@@ -56,6 +56,13 @@ const (
 	ScopeReadPrompts ScopeSlug = "read_prompts"
 	// ScopeWritePrompts manage the prompts of the project.
 	ScopeWritePrompts ScopeSlug = "write_prompts"
+
+	// ScopeManageOwnChannels manage own channels (where owner_id = current user).
+	ScopeManageOwnChannels ScopeSlug = "manage_own_channels"
+	// ScopeManageOwnModels manage own models (where owner_id = current user).
+	ScopeManageOwnModels ScopeSlug = "manage_own_models"
+	// ScopeReviewPublishRequests review publish requests (admin).
+	ScopeReviewPublishRequests ScopeSlug = "review_publish_requests"
 )
 
 type ScopeLevel string
@@ -172,6 +179,21 @@ var scopeConfigs = []Scope{
 		Slug:        ScopeWritePrompts,
 		Description: "Manage prompts (create, edit, delete)",
 		Levels:      []ScopeLevel{ScopeLevelSystem, ScopeLevelProject},
+	},
+	{
+		Slug:        ScopeManageOwnChannels,
+		Description: "Manage own channels",
+		Levels:      []ScopeLevel{ScopeLevelSystem},
+	},
+	{
+		Slug:        ScopeManageOwnModels,
+		Description: "Manage own models",
+		Levels:      []ScopeLevel{ScopeLevelSystem},
+	},
+	{
+		Slug:        ScopeReviewPublishRequests,
+		Description: "Review publish requests",
+		Levels:      []ScopeLevel{ScopeLevelSystem},
 	},
 }
 
