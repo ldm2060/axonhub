@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 func TestTokenProvider_AutoRefresh_StartStop_Idempotent(t *testing.T) {

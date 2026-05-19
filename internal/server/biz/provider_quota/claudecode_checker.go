@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/oauth"
-	"github.com/looplj/axonhub/llm/transformer/anthropic/claudecode"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/oauth"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
 )
 
 type ClaudeCodeQuotaChecker struct {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 const (

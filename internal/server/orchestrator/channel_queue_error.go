@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 const (

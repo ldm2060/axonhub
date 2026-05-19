@@ -8,14 +8,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/apikey"
-	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/ent/user"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 func setupTestTemplateService(t *testing.T) (*APIKeyProfileTemplateService, *ent.Client) {

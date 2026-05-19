@@ -6,9 +6,9 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"go.uber.org/zap"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
 type loggingTracer struct{}

@@ -14,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/shopspring/decimal"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -483,7 +483,7 @@ func (ec *executionContext) field_Mutation_createLLMAPIKey_args(ctx context.Cont
 func (ec *executionContext) field_Mutation_loadApiKeyProfileTemplate_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNLoadApiKeyProfileTemplateInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐLoadAPIKeyProfileTemplateInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNLoadApiKeyProfileTemplateInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐLoadAPIKeyProfileTemplateInput)
 	if err != nil {
 		return nil, err
 	}
@@ -494,12 +494,12 @@ func (ec *executionContext) field_Mutation_loadApiKeyProfileTemplate_args(ctx co
 func (ec *executionContext) field_Mutation_updateAPIKeyProfiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateAPIKeyProfilesInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateAPIKeyProfilesInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles)
 	if err != nil {
 		return nil, err
 	}
@@ -580,7 +580,7 @@ func (ec *executionContext) _APIKey_id(ctx context.Context, field graphql.Collec
 			return obj.ID, nil
 		},
 		nil,
-		ec.marshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		ec.marshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
 		true,
 		true,
 	)
@@ -696,7 +696,7 @@ func (ec *executionContext) _APIKey_profiles(ctx context.Context, field graphql.
 			return obj.Profiles, nil
 		},
 		nil,
-		ec.marshalOAPIKeyProfiles2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles,
+		ec.marshalOAPIKeyProfiles2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles,
 		true,
 		false,
 	)
@@ -760,7 +760,7 @@ func (ec *executionContext) _APIKeyProfile_modelMappings(ctx context.Context, fi
 			return obj.ModelMappings, nil
 		},
 		nil,
-		ec.marshalOModelMapping2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ,
+		ec.marshalOModelMapping2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ,
 		true,
 		false,
 	)
@@ -853,7 +853,7 @@ func (ec *executionContext) _APIKeyProfile_channelTagsMatchMode(ctx context.Cont
 			return obj.ChannelTagsMatchMode, nil
 		},
 		nil,
-		ec.marshalOChannelTagsMatchMode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode,
+		ec.marshalOChannelTagsMatchMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode,
 		true,
 		false,
 	)
@@ -911,7 +911,7 @@ func (ec *executionContext) _APIKeyProfile_quota(ctx context.Context, field grap
 			return obj.Quota, nil
 		},
 		nil,
-		ec.marshalOAPIKeyQuota2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota,
+		ec.marshalOAPIKeyQuota2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota,
 		true,
 		false,
 	)
@@ -1008,7 +1008,7 @@ func (ec *executionContext) _APIKeyProfiles_profiles(ctx context.Context, field 
 			return obj.Profiles, nil
 		},
 		nil,
-		ec.marshalOAPIKeyProfile2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ,
+		ec.marshalOAPIKeyProfile2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ,
 		true,
 		false,
 	)
@@ -1142,7 +1142,7 @@ func (ec *executionContext) _APIKeyQuota_period(ctx context.Context, field graph
 			return obj.Period, nil
 		},
 		nil,
-		ec.marshalNAPIKeyQuotaPeriod2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod,
+		ec.marshalNAPIKeyQuotaPeriod2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod,
 		true,
 		true,
 	)
@@ -1179,7 +1179,7 @@ func (ec *executionContext) _APIKeyQuotaCalendarDuration_unit(ctx context.Contex
 			return obj.Unit, nil
 		},
 		nil,
-		ec.marshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit,
+		ec.marshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit,
 		true,
 		true,
 	)
@@ -1237,7 +1237,7 @@ func (ec *executionContext) _APIKeyQuotaPastDuration_unit(ctx context.Context, f
 			return obj.Unit, nil
 		},
 		nil,
-		ec.marshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit,
+		ec.marshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit,
 		true,
 		true,
 	)
@@ -1266,7 +1266,7 @@ func (ec *executionContext) _APIKeyQuotaPeriod_type(ctx context.Context, field g
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalNAPIKeyQuotaPeriodType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType,
+		ec.marshalNAPIKeyQuotaPeriodType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType,
 		true,
 		true,
 	)
@@ -1295,7 +1295,7 @@ func (ec *executionContext) _APIKeyQuotaPeriod_pastDuration(ctx context.Context,
 			return obj.PastDuration, nil
 		},
 		nil,
-		ec.marshalOAPIKeyQuotaPastDuration2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration,
+		ec.marshalOAPIKeyQuotaPastDuration2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration,
 		true,
 		false,
 	)
@@ -1330,7 +1330,7 @@ func (ec *executionContext) _APIKeyQuotaPeriod_calendarDuration(ctx context.Cont
 			return obj.CalendarDuration, nil
 		},
 		nil,
-		ec.marshalOAPIKeyQuotaCalendarDuration2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration,
+		ec.marshalOAPIKeyQuotaCalendarDuration2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration,
 		true,
 		false,
 	)
@@ -1422,7 +1422,7 @@ func (ec *executionContext) _Mutation_createLLMAPIKey(ctx context.Context, field
 			return ec.resolvers.Mutation().CreateLLMAPIKey(ctx, fc.Args["name"].(string))
 		},
 		nil,
-		ec.marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
+		ec.marshalNAPIKey2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
 		true,
 		true,
 	)
@@ -1475,7 +1475,7 @@ func (ec *executionContext) _Mutation_updateAPIKeyProfiles(ctx context.Context, 
 			return ec.resolvers.Mutation().UpdateAPIKeyProfiles(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(objects.APIKeyProfiles))
 		},
 		nil,
-		ec.marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
+		ec.marshalNAPIKey2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
 		true,
 		true,
 	)
@@ -1528,7 +1528,7 @@ func (ec *executionContext) _Mutation_loadApiKeyProfileTemplate(ctx context.Cont
 			return ec.resolvers.Mutation().LoadAPIKeyProfileTemplate(ctx, fc.Args["input"].(LoadAPIKeyProfileTemplateInput))
 		},
 		nil,
-		ec.marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
+		ec.marshalNAPIKey2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey,
 		true,
 		true,
 	)
@@ -3147,7 +3147,7 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 			it.Name = data
 		case "modelMappings":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelMappings"))
-			data, err := ec.unmarshalOModelMappingInput2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx, v)
+			data, err := ec.unmarshalOModelMappingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3168,7 +3168,7 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 			it.ChannelTags = data
 		case "channelTagsMatchMode":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelTagsMatchMode"))
-			data, err := ec.unmarshalOChannelTagsMatchMode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx, v)
+			data, err := ec.unmarshalOChannelTagsMatchMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3182,7 +3182,7 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 			it.ModelIDs = data
 		case "quota":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quota"))
-			data, err := ec.unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx, v)
+			data, err := ec.unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3216,7 +3216,7 @@ func (ec *executionContext) unmarshalInputAPIKeyQuotaCalendarDurationInput(ctx c
 		switch k {
 		case "unit":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
-			data, err := ec.unmarshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx, v)
+			data, err := ec.unmarshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3264,7 +3264,7 @@ func (ec *executionContext) unmarshalInputAPIKeyQuotaInput(ctx context.Context, 
 			it.Cost = data
 		case "period":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
-			data, err := ec.unmarshalNAPIKeyQuotaPeriodInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx, v)
+			data, err := ec.unmarshalNAPIKeyQuotaPeriodInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3298,7 +3298,7 @@ func (ec *executionContext) unmarshalInputAPIKeyQuotaPastDurationInput(ctx conte
 			it.Value = data
 		case "unit":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
-			data, err := ec.unmarshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx, v)
+			data, err := ec.unmarshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3325,21 +3325,21 @@ func (ec *executionContext) unmarshalInputAPIKeyQuotaPeriodInput(ctx context.Con
 		switch k {
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNAPIKeyQuotaPeriodType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx, v)
+			data, err := ec.unmarshalNAPIKeyQuotaPeriodType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Type = data
 		case "pastDuration":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pastDuration"))
-			data, err := ec.unmarshalOAPIKeyQuotaPastDurationInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx, v)
+			data, err := ec.unmarshalOAPIKeyQuotaPastDurationInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.PastDuration = data
 		case "calendarDuration":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("calendarDuration"))
-			data, err := ec.unmarshalOAPIKeyQuotaCalendarDurationInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx, v)
+			data, err := ec.unmarshalOAPIKeyQuotaCalendarDurationInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3366,14 +3366,14 @@ func (ec *executionContext) unmarshalInputLoadApiKeyProfileTemplateInput(ctx con
 		switch k {
 		case "templateID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateID"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			data, err := ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TemplateID = data
 		case "apiKeyID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyID"))
-			data, err := ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			data, err := ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3441,7 +3441,7 @@ func (ec *executionContext) unmarshalInputUpdateAPIKeyProfilesInput(ctx context.
 			it.ActiveProfile = data
 		case "profiles":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profiles"))
-			data, err := ec.unmarshalNAPIKeyProfileInput2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx, v)
+			data, err := ec.unmarshalNAPIKeyProfileInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4270,11 +4270,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAPIKey2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey(ctx context.Context, sel ast.SelectionSet, v APIKey) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKey2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey(ctx context.Context, sel ast.SelectionSet, v APIKey) graphql.Marshaler {
 	return ec._APIKey(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey(ctx context.Context, sel ast.SelectionSet, v *APIKey) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKey2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐAPIKey(ctx context.Context, sel ast.SelectionSet, v *APIKey) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -4284,23 +4284,23 @@ func (ec *executionContext) marshalNAPIKey2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋ
 	return ec._APIKey(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAPIKeyProfile2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyProfile) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKeyProfile2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyProfile) graphql.Marshaler {
 	return ec._APIKeyProfile(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNAPIKeyProfileInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx context.Context, v any) (objects.APIKeyProfile, error) {
+func (ec *executionContext) unmarshalNAPIKeyProfileInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx context.Context, v any) (objects.APIKeyProfile, error) {
 	res, err := ec.unmarshalInputAPIKeyProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNAPIKeyProfileInput2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx context.Context, v any) ([]objects.APIKeyProfile, error) {
+func (ec *executionContext) unmarshalNAPIKeyProfileInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx context.Context, v any) ([]objects.APIKeyProfile, error) {
 	var vSlice []any
 	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]objects.APIKeyProfile, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNAPIKeyProfileInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNAPIKeyProfileInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -4308,13 +4308,13 @@ func (ec *executionContext) unmarshalNAPIKeyProfileInput2ᚕgithubᚗcomᚋloopl
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx context.Context, v any) (objects.APIKeyQuotaCalendarDurationUnit, error) {
+func (ec *executionContext) unmarshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx context.Context, v any) (objects.APIKeyQuotaCalendarDurationUnit, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := objects.APIKeyQuotaCalendarDurationUnit(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaCalendarDurationUnit) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDurationUnit(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaCalendarDurationUnit) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -4325,13 +4325,13 @@ func (ec *executionContext) marshalNAPIKeyQuotaCalendarDurationUnit2githubᚗcom
 	return res
 }
 
-func (ec *executionContext) unmarshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx context.Context, v any) (objects.APIKeyQuotaPastDurationUnit, error) {
+func (ec *executionContext) unmarshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx context.Context, v any) (objects.APIKeyQuotaPastDurationUnit, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := objects.APIKeyQuotaPastDurationUnit(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPastDurationUnit) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDurationUnit(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPastDurationUnit) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -4342,22 +4342,22 @@ func (ec *executionContext) marshalNAPIKeyQuotaPastDurationUnit2githubᚗcomᚋl
 	return res
 }
 
-func (ec *executionContext) marshalNAPIKeyQuotaPeriod2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPeriod) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKeyQuotaPeriod2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPeriod) graphql.Marshaler {
 	return ec._APIKeyQuotaPeriod(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNAPIKeyQuotaPeriodInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx context.Context, v any) (objects.APIKeyQuotaPeriod, error) {
+func (ec *executionContext) unmarshalNAPIKeyQuotaPeriodInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriod(ctx context.Context, v any) (objects.APIKeyQuotaPeriod, error) {
 	res, err := ec.unmarshalInputAPIKeyQuotaPeriodInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNAPIKeyQuotaPeriodType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx context.Context, v any) (objects.APIKeyQuotaPeriodType, error) {
+func (ec *executionContext) unmarshalNAPIKeyQuotaPeriodType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx context.Context, v any) (objects.APIKeyQuotaPeriodType, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := objects.APIKeyQuotaPeriodType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAPIKeyQuotaPeriodType2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPeriodType) graphql.Marshaler {
+func (ec *executionContext) marshalNAPIKeyQuotaPeriodType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPeriodType(ctx context.Context, sel ast.SelectionSet, v objects.APIKeyQuotaPeriodType) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -4384,13 +4384,13 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx context.Context, v any) (objects.GUID, error) {
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx context.Context, v any) (objects.GUID, error) {
 	var res objects.GUID
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx context.Context, sel ast.SelectionSet, v objects.GUID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx context.Context, sel ast.SelectionSet, v objects.GUID) graphql.Marshaler {
 	return v
 }
 
@@ -4426,16 +4426,16 @@ func (ec *executionContext) marshalNInt2int64(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNLoadApiKeyProfileTemplateInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐLoadAPIKeyProfileTemplateInput(ctx context.Context, v any) (LoadAPIKeyProfileTemplateInput, error) {
+func (ec *executionContext) unmarshalNLoadApiKeyProfileTemplateInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚋopenapiᚐLoadAPIKeyProfileTemplateInput(ctx context.Context, v any) (LoadAPIKeyProfileTemplateInput, error) {
 	res, err := ec.unmarshalInputLoadApiKeyProfileTemplateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNModelMapping2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx context.Context, sel ast.SelectionSet, v objects.ModelMapping) graphql.Marshaler {
+func (ec *executionContext) marshalNModelMapping2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx context.Context, sel ast.SelectionSet, v objects.ModelMapping) graphql.Marshaler {
 	return ec._ModelMapping(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNModelMappingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx context.Context, v any) (objects.ModelMapping, error) {
+func (ec *executionContext) unmarshalNModelMappingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx context.Context, v any) (objects.ModelMapping, error) {
 	res, err := ec.unmarshalInputModelMappingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -4456,7 +4456,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNUpdateAPIKeyProfilesInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles(ctx context.Context, v any) (objects.APIKeyProfiles, error) {
+func (ec *executionContext) unmarshalNUpdateAPIKeyProfilesInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles(ctx context.Context, v any) (objects.APIKeyProfiles, error) {
 	res, err := ec.unmarshalInputUpdateAPIKeyProfilesInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -4714,7 +4714,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAPIKeyProfile2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.APIKeyProfile) graphql.Marshaler {
+func (ec *executionContext) marshalOAPIKeyProfile2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.APIKeyProfile) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4741,7 +4741,7 @@ func (ec *executionContext) marshalOAPIKeyProfile2ᚕgithubᚗcomᚋloopljᚋaxo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAPIKeyProfile2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx, sel, v[i])
+			ret[i] = ec.marshalNAPIKeyProfile2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4761,28 +4761,28 @@ func (ec *executionContext) marshalOAPIKeyProfile2ᚕgithubᚗcomᚋloopljᚋaxo
 	return ret
 }
 
-func (ec *executionContext) marshalOAPIKeyProfiles2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyProfiles) graphql.Marshaler {
+func (ec *executionContext) marshalOAPIKeyProfiles2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyProfiles(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyProfiles) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._APIKeyProfiles(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAPIKeyQuota2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuota) graphql.Marshaler {
+func (ec *executionContext) marshalOAPIKeyQuota2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuota) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._APIKeyQuota(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAPIKeyQuotaCalendarDuration2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuotaCalendarDuration) graphql.Marshaler {
+func (ec *executionContext) marshalOAPIKeyQuotaCalendarDuration2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuotaCalendarDuration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._APIKeyQuotaCalendarDuration(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAPIKeyQuotaCalendarDurationInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx context.Context, v any) (*objects.APIKeyQuotaCalendarDuration, error) {
+func (ec *executionContext) unmarshalOAPIKeyQuotaCalendarDurationInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaCalendarDuration(ctx context.Context, v any) (*objects.APIKeyQuotaCalendarDuration, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4790,7 +4790,7 @@ func (ec *executionContext) unmarshalOAPIKeyQuotaCalendarDurationInput2ᚖgithub
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx context.Context, v any) (*objects.APIKeyQuota, error) {
+func (ec *executionContext) unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx context.Context, v any) (*objects.APIKeyQuota, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4798,14 +4798,14 @@ func (ec *executionContext) unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋlooplj�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOAPIKeyQuotaPastDuration2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuotaPastDuration) graphql.Marshaler {
+func (ec *executionContext) marshalOAPIKeyQuotaPastDuration2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx context.Context, sel ast.SelectionSet, v *objects.APIKeyQuotaPastDuration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._APIKeyQuotaPastDuration(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAPIKeyQuotaPastDurationInput2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx context.Context, v any) (*objects.APIKeyQuotaPastDuration, error) {
+func (ec *executionContext) unmarshalOAPIKeyQuotaPastDurationInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuotaPastDuration(ctx context.Context, v any) (*objects.APIKeyQuotaPastDuration, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4843,13 +4843,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOChannelTagsMatchMode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx context.Context, v any) (objects.ChannelTagsMatchMode, error) {
+func (ec *executionContext) unmarshalOChannelTagsMatchMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx context.Context, v any) (objects.ChannelTagsMatchMode, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := objects.ChannelTagsMatchMode(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOChannelTagsMatchMode2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx context.Context, sel ast.SelectionSet, v objects.ChannelTagsMatchMode) graphql.Marshaler {
+func (ec *executionContext) marshalOChannelTagsMatchMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelTagsMatchMode(ctx context.Context, sel ast.SelectionSet, v objects.ChannelTagsMatchMode) graphql.Marshaler {
 	_ = sel
 	_ = ctx
 	res := graphql.MarshalString(string(v))
@@ -4946,7 +4946,7 @@ func (ec *executionContext) marshalOInt2ᚖint64(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalOModelMapping2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.ModelMapping) graphql.Marshaler {
+func (ec *executionContext) marshalOModelMapping2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.ModelMapping) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4973,7 +4973,7 @@ func (ec *executionContext) marshalOModelMapping2ᚕgithubᚗcomᚋloopljᚋaxon
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNModelMapping2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx, sel, v[i])
+			ret[i] = ec.marshalNModelMapping2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4993,7 +4993,7 @@ func (ec *executionContext) marshalOModelMapping2ᚕgithubᚗcomᚋloopljᚋaxon
 	return ret
 }
 
-func (ec *executionContext) unmarshalOModelMappingInput2ᚕgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx context.Context, v any) ([]objects.ModelMapping, error) {
+func (ec *executionContext) unmarshalOModelMappingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx context.Context, v any) ([]objects.ModelMapping, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5003,7 +5003,7 @@ func (ec *executionContext) unmarshalOModelMappingInput2ᚕgithubᚗcomᚋlooplj
 	res := make([]objects.ModelMapping, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNModelMappingInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNModelMappingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMapping(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

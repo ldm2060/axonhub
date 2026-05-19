@@ -4,9 +4,9 @@ import (
 	"context"
 	"slices"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/privacy"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
 
 // Common error messages.

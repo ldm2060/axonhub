@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/looplj/axonhub/internal/build"
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/build"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 // Version retrieves the system version from system settings.
@@ -52,7 +52,7 @@ func (s *SystemService) CheckForUpdate(ctx context.Context) (*VersionCheckResult
 	}
 
 	hasUpdate := s.isNewerVersion(currentVersion, latestVersion)
-	releaseURL := fmt.Sprintf("https://github.com/looplj/axonhub/releases/tag/%s", latestVersion)
+	releaseURL := fmt.Sprintf("https://github.com/ldm2060/axonhub/releases/tag/%s", latestVersion)
 
 	return &VersionCheckResult{
 		CurrentVersion: currentVersion,
@@ -89,7 +89,7 @@ const releaseCooldownDuration = 30 * time.Minute
 // It skips beta, rc, and prerelease versions, and waits for a cooldown period after release.
 // In monorepo mode, it only considers tags matching "vX.Y.Z" (no service prefix).
 func FetchLatestGitHubRelease(ctx context.Context) (string, error) {
-	baseURL := "https://api.github.com/repos/looplj/axonhub/releases"
+	baseURL := "https://api.github.com/repos/ldm2060/axonhub/releases"
 
 	u, err := url.Parse(baseURL)
 	if err != nil {

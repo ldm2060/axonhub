@@ -9,8 +9,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // GetBodyOverrideOperations returns the cached override operations for the channel.

@@ -6,10 +6,10 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/xregexp"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
 )
 
 // syncChannelModels syncs supported models for all channels with auto_sync_supported_models enabled.

@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/ent/migrate/datamigrate"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/migrate/datamigrate"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/role"
 )
 
 func TestV0_3_0_NoOwnerUser(t *testing.T) {

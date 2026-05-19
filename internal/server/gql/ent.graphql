@@ -266,7 +266,7 @@ input APIKeyProfileTemplateWhereInput {
 """
 APIKeyStatus is enum for the field status
 """
-enum APIKeyStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/apikey.Status") {
+enum APIKeyStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/apikey.Status") {
   enabled
   disabled
   archived
@@ -274,7 +274,7 @@ enum APIKeyStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/apikey
 """
 APIKeyType is enum for the field type
 """
-enum APIKeyType @goModel(model: "github.com/looplj/axonhub/internal/ent/apikey.Type") {
+enum APIKeyType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/apikey.Type") {
   user
   service_account
   noauth
@@ -703,7 +703,7 @@ enum ChannelModelPriceVersionOrderField {
 """
 ChannelModelPriceVersionStatus is enum for the field status
 """
-enum ChannelModelPriceVersionStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/channelmodelpriceversion.Status") {
+enum ChannelModelPriceVersionStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion.Status") {
   active
   archived
 }
@@ -1244,7 +1244,7 @@ input ChannelProbeWhereInput {
 """
 ChannelStatus is enum for the field status
 """
-enum ChannelStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/channel.Status") {
+enum ChannelStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.Status") {
   enabled
   disabled
   archived
@@ -1252,7 +1252,7 @@ enum ChannelStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/chann
 """
 ChannelType is enum for the field type
 """
-enum ChannelType @goModel(model: "github.com/looplj/axonhub/internal/ent/channel.Type") {
+enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.Type") {
   openai
   openai_responses
   codex
@@ -2116,14 +2116,14 @@ enum DataStorageOrderField {
 """
 DataStorageStatus is enum for the field status
 """
-enum DataStorageStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/datastorage.Status") {
+enum DataStorageStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/datastorage.Status") {
   active
   archived
 }
 """
 DataStorageType is enum for the field type
 """
-enum DataStorageType @goModel(model: "github.com/looplj/axonhub/internal/ent/datastorage.Type") {
+enum DataStorageType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/datastorage.Type") {
   database
   fs
   s3
@@ -2327,7 +2327,7 @@ enum ModelOrderField {
 """
 ModelStatus is enum for the field status
 """
-enum ModelStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/model.Status") {
+enum ModelStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/model.Status") {
   enabled
   disabled
   archived
@@ -2335,7 +2335,7 @@ enum ModelStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/model.S
 """
 ModelType is enum for the field type
 """
-enum ModelType @goModel(model: "github.com/looplj/axonhub/internal/ent/model.Type") {
+enum ModelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/model.Type") {
   chat
   embedding
   rerank
@@ -2500,7 +2500,7 @@ input ModelWhereInput {
 An object with an ID.
 Follows the [Relay Global Object Identification Specification](https://relay.dev/graphql/objectidentification.htm)
 """
-interface Node @goModel(model: "github.com/looplj/axonhub/internal/ent.Noder") {
+interface Node @goModel(model: "github.com/ldm2060/axonhub/internal/ent.Noder") {
   """
   The id of the object.
   """
@@ -3107,7 +3107,7 @@ enum ProjectOrderField {
 """
 ProjectStatus is enum for the field status
 """
-enum ProjectStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/project.Status") {
+enum ProjectStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/project.Status") {
   active
   archived
 }
@@ -3434,7 +3434,7 @@ enum PromptProtectionRuleOrderField {
 """
 PromptProtectionRuleStatus is enum for the field status
 """
-enum PromptProtectionRuleStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/promptprotectionrule.Status") {
+enum PromptProtectionRuleStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/promptprotectionrule.Status") {
   enabled
   disabled
   archived
@@ -3539,7 +3539,7 @@ input PromptProtectionRuleWhereInput {
 """
 PromptStatus is enum for the field status
 """
-enum PromptStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/prompt.Status") {
+enum PromptStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/prompt.Status") {
   enabled
   disabled
 }
@@ -3734,7 +3734,7 @@ enum ProviderQuotaStatusOrderField {
 """
 ProviderQuotaStatusProviderType is enum for the field provider_type
 """
-enum ProviderQuotaStatusProviderType @goModel(model: "github.com/looplj/axonhub/internal/ent/providerquotastatus.ProviderType") {
+enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/providerquotastatus.ProviderType") {
   claudecode
   codex
   github_copilot
@@ -3746,7 +3746,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/looplj/axonhub/
 """
 ProviderQuotaStatusStatus is enum for the field status
 """
-enum ProviderQuotaStatusStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/providerquotastatus.Status") {
+enum ProviderQuotaStatusStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/providerquotastatus.Status") {
   available
   warning
   exhausted
@@ -4646,7 +4646,7 @@ enum RequestExecutionOrderField {
 """
 RequestExecutionStatus is enum for the field status
 """
-enum RequestExecutionStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/requestexecution.Status") {
+enum RequestExecutionStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/requestexecution.Status") {
   pending
   processing
   completed
@@ -4901,7 +4901,7 @@ enum RequestOrderField {
 """
 RequestSource is enum for the field source
 """
-enum RequestSource @goModel(model: "github.com/looplj/axonhub/internal/ent/request.Source") {
+enum RequestSource @goModel(model: "github.com/ldm2060/axonhub/internal/ent/request.Source") {
   api
   playground
   test
@@ -4909,7 +4909,7 @@ enum RequestSource @goModel(model: "github.com/looplj/axonhub/internal/ent/reque
 """
 RequestStatus is enum for the field status
 """
-enum RequestStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/request.Status") {
+enum RequestStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/request.Status") {
   pending
   processing
   completed
@@ -5311,7 +5311,7 @@ type RoleEdge {
 """
 RoleLevel is enum for the field level
 """
-enum RoleLevel @goModel(model: "github.com/looplj/axonhub/internal/ent/role.Level") {
+enum RoleLevel @goModel(model: "github.com/ldm2060/axonhub/internal/ent/role.Level") {
   system
   project
 }
@@ -6542,7 +6542,7 @@ enum UsageLogOrderField {
 """
 UsageLogSource is enum for the field source
 """
-enum UsageLogSource @goModel(model: "github.com/looplj/axonhub/internal/ent/usagelog.Source") {
+enum UsageLogSource @goModel(model: "github.com/ldm2060/axonhub/internal/ent/usagelog.Source") {
   api
   playground
   test
@@ -7251,7 +7251,7 @@ input UserRoleWhereInput {
 """
 UserStatus is enum for the field status
 """
-enum UserStatus @goModel(model: "github.com/looplj/axonhub/internal/ent/user.Status") {
+enum UserStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/user.Status") {
   activated
   deactivated
 }

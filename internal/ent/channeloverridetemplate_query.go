@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
-	"github.com/looplj/axonhub/internal/ent/predicate"
-	"github.com/looplj/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // ChannelOverrideTemplateQuery is the builder for querying ChannelOverrideTemplate entities.

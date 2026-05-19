@@ -3,9 +3,9 @@ package orchestrator
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // mockStrategy is a test strategy that returns a fixed score.

@@ -1,8 +1,8 @@
 package openapi
 
 import (
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // toOpenAPIAPIKey projects the rich ent.APIKey down to the minimal OpenAPI

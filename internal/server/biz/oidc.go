@@ -25,13 +25,13 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/oidcidentity"
-	"github.com/looplj/axonhub/internal/ent/role"
-	"github.com/looplj/axonhub/internal/ent/user"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
+	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 )
 
 type ProviderInfo struct {

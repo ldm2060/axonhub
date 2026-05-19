@@ -13,10 +13,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/datastorage"
-	"github.com/looplj/axonhub/internal/ent/predicate"
-	"github.com/looplj/axonhub/internal/ent/request"
-	"github.com/looplj/axonhub/internal/ent/requestexecution"
+	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 )
 
 // DataStorageQuery is the builder for querying DataStorage entities.

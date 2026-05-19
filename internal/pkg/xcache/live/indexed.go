@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/sync/singleflight"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/watcher"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/watcher"
 )
 
 // cacheItem wraps a value with its expiration time.

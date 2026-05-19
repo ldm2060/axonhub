@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/xcontext"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xcontext"
 )
 
 func (svc *ChannelService) markChannelUnavailable(ctx context.Context, channelID int, responseStatusCode int, threshold int, actualCount int) {

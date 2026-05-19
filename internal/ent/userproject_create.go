@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/ent/user"
-	"github.com/looplj/axonhub/internal/ent/userproject"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/userproject"
 )
 
 // UserProjectCreate is the builder for creating a UserProject entity.

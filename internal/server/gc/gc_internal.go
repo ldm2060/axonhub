@@ -3,7 +3,7 @@ package gc
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/authz"
 )
 
 func (w *Worker) runAutomaticCleanup(ctx context.Context) {

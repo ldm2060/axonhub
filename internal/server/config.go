@@ -3,7 +3,7 @@ package server
 import (
 	"time"
 
-	"github.com/looplj/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
 type Config struct {

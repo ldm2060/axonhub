@@ -27,64 +27,64 @@ models:
   # Defines the ID field as Go 'int'.
   ID:
     model:
-      - github.com/looplj/axonhub/internal/objects.GUID
+      - github.com/ldm2060/axonhub/internal/objects.GUID
   Decimal:
     model:
-      - github.com/looplj/axonhub/internal/objects.Decimal
+      - github.com/ldm2060/axonhub/internal/objects.Decimal
   DecimalInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.Decimal
+      - github.com/ldm2060/axonhub/internal/objects.Decimal
   ModelMapping:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelMapping
+      - github.com/ldm2060/axonhub/internal/objects.ModelMapping
   ModelMappingInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelMapping
+      - github.com/ldm2060/axonhub/internal/objects.ModelMapping
   ChannelTagsMatchMode:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsMatchMode
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsMatchMode
   UpdateAPIKeyProfilesInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfiles
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfiles
   APIKeyProfiles:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfiles
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfiles
   APIKeyProfile:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfile
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfile
   APIKeyProfileInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfile
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfile
   APIKeyQuota:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuota
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuota
   APIKeyQuotaInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuota
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuota
   APIKeyQuotaPeriod:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriod
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriod
   APIKeyQuotaPeriodInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriod
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriod
   APIKeyQuotaPeriodType:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriodType
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriodType
   APIKeyQuotaPastDuration:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDuration
   APIKeyQuotaPastDurationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDuration
   APIKeyQuotaPastDurationUnit:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDurationUnit
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDurationUnit
   APIKeyQuotaCalendarDuration:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDuration
   APIKeyQuotaCalendarDurationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDuration
   APIKeyQuotaCalendarDurationUnit:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDurationUnit
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDurationUnit

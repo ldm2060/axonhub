@@ -13,10 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/build"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/assets"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/build"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/assets"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 type SystemHandlersParams struct {

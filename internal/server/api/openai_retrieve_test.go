@@ -11,16 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/ent/model"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/internal/server/biz"
-	openaitypes "github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	openaitypes "github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 func setupOpenAIRetrieveTest(t *testing.T) (*ent.Client, *biz.ChannelService, *biz.SystemService, *gin.Engine, context.Context) {

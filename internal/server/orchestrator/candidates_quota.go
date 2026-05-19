@@ -5,11 +5,11 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/server/biz/provider_quota"
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 type ProviderQuotaSelector struct {

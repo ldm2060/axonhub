@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/looplj/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
 // WithLoggingTracing save the trace ID and request ID to the request context.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 // ContextKey defines the context key type.

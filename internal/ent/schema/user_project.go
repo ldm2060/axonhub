@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 // UserProject holds the schema definition for the UserProject entity.

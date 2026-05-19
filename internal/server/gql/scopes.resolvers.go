@@ -8,7 +8,7 @@ package gql
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 // AllScopes returns all available scopes with descriptions.

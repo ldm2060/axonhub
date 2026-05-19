@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 type BackupServiceParams struct {

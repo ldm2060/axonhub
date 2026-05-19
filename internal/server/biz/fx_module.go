@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 var Module = fx.Module("biz",

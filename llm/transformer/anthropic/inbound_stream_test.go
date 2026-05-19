@@ -8,11 +8,11 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/internal/pkg/xjson"
-	"github.com/looplj/axonhub/llm/internal/pkg/xtest"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xtest"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 func TestInboundStream_EmitsCitationsDeltaBeforeContentBlockStop(t *testing.T) {

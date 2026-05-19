@@ -8,9 +8,9 @@ package gql
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/prompt"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/prompt"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // CreatePrompt is the resolver for the createPrompt field.

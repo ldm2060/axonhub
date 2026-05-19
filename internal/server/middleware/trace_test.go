@@ -10,17 +10,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/tracing"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/transformer/anthropic/claudecode"
-	"github.com/looplj/axonhub/llm/transformer/shared"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
+	"github.com/ldm2060/axonhub/llm/transformer/shared"
 )
 
 func setupTestTraceMiddleware(t *testing.T) (*gin.Engine, *ent.Client, *biz.TraceService) {

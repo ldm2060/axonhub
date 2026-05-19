@@ -12,7 +12,7 @@ axonhub:
   replicaCount: 2
   
   image:
-    repository: looplj/axonhub
+    repository: ldm2060/axonhub
     tag: "latest"  # Consider using specific version in production
     pullPolicy: IfNotPresent
   

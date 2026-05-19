@@ -9,13 +9,13 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/ent/request"
-	"github.com/looplj/axonhub/internal/ent/usagelog"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 func TestQuotaService_AllTime_RequestCountExceeded(t *testing.T) {

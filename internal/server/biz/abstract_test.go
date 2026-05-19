@@ -8,9 +8,9 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
 )
 
 func TestAbstractService_RunInTransaction(t *testing.T) {

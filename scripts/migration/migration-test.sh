@@ -48,7 +48,7 @@ INIT_OWNER_LAST_NAME="${AXONHUB_INIT_OWNER_LAST_NAME:-Owner}"
 INIT_BRAND_NAME="${AXONHUB_INIT_BRAND_NAME:-AxonHub Migration Test}"
 
 # GitHub repository
-REPO="looplj/axonhub"
+REPO="ldm2060/axonhub"
 GITHUB_API="https://api.github.com/repos/${REPO}"
 
 print_info() {

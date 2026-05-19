@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 
-	gen "github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/hook"
-	"github.com/looplj/axonhub/internal/ent/intercept"
+	gen "github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/hook"
+	"github.com/ldm2060/axonhub/internal/ent/intercept"
 )
 
 // SoftDeleteMixin implements the soft delete pattern for schemas.

@@ -9,17 +9,17 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/apikey"
-	"github.com/looplj/axonhub/internal/ent/project"
-	"github.com/looplj/axonhub/internal/ent/role"
-	"github.com/looplj/axonhub/internal/ent/userproject"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/internal/pkg/xerrors"
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/userproject"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 const negativeCacheTTL = 5 * time.Second

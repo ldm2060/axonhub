@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/oidcidentity"
-	"github.com/looplj/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // OIDCIdentityCreate is the builder for creating a OIDCIdentity entity.

@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
 func TestTraceHook(t *testing.T) {

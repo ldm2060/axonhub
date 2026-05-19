@@ -15,14 +15,14 @@ import (
 
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/looplj/axonhub/conf"
-	"github.com/looplj/axonhub/internal/build"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/metrics"
-	"github.com/looplj/axonhub/internal/server"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/llm/transformer/antigravity"
+	"github.com/ldm2060/axonhub/conf"
+	"github.com/ldm2060/axonhub/internal/build"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/metrics"
+	"github.com/ldm2060/axonhub/internal/server"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 )
 
 func main() {

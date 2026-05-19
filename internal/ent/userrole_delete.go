@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/predicate"
-	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/ent/userrole"
 )
 
 // UserRoleDelete is the builder for deleting a UserRole entity.

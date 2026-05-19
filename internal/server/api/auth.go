@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 type AuthHandlersParams struct {

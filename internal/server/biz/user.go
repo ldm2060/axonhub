@@ -8,14 +8,14 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/role"
-	"github.com/looplj/axonhub/internal/ent/user"
-	"github.com/looplj/axonhub/internal/ent/userproject"
-	"github.com/looplj/axonhub/internal/ent/userrole"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/userproject"
+	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 )
 
 type UserServiceParams struct {

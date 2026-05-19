@@ -4,7 +4,7 @@ import (
 	"context"
 	"math/rand/v2"
 
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // RandomStrategy adds a small random score to break ties between channels

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // setupProviderConfMockServer creates a mock HTTP server returning provider conf JSON.

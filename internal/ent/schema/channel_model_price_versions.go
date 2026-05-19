@@ -7,8 +7,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 type ChannelModelPriceVersion struct {

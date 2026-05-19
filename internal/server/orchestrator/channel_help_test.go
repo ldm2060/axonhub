@@ -8,19 +8,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/pipeline/stream"
-	"github.com/looplj/axonhub/llm/streams"
-	"github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/pipeline/stream"
+	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 // newTestChannelServiceForChannels creates a minimal channel service for testing.

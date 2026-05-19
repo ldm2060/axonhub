@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/looplj/axonhub/internal/ent/role"
-	"github.com/looplj/axonhub/internal/ent/user"
-	"github.com/looplj/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/userrole"
 )
 
 // UserRole is the model entity for the UserRole schema.

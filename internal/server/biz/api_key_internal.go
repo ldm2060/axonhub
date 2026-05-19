@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 func (s *APIKeyService) onLoadOneKey(ctx context.Context, cacheKey string) (*ent.APIKey, error) {

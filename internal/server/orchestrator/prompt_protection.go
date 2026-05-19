@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/transformer"
 )
 
 const promptProtectionRejectedMessage = "request blocked by prompt protection policy"

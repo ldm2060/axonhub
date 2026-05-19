@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 func TestEnsureUsage_StreamEnabled(t *testing.T) {

@@ -31,7 +31,7 @@ The following table lists the configurable parameters of the AxonHub chart and t
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `axonhub.replicaCount` | Number of AxonHub replicas | `1` |
-| `axonhub.image.repository` | AxonHub image repository | `looplj/axonhub` |
+| `axonhub.image.repository` | AxonHub image repository | `ldm2060/axonhub` |
 | `axonhub.image.tag` | AxonHub image tag | `latest` |
 | `axonhub.image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `axonhub.dbPassword` | Database password | `axonhub_password` |

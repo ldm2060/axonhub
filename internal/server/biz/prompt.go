@@ -7,16 +7,16 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/prompt"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/pkg/xerrors"
-	"github.com/looplj/axonhub/internal/pkg/xmap"
-	"github.com/looplj/axonhub/internal/pkg/xregexp"
-	"github.com/looplj/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/prompt"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
+	"github.com/ldm2060/axonhub/internal/pkg/xmap"
+	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 type PromptServiceParams struct {

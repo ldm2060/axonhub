@@ -6,8 +6,8 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/transformer/shared"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/transformer/shared"
 )
 
 func TestRequestFromLLM(t *testing.T) {

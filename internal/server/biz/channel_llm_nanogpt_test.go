@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/transformer/nanogpt"
-	"github.com/looplj/axonhub/llm/transformer/openai/responses"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/transformer/nanogpt"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 func TestNanogptChannel_TypeNanogpt(t *testing.T) {

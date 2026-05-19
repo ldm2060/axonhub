@@ -7,10 +7,10 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent/privacy"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 func WithScopeDecision(ctx context.Context, requiredScope scopes.ScopeSlug) context.Context {

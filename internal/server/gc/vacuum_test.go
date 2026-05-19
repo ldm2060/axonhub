@@ -12,8 +12,8 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
 )
 
 func TestWorker_runVacuum_Disabled(t *testing.T) {

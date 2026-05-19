@@ -3,8 +3,8 @@ package orchestrator
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // WeightStrategy prioritizes channels based on their ordering weight.

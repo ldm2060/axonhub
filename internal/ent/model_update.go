@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/model"
-	"github.com/looplj/axonhub/internal/ent/predicate"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // ModelUpdate is the builder for updating Model entities.

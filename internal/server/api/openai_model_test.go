@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/model"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/stretchr/testify/assert"
 )
 

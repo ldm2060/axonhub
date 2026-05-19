@@ -16,9 +16,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/xcache"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 const (

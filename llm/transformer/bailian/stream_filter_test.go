@@ -6,8 +6,8 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 func collectStream(stream streams.Stream[*llm.Response]) []*llm.Response {

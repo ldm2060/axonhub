@@ -1,4 +1,4 @@
-module github.com/looplj/axonhub/gemini_test
+module github.com/ldm2060/axonhub/gemini_test
 
 go 1.25.2
 

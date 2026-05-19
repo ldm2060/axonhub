@@ -3,11 +3,11 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/tracing"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
 // WithThread is a middleware that extracts the X-Thread-ID header and

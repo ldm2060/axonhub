@@ -9,8 +9,8 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 )
 
 type UsageMetadata struct {

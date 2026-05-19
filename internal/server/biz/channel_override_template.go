@@ -7,10 +7,10 @@ import (
 	"entgo.io/contrib/entgql"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/channeloverridetemplate"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // ChannelOverrideTemplateService handles CRUD and application of channel override templates.

@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
-	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
-	"github.com/looplj/axonhub/internal/ent/predicate"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
+	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // ChannelModelPriceUpdate is the builder for updating ChannelModelPrice entities.

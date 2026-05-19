@@ -18,10 +18,10 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/streams"
-	transformer "github.com/looplj/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
+	transformer "github.com/ldm2060/axonhub/llm/transformer"
 )
 
 const (

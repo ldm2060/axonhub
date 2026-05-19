@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent/privacy"
-	"github.com/looplj/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
+	"github.com/ldm2060/axonhub/internal/log"
 )
 
 // bypassKey is an unexported key type to prevent external forgery.

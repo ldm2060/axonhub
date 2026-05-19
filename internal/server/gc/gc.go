@@ -10,17 +10,17 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channelprobe"
-	"github.com/looplj/axonhub/internal/ent/request"
-	"github.com/looplj/axonhub/internal/ent/requestexecution"
-	"github.com/looplj/axonhub/internal/ent/schema/schematype"
-	"github.com/looplj/axonhub/internal/ent/thread"
-	"github.com/looplj/axonhub/internal/ent/trace"
-	"github.com/looplj/axonhub/internal/ent/usagelog"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
+	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
+	"github.com/ldm2060/axonhub/internal/ent/thread"
+	"github.com/ldm2060/axonhub/internal/ent/trace"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 var defaultBatchSize = 500

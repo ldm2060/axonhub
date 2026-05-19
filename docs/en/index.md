@@ -72,9 +72,9 @@ Welcome to the AxonHub documentation center! This index will help you quickly fi
 
 ## 🔗 Related Links
 
-- [GitHub Repository](https://github.com/looplj/axonhub)
-- [DeepWiki Documentation](https://deepwiki.com/looplj/axonhub)
-- [Zread AI](https://zread.ai/looplj/axonhub)
+- [GitHub Repository](https://github.com/ldm2060/axonhub)
+- [DeepWiki Documentation](https://deepwiki.com/ldm2060/axonhub)
+- [Zread AI](https://zread.ai/ldm2060/axonhub)
 
 ## 🌐 Multilingual Documentation
 

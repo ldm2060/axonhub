@@ -5,14 +5,14 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/server/backup"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/internal/server/gc"
-	"github.com/looplj/axonhub/internal/server/orchestrator"
-	"github.com/looplj/axonhub/internal/server/scheduler"
-	"github.com/looplj/axonhub/internal/server/video_storage"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/server/backup"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/gc"
+	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/server/video_storage"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // This file will not be regenerated automatically.

@@ -3,7 +3,7 @@ package tracing
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/log"
 )
 
 func SetupLogger(logger *log.Logger) {

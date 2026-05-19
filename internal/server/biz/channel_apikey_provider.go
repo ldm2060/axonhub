@@ -7,8 +7,8 @@ import (
 
 	lru "github.com/hashicorp/golang-lru/v2"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/log"
 )
 
 // traceStickyLRUSize is the default LRU cache size for trace-to-key mappings.

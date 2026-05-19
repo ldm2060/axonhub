@@ -8,17 +8,17 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/server/biz"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/pipeline/stream"
-	"github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/pipeline/stream"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 func TestChatCompletionOrchestrator_Process_MinuteQuotaExceeded(t *testing.T) {

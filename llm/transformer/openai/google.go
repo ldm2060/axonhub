@@ -1,6 +1,6 @@
 package openai
 
-import "github.com/looplj/axonhub/llm/transformer/shared"
+import "github.com/ldm2060/axonhub/llm/transformer/shared"
 
 // TransformerMetadataKeyGoogleThoughtSignature 用于在 ToolCall TransformerMetadata 中保存 Gemini thought signature。
 const TransformerMetadataKeyGoogleThoughtSignature = shared.TransformerMetadataKeyGoogleThoughtSignature

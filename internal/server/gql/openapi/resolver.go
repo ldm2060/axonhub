@@ -3,7 +3,7 @@ package openapi
 import (
 	"github.com/99designs/gqlgen/graphql"
 
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // This file will not be regenerated automatically.

@@ -8,8 +8,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // streamAggregator holds the state for aggregating stream chunks.

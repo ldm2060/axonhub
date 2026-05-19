@@ -3,8 +3,8 @@ package maxtoken
 import (
 	"context"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/pipeline"
 )
 
 // EnsureMaxTokens creates a decorator that ensures requests have a max tokens value

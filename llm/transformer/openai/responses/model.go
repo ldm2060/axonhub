@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/internal/pkg/xjson"
-	"github.com/looplj/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
+	"github.com/ldm2060/axonhub/llm/transformer"
 )
 
 // ImageGeneration is a permissive structure to carry image generation tool

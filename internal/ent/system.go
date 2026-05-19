@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/looplj/axonhub/internal/ent/system"
+	"github.com/ldm2060/axonhub/internal/ent/system"
 )
 
 // System is the model entity for the System schema.

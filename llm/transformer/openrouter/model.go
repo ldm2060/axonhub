@@ -3,7 +3,7 @@ package openrouter
 import (
 	"strings"
 
-	"github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 type Response struct {

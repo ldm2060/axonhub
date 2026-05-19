@@ -5,8 +5,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/internal/pkg/xurl"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 func extractTextFromContent(content *Content) string {

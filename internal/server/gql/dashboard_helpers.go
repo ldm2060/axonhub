@@ -12,11 +12,11 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/looplj/axonhub/internal/ent/channelprobe"
-	"github.com/looplj/axonhub/internal/ent/usagelog"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/pkg/xtime"
-	"github.com/looplj/axonhub/internal/server/gql/qb"
+	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xtime"
+	"github.com/ldm2060/axonhub/internal/server/gql/qb"
 )
 
 var (

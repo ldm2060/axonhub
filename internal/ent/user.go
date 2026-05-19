@@ -10,7 +10,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/looplj/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // User is the model entity for the User schema.

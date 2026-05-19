@@ -3,7 +3,7 @@ package contexts
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 // WithTrace stores the trace entity in the context.

@@ -8,9 +8,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/privacy"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
 
 // Mock implementations for testing.

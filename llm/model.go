@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 var (

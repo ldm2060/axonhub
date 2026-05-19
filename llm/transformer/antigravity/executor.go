@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // Executor implements pipeline.Executor with endpoint fallback logic for Antigravity.

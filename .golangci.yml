@@ -368,7 +368,7 @@ formatters:
       # Local prefixes to use with "goimports -local".
       # Default: []
       local-prefixes:
-        - "github.com/looplj/axonhub"
+        - "github.com/ldm2060/axonhub"
 
   exclusions:
     # Mode of the generated files analysis.

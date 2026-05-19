@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/looplj/axonhub/openai_test/internal/testutil"
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 )

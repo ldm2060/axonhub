@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm/auth"
+	"github.com/ldm2060/axonhub/llm/auth"
 )
 
 func TestValidateConfig(t *testing.T) {

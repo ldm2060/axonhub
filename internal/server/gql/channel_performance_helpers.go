@@ -9,10 +9,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/channelprobe"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/gql/qb"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/gql/qb"
 )
 
 const topPerformersLimit = 6

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/oauth"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/oauth"
 )
 
 // ChannelEndpoint represents an outbound API endpoint configuration within a Channel.

@@ -8,13 +8,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/internal/pkg/xtest"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/streams"
-	"github.com/looplj/axonhub/llm/transformer"
-	"github.com/looplj/axonhub/llm/transformer/anthropic"
-	"github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xtest"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 // TestPipeline_Streaming_OpenAI_to_OpenAI tests streaming pipeline with OpenAI inbound and outbound transformers.

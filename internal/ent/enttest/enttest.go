@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 	// required by schema hooks.
-	_ "github.com/looplj/axonhub/internal/ent/runtime"
+	_ "github.com/ldm2060/axonhub/internal/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/looplj/axonhub/internal/ent/migrate"
+	"github.com/ldm2060/axonhub/internal/ent/migrate"
 )
 
 type (

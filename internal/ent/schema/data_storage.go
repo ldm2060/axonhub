@@ -8,9 +8,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"github.com/looplj/axonhub/internal/ent/schema/schematype"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 // DataStorage holds the schema definition for the DataStorage entity.

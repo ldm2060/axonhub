@@ -9,14 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/internal/pkg/xjson"
-	"github.com/looplj/axonhub/llm/oauth"
-	"github.com/looplj/axonhub/llm/pipeline"
-	"github.com/looplj/axonhub/llm/streams"
-	"github.com/looplj/axonhub/llm/transformer"
-	"github.com/looplj/axonhub/llm/transformer/gemini"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
+	"github.com/ldm2060/axonhub/llm/oauth"
+	"github.com/ldm2060/axonhub/llm/pipeline"
+	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/transformer/gemini"
 )
 
 // Token exchange timeout - maximum time to wait for token refresh/retrieval.

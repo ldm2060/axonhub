@@ -36,645 +36,645 @@ resolver:
 # provided package. If they match it will use them, otherwise it will generate new.
 autobind:
   - github.com/99designs/gqlgen/graphql/introspection
-  - github.com/looplj/axonhub/internal/ent
-  - github.com/looplj/axonhub/internal/ent/user
-  - github.com/looplj/axonhub/internal/ent/apikey
-  - github.com/looplj/axonhub/internal/ent/request
-  - github.com/looplj/axonhub/internal/ent/requestexecution
-  - github.com/looplj/axonhub/internal/ent/channel
-  - github.com/looplj/axonhub/internal/server/biz
+  - github.com/ldm2060/axonhub/internal/ent
+  - github.com/ldm2060/axonhub/internal/ent/user
+  - github.com/ldm2060/axonhub/internal/ent/apikey
+  - github.com/ldm2060/axonhub/internal/ent/request
+  - github.com/ldm2060/axonhub/internal/ent/requestexecution
+  - github.com/ldm2060/axonhub/internal/ent/channel
+  - github.com/ldm2060/axonhub/internal/server/biz
 
 converters:
-  - from: "*github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "*github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrToInt"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrToInt"
 
-  - from: "github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrToInt"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrToInt"
 
-  - from: "github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "*int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrToIntPtr"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrToIntPtr"
 
-  - from: "*github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "*github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "*int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrToIntPtr"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrToIntPtr"
 
-  - from: "[]*github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "[]*github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "[]*int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrsToIntPtrs"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrsToIntPtrs"
 
-  - from: "[]*github.com/looplj/axonhub/internal/objects.GUID"
+  - from: "[]*github.com/ldm2060/axonhub/internal/objects.GUID"
     to: "[]int"
-    with: "github.com/looplj/axonhub/internal/objects.ConvertGUIDPtrsToInts"
+    with: "github.com/ldm2060/axonhub/internal/objects.ConvertGUIDPtrsToInts"
 
 # This section declares type mapping between the GraphQL and Go type systems.
 models:
   # Defines the ID field as Go 'int'.
   ID:
     model:
-      - github.com/looplj/axonhub/internal/objects.GUID
+      - github.com/ldm2060/axonhub/internal/objects.GUID
   Node:
     model:
-      - github.com/looplj/axonhub/internal/ent.Noder
+      - github.com/ldm2060/axonhub/internal/ent.Noder
   Cursor:
     model:
-      - github.com/looplj/axonhub/internal/server/gql.Cursor
+      - github.com/ldm2060/axonhub/internal/server/gql.Cursor
   JSONRawMessage:
     model:
-      - github.com/looplj/axonhub/internal/objects.JSONRawMessage
+      - github.com/ldm2060/axonhub/internal/objects.JSONRawMessage
   JSONRawMessageInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.JSONRawMessage
+      - github.com/ldm2060/axonhub/internal/objects.JSONRawMessage
   Any:
     model:
       - github.com/99designs/gqlgen/graphql.Any
   Decimal:
     model:
-      - github.com/looplj/axonhub/internal/objects.Decimal
+      - github.com/ldm2060/axonhub/internal/objects.Decimal
   DecimalInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.Decimal
+      - github.com/ldm2060/axonhub/internal/objects.Decimal
   ModelMapping:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelMapping
+      - github.com/ldm2060/axonhub/internal/objects.ModelMapping
   ModelMappingInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelMapping
+      - github.com/ldm2060/axonhub/internal/objects.ModelMapping
   ProxyType:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProxyType
+      - github.com/ldm2060/axonhub/internal/objects.ProxyType
   ProxyConfig:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProxyConfig
+      - github.com/ldm2060/axonhub/internal/objects.ProxyConfig
   ProxyConfigInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProxyConfig
+      - github.com/ldm2060/axonhub/internal/objects.ProxyConfig
   CapabilityPolicy:
     model:
-      - github.com/looplj/axonhub/internal/objects.CapabilityPolicy
+      - github.com/ldm2060/axonhub/internal/objects.CapabilityPolicy
   ChannelEndpoint:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelEndpoint
+      - github.com/ldm2060/axonhub/internal/objects.ChannelEndpoint
   ChannelEndpointInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelEndpoint
+      - github.com/ldm2060/axonhub/internal/objects.ChannelEndpoint
   ChannelPolicies:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelPolicies
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPolicies
   ChannelPoliciesInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelPolicies
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPolicies
   ChannelSettings:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelSettings
+      - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
   ChannelSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelSettings
+      - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
   ChannelRateLimit:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelRateLimit
+      - github.com/ldm2060/axonhub/internal/objects.ChannelRateLimit
   ChannelRateLimitInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelRateLimit
+      - github.com/ldm2060/axonhub/internal/objects.ChannelRateLimit
   ChannelCredentials:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelCredentials
+      - github.com/ldm2060/axonhub/internal/objects.ChannelCredentials
   ChannelCredentialsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelCredentials
+      - github.com/ldm2060/axonhub/internal/objects.ChannelCredentials
   OAuthCredentials:
     model:
-      - github.com/looplj/axonhub/internal/objects.OAuthCredentials
+      - github.com/ldm2060/axonhub/internal/objects.OAuthCredentials
   OAuthCredentialsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.OAuthCredentials
+      - github.com/ldm2060/axonhub/internal/objects.OAuthCredentials
   BulkCreateChannelsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.BulkCreateChannelsInput
+      - github.com/ldm2060/axonhub/internal/server/biz.BulkCreateChannelsInput
   SaveChannelEndpointsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SaveChannelEndpointsInput
+      - github.com/ldm2060/axonhub/internal/server/biz.SaveChannelEndpointsInput
   QueryChannelInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.QueryChannelsInput
+      - github.com/ldm2060/axonhub/internal/server/biz.QueryChannelsInput
   StoragePolicy:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.StoragePolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.StoragePolicy
   CleanupOption:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.CleanupOption
+      - github.com/ldm2060/axonhub/internal/server/biz.CleanupOption
   UpdateStoragePolicyInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.StoragePolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.StoragePolicy
   CleanupOptionInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.CleanupOption
+      - github.com/ldm2060/axonhub/internal/server/biz.CleanupOption
   RetryPolicy:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.RetryPolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.RetryPolicy
   UpdateRetryPolicyInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.RetryPolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.RetryPolicy
   WebhookNotifierConfig:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookNotifierConfig
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookNotifierConfig
   WebhookNotifierConfigInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookNotifierConfig
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookNotifierConfig
   WebhookTarget:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookTarget
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookTarget
   WebhookTargetInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookTarget
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookTarget
   WebhookSubscription:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookSubscription
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookSubscription
   WebhookSubscriptionInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.WebhookSubscription
+      - github.com/ldm2060/axonhub/internal/server/biz.WebhookSubscription
   AutoDisableChannel:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.AutoDisableChannel
+      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannel
   AutoDisableChannelStatus:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.AutoDisableChannelStatus
+      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannelStatus
   AutoDisableChannelInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.AutoDisableChannel
+      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannel
   AutoDisableChannelStatusInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.AutoDisableChannelStatus
+      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannelStatus
   UpstreamErrorPolicy:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.UpstreamErrorPolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.UpstreamErrorPolicy
   UpstreamErrorPolicyInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.UpstreamErrorPolicy
+      - github.com/ldm2060/axonhub/internal/server/biz.UpstreamErrorPolicy
   UpdateAPIKeyProfilesInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfiles
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfiles
   APIKeyProfileInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfile
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfile
   APIKeyProfiles:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfiles
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfiles
   APIKeyProfile:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyProfile
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyProfile
   UpdateProjectProfilesInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProjectProfiles
+      - github.com/ldm2060/axonhub/internal/objects.ProjectProfiles
   ProjectProfileInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProjectProfile
+      - github.com/ldm2060/axonhub/internal/objects.ProjectProfile
   ProjectProfiles:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProjectProfiles
+      - github.com/ldm2060/axonhub/internal/objects.ProjectProfiles
   ProjectProfile:
     model:
-      - github.com/looplj/axonhub/internal/objects.ProjectProfile
+      - github.com/ldm2060/axonhub/internal/objects.ProjectProfile
   ChannelTagsMatchMode:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsMatchMode
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsMatchMode
   APIKeyQuotaInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuota
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuota
   APIKeyQuota:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuota
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuota
   APIKeyQuotaPeriodInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriod
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriod
   APIKeyQuotaPeriod:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriod
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriod
   APIKeyQuotaPeriodType:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPeriodType
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPeriodType
   APIKeyQuotaPastDurationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDuration
   APIKeyQuotaPastDuration:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDuration
   APIKeyQuotaPastDurationUnit:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaPastDurationUnit
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaPastDurationUnit
   APIKeyQuotaCalendarDurationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDuration
   APIKeyQuotaCalendarDuration:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDuration
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDuration
   APIKeyQuotaCalendarDurationUnit:
     model:
-      - github.com/looplj/axonhub/internal/objects.APIKeyQuotaCalendarDurationUnit
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyQuotaCalendarDurationUnit
   BackupOptionsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/backup.BackupOptions
+      - github.com/ldm2060/axonhub/internal/server/backup.BackupOptions
   RestoreOptionsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/backup.RestoreOptions
+      - github.com/ldm2060/axonhub/internal/server/backup.RestoreOptions
   BackupConflictStrategy:
     model:
-      - github.com/looplj/axonhub/internal/server/backup.ConflictStrategy
+      - github.com/ldm2060/axonhub/internal/server/backup.ConflictStrategy
   GCPCredential:
     model:
-      - github.com/looplj/axonhub/internal/objects.GCPCredential
+      - github.com/ldm2060/axonhub/internal/objects.GCPCredential
   GCPCredentialInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.GCPCredential
+      - github.com/ldm2060/axonhub/internal/objects.GCPCredential
   ModelIdentify:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ModelIdentify
+      - github.com/ldm2060/axonhub/internal/server/biz.ModelIdentify
   UserInfo:
     model:
-      - github.com/looplj/axonhub/internal/objects.UserInfo
+      - github.com/ldm2060/axonhub/internal/objects.UserInfo
   RoleInfo:
     model:
-      - github.com/looplj/axonhub/internal/objects.RoleInfo
+      - github.com/ldm2060/axonhub/internal/objects.RoleInfo
   UserProjectInfo:
     model:
-      - github.com/looplj/axonhub/internal/objects.UserProjectInfo
+      - github.com/ldm2060/axonhub/internal/objects.UserProjectInfo
   DataStorageSettings:
     model:
-      - github.com/looplj/axonhub/internal/objects.DataStorageSettings
+      - github.com/ldm2060/axonhub/internal/objects.DataStorageSettings
   DataStorageSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.DataStorageSettings
+      - github.com/ldm2060/axonhub/internal/objects.DataStorageSettings
   S3:
     model:
-      - github.com/looplj/axonhub/internal/objects.S3
+      - github.com/ldm2060/axonhub/internal/objects.S3
   S3Input:
     model:
-      - github.com/looplj/axonhub/internal/objects.S3
+      - github.com/ldm2060/axonhub/internal/objects.S3
   GCS:
     model:
-      - github.com/looplj/axonhub/internal/objects.GCS
+      - github.com/ldm2060/axonhub/internal/objects.GCS
   GCSInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.GCS
+      - github.com/ldm2060/axonhub/internal/objects.GCS
   WebDAV:
     model:
-      - github.com/looplj/axonhub/internal/objects.WebDAV
+      - github.com/ldm2060/axonhub/internal/objects.WebDAV
   WebDAVInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.WebDAV
+      - github.com/ldm2060/axonhub/internal/objects.WebDAV
   Segment:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.Segment
+      - github.com/ldm2060/axonhub/internal/server/biz.Segment
   RequestMetadata:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.RequestMetadata
+      - github.com/ldm2060/axonhub/internal/server/biz.RequestMetadata
   UsageMetadata:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.UsageMetadata
+      - github.com/ldm2060/axonhub/internal/server/biz.UsageMetadata
   Span:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.Span
+      - github.com/ldm2060/axonhub/internal/server/biz.Span
   SpanValue:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanValue
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanValue
   SpanUserQuery:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanUserQuery
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanUserQuery
   SpanUserImageURL:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanUserImageURL
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanUserImageURL
   SpanThinking:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanThinking
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanThinking
   SpanText:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanText
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanText
   SpanImageURL:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanImageURL
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanImageURL
   SpanFunctionCall:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanFunctionCall
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanFunctionCall
   SpanFunctionResult:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanFunctionResult
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanFunctionResult
   SpanToolUse:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanToolUse
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanToolUse
   SpanToolResult:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanToolResult
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanToolResult
   SpanSystemInstruction:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SpanSystemInstruction
+      - github.com/ldm2060/axonhub/internal/server/biz.SpanSystemInstruction
   SpanType:
     model:
       - string
   ModelIdentityWithStatus:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ModelIdentityWithStatus
+      - github.com/ldm2060/axonhub/internal/server/biz.ModelIdentityWithStatus
   SaveChannelModelPriceInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SaveChannelModelPriceInput
+      - github.com/ldm2060/axonhub/internal/server/biz.SaveChannelModelPriceInput
   ModelPrice:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelPrice
+      - github.com/ldm2060/axonhub/internal/objects.ModelPrice
   ModelPriceInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelPrice
+      - github.com/ldm2060/axonhub/internal/objects.ModelPrice
   ModelPriceItem:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelPriceItem
+      - github.com/ldm2060/axonhub/internal/objects.ModelPriceItem
   ModelPriceItemInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelPriceItem
+      - github.com/ldm2060/axonhub/internal/objects.ModelPriceItem
   Pricing:
     model:
-      - github.com/looplj/axonhub/internal/objects.Pricing
+      - github.com/ldm2060/axonhub/internal/objects.Pricing
   PricingInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.Pricing
+      - github.com/ldm2060/axonhub/internal/objects.Pricing
   TieredPricing:
     model:
-      - github.com/looplj/axonhub/internal/objects.TieredPricing
+      - github.com/ldm2060/axonhub/internal/objects.TieredPricing
   TieredPricingInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.TieredPricing
+      - github.com/ldm2060/axonhub/internal/objects.TieredPricing
   PriceTier:
     model:
-      - github.com/looplj/axonhub/internal/objects.PriceTier
+      - github.com/ldm2060/axonhub/internal/objects.PriceTier
   PriceTierInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PriceTier
+      - github.com/ldm2060/axonhub/internal/objects.PriceTier
   PromptWriteCacheVariant:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptWriteCacheVariant
+      - github.com/ldm2060/axonhub/internal/objects.PromptWriteCacheVariant
   PromptWriteCacheVariantInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptWriteCacheVariant
+      - github.com/ldm2060/axonhub/internal/objects.PromptWriteCacheVariant
   PricingMode:
     model:
-      - github.com/looplj/axonhub/internal/objects.PricingMode
+      - github.com/ldm2060/axonhub/internal/objects.PricingMode
   PriceItemCode:
     model:
-      - github.com/looplj/axonhub/internal/objects.PriceItemCode
+      - github.com/ldm2060/axonhub/internal/objects.PriceItemCode
   PromptWriteCacheVariantCode:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptWriteCacheVariantCode
+      - github.com/ldm2060/axonhub/internal/objects.PromptWriteCacheVariantCode
   ModelCard:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCard
+      - github.com/ldm2060/axonhub/internal/objects.ModelCard
   ModelCardInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCard
+      - github.com/ldm2060/axonhub/internal/objects.ModelCard
   ModelCardReasoning:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardReasoning
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardReasoning
   ModelCardReasoningInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardReasoning
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardReasoning
   ModelCardModalities:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardModalities
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardModalities
   ModelCardModalitiesInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardModalities
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardModalities
   ModelCardCost:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardCost
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardCost
   ModelCardCostInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardCost
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardCost
   ModelCardLimit:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardLimit
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardLimit
   ModelCardLimitInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelCardLimit
+      - github.com/ldm2060/axonhub/internal/objects.ModelCardLimit
   ModelSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelSettings
+      - github.com/ldm2060/axonhub/internal/objects.ModelSettings
   ModelSettings:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelSettings
+      - github.com/ldm2060/axonhub/internal/objects.ModelSettings
   ModelAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ModelAssociation
   ModelAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ModelAssociation
   ModelAssociationWhen:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelAssociationWhen
+      - github.com/ldm2060/axonhub/internal/objects.ModelAssociationWhen
   ModelAssociationWhenInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelAssociationWhen
+      - github.com/ldm2060/axonhub/internal/objects.ModelAssociationWhen
   FilterConditionType:
     model:
-      - github.com/looplj/axonhub/internal/objects.ConditionType
+      - github.com/ldm2060/axonhub/internal/objects.ConditionType
   FilterCondition:
     model:
-      - github.com/looplj/axonhub/internal/objects.Condition
+      - github.com/ldm2060/axonhub/internal/objects.Condition
   FilterConditionInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.Condition
+      - github.com/ldm2060/axonhub/internal/objects.Condition
   ChannelModelAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelModelAssociation
   ChannelModelAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelModelAssociation
   ChannelRegexAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelRegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelRegexAssociation
   ChannelRegexAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelRegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelRegexAssociation
   RegexAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.RegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.RegexAssociation
   RegexAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.RegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.RegexAssociation
   ModelIDAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelIDAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ModelIDAssociation
   ModelIDAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ModelIDAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ModelIDAssociation
   ExcludeAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ExcludeAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ExcludeAssociation
   ExcludeAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ExcludeAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ExcludeAssociation
   ChannelTagsModelAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsModelAssociation
   ChannelTagsModelAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsModelAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsModelAssociation
   ChannelTagsRegexAssociation:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsRegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsRegexAssociation
   ChannelTagsRegexAssociationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.ChannelTagsRegexAssociation
+      - github.com/ldm2060/axonhub/internal/objects.ChannelTagsRegexAssociation
   ModelChannelConnection:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ModelChannelConnection
+      - github.com/ldm2060/axonhub/internal/server/biz.ModelChannelConnection
   ChannelModelEntry:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelModelEntry
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelModelEntry
   UnassociatedChannel:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.UnassociatedChannel
+      - github.com/ldm2060/axonhub/internal/server/biz.UnassociatedChannel
   HeaderEntry:
     model:
-      - github.com/looplj/axonhub/internal/objects.HeaderEntry
+      - github.com/ldm2060/axonhub/internal/objects.HeaderEntry
   HeaderEntryInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.HeaderEntry
+      - github.com/ldm2060/axonhub/internal/objects.HeaderEntry
   OverrideOperation:
     model:
-      - github.com/looplj/axonhub/internal/objects.OverrideOperation
+      - github.com/ldm2060/axonhub/internal/objects.OverrideOperation
   OverrideOperationInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.OverrideOperation
+      - github.com/ldm2060/axonhub/internal/objects.OverrideOperation
   TierCost:
     model:
-      - github.com/looplj/axonhub/internal/objects.TierCost
+      - github.com/ldm2060/axonhub/internal/objects.TierCost
   CostItem:
     model:
-      - github.com/looplj/axonhub/internal/objects.CostItem
+      - github.com/ldm2060/axonhub/internal/objects.CostItem
   TierCostInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.TierCost
+      - github.com/ldm2060/axonhub/internal/objects.TierCost
   CostItemInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.CostItem
+      - github.com/ldm2060/axonhub/internal/objects.CostItem
   TransformOptions:
     model:
-      - github.com/looplj/axonhub/internal/objects.TransformOptions
+      - github.com/ldm2060/axonhub/internal/objects.TransformOptions
   TransformOptionsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.TransformOptions
+      - github.com/ldm2060/axonhub/internal/objects.TransformOptions
   SystemVersion:
     model:
-      - github.com/looplj/axonhub/internal/build.Info
+      - github.com/ldm2060/axonhub/internal/build.Info
   SystemModelSettings:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemModelSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemModelSettings
   UpdateSystemModelSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemModelSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemModelSettings
   SystemChannelSettings:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemChannelSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemChannelSettings
   UpdateSystemChannelSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemChannelSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemChannelSettings
   SystemGeneralSettings:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemGeneralSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemGeneralSettings
   UpdateSystemGeneralSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.SystemGeneralSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.SystemGeneralSettings
   VideoStorageSettings:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.VideoStorageSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.VideoStorageSettings
   UpdateVideoStorageSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.VideoStorageSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.VideoStorageSettings
   ProxyPreset:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ProxyPreset
+      - github.com/ldm2060/axonhub/internal/server/biz.ProxyPreset
   SaveProxyPresetInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ProxyPreset
+      - github.com/ldm2060/axonhub/internal/server/biz.ProxyPreset
   ChannelProbeSetting:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelProbeSetting
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelProbeSetting
   UpdateChannelProbeSettingInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelProbeSetting
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelProbeSetting
   ChannelModelAutoSyncSetting:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelModelAutoSyncSetting
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelModelAutoSyncSetting
   UpdateChannelModelAutoSyncSettingInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelModelAutoSyncSetting
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelModelAutoSyncSetting
   ChannelProbePoint:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelProbePoint
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelProbePoint
   ChannelProbeData:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ChannelProbeData
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelProbeData
   GetChannelProbeDataInput:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.GetChannelProbeDataInput
+      - github.com/ldm2060/axonhub/internal/server/biz.GetChannelProbeDataInput
   ProbeFrequency:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.ProbeFrequency
+      - github.com/ldm2060/axonhub/internal/server/biz.ProbeFrequency
   AutoSyncFrequency:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.AutoSyncFrequency
+      - github.com/ldm2060/axonhub/internal/server/biz.AutoSyncFrequency
   QuotaEnforcementMode:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.QuotaEnforcementMode
+      - github.com/ldm2060/axonhub/internal/server/biz.QuotaEnforcementMode
   TriggerGcCleanupInput:
     model:
-      - github.com/looplj/axonhub/internal/server/gc.TriggerGcCleanupInput
+      - github.com/ldm2060/axonhub/internal/server/gc.TriggerGcCleanupInput
   GcCleanupPreviewItem:
     model:
-      - github.com/looplj/axonhub/internal/server/gc.GcCleanupPreviewItem
+      - github.com/ldm2060/axonhub/internal/server/gc.GcCleanupPreviewItem
   PromptSettings:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptSettings
+      - github.com/ldm2060/axonhub/internal/objects.PromptSettings
   PromptSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptSettings
+      - github.com/ldm2060/axonhub/internal/objects.PromptSettings
   PromptProtectionSettings:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptProtectionSettings
+      - github.com/ldm2060/axonhub/internal/objects.PromptProtectionSettings
   PromptProtectionSettingsInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptProtectionSettings
+      - github.com/ldm2060/axonhub/internal/objects.PromptProtectionSettings
   PromptProtectionAction:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptProtectionAction
+      - github.com/ldm2060/axonhub/internal/objects.PromptProtectionAction
   PromptProtectionScope:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptProtectionScope
+      - github.com/ldm2060/axonhub/internal/objects.PromptProtectionScope
   PromptAction:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptAction
+      - github.com/ldm2060/axonhub/internal/objects.PromptAction
   PromptActionInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptAction
+      - github.com/ldm2060/axonhub/internal/objects.PromptAction
   PromptActivationCondition:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActivationCondition
+      - github.com/ldm2060/axonhub/internal/objects.PromptActivationCondition
   PromptActivationConditionInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActivationCondition
+      - github.com/ldm2060/axonhub/internal/objects.PromptActivationCondition
   PromptActionType:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActionType
+      - github.com/ldm2060/axonhub/internal/objects.PromptActionType
   PromptActivationConditionType:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActivationConditionType
+      - github.com/ldm2060/axonhub/internal/objects.PromptActivationConditionType
   PromptActivationConditionComposite:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActivationConditionComposite
+      - github.com/ldm2060/axonhub/internal/objects.PromptActivationConditionComposite
   PromptActivationConditionCompositeInput:
     model:
-      - github.com/looplj/axonhub/internal/objects.PromptActivationConditionComposite
+      - github.com/ldm2060/axonhub/internal/objects.PromptActivationConditionComposite
   DisabledAPIKey:
     model:
-      - github.com/looplj/axonhub/internal/objects.DisabledAPIKey
+      - github.com/ldm2060/axonhub/internal/objects.DisabledAPIKey
   DeleteDisabledAPIKeysPayload:
     model:
-      - github.com/looplj/axonhub/internal/server/biz.DeleteDisabledAPIKeysResult
+      - github.com/ldm2060/axonhub/internal/server/biz.DeleteDisabledAPIKeysResult

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/request"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/transformer"
 )
 
 type VideoService struct {

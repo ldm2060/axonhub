@@ -10,10 +10,10 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/streams"
-	"github.com/looplj/axonhub/llm/transformer/shared"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer/shared"
 )
 
 // ErrStreamIncomplete is returned when the stream ends without a terminal event

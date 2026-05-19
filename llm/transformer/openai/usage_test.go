@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 func TestUsage_ToLLMUsage(t *testing.T) {

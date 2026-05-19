@@ -10,7 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/vmihailenco/msgpack/v5"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 //nolint:errcheck,gosec // ignore error check.

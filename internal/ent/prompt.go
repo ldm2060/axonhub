@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/looplj/axonhub/internal/ent/prompt"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent/prompt"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // Prompt is the model entity for the Prompt schema.

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/looplj/axonhub/openai_test/internal/testutil"
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 func TestDisableTraceAndThread(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 // OnboardingModule represents a granular onboarding module.

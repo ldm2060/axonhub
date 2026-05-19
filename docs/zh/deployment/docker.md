@@ -9,7 +9,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/looplj/axonhub.git
+git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 ```
 
@@ -65,7 +65,7 @@ version: '3.8'
 
 services:
   axonhub:
-    image: looplj/axonhub:latest
+    image: ldm2060/axonhub:latest
     ports:
       - "8090:8090"
     volumes:
@@ -88,7 +88,7 @@ version: '3.8'
 
 services:
   axonhub:
-    image: looplj/axonhub:latest
+    image: ldm2060/axonhub:latest
     ports:
       - "8090:8090"
     volumes:
@@ -257,7 +257,7 @@ axonhub:
 ```yaml
 services:
   axonhub:
-    image: looplj/axonhub:latest
+    image: ldm2060/axonhub:latest
     deploy:
       replicas: 3
     networks:

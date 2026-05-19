@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // Dumper is responsible for dumping data to files when errors occur.

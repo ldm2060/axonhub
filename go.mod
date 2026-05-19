@@ -1,4 +1,4 @@
-module github.com/looplj/axonhub
+module github.com/ldm2060/axonhub
 
 go 1.26.0
 
@@ -45,8 +45,8 @@ require (
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/kaptinlin/jsonrepair v0.2.4
-	github.com/looplj/afero-s3 v0.1.0
-	github.com/looplj/afero-webdav v0.0.0-20260128073818-3f60e732e991
+	github.com/ldm2060/afero-s3 v0.1.0
+	github.com/ldm2060/afero-webdav v0.0.0-20260128073818-3f60e732e991
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/samber/lo v1.52.0
@@ -83,14 +83,14 @@ require (
 	github.com/tmaxmax/go-sse v0.11.0 // indirect
 )
 
-// Replace gqlgen with looplj/gqlgen to add type conversion between GUID and int.
-replace github.com/99designs/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
+// Replace gqlgen with ldm2060/gqlgen to add type conversion between GUID and int.
+replace github.com/99designs/gqlgen => github.com/ldm2060/gqlgen v0.0.0-20251206072334-03e453169896
 
-// Replace go-sse with looplj/go-sse to add Stream type.
-replace github.com/tmaxmax/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
+// Replace go-sse with ldm2060/go-sse to add Stream type.
+replace github.com/tmaxmax/go-sse => github.com/ldm2060/go-sse v0.0.0-20250909130008-e74a1155bc3b
 
-// Replace gin-contrib/sse with looplj/sse to add space after data: to improve compatibility.
-replace github.com/gin-contrib/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
+// Replace gin-contrib/sse with ldm2060/sse to add space after data: to improve compatibility.
+replace github.com/gin-contrib/sse => github.com/ldm2060/sse v0.0.0-20260223020440-b463add2d52f
 
 require (
 	ariga.io/atlas v0.38.0 // indirect
@@ -168,7 +168,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/looplj/axonhub/llm v0.0.0
+	github.com/ldm2060/axonhub/llm v0.0.0
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
@@ -234,4 +234,4 @@ require (
 
 tool github.com/99designs/gqlgen
 
-replace github.com/looplj/axonhub/llm => ./llm
+replace github.com/ldm2060/axonhub/llm => ./llm

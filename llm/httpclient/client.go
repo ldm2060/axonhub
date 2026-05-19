@@ -13,7 +13,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // HttpClient implements the HttpClient interface.

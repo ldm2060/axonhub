@@ -15,12 +15,12 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/migrate"
-	"github.com/looplj/axonhub/internal/ent/migrate/datamigrate"
-	"github.com/looplj/axonhub/internal/ent/migrate/schemahook"
-	_ "github.com/looplj/axonhub/internal/ent/runtime"
-	_ "github.com/looplj/axonhub/internal/pkg/sqlite"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/migrate"
+	"github.com/ldm2060/axonhub/internal/ent/migrate/datamigrate"
+	"github.com/ldm2060/axonhub/internal/ent/migrate/schemahook"
+	_ "github.com/ldm2060/axonhub/internal/ent/runtime"
+	_ "github.com/ldm2060/axonhub/internal/pkg/sqlite"
 )
 
 // NewEntClient creates an Ent client. When read_replica.read_dsn is configured,

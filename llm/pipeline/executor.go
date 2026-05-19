@@ -3,8 +3,8 @@ package pipeline
 import (
 	"context"
 
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // Executor interface for making HTTP requests.

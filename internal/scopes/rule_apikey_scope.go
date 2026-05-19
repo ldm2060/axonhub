@@ -6,8 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/entql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/privacy"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
 
 // APIKeyScopeQueryRule checks API Key permissions for queries.

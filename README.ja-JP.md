@@ -9,9 +9,9 @@
 
 <div align="center">
 
-[![Test Status](https://github.com/looplj/axonhub/actions/workflows/test.yml/badge.svg)](https://github.com/looplj/axonhub/actions/workflows/test.yml)
-[![Lint Status](https://github.com/looplj/axonhub/actions/workflows/lint.yml/badge.svg)](https://github.com/looplj/axonhub/actions/workflows/lint.yml)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/looplj/axonhub?logo=go&logoColor=white)](https://golang.org/)
+[![Test Status](https://github.com/ldm2060/axonhub/actions/workflows/test.yml/badge.svg)](https://github.com/ldm2060/axonhub/actions/workflows/test.yml)
+[![Lint Status](https://github.com/ldm2060/axonhub/actions/workflows/lint.yml/badge.svg)](https://github.com/ldm2060/axonhub/actions/workflows/lint.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ldm2060/axonhub?logo=go&logoColor=white)](https://golang.org/)
 [![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](https://docker.com)
 
 [English](README.md) | [中文](README.zh-CN.md) | [日本語](README.ja-JP.md)
@@ -174,7 +174,7 @@ AxonHubの動作画面をご覧ください：
 
 ```bash
 # ダウンロードして展開（macOS ARM64の例）
-curl -sSL https://github.com/looplj/axonhub/releases/latest/download/axonhub_darwin_arm64.tar.gz | tar xz
+curl -sSL https://github.com/ldm2060/axonhub/releases/latest/download/axonhub_darwin_arm64.tar.gz | tar xz
 cd axonhub_*
 
 # SQLiteで実行（デフォルト）
@@ -213,7 +213,7 @@ response = client.chat.completions.create(
 
 <div>
 
-<a href="https://render.com/deploy?repo=https://github.com/looplj/axonhub">
+<a href="https://render.com/deploy?repo=https://github.com/ldm2060/axonhub">
   <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render">
 </a>
 
@@ -229,7 +229,7 @@ response = client.chat.completions.create(
 
 #### ダウンロードと実行
 
-1. **最新リリースをダウンロード** - [GitHub Releases](https://github.com/looplj/axonhub/releases)から
+1. **最新リリースをダウンロード** - [GitHub Releases](https://github.com/ldm2060/axonhub/releases)から
 
    - お使いのオペレーティングシステムに合ったバージョンを選択してください：
 
@@ -315,7 +315,7 @@ AXONHUB_LOG_LEVEL=info
 
 ```bash
 # プロジェクトをクローン
-git clone https://github.com/looplj/axonhub.git
+git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 
 # 環境変数を設定
@@ -335,7 +335,7 @@ docker-compose ps
 
 ```bash
 # クイックインストール
-git clone https://github.com/looplj/axonhub.git
+git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 helm install axonhub ./deploy/helm
 
@@ -361,7 +361,7 @@ kubectl port-forward svc/axonhub 8090:8090
 
 #### 仮想マシンデプロイ
 
-[GitHub Releases](https://github.com/looplj/axonhub/releases)から最新リリースをダウンロードしてください
+[GitHub Releases](https://github.com/ldm2060/axonhub/releases)から最新リリースをダウンロードしてください
 
 ```bash
 # 展開して実行
@@ -489,7 +489,7 @@ SDKの詳細な使用例とコードサンプルについては、APIドキュ�
 
 **AxonHub** - オールインワンAI開発プラットフォーム、AI開発をよりシンプルに
 
-[🏠 ホームページ](https://github.com/looplj/axonhub) • [📚 ドキュメント](https://deepwiki.com/looplj/axonhub) • [🐛 問題報告](https://github.com/looplj/axonhub/issues)
+[🏠 ホームページ](https://github.com/ldm2060/axonhub) • [📚 ドキュメント](https://deepwiki.com/ldm2060/axonhub) • [🐛 問題報告](https://github.com/ldm2060/axonhub/issues)
 
 AxonHubチームが ❤️ を込めて開発
 

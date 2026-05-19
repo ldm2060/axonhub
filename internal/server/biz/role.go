@@ -8,10 +8,10 @@ import (
 	"github.com/samber/lo"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/role"
-	"github.com/looplj/axonhub/internal/ent/userrole"
-	"github.com/looplj/axonhub/internal/pkg/xerrors"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 )
 
 type RoleServiceParams struct {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 func TestWithTrace(t *testing.T) {

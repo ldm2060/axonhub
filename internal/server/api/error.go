@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // JSONError returns a JSON error response and adds the error to gin context for access logging.

@@ -7,10 +7,10 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/migrate"
-	"github.com/looplj/axonhub/internal/ent/migrate/schemahook"
-	_ "github.com/looplj/axonhub/internal/pkg/sqlite"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/migrate"
+	"github.com/ldm2060/axonhub/internal/ent/migrate/schemahook"
+	_ "github.com/ldm2060/axonhub/internal/pkg/sqlite"
 )
 
 func NewEntClient(t TestingT, driverName, dataSourceName string) *ent.Client {

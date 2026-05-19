@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/looplj/axonhub/gemini_test/internal/testutil"
+	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 	"google.golang.org/genai"
 )
 

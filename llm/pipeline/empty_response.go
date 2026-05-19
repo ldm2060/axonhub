@@ -3,7 +3,7 @@ package pipeline
 import (
 	"errors"
 
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 // ErrEmptyResponse indicates the response contains no meaningful content.

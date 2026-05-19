@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 func TestSelectAPIFormat(t *testing.T) {

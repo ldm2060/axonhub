@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 func TestWithAPIKeyConfig_RejectsNoAuthKeyWhenDisabled(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/looplj/axonhub/internal/ent/oidcidentity"
-	"github.com/looplj/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // OIDCIdentity is the model entity for the OIDCIdentity schema.

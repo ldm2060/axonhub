@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/looplj/axonhub/internal/ent/oidcidentity"
-	"github.com/looplj/axonhub/internal/ent/predicate"
+	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
+	"github.com/ldm2060/axonhub/internal/ent/predicate"
 )
 
 // OIDCIdentityDelete is the builder for deleting a OIDCIdentity entity.

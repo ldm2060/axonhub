@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // Request represents a generic HTTP request that can be adapted to different providers.

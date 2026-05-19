@@ -3,7 +3,7 @@ package orchestrator
 import (
 	"sync"
 
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // ChannelLimiterManager owns one ChannelLimiter per channel, recreating an entry

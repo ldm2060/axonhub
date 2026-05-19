@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 // QuotaChecker checks quota status for a provider.

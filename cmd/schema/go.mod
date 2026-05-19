@@ -1,20 +1,20 @@
-module github.com/looplj/axonhub/cmd/schema
+module github.com/ldm2060/axonhub/cmd/schema
 
 go 1.26.0
 
-replace github.com/looplj/axonhub => ../../
+replace github.com/ldm2060/axonhub => ../../
 
-replace github.com/looplj/axonhub/llm => ../../llm
+replace github.com/ldm2060/axonhub/llm => ../../llm
 
-replace github.com/99designs/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
+replace github.com/99designs/gqlgen => github.com/ldm2060/gqlgen v0.0.0-20251206072334-03e453169896
 
-replace github.com/tmaxmax/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
+replace github.com/tmaxmax/go-sse => github.com/ldm2060/go-sse v0.0.0-20250909130008-e74a1155bc3b
 
-replace github.com/gin-contrib/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
+replace github.com/gin-contrib/sse => github.com/ldm2060/sse v0.0.0-20260223020440-b463add2d52f
 
 require (
 	github.com/invopop/jsonschema v0.13.0
-	github.com/looplj/axonhub v0.0.0
+	github.com/ldm2060/axonhub v0.0.0
 	go.uber.org/zap v1.27.1
 )
 
@@ -124,9 +124,9 @@ require (
 	github.com/kaptinlin/jsonrepair v0.2.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/looplj/afero-s3 v0.1.0 // indirect
-	github.com/looplj/afero-webdav v0.0.0-20260128073818-3f60e732e991 // indirect
-	github.com/looplj/axonhub/llm v0.0.0 // indirect
+	github.com/ldm2060/afero-s3 v0.1.0 // indirect
+	github.com/ldm2060/afero-webdav v0.0.0-20260128073818-3f60e732e991 // indirect
+	github.com/ldm2060/axonhub/llm v0.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

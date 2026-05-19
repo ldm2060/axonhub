@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/apikeyprofiletemplate"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikeyprofiletemplate"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 type APIKeyProfileTemplateServiceParams struct {

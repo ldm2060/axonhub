@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/auth"
-	"github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/auth"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 func TestBailianTransformRequest_MergeConsecutiveToolCalls(t *testing.T) {

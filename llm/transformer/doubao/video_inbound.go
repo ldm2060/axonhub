@@ -10,11 +10,11 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/streams"
-	"github.com/looplj/axonhub/llm/transformer"
-	oai "github.com/looplj/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer"
+	oai "github.com/ldm2060/axonhub/llm/transformer/openai"
 )
 
 // VideoInboundTransformer handles Seedance-compatible API payloads.

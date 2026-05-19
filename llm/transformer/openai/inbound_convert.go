@@ -3,7 +3,7 @@ package openai
 import (
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 // ToLLMToolCall converts OpenAI ToolCall to unified llm.ToolCall.

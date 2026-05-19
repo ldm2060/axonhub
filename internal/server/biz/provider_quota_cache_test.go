@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	"github.com/looplj/axonhub/internal/ent/providerquotastatus"
-	"github.com/looplj/axonhub/internal/server/biz/provider_quota"
+	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/stretchr/testify/assert"
 )
 

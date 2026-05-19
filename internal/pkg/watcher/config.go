@@ -1,7 +1,7 @@
 package watcher
 
 import (
-	"github.com/looplj/axonhub/internal/pkg/xredis"
+	"github.com/ldm2060/axonhub/internal/pkg/xredis"
 )
 
 const (

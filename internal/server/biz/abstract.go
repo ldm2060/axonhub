@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/looplj/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent"
 )
 
 type AbstractService struct {

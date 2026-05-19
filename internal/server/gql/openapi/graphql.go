@@ -12,8 +12,8 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"go.uber.org/fx"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 type GraphqlHandler struct {

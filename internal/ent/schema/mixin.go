@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
-	"github.com/looplj/axonhub/internal/pkg/xtime"
+	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 )
 
 // TimeMixin implements the ent.Mixin for sharing

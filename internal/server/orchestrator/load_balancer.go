@@ -9,8 +9,8 @@ import (
 	"github.com/samber/lo"
 	"github.com/viterin/partial"
 
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // ChannelMetricsProvider provides channel performance metrics.

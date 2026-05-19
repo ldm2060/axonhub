@@ -1,6 +1,6 @@
 package openai
 
-import "github.com/looplj/axonhub/llm"
+import "github.com/ldm2060/axonhub/llm"
 
 type CompletionRequest struct {
 	Model            string             `json:"model"`

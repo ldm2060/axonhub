@@ -9,8 +9,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // CreateLLMAPIKey is the resolver for the createLLMAPIKey field.

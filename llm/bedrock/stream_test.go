@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream/eventstreamapi"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // mockReadCloser implements io.ReadCloser for testing.

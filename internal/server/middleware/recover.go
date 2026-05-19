@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/looplj/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/log"
 )
 
 // Recovery returns a middleware that recovers from any panics and logs detailed error information.

@@ -3,7 +3,7 @@ package openai
 import (
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm"
 )
 
 // RequestFromLLM creates OpenAI Request from unified llm.Request with reasoning field configuration.

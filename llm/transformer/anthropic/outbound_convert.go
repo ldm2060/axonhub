@@ -3,10 +3,10 @@ package anthropic
 import (
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/internal/pkg/xjson"
-	"github.com/looplj/axonhub/llm/internal/pkg/xurl"
-	"github.com/looplj/axonhub/llm/transformer/shared"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
+	"github.com/ldm2060/axonhub/llm/transformer/shared"
 )
 
 // convertToAnthropicRequest converts ChatCompletionRequest to Anthropic MessageRequest.

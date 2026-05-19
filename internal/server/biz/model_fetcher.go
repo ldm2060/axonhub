@@ -15,13 +15,13 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/transformer/anthropic/claudecode"
-	"github.com/looplj/axonhub/llm/transformer/antigravity"
-	"github.com/looplj/axonhub/llm/transformer/gemini/vertex"
-	"github.com/looplj/axonhub/llm/transformer/openai/codex"
-	"github.com/looplj/axonhub/llm/transformer/openai/copilot"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
+	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
+	"github.com/ldm2060/axonhub/llm/transformer/gemini/vertex"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/codex"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/copilot"
 )
 
 const providerConfCacheDuration = 1 * time.Hour

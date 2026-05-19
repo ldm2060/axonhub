@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/auth"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/auth"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 func TestOutboundTransformer_TransformStream_FilterEmptyEvents(t *testing.T) {

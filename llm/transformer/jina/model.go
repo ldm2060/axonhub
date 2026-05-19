@@ -1,6 +1,6 @@
 package jina
 
-import "github.com/looplj/axonhub/llm"
+import "github.com/ldm2060/axonhub/llm"
 
 type RerankRequest struct {
 	Model           string   `json:"model"`
