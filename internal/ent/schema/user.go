@@ -53,6 +53,7 @@ func (User) Fields() []ent.Field {
 			Comment("User scopes in system level: write_channels, read_channels, add_users, read_users, etc.").
 			Default([]string{}).
 			Optional(),
+			field.Int("private_project_id").Optional().Nillable().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 
@@ -65,7 +66,10 @@ func (User) Edges() []ent.Edge {
 			Annotations(
 				entgql.RelayConnection(),
 			),
-		edge.To("api_keys", APIKey.Type).
+		edge.To("owned_channels", Channel.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			edge.To("owned_models", Model.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			edge.To("private_project", Project.Type).Unique().Field("private_project_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			edge.To("api_keys", APIKey.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 				entgql.RelayConnection(),

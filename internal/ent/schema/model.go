@@ -4,6 +4,7 @@ import (
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
@@ -31,6 +32,7 @@ func (Model) Indexes() []ent.Index {
 		index.Fields("model_id", "deleted_at").
 			StorageKey("models_by_model_id").
 			Unique(),
+		index.Fields("owner_id", "deleted_at").StorageKey("models_by_owner_id"),
 	}
 }
 
@@ -53,11 +55,16 @@ func (Model) Fields() []ent.Field {
 		field.String("remark").
 			Optional().Nillable().
 			Comment("User-defined remark or note for the Model"),
+			field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
+			field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 
 func (Model) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		edge.From("owner", User.Type).Ref("owned_models").Unique().Field("owner_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+	}
 }
 
 func (Model) Annotations() []schema.Annotation {

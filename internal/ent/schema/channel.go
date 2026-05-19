@@ -29,6 +29,7 @@ func (Channel) Indexes() []ent.Index {
 		index.Fields("name", "deleted_at").
 			StorageKey("channels_by_name").
 			Unique(),
+		index.Fields("owner_id", "deleted_at").StorageKey("channels_by_owner_id"),
 	}
 }
 
@@ -147,11 +148,15 @@ func (Channel) Fields() []ent.Field {
 			Default([]objects.ChannelEndpoint{}).
 			Optional().
 			Comment("Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type."),
+			field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
+			field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 
 func (Channel) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.From("owner", User.Type).Ref("owned_channels").Unique().Field("owner_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 		edge.To("requests", Request.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
