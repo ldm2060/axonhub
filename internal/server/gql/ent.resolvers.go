@@ -130,7 +130,13 @@ func (r *channelResolver) Settings(ctx context.Context, obj *ent.Channel) (*obje
 
 // OwnerID is the resolver for the ownerID field.
 func (r *channelResolver) OwnerID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: OwnerID - ownerID"))
+	if obj.OwnerID == 0 {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.OwnerID,
+	}, nil
 }
 
 // ProviderQuotaStatus is the resolver for the providerQuotaStatus field.
@@ -270,7 +276,13 @@ func (r *modelResolver) ID(ctx context.Context, obj *ent.Model) (*objects.GUID, 
 
 // OwnerID is the resolver for the ownerID field.
 func (r *modelResolver) OwnerID(ctx context.Context, obj *ent.Model) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: OwnerID - ownerID"))
+	if obj.OwnerID == 0 {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.OwnerID,
+	}, nil
 }
 
 // ID is the resolver for the id field.
@@ -336,17 +348,29 @@ func (r *providerQuotaStatusResolver) ChannelID(ctx context.Context, obj *ent.Pr
 
 // ID is the resolver for the id field.
 func (r *publishRequestResolver) ID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypePublishRequest,
+		ID:   obj.ID,
+	}, nil
 }
 
 // RequesterID is the resolver for the requesterID field.
 func (r *publishRequestResolver) RequesterID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: RequesterID - requesterID"))
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.RequesterID,
+	}, nil
 }
 
 // ReviewerID is the resolver for the reviewerID field.
 func (r *publishRequestResolver) ReviewerID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ReviewerID - reviewerID"))
+	if obj.ReviewerID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   *obj.ReviewerID,
+	}, nil
 }
 
 // Node is the resolver for the node field.
@@ -361,7 +385,38 @@ func (r *queryResolver) Node(ctx context.Context, id objects.GUID) (ent.Noder, e
 
 // Nodes is the resolver for the nodes field.
 func (r *queryResolver) Nodes(ctx context.Context, ids []*objects.GUID) ([]ent.Noder, error) {
-	panic(fmt.Errorf("not implemented: Nodes - nodes"))
+	result := make([]ent.Noder, len(ids))
+
+	type group struct {
+		indices []int
+		ids     []int
+	}
+	groups := make(map[string]*group)
+	for i, guid := range ids {
+		g, ok := groups[guid.Type]
+		if !ok {
+			g = &group{}
+			groups[guid.Type] = g
+		}
+		g.indices = append(g.indices, i)
+		g.ids = append(g.ids, guid.ID)
+	}
+
+	for typ, g := range groups {
+		nodeType, ok := guidTypeToNodeType[typ]
+		if !ok {
+			return nil, fmt.Errorf("unknown node type: %s", typ)
+		}
+		nodes, err := r.client.Noders(ctx, g.ids, ent.WithFixedNodeType(nodeType))
+		if err != nil {
+			return nil, err
+		}
+		for j, idx := range g.indices {
+			result[idx] = nodes[j]
+		}
+	}
+
+	return result, nil
 }
 
 // APIKeys is the resolver for the apiKeys field.
@@ -513,7 +568,18 @@ func (r *queryResolver) PromptProtectionRules(ctx context.Context, after *entgql
 
 // PublishRequests is the resolver for the publishRequests field.
 func (r *queryResolver) PublishRequests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PublishRequestOrder, where *ent.PublishRequestWhereInput) (*ent.PublishRequestConnection, error) {
-	panic(fmt.Errorf("not implemented: PublishRequests - publishRequests"))
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	if orderBy != nil && orderBy.Field.String() == "CREATED_AT" {
+		orderBy.Field = ent.DefaultPublishRequestOrder.Field
+	}
+
+	return r.client.PublishRequest.Query().Paginate(ctx, after, first, before, last,
+		ent.WithPublishRequestOrder(orderBy),
+		ent.WithPublishRequestFilter(where.Filter),
+	)
 }
 
 // Requests is the resolver for the requests field.
@@ -926,7 +992,13 @@ func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*objects.GUID, er
 
 // PrivateProjectID is the resolver for the privateProjectID field.
 func (r *userResolver) PrivateProjectID(ctx context.Context, obj *ent.User) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: PrivateProjectID - privateProjectID"))
+	if obj.PrivateProjectID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeProject,
+		ID:   *obj.PrivateProjectID,
+	}, nil
 }
 
 // ProjectUsers is the resolver for the projectUsers field.

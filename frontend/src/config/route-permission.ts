@@ -147,6 +147,11 @@ export const routeConfigs: RouteGroup[] = [
     title: 'My Resources',
     routes: [
       {
+        path: '/my-channels',
+        requiredScopes: ['manage_own_channels'],
+        mode: 'hidden',
+      },
+      {
         path: '/my/channels',
         // Personal channels - accessible to all users
       },
