@@ -24,6 +24,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -3586,6 +3587,165 @@ func newProviderQuotaStatusPaginateArgs(rv map[string]any) *providerquotastatusP
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *PublishRequestQuery) CollectFields(ctx context.Context, satisfies ...string) (*PublishRequestQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *PublishRequestQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(publishrequest.Columns))
+		selectedFields = []string{publishrequest.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "requester":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withRequester = query
+			if _, ok := fieldSeen[publishrequest.FieldRequesterID]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldRequesterID)
+				fieldSeen[publishrequest.FieldRequesterID] = struct{}{}
+			}
+
+		case "reviewer":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withReviewer = query
+			if _, ok := fieldSeen[publishrequest.FieldReviewerID]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldReviewerID)
+				fieldSeen[publishrequest.FieldReviewerID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[publishrequest.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldCreatedAt)
+				fieldSeen[publishrequest.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[publishrequest.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldUpdatedAt)
+				fieldSeen[publishrequest.FieldUpdatedAt] = struct{}{}
+			}
+		case "resourceType":
+			if _, ok := fieldSeen[publishrequest.FieldResourceType]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldResourceType)
+				fieldSeen[publishrequest.FieldResourceType] = struct{}{}
+			}
+		case "resourceID":
+			if _, ok := fieldSeen[publishrequest.FieldResourceID]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldResourceID)
+				fieldSeen[publishrequest.FieldResourceID] = struct{}{}
+			}
+		case "requesterID":
+			if _, ok := fieldSeen[publishrequest.FieldRequesterID]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldRequesterID)
+				fieldSeen[publishrequest.FieldRequesterID] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[publishrequest.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldStatus)
+				fieldSeen[publishrequest.FieldStatus] = struct{}{}
+			}
+		case "reviewerID":
+			if _, ok := fieldSeen[publishrequest.FieldReviewerID]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldReviewerID)
+				fieldSeen[publishrequest.FieldReviewerID] = struct{}{}
+			}
+		case "reviewComment":
+			if _, ok := fieldSeen[publishrequest.FieldReviewComment]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldReviewComment)
+				fieldSeen[publishrequest.FieldReviewComment] = struct{}{}
+			}
+		case "requestComment":
+			if _, ok := fieldSeen[publishrequest.FieldRequestComment]; !ok {
+				selectedFields = append(selectedFields, publishrequest.FieldRequestComment)
+				fieldSeen[publishrequest.FieldRequestComment] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type publishrequestPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []PublishRequestPaginateOption
+}
+
+func newPublishRequestPaginateArgs(rv map[string]any) *publishrequestPaginateArgs {
+	args := &publishrequestPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &PublishRequestOrder{Field: &PublishRequestOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithPublishRequestOrder(order))
+			}
+		case *PublishRequestOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithPublishRequestOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*PublishRequestWhereInput); ok {
+		args.opts = append(args.opts, WithPublishRequestFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (_q *RequestQuery) CollectFields(ctx context.Context, satisfies ...string) (*RequestQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -5522,6 +5682,32 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "publishRequests":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PublishRequestClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, publishrequestImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedPublishRequests(alias, func(wq *PublishRequestQuery) {
+				*wq = *query
+			})
+
+		case "reviewedRequests":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&PublishRequestClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, publishrequestImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedReviewedRequests(alias, func(wq *PublishRequestQuery) {
+				*wq = *query
+			})
+
 		case "privateProject":
 			var (
 				alias = field.Alias
@@ -5580,10 +5766,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[6][alias] = n
 						}
 						return nil
 					})
@@ -5591,10 +5777,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.APIKeys)
-							if nodes[i].Edges.totalCount[4] == nil {
-								nodes[i].Edges.totalCount[4] = make(map[string]int)
+							if nodes[i].Edges.totalCount[6] == nil {
+								nodes[i].Edges.totalCount[6] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[4][alias] = n
+							nodes[i].Edges.totalCount[6][alias] = n
 						}
 						return nil
 					})
@@ -5673,10 +5859,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[5] == nil {
-								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[5][alias] = n
+							nodes[i].Edges.totalCount[7][alias] = n
 						}
 						return nil
 					})
@@ -5684,10 +5870,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.Roles)
-							if nodes[i].Edges.totalCount[5] == nil {
-								nodes[i].Edges.totalCount[5] = make(map[string]int)
+							if nodes[i].Edges.totalCount[7] == nil {
+								nodes[i].Edges.totalCount[7] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[5][alias] = n
+							nodes[i].Edges.totalCount[7][alias] = n
 						}
 						return nil
 					})
@@ -5762,10 +5948,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[6] == nil {
-								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[6][alias] = n
+							nodes[i].Edges.totalCount[8][alias] = n
 						}
 						return nil
 					})
@@ -5773,10 +5959,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ChannelOverrideTemplates)
-							if nodes[i].Edges.totalCount[6] == nil {
-								nodes[i].Edges.totalCount[6] = make(map[string]int)
+							if nodes[i].Edges.totalCount[8] == nil {
+								nodes[i].Edges.totalCount[8] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[6][alias] = n
+							nodes[i].Edges.totalCount[8][alias] = n
 						}
 						return nil
 					})
@@ -5851,10 +6037,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[9][alias] = n
 						}
 						return nil
 					})
@@ -5862,10 +6048,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.OidcIdentities)
-							if nodes[i].Edges.totalCount[7] == nil {
-								nodes[i].Edges.totalCount[7] = make(map[string]int)
+							if nodes[i].Edges.totalCount[9] == nil {
+								nodes[i].Edges.totalCount[9] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[7][alias] = n
+							nodes[i].Edges.totalCount[9][alias] = n
 						}
 						return nil
 					})
@@ -5940,10 +6126,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[8] == nil {
-								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[8][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -5951,10 +6137,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[8] == nil {
-								nodes[i].Edges.totalCount[8] = make(map[string]int)
+							if nodes[i].Edges.totalCount[10] == nil {
+								nodes[i].Edges.totalCount[10] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[8][alias] = n
+							nodes[i].Edges.totalCount[10][alias] = n
 						}
 						return nil
 					})
@@ -6029,10 +6215,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[9] == nil {
-								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[9][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})
@@ -6040,10 +6226,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[9] == nil {
-								nodes[i].Edges.totalCount[9] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[9][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})

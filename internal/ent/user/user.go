@@ -50,6 +50,10 @@ const (
 	EdgeOwnedChannels = "owned_channels"
 	// EdgeOwnedModels holds the string denoting the owned_models edge name in mutations.
 	EdgeOwnedModels = "owned_models"
+	// EdgePublishRequests holds the string denoting the publish_requests edge name in mutations.
+	EdgePublishRequests = "publish_requests"
+	// EdgeReviewedRequests holds the string denoting the reviewed_requests edge name in mutations.
+	EdgeReviewedRequests = "reviewed_requests"
 	// EdgePrivateProject holds the string denoting the private_project edge name in mutations.
 	EdgePrivateProject = "private_project"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
@@ -85,6 +89,20 @@ const (
 	OwnedModelsInverseTable = "models"
 	// OwnedModelsColumn is the table column denoting the owned_models relation/edge.
 	OwnedModelsColumn = "owner_id"
+	// PublishRequestsTable is the table that holds the publish_requests relation/edge.
+	PublishRequestsTable = "publish_requests"
+	// PublishRequestsInverseTable is the table name for the PublishRequest entity.
+	// It exists in this package in order to avoid circular dependency with the "publishrequest" package.
+	PublishRequestsInverseTable = "publish_requests"
+	// PublishRequestsColumn is the table column denoting the publish_requests relation/edge.
+	PublishRequestsColumn = "requester_id"
+	// ReviewedRequestsTable is the table that holds the reviewed_requests relation/edge.
+	ReviewedRequestsTable = "publish_requests"
+	// ReviewedRequestsInverseTable is the table name for the PublishRequest entity.
+	// It exists in this package in order to avoid circular dependency with the "publishrequest" package.
+	ReviewedRequestsInverseTable = "publish_requests"
+	// ReviewedRequestsColumn is the table column denoting the reviewed_requests relation/edge.
+	ReviewedRequestsColumn = "reviewer_id"
 	// PrivateProjectTable is the table that holds the private_project relation/edge.
 	PrivateProjectTable = "users"
 	// PrivateProjectInverseTable is the table name for the Project entity.
@@ -336,6 +354,34 @@ func ByOwnedModels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByPublishRequestsCount orders the results by publish_requests count.
+func ByPublishRequestsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPublishRequestsStep(), opts...)
+	}
+}
+
+// ByPublishRequests orders the results by publish_requests terms.
+func ByPublishRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPublishRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReviewedRequestsCount orders the results by reviewed_requests count.
+func ByReviewedRequestsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReviewedRequestsStep(), opts...)
+	}
+}
+
+// ByReviewedRequests orders the results by reviewed_requests terms.
+func ByReviewedRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReviewedRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByPrivateProjectField orders the results by private_project field.
 func ByPrivateProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -445,6 +491,20 @@ func newOwnedModelsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OwnedModelsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, OwnedModelsTable, OwnedModelsColumn),
+	)
+}
+func newPublishRequestsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PublishRequestsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PublishRequestsTable, PublishRequestsColumn),
+	)
+}
+func newReviewedRequestsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReviewedRequestsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReviewedRequestsTable, ReviewedRequestsColumn),
 	)
 }
 func newPrivateProjectStep() *sqlgraph.Step {

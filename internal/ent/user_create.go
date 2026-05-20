@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
@@ -232,6 +233,36 @@ func (_c *UserCreate) AddOwnedModels(v ...*Model) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddOwnedModelIDs(ids...)
+}
+
+// AddPublishRequestIDs adds the "publish_requests" edge to the PublishRequest entity by IDs.
+func (_c *UserCreate) AddPublishRequestIDs(ids ...int) *UserCreate {
+	_c.mutation.AddPublishRequestIDs(ids...)
+	return _c
+}
+
+// AddPublishRequests adds the "publish_requests" edges to the PublishRequest entity.
+func (_c *UserCreate) AddPublishRequests(v ...*PublishRequest) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPublishRequestIDs(ids...)
+}
+
+// AddReviewedRequestIDs adds the "reviewed_requests" edge to the PublishRequest entity by IDs.
+func (_c *UserCreate) AddReviewedRequestIDs(ids ...int) *UserCreate {
+	_c.mutation.AddReviewedRequestIDs(ids...)
+	return _c
+}
+
+// AddReviewedRequests adds the "reviewed_requests" edges to the PublishRequest entity.
+func (_c *UserCreate) AddReviewedRequests(v ...*PublishRequest) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddReviewedRequestIDs(ids...)
 }
 
 // SetPrivateProject sets the "private_project" edge to the Project entity.
@@ -562,6 +593,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PublishRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ReviewedRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

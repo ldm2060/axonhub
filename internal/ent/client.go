@@ -29,6 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -74,6 +75,8 @@ type Client struct {
 	PromptProtectionRule *PromptProtectionRuleClient
 	// ProviderQuotaStatus is the client for interacting with the ProviderQuotaStatus builders.
 	ProviderQuotaStatus *ProviderQuotaStatusClient
+	// PublishRequest is the client for interacting with the PublishRequest builders.
+	PublishRequest *PublishRequestClient
 	// Request is the client for interacting with the Request builders.
 	Request *RequestClient
 	// RequestExecution is the client for interacting with the RequestExecution builders.
@@ -121,6 +124,7 @@ func (c *Client) init() {
 	c.Prompt = NewPromptClient(c.config)
 	c.PromptProtectionRule = NewPromptProtectionRuleClient(c.config)
 	c.ProviderQuotaStatus = NewProviderQuotaStatusClient(c.config)
+	c.PublishRequest = NewPublishRequestClient(c.config)
 	c.Request = NewRequestClient(c.config)
 	c.RequestExecution = NewRequestExecutionClient(c.config)
 	c.Role = NewRoleClient(c.config)
@@ -237,6 +241,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
+		PublishRequest:           NewPublishRequestClient(cfg),
 		Request:                  NewRequestClient(cfg),
 		RequestExecution:         NewRequestExecutionClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -280,6 +285,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Prompt:                   NewPromptClient(cfg),
 		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
 		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
+		PublishRequest:           NewPublishRequestClient(cfg),
 		Request:                  NewRequestClient(cfg),
 		RequestExecution:         NewRequestExecutionClient(cfg),
 		Role:                     NewRoleClient(cfg),
@@ -322,9 +328,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
 		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
-		c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User, c.UserProject,
-		c.UserRole,
+		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
+		c.UserProject, c.UserRole,
 	} {
 		n.Use(hooks...)
 	}
@@ -337,9 +343,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
 		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.Request, c.RequestExecution,
-		c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User, c.UserProject,
-		c.UserRole,
+		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
+		c.UserProject, c.UserRole,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -376,6 +382,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PromptProtectionRule.mutate(ctx, m)
 	case *ProviderQuotaStatusMutation:
 		return c.ProviderQuotaStatus.mutate(ctx, m)
+	case *PublishRequestMutation:
+		return c.PublishRequest.mutate(ctx, m)
 	case *RequestMutation:
 		return c.Request.mutate(ctx, m)
 	case *RequestExecutionMutation:
@@ -2800,6 +2808,173 @@ func (c *ProviderQuotaStatusClient) mutate(ctx context.Context, m *ProviderQuota
 	}
 }
 
+// PublishRequestClient is a client for the PublishRequest schema.
+type PublishRequestClient struct {
+	config
+}
+
+// NewPublishRequestClient returns a client for the PublishRequest from the given config.
+func NewPublishRequestClient(c config) *PublishRequestClient {
+	return &PublishRequestClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `publishrequest.Hooks(f(g(h())))`.
+func (c *PublishRequestClient) Use(hooks ...Hook) {
+	c.hooks.PublishRequest = append(c.hooks.PublishRequest, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `publishrequest.Intercept(f(g(h())))`.
+func (c *PublishRequestClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PublishRequest = append(c.inters.PublishRequest, interceptors...)
+}
+
+// Create returns a builder for creating a PublishRequest entity.
+func (c *PublishRequestClient) Create() *PublishRequestCreate {
+	mutation := newPublishRequestMutation(c.config, OpCreate)
+	return &PublishRequestCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PublishRequest entities.
+func (c *PublishRequestClient) CreateBulk(builders ...*PublishRequestCreate) *PublishRequestCreateBulk {
+	return &PublishRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PublishRequestClient) MapCreateBulk(slice any, setFunc func(*PublishRequestCreate, int)) *PublishRequestCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PublishRequestCreateBulk{err: fmt.Errorf("calling to PublishRequestClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PublishRequestCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PublishRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PublishRequest.
+func (c *PublishRequestClient) Update() *PublishRequestUpdate {
+	mutation := newPublishRequestMutation(c.config, OpUpdate)
+	return &PublishRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PublishRequestClient) UpdateOne(_m *PublishRequest) *PublishRequestUpdateOne {
+	mutation := newPublishRequestMutation(c.config, OpUpdateOne, withPublishRequest(_m))
+	return &PublishRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PublishRequestClient) UpdateOneID(id int) *PublishRequestUpdateOne {
+	mutation := newPublishRequestMutation(c.config, OpUpdateOne, withPublishRequestID(id))
+	return &PublishRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PublishRequest.
+func (c *PublishRequestClient) Delete() *PublishRequestDelete {
+	mutation := newPublishRequestMutation(c.config, OpDelete)
+	return &PublishRequestDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PublishRequestClient) DeleteOne(_m *PublishRequest) *PublishRequestDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PublishRequestClient) DeleteOneID(id int) *PublishRequestDeleteOne {
+	builder := c.Delete().Where(publishrequest.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PublishRequestDeleteOne{builder}
+}
+
+// Query returns a query builder for PublishRequest.
+func (c *PublishRequestClient) Query() *PublishRequestQuery {
+	return &PublishRequestQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePublishRequest},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PublishRequest entity by its id.
+func (c *PublishRequestClient) Get(ctx context.Context, id int) (*PublishRequest, error) {
+	return c.Query().Where(publishrequest.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PublishRequestClient) GetX(ctx context.Context, id int) *PublishRequest {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRequester queries the requester edge of a PublishRequest.
+func (c *PublishRequestClient) QueryRequester(_m *PublishRequest) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(publishrequest.Table, publishrequest.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, publishrequest.RequesterTable, publishrequest.RequesterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReviewer queries the reviewer edge of a PublishRequest.
+func (c *PublishRequestClient) QueryReviewer(_m *PublishRequest) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(publishrequest.Table, publishrequest.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, publishrequest.ReviewerTable, publishrequest.ReviewerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PublishRequestClient) Hooks() []Hook {
+	hooks := c.hooks.PublishRequest
+	return append(hooks[:len(hooks):len(hooks)], publishrequest.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *PublishRequestClient) Interceptors() []Interceptor {
+	inters := c.inters.PublishRequest
+	return append(inters[:len(inters):len(inters)], publishrequest.Interceptors[:]...)
+}
+
+func (c *PublishRequestClient) mutate(ctx context.Context, m *PublishRequestMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PublishRequestCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PublishRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PublishRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PublishRequestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PublishRequest mutation op: %q", m.Op())
+	}
+}
+
 // RequestClient is a client for the Request schema.
 type RequestClient struct {
 	config
@@ -4231,6 +4406,38 @@ func (c *UserClient) QueryOwnedModels(_m *User) *ModelQuery {
 	return query
 }
 
+// QueryPublishRequests queries the publish_requests edge of a User.
+func (c *UserClient) QueryPublishRequests(_m *User) *PublishRequestQuery {
+	query := (&PublishRequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(publishrequest.Table, publishrequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PublishRequestsTable, user.PublishRequestsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReviewedRequests queries the reviewed_requests edge of a User.
+func (c *UserClient) QueryReviewedRequests(_m *User) *PublishRequestQuery {
+	query := (&PublishRequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(publishrequest.Table, publishrequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReviewedRequestsTable, user.ReviewedRequestsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryPrivateProject queries the private_project edge of a User.
 func (c *UserClient) QueryPrivateProject(_m *User) *ProjectQuery {
 	query := (&ProjectClient{config: c.config}).Query()
@@ -4707,14 +4914,14 @@ type (
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageLog, User, UserProject, UserRole []ent.Hook
+		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
+		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, Request, RequestExecution, Role, System, Thread, Trace,
-		UsageLog, User, UserProject, UserRole []ent.Interceptor
+		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
+		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Interceptor
 	}
 )

@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -6538,6 +6539,480 @@ func (i *ProviderQuotaStatusWhereInput) P() (predicate.ProviderQuotaStatus, erro
 	}
 }
 
+// PublishRequestWhereInput represents a where input for filtering PublishRequest queries.
+type PublishRequestWhereInput struct {
+	Predicates []predicate.PublishRequest  `json:"-"`
+	Not        *PublishRequestWhereInput   `json:"not,omitempty"`
+	Or         []*PublishRequestWhereInput `json:"or,omitempty"`
+	And        []*PublishRequestWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "resource_type" field predicates.
+	ResourceType      *publishrequest.ResourceType  `json:"resourceType,omitempty"`
+	ResourceTypeNEQ   *publishrequest.ResourceType  `json:"resourceTypeNEQ,omitempty"`
+	ResourceTypeIn    []publishrequest.ResourceType `json:"resourceTypeIn,omitempty"`
+	ResourceTypeNotIn []publishrequest.ResourceType `json:"resourceTypeNotIn,omitempty"`
+
+	// "resource_id" field predicates.
+	ResourceID      *int  `json:"resourceID,omitempty"`
+	ResourceIDNEQ   *int  `json:"resourceIDNEQ,omitempty"`
+	ResourceIDIn    []int `json:"resourceIDIn,omitempty"`
+	ResourceIDNotIn []int `json:"resourceIDNotIn,omitempty"`
+	ResourceIDGT    *int  `json:"resourceIDGT,omitempty"`
+	ResourceIDGTE   *int  `json:"resourceIDGTE,omitempty"`
+	ResourceIDLT    *int  `json:"resourceIDLT,omitempty"`
+	ResourceIDLTE   *int  `json:"resourceIDLTE,omitempty"`
+
+	// "requester_id" field predicates.
+	RequesterID      *int  `json:"requesterID,omitempty"`
+	RequesterIDNEQ   *int  `json:"requesterIDNEQ,omitempty"`
+	RequesterIDIn    []int `json:"requesterIDIn,omitempty"`
+	RequesterIDNotIn []int `json:"requesterIDNotIn,omitempty"`
+
+	// "status" field predicates.
+	Status      *publishrequest.Status  `json:"status,omitempty"`
+	StatusNEQ   *publishrequest.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []publishrequest.Status `json:"statusIn,omitempty"`
+	StatusNotIn []publishrequest.Status `json:"statusNotIn,omitempty"`
+
+	// "reviewer_id" field predicates.
+	ReviewerID       *int  `json:"reviewerID,omitempty"`
+	ReviewerIDNEQ    *int  `json:"reviewerIDNEQ,omitempty"`
+	ReviewerIDIn     []int `json:"reviewerIDIn,omitempty"`
+	ReviewerIDNotIn  []int `json:"reviewerIDNotIn,omitempty"`
+	ReviewerIDIsNil  bool  `json:"reviewerIDIsNil,omitempty"`
+	ReviewerIDNotNil bool  `json:"reviewerIDNotNil,omitempty"`
+
+	// "review_comment" field predicates.
+	ReviewComment             *string  `json:"reviewComment,omitempty"`
+	ReviewCommentNEQ          *string  `json:"reviewCommentNEQ,omitempty"`
+	ReviewCommentIn           []string `json:"reviewCommentIn,omitempty"`
+	ReviewCommentNotIn        []string `json:"reviewCommentNotIn,omitempty"`
+	ReviewCommentGT           *string  `json:"reviewCommentGT,omitempty"`
+	ReviewCommentGTE          *string  `json:"reviewCommentGTE,omitempty"`
+	ReviewCommentLT           *string  `json:"reviewCommentLT,omitempty"`
+	ReviewCommentLTE          *string  `json:"reviewCommentLTE,omitempty"`
+	ReviewCommentContains     *string  `json:"reviewCommentContains,omitempty"`
+	ReviewCommentHasPrefix    *string  `json:"reviewCommentHasPrefix,omitempty"`
+	ReviewCommentHasSuffix    *string  `json:"reviewCommentHasSuffix,omitempty"`
+	ReviewCommentIsNil        bool     `json:"reviewCommentIsNil,omitempty"`
+	ReviewCommentNotNil       bool     `json:"reviewCommentNotNil,omitempty"`
+	ReviewCommentEqualFold    *string  `json:"reviewCommentEqualFold,omitempty"`
+	ReviewCommentContainsFold *string  `json:"reviewCommentContainsFold,omitempty"`
+
+	// "request_comment" field predicates.
+	RequestComment             *string  `json:"requestComment,omitempty"`
+	RequestCommentNEQ          *string  `json:"requestCommentNEQ,omitempty"`
+	RequestCommentIn           []string `json:"requestCommentIn,omitempty"`
+	RequestCommentNotIn        []string `json:"requestCommentNotIn,omitempty"`
+	RequestCommentGT           *string  `json:"requestCommentGT,omitempty"`
+	RequestCommentGTE          *string  `json:"requestCommentGTE,omitempty"`
+	RequestCommentLT           *string  `json:"requestCommentLT,omitempty"`
+	RequestCommentLTE          *string  `json:"requestCommentLTE,omitempty"`
+	RequestCommentContains     *string  `json:"requestCommentContains,omitempty"`
+	RequestCommentHasPrefix    *string  `json:"requestCommentHasPrefix,omitempty"`
+	RequestCommentHasSuffix    *string  `json:"requestCommentHasSuffix,omitempty"`
+	RequestCommentIsNil        bool     `json:"requestCommentIsNil,omitempty"`
+	RequestCommentNotNil       bool     `json:"requestCommentNotNil,omitempty"`
+	RequestCommentEqualFold    *string  `json:"requestCommentEqualFold,omitempty"`
+	RequestCommentContainsFold *string  `json:"requestCommentContainsFold,omitempty"`
+
+	// "requester" edge predicates.
+	HasRequester     *bool             `json:"hasRequester,omitempty"`
+	HasRequesterWith []*UserWhereInput `json:"hasRequesterWith,omitempty"`
+
+	// "reviewer" edge predicates.
+	HasReviewer     *bool             `json:"hasReviewer,omitempty"`
+	HasReviewerWith []*UserWhereInput `json:"hasReviewerWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *PublishRequestWhereInput) AddPredicates(predicates ...predicate.PublishRequest) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the PublishRequestWhereInput filter on the PublishRequestQuery builder.
+func (i *PublishRequestWhereInput) Filter(q *PublishRequestQuery) (*PublishRequestQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyPublishRequestWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyPublishRequestWhereInput is returned in case the PublishRequestWhereInput is empty.
+var ErrEmptyPublishRequestWhereInput = errors.New("ent: empty predicate PublishRequestWhereInput")
+
+// P returns a predicate for filtering publishrequests.
+// An error is returned if the input is empty or invalid.
+func (i *PublishRequestWhereInput) P() (predicate.PublishRequest, error) {
+	var predicates []predicate.PublishRequest
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, publishrequest.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.PublishRequest, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, publishrequest.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.PublishRequest, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, publishrequest.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, publishrequest.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, publishrequest.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, publishrequest.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, publishrequest.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, publishrequest.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, publishrequest.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, publishrequest.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, publishrequest.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, publishrequest.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, publishrequest.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, publishrequest.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, publishrequest.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, publishrequest.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, publishrequest.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, publishrequest.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, publishrequest.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, publishrequest.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, publishrequest.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, publishrequest.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.ResourceType != nil {
+		predicates = append(predicates, publishrequest.ResourceTypeEQ(*i.ResourceType))
+	}
+	if i.ResourceTypeNEQ != nil {
+		predicates = append(predicates, publishrequest.ResourceTypeNEQ(*i.ResourceTypeNEQ))
+	}
+	if len(i.ResourceTypeIn) > 0 {
+		predicates = append(predicates, publishrequest.ResourceTypeIn(i.ResourceTypeIn...))
+	}
+	if len(i.ResourceTypeNotIn) > 0 {
+		predicates = append(predicates, publishrequest.ResourceTypeNotIn(i.ResourceTypeNotIn...))
+	}
+	if i.ResourceID != nil {
+		predicates = append(predicates, publishrequest.ResourceIDEQ(*i.ResourceID))
+	}
+	if i.ResourceIDNEQ != nil {
+		predicates = append(predicates, publishrequest.ResourceIDNEQ(*i.ResourceIDNEQ))
+	}
+	if len(i.ResourceIDIn) > 0 {
+		predicates = append(predicates, publishrequest.ResourceIDIn(i.ResourceIDIn...))
+	}
+	if len(i.ResourceIDNotIn) > 0 {
+		predicates = append(predicates, publishrequest.ResourceIDNotIn(i.ResourceIDNotIn...))
+	}
+	if i.ResourceIDGT != nil {
+		predicates = append(predicates, publishrequest.ResourceIDGT(*i.ResourceIDGT))
+	}
+	if i.ResourceIDGTE != nil {
+		predicates = append(predicates, publishrequest.ResourceIDGTE(*i.ResourceIDGTE))
+	}
+	if i.ResourceIDLT != nil {
+		predicates = append(predicates, publishrequest.ResourceIDLT(*i.ResourceIDLT))
+	}
+	if i.ResourceIDLTE != nil {
+		predicates = append(predicates, publishrequest.ResourceIDLTE(*i.ResourceIDLTE))
+	}
+	if i.RequesterID != nil {
+		predicates = append(predicates, publishrequest.RequesterIDEQ(*i.RequesterID))
+	}
+	if i.RequesterIDNEQ != nil {
+		predicates = append(predicates, publishrequest.RequesterIDNEQ(*i.RequesterIDNEQ))
+	}
+	if len(i.RequesterIDIn) > 0 {
+		predicates = append(predicates, publishrequest.RequesterIDIn(i.RequesterIDIn...))
+	}
+	if len(i.RequesterIDNotIn) > 0 {
+		predicates = append(predicates, publishrequest.RequesterIDNotIn(i.RequesterIDNotIn...))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, publishrequest.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, publishrequest.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, publishrequest.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, publishrequest.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.ReviewerID != nil {
+		predicates = append(predicates, publishrequest.ReviewerIDEQ(*i.ReviewerID))
+	}
+	if i.ReviewerIDNEQ != nil {
+		predicates = append(predicates, publishrequest.ReviewerIDNEQ(*i.ReviewerIDNEQ))
+	}
+	if len(i.ReviewerIDIn) > 0 {
+		predicates = append(predicates, publishrequest.ReviewerIDIn(i.ReviewerIDIn...))
+	}
+	if len(i.ReviewerIDNotIn) > 0 {
+		predicates = append(predicates, publishrequest.ReviewerIDNotIn(i.ReviewerIDNotIn...))
+	}
+	if i.ReviewerIDIsNil {
+		predicates = append(predicates, publishrequest.ReviewerIDIsNil())
+	}
+	if i.ReviewerIDNotNil {
+		predicates = append(predicates, publishrequest.ReviewerIDNotNil())
+	}
+	if i.ReviewComment != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentEQ(*i.ReviewComment))
+	}
+	if i.ReviewCommentNEQ != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentNEQ(*i.ReviewCommentNEQ))
+	}
+	if len(i.ReviewCommentIn) > 0 {
+		predicates = append(predicates, publishrequest.ReviewCommentIn(i.ReviewCommentIn...))
+	}
+	if len(i.ReviewCommentNotIn) > 0 {
+		predicates = append(predicates, publishrequest.ReviewCommentNotIn(i.ReviewCommentNotIn...))
+	}
+	if i.ReviewCommentGT != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentGT(*i.ReviewCommentGT))
+	}
+	if i.ReviewCommentGTE != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentGTE(*i.ReviewCommentGTE))
+	}
+	if i.ReviewCommentLT != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentLT(*i.ReviewCommentLT))
+	}
+	if i.ReviewCommentLTE != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentLTE(*i.ReviewCommentLTE))
+	}
+	if i.ReviewCommentContains != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentContains(*i.ReviewCommentContains))
+	}
+	if i.ReviewCommentHasPrefix != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentHasPrefix(*i.ReviewCommentHasPrefix))
+	}
+	if i.ReviewCommentHasSuffix != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentHasSuffix(*i.ReviewCommentHasSuffix))
+	}
+	if i.ReviewCommentIsNil {
+		predicates = append(predicates, publishrequest.ReviewCommentIsNil())
+	}
+	if i.ReviewCommentNotNil {
+		predicates = append(predicates, publishrequest.ReviewCommentNotNil())
+	}
+	if i.ReviewCommentEqualFold != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentEqualFold(*i.ReviewCommentEqualFold))
+	}
+	if i.ReviewCommentContainsFold != nil {
+		predicates = append(predicates, publishrequest.ReviewCommentContainsFold(*i.ReviewCommentContainsFold))
+	}
+	if i.RequestComment != nil {
+		predicates = append(predicates, publishrequest.RequestCommentEQ(*i.RequestComment))
+	}
+	if i.RequestCommentNEQ != nil {
+		predicates = append(predicates, publishrequest.RequestCommentNEQ(*i.RequestCommentNEQ))
+	}
+	if len(i.RequestCommentIn) > 0 {
+		predicates = append(predicates, publishrequest.RequestCommentIn(i.RequestCommentIn...))
+	}
+	if len(i.RequestCommentNotIn) > 0 {
+		predicates = append(predicates, publishrequest.RequestCommentNotIn(i.RequestCommentNotIn...))
+	}
+	if i.RequestCommentGT != nil {
+		predicates = append(predicates, publishrequest.RequestCommentGT(*i.RequestCommentGT))
+	}
+	if i.RequestCommentGTE != nil {
+		predicates = append(predicates, publishrequest.RequestCommentGTE(*i.RequestCommentGTE))
+	}
+	if i.RequestCommentLT != nil {
+		predicates = append(predicates, publishrequest.RequestCommentLT(*i.RequestCommentLT))
+	}
+	if i.RequestCommentLTE != nil {
+		predicates = append(predicates, publishrequest.RequestCommentLTE(*i.RequestCommentLTE))
+	}
+	if i.RequestCommentContains != nil {
+		predicates = append(predicates, publishrequest.RequestCommentContains(*i.RequestCommentContains))
+	}
+	if i.RequestCommentHasPrefix != nil {
+		predicates = append(predicates, publishrequest.RequestCommentHasPrefix(*i.RequestCommentHasPrefix))
+	}
+	if i.RequestCommentHasSuffix != nil {
+		predicates = append(predicates, publishrequest.RequestCommentHasSuffix(*i.RequestCommentHasSuffix))
+	}
+	if i.RequestCommentIsNil {
+		predicates = append(predicates, publishrequest.RequestCommentIsNil())
+	}
+	if i.RequestCommentNotNil {
+		predicates = append(predicates, publishrequest.RequestCommentNotNil())
+	}
+	if i.RequestCommentEqualFold != nil {
+		predicates = append(predicates, publishrequest.RequestCommentEqualFold(*i.RequestCommentEqualFold))
+	}
+	if i.RequestCommentContainsFold != nil {
+		predicates = append(predicates, publishrequest.RequestCommentContainsFold(*i.RequestCommentContainsFold))
+	}
+
+	if i.HasRequester != nil {
+		p := publishrequest.HasRequester()
+		if !*i.HasRequester {
+			p = publishrequest.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasRequesterWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasRequesterWith))
+		for _, w := range i.HasRequesterWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasRequesterWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, publishrequest.HasRequesterWith(with...))
+	}
+	if i.HasReviewer != nil {
+		p := publishrequest.HasReviewer()
+		if !*i.HasReviewer {
+			p = publishrequest.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasReviewerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasReviewerWith))
+		for _, w := range i.HasReviewerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasReviewerWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, publishrequest.HasReviewerWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyPublishRequestWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return publishrequest.And(predicates...), nil
+	}
+}
+
 // RequestWhereInput represents a where input for filtering Request queries.
 type RequestWhereInput struct {
 	Predicates []predicate.Request  `json:"-"`
@@ -10961,6 +11436,14 @@ type UserWhereInput struct {
 	HasOwnedModels     *bool              `json:"hasOwnedModels,omitempty"`
 	HasOwnedModelsWith []*ModelWhereInput `json:"hasOwnedModelsWith,omitempty"`
 
+	// "publish_requests" edge predicates.
+	HasPublishRequests     *bool                       `json:"hasPublishRequests,omitempty"`
+	HasPublishRequestsWith []*PublishRequestWhereInput `json:"hasPublishRequestsWith,omitempty"`
+
+	// "reviewed_requests" edge predicates.
+	HasReviewedRequests     *bool                       `json:"hasReviewedRequests,omitempty"`
+	HasReviewedRequestsWith []*PublishRequestWhereInput `json:"hasReviewedRequestsWith,omitempty"`
+
 	// "private_project" edge predicates.
 	HasPrivateProject     *bool                `json:"hasPrivateProject,omitempty"`
 	HasPrivateProjectWith []*ProjectWhereInput `json:"hasPrivateProjectWith,omitempty"`
@@ -11463,6 +11946,42 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasOwnedModelsWith(with...))
+	}
+	if i.HasPublishRequests != nil {
+		p := user.HasPublishRequests()
+		if !*i.HasPublishRequests {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPublishRequestsWith) > 0 {
+		with := make([]predicate.PublishRequest, 0, len(i.HasPublishRequestsWith))
+		for _, w := range i.HasPublishRequestsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPublishRequestsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasPublishRequestsWith(with...))
+	}
+	if i.HasReviewedRequests != nil {
+		p := user.HasReviewedRequests()
+		if !*i.HasReviewedRequests {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasReviewedRequestsWith) > 0 {
+		with := make([]predicate.PublishRequest, 0, len(i.HasReviewedRequestsWith))
+		for _, w := range i.HasReviewedRequestsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasReviewedRequestsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasReviewedRequestsWith(with...))
 	}
 	if i.HasPrivateProject != nil {
 		p := user.HasPrivateProject()

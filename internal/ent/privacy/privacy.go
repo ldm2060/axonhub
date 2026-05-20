@@ -447,6 +447,30 @@ func (f ProviderQuotaStatusMutationRuleFunc) EvalMutation(ctx context.Context, m
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ProviderQuotaStatusMutation", m)
 }
 
+// The PublishRequestQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type PublishRequestQueryRuleFunc func(context.Context, *ent.PublishRequestQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f PublishRequestQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.PublishRequestQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.PublishRequestQuery", q)
+}
+
+// The PublishRequestMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type PublishRequestMutationRuleFunc func(context.Context, *ent.PublishRequestMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f PublishRequestMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.PublishRequestMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.PublishRequestMutation", m)
+}
+
 // The RequestQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type RequestQueryRuleFunc func(context.Context, *ent.RequestQuery) error
@@ -750,6 +774,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.ProviderQuotaStatusQuery:
 		return q.Filter(), nil
+	case *ent.PublishRequestQuery:
+		return q.Filter(), nil
 	case *ent.RequestQuery:
 		return q.Filter(), nil
 	case *ent.RequestExecutionQuery:
@@ -804,6 +830,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.PromptProtectionRuleMutation:
 		return m.Filter(), nil
 	case *ent.ProviderQuotaStatusMutation:
+		return m.Filter(), nil
+	case *ent.PublishRequestMutation:
 		return m.Filter(), nil
 	case *ent.RequestMutation:
 		return m.Filter(), nil

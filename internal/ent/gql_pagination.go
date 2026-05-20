@@ -28,6 +28,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -4609,6 +4610,320 @@ func (_m *ProviderQuotaStatus) ToEdge(order *ProviderQuotaStatusOrder) *Provider
 		order = DefaultProviderQuotaStatusOrder
 	}
 	return &ProviderQuotaStatusEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// PublishRequestEdge is the edge representation of PublishRequest.
+type PublishRequestEdge struct {
+	Node   *PublishRequest `json:"node"`
+	Cursor Cursor          `json:"cursor"`
+}
+
+// PublishRequestConnection is the connection containing edges to PublishRequest.
+type PublishRequestConnection struct {
+	Edges      []*PublishRequestEdge `json:"edges"`
+	PageInfo   PageInfo              `json:"pageInfo"`
+	TotalCount int                   `json:"totalCount"`
+}
+
+func (c *PublishRequestConnection) build(nodes []*PublishRequest, pager *publishrequestPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *PublishRequest
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *PublishRequest {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *PublishRequest {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*PublishRequestEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &PublishRequestEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// PublishRequestPaginateOption enables pagination customization.
+type PublishRequestPaginateOption func(*publishrequestPager) error
+
+// WithPublishRequestOrder configures pagination ordering.
+func WithPublishRequestOrder(order *PublishRequestOrder) PublishRequestPaginateOption {
+	if order == nil {
+		order = DefaultPublishRequestOrder
+	}
+	o := *order
+	return func(pager *publishrequestPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultPublishRequestOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithPublishRequestFilter configures pagination filter.
+func WithPublishRequestFilter(filter func(*PublishRequestQuery) (*PublishRequestQuery, error)) PublishRequestPaginateOption {
+	return func(pager *publishrequestPager) error {
+		if filter == nil {
+			return errors.New("PublishRequestQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type publishrequestPager struct {
+	reverse bool
+	order   *PublishRequestOrder
+	filter  func(*PublishRequestQuery) (*PublishRequestQuery, error)
+}
+
+func newPublishRequestPager(opts []PublishRequestPaginateOption, reverse bool) (*publishrequestPager, error) {
+	pager := &publishrequestPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultPublishRequestOrder
+	}
+	return pager, nil
+}
+
+func (p *publishrequestPager) applyFilter(query *PublishRequestQuery) (*PublishRequestQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *publishrequestPager) toCursor(_m *PublishRequest) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *publishrequestPager) applyCursors(query *PublishRequestQuery, after, before *Cursor) (*PublishRequestQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultPublishRequestOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *publishrequestPager) applyOrder(query *PublishRequestQuery) *PublishRequestQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultPublishRequestOrder.Field {
+		query = query.Order(DefaultPublishRequestOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *publishrequestPager) orderExpr(query *PublishRequestQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultPublishRequestOrder.Field {
+			b.Comma().Ident(DefaultPublishRequestOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to PublishRequest.
+func (_m *PublishRequestQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...PublishRequestPaginateOption,
+) (*PublishRequestConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newPublishRequestPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &PublishRequestConnection{Edges: []*PublishRequestEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// PublishRequestOrderFieldCreatedAt orders PublishRequest by created_at.
+	PublishRequestOrderFieldCreatedAt = &PublishRequestOrderField{
+		Value: func(_m *PublishRequest) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: publishrequest.FieldCreatedAt,
+		toTerm: publishrequest.ByCreatedAt,
+		toCursor: func(_m *PublishRequest) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// PublishRequestOrderFieldUpdatedAt orders PublishRequest by updated_at.
+	PublishRequestOrderFieldUpdatedAt = &PublishRequestOrderField{
+		Value: func(_m *PublishRequest) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: publishrequest.FieldUpdatedAt,
+		toTerm: publishrequest.ByUpdatedAt,
+		toCursor: func(_m *PublishRequest) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f PublishRequestOrderField) String() string {
+	var str string
+	switch f.column {
+	case PublishRequestOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case PublishRequestOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f PublishRequestOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *PublishRequestOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("PublishRequestOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *PublishRequestOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *PublishRequestOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid PublishRequestOrderField", str)
+	}
+	return nil
+}
+
+// PublishRequestOrderField defines the ordering field of PublishRequest.
+type PublishRequestOrderField struct {
+	// Value extracts the ordering value from the given PublishRequest.
+	Value    func(*PublishRequest) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) publishrequest.OrderOption
+	toCursor func(*PublishRequest) Cursor
+}
+
+// PublishRequestOrder defines the ordering of PublishRequest.
+type PublishRequestOrder struct {
+	Direction OrderDirection            `json:"direction"`
+	Field     *PublishRequestOrderField `json:"field"`
+}
+
+// DefaultPublishRequestOrder is the default ordering of PublishRequest.
+var DefaultPublishRequestOrder = &PublishRequestOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &PublishRequestOrderField{
+		Value: func(_m *PublishRequest) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: publishrequest.FieldID,
+		toTerm: publishrequest.ByID,
+		toCursor: func(_m *PublishRequest) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts PublishRequest into PublishRequestEdge.
+func (_m *PublishRequest) ToEdge(order *PublishRequestOrder) *PublishRequestEdge {
+	if order == nil {
+		order = DefaultPublishRequestOrder
+	}
+	return &PublishRequestEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

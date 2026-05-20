@@ -497,6 +497,22 @@ func (_m *ProviderQuotaStatus) Channel(ctx context.Context) (*Channel, error) {
 	return result, err
 }
 
+func (_m *PublishRequest) Requester(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.RequesterOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryRequester().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *PublishRequest) Reviewer(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.ReviewerOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryReviewer().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
 func (_m *Request) APIKey(ctx context.Context) (*APIKey, error) {
 	result, err := _m.Edges.APIKeyOrErr()
 	if IsNotLoaded(err) {
@@ -788,6 +804,30 @@ func (_m *User) OwnedModels(ctx context.Context) (result []*Model, err error) {
 	return result, err
 }
 
+func (_m *User) PublishRequests(ctx context.Context) (result []*PublishRequest, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedPublishRequests(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.PublishRequestsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryPublishRequests().All(ctx)
+	}
+	return result, err
+}
+
+func (_m *User) ReviewedRequests(ctx context.Context) (result []*PublishRequest, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedReviewedRequests(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.ReviewedRequestsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryReviewedRequests().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *User) PrivateProject(ctx context.Context) (*Project, error) {
 	result, err := _m.Edges.PrivateProjectOrErr()
 	if IsNotLoaded(err) {
@@ -804,7 +844,7 @@ func (_m *User) APIKeys(
 		WithAPIKeyFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[4][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
 	if nodes, err := _m.NamedAPIKeys(alias); err == nil || hasTotalCount {
 		pager, err := newAPIKeyPager(opts, last != nil)
 		if err != nil {
@@ -825,7 +865,7 @@ func (_m *User) Roles(
 		WithRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[5][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
 	if nodes, err := _m.NamedRoles(alias); err == nil || hasTotalCount {
 		pager, err := newRolePager(opts, last != nil)
 		if err != nil {
@@ -846,7 +886,7 @@ func (_m *User) ChannelOverrideTemplates(
 		WithChannelOverrideTemplateFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[6][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
 	if nodes, err := _m.NamedChannelOverrideTemplates(alias); err == nil || hasTotalCount {
 		pager, err := newChannelOverrideTemplatePager(opts, last != nil)
 		if err != nil {
@@ -867,7 +907,7 @@ func (_m *User) OidcIdentities(
 		WithOIDCIdentityFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[7][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[9][alias]
 	if nodes, err := _m.NamedOidcIdentities(alias); err == nil || hasTotalCount {
 		pager, err := newOIDCIdentityPager(opts, last != nil)
 		if err != nil {
@@ -888,7 +928,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[8][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[10][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -909,7 +949,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[9][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[11][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {

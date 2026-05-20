@@ -26,6 +26,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -62,6 +63,7 @@ const (
 	TypePrompt                   = "Prompt"
 	TypePromptProtectionRule     = "PromptProtectionRule"
 	TypeProviderQuotaStatus      = "ProviderQuotaStatus"
+	TypePublishRequest           = "PublishRequest"
 	TypeRequest                  = "Request"
 	TypeRequestExecution         = "RequestExecution"
 	TypeRole                     = "Role"
@@ -15594,6 +15596,1047 @@ func (m *ProviderQuotaStatusMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown ProviderQuotaStatus edge %s", name)
 }
 
+// PublishRequestMutation represents an operation that mutates the PublishRequest nodes in the graph.
+type PublishRequestMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *int
+	adddeleted_at    *int
+	resource_type    *publishrequest.ResourceType
+	resource_id      *int
+	addresource_id   *int
+	status           *publishrequest.Status
+	review_comment   *string
+	request_comment  *string
+	clearedFields    map[string]struct{}
+	requester        *int
+	clearedrequester bool
+	reviewer         *int
+	clearedreviewer  bool
+	done             bool
+	oldValue         func(context.Context) (*PublishRequest, error)
+	predicates       []predicate.PublishRequest
+}
+
+var _ ent.Mutation = (*PublishRequestMutation)(nil)
+
+// publishrequestOption allows management of the mutation configuration using functional options.
+type publishrequestOption func(*PublishRequestMutation)
+
+// newPublishRequestMutation creates new mutation for the PublishRequest entity.
+func newPublishRequestMutation(c config, op Op, opts ...publishrequestOption) *PublishRequestMutation {
+	m := &PublishRequestMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePublishRequest,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPublishRequestID sets the ID field of the mutation.
+func withPublishRequestID(id int) publishrequestOption {
+	return func(m *PublishRequestMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PublishRequest
+		)
+		m.oldValue = func(ctx context.Context) (*PublishRequest, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PublishRequest.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPublishRequest sets the old PublishRequest of the mutation.
+func withPublishRequest(node *PublishRequest) publishrequestOption {
+	return func(m *PublishRequestMutation) {
+		m.oldValue = func(context.Context) (*PublishRequest, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PublishRequestMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PublishRequestMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PublishRequestMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PublishRequestMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PublishRequest.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PublishRequestMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PublishRequestMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PublishRequestMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PublishRequestMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PublishRequestMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PublishRequestMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *PublishRequestMutation) SetDeletedAt(i int) {
+	m.deleted_at = &i
+	m.adddeleted_at = nil
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *PublishRequestMutation) DeletedAt() (r int, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldDeletedAt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// AddDeletedAt adds i to the "deleted_at" field.
+func (m *PublishRequestMutation) AddDeletedAt(i int) {
+	if m.adddeleted_at != nil {
+		*m.adddeleted_at += i
+	} else {
+		m.adddeleted_at = &i
+	}
+}
+
+// AddedDeletedAt returns the value that was added to the "deleted_at" field in this mutation.
+func (m *PublishRequestMutation) AddedDeletedAt() (r int, exists bool) {
+	v := m.adddeleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *PublishRequestMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	m.adddeleted_at = nil
+}
+
+// SetResourceType sets the "resource_type" field.
+func (m *PublishRequestMutation) SetResourceType(pt publishrequest.ResourceType) {
+	m.resource_type = &pt
+}
+
+// ResourceType returns the value of the "resource_type" field in the mutation.
+func (m *PublishRequestMutation) ResourceType() (r publishrequest.ResourceType, exists bool) {
+	v := m.resource_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceType returns the old "resource_type" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldResourceType(ctx context.Context) (v publishrequest.ResourceType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceType: %w", err)
+	}
+	return oldValue.ResourceType, nil
+}
+
+// ResetResourceType resets all changes to the "resource_type" field.
+func (m *PublishRequestMutation) ResetResourceType() {
+	m.resource_type = nil
+}
+
+// SetResourceID sets the "resource_id" field.
+func (m *PublishRequestMutation) SetResourceID(i int) {
+	m.resource_id = &i
+	m.addresource_id = nil
+}
+
+// ResourceID returns the value of the "resource_id" field in the mutation.
+func (m *PublishRequestMutation) ResourceID() (r int, exists bool) {
+	v := m.resource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResourceID returns the old "resource_id" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldResourceID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResourceID: %w", err)
+	}
+	return oldValue.ResourceID, nil
+}
+
+// AddResourceID adds i to the "resource_id" field.
+func (m *PublishRequestMutation) AddResourceID(i int) {
+	if m.addresource_id != nil {
+		*m.addresource_id += i
+	} else {
+		m.addresource_id = &i
+	}
+}
+
+// AddedResourceID returns the value that was added to the "resource_id" field in this mutation.
+func (m *PublishRequestMutation) AddedResourceID() (r int, exists bool) {
+	v := m.addresource_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResourceID resets all changes to the "resource_id" field.
+func (m *PublishRequestMutation) ResetResourceID() {
+	m.resource_id = nil
+	m.addresource_id = nil
+}
+
+// SetRequesterID sets the "requester_id" field.
+func (m *PublishRequestMutation) SetRequesterID(i int) {
+	m.requester = &i
+}
+
+// RequesterID returns the value of the "requester_id" field in the mutation.
+func (m *PublishRequestMutation) RequesterID() (r int, exists bool) {
+	v := m.requester
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequesterID returns the old "requester_id" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldRequesterID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequesterID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequesterID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequesterID: %w", err)
+	}
+	return oldValue.RequesterID, nil
+}
+
+// ResetRequesterID resets all changes to the "requester_id" field.
+func (m *PublishRequestMutation) ResetRequesterID() {
+	m.requester = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PublishRequestMutation) SetStatus(pu publishrequest.Status) {
+	m.status = &pu
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PublishRequestMutation) Status() (r publishrequest.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldStatus(ctx context.Context) (v publishrequest.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PublishRequestMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (m *PublishRequestMutation) SetReviewerID(i int) {
+	m.reviewer = &i
+}
+
+// ReviewerID returns the value of the "reviewer_id" field in the mutation.
+func (m *PublishRequestMutation) ReviewerID() (r int, exists bool) {
+	v := m.reviewer
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewerID returns the old "reviewer_id" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldReviewerID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewerID: %w", err)
+	}
+	return oldValue.ReviewerID, nil
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (m *PublishRequestMutation) ClearReviewerID() {
+	m.reviewer = nil
+	m.clearedFields[publishrequest.FieldReviewerID] = struct{}{}
+}
+
+// ReviewerIDCleared returns if the "reviewer_id" field was cleared in this mutation.
+func (m *PublishRequestMutation) ReviewerIDCleared() bool {
+	_, ok := m.clearedFields[publishrequest.FieldReviewerID]
+	return ok
+}
+
+// ResetReviewerID resets all changes to the "reviewer_id" field.
+func (m *PublishRequestMutation) ResetReviewerID() {
+	m.reviewer = nil
+	delete(m.clearedFields, publishrequest.FieldReviewerID)
+}
+
+// SetReviewComment sets the "review_comment" field.
+func (m *PublishRequestMutation) SetReviewComment(s string) {
+	m.review_comment = &s
+}
+
+// ReviewComment returns the value of the "review_comment" field in the mutation.
+func (m *PublishRequestMutation) ReviewComment() (r string, exists bool) {
+	v := m.review_comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewComment returns the old "review_comment" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldReviewComment(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewComment: %w", err)
+	}
+	return oldValue.ReviewComment, nil
+}
+
+// ClearReviewComment clears the value of the "review_comment" field.
+func (m *PublishRequestMutation) ClearReviewComment() {
+	m.review_comment = nil
+	m.clearedFields[publishrequest.FieldReviewComment] = struct{}{}
+}
+
+// ReviewCommentCleared returns if the "review_comment" field was cleared in this mutation.
+func (m *PublishRequestMutation) ReviewCommentCleared() bool {
+	_, ok := m.clearedFields[publishrequest.FieldReviewComment]
+	return ok
+}
+
+// ResetReviewComment resets all changes to the "review_comment" field.
+func (m *PublishRequestMutation) ResetReviewComment() {
+	m.review_comment = nil
+	delete(m.clearedFields, publishrequest.FieldReviewComment)
+}
+
+// SetRequestComment sets the "request_comment" field.
+func (m *PublishRequestMutation) SetRequestComment(s string) {
+	m.request_comment = &s
+}
+
+// RequestComment returns the value of the "request_comment" field in the mutation.
+func (m *PublishRequestMutation) RequestComment() (r string, exists bool) {
+	v := m.request_comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequestComment returns the old "request_comment" field's value of the PublishRequest entity.
+// If the PublishRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublishRequestMutation) OldRequestComment(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequestComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequestComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequestComment: %w", err)
+	}
+	return oldValue.RequestComment, nil
+}
+
+// ClearRequestComment clears the value of the "request_comment" field.
+func (m *PublishRequestMutation) ClearRequestComment() {
+	m.request_comment = nil
+	m.clearedFields[publishrequest.FieldRequestComment] = struct{}{}
+}
+
+// RequestCommentCleared returns if the "request_comment" field was cleared in this mutation.
+func (m *PublishRequestMutation) RequestCommentCleared() bool {
+	_, ok := m.clearedFields[publishrequest.FieldRequestComment]
+	return ok
+}
+
+// ResetRequestComment resets all changes to the "request_comment" field.
+func (m *PublishRequestMutation) ResetRequestComment() {
+	m.request_comment = nil
+	delete(m.clearedFields, publishrequest.FieldRequestComment)
+}
+
+// ClearRequester clears the "requester" edge to the User entity.
+func (m *PublishRequestMutation) ClearRequester() {
+	m.clearedrequester = true
+	m.clearedFields[publishrequest.FieldRequesterID] = struct{}{}
+}
+
+// RequesterCleared reports if the "requester" edge to the User entity was cleared.
+func (m *PublishRequestMutation) RequesterCleared() bool {
+	return m.clearedrequester
+}
+
+// RequesterIDs returns the "requester" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequesterID instead. It exists only for internal usage by the builders.
+func (m *PublishRequestMutation) RequesterIDs() (ids []int) {
+	if id := m.requester; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequester resets all changes to the "requester" edge.
+func (m *PublishRequestMutation) ResetRequester() {
+	m.requester = nil
+	m.clearedrequester = false
+}
+
+// ClearReviewer clears the "reviewer" edge to the User entity.
+func (m *PublishRequestMutation) ClearReviewer() {
+	m.clearedreviewer = true
+	m.clearedFields[publishrequest.FieldReviewerID] = struct{}{}
+}
+
+// ReviewerCleared reports if the "reviewer" edge to the User entity was cleared.
+func (m *PublishRequestMutation) ReviewerCleared() bool {
+	return m.ReviewerIDCleared() || m.clearedreviewer
+}
+
+// ReviewerIDs returns the "reviewer" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ReviewerID instead. It exists only for internal usage by the builders.
+func (m *PublishRequestMutation) ReviewerIDs() (ids []int) {
+	if id := m.reviewer; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetReviewer resets all changes to the "reviewer" edge.
+func (m *PublishRequestMutation) ResetReviewer() {
+	m.reviewer = nil
+	m.clearedreviewer = false
+}
+
+// Where appends a list predicates to the PublishRequestMutation builder.
+func (m *PublishRequestMutation) Where(ps ...predicate.PublishRequest) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PublishRequestMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PublishRequestMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PublishRequest, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PublishRequestMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PublishRequestMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PublishRequest).
+func (m *PublishRequestMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PublishRequestMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.created_at != nil {
+		fields = append(fields, publishrequest.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, publishrequest.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, publishrequest.FieldDeletedAt)
+	}
+	if m.resource_type != nil {
+		fields = append(fields, publishrequest.FieldResourceType)
+	}
+	if m.resource_id != nil {
+		fields = append(fields, publishrequest.FieldResourceID)
+	}
+	if m.requester != nil {
+		fields = append(fields, publishrequest.FieldRequesterID)
+	}
+	if m.status != nil {
+		fields = append(fields, publishrequest.FieldStatus)
+	}
+	if m.reviewer != nil {
+		fields = append(fields, publishrequest.FieldReviewerID)
+	}
+	if m.review_comment != nil {
+		fields = append(fields, publishrequest.FieldReviewComment)
+	}
+	if m.request_comment != nil {
+		fields = append(fields, publishrequest.FieldRequestComment)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PublishRequestMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case publishrequest.FieldCreatedAt:
+		return m.CreatedAt()
+	case publishrequest.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case publishrequest.FieldDeletedAt:
+		return m.DeletedAt()
+	case publishrequest.FieldResourceType:
+		return m.ResourceType()
+	case publishrequest.FieldResourceID:
+		return m.ResourceID()
+	case publishrequest.FieldRequesterID:
+		return m.RequesterID()
+	case publishrequest.FieldStatus:
+		return m.Status()
+	case publishrequest.FieldReviewerID:
+		return m.ReviewerID()
+	case publishrequest.FieldReviewComment:
+		return m.ReviewComment()
+	case publishrequest.FieldRequestComment:
+		return m.RequestComment()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PublishRequestMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case publishrequest.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case publishrequest.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case publishrequest.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case publishrequest.FieldResourceType:
+		return m.OldResourceType(ctx)
+	case publishrequest.FieldResourceID:
+		return m.OldResourceID(ctx)
+	case publishrequest.FieldRequesterID:
+		return m.OldRequesterID(ctx)
+	case publishrequest.FieldStatus:
+		return m.OldStatus(ctx)
+	case publishrequest.FieldReviewerID:
+		return m.OldReviewerID(ctx)
+	case publishrequest.FieldReviewComment:
+		return m.OldReviewComment(ctx)
+	case publishrequest.FieldRequestComment:
+		return m.OldRequestComment(ctx)
+	}
+	return nil, fmt.Errorf("unknown PublishRequest field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PublishRequestMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case publishrequest.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case publishrequest.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case publishrequest.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case publishrequest.FieldResourceType:
+		v, ok := value.(publishrequest.ResourceType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceType(v)
+		return nil
+	case publishrequest.FieldResourceID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResourceID(v)
+		return nil
+	case publishrequest.FieldRequesterID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequesterID(v)
+		return nil
+	case publishrequest.FieldStatus:
+		v, ok := value.(publishrequest.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case publishrequest.FieldReviewerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewerID(v)
+		return nil
+	case publishrequest.FieldReviewComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewComment(v)
+		return nil
+	case publishrequest.FieldRequestComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequestComment(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PublishRequestMutation) AddedFields() []string {
+	var fields []string
+	if m.adddeleted_at != nil {
+		fields = append(fields, publishrequest.FieldDeletedAt)
+	}
+	if m.addresource_id != nil {
+		fields = append(fields, publishrequest.FieldResourceID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PublishRequestMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case publishrequest.FieldDeletedAt:
+		return m.AddedDeletedAt()
+	case publishrequest.FieldResourceID:
+		return m.AddedResourceID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PublishRequestMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case publishrequest.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDeletedAt(v)
+		return nil
+	case publishrequest.FieldResourceID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResourceID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PublishRequestMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(publishrequest.FieldReviewerID) {
+		fields = append(fields, publishrequest.FieldReviewerID)
+	}
+	if m.FieldCleared(publishrequest.FieldReviewComment) {
+		fields = append(fields, publishrequest.FieldReviewComment)
+	}
+	if m.FieldCleared(publishrequest.FieldRequestComment) {
+		fields = append(fields, publishrequest.FieldRequestComment)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PublishRequestMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PublishRequestMutation) ClearField(name string) error {
+	switch name {
+	case publishrequest.FieldReviewerID:
+		m.ClearReviewerID()
+		return nil
+	case publishrequest.FieldReviewComment:
+		m.ClearReviewComment()
+		return nil
+	case publishrequest.FieldRequestComment:
+		m.ClearRequestComment()
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PublishRequestMutation) ResetField(name string) error {
+	switch name {
+	case publishrequest.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case publishrequest.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case publishrequest.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case publishrequest.FieldResourceType:
+		m.ResetResourceType()
+		return nil
+	case publishrequest.FieldResourceID:
+		m.ResetResourceID()
+		return nil
+	case publishrequest.FieldRequesterID:
+		m.ResetRequesterID()
+		return nil
+	case publishrequest.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case publishrequest.FieldReviewerID:
+		m.ResetReviewerID()
+		return nil
+	case publishrequest.FieldReviewComment:
+		m.ResetReviewComment()
+		return nil
+	case publishrequest.FieldRequestComment:
+		m.ResetRequestComment()
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PublishRequestMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.requester != nil {
+		edges = append(edges, publishrequest.EdgeRequester)
+	}
+	if m.reviewer != nil {
+		edges = append(edges, publishrequest.EdgeReviewer)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PublishRequestMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case publishrequest.EdgeRequester:
+		if id := m.requester; id != nil {
+			return []ent.Value{*id}
+		}
+	case publishrequest.EdgeReviewer:
+		if id := m.reviewer; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PublishRequestMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PublishRequestMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PublishRequestMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedrequester {
+		edges = append(edges, publishrequest.EdgeRequester)
+	}
+	if m.clearedreviewer {
+		edges = append(edges, publishrequest.EdgeReviewer)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PublishRequestMutation) EdgeCleared(name string) bool {
+	switch name {
+	case publishrequest.EdgeRequester:
+		return m.clearedrequester
+	case publishrequest.EdgeReviewer:
+		return m.clearedreviewer
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PublishRequestMutation) ClearEdge(name string) error {
+	switch name {
+	case publishrequest.EdgeRequester:
+		m.ClearRequester()
+		return nil
+	case publishrequest.EdgeReviewer:
+		m.ClearReviewer()
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PublishRequestMutation) ResetEdge(name string) error {
+	switch name {
+	case publishrequest.EdgeRequester:
+		m.ResetRequester()
+		return nil
+	case publishrequest.EdgeReviewer:
+		m.ResetReviewer()
+		return nil
+	}
+	return fmt.Errorf("unknown PublishRequest edge %s", name)
+}
+
 // RequestMutation represents an operation that mutates the Request nodes in the graph.
 type RequestMutation struct {
 	config
@@ -25551,6 +26594,12 @@ type UserMutation struct {
 	owned_models                      map[int]struct{}
 	removedowned_models               map[int]struct{}
 	clearedowned_models               bool
+	publish_requests                  map[int]struct{}
+	removedpublish_requests           map[int]struct{}
+	clearedpublish_requests           bool
+	reviewed_requests                 map[int]struct{}
+	removedreviewed_requests          map[int]struct{}
+	clearedreviewed_requests          bool
 	private_project                   *int
 	clearedprivate_project            bool
 	api_keys                          map[int]struct{}
@@ -26379,6 +27428,114 @@ func (m *UserMutation) ResetOwnedModels() {
 	m.removedowned_models = nil
 }
 
+// AddPublishRequestIDs adds the "publish_requests" edge to the PublishRequest entity by ids.
+func (m *UserMutation) AddPublishRequestIDs(ids ...int) {
+	if m.publish_requests == nil {
+		m.publish_requests = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.publish_requests[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPublishRequests clears the "publish_requests" edge to the PublishRequest entity.
+func (m *UserMutation) ClearPublishRequests() {
+	m.clearedpublish_requests = true
+}
+
+// PublishRequestsCleared reports if the "publish_requests" edge to the PublishRequest entity was cleared.
+func (m *UserMutation) PublishRequestsCleared() bool {
+	return m.clearedpublish_requests
+}
+
+// RemovePublishRequestIDs removes the "publish_requests" edge to the PublishRequest entity by IDs.
+func (m *UserMutation) RemovePublishRequestIDs(ids ...int) {
+	if m.removedpublish_requests == nil {
+		m.removedpublish_requests = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.publish_requests, ids[i])
+		m.removedpublish_requests[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPublishRequests returns the removed IDs of the "publish_requests" edge to the PublishRequest entity.
+func (m *UserMutation) RemovedPublishRequestsIDs() (ids []int) {
+	for id := range m.removedpublish_requests {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PublishRequestsIDs returns the "publish_requests" edge IDs in the mutation.
+func (m *UserMutation) PublishRequestsIDs() (ids []int) {
+	for id := range m.publish_requests {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPublishRequests resets all changes to the "publish_requests" edge.
+func (m *UserMutation) ResetPublishRequests() {
+	m.publish_requests = nil
+	m.clearedpublish_requests = false
+	m.removedpublish_requests = nil
+}
+
+// AddReviewedRequestIDs adds the "reviewed_requests" edge to the PublishRequest entity by ids.
+func (m *UserMutation) AddReviewedRequestIDs(ids ...int) {
+	if m.reviewed_requests == nil {
+		m.reviewed_requests = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.reviewed_requests[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReviewedRequests clears the "reviewed_requests" edge to the PublishRequest entity.
+func (m *UserMutation) ClearReviewedRequests() {
+	m.clearedreviewed_requests = true
+}
+
+// ReviewedRequestsCleared reports if the "reviewed_requests" edge to the PublishRequest entity was cleared.
+func (m *UserMutation) ReviewedRequestsCleared() bool {
+	return m.clearedreviewed_requests
+}
+
+// RemoveReviewedRequestIDs removes the "reviewed_requests" edge to the PublishRequest entity by IDs.
+func (m *UserMutation) RemoveReviewedRequestIDs(ids ...int) {
+	if m.removedreviewed_requests == nil {
+		m.removedreviewed_requests = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.reviewed_requests, ids[i])
+		m.removedreviewed_requests[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReviewedRequests returns the removed IDs of the "reviewed_requests" edge to the PublishRequest entity.
+func (m *UserMutation) RemovedReviewedRequestsIDs() (ids []int) {
+	for id := range m.removedreviewed_requests {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReviewedRequestsIDs returns the "reviewed_requests" edge IDs in the mutation.
+func (m *UserMutation) ReviewedRequestsIDs() (ids []int) {
+	for id := range m.reviewed_requests {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReviewedRequests resets all changes to the "reviewed_requests" edge.
+func (m *UserMutation) ResetReviewedRequests() {
+	m.reviewed_requests = nil
+	m.clearedreviewed_requests = false
+	m.removedreviewed_requests = nil
+}
+
 // ClearPrivateProject clears the "private_project" edge to the Project entity.
 func (m *UserMutation) ClearPrivateProject() {
 	m.clearedprivate_project = true
@@ -27103,7 +28260,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.projects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -27112,6 +28269,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.owned_models != nil {
 		edges = append(edges, user.EdgeOwnedModels)
+	}
+	if m.publish_requests != nil {
+		edges = append(edges, user.EdgePublishRequests)
+	}
+	if m.reviewed_requests != nil {
+		edges = append(edges, user.EdgeReviewedRequests)
 	}
 	if m.private_project != nil {
 		edges = append(edges, user.EdgePrivateProject)
@@ -27156,6 +28319,18 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	case user.EdgeOwnedModels:
 		ids := make([]ent.Value, 0, len(m.owned_models))
 		for id := range m.owned_models {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgePublishRequests:
+		ids := make([]ent.Value, 0, len(m.publish_requests))
+		for id := range m.publish_requests {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeReviewedRequests:
+		ids := make([]ent.Value, 0, len(m.reviewed_requests))
+		for id := range m.reviewed_requests {
 			ids = append(ids, id)
 		}
 		return ids
@@ -27205,7 +28380,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.removedprojects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -27214,6 +28389,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedowned_models != nil {
 		edges = append(edges, user.EdgeOwnedModels)
+	}
+	if m.removedpublish_requests != nil {
+		edges = append(edges, user.EdgePublishRequests)
+	}
+	if m.removedreviewed_requests != nil {
+		edges = append(edges, user.EdgeReviewedRequests)
 	}
 	if m.removedapi_keys != nil {
 		edges = append(edges, user.EdgeAPIKeys)
@@ -27255,6 +28436,18 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	case user.EdgeOwnedModels:
 		ids := make([]ent.Value, 0, len(m.removedowned_models))
 		for id := range m.removedowned_models {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgePublishRequests:
+		ids := make([]ent.Value, 0, len(m.removedpublish_requests))
+		for id := range m.removedpublish_requests {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeReviewedRequests:
+		ids := make([]ent.Value, 0, len(m.removedreviewed_requests))
+		for id := range m.removedreviewed_requests {
 			ids = append(ids, id)
 		}
 		return ids
@@ -27300,7 +28493,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 10)
+	edges := make([]string, 0, 12)
 	if m.clearedprojects {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -27309,6 +28502,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedowned_models {
 		edges = append(edges, user.EdgeOwnedModels)
+	}
+	if m.clearedpublish_requests {
+		edges = append(edges, user.EdgePublishRequests)
+	}
+	if m.clearedreviewed_requests {
+		edges = append(edges, user.EdgeReviewedRequests)
 	}
 	if m.clearedprivate_project {
 		edges = append(edges, user.EdgePrivateProject)
@@ -27344,6 +28543,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedowned_channels
 	case user.EdgeOwnedModels:
 		return m.clearedowned_models
+	case user.EdgePublishRequests:
+		return m.clearedpublish_requests
+	case user.EdgeReviewedRequests:
+		return m.clearedreviewed_requests
 	case user.EdgePrivateProject:
 		return m.clearedprivate_project
 	case user.EdgeAPIKeys:
@@ -27385,6 +28588,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeOwnedModels:
 		m.ResetOwnedModels()
+		return nil
+	case user.EdgePublishRequests:
+		m.ResetPublishRequests()
+		return nil
+	case user.EdgeReviewedRequests:
+		m.ResetReviewedRequests()
 		return nil
 	case user.EdgePrivateProject:
 		m.ResetPrivateProject()

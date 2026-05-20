@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
@@ -247,6 +248,36 @@ func (_u *UserUpdate) AddOwnedModels(v ...*Model) *UserUpdate {
 	return _u.AddOwnedModelIDs(ids...)
 }
 
+// AddPublishRequestIDs adds the "publish_requests" edge to the PublishRequest entity by IDs.
+func (_u *UserUpdate) AddPublishRequestIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddPublishRequestIDs(ids...)
+	return _u
+}
+
+// AddPublishRequests adds the "publish_requests" edges to the PublishRequest entity.
+func (_u *UserUpdate) AddPublishRequests(v ...*PublishRequest) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPublishRequestIDs(ids...)
+}
+
+// AddReviewedRequestIDs adds the "reviewed_requests" edge to the PublishRequest entity by IDs.
+func (_u *UserUpdate) AddReviewedRequestIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddReviewedRequestIDs(ids...)
+	return _u
+}
+
+// AddReviewedRequests adds the "reviewed_requests" edges to the PublishRequest entity.
+func (_u *UserUpdate) AddReviewedRequests(v ...*PublishRequest) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReviewedRequestIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -403,6 +434,48 @@ func (_u *UserUpdate) RemoveOwnedModels(v ...*Model) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOwnedModelIDs(ids...)
+}
+
+// ClearPublishRequests clears all "publish_requests" edges to the PublishRequest entity.
+func (_u *UserUpdate) ClearPublishRequests() *UserUpdate {
+	_u.mutation.ClearPublishRequests()
+	return _u
+}
+
+// RemovePublishRequestIDs removes the "publish_requests" edge to PublishRequest entities by IDs.
+func (_u *UserUpdate) RemovePublishRequestIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemovePublishRequestIDs(ids...)
+	return _u
+}
+
+// RemovePublishRequests removes "publish_requests" edges to PublishRequest entities.
+func (_u *UserUpdate) RemovePublishRequests(v ...*PublishRequest) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePublishRequestIDs(ids...)
+}
+
+// ClearReviewedRequests clears all "reviewed_requests" edges to the PublishRequest entity.
+func (_u *UserUpdate) ClearReviewedRequests() *UserUpdate {
+	_u.mutation.ClearReviewedRequests()
+	return _u
+}
+
+// RemoveReviewedRequestIDs removes the "reviewed_requests" edge to PublishRequest entities by IDs.
+func (_u *UserUpdate) RemoveReviewedRequestIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveReviewedRequestIDs(ids...)
+	return _u
+}
+
+// RemoveReviewedRequests removes "reviewed_requests" edges to PublishRequest entities.
+func (_u *UserUpdate) RemoveReviewedRequests(v ...*PublishRequest) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReviewedRequestIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -788,6 +861,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PublishRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPublishRequestsIDs(); len(nodes) > 0 && !_u.mutation.PublishRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PublishRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReviewedRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReviewedRequestsIDs(); len(nodes) > 0 && !_u.mutation.ReviewedRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewedRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1307,6 +1470,36 @@ func (_u *UserUpdateOne) AddOwnedModels(v ...*Model) *UserUpdateOne {
 	return _u.AddOwnedModelIDs(ids...)
 }
 
+// AddPublishRequestIDs adds the "publish_requests" edge to the PublishRequest entity by IDs.
+func (_u *UserUpdateOne) AddPublishRequestIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddPublishRequestIDs(ids...)
+	return _u
+}
+
+// AddPublishRequests adds the "publish_requests" edges to the PublishRequest entity.
+func (_u *UserUpdateOne) AddPublishRequests(v ...*PublishRequest) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPublishRequestIDs(ids...)
+}
+
+// AddReviewedRequestIDs adds the "reviewed_requests" edge to the PublishRequest entity by IDs.
+func (_u *UserUpdateOne) AddReviewedRequestIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddReviewedRequestIDs(ids...)
+	return _u
+}
+
+// AddReviewedRequests adds the "reviewed_requests" edges to the PublishRequest entity.
+func (_u *UserUpdateOne) AddReviewedRequests(v ...*PublishRequest) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReviewedRequestIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1463,6 +1656,48 @@ func (_u *UserUpdateOne) RemoveOwnedModels(v ...*Model) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOwnedModelIDs(ids...)
+}
+
+// ClearPublishRequests clears all "publish_requests" edges to the PublishRequest entity.
+func (_u *UserUpdateOne) ClearPublishRequests() *UserUpdateOne {
+	_u.mutation.ClearPublishRequests()
+	return _u
+}
+
+// RemovePublishRequestIDs removes the "publish_requests" edge to PublishRequest entities by IDs.
+func (_u *UserUpdateOne) RemovePublishRequestIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemovePublishRequestIDs(ids...)
+	return _u
+}
+
+// RemovePublishRequests removes "publish_requests" edges to PublishRequest entities.
+func (_u *UserUpdateOne) RemovePublishRequests(v ...*PublishRequest) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePublishRequestIDs(ids...)
+}
+
+// ClearReviewedRequests clears all "reviewed_requests" edges to the PublishRequest entity.
+func (_u *UserUpdateOne) ClearReviewedRequests() *UserUpdateOne {
+	_u.mutation.ClearReviewedRequests()
+	return _u
+}
+
+// RemoveReviewedRequestIDs removes the "reviewed_requests" edge to PublishRequest entities by IDs.
+func (_u *UserUpdateOne) RemoveReviewedRequestIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveReviewedRequestIDs(ids...)
+	return _u
+}
+
+// RemoveReviewedRequests removes "reviewed_requests" edges to PublishRequest entities.
+func (_u *UserUpdateOne) RemoveReviewedRequests(v ...*PublishRequest) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReviewedRequestIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -1878,6 +2113,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PublishRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPublishRequestsIDs(); len(nodes) > 0 && !_u.mutation.PublishRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PublishRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PublishRequestsTable,
+			Columns: []string{user.PublishRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReviewedRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReviewedRequestsIDs(); len(nodes) > 0 && !_u.mutation.ReviewedRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewedRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReviewedRequestsTable,
+			Columns: []string{user.ReviewedRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

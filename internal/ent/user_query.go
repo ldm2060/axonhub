@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
@@ -36,6 +37,8 @@ type UserQuery struct {
 	withProjects                      *ProjectQuery
 	withOwnedChannels                 *ChannelQuery
 	withOwnedModels                   *ModelQuery
+	withPublishRequests               *PublishRequestQuery
+	withReviewedRequests              *PublishRequestQuery
 	withPrivateProject                *ProjectQuery
 	withAPIKeys                       *APIKeyQuery
 	withRoles                         *RoleQuery
@@ -48,6 +51,8 @@ type UserQuery struct {
 	withNamedProjects                 map[string]*ProjectQuery
 	withNamedOwnedChannels            map[string]*ChannelQuery
 	withNamedOwnedModels              map[string]*ModelQuery
+	withNamedPublishRequests          map[string]*PublishRequestQuery
+	withNamedReviewedRequests         map[string]*PublishRequestQuery
 	withNamedAPIKeys                  map[string]*APIKeyQuery
 	withNamedRoles                    map[string]*RoleQuery
 	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
@@ -149,6 +154,50 @@ func (_q *UserQuery) QueryOwnedModels() *ModelQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(model.Table, model.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnedModelsTable, user.OwnedModelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPublishRequests chains the current query on the "publish_requests" edge.
+func (_q *UserQuery) QueryPublishRequests() *PublishRequestQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(publishrequest.Table, publishrequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PublishRequestsTable, user.PublishRequestsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReviewedRequests chains the current query on the "reviewed_requests" edge.
+func (_q *UserQuery) QueryReviewedRequests() *PublishRequestQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(publishrequest.Table, publishrequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReviewedRequestsTable, user.ReviewedRequestsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -505,6 +554,8 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withProjects:                 _q.withProjects.Clone(),
 		withOwnedChannels:            _q.withOwnedChannels.Clone(),
 		withOwnedModels:              _q.withOwnedModels.Clone(),
+		withPublishRequests:          _q.withPublishRequests.Clone(),
+		withReviewedRequests:         _q.withReviewedRequests.Clone(),
 		withPrivateProject:           _q.withPrivateProject.Clone(),
 		withAPIKeys:                  _q.withAPIKeys.Clone(),
 		withRoles:                    _q.withRoles.Clone(),
@@ -549,6 +600,28 @@ func (_q *UserQuery) WithOwnedModels(opts ...func(*ModelQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withOwnedModels = query
+	return _q
+}
+
+// WithPublishRequests tells the query-builder to eager-load the nodes that are connected to
+// the "publish_requests" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPublishRequests(opts ...func(*PublishRequestQuery)) *UserQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPublishRequests = query
+	return _q
+}
+
+// WithReviewedRequests tells the query-builder to eager-load the nodes that are connected to
+// the "reviewed_requests" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithReviewedRequests(opts ...func(*PublishRequestQuery)) *UserQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReviewedRequests = query
 	return _q
 }
 
@@ -713,10 +786,12 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [10]bool{
+		loadedTypes = [12]bool{
 			_q.withProjects != nil,
 			_q.withOwnedChannels != nil,
 			_q.withOwnedModels != nil,
+			_q.withPublishRequests != nil,
+			_q.withReviewedRequests != nil,
 			_q.withPrivateProject != nil,
 			_q.withAPIKeys != nil,
 			_q.withRoles != nil,
@@ -765,6 +840,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadOwnedModels(ctx, query, nodes,
 			func(n *User) { n.Edges.OwnedModels = []*Model{} },
 			func(n *User, e *Model) { n.Edges.OwnedModels = append(n.Edges.OwnedModels, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPublishRequests; query != nil {
+		if err := _q.loadPublishRequests(ctx, query, nodes,
+			func(n *User) { n.Edges.PublishRequests = []*PublishRequest{} },
+			func(n *User, e *PublishRequest) { n.Edges.PublishRequests = append(n.Edges.PublishRequests, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReviewedRequests; query != nil {
+		if err := _q.loadReviewedRequests(ctx, query, nodes,
+			func(n *User) { n.Edges.ReviewedRequests = []*PublishRequest{} },
+			func(n *User, e *PublishRequest) { n.Edges.ReviewedRequests = append(n.Edges.ReviewedRequests, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -836,6 +925,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadOwnedModels(ctx, query, nodes,
 			func(n *User) { n.appendNamedOwnedModels(name) },
 			func(n *User, e *Model) { n.appendNamedOwnedModels(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedPublishRequests {
+		if err := _q.loadPublishRequests(ctx, query, nodes,
+			func(n *User) { n.appendNamedPublishRequests(name) },
+			func(n *User, e *PublishRequest) { n.appendNamedPublishRequests(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedReviewedRequests {
+		if err := _q.loadReviewedRequests(ctx, query, nodes,
+			func(n *User) { n.appendNamedReviewedRequests(name) },
+			func(n *User, e *PublishRequest) { n.appendNamedReviewedRequests(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1005,6 +1108,69 @@ func (_q *UserQuery) loadOwnedModels(ctx context.Context, query *ModelQuery, nod
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadPublishRequests(ctx context.Context, query *PublishRequestQuery, nodes []*User, init func(*User), assign func(*User, *PublishRequest)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(publishrequest.FieldRequesterID)
+	}
+	query.Where(predicate.PublishRequest(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PublishRequestsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RequesterID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "requester_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadReviewedRequests(ctx context.Context, query *PublishRequestQuery, nodes []*User, init func(*User), assign func(*User, *PublishRequest)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(publishrequest.FieldReviewerID)
+	}
+	query.Where(predicate.PublishRequest(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReviewedRequestsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ReviewerID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "reviewer_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "reviewer_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -1389,6 +1555,34 @@ func (_q *UserQuery) WithNamedOwnedModels(name string, opts ...func(*ModelQuery)
 		_q.withNamedOwnedModels = make(map[string]*ModelQuery)
 	}
 	_q.withNamedOwnedModels[name] = query
+	return _q
+}
+
+// WithNamedPublishRequests tells the query-builder to eager-load the nodes that are connected to the "publish_requests"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedPublishRequests(name string, opts ...func(*PublishRequestQuery)) *UserQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedPublishRequests == nil {
+		_q.withNamedPublishRequests = make(map[string]*PublishRequestQuery)
+	}
+	_q.withNamedPublishRequests[name] = query
+	return _q
+}
+
+// WithNamedReviewedRequests tells the query-builder to eager-load the nodes that are connected to the "reviewed_requests"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedReviewedRequests(name string, opts ...func(*PublishRequestQuery)) *UserQuery {
+	query := (&PublishRequestClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedReviewedRequests == nil {
+		_q.withNamedReviewedRequests = make(map[string]*PublishRequestQuery)
+	}
+	_q.withNamedReviewedRequests[name] = query
 	return _q
 }
 

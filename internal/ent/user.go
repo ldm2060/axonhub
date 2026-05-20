@@ -59,6 +59,10 @@ type UserEdges struct {
 	OwnedChannels []*Channel `json:"owned_channels,omitempty"`
 	// OwnedModels holds the value of the owned_models edge.
 	OwnedModels []*Model `json:"owned_models,omitempty"`
+	// PublishRequests holds the value of the publish_requests edge.
+	PublishRequests []*PublishRequest `json:"publish_requests,omitempty"`
+	// ReviewedRequests holds the value of the reviewed_requests edge.
+	ReviewedRequests []*PublishRequest `json:"reviewed_requests,omitempty"`
 	// PrivateProject holds the value of the private_project edge.
 	PrivateProject *Project `json:"private_project,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
@@ -75,13 +79,15 @@ type UserEdges struct {
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [10]bool
+	loadedTypes [12]bool
 	// totalCount holds the count of the edges above.
-	totalCount [10]map[string]int
+	totalCount [12]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedOwnedChannels            map[string][]*Channel
 	namedOwnedModels              map[string][]*Model
+	namedPublishRequests          map[string][]*PublishRequest
+	namedReviewedRequests         map[string][]*PublishRequest
 	namedAPIKeys                  map[string][]*APIKey
 	namedRoles                    map[string][]*Role
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
@@ -117,12 +123,30 @@ func (e UserEdges) OwnedModelsOrErr() ([]*Model, error) {
 	return nil, &NotLoadedError{edge: "owned_models"}
 }
 
+// PublishRequestsOrErr returns the PublishRequests value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PublishRequestsOrErr() ([]*PublishRequest, error) {
+	if e.loadedTypes[3] {
+		return e.PublishRequests, nil
+	}
+	return nil, &NotLoadedError{edge: "publish_requests"}
+}
+
+// ReviewedRequestsOrErr returns the ReviewedRequests value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReviewedRequestsOrErr() ([]*PublishRequest, error) {
+	if e.loadedTypes[4] {
+		return e.ReviewedRequests, nil
+	}
+	return nil, &NotLoadedError{edge: "reviewed_requests"}
+}
+
 // PrivateProjectOrErr returns the PrivateProject value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e UserEdges) PrivateProjectOrErr() (*Project, error) {
 	if e.PrivateProject != nil {
 		return e.PrivateProject, nil
-	} else if e.loadedTypes[3] {
+	} else if e.loadedTypes[5] {
 		return nil, &NotFoundError{label: project.Label}
 	}
 	return nil, &NotLoadedError{edge: "private_project"}
@@ -131,7 +155,7 @@ func (e UserEdges) PrivateProjectOrErr() (*Project, error) {
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -140,7 +164,7 @@ func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -149,7 +173,7 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 // ChannelOverrideTemplatesOrErr returns the ChannelOverrideTemplates value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ChannelOverrideTemplatesOrErr() ([]*ChannelOverrideTemplate, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.ChannelOverrideTemplates, nil
 	}
 	return nil, &NotLoadedError{edge: "channel_override_templates"}
@@ -158,7 +182,7 @@ func (e UserEdges) ChannelOverrideTemplatesOrErr() ([]*ChannelOverrideTemplate, 
 // OidcIdentitiesOrErr returns the OidcIdentities value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[9] {
 		return e.OidcIdentities, nil
 	}
 	return nil, &NotLoadedError{edge: "oidc_identities"}
@@ -167,7 +191,7 @@ func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[10] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -176,7 +200,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[11] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -325,6 +349,16 @@ func (_m *User) QueryOwnedChannels() *ChannelQuery {
 // QueryOwnedModels queries the "owned_models" edge of the User entity.
 func (_m *User) QueryOwnedModels() *ModelQuery {
 	return NewUserClient(_m.config).QueryOwnedModels(_m)
+}
+
+// QueryPublishRequests queries the "publish_requests" edge of the User entity.
+func (_m *User) QueryPublishRequests() *PublishRequestQuery {
+	return NewUserClient(_m.config).QueryPublishRequests(_m)
+}
+
+// QueryReviewedRequests queries the "reviewed_requests" edge of the User entity.
+func (_m *User) QueryReviewedRequests() *PublishRequestQuery {
+	return NewUserClient(_m.config).QueryReviewedRequests(_m)
 }
 
 // QueryPrivateProject queries the "private_project" edge of the User entity.
@@ -497,6 +531,54 @@ func (_m *User) appendNamedOwnedModels(name string, edges ...*Model) {
 		_m.Edges.namedOwnedModels[name] = []*Model{}
 	} else {
 		_m.Edges.namedOwnedModels[name] = append(_m.Edges.namedOwnedModels[name], edges...)
+	}
+}
+
+// NamedPublishRequests returns the PublishRequests named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedPublishRequests(name string) ([]*PublishRequest, error) {
+	if _m.Edges.namedPublishRequests == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedPublishRequests[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedPublishRequests(name string, edges ...*PublishRequest) {
+	if _m.Edges.namedPublishRequests == nil {
+		_m.Edges.namedPublishRequests = make(map[string][]*PublishRequest)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedPublishRequests[name] = []*PublishRequest{}
+	} else {
+		_m.Edges.namedPublishRequests[name] = append(_m.Edges.namedPublishRequests[name], edges...)
+	}
+}
+
+// NamedReviewedRequests returns the ReviewedRequests named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedReviewedRequests(name string) ([]*PublishRequest, error) {
+	if _m.Edges.namedReviewedRequests == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedReviewedRequests[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedReviewedRequests(name string, edges ...*PublishRequest) {
+	if _m.Edges.namedReviewedRequests == nil {
+		_m.Edges.namedReviewedRequests = make(map[string][]*PublishRequest)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedReviewedRequests[name] = []*PublishRequest{}
+	} else {
+		_m.Edges.namedReviewedRequests[name] = append(_m.Edges.namedReviewedRequests[name], edges...)
 	}
 }
 

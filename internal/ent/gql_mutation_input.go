@@ -12,6 +12,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
@@ -919,6 +920,72 @@ func (c *PromptProtectionRuleUpdate) SetInput(i UpdatePromptProtectionRuleInput)
 
 // SetInput applies the change-set in the UpdatePromptProtectionRuleInput on the PromptProtectionRuleUpdateOne builder.
 func (c *PromptProtectionRuleUpdateOne) SetInput(i UpdatePromptProtectionRuleInput) *PromptProtectionRuleUpdateOne {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// CreatePublishRequestInput represents a mutation input for creating publishrequests.
+type CreatePublishRequestInput struct {
+	ResourceType   publishrequest.ResourceType
+	ResourceID     int
+	ReviewComment  *string
+	RequestComment *string
+}
+
+// Mutate applies the CreatePublishRequestInput on the PublishRequestMutation builder.
+func (i *CreatePublishRequestInput) Mutate(m *PublishRequestMutation) {
+	m.SetResourceType(i.ResourceType)
+	m.SetResourceID(i.ResourceID)
+	if v := i.ReviewComment; v != nil {
+		m.SetReviewComment(*v)
+	}
+	if v := i.RequestComment; v != nil {
+		m.SetRequestComment(*v)
+	}
+}
+
+// SetInput applies the change-set in the CreatePublishRequestInput on the PublishRequestCreate builder.
+func (c *PublishRequestCreate) SetInput(i CreatePublishRequestInput) *PublishRequestCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// UpdatePublishRequestInput represents a mutation input for updating publishrequests.
+type UpdatePublishRequestInput struct {
+	Status              *publishrequest.Status
+	ClearReviewComment  bool
+	ReviewComment       *string
+	ClearRequestComment bool
+	RequestComment      *string
+}
+
+// Mutate applies the UpdatePublishRequestInput on the PublishRequestMutation builder.
+func (i *UpdatePublishRequestInput) Mutate(m *PublishRequestMutation) {
+	if v := i.Status; v != nil {
+		m.SetStatus(*v)
+	}
+	if i.ClearReviewComment {
+		m.ClearReviewComment()
+	}
+	if v := i.ReviewComment; v != nil {
+		m.SetReviewComment(*v)
+	}
+	if i.ClearRequestComment {
+		m.ClearRequestComment()
+	}
+	if v := i.RequestComment; v != nil {
+		m.SetRequestComment(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdatePublishRequestInput on the PublishRequestUpdate builder.
+func (c *PublishRequestUpdate) SetInput(i UpdatePublishRequestInput) *PublishRequestUpdate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// SetInput applies the change-set in the UpdatePublishRequestInput on the PublishRequestUpdateOne builder.
+func (c *PublishRequestUpdateOne) SetInput(i UpdatePublishRequestInput) *PublishRequestUpdateOne {
 	i.Mutate(c.Mutation())
 	return c
 }

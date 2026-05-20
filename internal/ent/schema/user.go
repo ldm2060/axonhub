@@ -68,6 +68,8 @@ func (User) Edges() []ent.Edge {
 			),
 		edge.To("owned_channels", Channel.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 			edge.To("owned_models", Model.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			edge.To("publish_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+			edge.To("reviewed_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 			edge.To("private_project", Project.Type).Unique().Immutable().Field("private_project_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 			edge.To("api_keys", APIKey.Type).
 			Annotations(

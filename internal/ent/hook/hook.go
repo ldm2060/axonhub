@@ -177,6 +177,18 @@ func (f ProviderQuotaStatusFunc) Mutate(ctx context.Context, m ent.Mutation) (en
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProviderQuotaStatusMutation", m)
 }
 
+// The PublishRequestFunc type is an adapter to allow the use of ordinary
+// function as PublishRequest mutator.
+type PublishRequestFunc func(context.Context, *ent.PublishRequestMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PublishRequestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PublishRequestMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PublishRequestMutation", m)
+}
+
 // The RequestFunc type is an adapter to allow the use of ordinary
 // function as Request mutator.
 type RequestFunc func(context.Context, *ent.RequestMutation) (ent.Value, error)

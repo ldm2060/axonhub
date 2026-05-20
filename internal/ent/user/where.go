@@ -769,6 +769,52 @@ func HasOwnedModelsWith(preds ...predicate.Model) predicate.User {
 	})
 }
 
+// HasPublishRequests applies the HasEdge predicate on the "publish_requests" edge.
+func HasPublishRequests() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PublishRequestsTable, PublishRequestsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPublishRequestsWith applies the HasEdge predicate on the "publish_requests" edge with a given conditions (other predicates).
+func HasPublishRequestsWith(preds ...predicate.PublishRequest) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPublishRequestsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReviewedRequests applies the HasEdge predicate on the "reviewed_requests" edge.
+func HasReviewedRequests() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReviewedRequestsTable, ReviewedRequestsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReviewedRequestsWith applies the HasEdge predicate on the "reviewed_requests" edge with a given conditions (other predicates).
+func HasReviewedRequestsWith(preds ...predicate.PublishRequest) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newReviewedRequestsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasPrivateProject applies the HasEdge predicate on the "private_project" edge.
 func HasPrivateProject() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

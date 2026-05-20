@@ -28,6 +28,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -116,6 +117,11 @@ var providerquotastatusImplementors = []string{"ProviderQuotaStatus", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*ProviderQuotaStatus) IsNode() {}
+
+var publishrequestImplementors = []string{"PublishRequest", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*PublishRequest) IsNode() {}
 
 var requestImplementors = []string{"Request", "Node"}
 
@@ -347,6 +353,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(providerquotastatus.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, providerquotastatusImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case publishrequest.Table:
+		query := c.PublishRequest.Query().
+			Where(publishrequest.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, publishrequestImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -726,6 +741,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.ProviderQuotaStatus.Query().
 			Where(providerquotastatus.IDIn(ids...))
 		query, err := query.CollectFields(ctx, providerquotastatusImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case publishrequest.Table:
+		query := c.PublishRequest.Query().
+			Where(publishrequest.IDIn(ids...))
+		query, err := query.CollectFields(ctx, publishrequestImplementors...)
 		if err != nil {
 			return nil, err
 		}

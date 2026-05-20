@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -578,6 +579,41 @@ func init() {
 	providerquotastatusDescReady := providerquotastatusFields[5].Descriptor()
 	// providerquotastatus.DefaultReady holds the default value on creation for the ready field.
 	providerquotastatus.DefaultReady = providerquotastatusDescReady.Default.(bool)
+	publishrequestMixin := schema.PublishRequest{}.Mixin()
+	publishrequest.Policy = privacy.NewPolicies(schema.PublishRequest{})
+	publishrequest.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := publishrequest.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	publishrequestMixinHooks1 := publishrequestMixin[1].Hooks()
+
+	publishrequest.Hooks[1] = publishrequestMixinHooks1[0]
+	publishrequestMixinInters1 := publishrequestMixin[1].Interceptors()
+	publishrequest.Interceptors[0] = publishrequestMixinInters1[0]
+	publishrequestMixinFields0 := publishrequestMixin[0].Fields()
+	_ = publishrequestMixinFields0
+	publishrequestMixinFields1 := publishrequestMixin[1].Fields()
+	_ = publishrequestMixinFields1
+	publishrequestFields := schema.PublishRequest{}.Fields()
+	_ = publishrequestFields
+	// publishrequestDescCreatedAt is the schema descriptor for created_at field.
+	publishrequestDescCreatedAt := publishrequestMixinFields0[0].Descriptor()
+	// publishrequest.DefaultCreatedAt holds the default value on creation for the created_at field.
+	publishrequest.DefaultCreatedAt = publishrequestDescCreatedAt.Default.(func() time.Time)
+	// publishrequestDescUpdatedAt is the schema descriptor for updated_at field.
+	publishrequestDescUpdatedAt := publishrequestMixinFields0[1].Descriptor()
+	// publishrequest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	publishrequest.DefaultUpdatedAt = publishrequestDescUpdatedAt.Default.(func() time.Time)
+	// publishrequest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	publishrequest.UpdateDefaultUpdatedAt = publishrequestDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// publishrequestDescDeletedAt is the schema descriptor for deleted_at field.
+	publishrequestDescDeletedAt := publishrequestMixinFields1[0].Descriptor()
+	// publishrequest.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	publishrequest.DefaultDeletedAt = publishrequestDescDeletedAt.Default.(int)
 	requestMixin := schema.Request{}.Mixin()
 	request.Policy = privacy.NewPolicies(schema.Request{})
 	request.Hooks[0] = func(next ent.Mutator) ent.Mutator {

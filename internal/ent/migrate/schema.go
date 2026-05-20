@@ -510,6 +510,52 @@ var (
 			},
 		},
 	}
+	// PublishRequestsColumns holds the columns for the "publish_requests" table.
+	PublishRequestsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
+		{Name: "resource_type", Type: field.TypeEnum, Enums: []string{"channel", "model"}},
+		{Name: "resource_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected"}, Default: "pending"},
+		{Name: "review_comment", Type: field.TypeString, Nullable: true},
+		{Name: "request_comment", Type: field.TypeString, Nullable: true},
+		{Name: "requester_id", Type: field.TypeInt},
+		{Name: "reviewer_id", Type: field.TypeInt, Nullable: true},
+	}
+	// PublishRequestsTable holds the schema information for the "publish_requests" table.
+	PublishRequestsTable = &schema.Table{
+		Name:       "publish_requests",
+		Columns:    PublishRequestsColumns,
+		PrimaryKey: []*schema.Column{PublishRequestsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "publish_requests_users_publish_requests",
+				Columns:    []*schema.Column{PublishRequestsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "publish_requests_users_reviewed_requests",
+				Columns:    []*schema.Column{PublishRequestsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "publish_requests_by_status",
+				Unique:  false,
+				Columns: []*schema.Column{PublishRequestsColumns[6], PublishRequestsColumns[3]},
+			},
+			{
+				Name:    "publish_requests_by_requester",
+				Unique:  false,
+				Columns: []*schema.Column{PublishRequestsColumns[9], PublishRequestsColumns[3]},
+			},
+		},
+	}
 	// RequestsColumns holds the columns for the "requests" table.
 	RequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1051,6 +1097,7 @@ var (
 		PromptsTable,
 		PromptProtectionRulesTable,
 		ProviderQuotaStatusTable,
+		PublishRequestsTable,
 		RequestsTable,
 		RequestExecutionsTable,
 		RolesTable,
@@ -1077,6 +1124,8 @@ func init() {
 	ModelsTable.ForeignKeys[0].RefTable = UsersTable
 	OidcIdentitiesTable.ForeignKeys[0].RefTable = UsersTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable
+	PublishRequestsTable.ForeignKeys[0].RefTable = UsersTable
+	PublishRequestsTable.ForeignKeys[1].RefTable = UsersTable
 	RequestsTable.ForeignKeys[0].RefTable = APIKeysTable
 	RequestsTable.ForeignKeys[1].RefTable = ChannelsTable
 	RequestsTable.ForeignKeys[2].RefTable = DataStoragesTable
