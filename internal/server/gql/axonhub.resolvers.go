@@ -715,6 +715,9 @@ func (r *queryResolver) CountChannelsByType(ctx context.Context, input CountChan
 	} else {
 		q = q.Where(channel.StatusNEQ(channel.StatusArchived))
 	}
+	if input.OwnerID != nil {
+		q = q.Where(channel.OwnerIDEQ(input.OwnerID.ID))
+	}
 
 	err := q.GroupBy(channel.FieldType).
 		Aggregate(ent.Count()).Scan(ctx, &results)

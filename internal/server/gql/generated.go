@@ -66518,7 +66518,7 @@ func (ec *executionContext) unmarshalInputCountChannelsByTypeInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"statusIn"}
+	fieldsInOrder := [...]string{"statusIn", "ownerID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -66532,6 +66532,13 @@ func (ec *executionContext) unmarshalInputCountChannelsByTypeInput(ctx context.C
 				return it, err
 			}
 			it.StatusIn = data
+		case "ownerID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerID = data
 		}
 	}
 

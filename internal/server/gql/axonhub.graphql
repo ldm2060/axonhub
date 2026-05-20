@@ -894,6 +894,10 @@ input CountChannelsByTypeInput {
   Filtering options for Channels returned from the connection.
   """
   statusIn: [ChannelStatus!]
+  """
+  Filter by owner ID to get counts for a specific user's channels.
+  """
+  ownerID: ID
 }
 
 extend type Query {

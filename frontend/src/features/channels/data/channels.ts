@@ -1440,17 +1440,20 @@ export interface ChannelTypeCount {
   count: number;
 }
 
-export function useChannelTypes(statusIn?: string[]) {
+export function useChannelTypes(statusIn?: string[], ownerID?: number) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
 
   return useQuery({
-    queryKey: ['channelTypes', statusIn],
+    queryKey: ['channelTypes', statusIn, ownerID],
     queryFn: async () => {
       try {
-        const input: { statusIn?: string[] } = {};
+        const input: { statusIn?: string[]; ownerID?: number } = {};
         if (statusIn && statusIn.length > 0) {
           input.statusIn = statusIn;
+        }
+        if (ownerID !== undefined) {
+          input.ownerID = ownerID;
         }
         const data = await graphqlRequest<{ countChannelsByType: ChannelTypeCount[] }>(CHANNEL_TYPES_QUERY, { input });
         return data.countChannelsByType || [];
@@ -1464,25 +1467,30 @@ export function useChannelTypes(statusIn?: string[]) {
 }
 
 const ERROR_CHANNELS_COUNT_QUERY = `
-  query GetErrorChannelsCount {
+  query GetErrorChannelsCount($where: ChannelWhereInput) {
     channels(
       first: 1,
-      where: { errorMessageNotNil: true }
+      where: $where
     ) {
       totalCount
     }
   }
 `;
 
-export function useErrorChannelsCount() {
+export function useErrorChannelsCount(ownerID?: number) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
 
+  const where: Record<string, unknown> = { errorMessageNotNil: true };
+  if (ownerID !== undefined) {
+    where.ownerID = ownerID;
+  }
+
   return useQuery({
-    queryKey: ['errorChannelsCount'],
+    queryKey: ['errorChannelsCount', ownerID],
     queryFn: async () => {
       try {
-        const data = await graphqlRequest<{ channels: { totalCount: number } }>(ERROR_CHANNELS_COUNT_QUERY);
+        const data = await graphqlRequest<{ channels: { totalCount: number } }>(ERROR_CHANNELS_COUNT_QUERY, { where });
         return data.channels.totalCount;
       } catch (error) {
         handleError(error, t('common.errors.internalServerError'));

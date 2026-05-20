@@ -202,6 +202,8 @@ type CostStatsByModel struct {
 type CountChannelsByTypeInput struct {
 	// Filtering options for Channels returned from the connection.
 	StatusIn []channel.Status `json:"statusIn,omitempty"`
+	// Filter by owner ID to get counts for a specific user's channels.
+	OwnerID *objects.GUID `json:"ownerID,omitempty"`
 }
 
 type DailyRequestStats struct {

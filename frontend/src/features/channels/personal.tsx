@@ -66,8 +66,8 @@ function PersonalChannelsContent() {
     localStorage.setItem('my-channels-table-sorting', JSON.stringify(sorting));
   }, [sorting]);
 
-  const { data: channelTypeCounts = [] } = useChannelTypes(statusFilter.length > 0 ? statusFilter : ['enabled', 'disabled']);
-  const { data: errorCount = 0 } = useErrorChannelsCount();
+  const { data: channelTypeCounts = [] } = useChannelTypes(statusFilter.length > 0 ? statusFilter : ['enabled', 'disabled'], currentUser?.id);
+  const { data: errorCount = 0 } = useErrorChannelsCount(currentUser?.id);
   const debouncedNameFilter = useDebounce(nameFilter, 300);
 
   const tabFilteredTypes = useMemo(() => {
