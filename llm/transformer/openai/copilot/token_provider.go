@@ -7,9 +7,9 @@ import (
 	"github.com/ldm2060/axonhub/llm/oauth"
 )
 
-// CopilotTokenProvider manages OAuth2 credentials and exchanges them for Copilot tokens.
-// It wraps oauth.DeviceFlowProvider internally to handle the device flow lifecycle
-// and token exchange for Copilot-specific tokens.
+// CopilotTokenProvider manages OAuth2 credentials for the Copilot API.
+// It wraps oauth.DeviceFlowProvider internally to handle the device flow lifecycle.
+// Uses OAuth access_token directly as Bearer token — no exchange step needed.
 type CopilotTokenProvider struct {
 	deviceFlowProvider *oauth.DeviceFlowProvider
 }
@@ -22,12 +22,9 @@ type TokenProviderParams struct {
 }
 
 // NewTokenProvider creates a new CopilotTokenProvider instance.
-// It wraps a DeviceFlowProvider to handle the device flow lifecycle and token exchange.
+// It wraps a DeviceFlowProvider to handle the device flow lifecycle.
+// The OAuth access_token is used directly for Copilot API authentication.
 func NewTokenProvider(params TokenProviderParams) (*CopilotTokenProvider, error) {
-	exchanger := NewTokenExchanger(TokenExchangerParams{
-		HTTPClient: params.HTTPClient,
-	})
-
 	config := oauth.DeviceFlowConfig{ //nolint:gosec
 		DeviceAuthURL: "https://github.com/login/device/code",
 		TokenURL:      "https://github.com/login/oauth/access_token",
@@ -37,11 +34,10 @@ func NewTokenProvider(params TokenProviderParams) (*CopilotTokenProvider, error)
 	}
 
 	deviceFlowProvider := oauth.NewDeviceFlowProvider(oauth.DeviceFlowProviderParams{
-		Config:         config,
-		HTTPClient:     params.HTTPClient,
-		Credentials:    params.Credentials,
-		TokenExchanger: exchanger,
-		OnRefreshed:    params.OnRefreshed,
+		Config:      config,
+		HTTPClient:  params.HTTPClient,
+		Credentials: params.Credentials,
+		OnRefreshed: params.OnRefreshed,
 	})
 
 	return &CopilotTokenProvider{
@@ -49,9 +45,8 @@ func NewTokenProvider(params TokenProviderParams) (*CopilotTokenProvider, error)
 	}, nil
 }
 
-// GetToken returns a valid Copilot token.
-// If the cached copilot token is expired or missing, it exchanges the access token for a new one.
-// This method implements the token provider interface used by the Copilot outbound transformer.
+// GetToken returns a valid OAuth access_token for the Copilot API.
+// Refreshes the token if expired using the refresh_token.
 func (p *CopilotTokenProvider) GetToken(ctx context.Context) (string, error) {
 	return p.deviceFlowProvider.GetToken(ctx)
 }

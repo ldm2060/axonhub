@@ -822,7 +822,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel) (*Channel
 			return nil, fmt.Errorf("github_copilot channel %s has invalid credentials: %w", c.Name, err)
 		}
 
-		// Create CopilotTokenProvider with the token exchanger
+		// Create CopilotTokenProvider for direct OAuth token usage
 		p, err := copilot.NewTokenProvider(copilot.TokenProviderParams{
 			Credentials: creds,
 			HTTPClient:  httpClient,

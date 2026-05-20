@@ -6,3 +6,6 @@ const ProviderConfURL = "https://raw.githubusercontent.com/ThinkInAIXYZ/PublicPr
 
 // ProviderID is the provider identifier in the PublicProviderConf.
 const ProviderID = "github-copilot"
+
+// ModelsEndpoint is the path to fetch available models from the Copilot API.
+const ModelsEndpoint = "/models"

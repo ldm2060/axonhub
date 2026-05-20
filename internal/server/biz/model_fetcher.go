@@ -15,8 +15,10 @@ import (
 
 	"github.com/samber/lo"
 
+	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/oauth"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
 	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 	"github.com/ldm2060/axonhub/llm/transformer/gemini/vertex"
@@ -31,7 +33,34 @@ type ModelFetcher struct {
 	httpClient          *httpclient.HttpClient
 	channelService      *ChannelService
 	copilotFetcher      *providerConfFetcher
+	copilotDynamicCache *copilotDynamicModelCache
 	geminiVertexFetcher *providerConfFetcher
+}
+
+// copilotDynamicModelCache caches models fetched from the Copilot /models API.
+type copilotDynamicModelCache struct {
+	models    []ModelIdentify
+	mu        sync.RWMutex
+	timestamp time.Time
+}
+
+func (c *copilotDynamicModelCache) Get() ([]ModelIdentify, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if len(c.models) > 0 && time.Since(c.timestamp) < providerConfCacheDuration {
+		result := make([]ModelIdentify, len(c.models))
+		copy(result, c.models)
+		return result, true
+	}
+	return nil, false
+}
+
+func (c *copilotDynamicModelCache) Set(models []ModelIdentify) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.models = make([]ModelIdentify, len(models))
+	copy(c.models, models)
+	c.timestamp = time.Now()
 }
 
 // providerConfFetcher handles fetching models from PublicProviderConf with caching.
@@ -145,6 +174,7 @@ func NewModelFetcher(httpClient *httpclient.HttpClient, channelService *ChannelS
 			cacheDuration: providerConfCacheDuration,
 			providerURL:   copilot.ProviderConfURL,
 		},
+		copilotDynamicCache: &copilotDynamicModelCache{},
 		geminiVertexFetcher: &providerConfFetcher{
 			cacheDuration: providerConfCacheDuration,
 			providerURL:   vertex.ProviderConfURL,
@@ -194,9 +224,79 @@ func isOfficialOnlyType(typ channel.Type) bool {
 	return typ == channel.TypeClaudecode || typ == channel.TypeCodex
 }
 
-// fetchCopilotModels fetches GitHub Copilot models from PublicProviderConf with caching.
+// fetchCopilotModels fetches GitHub Copilot models.
+// Tries the dynamic /models API first (cached), falls back to static JSON config.
 func (f *ModelFetcher) fetchCopilotModels(ctx context.Context) []ModelIdentify {
+	// Try dynamic cache first
+	if models, ok := f.copilotDynamicCache.Get(); ok {
+		return models
+	}
+
+	// Try dynamic fetch from any Copilot channel with OAuth credentials
+	if models := f.fetchCopilotModelsFromAPI(ctx); len(models) > 0 {
+		f.copilotDynamicCache.Set(models)
+		return models
+	}
+
+	// Fallback to static JSON
 	return f.copilotFetcher.fetch(ctx, f.httpClient)
+}
+
+// fetchCopilotModelsFromAPI tries to fetch models from the Copilot /models API
+// using OAuth credentials from the first available Copilot channel.
+func (f *ModelFetcher) fetchCopilotModelsFromAPI(ctx context.Context) []ModelIdentify {
+	if f.channelService == nil {
+		return nil
+	}
+
+	channels, err := f.channelService.entFromContext(ctx).Channel.Query().
+		Where(channel.TypeEQ(channel.TypeGithubCopilot)).
+		All(ctx)
+	if err != nil || len(channels) == 0 {
+		return nil
+	}
+
+	for _, ch := range channels {
+		accessToken := f.copilotAccessToken(ch)
+		if accessToken == "" {
+			continue
+		}
+
+		baseURL := ch.BaseURL
+		if baseURL == "" {
+			baseURL = copilot.DefaultCopilotBaseURL
+		}
+
+		apiModels, err := copilot.FetchModels(ctx, f.httpClient, baseURL, accessToken)
+		if err != nil {
+			slog.Debug("failed to fetch copilot models from API", "channel", ch.Name, "error", err)
+			continue
+		}
+
+		models := make([]ModelIdentify, 0, len(apiModels))
+		for _, m := range apiModels {
+			models = append(models, ModelIdentify{ID: m.ID})
+		}
+		return models
+	}
+
+	return nil
+}
+
+// copilotAccessToken extracts the OAuth access token from a Copilot channel.
+func (f *ModelFetcher) copilotAccessToken(ch *ent.Channel) string {
+	if ch.Credentials.OAuth != nil && ch.Credentials.OAuth.AccessToken != "" {
+		return ch.Credentials.OAuth.AccessToken
+	}
+
+	if isOAuthJSON(ch.Credentials.APIKey) {
+		creds, err := oauth.ParseCredentialsJSON(ch.Credentials.APIKey)
+		if err == nil && creds.AccessToken != "" {
+			return creds.AccessToken
+		}
+	}
+
+	return ""
 }
 
 // fetchGeminiVertexModels fetches Gemini Vertex models from PublicProviderConf with caching.
