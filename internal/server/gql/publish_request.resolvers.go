@@ -12,6 +12,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -104,17 +105,37 @@ func (r *queryResolver) MySharedModels(ctx context.Context) ([]*ent.Model, error
 	return r.modelService.ListSharedWithUser(ctx, user.ID)
 }
 
-func derefStr(s *string) string {
-	if s == nil {
-		return ""
+// MyDashboard is the resolver for the myDashboard field.
+func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
 	}
-	return *s
-}
 
-func guidSliceToIntSlice(guids []*objects.GUID) []int {
-	ids := make([]int, 0, len(guids))
-	for _, g := range guids {
-		ids = append(ids, g.ID)
+	projectID, err := r.userService.EnsurePrivateProject(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve private project: %w", err)
 	}
-	return ids
+
+	stats := &DashboardOverview{
+		TotalRequests:       0,
+		FailedRequests:      0,
+		AverageResponseTime: nil,
+	}
+
+	totalRequests, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDEQ(projectID)).
+		Count(ctx)
+	if err == nil {
+		stats.TotalRequests = totalRequests
+	}
+
+	requestStats, err := r.RequestStats(ctx)
+	if err == nil {
+		stats.RequestStats = requestStats
+	} else {
+		stats.RequestStats = &RequestStats{}
+	}
+
+	return stats, nil
 }

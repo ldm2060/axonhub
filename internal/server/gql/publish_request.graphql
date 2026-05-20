@@ -11,6 +11,7 @@ extend type Mutation {
 extend type Query {
   mySharedChannels: [Channel!]!
   mySharedModels: [Model!]!
+  myDashboard: DashboardOverview!
 }
 
 enum ReviewAction {
