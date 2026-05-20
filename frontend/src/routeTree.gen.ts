@@ -24,8 +24,10 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedSystemIndexRouteImport } from './routes/_authenticated/system/index'
+import { Route as AuthenticatedSharedIndexRouteImport } from './routes/_authenticated/shared/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRolesIndexRouteImport } from './routes/_authenticated/roles/index'
+import { Route as AuthenticatedPublishRequestsIndexRouteImport } from './routes/_authenticated/publish-requests/index'
 import { Route as AuthenticatedPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/prompt-protection-rules/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
@@ -130,6 +132,12 @@ const AuthenticatedSystemIndexRoute =
     path: '/system/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSharedIndexRoute =
+  AuthenticatedSharedIndexRouteImport.update({
+    id: '/shared/',
+    path: '/shared/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
@@ -141,6 +149,12 @@ const AuthenticatedRolesIndexRoute = AuthenticatedRolesIndexRouteImport.update({
   path: '/roles/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPublishRequestsIndexRoute =
+  AuthenticatedPublishRequestsIndexRouteImport.update({
+    id: '/publish-requests/',
+    path: '/publish-requests/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPromptProtectionRulesIndexRoute =
   AuthenticatedPromptProtectionRulesIndexRouteImport.update({
     id: '/prompt-protection-rules/',
@@ -331,8 +345,10 @@ export interface FileRoutesByFullPath {
   '/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/prompt-protection-rules/': typeof AuthenticatedPromptProtectionRulesIndexRoute
+  '/publish-requests/': typeof AuthenticatedPublishRequestsIndexRoute
   '/roles/': typeof AuthenticatedRolesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/shared/': typeof AuthenticatedSharedIndexRoute
   '/system/': typeof AuthenticatedSystemIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
@@ -375,8 +391,10 @@ export interface FileRoutesByTo {
   '/permission-demo': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/prompt-protection-rules': typeof AuthenticatedPromptProtectionRulesIndexRoute
+  '/publish-requests': typeof AuthenticatedPublishRequestsIndexRoute
   '/roles': typeof AuthenticatedRolesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/shared': typeof AuthenticatedSharedIndexRoute
   '/system': typeof AuthenticatedSystemIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
@@ -422,8 +440,10 @@ export interface FileRoutesById {
   '/_authenticated/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/prompt-protection-rules/': typeof AuthenticatedPromptProtectionRulesIndexRoute
+  '/_authenticated/publish-requests/': typeof AuthenticatedPublishRequestsIndexRoute
   '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/shared/': typeof AuthenticatedSharedIndexRoute
   '/_authenticated/system/': typeof AuthenticatedSystemIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
@@ -469,8 +489,10 @@ export interface FileRouteTypes {
     | '/permission-demo/'
     | '/projects/'
     | '/prompt-protection-rules/'
+    | '/publish-requests/'
     | '/roles/'
     | '/settings/'
+    | '/shared/'
     | '/system/'
     | '/users/'
     | '/project/requests/$requestId'
@@ -513,8 +535,10 @@ export interface FileRouteTypes {
     | '/permission-demo'
     | '/projects'
     | '/prompt-protection-rules'
+    | '/publish-requests'
     | '/roles'
     | '/settings'
+    | '/shared'
     | '/system'
     | '/users'
     | '/project/requests/$requestId'
@@ -559,8 +583,10 @@ export interface FileRouteTypes {
     | '/_authenticated/permission-demo/'
     | '/_authenticated/projects/'
     | '/_authenticated/prompt-protection-rules/'
+    | '/_authenticated/publish-requests/'
     | '/_authenticated/roles/'
     | '/_authenticated/settings/'
+    | '/_authenticated/shared/'
     | '/_authenticated/system/'
     | '/_authenticated/users/'
     | '/_authenticated/project/requests/$requestId'
@@ -697,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/shared/': {
+      id: '/_authenticated/shared/'
+      path: '/shared'
+      fullPath: '/shared/'
+      preLoaderRoute: typeof AuthenticatedSharedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/'
@@ -709,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/roles'
       fullPath: '/roles/'
       preLoaderRoute: typeof AuthenticatedRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/publish-requests/': {
+      id: '/_authenticated/publish-requests/'
+      path: '/publish-requests'
+      fullPath: '/publish-requests/'
+      preLoaderRoute: typeof AuthenticatedPublishRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/prompt-protection-rules/': {
@@ -941,7 +981,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPermissionDemoIndexRoute: typeof AuthenticatedPermissionDemoIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedPromptProtectionRulesIndexRoute: typeof AuthenticatedPromptProtectionRulesIndexRoute
+  AuthenticatedPublishRequestsIndexRoute: typeof AuthenticatedPublishRequestsIndexRoute
   AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
+  AuthenticatedSharedIndexRoute: typeof AuthenticatedSharedIndexRoute
   AuthenticatedSystemIndexRoute: typeof AuthenticatedSystemIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
@@ -974,7 +1016,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedPromptProtectionRulesIndexRoute:
     AuthenticatedPromptProtectionRulesIndexRoute,
+  AuthenticatedPublishRequestsIndexRoute:
+    AuthenticatedPublishRequestsIndexRoute,
   AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
+  AuthenticatedSharedIndexRoute: AuthenticatedSharedIndexRoute,
   AuthenticatedSystemIndexRoute: AuthenticatedSystemIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedProjectRequestsRequestIdRoute:

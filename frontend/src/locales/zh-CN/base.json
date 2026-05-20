@@ -1,7 +1,6 @@
 {
   "sidebar.groups.admin": "管理",
-  "sidebar.groups.project": "项目",
-  "sidebar.groups.myResources": "我的资源",
+  "sidebar.groups.personal": "个人",
   "sidebar.groups.settings": "设置",
   "sidebar.items.dashboard": "仪表板",
   "sidebar.items.channels": "渠道",
@@ -305,5 +304,21 @@
   "auth.signUp.footer.agreement": "创建账户即表示您同意我们的服务条款和隐私政策",
   "settings.nav.appearance": "外观",
   "settings.nav.display": "显示",
-  "settings.nav.notifications": "通知"
+  "settings.nav.notifications": "通知",
+  "shared.title": "与我共享",
+  "shared.tabs.channels": "渠道",
+  "shared.tabs.models": "模型",
+  "shared.empty.channels": "暂无共享的渠道",
+  "shared.empty.models": "暂无共享的模型",
+  "shared.columns.owner": "所有者",
+  "shared.columns.name": "名称",
+  "shared.columns.provider": "提供商",
+  "shared.columns.status": "状态",
+  "shared.columns.models": "模型数",
+  "shared.columns.tags": "标签",
+  "shared.columns.createdAt": "创建时间",
+  "shared.columns.modelID": "模型 ID",
+  "shared.columns.type": "类型",
+  "shared.columns.developer": "开发者",
+  "shared.columns.group": "分组"
 }

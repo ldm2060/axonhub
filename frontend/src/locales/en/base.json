@@ -1,7 +1,6 @@
 {
   "sidebar.groups.admin": "Admin",
-  "sidebar.groups.project": "Project",
-  "sidebar.groups.myResources": "My Resources",
+  "sidebar.groups.personal": "Personal",
   "sidebar.groups.settings": "Settings",
   "sidebar.items.dashboard": "Dashboard",
   "sidebar.items.channels": "Channels",
@@ -305,5 +304,21 @@
   "auth.signUp.footer.agreement": "By creating an account, you agree to our Terms of Service and Privacy Policy",
   "settings.nav.appearance": "Appearance",
   "settings.nav.display": "Display",
-  "settings.nav.notifications": "Notifications"
+  "settings.nav.notifications": "Notifications",
+  "shared.title": "Shared with Me",
+  "shared.tabs.channels": "Channels",
+  "shared.tabs.models": "Models",
+  "shared.empty.channels": "No channels have been shared with you",
+  "shared.empty.models": "No models have been shared with you",
+  "shared.columns.owner": "Owner",
+  "shared.columns.name": "Name",
+  "shared.columns.provider": "Provider",
+  "shared.columns.status": "Status",
+  "shared.columns.models": "Models",
+  "shared.columns.tags": "Tags",
+  "shared.columns.createdAt": "Created",
+  "shared.columns.modelID": "Model ID",
+  "shared.columns.type": "Type",
+  "shared.columns.developer": "Developer",
+  "shared.columns.group": "Group"
 }
