@@ -168,7 +168,7 @@ export function useSidebarData(): SidebarData {
       items: [
         {
           title: t('sidebar.items.myChannels'),
-          url: '/my/channels',
+          url: '/my-channels',
           icon: IconAi,
         } as NavLink,
         {
@@ -178,7 +178,7 @@ export function useSidebarData(): SidebarData {
         } as NavLink,
         {
           title: t('sidebar.items.sharedWithMe'),
-          url: '/shared',
+          url: '/shared-channels',
           icon: IconShare,
         } as NavLink,
         {
