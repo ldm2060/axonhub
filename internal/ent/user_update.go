@@ -203,6 +203,26 @@ func (_u *UserUpdate) ClearScopes() *UserUpdate {
 	return _u
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (_u *UserUpdate) SetPrivateProjectID(v int) *UserUpdate {
+	_u.mutation.SetPrivateProjectID(v)
+	return _u
+}
+
+// SetNillablePrivateProjectID sets the "private_project_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePrivateProjectID(v *int) *UserUpdate {
+	if v != nil {
+		_u.SetPrivateProjectID(*v)
+	}
+	return _u
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (_u *UserUpdate) ClearPrivateProjectID() *UserUpdate {
+	_u.mutation.ClearPrivateProjectID()
+	return _u
+}
+
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
 func (_u *UserUpdate) AddProjectIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddProjectIDs(ids...)
@@ -276,6 +296,11 @@ func (_u *UserUpdate) AddReviewedRequests(v ...*PublishRequest) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddReviewedRequestIDs(ids...)
+}
+
+// SetPrivateProject sets the "private_project" edge to the Project entity.
+func (_u *UserUpdate) SetPrivateProject(v *Project) *UserUpdate {
+	return _u.SetPrivateProjectID(v.ID)
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
@@ -476,6 +501,12 @@ func (_u *UserUpdate) RemoveReviewedRequests(v ...*PublishRequest) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveReviewedRequestIDs(ids...)
+}
+
+// ClearPrivateProject clears the "private_project" edge to the Project entity.
+func (_u *UserUpdate) ClearPrivateProject() *UserUpdate {
+	_u.mutation.ClearPrivateProject()
+	return _u
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -958,6 +989,35 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.PrivateProjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PrivateProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1425,6 +1485,26 @@ func (_u *UserUpdateOne) ClearScopes() *UserUpdateOne {
 	return _u
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (_u *UserUpdateOne) SetPrivateProjectID(v int) *UserUpdateOne {
+	_u.mutation.SetPrivateProjectID(v)
+	return _u
+}
+
+// SetNillablePrivateProjectID sets the "private_project_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePrivateProjectID(v *int) *UserUpdateOne {
+	if v != nil {
+		_u.SetPrivateProjectID(*v)
+	}
+	return _u
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (_u *UserUpdateOne) ClearPrivateProjectID() *UserUpdateOne {
+	_u.mutation.ClearPrivateProjectID()
+	return _u
+}
+
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
 func (_u *UserUpdateOne) AddProjectIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddProjectIDs(ids...)
@@ -1498,6 +1578,11 @@ func (_u *UserUpdateOne) AddReviewedRequests(v ...*PublishRequest) *UserUpdateOn
 		ids[i] = v[i].ID
 	}
 	return _u.AddReviewedRequestIDs(ids...)
+}
+
+// SetPrivateProject sets the "private_project" edge to the Project entity.
+func (_u *UserUpdateOne) SetPrivateProject(v *Project) *UserUpdateOne {
+	return _u.SetPrivateProjectID(v.ID)
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
@@ -1698,6 +1783,12 @@ func (_u *UserUpdateOne) RemoveReviewedRequests(v ...*PublishRequest) *UserUpdat
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveReviewedRequestIDs(ids...)
+}
+
+// ClearPrivateProject clears the "private_project" edge to the Project entity.
+func (_u *UserUpdateOne) ClearPrivateProject() *UserUpdateOne {
+	_u.mutation.ClearPrivateProject()
+	return _u
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -2203,6 +2294,35 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(publishrequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PrivateProjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PrivateProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -951,6 +951,24 @@ func (u *UserUpsert) ClearScopes() *UserUpsert {
 	return u
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (u *UserUpsert) SetPrivateProjectID(v int) *UserUpsert {
+	u.Set(user.FieldPrivateProjectID, v)
+	return u
+}
+
+// UpdatePrivateProjectID sets the "private_project_id" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePrivateProjectID() *UserUpsert {
+	u.SetExcluded(user.FieldPrivateProjectID)
+	return u
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (u *UserUpsert) ClearPrivateProjectID() *UserUpsert {
+	u.SetNull(user.FieldPrivateProjectID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -964,9 +982,6 @@ func (u *UserUpsertOne) UpdateNewValues() *UserUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(user.FieldCreatedAt)
-		}
-		if _, exists := u.create.mutation.PrivateProjectID(); exists {
-			s.SetIgnore(user.FieldPrivateProjectID)
 		}
 	}))
 	return u
@@ -1174,6 +1189,27 @@ func (u *UserUpsertOne) ClearScopes() *UserUpsertOne {
 	})
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (u *UserUpsertOne) SetPrivateProjectID(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPrivateProjectID(v)
+	})
+}
+
+// UpdatePrivateProjectID sets the "private_project_id" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePrivateProjectID() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePrivateProjectID()
+	})
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (u *UserUpsertOne) ClearPrivateProjectID() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPrivateProjectID()
+	})
+}
+
 // Exec executes the query.
 func (u *UserUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -1352,9 +1388,6 @@ func (u *UserUpsertBulk) UpdateNewValues() *UserUpsertBulk {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(user.FieldCreatedAt)
-			}
-			if _, exists := b.mutation.PrivateProjectID(); exists {
-				s.SetIgnore(user.FieldPrivateProjectID)
 			}
 		}
 	}))
@@ -1560,6 +1593,27 @@ func (u *UserUpsertBulk) UpdateScopes() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearScopes() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearScopes()
+	})
+}
+
+// SetPrivateProjectID sets the "private_project_id" field.
+func (u *UserUpsertBulk) SetPrivateProjectID(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPrivateProjectID(v)
+	})
+}
+
+// UpdatePrivateProjectID sets the "private_project_id" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePrivateProjectID() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePrivateProjectID()
+	})
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (u *UserUpsertBulk) ClearPrivateProjectID() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPrivateProjectID()
 	})
 }
 

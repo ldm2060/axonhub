@@ -21,8 +21,9 @@ import (
 type UserServiceParams struct {
 	fx.In
 
-	CacheConfig xcache.Config
-	Ent         *ent.Client
+	CacheConfig    xcache.Config
+	Ent            *ent.Client
+	ProjectService *ProjectService `optional:"true"`
 }
 
 type UserService struct {
@@ -30,6 +31,7 @@ type UserService struct {
 
 	UserCache           xcache.Cache[ent.User]
 	permissionValidator *PermissionValidator
+	projectService      *ProjectService
 }
 
 func NewUserService(params UserServiceParams) *UserService {
@@ -39,6 +41,7 @@ func NewUserService(params UserServiceParams) *UserService {
 		},
 		UserCache:           xcache.NewFromConfig[ent.User](params.CacheConfig),
 		permissionValidator: NewPermissionValidator(),
+		projectService:      params.ProjectService,
 	}
 }
 
@@ -75,7 +78,47 @@ func (s *UserService) CreateUser(ctx context.Context, input ent.CreateUserInput)
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
+	// Auto-create private project if ProjectService is available
+	if s.projectService != nil {
+		projectID, err := s.projectService.CreatePrivateProject(ctx, user.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create private project: %w", err)
+		}
+
+		user, err = client.User.UpdateOneID(user.ID).
+			SetPrivateProjectID(projectID).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set private project: %w", err)
+		}
+	}
+
 	return user, nil
+}
+
+// EnsurePrivateProject returns the user's private project ID, creating one if needed.
+func (s *UserService) EnsurePrivateProject(ctx context.Context, u *ent.User) (int, error) {
+	if u.PrivateProjectID != nil {
+		return *u.PrivateProjectID, nil
+	}
+
+	if s.projectService == nil {
+		return 0, fmt.Errorf("project service not available")
+	}
+
+	projectID, err := s.projectService.CreatePrivateProject(ctx, u.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = s.entFromContext(ctx).User.UpdateOneID(u.ID).
+		SetPrivateProjectID(projectID).
+		Save(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return projectID, nil
 }
 
 // UpdateUser updates an existing user.

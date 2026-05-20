@@ -50,6 +50,68 @@ func NewProjectService(params ProjectServiceParams) *ProjectService {
 
 // CreateProject creates a new project with owner role and assigns the creator as owner.
 // It also creates three default project-level roles: admin, developer, and viewer.
+// CreatePrivateProject creates a private project for a user.
+func (s *ProjectService) CreatePrivateProject(ctx context.Context, userID int) (int, error) {
+	projectName := fmt.Sprintf("__user_%d__", userID)
+	client := s.entFromContext(ctx)
+
+	proj, err := client.Project.Create().
+		SetName(projectName).
+		SetDescription("Private project for user " + fmt.Sprint(userID)).
+		Save(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create private project: %w", err)
+	}
+
+	// Assign user as project owner
+	_, err = client.UserProject.Create().
+		SetUserID(userID).
+		SetProjectID(proj.ID).
+		SetIsOwner(true).
+		SetScopes([]string{}).
+		Save(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to assign project owner: %w", err)
+	}
+
+	// Create default project roles
+	s.createDefaultProjectRoles(ctx, proj.ID)
+
+	return proj.ID, nil
+}
+
+func (s *ProjectService) createDefaultProjectRoles(ctx context.Context, projectID int) {
+	client := s.entFromContext(ctx)
+	roles := []struct {
+		name   string
+		scopes []string
+	}{
+		{"Admin", []string{
+			string(scopes.ScopeReadUsers), string(scopes.ScopeWriteUsers),
+			string(scopes.ScopeReadRoles), string(scopes.ScopeWriteRoles),
+			string(scopes.ScopeReadAPIKeys), string(scopes.ScopeWriteAPIKeys),
+			string(scopes.ScopeReadRequests), string(scopes.ScopeWriteRequests),
+		}},
+		{"Developer", []string{
+			string(scopes.ScopeReadUsers),
+			string(scopes.ScopeReadAPIKeys), string(scopes.ScopeWriteAPIKeys),
+			string(scopes.ScopeReadRequests),
+		}},
+		{"Viewer", []string{
+			string(scopes.ScopeReadUsers),
+			string(scopes.ScopeReadRequests),
+		}},
+	}
+	for _, r := range roles {
+		client.Role.Create().
+			SetName(r.name).
+			SetLevel(role.LevelProject).
+			SetProjectID(projectID).
+			SetScopes(r.scopes).
+			SaveX(ctx)
+	}
+}
+
 func (s *ProjectService) CreateProject(ctx context.Context, input ent.CreateProjectInput) (*ent.Project, error) {
 	currentUser, ok := contexts.GetUser(ctx)
 	if !ok || currentUser == nil {
