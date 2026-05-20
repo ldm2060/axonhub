@@ -640,7 +640,11 @@ const CreatedAtCell = memo(({ row }: { row: Row<Channel> }) => {
 
 CreatedAtCell.displayName = 'CreatedAtCell';
 
-export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true): ColumnDef<Channel>[] => {
+interface CreateColumnsOptions {
+  hideOrderingWeight?: boolean;
+}
+
+export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true, options?: CreateColumnsOptions): ColumnDef<Channel>[] => {
   return [
     {
       id: 'expand',
@@ -787,19 +791,23 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
       enableSorting: false,
       enableHiding: true,
     },
-    {
-      accessorKey: 'orderingWeight',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('channels.columns.orderingWeight')} className='justify-center' />
-      ),
-      cell: OrderingWeightCell,
-      meta: {
-        className: 'w-20 min-w-20 text-center',
-      },
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
-      enableHiding: true,
-    },
+    ...(!options?.hideOrderingWeight
+      ? [
+          {
+            accessorKey: 'orderingWeight',
+            header: ({ column }: { column: any }) => (
+              <DataTableColumnHeader column={column} title={t('channels.columns.orderingWeight')} className='justify-center' />
+            ),
+            cell: OrderingWeightCell,
+            meta: {
+              className: 'w-20 min-w-20 text-center',
+            },
+            sortingFn: 'alphanumeric',
+            enableSorting: true,
+            enableHiding: true,
+          },
+        ]
+      : []),
     {
       accessorKey: 'createdAt',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.createdAt')} className='justify-center' />,
