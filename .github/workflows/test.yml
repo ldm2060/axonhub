@@ -12,6 +12,7 @@ on:
       - "release/**"
 env:
   GO111MODULE: on
+  GOPRIVATE: github.com/ldm2060,github.com/looplj
 jobs:
   test:
     runs-on: ubuntu-latest
