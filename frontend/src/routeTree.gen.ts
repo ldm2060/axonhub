@@ -31,6 +31,7 @@ import { Route as AuthenticatedPublishRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/prompt-protection-rules/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
+import { Route as AuthenticatedMyChannelsIndexRouteImport } from './routes/_authenticated/my-channels/index'
 import { Route as AuthenticatedModelsIndexRouteImport } from './routes/_authenticated/models/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDataStoragesIndexRouteImport } from './routes/_authenticated/data-storages/index'
@@ -171,6 +172,12 @@ const AuthenticatedPermissionDemoIndexRoute =
   AuthenticatedPermissionDemoIndexRouteImport.update({
     id: '/permission-demo/',
     path: '/permission-demo/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMyChannelsIndexRoute =
+  AuthenticatedMyChannelsIndexRouteImport.update({
+    id: '/my-channels/',
+    path: '/my-channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedModelsIndexRoute =
@@ -342,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/data-storages/': typeof AuthenticatedDataStoragesIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/models/': typeof AuthenticatedModelsIndexRoute
+  '/my-channels/': typeof AuthenticatedMyChannelsIndexRoute
   '/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/prompt-protection-rules/': typeof AuthenticatedPromptProtectionRulesIndexRoute
@@ -388,6 +396,7 @@ export interface FileRoutesByTo {
   '/data-storages': typeof AuthenticatedDataStoragesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/models': typeof AuthenticatedModelsIndexRoute
+  '/my-channels': typeof AuthenticatedMyChannelsIndexRoute
   '/permission-demo': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/prompt-protection-rules': typeof AuthenticatedPromptProtectionRulesIndexRoute
@@ -437,6 +446,7 @@ export interface FileRoutesById {
   '/_authenticated/data-storages/': typeof AuthenticatedDataStoragesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/models/': typeof AuthenticatedModelsIndexRoute
+  '/_authenticated/my-channels/': typeof AuthenticatedMyChannelsIndexRoute
   '/_authenticated/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/prompt-protection-rules/': typeof AuthenticatedPromptProtectionRulesIndexRoute
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/data-storages/'
     | '/help-center/'
     | '/models/'
+    | '/my-channels/'
     | '/permission-demo/'
     | '/projects/'
     | '/prompt-protection-rules/'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/data-storages'
     | '/help-center'
     | '/models'
+    | '/my-channels'
     | '/permission-demo'
     | '/projects'
     | '/prompt-protection-rules'
@@ -580,6 +592,7 @@ export interface FileRouteTypes {
     | '/_authenticated/data-storages/'
     | '/_authenticated/help-center/'
     | '/_authenticated/models/'
+    | '/_authenticated/my-channels/'
     | '/_authenticated/permission-demo/'
     | '/_authenticated/projects/'
     | '/_authenticated/prompt-protection-rules/'
@@ -770,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/permission-demo'
       fullPath: '/permission-demo/'
       preLoaderRoute: typeof AuthenticatedPermissionDemoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-channels/': {
+      id: '/_authenticated/my-channels/'
+      path: '/my-channels'
+      fullPath: '/my-channels/'
+      preLoaderRoute: typeof AuthenticatedMyChannelsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/models/': {
@@ -978,6 +998,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDataStoragesIndexRoute: typeof AuthenticatedDataStoragesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedModelsIndexRoute: typeof AuthenticatedModelsIndexRoute
+  AuthenticatedMyChannelsIndexRoute: typeof AuthenticatedMyChannelsIndexRoute
   AuthenticatedPermissionDemoIndexRoute: typeof AuthenticatedPermissionDemoIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedPromptProtectionRulesIndexRoute: typeof AuthenticatedPromptProtectionRulesIndexRoute
@@ -1012,6 +1033,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDataStoragesIndexRoute: AuthenticatedDataStoragesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedModelsIndexRoute: AuthenticatedModelsIndexRoute,
+  AuthenticatedMyChannelsIndexRoute: AuthenticatedMyChannelsIndexRoute,
   AuthenticatedPermissionDemoIndexRoute: AuthenticatedPermissionDemoIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedPromptProtectionRulesIndexRoute:
