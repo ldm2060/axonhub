@@ -157,6 +157,7 @@
   "common.errors.duplicateKey": "This item already exists. Please use different values.",
   "common.errors.notFound": "{{resource}} not found",
   "common.errors.forbidden": "You don't have permission to perform this action",
+  "common.errors.noAdminPermission": "No permission to access admin pages.",
   "common.success.duplicated": "Duplicated successfully",
   "common.success.copiedToClipboard": "Copied to clipboard!",
   "common.success.roleCreated": "Role created successfully",
