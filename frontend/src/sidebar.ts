@@ -1,8 +1,6 @@
 import {
   IconLayoutDashboard,
-  IconPackages,
   IconSettings,
-  IconUsers,
   IconRobot,
   IconShield,
   IconKey,
@@ -67,54 +65,59 @@ export function useSidebarData(): SidebarData {
       items: [
         {
           title: t('sidebar.items.dashboard'),
-          url: '/',
+          url: '/admin',
           icon: IconLayoutDashboard,
         } as NavLink,
         {
-          title: t('sidebar.items.projects'),
-          url: '/projects',
-          icon: IconPackages,
-        } as NavLink,
-        {
           title: t('sidebar.items.channels'),
-          url: '/channels',
+          url: '/admin/channels',
           icon: IconAi,
         } as NavLink,
         {
           title: t('sidebar.items.models'),
-          url: '/models',
+          url: '/admin/models',
           icon: IconRobot,
         } as NavLink,
         {
+          title: t('sidebar.items.publishRequests'),
+          url: '/admin/publish-requests',
+          icon: IconSend,
+        } as NavLink,
+        {
           title: t('sidebar.items.promptProtectionRules'),
-          url: '/prompt-protection-rules',
+          url: '/admin/prompt-protection-rules',
           icon: IconShield,
         } as NavLink,
         {
           title: t('sidebar.items.dataStorages'),
-          url: '/data-storages',
+          url: '/admin/data-storages',
           icon: IconDatabase,
         } as NavLink,
-        {
-          title: t('sidebar.items.users'),
-          url: '/users',
-          icon: IconUsers,
-        } as NavLink,
-        {
-          title: t('sidebar.items.roles'),
-          url: '/roles',
-          icon: IconShield,
-        } as NavLink,
-        // {
-        //   title: 'Permission Demo',
-        //   url: '/permission-demo',
-        //   icon: IconSettings,
-        // } as NavLink,
       ],
     },
     {
-      title: t('sidebar.groups.project'),
+      title: t('sidebar.groups.personal'),
       items: [
+        {
+          title: t('sidebar.items.dashboard'),
+          url: '/',
+          icon: IconLayoutDashboard,
+        } as NavLink,
+        {
+          title: t('sidebar.items.myChannels'),
+          url: '/my-channels',
+          icon: IconAi,
+        } as NavLink,
+        {
+          title: t('sidebar.items.myModels'),
+          url: '/my-models',
+          icon: IconRobot,
+        } as NavLink,
+        {
+          title: t('sidebar.items.sharedWithMe'),
+          url: '/shared',
+          icon: IconShare,
+        } as NavLink,
         {
           title: t('sidebar.items.apiKeys'),
           url: '/project/api-keys',
@@ -130,11 +133,6 @@ export function useSidebarData(): SidebarData {
           url: '/project/requests',
           icon: IconActivity,
         } as NavLink,
-        // {
-        //   title: t('sidebar.items.usageLogs'),
-        //   url: '/project/usage-logs',
-        //   icon: IconActivityHeartbeat,
-        // } as NavLink,
         {
           title: t('sidebar.items.traces'),
           url: '/project/traces',
@@ -145,17 +143,6 @@ export function useSidebarData(): SidebarData {
           url: '/project/threads',
           icon: IconBaselineDensityMedium,
         } as NavLink,
-
-        {
-          title: t('sidebar.items.users'),
-          url: '/project/users',
-          icon: IconUsers,
-        } as NavLink,
-        {
-          title: t('sidebar.items.roles'),
-          url: '/project/roles',
-          icon: IconShield,
-        } as NavLink,
         {
           title: t('sidebar.items.playground'),
           url: '/project/playground',
@@ -164,60 +151,31 @@ export function useSidebarData(): SidebarData {
       ],
     },
     {
-      title: t('sidebar.groups.myResources'),
-      items: [
-        {
-          title: t('sidebar.items.myChannels'),
-          url: '/my-channels',
-          icon: IconAi,
-        } as NavLink,
-        {
-          title: t('sidebar.items.myModels'),
-          url: '/my/models',
-          icon: IconRobot,
-        } as NavLink,
-        {
-          title: t('sidebar.items.sharedWithMe'),
-          url: '/shared-channels',
-          icon: IconShare,
-        } as NavLink,
-        {
-          title: t('sidebar.items.publishRequests'),
-          url: '/publish-requests',
-          icon: IconSend,
-        } as NavLink,
-      ],
-    },
-    {
       title: t('sidebar.groups.settings'),
       items: [
         {
           title: t('sidebar.items.system'),
-          url: '/system',
+          url: '/admin/system',
           icon: IconSettings,
           mobileOnly: true,
         } as NavLink,
-        // {
-        //   title: 'Account',
-        //   url: '/settings/account',
-        //   icon: IconTool,
-        // } as NavLink,
-        // {
-        //   title: 'Appearance',
-        //   url: '/settings/appearance',
-        //   icon: IconPalette,
-        // } as NavLink,
-        // {
-        //   title: 'Notifications',
-        //   url: '/settings/notifications',
-        //   icon: IconNotification,
-        // } as NavLink,
       ],
     },
   ];
 
   // 使用权限过滤导航组
   const filteredNavGroups = filterNavGroups(rawNavGroups);
+
+  // Admin group only visible to system owners
+  const isSystemOwner = user?.isOwner === true;
+  const finalNavGroups = filteredNavGroups
+    .map((group) => {
+      if (group.title === t('sidebar.groups.admin') && !isSystemOwner) {
+        return { ...group, items: [] };
+      }
+      return group;
+    })
+    .filter((group) => group.items.length > 0);
 
   return {
     user: {
@@ -230,10 +188,8 @@ export function useSidebarData(): SidebarData {
         name: t('sidebar.team.name'),
         logo: Command,
         description: '',
-        // DO NOT USE THIS
-        // plan: t('sidebar.team.plan'),
       },
     ],
-    navGroups: filteredNavGroups,
+    navGroups: finalNavGroups,
   };
 }
