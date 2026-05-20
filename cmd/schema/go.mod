@@ -127,10 +127,10 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/kaptinlin/jsonrepair v0.2.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
-	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/ldm2060/afero-s3 v0.1.0 // indirect
 	github.com/ldm2060/afero-webdav v0.0.0-20260128073818-3f60e732e991 // indirect
 	github.com/ldm2060/axonhub/llm v0.0.0 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
