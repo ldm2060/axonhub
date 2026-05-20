@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 
 // Schema definitions
+export type DashboardMode = 'project' | 'personal';
+
 export const requestStatsSchema = z.object({
   requestsToday: z.number(),
   requestsThisWeek: z.number(),
@@ -165,6 +167,22 @@ export type TokenStats = z.infer<typeof tokenStatsSchema>;
 const DASHBOARD_STATS_QUERY = `
   query GetDashboardStats {
     dashboardOverview {
+      totalRequests
+      requestStats {
+        requestsToday
+        requestsThisWeek
+        requestsLastWeek
+        requestsThisMonth
+      }
+      failedRequests
+      averageResponseTime
+    }
+  }
+`;
+
+const MY_DASHBOARD_STATS_QUERY = `
+  query GetMyDashboardStats {
+    myDashboard {
       totalRequests
       requestStats {
         requestsToday
@@ -370,12 +388,15 @@ const TOKEN_STATS_AGGR_QUERY = `
 `;
 
 // Query hooks
-export function useDashboardStats() {
+export function useDashboardStats(mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['dashboardStats'],
+    queryKey: ['dashboardStats', mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ dashboardOverview: DashboardStats }>(DASHBOARD_STATS_QUERY);
-      return dashboardStatsSchema.parse(data.dashboardOverview);
+      const query = isPersonal ? MY_DASHBOARD_STATS_QUERY : DASHBOARD_STATS_QUERY;
+      const fieldName = isPersonal ? 'myDashboard' : 'dashboardOverview';
+      const data = await graphqlRequest<{ [key: string]: DashboardStats }>(query);
+      return dashboardStatsSchema.parse(data[fieldName]);
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });

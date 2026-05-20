@@ -25,6 +25,7 @@ import { ChannelsRateLimitDialog } from './channels-rate-limit-dialog';
 import { ChannelsTransformOptionsDialog } from './channels-transform-options-dialog';
 import { ChannelsEndpointsDialog } from './channels-endpoints-dialog';
 import { ChannelsSystemSettingsDialog } from './channels-system-settings-dialog';
+import { ChannelsShareDialog } from './channels-share-dialog';
 
 export function ChannelsDialogs() {
   const { open, setOpen, currentRow, setCurrentRow, selectedChannels } = useChannels();
@@ -322,6 +323,20 @@ export function ChannelsDialogs() {
                 }, 500);
               }
             }}
+          />
+
+          <ChannelsShareDialog
+            key={`channel-share-${currentRow.id}`}
+            open={open === 'share'}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setOpen(null);
+                setTimeout(() => {
+                  setCurrentRow(null);
+                }, 500);
+              }
+            }}
+            channel={currentRow}
           />
         </>
       )}

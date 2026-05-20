@@ -104,6 +104,57 @@ export function useSignOut() {
 }
 
 
+export interface SignUpInput {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+}
+
+export function useSignUpAllowed() {
+  return useQuery({
+    queryKey: ['sign-up-allowed'],
+    queryFn: async () => {
+      const result = await authApi.isSignUpAllowed();
+      return result.allowed;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+export function useSignUp() {
+  const { setUser, setAccessToken } = useAuthStore((state) => state.auth);
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (input: SignUpInput) => {
+      return await authApi.signUp(input);
+    },
+    onSuccess: (data) => {
+      setTokenToStorage(data.token);
+
+      const userLanguage = data.user.preferLanguage || 'en';
+
+      setAccessToken(data.token);
+      setUser(data.user);
+
+      if (userLanguage !== i18n.language) {
+        i18n.changeLanguage(userLanguage);
+      }
+
+      toast.success(i18n.t('auth.signUp.success'));
+
+      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      router.navigate({ to: redirectPath });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Failed to sign up';
+      toast.error(errorMessage);
+    },
+  });
+}
+
 export function useOIDCProviders() {
   return useQuery({
     queryKey: ['oidc-providers'],

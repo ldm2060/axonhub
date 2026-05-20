@@ -91,5 +91,15 @@
   "dashboard.channelSuccessRates.inputTokens": "Input",
   "dashboard.channelSuccessRates.outputTokens": "Output",
   "dashboard.channelSuccessRates.totalTokens": "Total",
-  "dashboard.viewAll": "View All"
+  "dashboard.viewAll": "View All",
+  "dashboard.personal": "Personal",
+  "dashboard.project": "Project",
+  "dashboard.reviewQueue": "Review Queue",
+  "dashboard.noPendingRequests": "No pending requests",
+  "publish.approve": "Approve",
+  "publish.reject": "Reject",
+  "publish.approveSuccess": "Request approved successfully",
+  "publish.rejectSuccess": "Request rejected successfully",
+  "publish.reviewComment": "Review Comment",
+  "publish.reviewCommentPlaceholder": "Optional review comment..."
 }

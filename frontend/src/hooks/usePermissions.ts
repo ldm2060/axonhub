@@ -115,6 +115,7 @@ export function usePermissions() {
       canDelete: hasScope('write_channels'),
       canTest: hasScope('read_channels'), // Test requires at least read permission
       canOrder: hasScope('write_channels'), // Ordering requires write permission
+      canManageOwn: hasScope('manage_own_channels'), // Manage own channels
     }),
     [hasScope]
   );
@@ -163,6 +164,7 @@ export function usePermissions() {
       canCreate: hasScope('write_channels'),
       canEdit: hasScope('write_channels'),
       canDelete: hasScope('write_channels'),
+      canManageOwn: hasScope('manage_own_models'), // Manage own models
     }),
     [hasScope]
   );
@@ -179,6 +181,14 @@ export function usePermissions() {
     [hasScope, isOwner]
   );
 
+  // Common permission checks for publish request operations
+  const publishRequestPermissions = useMemo(
+    () => ({
+      canReview: hasScope('review_publish_requests'), // Review publish requests
+    }),
+    [hasScope]
+  );
+
   return {
     user,
     isOwner,
@@ -193,5 +203,6 @@ export function usePermissions() {
     apiKeyPermissions,
     modelPermissions,
     projectPermissions,
+    publishRequestPermissions,
   };
 }

@@ -7,10 +7,11 @@ import { ModelsBulkDisableDialog } from './models-bulk-disable-dialog';
 import { ModelsBulkEnableDialog } from './models-bulk-enable-dialog';
 import { ModelsDeleteDialog } from './models-delete-dialog';
 import { ModelSettingsDialog } from './models-settings-dialog';
+import { ModelsShareDialog } from './models-share-dialog';
 import { ModelsUnassociatedDialog } from './models-unassociated-dialog';
 
 export function ModelsDialogs() {
-  const { open } = useModels();
+  const { open, currentRow, setOpen, setCurrentRow } = useModels();
 
   return (
     <>
@@ -21,6 +22,18 @@ export function ModelsDialogs() {
       {open === 'association' && <ModelsAssociationDialog />}
       {open === 'settings' && <ModelSettingsDialog />}
       {open === 'unassociated' && <ModelsUnassociatedDialog />}
+      {open === 'share' && currentRow && (
+        <ModelsShareDialog
+          open={true}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setOpen(null);
+              setCurrentRow(null);
+            }
+          }}
+          model={currentRow}
+        />
+      )}
       <ModelsBulkDisableDialog />
       <ModelsBulkEnableDialog />
     </>

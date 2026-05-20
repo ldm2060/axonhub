@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import { BarChart3, Brain, Key, Zap, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart3, Brain, Key, Zap, User, Folder } from 'lucide-react';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/header';
 import { formatNumber } from '@/utils/format-number';
 import { TimePeriodSelector, type TimePeriod } from '@/components/time-period-selector';
@@ -24,73 +24,15 @@ import { FastestChannelsCard } from './components/fastest-channels-card';
 import { FastestModelsCard } from './components/fastest-models-card';
 import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
+import { CollapsibleSection } from './components/collapsible-section';
+import { ReviewQueue } from './components/review-queue';
 import { useDashboardStats } from './data/dashboard';
-
-interface CollapsibleSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  storageKey: string;
-  defaultOpen?: boolean;
-}
-
-function CollapsibleSection({ title, icon, children, storageKey, defaultOpen = false }: CollapsibleSectionProps) {
-  const [isOpen, setIsOpen] = useState(() => {
-    try {
-      const stored = localStorage.getItem(`dashboard-section-${storageKey}`);
-      return stored !== null ? stored === 'true' : defaultOpen;
-    } catch {
-      return defaultOpen;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(`dashboard-section-${storageKey}`, isOpen.toString());
-    } catch {
-      // Silently fail - persistence is a nice-to-have, not critical
-    }
-  }, [isOpen, storageKey]);
-
-  return (
-    <div className='space-y-4'>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className='flex w-full items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent/50'
-      >
-        <div className='flex items-center gap-3'>
-          <div className='flex h-8 w-8 items-center justify-center rounded-md bg-primary/10'>
-            {icon}
-          </div>
-          <span className='text-lg font-semibold'>{title}</span>
-        </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-        >
-          <ChevronDown className='h-5 w-5 text-muted-foreground' />
-        </motion.div>
-      </button>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: 'easeInOut' }}
-          >
-            <div className='space-y-4'>{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+import { DashboardModeContext, type DashboardMode } from './context';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { isLoading, error } = useDashboardStats();
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('project');
+  const { isLoading, error } = useDashboardStats(dashboardMode);
   const [modelTotalRequests, setModelTotalRequests] = useState(0);
   const [channelTotalRequests, setChannelTotalRequests] = useState(0);
 
@@ -142,12 +84,127 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className='flex-1 space-y-6 p-8 pt-6'>
-      <Header />
+    <DashboardModeContext.Provider value={dashboardMode}>
+      <div className='flex-1 space-y-6 p-8 pt-6'>
+        <Header />
 
-      {/* 概览部分 - 始终展示 */}
+        {/* Dashboard view toggle */}
+        <Tabs
+          value={dashboardMode}
+          onValueChange={(value) => setDashboardMode(value as DashboardMode)}
+        >
+          <TabsList>
+            <TabsTrigger value='project' className='gap-1.5'>
+              <Folder className='h-3.5 w-3.5' />
+              {t('dashboard.project')}
+            </TabsTrigger>
+            <TabsTrigger value='personal' className='gap-1.5'>
+              <User className='h-3.5 w-3.5' />
+              {t('dashboard.personal')}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value='project'>
+            <DashboardContent
+              modelPerformanceDescription={modelPerformanceDescription}
+              channelPerformanceDescription={channelPerformanceDescription}
+              channelTimePeriod={channelTimePeriod}
+              setChannelTimePeriod={setChannelTimePeriod}
+              channelTokensTimePeriod={channelTokensTimePeriod}
+              setChannelTokensTimePeriod={setChannelTokensTimePeriod}
+              modelTimePeriod={modelTimePeriod}
+              setModelTimePeriod={setModelTimePeriod}
+              modelTokensTimePeriod={modelTokensTimePeriod}
+              setModelTokensTimePeriod={setModelTokensTimePeriod}
+              apiKeyTimePeriod={apiKeyTimePeriod}
+              setApiKeyTimePeriod={setApiKeyTimePeriod}
+              apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
+              setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
+              modelTotalRequests={modelTotalRequests}
+              setModelTotalRequests={setModelTotalRequests}
+              channelTotalRequests={channelTotalRequests}
+              setChannelTotalRequests={setChannelTotalRequests}
+            />
+          </TabsContent>
+
+          <TabsContent value='personal'>
+            <DashboardContent
+              modelPerformanceDescription={modelPerformanceDescription}
+              channelPerformanceDescription={channelPerformanceDescription}
+              channelTimePeriod={channelTimePeriod}
+              setChannelTimePeriod={setChannelTimePeriod}
+              channelTokensTimePeriod={channelTokensTimePeriod}
+              setChannelTokensTimePeriod={setChannelTokensTimePeriod}
+              modelTimePeriod={modelTimePeriod}
+              setModelTimePeriod={setModelTimePeriod}
+              modelTokensTimePeriod={modelTokensTimePeriod}
+              setModelTokensTimePeriod={setModelTokensTimePeriod}
+              apiKeyTimePeriod={apiKeyTimePeriod}
+              setApiKeyTimePeriod={setApiKeyTimePeriod}
+              apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
+              setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
+              modelTotalRequests={modelTotalRequests}
+              setModelTotalRequests={setModelTotalRequests}
+              channelTotalRequests={channelTotalRequests}
+              setChannelTotalRequests={setChannelTotalRequests}
+            />
+          </TabsContent>
+        </Tabs>
+
+        {/* Review Queue - always visible regardless of tab */}
+        <ReviewQueue />
+      </div>
+    </DashboardModeContext.Provider>
+  );
+}
+
+interface DashboardContentProps {
+  modelPerformanceDescription: string;
+  channelPerformanceDescription: string;
+  channelTimePeriod: TimePeriod;
+  setChannelTimePeriod: (v: TimePeriod) => void;
+  channelTokensTimePeriod: TimePeriod;
+  setChannelTokensTimePeriod: (v: TimePeriod) => void;
+  modelTimePeriod: TimePeriod;
+  setModelTimePeriod: (v: TimePeriod) => void;
+  modelTokensTimePeriod: TimePeriod;
+  setModelTokensTimePeriod: (v: TimePeriod) => void;
+  apiKeyTimePeriod: TimePeriod;
+  setApiKeyTimePeriod: (v: TimePeriod) => void;
+  apiKeyTokensTimePeriod: TimePeriod;
+  setApiKeyTokensTimePeriod: (v: TimePeriod) => void;
+  modelTotalRequests: number;
+  setModelTotalRequests: (v: number) => void;
+  channelTotalRequests: number;
+  setChannelTotalRequests: (v: number) => void;
+}
+
+function DashboardContent({
+  modelPerformanceDescription,
+  channelPerformanceDescription,
+  channelTimePeriod,
+  setChannelTimePeriod,
+  channelTokensTimePeriod,
+  setChannelTokensTimePeriod,
+  modelTimePeriod,
+  setModelTimePeriod,
+  modelTokensTimePeriod,
+  setModelTokensTimePeriod,
+  apiKeyTimePeriod,
+  setApiKeyTimePeriod,
+  apiKeyTokensTimePeriod,
+  setApiKeyTokensTimePeriod,
+  modelTotalRequests,
+  setModelTotalRequests,
+  channelTotalRequests,
+  setChannelTotalRequests,
+}: DashboardContentProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className='space-y-6 pt-2'>
+      {/* Overview section - always shown */}
       <section className='space-y-4'>
-        {/* <h2 className='text-2xl font-bold tracking-tight'>{t('dashboard.sections.overview')}</h2> */}
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
           <TotalRequestsCard />
           <SuccessRateCard />
@@ -180,7 +237,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 渠道分析 - 可折叠 */}
+      {/* Channel Analytics - collapsible */}
       <CollapsibleSection
         title={t('dashboard.sections.channels')}
         icon={<BarChart3 className='h-4 w-4 text-primary' />}
@@ -214,7 +271,7 @@ export default function DashboardPage() {
         </div>
       </CollapsibleSection>
 
-      {/* 模型分析 - 可折叠 */}
+      {/* Model Analytics - collapsible */}
       <CollapsibleSection
         title={t('dashboard.sections.models')}
         icon={<Brain className='h-4 w-4 text-primary' />}
@@ -248,7 +305,7 @@ export default function DashboardPage() {
         </div>
       </CollapsibleSection>
 
-      {/* API密钥分析 - 可折叠 */}
+      {/* API Key Analytics - collapsible */}
       <CollapsibleSection
         title={t('dashboard.sections.apiKeys')}
         icon={<Key className='h-4 w-4 text-primary' />}
@@ -282,7 +339,7 @@ export default function DashboardPage() {
         </div>
       </CollapsibleSection>
 
-      {/* 性能分析 - 可折叠 */}
+      {/* Performance Analytics - collapsible */}
       <CollapsibleSection
         title={t('dashboard.sections.performance')}
         icon={<Zap className='h-4 w-4 text-primary' />}

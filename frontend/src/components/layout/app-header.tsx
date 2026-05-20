@@ -11,7 +11,8 @@ import { QuotaBadges } from '@/components/quota-badges';
 import { PermissionGuard } from '@/components/permission-guard';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
-import { ProjectSwitcher } from './project-switcher';
+import { useAutoResolveProject } from '@/stores/projectStore';
+import { useMyProjects } from '@/features/projects/data/projects';
 import { toast } from 'sonner';
 
 export function AppHeader() {
@@ -21,6 +22,10 @@ export function AppHeader() {
   const queryClient = useQueryClient();
   const { isMobile } = useSidebar();
   const displayName = brandSettings?.brandName || 'AxonHub';
+  const { data: myProjects } = useMyProjects();
+
+  // Auto-resolve project context without user interaction
+  useAutoResolveProject(myProjects);
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
@@ -45,7 +50,7 @@ export function AppHeader() {
   return (
     <header className='bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed top-0 z-50 w-full backdrop-blur'>
       <div className='flex h-14 items-center justify-between'>
-        {/* Logo + Project Switcher - 左侧对齐 */}
+        {/* Logo - 左侧对齐 */}
         <div className='flex items-center gap-2 pl-6'>
           {/* Sidebar Toggle - 与侧边栏图标垂直对齐 */}
           <SidebarTrigger className='-ml-4 size-8' />
@@ -70,12 +75,6 @@ export function AppHeader() {
             </div>
             <span className='text-sm leading-none font-semibold'>{displayName}</span>
           </div>
-
-          {/* Separator */}
-          <div className='bg-border mx-0.5 h-3.5 w-px' />
-
-          {/* Project Switcher */}
-          <ProjectSwitcher />
         </div>
 
         {/* 右侧控件 */}

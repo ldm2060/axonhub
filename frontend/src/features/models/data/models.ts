@@ -118,6 +118,9 @@ const MODELS_QUERY = `
           status
           remark
           associatedChannelCount
+          ownerID
+          visibility
+          sharedWith
         }
         cursor
       }

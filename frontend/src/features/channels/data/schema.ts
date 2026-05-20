@@ -287,6 +287,9 @@ export const channelSchema = z.object({
   liveLimiterStats: channelLimiterStatsSchema.optional().nullable(),
   endpoints: z.array(channelEndpointSchema).optional().default([]).nullable(),
   defaultEndpoints: z.array(channelEndpointSchema).optional().default([]).nullable(),
+  ownerID: z.string().optional().nullable(),
+  visibility: z.enum(['private', 'shared', 'published']).default('private'),
+  sharedWith: z.array(z.number()).optional().default([]),
 });
 export type Channel = z.infer<typeof channelSchema>;
 

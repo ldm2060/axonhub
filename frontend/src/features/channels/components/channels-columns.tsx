@@ -23,6 +23,7 @@ import {
   IconGauge,
   IconHistory,
   IconPlugConnected,
+  IconShare,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -250,6 +251,16 @@ const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
               {t('channels.actions.markErrorResolved')}
             </DropdownMenuItem>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(channel);
+              setOpen('share');
+            }}
+          >
+            <IconShare size={16} className='mr-2' />
+            {t('share.dialog.menuItem')}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {

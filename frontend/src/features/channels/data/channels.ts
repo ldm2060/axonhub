@@ -729,6 +729,9 @@ const QUERY_CHANNELS_QUERY = `
             capacity
             queueSize
           }
+          ownerID
+          visibility
+          sharedWith
         }
         cursor
       }

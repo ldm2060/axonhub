@@ -4,10 +4,12 @@ import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '../data/dashboard';
+import { useDashboardMode } from '../context';
 
 export function TodayRequestsCard() {
   const { t } = useTranslation();
-  const { data: stats, isLoading, error } = useDashboardStats();
+  const mode = useDashboardMode();
+  const { data: stats, isLoading, error } = useDashboardStats(mode);
 
   if (isLoading) {
     return (

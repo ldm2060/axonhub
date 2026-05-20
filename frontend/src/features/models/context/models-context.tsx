@@ -12,6 +12,7 @@ type DialogType =
   | 'bulkEnable'
   | 'bulkDisable'
   | 'unassociated'
+  | 'share'
   | null;
 
 interface ModelsContextType {

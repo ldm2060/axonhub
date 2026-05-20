@@ -12,6 +12,8 @@ import {
   IconBaselineDensityMedium,
   IconAi,
   IconNote,
+  IconShare,
+  IconSend,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -158,6 +160,31 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.playground'),
           url: '/project/playground',
           icon: IconRobot,
+        } as NavLink,
+      ],
+    },
+    {
+      title: t('sidebar.groups.myResources'),
+      items: [
+        {
+          title: t('sidebar.items.myChannels'),
+          url: '/my/channels',
+          icon: IconAi,
+        } as NavLink,
+        {
+          title: t('sidebar.items.myModels'),
+          url: '/my/models',
+          icon: IconRobot,
+        } as NavLink,
+        {
+          title: t('sidebar.items.sharedWithMe'),
+          url: '/shared',
+          icon: IconShare,
+        } as NavLink,
+        {
+          title: t('sidebar.items.publishRequests'),
+          url: '/publish-requests',
+          icon: IconSend,
         } as NavLink,
       ],
     },

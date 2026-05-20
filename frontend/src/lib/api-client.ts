@@ -145,6 +145,22 @@ export const authApi = {
       body: data,
     }),
 
+  signUp: (data: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+  }): Promise<{
+    user: AuthUser;
+    token: string;
+  }> =>
+    apiRequest('/admin/auth/signup', {
+      method: 'POST',
+      body: data,
+    }),
+
+  isSignUpAllowed: (): Promise<{ allowed: boolean }> => apiRequest('/admin/auth/signup/allowed'),
+
   getOIDCProviders: (): Promise<{
     data: {
       id: string;

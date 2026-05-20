@@ -91,5 +91,15 @@
   "dashboard.channelSuccessRates.inputTokens": "输入",
   "dashboard.channelSuccessRates.outputTokens": "输出",
   "dashboard.channelSuccessRates.totalTokens": "总计",
-  "dashboard.viewAll": "查看全部"
+  "dashboard.viewAll": "查看全部",
+  "dashboard.personal": "个人",
+  "dashboard.project": "项目",
+  "dashboard.reviewQueue": "审核队列",
+  "dashboard.noPendingRequests": "没有待审核请求",
+  "publish.approve": "批准",
+  "publish.reject": "拒绝",
+  "publish.approveSuccess": "请求已批准",
+  "publish.rejectSuccess": "请求已拒绝",
+  "publish.reviewComment": "审核评论",
+  "publish.reviewCommentPlaceholder": "可选的审核评论..."
 }

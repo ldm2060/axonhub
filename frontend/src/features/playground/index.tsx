@@ -102,8 +102,10 @@ export default function Playground() {
       headers: () => {
         const headers: Record<string, string> = {
           Authorization: 'Bearer ' + accessToken,
-          'X-Project-ID': selectedProjectId || '',
         };
+        if (selectedProjectId) {
+          headers['X-Project-ID'] = selectedProjectId;
+        }
         if (modelSourceRef.current === 'channel' && selectedChannelRef.current) {
           headers['X-Channel-ID'] = selectedChannelRef.current;
         }

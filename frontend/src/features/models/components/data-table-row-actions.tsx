@@ -1,6 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
-import { IconEdit, IconArchive, IconTrash, IconNote, IconArchiveOff } from '@tabler/icons-react';
+import { IconEdit, IconArchive, IconTrash, IconNote, IconArchiveOff, IconShare } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,16 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             >
               <IconNote size={16} className='mr-2' />
               {t('models.actions.manageAssociation')}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original);
+                setOpen('share');
+              }}
+            >
+              <IconShare size={16} className='mr-2' />
+              {t('share.dialog.menuItem')}
             </DropdownMenuItem>
 
             {channelPermissions.canRead && <DropdownMenuSeparator />}

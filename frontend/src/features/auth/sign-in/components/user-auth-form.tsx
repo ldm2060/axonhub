@@ -190,6 +190,13 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           </div>
         )}
 
+        <p className={cn('text-center text-sm text-slate-600', (!oidcProviders || oidcProviders.length === 0) && 'mt-2')}>
+          {t('auth.signIn.links.noAccount')}{' '}
+          <Link to='/sign-up' className='font-medium text-slate-500 transition-colors hover:text-slate-700 hover:underline'>
+            {t('auth.signIn.links.signUp')}
+          </Link>
+        </p>
+
     </Form>
   );
 }

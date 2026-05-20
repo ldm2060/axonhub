@@ -143,6 +143,27 @@ export const routeConfigs: RouteGroup[] = [
       },
     ],
   },
+  {
+    title: 'My Resources',
+    routes: [
+      {
+        path: '/my/channels',
+        // Personal channels - accessible to all users
+      },
+      {
+        path: '/my/models',
+        // Personal models - accessible to all users
+      },
+      {
+        path: '/shared',
+        // Shared with me - accessible to all users
+      },
+      {
+        path: '/publish-requests',
+        // Publish requests - accessible to all users
+      },
+    ],
+  },
 ];
 
 // 获取路由配置的辅助函数

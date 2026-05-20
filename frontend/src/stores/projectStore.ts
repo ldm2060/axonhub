@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { create } from 'zustand';
 
 const PROJECT_STORAGE_KEY = 'axonhub_selected_project_id';
@@ -13,22 +14,20 @@ export const getProjectIdFromStorage = (): string | null => {
   try {
     return localStorage.getItem(PROJECT_STORAGE_KEY);
   } catch (error) {
-        return null;
-      }
+    return null;
+  }
 };
 
 const setProjectIdToStorage = (projectId: string): void => {
   try {
     localStorage.setItem(PROJECT_STORAGE_KEY, projectId);
-  } catch (error) {
-  }
+  } catch (error) {}
 };
 
 const removeProjectIdFromStorage = (): void => {
   try {
     localStorage.removeItem(PROJECT_STORAGE_KEY);
-  } catch (error) {
-  }
+  } catch (error) {}
 };
 
 export const useProjectStore = create<ProjectState>()((set) => {
@@ -53,3 +52,41 @@ export const useProjectStore = create<ProjectState>()((set) => {
 
 // Convenience hook to get the selected project ID
 export const useSelectedProjectId = () => useProjectStore((state) => state.selectedProjectId);
+
+/**
+ * Hook that auto-resolves the project context from the user's projects list.
+ * Selects the first project if none is currently selected, or resets to the
+ * first project if the current selection no longer exists.
+ * This replaces the former ProjectSwitcher UI-driven selection.
+ */
+export function useAutoResolveProject(projects: { id: string }[] | undefined) {
+  const { selectedProjectId, setSelectedProjectId } = useProjectStore();
+
+  // eslint-disable-next-line consistent-return
+  React.useEffect(() => {
+    // If projects are still loading, do nothing
+    if (!projects) {
+      return;
+    }
+
+    // If user has no projects, clear the selection
+    if (projects.length === 0) {
+      if (selectedProjectId) {
+        setSelectedProjectId(null);
+      }
+      return;
+    }
+
+    // If a project is selected and it still exists in the list, keep it
+    if (selectedProjectId) {
+      const projectExists = projects.some((p) => p.id === selectedProjectId);
+      if (projectExists) {
+        return;
+      }
+    }
+
+    // Auto-select the first project
+    const firstProject = projects[0];
+    setSelectedProjectId(firstProject.id);
+  }, [projects, selectedProjectId, setSelectedProjectId]);
+}
