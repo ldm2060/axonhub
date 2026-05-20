@@ -22,60 +22,62 @@ export const routeConfigs: RouteGroup[] = [
     scopeLevel: 'system', // Admin 路由组只能通过 system-level 权限访问
     routes: [
       {
-        path: '/',
+        path: '/admin',
         requiredScopes: ['read_dashboard'],
         mode: 'hidden',
       },
       {
-        path: '/projects',
-        requiredScopes: ['read_projects'],
-        mode: 'hidden',
-      },
-      {
-        path: '/users',
-        requiredScopes: ['read_users'],
-        mode: 'hidden',
-      },
-      {
-        path: '/roles',
-        requiredScopes: ['read_roles'],
-        mode: 'hidden',
-      },
-      {
-        path: '/channels',
+        path: '/admin/channels',
         requiredScopes: ['read_channels'],
         mode: 'hidden',
       },
       {
-        path: '/models',
+        path: '/admin/models',
         requiredScopes: ['read_channels'],
         mode: 'hidden',
       },
       {
-        path: '/prompt-protection-rules',
+        path: '/admin/publish-requests',
         requiredScopes: ['read_channels'],
         mode: 'hidden',
       },
       {
-        path: '/data-storages',
+        path: '/admin/prompt-protection-rules',
+        requiredScopes: ['read_channels'],
+        mode: 'hidden',
+      },
+      {
+        path: '/admin/data-storages',
         requiredScopes: ['read_data_storages'],
         mode: 'hidden',
       },
       {
-        path: '/system',
+        path: '/admin/system',
         requiredScopes: ['read_system'],
         mode: 'hidden',
-      },
-      {
-        path: '/permission-demo',
-        // 权限演示页面所有用户都可以访问
       },
     ],
   },
   {
-    title: 'Project',
-    scopeLevel: 'any', // Project 路由组可以通过 system-level 或 project-level 权限访问
+    title: 'Personal',
+    scopeLevel: 'any', // Personal 路由组可以通过 system-level 或 project-level 权限访问
     routes: [
+      {
+        path: '/',
+        // Personal dashboard - accessible to all users
+      },
+      {
+        path: '/my-channels',
+        // Personal channels - accessible to all users
+      },
+      {
+        path: '/my-models',
+        // Personal models - accessible to all users
+      },
+      {
+        path: '/shared',
+        // Shared with me - accessible to all users
+      },
       {
         path: '/project/api-keys',
         requiredScopes: ['read_api_keys'],
@@ -102,18 +104,18 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/project/traces/$traceId',
+        requiredScopes: ['read_requests'],
+        mode: 'hidden',
+      },
+      {
         path: '/project/threads',
         requiredScopes: ['read_requests'],
         mode: 'hidden',
       },
       {
-        path: '/project/users',
-        requiredScopes: ['read_users'],
-        mode: 'hidden',
-      },
-      {
-        path: '/project/roles',
-        requiredScopes: ['read_roles'],
+        path: '/project/threads/$threadId',
+        requiredScopes: ['read_requests'],
         mode: 'hidden',
       },
       {
@@ -140,32 +142,6 @@ export const routeConfigs: RouteGroup[] = [
       {
         path: '/settings/notifications',
         // Notifications 设置所有用户都可以访问
-      },
-    ],
-  },
-  {
-    title: 'My Resources',
-    routes: [
-      {
-        path: '/my-channels',
-        requiredScopes: ['manage_own_channels'],
-        mode: 'hidden',
-      },
-      {
-        path: '/my/channels',
-        // Personal channels - accessible to all users
-      },
-      {
-        path: '/my/models',
-        // Personal models - accessible to all users
-      },
-      {
-        path: '/shared',
-        // Shared with me - accessible to all users
-      },
-      {
-        path: '/publish-requests',
-        // Publish requests - accessible to all users
       },
     ],
   },
