@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // PublishRequestUpdate is the builder for updating PublishRequest entities.
@@ -70,6 +71,26 @@ func (_u *PublishRequestUpdate) SetNillableStatus(v *publishrequest.Status) *Pub
 	return _u
 }
 
+// SetReviewerID sets the "reviewer_id" field.
+func (_u *PublishRequestUpdate) SetReviewerID(v int) *PublishRequestUpdate {
+	_u.mutation.SetReviewerID(v)
+	return _u
+}
+
+// SetNillableReviewerID sets the "reviewer_id" field if the given value is not nil.
+func (_u *PublishRequestUpdate) SetNillableReviewerID(v *int) *PublishRequestUpdate {
+	if v != nil {
+		_u.SetReviewerID(*v)
+	}
+	return _u
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (_u *PublishRequestUpdate) ClearReviewerID() *PublishRequestUpdate {
+	_u.mutation.ClearReviewerID()
+	return _u
+}
+
 // SetReviewComment sets the "review_comment" field.
 func (_u *PublishRequestUpdate) SetReviewComment(v string) *PublishRequestUpdate {
 	_u.mutation.SetReviewComment(v)
@@ -110,9 +131,20 @@ func (_u *PublishRequestUpdate) ClearRequestComment() *PublishRequestUpdate {
 	return _u
 }
 
+// SetReviewer sets the "reviewer" edge to the User entity.
+func (_u *PublishRequestUpdate) SetReviewer(v *User) *PublishRequestUpdate {
+	return _u.SetReviewerID(v.ID)
+}
+
 // Mutation returns the PublishRequestMutation object of the builder.
 func (_u *PublishRequestUpdate) Mutation() *PublishRequestMutation {
 	return _u.mutation
+}
+
+// ClearReviewer clears the "reviewer" edge to the User entity.
+func (_u *PublishRequestUpdate) ClearReviewer() *PublishRequestUpdate {
+	_u.mutation.ClearReviewer()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -212,6 +244,35 @@ func (_u *PublishRequestUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if _u.mutation.RequestCommentCleared() {
 		_spec.ClearField(publishrequest.FieldRequestComment, field.TypeString)
 	}
+	if _u.mutation.ReviewerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   publishrequest.ReviewerTable,
+			Columns: []string{publishrequest.ReviewerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   publishrequest.ReviewerTable,
+			Columns: []string{publishrequest.ReviewerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -275,6 +336,26 @@ func (_u *PublishRequestUpdateOne) SetNillableStatus(v *publishrequest.Status) *
 	return _u
 }
 
+// SetReviewerID sets the "reviewer_id" field.
+func (_u *PublishRequestUpdateOne) SetReviewerID(v int) *PublishRequestUpdateOne {
+	_u.mutation.SetReviewerID(v)
+	return _u
+}
+
+// SetNillableReviewerID sets the "reviewer_id" field if the given value is not nil.
+func (_u *PublishRequestUpdateOne) SetNillableReviewerID(v *int) *PublishRequestUpdateOne {
+	if v != nil {
+		_u.SetReviewerID(*v)
+	}
+	return _u
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (_u *PublishRequestUpdateOne) ClearReviewerID() *PublishRequestUpdateOne {
+	_u.mutation.ClearReviewerID()
+	return _u
+}
+
 // SetReviewComment sets the "review_comment" field.
 func (_u *PublishRequestUpdateOne) SetReviewComment(v string) *PublishRequestUpdateOne {
 	_u.mutation.SetReviewComment(v)
@@ -315,9 +396,20 @@ func (_u *PublishRequestUpdateOne) ClearRequestComment() *PublishRequestUpdateOn
 	return _u
 }
 
+// SetReviewer sets the "reviewer" edge to the User entity.
+func (_u *PublishRequestUpdateOne) SetReviewer(v *User) *PublishRequestUpdateOne {
+	return _u.SetReviewerID(v.ID)
+}
+
 // Mutation returns the PublishRequestMutation object of the builder.
 func (_u *PublishRequestUpdateOne) Mutation() *PublishRequestMutation {
 	return _u.mutation
+}
+
+// ClearReviewer clears the "reviewer" edge to the User entity.
+func (_u *PublishRequestUpdateOne) ClearReviewer() *PublishRequestUpdateOne {
+	_u.mutation.ClearReviewer()
+	return _u
 }
 
 // Where appends a list predicates to the PublishRequestUpdate builder.
@@ -446,6 +538,35 @@ func (_u *PublishRequestUpdateOne) sqlSave(ctx context.Context) (_node *PublishR
 	}
 	if _u.mutation.RequestCommentCleared() {
 		_spec.ClearField(publishrequest.FieldRequestComment, field.TypeString)
+	}
+	if _u.mutation.ReviewerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   publishrequest.ReviewerTable,
+			Columns: []string{publishrequest.ReviewerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   publishrequest.ReviewerTable,
+			Columns: []string{publishrequest.ReviewerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	_node = &PublishRequest{config: _u.config}

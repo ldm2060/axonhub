@@ -428,6 +428,24 @@ func (u *PublishRequestUpsert) UpdateStatus() *PublishRequestUpsert {
 	return u
 }
 
+// SetReviewerID sets the "reviewer_id" field.
+func (u *PublishRequestUpsert) SetReviewerID(v int) *PublishRequestUpsert {
+	u.Set(publishrequest.FieldReviewerID, v)
+	return u
+}
+
+// UpdateReviewerID sets the "reviewer_id" field to the value that was provided on create.
+func (u *PublishRequestUpsert) UpdateReviewerID() *PublishRequestUpsert {
+	u.SetExcluded(publishrequest.FieldReviewerID)
+	return u
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (u *PublishRequestUpsert) ClearReviewerID() *PublishRequestUpsert {
+	u.SetNull(publishrequest.FieldReviewerID)
+	return u
+}
+
 // SetReviewComment sets the "review_comment" field.
 func (u *PublishRequestUpsert) SetReviewComment(v string) *PublishRequestUpsert {
 	u.Set(publishrequest.FieldReviewComment, v)
@@ -486,9 +504,6 @@ func (u *PublishRequestUpsertOne) UpdateNewValues() *PublishRequestUpsertOne {
 		}
 		if _, exists := u.create.mutation.RequesterID(); exists {
 			s.SetIgnore(publishrequest.FieldRequesterID)
-		}
-		if _, exists := u.create.mutation.ReviewerID(); exists {
-			s.SetIgnore(publishrequest.FieldReviewerID)
 		}
 	}))
 	return u
@@ -567,6 +582,27 @@ func (u *PublishRequestUpsertOne) SetStatus(v publishrequest.Status) *PublishReq
 func (u *PublishRequestUpsertOne) UpdateStatus() *PublishRequestUpsertOne {
 	return u.Update(func(s *PublishRequestUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (u *PublishRequestUpsertOne) SetReviewerID(v int) *PublishRequestUpsertOne {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.SetReviewerID(v)
+	})
+}
+
+// UpdateReviewerID sets the "reviewer_id" field to the value that was provided on create.
+func (u *PublishRequestUpsertOne) UpdateReviewerID() *PublishRequestUpsertOne {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.UpdateReviewerID()
+	})
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (u *PublishRequestUpsertOne) ClearReviewerID() *PublishRequestUpsertOne {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.ClearReviewerID()
 	})
 }
 
@@ -800,9 +836,6 @@ func (u *PublishRequestUpsertBulk) UpdateNewValues() *PublishRequestUpsertBulk {
 			if _, exists := b.mutation.RequesterID(); exists {
 				s.SetIgnore(publishrequest.FieldRequesterID)
 			}
-			if _, exists := b.mutation.ReviewerID(); exists {
-				s.SetIgnore(publishrequest.FieldReviewerID)
-			}
 		}
 	}))
 	return u
@@ -881,6 +914,27 @@ func (u *PublishRequestUpsertBulk) SetStatus(v publishrequest.Status) *PublishRe
 func (u *PublishRequestUpsertBulk) UpdateStatus() *PublishRequestUpsertBulk {
 	return u.Update(func(s *PublishRequestUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (u *PublishRequestUpsertBulk) SetReviewerID(v int) *PublishRequestUpsertBulk {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.SetReviewerID(v)
+	})
+}
+
+// UpdateReviewerID sets the "reviewer_id" field to the value that was provided on create.
+func (u *PublishRequestUpsertBulk) UpdateReviewerID() *PublishRequestUpsertBulk {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.UpdateReviewerID()
+	})
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (u *PublishRequestUpsertBulk) ClearReviewerID() *PublishRequestUpsertBulk {
+	return u.Update(func(s *PublishRequestUpsert) {
+		s.ClearReviewerID()
 	})
 }
 

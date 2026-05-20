@@ -37,7 +37,7 @@ func (PublishRequest) Fields() []ent.Field {
 		field.Int("resource_id").Immutable(),
 		field.Int("requester_id").Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 		field.Enum("status").Values("pending", "approved", "rejected").Default("pending").Annotations(entgql.Skip(entgql.SkipMutationCreateInput)),
-		field.Int("reviewer_id").Optional().Nillable().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		field.Int("reviewer_id").Optional().Nillable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 		field.String("review_comment").Optional().Nillable(),
 		field.String("request_comment").Optional().Nillable(),
 	}
@@ -46,7 +46,7 @@ func (PublishRequest) Fields() []ent.Field {
 func (PublishRequest) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("requester", User.Type).Ref("publish_requests").Unique().Required().Immutable().Field("requester_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-		edge.From("reviewer", User.Type).Ref("reviewed_requests").Unique().Immutable().Field("reviewer_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.From("reviewer", User.Type).Ref("reviewed_requests").Unique().Field("reviewer_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 
