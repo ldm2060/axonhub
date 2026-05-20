@@ -1016,7 +1016,8 @@ func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject,
 			SetEmail(email).
 			SetFirstName(firstName).
 			SetLastName(lastName).
-			SetPassword(password)
+			SetPassword(password).
+			SetScopes(DefaultUserScopes)
 
 		if picture != "" {
 			userCreate.SetAvatar(picture)
