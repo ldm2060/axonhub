@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/objects"
@@ -16,45 +17,104 @@ import (
 
 // RequestPublish is the resolver for the requestPublish field.
 func (r *mutationResolver) RequestPublish(ctx context.Context, resourceType publishrequest.ResourceType, resourceID objects.GUID, comment *string) (*ent.PublishRequest, error) {
-	panic(fmt.Errorf("not implemented: RequestPublish - requestPublish"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	return r.publishRequestService.CreatePublishRequest(ctx, resourceType, resourceID.ID, user.ID, derefStr(comment))
 }
 
 // CancelPublishRequest is the resolver for the cancelPublishRequest field.
 func (r *mutationResolver) CancelPublishRequest(ctx context.Context, id objects.GUID) (bool, error) {
-	panic(fmt.Errorf("not implemented: CancelPublishRequest - cancelPublishRequest"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return false, fmt.Errorf("unauthorized")
+	}
+	return true, r.publishRequestService.CancelPublishRequest(ctx, id.ID, user.ID)
 }
 
 // ReviewPublishRequest is the resolver for the reviewPublishRequest field.
 func (r *mutationResolver) ReviewPublishRequest(ctx context.Context, id objects.GUID, action ReviewAction, comment *string) (*ent.PublishRequest, error) {
-	panic(fmt.Errorf("not implemented: ReviewPublishRequest - reviewPublishRequest"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	status := publishrequest.StatusApproved
+	if action == "reject" {
+		status = publishrequest.StatusRejected
+	}
+	return r.publishRequestService.ReviewPublishRequest(ctx, id.ID, user.ID, status, derefStr(comment))
 }
 
 // ShareChannel is the resolver for the shareChannel field.
 func (r *mutationResolver) ShareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error) {
-	panic(fmt.Errorf("not implemented: ShareChannel - shareChannel"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	ids := guidSliceToIntSlice(userIDs)
+	return r.channelService.ShareChannel(ctx, id.ID, user.ID, ids)
 }
 
 // UnshareChannel is the resolver for the unshareChannel field.
 func (r *mutationResolver) UnshareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error) {
-	panic(fmt.Errorf("not implemented: UnshareChannel - unshareChannel"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	ids := guidSliceToIntSlice(userIDs)
+	return r.channelService.UnshareChannel(ctx, id.ID, user.ID, ids)
 }
 
 // ShareModel is the resolver for the shareModel field.
 func (r *mutationResolver) ShareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error) {
-	panic(fmt.Errorf("not implemented: ShareModel - shareModel"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	ids := guidSliceToIntSlice(userIDs)
+	return r.modelService.ShareModel(ctx, id.ID, user.ID, ids)
 }
 
 // UnshareModel is the resolver for the unshareModel field.
 func (r *mutationResolver) UnshareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error) {
-	panic(fmt.Errorf("not implemented: UnshareModel - unshareModel"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	ids := guidSliceToIntSlice(userIDs)
+	return r.modelService.UnshareModel(ctx, id.ID, user.ID, ids)
 }
 
 // MySharedChannels is the resolver for the mySharedChannels field.
 func (r *queryResolver) MySharedChannels(ctx context.Context) ([]*ent.Channel, error) {
-	panic(fmt.Errorf("not implemented: MySharedChannels - mySharedChannels"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	return r.channelService.ListSharedWithUser(ctx, user.ID)
 }
 
 // MySharedModels is the resolver for the mySharedModels field.
 func (r *queryResolver) MySharedModels(ctx context.Context) ([]*ent.Model, error) {
-	panic(fmt.Errorf("not implemented: MySharedModels - mySharedModels"))
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	return r.modelService.ListSharedWithUser(ctx, user.ID)
+}
+
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func guidSliceToIntSlice(guids []*objects.GUID) []int {
+	ids := make([]int, 0, len(guids))
+	for _, g := range guids {
+		ids = append(ids, g.ID)
+	}
+	return ids
 }

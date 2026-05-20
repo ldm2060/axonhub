@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/samber/lo"
 	"go.uber.org/fx"
 
 	"github.com/ldm2060/axonhub/internal/ent"
@@ -19,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache/live"
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
+	"github.com/ldm2060/axonhub/internal/scopes"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
@@ -716,4 +718,81 @@ func (c *Channel) GetEnabledAPIKeys() []string {
 func (c *Channel) IsAPIKeyDisabled(key string) bool {
 	_, ok := c.cachedDisabledKeySet[key]
 	return ok
+}
+
+// ShareChannel shares a channel with the specified users.
+func (svc *ChannelService) ShareChannel(ctx context.Context, channelID, ownerID int, userIDs []int) (*ent.Channel, error) {
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, channelID)
+	if err != nil {
+		return nil, fmt.Errorf("channel not found: %w", err)
+	}
+	if ch.OwnerID == 0 || ch.OwnerID != ownerID {
+		return nil, fmt.Errorf("only the owner can share this channel")
+	}
+
+	sharedWith := ch.SharedWith
+	for _, uid := range userIDs {
+		if uid == ownerID {
+			continue
+		}
+		if !slices.Contains(sharedWith, uid) {
+			sharedWith = append(sharedWith, uid)
+		}
+	}
+
+	ch, err = client.Channel.UpdateOneID(channelID).
+		SetSharedWith(sharedWith).
+		SetVisibility(channel.VisibilityShared).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to share channel: %w", err)
+	}
+	svc.asyncReloadChannels()
+	return ch, nil
+}
+
+// UnshareChannel removes users from the shared_with list.
+func (svc *ChannelService) UnshareChannel(ctx context.Context, channelID, ownerID int, userIDs []int) (*ent.Channel, error) {
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, channelID)
+	if err != nil {
+		return nil, fmt.Errorf("channel not found: %w", err)
+	}
+	if ch.OwnerID == 0 || ch.OwnerID != ownerID {
+		return nil, fmt.Errorf("only the owner can unshare this channel")
+	}
+
+	sharedWith := lo.Filter(ch.SharedWith, func(id int, _ int) bool {
+		return !slices.Contains(userIDs, id)
+	})
+
+	visibility := channel.VisibilityShared
+	if len(sharedWith) == 0 {
+		visibility = channel.VisibilityPrivate
+	}
+
+	ch, err = client.Channel.UpdateOneID(channelID).
+		SetSharedWith(sharedWith).
+		SetVisibility(visibility).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unshare channel: %w", err)
+	}
+	svc.asyncReloadChannels()
+	return ch, nil
+}
+
+// ListSharedWithUser returns channels shared with the given user.
+func (svc *ChannelService) ListSharedWithUser(ctx context.Context, userID int) ([]*ent.Channel, error) {
+	client := svc.entFromContext(ctx)
+	channels, err := client.Channel.Query().
+		Where(channel.VisibilityEQ(channel.VisibilityShared)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lo.Filter(channels, func(ch *ent.Channel, _ int) bool {
+		return scopes.IsSharedWithUser(ch.SharedWith, userID)
+	}), nil
 }
