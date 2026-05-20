@@ -202,12 +202,13 @@ func (Channel) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.APIKeyScopeQueryRule(scopes.ScopeReadChannels),
-			scopes.OwnerRule(), // owner 用户可以访问所有渠道
-			scopes.UserReadScopeRule(scopes.ScopeReadChannels), // 需要 channels 读取权限
+			scopes.OwnerRule(),
+			scopes.ChannelVisibilityQueryRule(scopes.ScopeReadChannels),
 		},
 		Mutation: scopes.MutationPolicy{
-			scopes.OwnerRule(), // owner 用户可以修改所有渠道
-			scopes.UserWriteScopeRule(scopes.ScopeWriteChannels), // 需要 channels 写入权限
+			scopes.OwnerRule(),
+			scopes.UserWriteScopeRule(scopes.ScopeWriteChannels),
+			scopes.ChannelManageOwnMutationRule(scopes.ScopeManageOwnChannels),
 		},
 	}
 }

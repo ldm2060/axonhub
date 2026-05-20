@@ -80,11 +80,12 @@ func (Model) Policy() ent.Policy {
 		Query: scopes.QueryPolicy{
 			scopes.APIKeyScopeQueryRule(scopes.ScopeReadChannels),
 			scopes.OwnerRule(),
-			scopes.UserReadScopeRule(scopes.ScopeReadChannels),
+			scopes.ChannelVisibilityQueryRule(scopes.ScopeReadChannels),
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
 			scopes.UserWriteScopeRule(scopes.ScopeWriteChannels),
+			scopes.ChannelManageOwnMutationRule(scopes.ScopeManageOwnModels),
 		},
 	}
 }
