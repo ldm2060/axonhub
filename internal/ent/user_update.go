@@ -13,7 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -215,6 +217,36 @@ func (_u *UserUpdate) AddProjects(v ...*Project) *UserUpdate {
 	return _u.AddProjectIDs(ids...)
 }
 
+// AddOwnedChannelIDs adds the "owned_channels" edge to the Channel entity by IDs.
+func (_u *UserUpdate) AddOwnedChannelIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddOwnedChannelIDs(ids...)
+	return _u
+}
+
+// AddOwnedChannels adds the "owned_channels" edges to the Channel entity.
+func (_u *UserUpdate) AddOwnedChannels(v ...*Channel) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedChannelIDs(ids...)
+}
+
+// AddOwnedModelIDs adds the "owned_models" edge to the Model entity by IDs.
+func (_u *UserUpdate) AddOwnedModelIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddOwnedModelIDs(ids...)
+	return _u
+}
+
+// AddOwnedModels adds the "owned_models" edges to the Model entity.
+func (_u *UserUpdate) AddOwnedModels(v ...*Model) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedModelIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -329,6 +361,48 @@ func (_u *UserUpdate) RemoveProjects(v ...*Project) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProjectIDs(ids...)
+}
+
+// ClearOwnedChannels clears all "owned_channels" edges to the Channel entity.
+func (_u *UserUpdate) ClearOwnedChannels() *UserUpdate {
+	_u.mutation.ClearOwnedChannels()
+	return _u
+}
+
+// RemoveOwnedChannelIDs removes the "owned_channels" edge to Channel entities by IDs.
+func (_u *UserUpdate) RemoveOwnedChannelIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveOwnedChannelIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedChannels removes "owned_channels" edges to Channel entities.
+func (_u *UserUpdate) RemoveOwnedChannels(v ...*Channel) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedChannelIDs(ids...)
+}
+
+// ClearOwnedModels clears all "owned_models" edges to the Model entity.
+func (_u *UserUpdate) ClearOwnedModels() *UserUpdate {
+	_u.mutation.ClearOwnedModels()
+	return _u
+}
+
+// RemoveOwnedModelIDs removes the "owned_models" edge to Model entities by IDs.
+func (_u *UserUpdate) RemoveOwnedModelIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveOwnedModelIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedModels removes "owned_models" edges to Model entities.
+func (_u *UserUpdate) RemoveOwnedModels(v ...*Model) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedModelIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -629,6 +703,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_ = createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedChannelsIDs(); len(nodes) > 0 && !_u.mutation.OwnedChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedModelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedModelsIDs(); len(nodes) > 0 && !_u.mutation.OwnedModelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedModelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _u.mutation.APIKeysCleared() {
@@ -1113,6 +1277,36 @@ func (_u *UserUpdateOne) AddProjects(v ...*Project) *UserUpdateOne {
 	return _u.AddProjectIDs(ids...)
 }
 
+// AddOwnedChannelIDs adds the "owned_channels" edge to the Channel entity by IDs.
+func (_u *UserUpdateOne) AddOwnedChannelIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddOwnedChannelIDs(ids...)
+	return _u
+}
+
+// AddOwnedChannels adds the "owned_channels" edges to the Channel entity.
+func (_u *UserUpdateOne) AddOwnedChannels(v ...*Channel) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedChannelIDs(ids...)
+}
+
+// AddOwnedModelIDs adds the "owned_models" edge to the Model entity by IDs.
+func (_u *UserUpdateOne) AddOwnedModelIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddOwnedModelIDs(ids...)
+	return _u
+}
+
+// AddOwnedModels adds the "owned_models" edges to the Model entity.
+func (_u *UserUpdateOne) AddOwnedModels(v ...*Model) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedModelIDs(ids...)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1227,6 +1421,48 @@ func (_u *UserUpdateOne) RemoveProjects(v ...*Project) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProjectIDs(ids...)
+}
+
+// ClearOwnedChannels clears all "owned_channels" edges to the Channel entity.
+func (_u *UserUpdateOne) ClearOwnedChannels() *UserUpdateOne {
+	_u.mutation.ClearOwnedChannels()
+	return _u
+}
+
+// RemoveOwnedChannelIDs removes the "owned_channels" edge to Channel entities by IDs.
+func (_u *UserUpdateOne) RemoveOwnedChannelIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveOwnedChannelIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedChannels removes "owned_channels" edges to Channel entities.
+func (_u *UserUpdateOne) RemoveOwnedChannels(v ...*Channel) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedChannelIDs(ids...)
+}
+
+// ClearOwnedModels clears all "owned_models" edges to the Model entity.
+func (_u *UserUpdateOne) ClearOwnedModels() *UserUpdateOne {
+	_u.mutation.ClearOwnedModels()
+	return _u
+}
+
+// RemoveOwnedModelIDs removes the "owned_models" edge to Model entities by IDs.
+func (_u *UserUpdateOne) RemoveOwnedModelIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveOwnedModelIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedModels removes "owned_models" edges to Model entities.
+func (_u *UserUpdateOne) RemoveOwnedModels(v ...*Model) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedModelIDs(ids...)
 }
 
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
@@ -1557,6 +1793,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 		_ = createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedChannelsIDs(); len(nodes) > 0 && !_u.mutation.OwnedChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedModelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedModelsIDs(); len(nodes) > 0 && !_u.mutation.OwnedModelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedModelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _u.mutation.APIKeysCleared() {

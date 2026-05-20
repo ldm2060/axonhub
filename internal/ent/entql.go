@@ -114,6 +114,9 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldErrorMessage:            {Type: field.TypeString, Column: channel.FieldErrorMessage},
 			channel.FieldRemark:                  {Type: field.TypeString, Column: channel.FieldRemark},
 			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
+			channel.FieldOwnerID:                 {Type: field.TypeInt, Column: channel.FieldOwnerID},
+			channel.FieldVisibility:              {Type: field.TypeEnum, Column: channel.FieldVisibility},
+			channel.FieldSharedWith:              {Type: field.TypeJSON, Column: channel.FieldSharedWith},
 		},
 	}
 	graph.Nodes[3] = &sqlgraph.Node{
@@ -234,19 +237,22 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Model",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			model.FieldCreatedAt: {Type: field.TypeTime, Column: model.FieldCreatedAt},
-			model.FieldUpdatedAt: {Type: field.TypeTime, Column: model.FieldUpdatedAt},
-			model.FieldDeletedAt: {Type: field.TypeInt, Column: model.FieldDeletedAt},
-			model.FieldDeveloper: {Type: field.TypeString, Column: model.FieldDeveloper},
-			model.FieldModelID:   {Type: field.TypeString, Column: model.FieldModelID},
-			model.FieldType:      {Type: field.TypeEnum, Column: model.FieldType},
-			model.FieldName:      {Type: field.TypeString, Column: model.FieldName},
-			model.FieldIcon:      {Type: field.TypeString, Column: model.FieldIcon},
-			model.FieldGroup:     {Type: field.TypeString, Column: model.FieldGroup},
-			model.FieldModelCard: {Type: field.TypeJSON, Column: model.FieldModelCard},
-			model.FieldSettings:  {Type: field.TypeJSON, Column: model.FieldSettings},
-			model.FieldStatus:    {Type: field.TypeEnum, Column: model.FieldStatus},
-			model.FieldRemark:    {Type: field.TypeString, Column: model.FieldRemark},
+			model.FieldCreatedAt:  {Type: field.TypeTime, Column: model.FieldCreatedAt},
+			model.FieldUpdatedAt:  {Type: field.TypeTime, Column: model.FieldUpdatedAt},
+			model.FieldDeletedAt:  {Type: field.TypeInt, Column: model.FieldDeletedAt},
+			model.FieldDeveloper:  {Type: field.TypeString, Column: model.FieldDeveloper},
+			model.FieldModelID:    {Type: field.TypeString, Column: model.FieldModelID},
+			model.FieldType:       {Type: field.TypeEnum, Column: model.FieldType},
+			model.FieldName:       {Type: field.TypeString, Column: model.FieldName},
+			model.FieldIcon:       {Type: field.TypeString, Column: model.FieldIcon},
+			model.FieldGroup:      {Type: field.TypeString, Column: model.FieldGroup},
+			model.FieldModelCard:  {Type: field.TypeJSON, Column: model.FieldModelCard},
+			model.FieldSettings:   {Type: field.TypeJSON, Column: model.FieldSettings},
+			model.FieldStatus:     {Type: field.TypeEnum, Column: model.FieldStatus},
+			model.FieldRemark:     {Type: field.TypeString, Column: model.FieldRemark},
+			model.FieldOwnerID:    {Type: field.TypeInt, Column: model.FieldOwnerID},
+			model.FieldVisibility: {Type: field.TypeEnum, Column: model.FieldVisibility},
+			model.FieldSharedWith: {Type: field.TypeJSON, Column: model.FieldSharedWith},
 		},
 	}
 	graph.Nodes[9] = &sqlgraph.Node{
@@ -552,18 +558,19 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "User",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			user.FieldCreatedAt:      {Type: field.TypeTime, Column: user.FieldCreatedAt},
-			user.FieldUpdatedAt:      {Type: field.TypeTime, Column: user.FieldUpdatedAt},
-			user.FieldDeletedAt:      {Type: field.TypeInt, Column: user.FieldDeletedAt},
-			user.FieldEmail:          {Type: field.TypeString, Column: user.FieldEmail},
-			user.FieldStatus:         {Type: field.TypeEnum, Column: user.FieldStatus},
-			user.FieldPreferLanguage: {Type: field.TypeString, Column: user.FieldPreferLanguage},
-			user.FieldPassword:       {Type: field.TypeString, Column: user.FieldPassword},
-			user.FieldFirstName:      {Type: field.TypeString, Column: user.FieldFirstName},
-			user.FieldLastName:       {Type: field.TypeString, Column: user.FieldLastName},
-			user.FieldAvatar:         {Type: field.TypeString, Column: user.FieldAvatar},
-			user.FieldIsOwner:        {Type: field.TypeBool, Column: user.FieldIsOwner},
-			user.FieldScopes:         {Type: field.TypeJSON, Column: user.FieldScopes},
+			user.FieldCreatedAt:        {Type: field.TypeTime, Column: user.FieldCreatedAt},
+			user.FieldUpdatedAt:        {Type: field.TypeTime, Column: user.FieldUpdatedAt},
+			user.FieldDeletedAt:        {Type: field.TypeInt, Column: user.FieldDeletedAt},
+			user.FieldEmail:            {Type: field.TypeString, Column: user.FieldEmail},
+			user.FieldStatus:           {Type: field.TypeEnum, Column: user.FieldStatus},
+			user.FieldPreferLanguage:   {Type: field.TypeString, Column: user.FieldPreferLanguage},
+			user.FieldPassword:         {Type: field.TypeString, Column: user.FieldPassword},
+			user.FieldFirstName:        {Type: field.TypeString, Column: user.FieldFirstName},
+			user.FieldLastName:         {Type: field.TypeString, Column: user.FieldLastName},
+			user.FieldAvatar:           {Type: field.TypeString, Column: user.FieldAvatar},
+			user.FieldIsOwner:          {Type: field.TypeBool, Column: user.FieldIsOwner},
+			user.FieldScopes:           {Type: field.TypeJSON, Column: user.FieldScopes},
+			user.FieldPrivateProjectID: {Type: field.TypeInt, Column: user.FieldPrivateProjectID},
 		},
 	}
 	graph.Nodes[22] = &sqlgraph.Node{
@@ -649,6 +656,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"APIKeyProfileTemplate",
 		"Project",
+	)
+	graph.MustAddE(
+		"owner",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   channel.OwnerTable,
+			Columns: []string{channel.OwnerColumn},
+			Bidi:    false,
+		},
+		"Channel",
+		"User",
 	)
 	graph.MustAddE(
 		"requests",
@@ -805,6 +824,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"DataStorage",
 		"RequestExecution",
+	)
+	graph.MustAddE(
+		"owner",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   model.OwnerTable,
+			Columns: []string{model.OwnerColumn},
+			Bidi:    false,
+		},
+		"Model",
+		"User",
 	)
 	graph.MustAddE(
 		"user",
@@ -1221,6 +1252,42 @@ var schemaGraph = func() *sqlgraph.Schema {
 			Inverse: true,
 			Table:   user.ProjectsTable,
 			Columns: user.ProjectsPrimaryKey,
+			Bidi:    false,
+		},
+		"User",
+		"Project",
+	)
+	graph.MustAddE(
+		"owned_channels",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"Channel",
+	)
+	graph.MustAddE(
+		"owned_models",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"Model",
+	)
+	graph.MustAddE(
+		"private_project",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
 			Bidi:    false,
 		},
 		"User",
@@ -1724,6 +1791,35 @@ func (f *ChannelFilter) WhereRemark(p entql.StringP) {
 // WhereEndpoints applies the entql json.RawMessage predicate on the endpoints field.
 func (f *ChannelFilter) WhereEndpoints(p entql.BytesP) {
 	f.Where(p.Field(channel.FieldEndpoints))
+}
+
+// WhereOwnerID applies the entql int predicate on the owner_id field.
+func (f *ChannelFilter) WhereOwnerID(p entql.IntP) {
+	f.Where(p.Field(channel.FieldOwnerID))
+}
+
+// WhereVisibility applies the entql string predicate on the visibility field.
+func (f *ChannelFilter) WhereVisibility(p entql.StringP) {
+	f.Where(p.Field(channel.FieldVisibility))
+}
+
+// WhereSharedWith applies the entql json.RawMessage predicate on the shared_with field.
+func (f *ChannelFilter) WhereSharedWith(p entql.BytesP) {
+	f.Where(p.Field(channel.FieldSharedWith))
+}
+
+// WhereHasOwner applies a predicate to check if query has an edge owner.
+func (f *ChannelFilter) WhereHasOwner() {
+	f.Where(entql.HasEdge("owner"))
+}
+
+// WhereHasOwnerWith applies a predicate to check if query has an edge owner with a given conditions (other predicates).
+func (f *ChannelFilter) WhereHasOwnerWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("owner", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
 }
 
 // WhereHasRequests applies a predicate to check if query has an edge requests.
@@ -2421,6 +2517,35 @@ func (f *ModelFilter) WhereStatus(p entql.StringP) {
 // WhereRemark applies the entql string predicate on the remark field.
 func (f *ModelFilter) WhereRemark(p entql.StringP) {
 	f.Where(p.Field(model.FieldRemark))
+}
+
+// WhereOwnerID applies the entql int predicate on the owner_id field.
+func (f *ModelFilter) WhereOwnerID(p entql.IntP) {
+	f.Where(p.Field(model.FieldOwnerID))
+}
+
+// WhereVisibility applies the entql string predicate on the visibility field.
+func (f *ModelFilter) WhereVisibility(p entql.StringP) {
+	f.Where(p.Field(model.FieldVisibility))
+}
+
+// WhereSharedWith applies the entql json.RawMessage predicate on the shared_with field.
+func (f *ModelFilter) WhereSharedWith(p entql.BytesP) {
+	f.Where(p.Field(model.FieldSharedWith))
+}
+
+// WhereHasOwner applies a predicate to check if query has an edge owner.
+func (f *ModelFilter) WhereHasOwner() {
+	f.Where(entql.HasEdge("owner"))
+}
+
+// WhereHasOwnerWith applies a predicate to check if query has an edge owner with a given conditions (other predicates).
+func (f *ModelFilter) WhereHasOwnerWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("owner", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
 }
 
 // addPredicate implements the predicateAdder interface.
@@ -4159,6 +4284,11 @@ func (f *UserFilter) WhereScopes(p entql.BytesP) {
 	f.Where(p.Field(user.FieldScopes))
 }
 
+// WherePrivateProjectID applies the entql int predicate on the private_project_id field.
+func (f *UserFilter) WherePrivateProjectID(p entql.IntP) {
+	f.Where(p.Field(user.FieldPrivateProjectID))
+}
+
 // WhereHasProjects applies a predicate to check if query has an edge projects.
 func (f *UserFilter) WhereHasProjects() {
 	f.Where(entql.HasEdge("projects"))
@@ -4167,6 +4297,48 @@ func (f *UserFilter) WhereHasProjects() {
 // WhereHasProjectsWith applies a predicate to check if query has an edge projects with a given conditions (other predicates).
 func (f *UserFilter) WhereHasProjectsWith(preds ...predicate.Project) {
 	f.Where(entql.HasEdgeWith("projects", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasOwnedChannels applies a predicate to check if query has an edge owned_channels.
+func (f *UserFilter) WhereHasOwnedChannels() {
+	f.Where(entql.HasEdge("owned_channels"))
+}
+
+// WhereHasOwnedChannelsWith applies a predicate to check if query has an edge owned_channels with a given conditions (other predicates).
+func (f *UserFilter) WhereHasOwnedChannelsWith(preds ...predicate.Channel) {
+	f.Where(entql.HasEdgeWith("owned_channels", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasOwnedModels applies a predicate to check if query has an edge owned_models.
+func (f *UserFilter) WhereHasOwnedModels() {
+	f.Where(entql.HasEdge("owned_models"))
+}
+
+// WhereHasOwnedModelsWith applies a predicate to check if query has an edge owned_models with a given conditions (other predicates).
+func (f *UserFilter) WhereHasOwnedModelsWith(preds ...predicate.Model) {
+	f.Where(entql.HasEdgeWith("owned_models", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasPrivateProject applies a predicate to check if query has an edge private_project.
+func (f *UserFilter) WhereHasPrivateProject() {
+	f.Where(entql.HasEdge("private_project"))
+}
+
+// WhereHasPrivateProjectWith applies a predicate to check if query has an edge private_project with a given conditions (other predicates).
+func (f *UserFilter) WhereHasPrivateProjectWith(preds ...predicate.Project) {
+	f.Where(entql.HasEdgeWith("private_project", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

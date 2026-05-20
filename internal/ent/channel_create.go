@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -243,6 +244,45 @@ func (_c *ChannelCreate) SetEndpoints(v []objects.ChannelEndpoint) *ChannelCreat
 	return _c
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (_c *ChannelCreate) SetOwnerID(v int) *ChannelCreate {
+	_c.mutation.SetOwnerID(v)
+	return _c
+}
+
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableOwnerID(v *int) *ChannelCreate {
+	if v != nil {
+		_c.SetOwnerID(*v)
+	}
+	return _c
+}
+
+// SetVisibility sets the "visibility" field.
+func (_c *ChannelCreate) SetVisibility(v channel.Visibility) *ChannelCreate {
+	_c.mutation.SetVisibility(v)
+	return _c
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableVisibility(v *channel.Visibility) *ChannelCreate {
+	if v != nil {
+		_c.SetVisibility(*v)
+	}
+	return _c
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_c *ChannelCreate) SetSharedWith(v []int) *ChannelCreate {
+	_c.mutation.SetSharedWith(v)
+	return _c
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (_c *ChannelCreate) SetOwner(v *User) *ChannelCreate {
+	return _c.SetOwnerID(v.ID)
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_c *ChannelCreate) AddRequestIDs(ids ...int) *ChannelCreate {
 	_c.mutation.AddRequestIDs(ids...)
@@ -432,6 +472,10 @@ func (_c *ChannelCreate) defaults() error {
 		v := channel.DefaultEndpoints
 		_c.mutation.SetEndpoints(v)
 	}
+	if _, ok := _c.mutation.Visibility(); !ok {
+		v := channel.DefaultVisibility
+		_c.mutation.SetVisibility(v)
+	}
 	return nil
 }
 
@@ -473,6 +517,14 @@ func (_c *ChannelCreate) check() error {
 	}
 	if _, ok := _c.mutation.OrderingWeight(); !ok {
 		return &ValidationError{Name: "ordering_weight", err: errors.New(`ent: missing required field "Channel.ordering_weight"`)}
+	}
+	if _, ok := _c.mutation.Visibility(); !ok {
+		return &ValidationError{Name: "visibility", err: errors.New(`ent: missing required field "Channel.visibility"`)}
+	}
+	if v, ok := _c.mutation.Visibility(); ok {
+		if err := channel.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -584,6 +636,31 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Endpoints(); ok {
 		_spec.SetField(channel.FieldEndpoints, field.TypeJSON, value)
 		_node.Endpoints = value
+	}
+	if value, ok := _c.mutation.Visibility(); ok {
+		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)
+		_node.Visibility = value
+	}
+	if value, ok := _c.mutation.SharedWith(); ok {
+		_spec.SetField(channel.FieldSharedWith, field.TypeJSON, value)
+		_node.SharedWith = value
+	}
+	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   channel.OwnerTable,
+			Columns: []string{channel.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.OwnerID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.RequestsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1045,6 +1122,36 @@ func (u *ChannelUpsert) ClearEndpoints() *ChannelUpsert {
 	return u
 }
 
+// SetVisibility sets the "visibility" field.
+func (u *ChannelUpsert) SetVisibility(v channel.Visibility) *ChannelUpsert {
+	u.Set(channel.FieldVisibility, v)
+	return u
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateVisibility() *ChannelUpsert {
+	u.SetExcluded(channel.FieldVisibility)
+	return u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ChannelUpsert) SetSharedWith(v []int) *ChannelUpsert {
+	u.Set(channel.FieldSharedWith, v)
+	return u
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateSharedWith() *ChannelUpsert {
+	u.SetExcluded(channel.FieldSharedWith)
+	return u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ChannelUpsert) ClearSharedWith() *ChannelUpsert {
+	u.SetNull(channel.FieldSharedWith)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1058,6 +1165,9 @@ func (u *ChannelUpsertOne) UpdateNewValues() *ChannelUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(channel.FieldCreatedAt)
+		}
+		if _, exists := u.create.mutation.OwnerID(); exists {
+			s.SetIgnore(channel.FieldOwnerID)
 		}
 	}))
 	return u
@@ -1454,6 +1564,41 @@ func (u *ChannelUpsertOne) ClearEndpoints() *ChannelUpsertOne {
 	})
 }
 
+// SetVisibility sets the "visibility" field.
+func (u *ChannelUpsertOne) SetVisibility(v channel.Visibility) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetVisibility(v)
+	})
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateVisibility() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateVisibility()
+	})
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ChannelUpsertOne) SetSharedWith(v []int) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetSharedWith(v)
+	})
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateSharedWith() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateSharedWith()
+	})
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ChannelUpsertOne) ClearSharedWith() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearSharedWith()
+	})
+}
+
 // Exec executes the query.
 func (u *ChannelUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -1632,6 +1777,9 @@ func (u *ChannelUpsertBulk) UpdateNewValues() *ChannelUpsertBulk {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(channel.FieldCreatedAt)
+			}
+			if _, exists := b.mutation.OwnerID(); exists {
+				s.SetIgnore(channel.FieldOwnerID)
 			}
 		}
 	}))
@@ -2026,6 +2174,41 @@ func (u *ChannelUpsertBulk) UpdateEndpoints() *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) ClearEndpoints() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearEndpoints()
+	})
+}
+
+// SetVisibility sets the "visibility" field.
+func (u *ChannelUpsertBulk) SetVisibility(v channel.Visibility) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetVisibility(v)
+	})
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateVisibility() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateVisibility()
+	})
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ChannelUpsertBulk) SetSharedWith(v []int) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetSharedWith(v)
+	})
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateSharedWith() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateSharedWith()
+	})
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ChannelUpsertBulk) ClearSharedWith() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearSharedWith()
 	})
 }
 

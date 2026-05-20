@@ -84,13 +84,24 @@ require (
 )
 
 // Replace gqlgen with ldm2060/gqlgen to add type conversion between GUID and int.
-replace github.com/99designs/gqlgen => github.com/ldm2060/gqlgen v0.0.0-20251206072334-03e453169896
+replace github.com/99designs/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
 
 // Replace go-sse with ldm2060/go-sse to add Stream type.
-replace github.com/tmaxmax/go-sse => github.com/ldm2060/go-sse v0.0.0-20250909130008-e74a1155bc3b
+replace github.com/tmaxmax/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
 
 // Replace gin-contrib/sse with ldm2060/sse to add space after data: to improve compatibility.
-replace github.com/gin-contrib/sse => github.com/ldm2060/sse v0.0.0-20260223020440-b463add2d52f
+replace github.com/gin-contrib/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
+
+// Replace ldm2060 forks with looplj (public mirrors).
+replace github.com/ldm2060/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
+
+replace github.com/ldm2060/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
+
+replace github.com/ldm2060/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
+
+replace github.com/ldm2060/afero-s3 => github.com/looplj/afero-s3 v0.1.0
+
+replace github.com/ldm2060/afero-webdav => github.com/looplj/afero-webdav v0.0.0-20260128073818-3f60e732e991
 
 require (
 	ariga.io/atlas v0.38.0 // indirect
@@ -166,9 +177,9 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
+	github.com/ldm2060/axonhub/llm v0.0.0
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/ldm2060/axonhub/llm v0.0.0
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect

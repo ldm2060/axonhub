@@ -12,7 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -173,6 +175,20 @@ func (_c *UserCreate) SetScopes(v []string) *UserCreate {
 	return _c
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (_c *UserCreate) SetPrivateProjectID(v int) *UserCreate {
+	_c.mutation.SetPrivateProjectID(v)
+	return _c
+}
+
+// SetNillablePrivateProjectID sets the "private_project_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePrivateProjectID(v *int) *UserCreate {
+	if v != nil {
+		_c.SetPrivateProjectID(*v)
+	}
+	return _c
+}
+
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
 func (_c *UserCreate) AddProjectIDs(ids ...int) *UserCreate {
 	_c.mutation.AddProjectIDs(ids...)
@@ -186,6 +202,41 @@ func (_c *UserCreate) AddProjects(v ...*Project) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddProjectIDs(ids...)
+}
+
+// AddOwnedChannelIDs adds the "owned_channels" edge to the Channel entity by IDs.
+func (_c *UserCreate) AddOwnedChannelIDs(ids ...int) *UserCreate {
+	_c.mutation.AddOwnedChannelIDs(ids...)
+	return _c
+}
+
+// AddOwnedChannels adds the "owned_channels" edges to the Channel entity.
+func (_c *UserCreate) AddOwnedChannels(v ...*Channel) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOwnedChannelIDs(ids...)
+}
+
+// AddOwnedModelIDs adds the "owned_models" edge to the Model entity by IDs.
+func (_c *UserCreate) AddOwnedModelIDs(ids ...int) *UserCreate {
+	_c.mutation.AddOwnedModelIDs(ids...)
+	return _c
+}
+
+// AddOwnedModels adds the "owned_models" edges to the Model entity.
+func (_c *UserCreate) AddOwnedModels(v ...*Model) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOwnedModelIDs(ids...)
+}
+
+// SetPrivateProject sets the "private_project" edge to the Project entity.
+func (_c *UserCreate) SetPrivateProject(v *Project) *UserCreate {
+	return _c.SetPrivateProjectID(v.ID)
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
@@ -484,6 +535,55 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_ = createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OwnedChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedChannelsTable,
+			Columns: []string{user.OwnedChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OwnedModelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedModelsTable,
+			Columns: []string{user.OwnedModelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(model.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PrivateProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.PrivateProjectTable,
+			Columns: []string{user.PrivateProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.PrivateProjectID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
@@ -801,6 +901,9 @@ func (u *UserUpsertOne) UpdateNewValues() *UserUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(user.FieldCreatedAt)
+		}
+		if _, exists := u.create.mutation.PrivateProjectID(); exists {
+			s.SetIgnore(user.FieldPrivateProjectID)
 		}
 	}))
 	return u
@@ -1186,6 +1289,9 @@ func (u *UserUpsertBulk) UpdateNewValues() *UserUpsertBulk {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(user.FieldCreatedAt)
+			}
+			if _, exists := b.mutation.PrivateProjectID(); exists {
+				s.SetIgnore(user.FieldPrivateProjectID)
 			}
 		}
 	}))

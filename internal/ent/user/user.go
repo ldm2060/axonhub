@@ -42,8 +42,16 @@ const (
 	FieldIsOwner = "is_owner"
 	// FieldScopes holds the string denoting the scopes field in the database.
 	FieldScopes = "scopes"
+	// FieldPrivateProjectID holds the string denoting the private_project_id field in the database.
+	FieldPrivateProjectID = "private_project_id"
 	// EdgeProjects holds the string denoting the projects edge name in mutations.
 	EdgeProjects = "projects"
+	// EdgeOwnedChannels holds the string denoting the owned_channels edge name in mutations.
+	EdgeOwnedChannels = "owned_channels"
+	// EdgeOwnedModels holds the string denoting the owned_models edge name in mutations.
+	EdgeOwnedModels = "owned_models"
+	// EdgePrivateProject holds the string denoting the private_project edge name in mutations.
+	EdgePrivateProject = "private_project"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
@@ -63,6 +71,27 @@ const (
 	// ProjectsInverseTable is the table name for the Project entity.
 	// It exists in this package in order to avoid circular dependency with the "project" package.
 	ProjectsInverseTable = "projects"
+	// OwnedChannelsTable is the table that holds the owned_channels relation/edge.
+	OwnedChannelsTable = "channels"
+	// OwnedChannelsInverseTable is the table name for the Channel entity.
+	// It exists in this package in order to avoid circular dependency with the "channel" package.
+	OwnedChannelsInverseTable = "channels"
+	// OwnedChannelsColumn is the table column denoting the owned_channels relation/edge.
+	OwnedChannelsColumn = "owner_id"
+	// OwnedModelsTable is the table that holds the owned_models relation/edge.
+	OwnedModelsTable = "models"
+	// OwnedModelsInverseTable is the table name for the Model entity.
+	// It exists in this package in order to avoid circular dependency with the "model" package.
+	OwnedModelsInverseTable = "models"
+	// OwnedModelsColumn is the table column denoting the owned_models relation/edge.
+	OwnedModelsColumn = "owner_id"
+	// PrivateProjectTable is the table that holds the private_project relation/edge.
+	PrivateProjectTable = "users"
+	// PrivateProjectInverseTable is the table name for the Project entity.
+	// It exists in this package in order to avoid circular dependency with the "project" package.
+	PrivateProjectInverseTable = "projects"
+	// PrivateProjectColumn is the table column denoting the private_project relation/edge.
+	PrivateProjectColumn = "private_project_id"
 	// APIKeysTable is the table that holds the api_keys relation/edge.
 	APIKeysTable = "api_keys"
 	// APIKeysInverseTable is the table name for the APIKey entity.
@@ -120,6 +149,7 @@ var Columns = []string{
 	FieldAvatar,
 	FieldIsOwner,
 	FieldScopes,
+	FieldPrivateProjectID,
 }
 
 var (
@@ -259,6 +289,11 @@ func ByIsOwner(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsOwner, opts...).ToFunc()
 }
 
+// ByPrivateProjectID orders the results by the private_project_id field.
+func ByPrivateProjectID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPrivateProjectID, opts...).ToFunc()
+}
+
 // ByProjectsCount orders the results by projects count.
 func ByProjectsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -270,6 +305,41 @@ func ByProjectsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByProjects(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newProjectsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOwnedChannelsCount orders the results by owned_channels count.
+func ByOwnedChannelsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOwnedChannelsStep(), opts...)
+	}
+}
+
+// ByOwnedChannels orders the results by owned_channels terms.
+func ByOwnedChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOwnedChannelsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOwnedModelsCount orders the results by owned_models count.
+func ByOwnedModelsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOwnedModelsStep(), opts...)
+	}
+}
+
+// ByOwnedModels orders the results by owned_models terms.
+func ByOwnedModels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOwnedModelsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPrivateProjectField orders the results by private_project field.
+func ByPrivateProjectField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPrivateProjectStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -361,6 +431,27 @@ func newProjectsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProjectsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ProjectsTable, ProjectsPrimaryKey...),
+	)
+}
+func newOwnedChannelsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OwnedChannelsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OwnedChannelsTable, OwnedChannelsColumn),
+	)
+}
+func newOwnedModelsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OwnedModelsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OwnedModelsTable, OwnedModelsColumn),
+	)
+}
+func newPrivateProjectStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PrivateProjectInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, PrivateProjectTable, PrivateProjectColumn),
 	)
 }
 func newAPIKeysStep() *sqlgraph.Step {

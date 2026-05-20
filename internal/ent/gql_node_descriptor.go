@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
@@ -248,8 +249,8 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "Channel",
-		Fields: make([]*Field, 20),
-		Edges:  make([]*Edge, 6),
+		Fields: make([]*Field, 23),
+		Edges:  make([]*Edge, 7),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -412,63 +413,97 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "endpoints",
 		Value: string(buf),
 	}
-	node.Edges[0] = &Edge{
-		Type: "Request",
-		Name: "requests",
+	if buf, err = json.Marshal(_m.OwnerID); err != nil {
+		return nil, err
 	}
-	err = _m.QueryRequests().
-		Select(request.FieldID).
+	node.Fields[20] = &Field{
+		Type:  "int",
+		Name:  "owner_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Visibility); err != nil {
+		return nil, err
+	}
+	node.Fields[21] = &Field{
+		Type:  "channel.Visibility",
+		Name:  "visibility",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SharedWith); err != nil {
+		return nil, err
+	}
+	node.Fields[22] = &Field{
+		Type:  "[]int",
+		Name:  "shared_with",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = _m.QueryOwner().
+		Select(user.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[1] = &Edge{
-		Type: "RequestExecution",
-		Name: "executions",
+		Type: "Request",
+		Name: "requests",
 	}
-	err = _m.QueryExecutions().
-		Select(requestexecution.FieldID).
+	err = _m.QueryRequests().
+		Select(request.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[2] = &Edge{
-		Type: "UsageLog",
-		Name: "usage_logs",
+		Type: "RequestExecution",
+		Name: "executions",
 	}
-	err = _m.QueryUsageLogs().
-		Select(usagelog.FieldID).
+	err = _m.QueryExecutions().
+		Select(requestexecution.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[3] = &Edge{
-		Type: "ChannelProbe",
-		Name: "channel_probes",
+		Type: "UsageLog",
+		Name: "usage_logs",
 	}
-	err = _m.QueryChannelProbes().
-		Select(channelprobe.FieldID).
+	err = _m.QueryUsageLogs().
+		Select(usagelog.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
-		Type: "ChannelModelPrice",
-		Name: "channel_model_prices",
+		Type: "ChannelProbe",
+		Name: "channel_probes",
 	}
-	err = _m.QueryChannelModelPrices().
-		Select(channelmodelprice.FieldID).
+	err = _m.QueryChannelProbes().
+		Select(channelprobe.FieldID).
 		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[5] = &Edge{
+		Type: "ChannelModelPrice",
+		Name: "channel_model_prices",
+	}
+	err = _m.QueryChannelModelPrices().
+		Select(channelmodelprice.FieldID).
+		Scan(ctx, &node.Edges[5].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[6] = &Edge{
 		Type: "ProviderQuotaStatus",
 		Name: "provider_quota_status",
 	}
 	err = _m.QueryProviderQuotaStatus().
 		Select(providerquotastatus.FieldID).
-		Scan(ctx, &node.Edges[5].IDs)
+		Scan(ctx, &node.Edges[6].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -922,8 +957,8 @@ func (_m *Model) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "Model",
-		Fields: make([]*Field, 12),
-		Edges:  make([]*Edge, 0),
+		Fields: make([]*Field, 15),
+		Edges:  make([]*Edge, 1),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -1021,6 +1056,40 @@ func (_m *Model) Node(ctx context.Context) (node *Node, err error) {
 		Type:  "string",
 		Name:  "remark",
 		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.OwnerID); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "int",
+		Name:  "owner_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Visibility); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "model.Visibility",
+		Name:  "visibility",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SharedWith); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "[]int",
+		Name:  "shared_with",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = _m.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
 	}
 	return node, nil
 }
@@ -2546,8 +2615,8 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "User",
-		Fields: make([]*Field, 11),
-		Edges:  make([]*Edge, 7),
+		Fields: make([]*Field, 12),
+		Edges:  make([]*Edge, 10),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -2638,6 +2707,14 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "scopes",
 		Value: string(buf),
 	}
+	if buf, err = json.Marshal(_m.PrivateProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "int",
+		Name:  "private_project_id",
+		Value: string(buf),
+	}
 	node.Edges[0] = &Edge{
 		Type: "Project",
 		Name: "projects",
@@ -2649,62 +2726,92 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[1] = &Edge{
-		Type: "APIKey",
-		Name: "api_keys",
+		Type: "Channel",
+		Name: "owned_channels",
 	}
-	err = _m.QueryAPIKeys().
-		Select(apikey.FieldID).
+	err = _m.QueryOwnedChannels().
+		Select(channel.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[2] = &Edge{
-		Type: "Role",
-		Name: "roles",
+		Type: "Model",
+		Name: "owned_models",
 	}
-	err = _m.QueryRoles().
-		Select(role.FieldID).
+	err = _m.QueryOwnedModels().
+		Select(model.FieldID).
 		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[3] = &Edge{
-		Type: "ChannelOverrideTemplate",
-		Name: "channel_override_templates",
+		Type: "Project",
+		Name: "private_project",
 	}
-	err = _m.QueryChannelOverrideTemplates().
-		Select(channeloverridetemplate.FieldID).
+	err = _m.QueryPrivateProject().
+		Select(project.FieldID).
 		Scan(ctx, &node.Edges[3].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[4] = &Edge{
-		Type: "OIDCIdentity",
-		Name: "oidc_identities",
+		Type: "APIKey",
+		Name: "api_keys",
 	}
-	err = _m.QueryOidcIdentities().
-		Select(oidcidentity.FieldID).
+	err = _m.QueryAPIKeys().
+		Select(apikey.FieldID).
 		Scan(ctx, &node.Edges[4].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[5] = &Edge{
-		Type: "UserProject",
-		Name: "project_users",
+		Type: "Role",
+		Name: "roles",
 	}
-	err = _m.QueryProjectUsers().
-		Select(userproject.FieldID).
+	err = _m.QueryRoles().
+		Select(role.FieldID).
 		Scan(ctx, &node.Edges[5].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[6] = &Edge{
+		Type: "ChannelOverrideTemplate",
+		Name: "channel_override_templates",
+	}
+	err = _m.QueryChannelOverrideTemplates().
+		Select(channeloverridetemplate.FieldID).
+		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[7] = &Edge{
+		Type: "OIDCIdentity",
+		Name: "oidc_identities",
+	}
+	err = _m.QueryOidcIdentities().
+		Select(oidcidentity.FieldID).
+		Scan(ctx, &node.Edges[7].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[8] = &Edge{
+		Type: "UserProject",
+		Name: "project_users",
+	}
+	err = _m.QueryProjectUsers().
+		Select(userproject.FieldID).
+		Scan(ctx, &node.Edges[8].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[9] = &Edge{
 		Type: "UserRole",
 		Name: "user_roles",
 	}
 	err = _m.QueryUserRoles().
 		Select(userrole.FieldID).
-		Scan(ctx, &node.Edges[6].IDs)
+		Scan(ctx, &node.Edges[9].IDs)
 	if err != nil {
 		return nil, err
 	}

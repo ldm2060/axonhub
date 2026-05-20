@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
@@ -187,6 +188,38 @@ func (_u *ModelUpdate) ClearRemark() *ModelUpdate {
 	return _u
 }
 
+// SetVisibility sets the "visibility" field.
+func (_u *ModelUpdate) SetVisibility(v model.Visibility) *ModelUpdate {
+	_u.mutation.SetVisibility(v)
+	return _u
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_u *ModelUpdate) SetNillableVisibility(v *model.Visibility) *ModelUpdate {
+	if v != nil {
+		_u.SetVisibility(*v)
+	}
+	return _u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_u *ModelUpdate) SetSharedWith(v []int) *ModelUpdate {
+	_u.mutation.SetSharedWith(v)
+	return _u
+}
+
+// AppendSharedWith appends value to the "shared_with" field.
+func (_u *ModelUpdate) AppendSharedWith(v []int) *ModelUpdate {
+	_u.mutation.AppendSharedWith(v)
+	return _u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (_u *ModelUpdate) ClearSharedWith() *ModelUpdate {
+	_u.mutation.ClearSharedWith()
+	return _u
+}
+
 // Mutation returns the ModelMutation object of the builder.
 func (_u *ModelUpdate) Mutation() *ModelMutation {
 	return _u.mutation
@@ -244,6 +277,11 @@ func (_u *ModelUpdate) check() error {
 	if v, ok := _u.mutation.Status(); ok {
 		if err := model.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Model.status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Visibility(); ok {
+		if err := model.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Model.visibility": %w`, err)}
 		}
 	}
 	return nil
@@ -308,6 +346,20 @@ func (_u *ModelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RemarkCleared() {
 		_spec.ClearField(model.FieldRemark, field.TypeString)
+	}
+	if value, ok := _u.mutation.Visibility(); ok {
+		_spec.SetField(model.FieldVisibility, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SharedWith(); ok {
+		_spec.SetField(model.FieldSharedWith, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSharedWith(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, model.FieldSharedWith, value)
+		})
+	}
+	if _u.mutation.SharedWithCleared() {
+		_spec.ClearField(model.FieldSharedWith, field.TypeJSON)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -488,6 +540,38 @@ func (_u *ModelUpdateOne) ClearRemark() *ModelUpdateOne {
 	return _u
 }
 
+// SetVisibility sets the "visibility" field.
+func (_u *ModelUpdateOne) SetVisibility(v model.Visibility) *ModelUpdateOne {
+	_u.mutation.SetVisibility(v)
+	return _u
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_u *ModelUpdateOne) SetNillableVisibility(v *model.Visibility) *ModelUpdateOne {
+	if v != nil {
+		_u.SetVisibility(*v)
+	}
+	return _u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_u *ModelUpdateOne) SetSharedWith(v []int) *ModelUpdateOne {
+	_u.mutation.SetSharedWith(v)
+	return _u
+}
+
+// AppendSharedWith appends value to the "shared_with" field.
+func (_u *ModelUpdateOne) AppendSharedWith(v []int) *ModelUpdateOne {
+	_u.mutation.AppendSharedWith(v)
+	return _u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (_u *ModelUpdateOne) ClearSharedWith() *ModelUpdateOne {
+	_u.mutation.ClearSharedWith()
+	return _u
+}
+
 // Mutation returns the ModelMutation object of the builder.
 func (_u *ModelUpdateOne) Mutation() *ModelMutation {
 	return _u.mutation
@@ -558,6 +642,11 @@ func (_u *ModelUpdateOne) check() error {
 	if v, ok := _u.mutation.Status(); ok {
 		if err := model.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Model.status": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Visibility(); ok {
+		if err := model.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Model.visibility": %w`, err)}
 		}
 	}
 	return nil
@@ -639,6 +728,20 @@ func (_u *ModelUpdateOne) sqlSave(ctx context.Context) (_node *Model, err error)
 	}
 	if _u.mutation.RemarkCleared() {
 		_spec.ClearField(model.FieldRemark, field.TypeString)
+	}
+	if value, ok := _u.mutation.Visibility(); ok {
+		_spec.SetField(model.FieldVisibility, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SharedWith(); ok {
+		_spec.SetField(model.FieldSharedWith, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSharedWith(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, model.FieldSharedWith, value)
+		})
+	}
+	if _u.mutation.SharedWithCleared() {
+		_spec.ClearField(model.FieldSharedWith, field.TypeJSON)
 	}
 	_spec.AddModifiers(_u.modifiers...)
 	_node = &Model{config: _u.config}

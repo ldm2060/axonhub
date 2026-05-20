@@ -14,7 +14,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -32,6 +34,9 @@ type UserQuery struct {
 	inters                            []Interceptor
 	predicates                        []predicate.User
 	withProjects                      *ProjectQuery
+	withOwnedChannels                 *ChannelQuery
+	withOwnedModels                   *ModelQuery
+	withPrivateProject                *ProjectQuery
 	withAPIKeys                       *APIKeyQuery
 	withRoles                         *RoleQuery
 	withChannelOverrideTemplates      *ChannelOverrideTemplateQuery
@@ -41,6 +46,8 @@ type UserQuery struct {
 	loadTotal                         []func(context.Context, []*User) error
 	modifiers                         []func(*sql.Selector)
 	withNamedProjects                 map[string]*ProjectQuery
+	withNamedOwnedChannels            map[string]*ChannelQuery
+	withNamedOwnedModels              map[string]*ModelQuery
 	withNamedAPIKeys                  map[string]*APIKeyQuery
 	withNamedRoles                    map[string]*RoleQuery
 	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
@@ -98,6 +105,72 @@ func (_q *UserQuery) QueryProjects() *ProjectQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(project.Table, project.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, user.ProjectsTable, user.ProjectsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOwnedChannels chains the current query on the "owned_channels" edge.
+func (_q *UserQuery) QueryOwnedChannels() *ChannelQuery {
+	query := (&ChannelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnedChannelsTable, user.OwnedChannelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOwnedModels chains the current query on the "owned_models" edge.
+func (_q *UserQuery) QueryOwnedModels() *ModelQuery {
+	query := (&ModelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(model.Table, model.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnedModelsTable, user.OwnedModelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPrivateProject chains the current query on the "private_project" edge.
+func (_q *UserQuery) QueryPrivateProject() *ProjectQuery {
+	query := (&ProjectClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, user.PrivateProjectTable, user.PrivateProjectColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -430,6 +503,9 @@ func (_q *UserQuery) Clone() *UserQuery {
 		inters:                       append([]Interceptor{}, _q.inters...),
 		predicates:                   append([]predicate.User{}, _q.predicates...),
 		withProjects:                 _q.withProjects.Clone(),
+		withOwnedChannels:            _q.withOwnedChannels.Clone(),
+		withOwnedModels:              _q.withOwnedModels.Clone(),
+		withPrivateProject:           _q.withPrivateProject.Clone(),
 		withAPIKeys:                  _q.withAPIKeys.Clone(),
 		withRoles:                    _q.withRoles.Clone(),
 		withChannelOverrideTemplates: _q.withChannelOverrideTemplates.Clone(),
@@ -451,6 +527,39 @@ func (_q *UserQuery) WithProjects(opts ...func(*ProjectQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withProjects = query
+	return _q
+}
+
+// WithOwnedChannels tells the query-builder to eager-load the nodes that are connected to
+// the "owned_channels" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithOwnedChannels(opts ...func(*ChannelQuery)) *UserQuery {
+	query := (&ChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOwnedChannels = query
+	return _q
+}
+
+// WithOwnedModels tells the query-builder to eager-load the nodes that are connected to
+// the "owned_models" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithOwnedModels(opts ...func(*ModelQuery)) *UserQuery {
+	query := (&ModelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOwnedModels = query
+	return _q
+}
+
+// WithPrivateProject tells the query-builder to eager-load the nodes that are connected to
+// the "private_project" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPrivateProject(opts ...func(*ProjectQuery)) *UserQuery {
+	query := (&ProjectClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPrivateProject = query
 	return _q
 }
 
@@ -604,8 +713,11 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [10]bool{
 			_q.withProjects != nil,
+			_q.withOwnedChannels != nil,
+			_q.withOwnedModels != nil,
+			_q.withPrivateProject != nil,
 			_q.withAPIKeys != nil,
 			_q.withRoles != nil,
 			_q.withChannelOverrideTemplates != nil,
@@ -639,6 +751,26 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadProjects(ctx, query, nodes,
 			func(n *User) { n.Edges.Projects = []*Project{} },
 			func(n *User, e *Project) { n.Edges.Projects = append(n.Edges.Projects, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOwnedChannels; query != nil {
+		if err := _q.loadOwnedChannels(ctx, query, nodes,
+			func(n *User) { n.Edges.OwnedChannels = []*Channel{} },
+			func(n *User, e *Channel) { n.Edges.OwnedChannels = append(n.Edges.OwnedChannels, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOwnedModels; query != nil {
+		if err := _q.loadOwnedModels(ctx, query, nodes,
+			func(n *User) { n.Edges.OwnedModels = []*Model{} },
+			func(n *User, e *Model) { n.Edges.OwnedModels = append(n.Edges.OwnedModels, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPrivateProject; query != nil {
+		if err := _q.loadPrivateProject(ctx, query, nodes, nil,
+			func(n *User, e *Project) { n.Edges.PrivateProject = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -690,6 +822,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadProjects(ctx, query, nodes,
 			func(n *User) { n.appendNamedProjects(name) },
 			func(n *User, e *Project) { n.appendNamedProjects(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedOwnedChannels {
+		if err := _q.loadOwnedChannels(ctx, query, nodes,
+			func(n *User) { n.appendNamedOwnedChannels(name) },
+			func(n *User, e *Channel) { n.appendNamedOwnedChannels(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedOwnedModels {
+		if err := _q.loadOwnedModels(ctx, query, nodes,
+			func(n *User) { n.appendNamedOwnedModels(name) },
+			func(n *User, e *Model) { n.appendNamedOwnedModels(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -800,6 +946,98 @@ func (_q *UserQuery) loadProjects(ctx context.Context, query *ProjectQuery, node
 		}
 		for kn := range nodes {
 			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *UserQuery) loadOwnedChannels(ctx context.Context, query *ChannelQuery, nodes []*User, init func(*User), assign func(*User, *Channel)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(channel.FieldOwnerID)
+	}
+	query.Where(predicate.Channel(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.OwnedChannelsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadOwnedModels(ctx context.Context, query *ModelQuery, nodes []*User, init func(*User), assign func(*User, *Model)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(model.FieldOwnerID)
+	}
+	query.Where(predicate.Model(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.OwnedModelsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadPrivateProject(ctx context.Context, query *ProjectQuery, nodes []*User, init func(*User), assign func(*User, *Project)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*User)
+	for i := range nodes {
+		if nodes[i].PrivateProjectID == nil {
+			continue
+		}
+		fk := *nodes[i].PrivateProjectID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(project.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "private_project_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
@@ -1044,6 +1282,9 @@ func (_q *UserQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
+		if _q.withPrivateProject != nil {
+			_spec.Node.AddColumnOnce(user.FieldPrivateProjectID)
+		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -1120,6 +1361,34 @@ func (_q *UserQuery) WithNamedProjects(name string, opts ...func(*ProjectQuery))
 		_q.withNamedProjects = make(map[string]*ProjectQuery)
 	}
 	_q.withNamedProjects[name] = query
+	return _q
+}
+
+// WithNamedOwnedChannels tells the query-builder to eager-load the nodes that are connected to the "owned_channels"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedOwnedChannels(name string, opts ...func(*ChannelQuery)) *UserQuery {
+	query := (&ChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedOwnedChannels == nil {
+		_q.withNamedOwnedChannels = make(map[string]*ChannelQuery)
+	}
+	_q.withNamedOwnedChannels[name] = query
+	return _q
+}
+
+// WithNamedOwnedModels tells the query-builder to eager-load the nodes that are connected to the "owned_models"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedOwnedModels(name string, opts ...func(*ModelQuery)) *UserQuery {
+	query := (&ModelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedOwnedModels == nil {
+		_q.withNamedOwnedModels = make(map[string]*ModelQuery)
+	}
+	_q.withNamedOwnedModels[name] = query
 	return _q
 }
 

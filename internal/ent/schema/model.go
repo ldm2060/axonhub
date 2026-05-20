@@ -63,7 +63,7 @@ func (Model) Fields() []ent.Field {
 
 func (Model) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).Ref("owned_models").Unique().Field("owner_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.From("owner", User.Type).Ref("owned_models").Unique().Immutable().Field("owner_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 

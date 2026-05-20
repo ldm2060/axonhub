@@ -981,6 +981,24 @@ type ChannelWhereInput struct {
 	RemarkEqualFold    *string  `json:"remarkEqualFold,omitempty"`
 	RemarkContainsFold *string  `json:"remarkContainsFold,omitempty"`
 
+	// "owner_id" field predicates.
+	OwnerID       *int  `json:"ownerID,omitempty"`
+	OwnerIDNEQ    *int  `json:"ownerIDNEQ,omitempty"`
+	OwnerIDIn     []int `json:"ownerIDIn,omitempty"`
+	OwnerIDNotIn  []int `json:"ownerIDNotIn,omitempty"`
+	OwnerIDIsNil  bool  `json:"ownerIDIsNil,omitempty"`
+	OwnerIDNotNil bool  `json:"ownerIDNotNil,omitempty"`
+
+	// "visibility" field predicates.
+	Visibility      *channel.Visibility  `json:"visibility,omitempty"`
+	VisibilityNEQ   *channel.Visibility  `json:"visibilityNEQ,omitempty"`
+	VisibilityIn    []channel.Visibility `json:"visibilityIn,omitempty"`
+	VisibilityNotIn []channel.Visibility `json:"visibilityNotIn,omitempty"`
+
+	// "owner" edge predicates.
+	HasOwner     *bool             `json:"hasOwner,omitempty"`
+	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
+
 	// "requests" edge predicates.
 	HasRequests     *bool                `json:"hasRequests,omitempty"`
 	HasRequestsWith []*RequestWhereInput `json:"hasRequestsWith,omitempty"`
@@ -1461,7 +1479,55 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 	if i.RemarkContainsFold != nil {
 		predicates = append(predicates, channel.RemarkContainsFold(*i.RemarkContainsFold))
 	}
+	if i.OwnerID != nil {
+		predicates = append(predicates, channel.OwnerIDEQ(*i.OwnerID))
+	}
+	if i.OwnerIDNEQ != nil {
+		predicates = append(predicates, channel.OwnerIDNEQ(*i.OwnerIDNEQ))
+	}
+	if len(i.OwnerIDIn) > 0 {
+		predicates = append(predicates, channel.OwnerIDIn(i.OwnerIDIn...))
+	}
+	if len(i.OwnerIDNotIn) > 0 {
+		predicates = append(predicates, channel.OwnerIDNotIn(i.OwnerIDNotIn...))
+	}
+	if i.OwnerIDIsNil {
+		predicates = append(predicates, channel.OwnerIDIsNil())
+	}
+	if i.OwnerIDNotNil {
+		predicates = append(predicates, channel.OwnerIDNotNil())
+	}
+	if i.Visibility != nil {
+		predicates = append(predicates, channel.VisibilityEQ(*i.Visibility))
+	}
+	if i.VisibilityNEQ != nil {
+		predicates = append(predicates, channel.VisibilityNEQ(*i.VisibilityNEQ))
+	}
+	if len(i.VisibilityIn) > 0 {
+		predicates = append(predicates, channel.VisibilityIn(i.VisibilityIn...))
+	}
+	if len(i.VisibilityNotIn) > 0 {
+		predicates = append(predicates, channel.VisibilityNotIn(i.VisibilityNotIn...))
+	}
 
+	if i.HasOwner != nil {
+		p := channel.HasOwner()
+		if !*i.HasOwner {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasOwnerWith))
+		for _, w := range i.HasOwnerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasOwnerWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasOwnerWith(with...))
+	}
 	if i.HasRequests != nil {
 		p := channel.HasRequests()
 		if !*i.HasRequests {
@@ -3700,6 +3766,24 @@ type ModelWhereInput struct {
 	RemarkNotNil       bool     `json:"remarkNotNil,omitempty"`
 	RemarkEqualFold    *string  `json:"remarkEqualFold,omitempty"`
 	RemarkContainsFold *string  `json:"remarkContainsFold,omitempty"`
+
+	// "owner_id" field predicates.
+	OwnerID       *int  `json:"ownerID,omitempty"`
+	OwnerIDNEQ    *int  `json:"ownerIDNEQ,omitempty"`
+	OwnerIDIn     []int `json:"ownerIDIn,omitempty"`
+	OwnerIDNotIn  []int `json:"ownerIDNotIn,omitempty"`
+	OwnerIDIsNil  bool  `json:"ownerIDIsNil,omitempty"`
+	OwnerIDNotNil bool  `json:"ownerIDNotNil,omitempty"`
+
+	// "visibility" field predicates.
+	Visibility      *model.Visibility  `json:"visibility,omitempty"`
+	VisibilityNEQ   *model.Visibility  `json:"visibilityNEQ,omitempty"`
+	VisibilityIn    []model.Visibility `json:"visibilityIn,omitempty"`
+	VisibilityNotIn []model.Visibility `json:"visibilityNotIn,omitempty"`
+
+	// "owner" edge predicates.
+	HasOwner     *bool             `json:"hasOwner,omitempty"`
+	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -4109,7 +4193,55 @@ func (i *ModelWhereInput) P() (predicate.Model, error) {
 	if i.RemarkContainsFold != nil {
 		predicates = append(predicates, model.RemarkContainsFold(*i.RemarkContainsFold))
 	}
+	if i.OwnerID != nil {
+		predicates = append(predicates, model.OwnerIDEQ(*i.OwnerID))
+	}
+	if i.OwnerIDNEQ != nil {
+		predicates = append(predicates, model.OwnerIDNEQ(*i.OwnerIDNEQ))
+	}
+	if len(i.OwnerIDIn) > 0 {
+		predicates = append(predicates, model.OwnerIDIn(i.OwnerIDIn...))
+	}
+	if len(i.OwnerIDNotIn) > 0 {
+		predicates = append(predicates, model.OwnerIDNotIn(i.OwnerIDNotIn...))
+	}
+	if i.OwnerIDIsNil {
+		predicates = append(predicates, model.OwnerIDIsNil())
+	}
+	if i.OwnerIDNotNil {
+		predicates = append(predicates, model.OwnerIDNotNil())
+	}
+	if i.Visibility != nil {
+		predicates = append(predicates, model.VisibilityEQ(*i.Visibility))
+	}
+	if i.VisibilityNEQ != nil {
+		predicates = append(predicates, model.VisibilityNEQ(*i.VisibilityNEQ))
+	}
+	if len(i.VisibilityIn) > 0 {
+		predicates = append(predicates, model.VisibilityIn(i.VisibilityIn...))
+	}
+	if len(i.VisibilityNotIn) > 0 {
+		predicates = append(predicates, model.VisibilityNotIn(i.VisibilityNotIn...))
+	}
 
+	if i.HasOwner != nil {
+		p := model.HasOwner()
+		if !*i.HasOwner {
+			p = model.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasOwnerWith))
+		for _, w := range i.HasOwnerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasOwnerWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, model.HasOwnerWith(with...))
+	}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmptyModelWhereInput
@@ -10809,9 +10941,29 @@ type UserWhereInput struct {
 	IsOwner    *bool `json:"isOwner,omitempty"`
 	IsOwnerNEQ *bool `json:"isOwnerNEQ,omitempty"`
 
+	// "private_project_id" field predicates.
+	PrivateProjectID       *int  `json:"privateProjectID,omitempty"`
+	PrivateProjectIDNEQ    *int  `json:"privateProjectIDNEQ,omitempty"`
+	PrivateProjectIDIn     []int `json:"privateProjectIDIn,omitempty"`
+	PrivateProjectIDNotIn  []int `json:"privateProjectIDNotIn,omitempty"`
+	PrivateProjectIDIsNil  bool  `json:"privateProjectIDIsNil,omitempty"`
+	PrivateProjectIDNotNil bool  `json:"privateProjectIDNotNil,omitempty"`
+
 	// "projects" edge predicates.
 	HasProjects     *bool                `json:"hasProjects,omitempty"`
 	HasProjectsWith []*ProjectWhereInput `json:"hasProjectsWith,omitempty"`
+
+	// "owned_channels" edge predicates.
+	HasOwnedChannels     *bool                `json:"hasOwnedChannels,omitempty"`
+	HasOwnedChannelsWith []*ChannelWhereInput `json:"hasOwnedChannelsWith,omitempty"`
+
+	// "owned_models" edge predicates.
+	HasOwnedModels     *bool              `json:"hasOwnedModels,omitempty"`
+	HasOwnedModelsWith []*ModelWhereInput `json:"hasOwnedModelsWith,omitempty"`
+
+	// "private_project" edge predicates.
+	HasPrivateProject     *bool                `json:"hasPrivateProject,omitempty"`
+	HasPrivateProjectWith []*ProjectWhereInput `json:"hasPrivateProjectWith,omitempty"`
 
 	// "api_keys" edge predicates.
 	HasAPIKeys     *bool               `json:"hasAPIKeys,omitempty"`
@@ -11239,6 +11391,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 	if i.IsOwnerNEQ != nil {
 		predicates = append(predicates, user.IsOwnerNEQ(*i.IsOwnerNEQ))
 	}
+	if i.PrivateProjectID != nil {
+		predicates = append(predicates, user.PrivateProjectIDEQ(*i.PrivateProjectID))
+	}
+	if i.PrivateProjectIDNEQ != nil {
+		predicates = append(predicates, user.PrivateProjectIDNEQ(*i.PrivateProjectIDNEQ))
+	}
+	if len(i.PrivateProjectIDIn) > 0 {
+		predicates = append(predicates, user.PrivateProjectIDIn(i.PrivateProjectIDIn...))
+	}
+	if len(i.PrivateProjectIDNotIn) > 0 {
+		predicates = append(predicates, user.PrivateProjectIDNotIn(i.PrivateProjectIDNotIn...))
+	}
+	if i.PrivateProjectIDIsNil {
+		predicates = append(predicates, user.PrivateProjectIDIsNil())
+	}
+	if i.PrivateProjectIDNotNil {
+		predicates = append(predicates, user.PrivateProjectIDNotNil())
+	}
 
 	if i.HasProjects != nil {
 		p := user.HasProjects()
@@ -11257,6 +11427,60 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasProjectsWith(with...))
+	}
+	if i.HasOwnedChannels != nil {
+		p := user.HasOwnedChannels()
+		if !*i.HasOwnedChannels {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnedChannelsWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasOwnedChannelsWith))
+		for _, w := range i.HasOwnedChannelsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasOwnedChannelsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasOwnedChannelsWith(with...))
+	}
+	if i.HasOwnedModels != nil {
+		p := user.HasOwnedModels()
+		if !*i.HasOwnedModels {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnedModelsWith) > 0 {
+		with := make([]predicate.Model, 0, len(i.HasOwnedModelsWith))
+		for _, w := range i.HasOwnedModelsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasOwnedModelsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasOwnedModelsWith(with...))
+	}
+	if i.HasPrivateProject != nil {
+		p := user.HasPrivateProject()
+		if !*i.HasPrivateProject {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasPrivateProjectWith) > 0 {
+		with := make([]predicate.Project, 0, len(i.HasPrivateProjectWith))
+		for _, w := range i.HasPrivateProjectWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasPrivateProjectWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasPrivateProjectWith(with...))
 	}
 	if i.HasAPIKeys != nil {
 		p := user.HasAPIKeys()

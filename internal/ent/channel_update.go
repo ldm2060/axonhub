@@ -365,6 +365,38 @@ func (_u *ChannelUpdate) ClearEndpoints() *ChannelUpdate {
 	return _u
 }
 
+// SetVisibility sets the "visibility" field.
+func (_u *ChannelUpdate) SetVisibility(v channel.Visibility) *ChannelUpdate {
+	_u.mutation.SetVisibility(v)
+	return _u
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillableVisibility(v *channel.Visibility) *ChannelUpdate {
+	if v != nil {
+		_u.SetVisibility(*v)
+	}
+	return _u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_u *ChannelUpdate) SetSharedWith(v []int) *ChannelUpdate {
+	_u.mutation.SetSharedWith(v)
+	return _u
+}
+
+// AppendSharedWith appends value to the "shared_with" field.
+func (_u *ChannelUpdate) AppendSharedWith(v []int) *ChannelUpdate {
+	_u.mutation.AppendSharedWith(v)
+	return _u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (_u *ChannelUpdate) ClearSharedWith() *ChannelUpdate {
+	_u.mutation.ClearSharedWith()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *ChannelUpdate) AddRequestIDs(ids ...int) *ChannelUpdate {
 	_u.mutation.AddRequestIDs(ids...)
@@ -629,6 +661,11 @@ func (_u *ChannelUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Channel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Visibility(); ok {
+		if err := channel.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -770,6 +807,20 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.EndpointsCleared() {
 		_spec.ClearField(channel.FieldEndpoints, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Visibility(); ok {
+		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SharedWith(); ok {
+		_spec.SetField(channel.FieldSharedWith, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSharedWith(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, channel.FieldSharedWith, value)
+		})
+	}
+	if _u.mutation.SharedWithCleared() {
+		_spec.ClearField(channel.FieldSharedWith, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1375,6 +1426,38 @@ func (_u *ChannelUpdateOne) ClearEndpoints() *ChannelUpdateOne {
 	return _u
 }
 
+// SetVisibility sets the "visibility" field.
+func (_u *ChannelUpdateOne) SetVisibility(v channel.Visibility) *ChannelUpdateOne {
+	_u.mutation.SetVisibility(v)
+	return _u
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillableVisibility(v *channel.Visibility) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetVisibility(*v)
+	}
+	return _u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_u *ChannelUpdateOne) SetSharedWith(v []int) *ChannelUpdateOne {
+	_u.mutation.SetSharedWith(v)
+	return _u
+}
+
+// AppendSharedWith appends value to the "shared_with" field.
+func (_u *ChannelUpdateOne) AppendSharedWith(v []int) *ChannelUpdateOne {
+	_u.mutation.AppendSharedWith(v)
+	return _u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (_u *ChannelUpdateOne) ClearSharedWith() *ChannelUpdateOne {
+	_u.mutation.ClearSharedWith()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *ChannelUpdateOne) AddRequestIDs(ids ...int) *ChannelUpdateOne {
 	_u.mutation.AddRequestIDs(ids...)
@@ -1652,6 +1735,11 @@ func (_u *ChannelUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Channel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Visibility(); ok {
+		if err := channel.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1810,6 +1898,20 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 	}
 	if _u.mutation.EndpointsCleared() {
 		_spec.ClearField(channel.FieldEndpoints, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Visibility(); ok {
+		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SharedWith(); ok {
+		_spec.SetField(channel.FieldSharedWith, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSharedWith(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, channel.FieldSharedWith, value)
+		})
+	}
+	if _u.mutation.SharedWithCleared() {
+		_spec.ClearField(channel.FieldSharedWith, field.TypeJSON)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

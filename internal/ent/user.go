@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
@@ -42,6 +43,8 @@ type User struct {
 	IsOwner bool `json:"is_owner,omitempty"`
 	// User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
 	Scopes []string `json:"scopes,omitempty"`
+	// PrivateProjectID holds the value of the "private_project_id" field.
+	PrivateProjectID *int `json:"private_project_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -52,6 +55,12 @@ type User struct {
 type UserEdges struct {
 	// Projects holds the value of the projects edge.
 	Projects []*Project `json:"projects,omitempty"`
+	// OwnedChannels holds the value of the owned_channels edge.
+	OwnedChannels []*Channel `json:"owned_channels,omitempty"`
+	// OwnedModels holds the value of the owned_models edge.
+	OwnedModels []*Model `json:"owned_models,omitempty"`
+	// PrivateProject holds the value of the private_project edge.
+	PrivateProject *Project `json:"private_project,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
 	APIKeys []*APIKey `json:"api_keys,omitempty"`
 	// Roles holds the value of the roles edge.
@@ -66,11 +75,13 @@ type UserEdges struct {
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [10]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [10]map[string]int
 
 	namedProjects                 map[string][]*Project
+	namedOwnedChannels            map[string][]*Channel
+	namedOwnedModels              map[string][]*Model
 	namedAPIKeys                  map[string][]*APIKey
 	namedRoles                    map[string][]*Role
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
@@ -88,10 +99,39 @@ func (e UserEdges) ProjectsOrErr() ([]*Project, error) {
 	return nil, &NotLoadedError{edge: "projects"}
 }
 
+// OwnedChannelsOrErr returns the OwnedChannels value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OwnedChannelsOrErr() ([]*Channel, error) {
+	if e.loadedTypes[1] {
+		return e.OwnedChannels, nil
+	}
+	return nil, &NotLoadedError{edge: "owned_channels"}
+}
+
+// OwnedModelsOrErr returns the OwnedModels value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OwnedModelsOrErr() ([]*Model, error) {
+	if e.loadedTypes[2] {
+		return e.OwnedModels, nil
+	}
+	return nil, &NotLoadedError{edge: "owned_models"}
+}
+
+// PrivateProjectOrErr returns the PrivateProject value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) PrivateProjectOrErr() (*Project, error) {
+	if e.PrivateProject != nil {
+		return e.PrivateProject, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: project.Label}
+	}
+	return nil, &NotLoadedError{edge: "private_project"}
+}
+
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[4] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -100,7 +140,7 @@ func (e UserEdges) APIKeysOrErr() ([]*APIKey, error) {
 // RolesOrErr returns the Roles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RolesOrErr() ([]*Role, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[5] {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
@@ -109,7 +149,7 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 // ChannelOverrideTemplatesOrErr returns the ChannelOverrideTemplates value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ChannelOverrideTemplatesOrErr() ([]*ChannelOverrideTemplate, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[6] {
 		return e.ChannelOverrideTemplates, nil
 	}
 	return nil, &NotLoadedError{edge: "channel_override_templates"}
@@ -118,7 +158,7 @@ func (e UserEdges) ChannelOverrideTemplatesOrErr() ([]*ChannelOverrideTemplate, 
 // OidcIdentitiesOrErr returns the OidcIdentities value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[7] {
 		return e.OidcIdentities, nil
 	}
 	return nil, &NotLoadedError{edge: "oidc_identities"}
@@ -127,7 +167,7 @@ func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[8] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -136,7 +176,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[9] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -151,7 +191,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case user.FieldIsOwner:
 			values[i] = new(sql.NullBool)
-		case user.FieldID, user.FieldDeletedAt:
+		case user.FieldID, user.FieldDeletedAt, user.FieldPrivateProjectID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldEmail, user.FieldStatus, user.FieldPreferLanguage, user.FieldPassword, user.FieldFirstName, user.FieldLastName, user.FieldAvatar:
 			values[i] = new(sql.NullString)
@@ -252,6 +292,13 @@ func (_m *User) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
 			}
+		case user.FieldPrivateProjectID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field private_project_id", values[i])
+			} else if value.Valid {
+				_m.PrivateProjectID = new(int)
+				*_m.PrivateProjectID = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -268,6 +315,21 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryProjects queries the "projects" edge of the User entity.
 func (_m *User) QueryProjects() *ProjectQuery {
 	return NewUserClient(_m.config).QueryProjects(_m)
+}
+
+// QueryOwnedChannels queries the "owned_channels" edge of the User entity.
+func (_m *User) QueryOwnedChannels() *ChannelQuery {
+	return NewUserClient(_m.config).QueryOwnedChannels(_m)
+}
+
+// QueryOwnedModels queries the "owned_models" edge of the User entity.
+func (_m *User) QueryOwnedModels() *ModelQuery {
+	return NewUserClient(_m.config).QueryOwnedModels(_m)
+}
+
+// QueryPrivateProject queries the "private_project" edge of the User entity.
+func (_m *User) QueryPrivateProject() *ProjectQuery {
+	return NewUserClient(_m.config).QueryPrivateProject(_m)
 }
 
 // QueryAPIKeys queries the "api_keys" edge of the User entity.
@@ -357,6 +419,11 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
+	builder.WriteString(", ")
+	if v := _m.PrivateProjectID; v != nil {
+		builder.WriteString("private_project_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
@@ -382,6 +449,54 @@ func (_m *User) appendNamedProjects(name string, edges ...*Project) {
 		_m.Edges.namedProjects[name] = []*Project{}
 	} else {
 		_m.Edges.namedProjects[name] = append(_m.Edges.namedProjects[name], edges...)
+	}
+}
+
+// NamedOwnedChannels returns the OwnedChannels named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedOwnedChannels(name string) ([]*Channel, error) {
+	if _m.Edges.namedOwnedChannels == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedOwnedChannels[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedOwnedChannels(name string, edges ...*Channel) {
+	if _m.Edges.namedOwnedChannels == nil {
+		_m.Edges.namedOwnedChannels = make(map[string][]*Channel)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedOwnedChannels[name] = []*Channel{}
+	} else {
+		_m.Edges.namedOwnedChannels[name] = append(_m.Edges.namedOwnedChannels[name], edges...)
+	}
+}
+
+// NamedOwnedModels returns the OwnedModels named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedOwnedModels(name string) ([]*Model, error) {
+	if _m.Edges.namedOwnedModels == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedOwnedModels[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedOwnedModels(name string, edges ...*Model) {
+	if _m.Edges.namedOwnedModels == nil {
+		_m.Edges.namedOwnedModels = make(map[string][]*Model)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedOwnedModels[name] = []*Model{}
+	} else {
+		_m.Edges.namedOwnedModels[name] = append(_m.Edges.namedOwnedModels[name], edges...)
 	}
 }
 

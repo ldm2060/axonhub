@@ -105,6 +105,11 @@ func IsOwner(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldIsOwner, v))
 }
 
+// PrivateProjectID applies equality check predicate on the "private_project_id" field. It's identical to PrivateProjectIDEQ.
+func PrivateProjectID(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPrivateProjectID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -665,6 +670,36 @@ func ScopesNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldScopes))
 }
 
+// PrivateProjectIDEQ applies the EQ predicate on the "private_project_id" field.
+func PrivateProjectIDEQ(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPrivateProjectID, v))
+}
+
+// PrivateProjectIDNEQ applies the NEQ predicate on the "private_project_id" field.
+func PrivateProjectIDNEQ(v int) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPrivateProjectID, v))
+}
+
+// PrivateProjectIDIn applies the In predicate on the "private_project_id" field.
+func PrivateProjectIDIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldIn(FieldPrivateProjectID, vs...))
+}
+
+// PrivateProjectIDNotIn applies the NotIn predicate on the "private_project_id" field.
+func PrivateProjectIDNotIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldPrivateProjectID, vs...))
+}
+
+// PrivateProjectIDIsNil applies the IsNil predicate on the "private_project_id" field.
+func PrivateProjectIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldPrivateProjectID))
+}
+
+// PrivateProjectIDNotNil applies the NotNil predicate on the "private_project_id" field.
+func PrivateProjectIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldPrivateProjectID))
+}
+
 // HasProjects applies the HasEdge predicate on the "projects" edge.
 func HasProjects() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -680,6 +715,75 @@ func HasProjects() predicate.User {
 func HasProjectsWith(preds ...predicate.Project) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newProjectsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOwnedChannels applies the HasEdge predicate on the "owned_channels" edge.
+func HasOwnedChannels() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OwnedChannelsTable, OwnedChannelsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOwnedChannelsWith applies the HasEdge predicate on the "owned_channels" edge with a given conditions (other predicates).
+func HasOwnedChannelsWith(preds ...predicate.Channel) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newOwnedChannelsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOwnedModels applies the HasEdge predicate on the "owned_models" edge.
+func HasOwnedModels() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OwnedModelsTable, OwnedModelsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOwnedModelsWith applies the HasEdge predicate on the "owned_models" edge with a given conditions (other predicates).
+func HasOwnedModelsWith(preds ...predicate.Model) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newOwnedModelsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPrivateProject applies the HasEdge predicate on the "private_project" edge.
+func HasPrivateProject() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, PrivateProjectTable, PrivateProjectColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrivateProjectWith applies the HasEdge predicate on the "private_project" edge with a given conditions (other predicates).
+func HasPrivateProjectWith(preds ...predicate.Project) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPrivateProjectStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

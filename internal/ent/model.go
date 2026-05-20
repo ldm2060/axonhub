@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -44,8 +45,39 @@ type Model struct {
 	// Status holds the value of the "status" field.
 	Status model.Status `json:"status,omitempty"`
 	// User-defined remark or note for the Model
-	Remark       *string `json:"remark,omitempty"`
+	Remark *string `json:"remark,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID int `json:"owner_id,omitempty"`
+	// Visibility holds the value of the "visibility" field.
+	Visibility model.Visibility `json:"visibility,omitempty"`
+	// SharedWith holds the value of the "shared_with" field.
+	SharedWith []int `json:"shared_with,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ModelQuery when eager-loading is set.
+	Edges        ModelEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ModelEdges holds the relations/edges for other nodes in the graph.
+type ModelEdges struct {
+	// Owner holds the value of the owner edge.
+	Owner *User `json:"owner,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+	// totalCount holds the count of the edges above.
+	totalCount [1]map[string]int
+}
+
+// OwnerOrErr returns the Owner value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ModelEdges) OwnerOrErr() (*User, error) {
+	if e.Owner != nil {
+		return e.Owner, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "owner"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -53,11 +85,11 @@ func (*Model) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case model.FieldModelCard, model.FieldSettings:
+		case model.FieldModelCard, model.FieldSettings, model.FieldSharedWith:
 			values[i] = new([]byte)
-		case model.FieldID, model.FieldDeletedAt:
+		case model.FieldID, model.FieldDeletedAt, model.FieldOwnerID:
 			values[i] = new(sql.NullInt64)
-		case model.FieldDeveloper, model.FieldModelID, model.FieldType, model.FieldName, model.FieldIcon, model.FieldGroup, model.FieldStatus, model.FieldRemark:
+		case model.FieldDeveloper, model.FieldModelID, model.FieldType, model.FieldName, model.FieldIcon, model.FieldGroup, model.FieldStatus, model.FieldRemark, model.FieldVisibility:
 			values[i] = new(sql.NullString)
 		case model.FieldCreatedAt, model.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -165,6 +197,26 @@ func (_m *Model) assignValues(columns []string, values []any) error {
 				_m.Remark = new(string)
 				*_m.Remark = value.String
 			}
+		case model.FieldOwnerID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
+			} else if value.Valid {
+				_m.OwnerID = int(value.Int64)
+			}
+		case model.FieldVisibility:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field visibility", values[i])
+			} else if value.Valid {
+				_m.Visibility = model.Visibility(value.String)
+			}
+		case model.FieldSharedWith:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field shared_with", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.SharedWith); err != nil {
+					return fmt.Errorf("unmarshal field shared_with: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -176,6 +228,11 @@ func (_m *Model) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Model) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryOwner queries the "owner" edge of the Model entity.
+func (_m *Model) QueryOwner() *UserQuery {
+	return NewModelClient(_m.config).QueryOwner(_m)
 }
 
 // Update returns a builder for updating this Model.
@@ -241,6 +298,15 @@ func (_m *Model) String() string {
 		builder.WriteString("remark=")
 		builder.WriteString(*v)
 	}
+	builder.WriteString(", ")
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
+	builder.WriteString(", ")
+	builder.WriteString("visibility=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Visibility))
+	builder.WriteString(", ")
+	builder.WriteString("shared_with=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SharedWith))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -149,6 +150,45 @@ func (_c *ModelCreate) SetNillableRemark(v *string) *ModelCreate {
 	return _c
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (_c *ModelCreate) SetOwnerID(v int) *ModelCreate {
+	_c.mutation.SetOwnerID(v)
+	return _c
+}
+
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_c *ModelCreate) SetNillableOwnerID(v *int) *ModelCreate {
+	if v != nil {
+		_c.SetOwnerID(*v)
+	}
+	return _c
+}
+
+// SetVisibility sets the "visibility" field.
+func (_c *ModelCreate) SetVisibility(v model.Visibility) *ModelCreate {
+	_c.mutation.SetVisibility(v)
+	return _c
+}
+
+// SetNillableVisibility sets the "visibility" field if the given value is not nil.
+func (_c *ModelCreate) SetNillableVisibility(v *model.Visibility) *ModelCreate {
+	if v != nil {
+		_c.SetVisibility(*v)
+	}
+	return _c
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (_c *ModelCreate) SetSharedWith(v []int) *ModelCreate {
+	_c.mutation.SetSharedWith(v)
+	return _c
+}
+
+// SetOwner sets the "owner" edge to the User entity.
+func (_c *ModelCreate) SetOwner(v *User) *ModelCreate {
+	return _c.SetOwnerID(v.ID)
+}
+
 // Mutation returns the ModelMutation object of the builder.
 func (_c *ModelCreate) Mutation() *ModelMutation {
 	return _c.mutation
@@ -212,6 +252,10 @@ func (_c *ModelCreate) defaults() error {
 		v := model.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.Visibility(); !ok {
+		v := model.DefaultVisibility
+		_c.mutation.SetVisibility(v)
+	}
 	return nil
 }
 
@@ -255,6 +299,14 @@ func (_c *ModelCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := model.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Model.status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Visibility(); !ok {
+		return &ValidationError{Name: "visibility", err: errors.New(`ent: missing required field "Model.visibility"`)}
+	}
+	if v, ok := _c.mutation.Visibility(); ok {
+		if err := model.VisibilityValidator(v); err != nil {
+			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Model.visibility": %w`, err)}
 		}
 	}
 	return nil
@@ -335,6 +387,31 @@ func (_c *ModelCreate) createSpec() (*Model, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Remark(); ok {
 		_spec.SetField(model.FieldRemark, field.TypeString, value)
 		_node.Remark = &value
+	}
+	if value, ok := _c.mutation.Visibility(); ok {
+		_spec.SetField(model.FieldVisibility, field.TypeEnum, value)
+		_node.Visibility = value
+	}
+	if value, ok := _c.mutation.SharedWith(); ok {
+		_spec.SetField(model.FieldSharedWith, field.TypeJSON, value)
+		_node.SharedWith = value
+	}
+	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   model.OwnerTable,
+			Columns: []string{model.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.OwnerID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -544,6 +621,36 @@ func (u *ModelUpsert) ClearRemark() *ModelUpsert {
 	return u
 }
 
+// SetVisibility sets the "visibility" field.
+func (u *ModelUpsert) SetVisibility(v model.Visibility) *ModelUpsert {
+	u.Set(model.FieldVisibility, v)
+	return u
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ModelUpsert) UpdateVisibility() *ModelUpsert {
+	u.SetExcluded(model.FieldVisibility)
+	return u
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ModelUpsert) SetSharedWith(v []int) *ModelUpsert {
+	u.Set(model.FieldSharedWith, v)
+	return u
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ModelUpsert) UpdateSharedWith() *ModelUpsert {
+	u.SetExcluded(model.FieldSharedWith)
+	return u
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ModelUpsert) ClearSharedWith() *ModelUpsert {
+	u.SetNull(model.FieldSharedWith)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -557,6 +664,9 @@ func (u *ModelUpsertOne) UpdateNewValues() *ModelUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(model.FieldCreatedAt)
+		}
+		if _, exists := u.create.mutation.OwnerID(); exists {
+			s.SetIgnore(model.FieldOwnerID)
 		}
 	}))
 	return u
@@ -771,6 +881,41 @@ func (u *ModelUpsertOne) ClearRemark() *ModelUpsertOne {
 	})
 }
 
+// SetVisibility sets the "visibility" field.
+func (u *ModelUpsertOne) SetVisibility(v model.Visibility) *ModelUpsertOne {
+	return u.Update(func(s *ModelUpsert) {
+		s.SetVisibility(v)
+	})
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ModelUpsertOne) UpdateVisibility() *ModelUpsertOne {
+	return u.Update(func(s *ModelUpsert) {
+		s.UpdateVisibility()
+	})
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ModelUpsertOne) SetSharedWith(v []int) *ModelUpsertOne {
+	return u.Update(func(s *ModelUpsert) {
+		s.SetSharedWith(v)
+	})
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ModelUpsertOne) UpdateSharedWith() *ModelUpsertOne {
+	return u.Update(func(s *ModelUpsert) {
+		s.UpdateSharedWith()
+	})
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ModelUpsertOne) ClearSharedWith() *ModelUpsertOne {
+	return u.Update(func(s *ModelUpsert) {
+		s.ClearSharedWith()
+	})
+}
+
 // Exec executes the query.
 func (u *ModelUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -949,6 +1094,9 @@ func (u *ModelUpsertBulk) UpdateNewValues() *ModelUpsertBulk {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(model.FieldCreatedAt)
+			}
+			if _, exists := b.mutation.OwnerID(); exists {
+				s.SetIgnore(model.FieldOwnerID)
 			}
 		}
 	}))
@@ -1161,6 +1309,41 @@ func (u *ModelUpsertBulk) UpdateRemark() *ModelUpsertBulk {
 func (u *ModelUpsertBulk) ClearRemark() *ModelUpsertBulk {
 	return u.Update(func(s *ModelUpsert) {
 		s.ClearRemark()
+	})
+}
+
+// SetVisibility sets the "visibility" field.
+func (u *ModelUpsertBulk) SetVisibility(v model.Visibility) *ModelUpsertBulk {
+	return u.Update(func(s *ModelUpsert) {
+		s.SetVisibility(v)
+	})
+}
+
+// UpdateVisibility sets the "visibility" field to the value that was provided on create.
+func (u *ModelUpsertBulk) UpdateVisibility() *ModelUpsertBulk {
+	return u.Update(func(s *ModelUpsert) {
+		s.UpdateVisibility()
+	})
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (u *ModelUpsertBulk) SetSharedWith(v []int) *ModelUpsertBulk {
+	return u.Update(func(s *ModelUpsert) {
+		s.SetSharedWith(v)
+	})
+}
+
+// UpdateSharedWith sets the "shared_with" field to the value that was provided on create.
+func (u *ModelUpsertBulk) UpdateSharedWith() *ModelUpsertBulk {
+	return u.Update(func(s *ModelUpsert) {
+		s.UpdateSharedWith()
+	})
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (u *ModelUpsertBulk) ClearSharedWith() *ModelUpsertBulk {
+	return u.Update(func(s *ModelUpsert) {
+		s.ClearSharedWith()
 	})
 }
 

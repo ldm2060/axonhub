@@ -148,6 +148,7 @@ type CreateChannelInput struct {
 	OrderingWeight          *int
 	Remark                  *string
 	Endpoints               []objects.ChannelEndpoint
+	Visibility              *channel.Visibility
 }
 
 // Mutate applies the CreateChannelInput on the ChannelMutation builder.
@@ -189,6 +190,9 @@ func (i *CreateChannelInput) Mutate(m *ChannelMutation) {
 	if v := i.Endpoints; v != nil {
 		m.SetEndpoints(v)
 	}
+	if v := i.Visibility; v != nil {
+		m.SetVisibility(*v)
+	}
 }
 
 // SetInput applies the change-set in the CreateChannelInput on the ChannelCreate builder.
@@ -229,6 +233,7 @@ type UpdateChannelInput struct {
 	ClearEndpoints            bool
 	Endpoints                 []objects.ChannelEndpoint
 	AppendEndpoints           []objects.ChannelEndpoint
+	Visibility                *channel.Visibility
 }
 
 // Mutate applies the UpdateChannelInput on the ChannelMutation builder.
@@ -322,6 +327,9 @@ func (i *UpdateChannelInput) Mutate(m *ChannelMutation) {
 	}
 	if i.AppendEndpoints != nil {
 		m.AppendEndpoints(i.Endpoints)
+	}
+	if v := i.Visibility; v != nil {
+		m.SetVisibility(*v)
 	}
 }
 
@@ -487,15 +495,16 @@ func (c *DataStorageUpdateOne) SetInput(i UpdateDataStorageInput) *DataStorageUp
 
 // CreateModelInput represents a mutation input for creating models.
 type CreateModelInput struct {
-	Developer string
-	ModelID   string
-	Type      *model.Type
-	Name      string
-	Icon      string
-	Group     string
-	ModelCard *objects.ModelCard
-	Settings  *objects.ModelSettings
-	Remark    *string
+	Developer  string
+	ModelID    string
+	Type       *model.Type
+	Name       string
+	Icon       string
+	Group      string
+	ModelCard  *objects.ModelCard
+	Settings   *objects.ModelSettings
+	Remark     *string
+	Visibility *model.Visibility
 }
 
 // Mutate applies the CreateModelInput on the ModelMutation builder.
@@ -516,6 +525,9 @@ func (i *CreateModelInput) Mutate(m *ModelMutation) {
 	}
 	if v := i.Remark; v != nil {
 		m.SetRemark(*v)
+	}
+	if v := i.Visibility; v != nil {
+		m.SetVisibility(*v)
 	}
 }
 
@@ -538,6 +550,7 @@ type UpdateModelInput struct {
 	Status      *model.Status
 	ClearRemark bool
 	Remark      *string
+	Visibility  *model.Visibility
 }
 
 // Mutate applies the UpdateModelInput on the ModelMutation builder.
@@ -574,6 +587,9 @@ func (i *UpdateModelInput) Mutate(m *ModelMutation) {
 	}
 	if v := i.Remark; v != nil {
 		m.SetRemark(*v)
+	}
+	if v := i.Visibility; v != nil {
+		m.SetVisibility(*v)
 	}
 }
 

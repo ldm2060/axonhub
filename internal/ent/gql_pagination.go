@@ -1042,6 +1042,20 @@ var (
 			}
 		},
 	}
+	// ChannelOrderFieldVisibility orders Channel by visibility.
+	ChannelOrderFieldVisibility = &ChannelOrderField{
+		Value: func(_m *Channel) (ent.Value, error) {
+			return _m.Visibility, nil
+		},
+		column: channel.FieldVisibility,
+		toTerm: channel.ByVisibility,
+		toCursor: func(_m *Channel) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.Visibility,
+			}
+		},
+	}
 )
 
 // String implement fmt.Stringer interface.
@@ -1060,6 +1074,8 @@ func (f ChannelOrderField) String() string {
 		str = "STATUS"
 	case ChannelOrderFieldOrderingWeight.column:
 		str = "ORDERING_WEIGHT"
+	case ChannelOrderFieldVisibility.column:
+		str = "VISIBILITY"
 	}
 	return str
 }
@@ -1088,6 +1104,8 @@ func (f *ChannelOrderField) UnmarshalGQL(v interface{}) error {
 		*f = *ChannelOrderFieldStatus
 	case "ORDERING_WEIGHT":
 		*f = *ChannelOrderFieldOrderingWeight
+	case "VISIBILITY":
+		*f = *ChannelOrderFieldVisibility
 	default:
 		return fmt.Errorf("%s is not a valid ChannelOrderField", str)
 	}
@@ -2891,6 +2909,20 @@ var (
 			}
 		},
 	}
+	// ModelOrderFieldVisibility orders Model by visibility.
+	ModelOrderFieldVisibility = &ModelOrderField{
+		Value: func(_m *Model) (ent.Value, error) {
+			return _m.Visibility, nil
+		},
+		column: model.FieldVisibility,
+		toTerm: model.ByVisibility,
+		toCursor: func(_m *Model) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.Visibility,
+			}
+		},
+	}
 )
 
 // String implement fmt.Stringer interface.
@@ -2903,6 +2935,8 @@ func (f ModelOrderField) String() string {
 		str = "UPDATED_AT"
 	case ModelOrderFieldName.column:
 		str = "NAME"
+	case ModelOrderFieldVisibility.column:
+		str = "VISIBILITY"
 	}
 	return str
 }
@@ -2925,6 +2959,8 @@ func (f *ModelOrderField) UnmarshalGQL(v interface{}) error {
 		*f = *ModelOrderFieldUpdatedAt
 	case "NAME":
 		*f = *ModelOrderFieldName
+	case "VISIBILITY":
+		*f = *ModelOrderFieldVisibility
 	default:
 		return fmt.Errorf("%s is not a valid ModelOrderField", str)
 	}

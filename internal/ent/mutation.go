@@ -2034,7 +2034,12 @@ type ChannelMutation struct {
 	remark                       *string
 	endpoints                    *[]objects.ChannelEndpoint
 	appendendpoints              []objects.ChannelEndpoint
+	visibility                   *channel.Visibility
+	shared_with                  *[]int
+	appendshared_with            []int
 	clearedFields                map[string]struct{}
+	owner                        *int
+	clearedowner                 bool
 	requests                     map[int]struct{}
 	removedrequests              map[int]struct{}
 	clearedrequests              bool
@@ -3160,6 +3165,183 @@ func (m *ChannelMutation) ResetEndpoints() {
 	delete(m.clearedFields, channel.FieldEndpoints)
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (m *ChannelMutation) SetOwnerID(i int) {
+	m.owner = &i
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *ChannelMutation) OwnerID() (r int, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldOwnerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ClearOwnerID clears the value of the "owner_id" field.
+func (m *ChannelMutation) ClearOwnerID() {
+	m.owner = nil
+	m.clearedFields[channel.FieldOwnerID] = struct{}{}
+}
+
+// OwnerIDCleared returns if the "owner_id" field was cleared in this mutation.
+func (m *ChannelMutation) OwnerIDCleared() bool {
+	_, ok := m.clearedFields[channel.FieldOwnerID]
+	return ok
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *ChannelMutation) ResetOwnerID() {
+	m.owner = nil
+	delete(m.clearedFields, channel.FieldOwnerID)
+}
+
+// SetVisibility sets the "visibility" field.
+func (m *ChannelMutation) SetVisibility(c channel.Visibility) {
+	m.visibility = &c
+}
+
+// Visibility returns the value of the "visibility" field in the mutation.
+func (m *ChannelMutation) Visibility() (r channel.Visibility, exists bool) {
+	v := m.visibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVisibility returns the old "visibility" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldVisibility(ctx context.Context) (v channel.Visibility, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVisibility is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVisibility requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVisibility: %w", err)
+	}
+	return oldValue.Visibility, nil
+}
+
+// ResetVisibility resets all changes to the "visibility" field.
+func (m *ChannelMutation) ResetVisibility() {
+	m.visibility = nil
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (m *ChannelMutation) SetSharedWith(i []int) {
+	m.shared_with = &i
+	m.appendshared_with = nil
+}
+
+// SharedWith returns the value of the "shared_with" field in the mutation.
+func (m *ChannelMutation) SharedWith() (r []int, exists bool) {
+	v := m.shared_with
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSharedWith returns the old "shared_with" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldSharedWith(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSharedWith is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSharedWith requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSharedWith: %w", err)
+	}
+	return oldValue.SharedWith, nil
+}
+
+// AppendSharedWith adds i to the "shared_with" field.
+func (m *ChannelMutation) AppendSharedWith(i []int) {
+	m.appendshared_with = append(m.appendshared_with, i...)
+}
+
+// AppendedSharedWith returns the list of values that were appended to the "shared_with" field in this mutation.
+func (m *ChannelMutation) AppendedSharedWith() ([]int, bool) {
+	if len(m.appendshared_with) == 0 {
+		return nil, false
+	}
+	return m.appendshared_with, true
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (m *ChannelMutation) ClearSharedWith() {
+	m.shared_with = nil
+	m.appendshared_with = nil
+	m.clearedFields[channel.FieldSharedWith] = struct{}{}
+}
+
+// SharedWithCleared returns if the "shared_with" field was cleared in this mutation.
+func (m *ChannelMutation) SharedWithCleared() bool {
+	_, ok := m.clearedFields[channel.FieldSharedWith]
+	return ok
+}
+
+// ResetSharedWith resets all changes to the "shared_with" field.
+func (m *ChannelMutation) ResetSharedWith() {
+	m.shared_with = nil
+	m.appendshared_with = nil
+	delete(m.clearedFields, channel.FieldSharedWith)
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *ChannelMutation) ClearOwner() {
+	m.clearedowner = true
+	m.clearedFields[channel.FieldOwnerID] = struct{}{}
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *ChannelMutation) OwnerCleared() bool {
+	return m.OwnerIDCleared() || m.clearedowner
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *ChannelMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *ChannelMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by ids.
 func (m *ChannelMutation) AddRequestIDs(ids ...int) {
 	if m.requests == nil {
@@ -3503,7 +3685,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, channel.FieldCreatedAt)
 	}
@@ -3567,6 +3749,15 @@ func (m *ChannelMutation) Fields() []string {
 	if m.endpoints != nil {
 		fields = append(fields, channel.FieldEndpoints)
 	}
+	if m.owner != nil {
+		fields = append(fields, channel.FieldOwnerID)
+	}
+	if m.visibility != nil {
+		fields = append(fields, channel.FieldVisibility)
+	}
+	if m.shared_with != nil {
+		fields = append(fields, channel.FieldSharedWith)
+	}
 	return fields
 }
 
@@ -3617,6 +3808,12 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.Remark()
 	case channel.FieldEndpoints:
 		return m.Endpoints()
+	case channel.FieldOwnerID:
+		return m.OwnerID()
+	case channel.FieldVisibility:
+		return m.Visibility()
+	case channel.FieldSharedWith:
+		return m.SharedWith()
 	}
 	return nil, false
 }
@@ -3668,6 +3865,12 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldRemark(ctx)
 	case channel.FieldEndpoints:
 		return m.OldEndpoints(ctx)
+	case channel.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case channel.FieldVisibility:
+		return m.OldVisibility(ctx)
+	case channel.FieldSharedWith:
+		return m.OldSharedWith(ctx)
 	}
 	return nil, fmt.Errorf("unknown Channel field %s", name)
 }
@@ -3824,6 +4027,27 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEndpoints(v)
 		return nil
+	case channel.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case channel.FieldVisibility:
+		v, ok := value.(channel.Visibility)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVisibility(v)
+		return nil
+	case channel.FieldSharedWith:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSharedWith(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
 }
@@ -3911,6 +4135,12 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldEndpoints) {
 		fields = append(fields, channel.FieldEndpoints)
 	}
+	if m.FieldCleared(channel.FieldOwnerID) {
+		fields = append(fields, channel.FieldOwnerID)
+	}
+	if m.FieldCleared(channel.FieldSharedWith) {
+		fields = append(fields, channel.FieldSharedWith)
+	}
 	return fields
 }
 
@@ -3954,6 +4184,12 @@ func (m *ChannelMutation) ClearField(name string) error {
 		return nil
 	case channel.FieldEndpoints:
 		m.ClearEndpoints()
+		return nil
+	case channel.FieldOwnerID:
+		m.ClearOwnerID()
+		return nil
+	case channel.FieldSharedWith:
+		m.ClearSharedWith()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel nullable field %s", name)
@@ -4026,13 +4262,25 @@ func (m *ChannelMutation) ResetField(name string) error {
 	case channel.FieldEndpoints:
 		m.ResetEndpoints()
 		return nil
+	case channel.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case channel.FieldVisibility:
+		m.ResetVisibility()
+		return nil
+	case channel.FieldSharedWith:
+		m.ResetSharedWith()
+		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChannelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
+	if m.owner != nil {
+		edges = append(edges, channel.EdgeOwner)
+	}
 	if m.requests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -4058,6 +4306,10 @@ func (m *ChannelMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case channel.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
 	case channel.EdgeRequests:
 		ids := make([]ent.Value, 0, len(m.requests))
 		for id := range m.requests {
@@ -4098,7 +4350,7 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChannelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedrequests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -4157,7 +4409,10 @@ func (m *ChannelMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChannelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
+	if m.clearedowner {
+		edges = append(edges, channel.EdgeOwner)
+	}
 	if m.clearedrequests {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -4183,6 +4438,8 @@ func (m *ChannelMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ChannelMutation) EdgeCleared(name string) bool {
 	switch name {
+	case channel.EdgeOwner:
+		return m.clearedowner
 	case channel.EdgeRequests:
 		return m.clearedrequests
 	case channel.EdgeExecutions:
@@ -4203,6 +4460,9 @@ func (m *ChannelMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ChannelMutation) ClearEdge(name string) error {
 	switch name {
+	case channel.EdgeOwner:
+		m.ClearOwner()
+		return nil
 	case channel.EdgeProviderQuotaStatus:
 		m.ClearProviderQuotaStatus()
 		return nil
@@ -4214,6 +4474,9 @@ func (m *ChannelMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ChannelMutation) ResetEdge(name string) error {
 	switch name {
+	case channel.EdgeOwner:
+		m.ResetOwner()
+		return nil
 	case channel.EdgeRequests:
 		m.ResetRequests()
 		return nil
@@ -8850,27 +9113,32 @@ func (m *DataStorageMutation) ResetEdge(name string) error {
 // ModelMutation represents an operation that mutates the Model nodes in the graph.
 type ModelMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *int
-	adddeleted_at *int
-	developer     *string
-	model_id      *string
-	_type         *model.Type
-	name          *string
-	icon          *string
-	group         *string
-	model_card    **objects.ModelCard
-	settings      **objects.ModelSettings
-	status        *model.Status
-	remark        *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Model, error)
-	predicates    []predicate.Model
+	op                Op
+	typ               string
+	id                *int
+	created_at        *time.Time
+	updated_at        *time.Time
+	deleted_at        *int
+	adddeleted_at     *int
+	developer         *string
+	model_id          *string
+	_type             *model.Type
+	name              *string
+	icon              *string
+	group             *string
+	model_card        **objects.ModelCard
+	settings          **objects.ModelSettings
+	status            *model.Status
+	remark            *string
+	visibility        *model.Visibility
+	shared_with       *[]int
+	appendshared_with []int
+	clearedFields     map[string]struct{}
+	owner             *int
+	clearedowner      bool
+	done              bool
+	oldValue          func(context.Context) (*Model, error)
+	predicates        []predicate.Model
 }
 
 var _ ent.Mutation = (*ModelMutation)(nil)
@@ -9472,6 +9740,183 @@ func (m *ModelMutation) ResetRemark() {
 	delete(m.clearedFields, model.FieldRemark)
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (m *ModelMutation) SetOwnerID(i int) {
+	m.owner = &i
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *ModelMutation) OwnerID() (r int, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Model entity.
+// If the Model object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelMutation) OldOwnerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ClearOwnerID clears the value of the "owner_id" field.
+func (m *ModelMutation) ClearOwnerID() {
+	m.owner = nil
+	m.clearedFields[model.FieldOwnerID] = struct{}{}
+}
+
+// OwnerIDCleared returns if the "owner_id" field was cleared in this mutation.
+func (m *ModelMutation) OwnerIDCleared() bool {
+	_, ok := m.clearedFields[model.FieldOwnerID]
+	return ok
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *ModelMutation) ResetOwnerID() {
+	m.owner = nil
+	delete(m.clearedFields, model.FieldOwnerID)
+}
+
+// SetVisibility sets the "visibility" field.
+func (m *ModelMutation) SetVisibility(value model.Visibility) {
+	m.visibility = &value
+}
+
+// Visibility returns the value of the "visibility" field in the mutation.
+func (m *ModelMutation) Visibility() (r model.Visibility, exists bool) {
+	v := m.visibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVisibility returns the old "visibility" field's value of the Model entity.
+// If the Model object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelMutation) OldVisibility(ctx context.Context) (v model.Visibility, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVisibility is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVisibility requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVisibility: %w", err)
+	}
+	return oldValue.Visibility, nil
+}
+
+// ResetVisibility resets all changes to the "visibility" field.
+func (m *ModelMutation) ResetVisibility() {
+	m.visibility = nil
+}
+
+// SetSharedWith sets the "shared_with" field.
+func (m *ModelMutation) SetSharedWith(i []int) {
+	m.shared_with = &i
+	m.appendshared_with = nil
+}
+
+// SharedWith returns the value of the "shared_with" field in the mutation.
+func (m *ModelMutation) SharedWith() (r []int, exists bool) {
+	v := m.shared_with
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSharedWith returns the old "shared_with" field's value of the Model entity.
+// If the Model object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModelMutation) OldSharedWith(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSharedWith is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSharedWith requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSharedWith: %w", err)
+	}
+	return oldValue.SharedWith, nil
+}
+
+// AppendSharedWith adds i to the "shared_with" field.
+func (m *ModelMutation) AppendSharedWith(i []int) {
+	m.appendshared_with = append(m.appendshared_with, i...)
+}
+
+// AppendedSharedWith returns the list of values that were appended to the "shared_with" field in this mutation.
+func (m *ModelMutation) AppendedSharedWith() ([]int, bool) {
+	if len(m.appendshared_with) == 0 {
+		return nil, false
+	}
+	return m.appendshared_with, true
+}
+
+// ClearSharedWith clears the value of the "shared_with" field.
+func (m *ModelMutation) ClearSharedWith() {
+	m.shared_with = nil
+	m.appendshared_with = nil
+	m.clearedFields[model.FieldSharedWith] = struct{}{}
+}
+
+// SharedWithCleared returns if the "shared_with" field was cleared in this mutation.
+func (m *ModelMutation) SharedWithCleared() bool {
+	_, ok := m.clearedFields[model.FieldSharedWith]
+	return ok
+}
+
+// ResetSharedWith resets all changes to the "shared_with" field.
+func (m *ModelMutation) ResetSharedWith() {
+	m.shared_with = nil
+	m.appendshared_with = nil
+	delete(m.clearedFields, model.FieldSharedWith)
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *ModelMutation) ClearOwner() {
+	m.clearedowner = true
+	m.clearedFields[model.FieldOwnerID] = struct{}{}
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *ModelMutation) OwnerCleared() bool {
+	return m.OwnerIDCleared() || m.clearedowner
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *ModelMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *ModelMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
 // Where appends a list predicates to the ModelMutation builder.
 func (m *ModelMutation) Where(ps ...predicate.Model) {
 	m.predicates = append(m.predicates, ps...)
@@ -9506,7 +9951,7 @@ func (m *ModelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ModelMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 16)
 	if m.created_at != nil {
 		fields = append(fields, model.FieldCreatedAt)
 	}
@@ -9546,6 +9991,15 @@ func (m *ModelMutation) Fields() []string {
 	if m.remark != nil {
 		fields = append(fields, model.FieldRemark)
 	}
+	if m.owner != nil {
+		fields = append(fields, model.FieldOwnerID)
+	}
+	if m.visibility != nil {
+		fields = append(fields, model.FieldVisibility)
+	}
+	if m.shared_with != nil {
+		fields = append(fields, model.FieldSharedWith)
+	}
 	return fields
 }
 
@@ -9580,6 +10034,12 @@ func (m *ModelMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case model.FieldRemark:
 		return m.Remark()
+	case model.FieldOwnerID:
+		return m.OwnerID()
+	case model.FieldVisibility:
+		return m.Visibility()
+	case model.FieldSharedWith:
+		return m.SharedWith()
 	}
 	return nil, false
 }
@@ -9615,6 +10075,12 @@ func (m *ModelMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldStatus(ctx)
 	case model.FieldRemark:
 		return m.OldRemark(ctx)
+	case model.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case model.FieldVisibility:
+		return m.OldVisibility(ctx)
+	case model.FieldSharedWith:
+		return m.OldSharedWith(ctx)
 	}
 	return nil, fmt.Errorf("unknown Model field %s", name)
 }
@@ -9715,6 +10181,27 @@ func (m *ModelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRemark(v)
 		return nil
+	case model.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case model.FieldVisibility:
+		v, ok := value.(model.Visibility)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVisibility(v)
+		return nil
+	case model.FieldSharedWith:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSharedWith(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Model field %s", name)
 }
@@ -9763,6 +10250,12 @@ func (m *ModelMutation) ClearedFields() []string {
 	if m.FieldCleared(model.FieldRemark) {
 		fields = append(fields, model.FieldRemark)
 	}
+	if m.FieldCleared(model.FieldOwnerID) {
+		fields = append(fields, model.FieldOwnerID)
+	}
+	if m.FieldCleared(model.FieldSharedWith) {
+		fields = append(fields, model.FieldSharedWith)
+	}
 	return fields
 }
 
@@ -9779,6 +10272,12 @@ func (m *ModelMutation) ClearField(name string) error {
 	switch name {
 	case model.FieldRemark:
 		m.ClearRemark()
+		return nil
+	case model.FieldOwnerID:
+		m.ClearOwnerID()
+		return nil
+	case model.FieldSharedWith:
+		m.ClearSharedWith()
 		return nil
 	}
 	return fmt.Errorf("unknown Model nullable field %s", name)
@@ -9827,25 +10326,43 @@ func (m *ModelMutation) ResetField(name string) error {
 	case model.FieldRemark:
 		m.ResetRemark()
 		return nil
+	case model.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case model.FieldVisibility:
+		m.ResetVisibility()
+		return nil
+	case model.FieldSharedWith:
+		m.ResetSharedWith()
+		return nil
 	}
 	return fmt.Errorf("unknown Model field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ModelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.owner != nil {
+		edges = append(edges, model.EdgeOwner)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ModelMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case model.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ModelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -9857,25 +10374,42 @@ func (m *ModelMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ModelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedowner {
+		edges = append(edges, model.EdgeOwner)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ModelMutation) EdgeCleared(name string) bool {
+	switch name {
+	case model.EdgeOwner:
+		return m.clearedowner
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ModelMutation) ClearEdge(name string) error {
+	switch name {
+	case model.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	}
 	return fmt.Errorf("unknown Model unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ModelMutation) ResetEdge(name string) error {
+	switch name {
+	case model.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	}
 	return fmt.Errorf("unknown Model edge %s", name)
 }
 
@@ -25011,6 +25545,14 @@ type UserMutation struct {
 	projects                          map[int]struct{}
 	removedprojects                   map[int]struct{}
 	clearedprojects                   bool
+	owned_channels                    map[int]struct{}
+	removedowned_channels             map[int]struct{}
+	clearedowned_channels             bool
+	owned_models                      map[int]struct{}
+	removedowned_models               map[int]struct{}
+	clearedowned_models               bool
+	private_project                   *int
+	clearedprivate_project            bool
 	api_keys                          map[int]struct{}
 	removedapi_keys                   map[int]struct{}
 	clearedapi_keys                   bool
@@ -25626,6 +26168,55 @@ func (m *UserMutation) ResetScopes() {
 	delete(m.clearedFields, user.FieldScopes)
 }
 
+// SetPrivateProjectID sets the "private_project_id" field.
+func (m *UserMutation) SetPrivateProjectID(i int) {
+	m.private_project = &i
+}
+
+// PrivateProjectID returns the value of the "private_project_id" field in the mutation.
+func (m *UserMutation) PrivateProjectID() (r int, exists bool) {
+	v := m.private_project
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrivateProjectID returns the old "private_project_id" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldPrivateProjectID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrivateProjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrivateProjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrivateProjectID: %w", err)
+	}
+	return oldValue.PrivateProjectID, nil
+}
+
+// ClearPrivateProjectID clears the value of the "private_project_id" field.
+func (m *UserMutation) ClearPrivateProjectID() {
+	m.private_project = nil
+	m.clearedFields[user.FieldPrivateProjectID] = struct{}{}
+}
+
+// PrivateProjectIDCleared returns if the "private_project_id" field was cleared in this mutation.
+func (m *UserMutation) PrivateProjectIDCleared() bool {
+	_, ok := m.clearedFields[user.FieldPrivateProjectID]
+	return ok
+}
+
+// ResetPrivateProjectID resets all changes to the "private_project_id" field.
+func (m *UserMutation) ResetPrivateProjectID() {
+	m.private_project = nil
+	delete(m.clearedFields, user.FieldPrivateProjectID)
+}
+
 // AddProjectIDs adds the "projects" edge to the Project entity by ids.
 func (m *UserMutation) AddProjectIDs(ids ...int) {
 	if m.projects == nil {
@@ -25678,6 +26269,141 @@ func (m *UserMutation) ResetProjects() {
 	m.projects = nil
 	m.clearedprojects = false
 	m.removedprojects = nil
+}
+
+// AddOwnedChannelIDs adds the "owned_channels" edge to the Channel entity by ids.
+func (m *UserMutation) AddOwnedChannelIDs(ids ...int) {
+	if m.owned_channels == nil {
+		m.owned_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.owned_channels[ids[i]] = struct{}{}
+	}
+}
+
+// ClearOwnedChannels clears the "owned_channels" edge to the Channel entity.
+func (m *UserMutation) ClearOwnedChannels() {
+	m.clearedowned_channels = true
+}
+
+// OwnedChannelsCleared reports if the "owned_channels" edge to the Channel entity was cleared.
+func (m *UserMutation) OwnedChannelsCleared() bool {
+	return m.clearedowned_channels
+}
+
+// RemoveOwnedChannelIDs removes the "owned_channels" edge to the Channel entity by IDs.
+func (m *UserMutation) RemoveOwnedChannelIDs(ids ...int) {
+	if m.removedowned_channels == nil {
+		m.removedowned_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.owned_channels, ids[i])
+		m.removedowned_channels[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedOwnedChannels returns the removed IDs of the "owned_channels" edge to the Channel entity.
+func (m *UserMutation) RemovedOwnedChannelsIDs() (ids []int) {
+	for id := range m.removedowned_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// OwnedChannelsIDs returns the "owned_channels" edge IDs in the mutation.
+func (m *UserMutation) OwnedChannelsIDs() (ids []int) {
+	for id := range m.owned_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetOwnedChannels resets all changes to the "owned_channels" edge.
+func (m *UserMutation) ResetOwnedChannels() {
+	m.owned_channels = nil
+	m.clearedowned_channels = false
+	m.removedowned_channels = nil
+}
+
+// AddOwnedModelIDs adds the "owned_models" edge to the Model entity by ids.
+func (m *UserMutation) AddOwnedModelIDs(ids ...int) {
+	if m.owned_models == nil {
+		m.owned_models = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.owned_models[ids[i]] = struct{}{}
+	}
+}
+
+// ClearOwnedModels clears the "owned_models" edge to the Model entity.
+func (m *UserMutation) ClearOwnedModels() {
+	m.clearedowned_models = true
+}
+
+// OwnedModelsCleared reports if the "owned_models" edge to the Model entity was cleared.
+func (m *UserMutation) OwnedModelsCleared() bool {
+	return m.clearedowned_models
+}
+
+// RemoveOwnedModelIDs removes the "owned_models" edge to the Model entity by IDs.
+func (m *UserMutation) RemoveOwnedModelIDs(ids ...int) {
+	if m.removedowned_models == nil {
+		m.removedowned_models = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.owned_models, ids[i])
+		m.removedowned_models[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedOwnedModels returns the removed IDs of the "owned_models" edge to the Model entity.
+func (m *UserMutation) RemovedOwnedModelsIDs() (ids []int) {
+	for id := range m.removedowned_models {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// OwnedModelsIDs returns the "owned_models" edge IDs in the mutation.
+func (m *UserMutation) OwnedModelsIDs() (ids []int) {
+	for id := range m.owned_models {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetOwnedModels resets all changes to the "owned_models" edge.
+func (m *UserMutation) ResetOwnedModels() {
+	m.owned_models = nil
+	m.clearedowned_models = false
+	m.removedowned_models = nil
+}
+
+// ClearPrivateProject clears the "private_project" edge to the Project entity.
+func (m *UserMutation) ClearPrivateProject() {
+	m.clearedprivate_project = true
+	m.clearedFields[user.FieldPrivateProjectID] = struct{}{}
+}
+
+// PrivateProjectCleared reports if the "private_project" edge to the Project entity was cleared.
+func (m *UserMutation) PrivateProjectCleared() bool {
+	return m.PrivateProjectIDCleared() || m.clearedprivate_project
+}
+
+// PrivateProjectIDs returns the "private_project" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PrivateProjectID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) PrivateProjectIDs() (ids []int) {
+	if id := m.private_project; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPrivateProject resets all changes to the "private_project" edge.
+func (m *UserMutation) ResetPrivateProject() {
+	m.private_project = nil
+	m.clearedprivate_project = false
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
@@ -26038,7 +26764,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -26075,6 +26801,9 @@ func (m *UserMutation) Fields() []string {
 	if m.scopes != nil {
 		fields = append(fields, user.FieldScopes)
 	}
+	if m.private_project != nil {
+		fields = append(fields, user.FieldPrivateProjectID)
+	}
 	return fields
 }
 
@@ -26107,6 +26836,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.IsOwner()
 	case user.FieldScopes:
 		return m.Scopes()
+	case user.FieldPrivateProjectID:
+		return m.PrivateProjectID()
 	}
 	return nil, false
 }
@@ -26140,6 +26871,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldIsOwner(ctx)
 	case user.FieldScopes:
 		return m.OldScopes(ctx)
+	case user.FieldPrivateProjectID:
+		return m.OldPrivateProjectID(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -26233,6 +26966,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetScopes(v)
 		return nil
+	case user.FieldPrivateProjectID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrivateProjectID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
@@ -26284,6 +27024,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldScopes) {
 		fields = append(fields, user.FieldScopes)
 	}
+	if m.FieldCleared(user.FieldPrivateProjectID) {
+		fields = append(fields, user.FieldPrivateProjectID)
+	}
 	return fields
 }
 
@@ -26303,6 +27046,9 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldScopes:
 		m.ClearScopes()
+		return nil
+	case user.FieldPrivateProjectID:
+		m.ClearPrivateProjectID()
 		return nil
 	}
 	return fmt.Errorf("unknown User nullable field %s", name)
@@ -26348,15 +27094,27 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldScopes:
 		m.ResetScopes()
 		return nil
+	case user.FieldPrivateProjectID:
+		m.ResetPrivateProjectID()
+		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 10)
 	if m.projects != nil {
 		edges = append(edges, user.EdgeProjects)
+	}
+	if m.owned_channels != nil {
+		edges = append(edges, user.EdgeOwnedChannels)
+	}
+	if m.owned_models != nil {
+		edges = append(edges, user.EdgeOwnedModels)
+	}
+	if m.private_project != nil {
+		edges = append(edges, user.EdgePrivateProject)
 	}
 	if m.api_keys != nil {
 		edges = append(edges, user.EdgeAPIKeys)
@@ -26389,6 +27147,22 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeOwnedChannels:
+		ids := make([]ent.Value, 0, len(m.owned_channels))
+		for id := range m.owned_channels {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeOwnedModels:
+		ids := make([]ent.Value, 0, len(m.owned_models))
+		for id := range m.owned_models {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgePrivateProject:
+		if id := m.private_project; id != nil {
+			return []ent.Value{*id}
+		}
 	case user.EdgeAPIKeys:
 		ids := make([]ent.Value, 0, len(m.api_keys))
 		for id := range m.api_keys {
@@ -26431,9 +27205,15 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 10)
 	if m.removedprojects != nil {
 		edges = append(edges, user.EdgeProjects)
+	}
+	if m.removedowned_channels != nil {
+		edges = append(edges, user.EdgeOwnedChannels)
+	}
+	if m.removedowned_models != nil {
+		edges = append(edges, user.EdgeOwnedModels)
 	}
 	if m.removedapi_keys != nil {
 		edges = append(edges, user.EdgeAPIKeys)
@@ -26463,6 +27243,18 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	case user.EdgeProjects:
 		ids := make([]ent.Value, 0, len(m.removedprojects))
 		for id := range m.removedprojects {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeOwnedChannels:
+		ids := make([]ent.Value, 0, len(m.removedowned_channels))
+		for id := range m.removedowned_channels {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeOwnedModels:
+		ids := make([]ent.Value, 0, len(m.removedowned_models))
+		for id := range m.removedowned_models {
 			ids = append(ids, id)
 		}
 		return ids
@@ -26508,9 +27300,18 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 10)
 	if m.clearedprojects {
 		edges = append(edges, user.EdgeProjects)
+	}
+	if m.clearedowned_channels {
+		edges = append(edges, user.EdgeOwnedChannels)
+	}
+	if m.clearedowned_models {
+		edges = append(edges, user.EdgeOwnedModels)
+	}
+	if m.clearedprivate_project {
+		edges = append(edges, user.EdgePrivateProject)
 	}
 	if m.clearedapi_keys {
 		edges = append(edges, user.EdgeAPIKeys)
@@ -26539,6 +27340,12 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeProjects:
 		return m.clearedprojects
+	case user.EdgeOwnedChannels:
+		return m.clearedowned_channels
+	case user.EdgeOwnedModels:
+		return m.clearedowned_models
+	case user.EdgePrivateProject:
+		return m.clearedprivate_project
 	case user.EdgeAPIKeys:
 		return m.clearedapi_keys
 	case user.EdgeRoles:
@@ -26559,6 +27366,9 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
 	switch name {
+	case user.EdgePrivateProject:
+		m.ClearPrivateProject()
+		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
@@ -26569,6 +27379,15 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeProjects:
 		m.ResetProjects()
+		return nil
+	case user.EdgeOwnedChannels:
+		m.ResetOwnedChannels()
+		return nil
+	case user.EdgeOwnedModels:
+		m.ResetOwnedModels()
+		return nil
+	case user.EdgePrivateProject:
+		m.ResetPrivateProject()
 		return nil
 	case user.EdgeAPIKeys:
 		m.ResetAPIKeys()
