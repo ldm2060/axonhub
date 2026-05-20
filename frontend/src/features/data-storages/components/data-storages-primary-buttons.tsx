@@ -13,7 +13,7 @@ export function DataStoragesPrimaryButtons() {
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
-      <Button variant='outline' onClick={() => navigate({ to: '/system', search: { tab: 'storage' } })}>
+      <Button variant='outline' onClick={() => navigate({ to: '/admin/system', search: { tab: 'storage' } })}>
         <Settings className='mr-2 h-4 w-4' />
         {t('dataStorages.buttons.openStorageSettings')}
       </Button>

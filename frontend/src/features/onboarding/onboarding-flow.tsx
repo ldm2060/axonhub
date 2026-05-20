@@ -38,7 +38,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setShowPrompt(false);
 
     // Navigate to system page first
-    navigate({ to: '/system' }).then(() => {
+    navigate({ to: '/admin/system' }).then(() => {
       // Start the tour after navigation
       setTimeout(() => {
         const driverObj = driver({
@@ -82,7 +82,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               onHighlighted: () => {
                 // Switch to retry tab using URL navigation for more reliable tab switching
                 setTimeout(() => {
-                  navigate({ to: '/system', search: { tab: 'retry' } });
+                  navigate({ to: '/admin/system', search: { tab: 'retry' } });
                 }, 300);
               },
             },
@@ -154,7 +154,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               onHighlighted: () => {
                 // Switch to storage tab using URL navigation for more reliable tab switching
                 setTimeout(() => {
-                  navigate({ to: '/system', search: { tab: 'storage' } });
+                  navigate({ to: '/admin/system', search: { tab: 'storage' } });
                 }, 300);
               },
             },
@@ -236,7 +236,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     toast.success(t('system.onboarding.completeTour'));
                     onComplete?.();
                     // Navigate to data storages page
-                    navigate({ to: '/data-storages' });
+                    navigate({ to: '/admin/data-storages' });
                   },
                 });
               },

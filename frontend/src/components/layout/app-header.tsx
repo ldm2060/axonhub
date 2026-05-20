@@ -86,7 +86,7 @@ export function AppHeader() {
           {!isMobile && (
             <>
               <PermissionGuard requiredSystemScope='read_system'>
-                <Link to='/system'>
+                <Link to='/admin/system'>
                   <Button variant='ghost' size='icon' className='size-8'>
                     <IconSettings className='h-4 w-4' />
                   </Button>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { BarChart3, Brain, Key, Zap, User, Folder } from 'lucide-react';
@@ -31,7 +31,8 @@ import { DashboardModeContext, type DashboardMode } from './context';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>('project');
+  const initialMode = useContext(DashboardModeContext);
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(initialMode);
   const { isLoading, error } = useDashboardStats(dashboardMode);
   const [modelTotalRequests, setModelTotalRequests] = useState(0);
   const [channelTotalRequests, setChannelTotalRequests] = useState(0);
