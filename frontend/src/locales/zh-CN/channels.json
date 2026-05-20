@@ -9,6 +9,8 @@
   "channels.dialogs.oauth.errors.credentialsInvalid": "无效的 OAuth 凭据格式",
   "channels.title": "渠道",
   "channels.description": "管理 AI 模型渠道、配置提供商并监控健康状态。",
+  "channels.personal.title": "我的渠道",
+  "channels.personal.description": "管理您自己的 AI 模型渠道。",
   "channels.addChannel": "添加渠道",
   "channels.loadBalancingStrategy": "负载均衡策略",
   "channels.importChannels": "批量导入",

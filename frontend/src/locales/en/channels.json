@@ -9,6 +9,8 @@
   "channels.dialogs.oauth.errors.credentialsInvalid": "Invalid OAuth credentials format",
   "channels.title": "Channels",
   "channels.description": "Manage AI model channels, configure providers, and monitor health status.",
+  "channels.personal.title": "My Channels",
+  "channels.personal.description": "Manage your own AI model channels.",
   "channels.addChannel": "Add Channel",
   "channels.loadBalancingStrategy": "Load Balancing Strategy",
   "channels.importChannels": "Bulk Import",
