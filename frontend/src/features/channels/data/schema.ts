@@ -289,7 +289,7 @@ export const channelSchema = z.object({
   defaultEndpoints: z.array(channelEndpointSchema).optional().default([]).nullable(),
   ownerID: z.string().optional().nullable(),
   visibility: z.enum(['private', 'shared', 'published']).default('private'),
-  sharedWith: z.array(z.number()).optional().default([]),
+  sharedWith: z.array(z.number()).optional().default([]).nullable(),
 });
 export type Channel = z.infer<typeof channelSchema>;
 

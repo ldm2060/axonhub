@@ -1,13 +1,18 @@
 package schema
 
 import (
+	"context"
+
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/entql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/scopes"
 )
@@ -62,10 +67,25 @@ func (PublishRequest) Policy() ent.Policy {
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
 			scopes.UserReadScopeRule(scopes.ScopeReviewPublishRequests),
+			requesterQueryRule(),
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
 			scopes.UserWriteScopeRule(scopes.ScopeReviewPublishRequests),
 		},
 	}
+}
+
+// requesterQueryRule allows users to query publish requests where they are the requester.
+func requesterQueryRule() privacy.QueryRule {
+	return privacy.FilterFunc(func(ctx context.Context, f privacy.Filter) error {
+		user, ok := contexts.GetUser(ctx)
+		if !ok || user == nil {
+			return privacy.Skipf("no user in context")
+		}
+
+		f.Where(entql.FieldEQ("requester_id", user.ID))
+
+		return privacy.Allowf("User %d can query own publish requests", user.ID)
+	})
 }
