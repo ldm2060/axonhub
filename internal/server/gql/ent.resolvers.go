@@ -13,6 +13,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/samber/lo"
 )
 
@@ -78,6 +80,52 @@ func (r *channelResolver) Policies(ctx context.Context, obj *ent.Channel) (*obje
 	}
 
 	return &obj.Policies, nil
+}
+
+// Settings is the resolver for the settings field.
+func (r *channelResolver) Settings(ctx context.Context, obj *ent.Channel) (*objects.ChannelSettings, error) {
+	if obj == nil || obj.Settings == nil {
+		return nil, nil
+	}
+
+	hasScope := scopes.UserHasScope(ctx, scopes.ScopeWriteChannels)
+	if hasScope {
+		return obj.Settings, nil
+	}
+
+	sanitized := *obj.Settings
+
+	if sanitized.Proxy != nil {
+		sanitized.Proxy = &httpclient.ProxyConfig{
+			Type: sanitized.Proxy.Type,
+			URL:  sanitized.Proxy.URL,
+		}
+	}
+
+	if len(sanitized.OverrideHeaders) > 0 {
+		sanitized.OverrideHeaders = make([]objects.HeaderEntry, len(obj.Settings.OverrideHeaders))
+		for i, h := range obj.Settings.OverrideHeaders {
+			sanitized.OverrideHeaders[i] = objects.HeaderEntry{Key: h.Key}
+		}
+	}
+
+	if len(sanitized.HeaderOverrideOperations) > 0 {
+		sanitized.HeaderOverrideOperations = make([]objects.OverrideOperation, len(obj.Settings.HeaderOverrideOperations))
+		for i, op := range obj.Settings.HeaderOverrideOperations {
+			sanitized.HeaderOverrideOperations[i] = op
+			sanitized.HeaderOverrideOperations[i].Value = ""
+		}
+	}
+
+	if len(sanitized.BodyOverrideOperations) > 0 {
+		sanitized.BodyOverrideOperations = make([]objects.OverrideOperation, len(obj.Settings.BodyOverrideOperations))
+		for i, op := range obj.Settings.BodyOverrideOperations {
+			sanitized.BodyOverrideOperations[i] = op
+			sanitized.BodyOverrideOperations[i].Value = ""
+		}
+	}
+
+	return &sanitized, nil
 }
 
 // OwnerID is the resolver for the ownerID field.
