@@ -9,6 +9,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
@@ -562,6 +565,26 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 		if err != nil {
 			return fmt.Errorf("failed to delete user roles: %w", err)
 		}
+
+		// 2.5. Clean up user's channels and models based on visibility
+		userChannels, _ := client.Channel.Query().Where(channel.OwnerIDEQ(id)).All(ctx)
+		for _, ch := range userChannels {
+			if ch.Visibility != channel.VisibilityPublished {
+				client.Channel.DeleteOneID(ch.ID).Exec(ctx)
+			}
+		}
+
+		userModels, _ := client.Model.Query().Where(model.OwnerIDEQ(id)).All(ctx)
+		for _, m := range userModels {
+			if m.Visibility != model.VisibilityPublished {
+				client.Model.DeleteOneID(m.ID).Exec(ctx)
+			}
+		}
+
+		// Cancel pending publish requests
+		client.PublishRequest.Delete().
+			Where(publishrequest.RequesterIDEQ(id), publishrequest.StatusEQ(publishrequest.StatusPending)).
+			Exec(ctx)
 
 		// 3. Soft delete the user
 		err = client.User.DeleteOneID(id).Exec(ctx)
