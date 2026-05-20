@@ -290,6 +290,10 @@ func (svc *ModelService) CreateModel(ctx context.Context, input ent.CreateModelI
 		createBuilder.SetRemark(*input.Remark)
 	}
 
+	if currentUser, ok := contexts.GetUser(ctx); ok && currentUser != nil {
+		createBuilder.SetOwnerID(currentUser.ID)
+	}
+
 	model, err := createBuilder.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create model: %w", err)

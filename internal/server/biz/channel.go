@@ -11,6 +11,7 @@ import (
 	"github.com/samber/lo"
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
@@ -491,6 +492,10 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 
 	if input.Policies != nil {
 		createBuilder.SetPolicies(*input.Policies)
+	}
+
+	if currentUser, ok := contexts.GetUser(ctx); ok && currentUser != nil {
+		createBuilder.SetOwnerID(currentUser.ID)
 	}
 
 	channel, err := createBuilder.Save(ctx)
