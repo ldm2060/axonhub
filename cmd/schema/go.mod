@@ -6,11 +6,15 @@ replace github.com/ldm2060/axonhub => ../../
 
 replace github.com/ldm2060/axonhub/llm => ../../llm
 
-replace github.com/99designs/gqlgen => github.com/ldm2060/gqlgen v0.0.0-20251206072334-03e453169896
+replace github.com/99designs/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
 
-replace github.com/tmaxmax/go-sse => github.com/ldm2060/go-sse v0.0.0-20250909130008-e74a1155bc3b
+replace github.com/tmaxmax/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
 
-replace github.com/gin-contrib/sse => github.com/ldm2060/sse v0.0.0-20260223020440-b463add2d52f
+replace github.com/gin-contrib/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
+
+replace github.com/ldm2060/afero-s3 => github.com/looplj/afero-s3 v0.1.0
+
+replace github.com/ldm2060/afero-webdav => github.com/looplj/afero-webdav v0.0.0-20260128073818-3f60e732e991
 
 require (
 	github.com/invopop/jsonschema v0.13.0

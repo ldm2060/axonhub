@@ -83,13 +83,13 @@ require (
 	github.com/tmaxmax/go-sse v0.11.0 // indirect
 )
 
-// Replace gqlgen with ldm2060/gqlgen to add type conversion between GUID and int.
+// Replace gqlgen with looplj/gqlgen to add type conversion between GUID and int.
 replace github.com/99designs/gqlgen => github.com/looplj/gqlgen v0.0.0-20251206072334-03e453169896
 
-// Replace go-sse with ldm2060/go-sse to add Stream type.
+// Replace go-sse with looplj/go-sse to add Stream type.
 replace github.com/tmaxmax/go-sse => github.com/looplj/go-sse v0.0.0-20250909130008-e74a1155bc3b
 
-// Replace gin-contrib/sse with ldm2060/sse to add space after data: to improve compatibility.
+// Replace gin-contrib/sse with looplj/sse to add space after data: to improve compatibility.
 replace github.com/gin-contrib/sse => github.com/looplj/sse v0.0.0-20260223020440-b463add2d52f
 
 // Replace ldm2060 forks with looplj (public mirrors).
