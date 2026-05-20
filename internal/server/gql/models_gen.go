@@ -666,3 +666,58 @@ func (e OverrideApplyMode) MarshalJSON() ([]byte, error) {
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
 }
+
+type ReviewAction string
+
+const (
+	ReviewActionApprove ReviewAction = "approve"
+	ReviewActionReject  ReviewAction = "reject"
+)
+
+var AllReviewAction = []ReviewAction{
+	ReviewActionApprove,
+	ReviewActionReject,
+}
+
+func (e ReviewAction) IsValid() bool {
+	switch e {
+	case ReviewActionApprove, ReviewActionReject:
+		return true
+	}
+	return false
+}
+
+func (e ReviewAction) String() string {
+	return string(e)
+}
+
+func (e *ReviewAction) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ReviewAction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ReviewAction", str)
+	}
+	return nil
+}
+
+func (e ReviewAction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *ReviewAction) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e ReviewAction) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}

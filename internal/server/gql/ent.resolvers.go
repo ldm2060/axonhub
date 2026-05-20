@@ -80,6 +80,11 @@ func (r *channelResolver) Policies(ctx context.Context, obj *ent.Channel) (*obje
 	return &obj.Policies, nil
 }
 
+// OwnerID is the resolver for the ownerID field.
+func (r *channelResolver) OwnerID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: OwnerID - ownerID"))
+}
+
 // ProviderQuotaStatus is the resolver for the providerQuotaStatus field.
 // It returns null (not an error) when no quota status exists for the channel.
 func (r *channelResolver) ProviderQuotaStatus(ctx context.Context, obj *ent.Channel) (*ent.ProviderQuotaStatus, error) {
@@ -215,6 +220,11 @@ func (r *modelResolver) ID(ctx context.Context, obj *ent.Model) (*objects.GUID, 
 	}, nil
 }
 
+// OwnerID is the resolver for the ownerID field.
+func (r *modelResolver) OwnerID(ctx context.Context, obj *ent.Model) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: OwnerID - ownerID"))
+}
+
 // ID is the resolver for the id field.
 func (r *oIDCIdentityResolver) ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error) {
 	return &objects.GUID{
@@ -274,6 +284,21 @@ func (r *providerQuotaStatusResolver) ChannelID(ctx context.Context, obj *ent.Pr
 		Type: ent.TypeChannel,
 		ID:   obj.ChannelID,
 	}, nil
+}
+
+// ID is the resolver for the id field.
+func (r *publishRequestResolver) ID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// RequesterID is the resolver for the requesterID field.
+func (r *publishRequestResolver) RequesterID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: RequesterID - requesterID"))
+}
+
+// ReviewerID is the resolver for the reviewerID field.
+func (r *publishRequestResolver) ReviewerID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ReviewerID - reviewerID"))
 }
 
 // Node is the resolver for the node field.
@@ -436,6 +461,11 @@ func (r *queryResolver) PromptProtectionRules(ctx context.Context, after *entgql
 		ent.WithPromptProtectionRuleOrder(orderBy),
 		ent.WithPromptProtectionRuleFilter(where.Filter),
 	)
+}
+
+// PublishRequests is the resolver for the publishRequests field.
+func (r *queryResolver) PublishRequests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PublishRequestOrder, where *ent.PublishRequestWhereInput) (*ent.PublishRequestConnection, error) {
+	panic(fmt.Errorf("not implemented: PublishRequests - publishRequests"))
 }
 
 // Requests is the resolver for the requests field.
@@ -846,6 +876,11 @@ func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*objects.GUID, er
 	}, nil
 }
 
+// PrivateProjectID is the resolver for the privateProjectID field.
+func (r *userResolver) PrivateProjectID(ctx context.Context, obj *ent.User) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: PrivateProjectID - privateProjectID"))
+}
+
 // ProjectUsers is the resolver for the projectUsers field.
 func (r *userResolver) ProjectUsers(ctx context.Context, obj *ent.User) ([]*ent.UserProject, error) {
 	return obj.QueryProjectUsers().All(ctx)
@@ -958,6 +993,9 @@ func (r *Resolver) ProviderQuotaStatus() ProviderQuotaStatusResolver {
 	return &providerQuotaStatusResolver{r}
 }
 
+// PublishRequest returns PublishRequestResolver implementation.
+func (r *Resolver) PublishRequest() PublishRequestResolver { return &publishRequestResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
@@ -1005,6 +1043,7 @@ type projectResolver struct{ *Resolver }
 type promptResolver struct{ *Resolver }
 type promptProtectionRuleResolver struct{ *Resolver }
 type providerQuotaStatusResolver struct{ *Resolver }
+type publishRequestResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type requestResolver struct{ *Resolver }
 type requestExecutionResolver struct{ *Resolver }

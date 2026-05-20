@@ -1,0 +1,19 @@
+extend type Mutation {
+  requestPublish(resourceType: PublishRequestResourceType!, resourceID: ID!, comment: String): PublishRequest!
+  cancelPublishRequest(id: ID!): Boolean!
+  reviewPublishRequest(id: ID!, action: ReviewAction!, comment: String): PublishRequest!
+  shareChannel(id: ID!, userIDs: [ID!]!): Channel!
+  unshareChannel(id: ID!, userIDs: [ID!]!): Channel!
+  shareModel(id: ID!, userIDs: [ID!]!): Model!
+  unshareModel(id: ID!, userIDs: [ID!]!): Model!
+}
+
+extend type Query {
+  mySharedChannels: [Channel!]!
+  mySharedModels: [Model!]!
+}
+
+enum ReviewAction {
+  approve
+  reject
+}

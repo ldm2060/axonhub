@@ -27,6 +27,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
@@ -80,6 +81,7 @@ type ResolverRoot interface {
 	Prompt() PromptResolver
 	PromptProtectionRule() PromptProtectionRuleResolver
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
+	PublishRequest() PublishRequestResolver
 	Query() QueryResolver
 	Request() RequestResolver
 	RequestExecution() RequestExecutionResolver
@@ -304,17 +306,21 @@ type ComplexityRoot struct {
 		ManualModels            func(childComplexity int) int
 		Name                    func(childComplexity int) int
 		OrderingWeight          func(childComplexity int) int
+		Owner                   func(childComplexity int) int
+		OwnerID                 func(childComplexity int) int
 		Policies                func(childComplexity int) int
 		ProviderQuotaStatus     func(childComplexity int) int
 		Remark                  func(childComplexity int) int
 		Requests                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
 		Settings                func(childComplexity int) int
+		SharedWith              func(childComplexity int) int
 		Status                  func(childComplexity int) int
 		SupportedModels         func(childComplexity int) int
 		Tags                    func(childComplexity int) int
 		Type                    func(childComplexity int) int
 		UpdatedAt               func(childComplexity int) int
 		UsageLogs               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
+		Visibility              func(childComplexity int) int
 	}
 
 	ChannelConnection struct {
@@ -725,11 +731,15 @@ type ComplexityRoot struct {
 		ModelCard              func(childComplexity int) int
 		ModelID                func(childComplexity int) int
 		Name                   func(childComplexity int) int
+		Owner                  func(childComplexity int) int
+		OwnerID                func(childComplexity int) int
 		Remark                 func(childComplexity int) int
 		Settings               func(childComplexity int) int
+		SharedWith             func(childComplexity int) int
 		Status                 func(childComplexity int) int
 		Type                   func(childComplexity int) int
 		UpdatedAt              func(childComplexity int) int
+		Visibility             func(childComplexity int) int
 	}
 
 	ModelAssociation struct {
@@ -878,6 +888,7 @@ type ComplexityRoot struct {
 		BulkImportChannels                   func(childComplexity int, input BulkImportChannelsInput) int
 		BulkRecoverChannels                  func(childComplexity int, ids []*objects.GUID) int
 		BulkUpdateChannelOrdering            func(childComplexity int, input BulkUpdateChannelOrderingInput) int
+		CancelPublishRequest                 func(childComplexity int, id objects.GUID) int
 		CheckProviderQuotas                  func(childComplexity int) int
 		ClearCache                           func(childComplexity int, input ClearCacheInput) int
 		ClearChannelOverrideTemplates        func(childComplexity int, input ClearChannelOverrideTemplatesInput) int
@@ -913,16 +924,22 @@ type ComplexityRoot struct {
 		LoadAPIKeyProfileTemplate            func(childComplexity int, input LoadAPIKeyProfileTemplateInput) int
 		PreviewPromptProtectionRule          func(childComplexity int, input PromptProtectionRulePreviewInput) int
 		RemoveUserFromProject                func(childComplexity int, input RemoveUserFromProjectInput) int
+		RequestPublish                       func(childComplexity int, resourceType publishrequest.ResourceType, resourceID objects.GUID, comment *string) int
 		Restore                              func(childComplexity int, file graphql.Upload, input backup.RestoreOptions) int
+		ReviewPublishRequest                 func(childComplexity int, id objects.GUID, action ReviewAction, comment *string) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
+		ShareChannel                         func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
+		ShareModel                           func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
 		SyncChannelModels                    func(childComplexity int, channelID objects.GUID, pattern *string) int
 		TestChannel                          func(childComplexity int, input TestChannelInput) int
 		TestChannelAPIKeys                   func(childComplexity int, channelID objects.GUID, modelID *string) int
 		TriggerAutoBackup                    func(childComplexity int) int
 		TriggerGcCleanup                     func(childComplexity int, input gc.TriggerGcCleanupInput) int
 		UnlinkOIDCIdentity                   func(childComplexity int, id objects.GUID) int
+		UnshareChannel                       func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
+		UnshareModel                         func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
 		UpdateAPIKey                         func(childComplexity int, id objects.GUID, input ent.UpdateAPIKeyInput) int
 		UpdateAPIKeyProfileTemplate          func(childComplexity int, id objects.GUID, input ent.UpdateAPIKeyProfileTemplateInput, profile *objects.APIKeyProfile) int
 		UpdateAPIKeyProfiles                 func(childComplexity int, id objects.GUID, input objects.APIKeyProfiles) int
@@ -1198,6 +1215,32 @@ type ComplexityRoot struct {
 		Username func(childComplexity int) int
 	}
 
+	PublishRequest struct {
+		CreatedAt      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		RequestComment func(childComplexity int) int
+		Requester      func(childComplexity int) int
+		RequesterID    func(childComplexity int) int
+		ResourceID     func(childComplexity int) int
+		ResourceType   func(childComplexity int) int
+		ReviewComment  func(childComplexity int) int
+		Reviewer       func(childComplexity int) int
+		ReviewerID     func(childComplexity int) int
+		Status         func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
+	}
+
+	PublishRequestConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	PublishRequestEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	Query struct {
 		APIKeyProfileTemplates       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) int
 		APIKeyQuotaUsages            func(childComplexity int, apiKeyID objects.GUID) int
@@ -1230,6 +1273,8 @@ type ComplexityRoot struct {
 		ModelPerformanceStats        func(childComplexity int) int
 		Models                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
 		MyProjects                   func(childComplexity int) int
+		MySharedChannels             func(childComplexity int) int
+		MySharedModels               func(childComplexity int) int
 		Node                         func(childComplexity int, id objects.GUID) int
 		Nodes                        func(childComplexity int, ids []*objects.GUID) int
 		OidcIdentities               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
@@ -1240,6 +1285,7 @@ type ComplexityRoot struct {
 		PromptProtectionRules        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) int
 		Prompts                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) int
 		ProxyPresets                 func(childComplexity int) int
+		PublishRequests              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PublishRequestOrder, where *ent.PublishRequestWhereInput) int
 		QueryChannels                func(childComplexity int, input biz.QueryChannelsInput) int
 		QueryModelChannelConnections func(childComplexity int, associations []*objects.ModelAssociation) int
 		QueryModels                  func(childComplexity int, input QueryModelsInput) int
@@ -1817,9 +1863,15 @@ type ComplexityRoot struct {
 		IsOwner                  func(childComplexity int) int
 		LastName                 func(childComplexity int) int
 		OidcIdentities           func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
+		OwnedChannels            func(childComplexity int) int
+		OwnedModels              func(childComplexity int) int
 		PreferLanguage           func(childComplexity int) int
+		PrivateProject           func(childComplexity int) int
+		PrivateProjectID         func(childComplexity int) int
 		ProjectUsers             func(childComplexity int) int
 		Projects                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) int
+		PublishRequests          func(childComplexity int) int
+		ReviewedRequests         func(childComplexity int) int
 		Roles                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) int
 		Scopes                   func(childComplexity int) int
 		Status                   func(childComplexity int) int
@@ -1947,6 +1999,8 @@ type ChannelResolver interface {
 
 	Policies(ctx context.Context, obj *ent.Channel) (*objects.ChannelPolicies, error)
 
+	OwnerID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error)
+
 	ProviderQuotaStatus(ctx context.Context, obj *ent.Channel) (*ent.ProviderQuotaStatus, error)
 	DefaultEndpoints(ctx context.Context, obj *ent.Channel) ([]*objects.ChannelEndpoint, error)
 	AllModelEntries(ctx context.Context, obj *ent.Channel) ([]*biz.ChannelModelEntry, error)
@@ -1989,6 +2043,8 @@ type DataStorageResolver interface {
 }
 type ModelResolver interface {
 	ID(ctx context.Context, obj *ent.Model) (*objects.GUID, error)
+
+	OwnerID(ctx context.Context, obj *ent.Model) (*objects.GUID, error)
 
 	AssociatedChannelCount(ctx context.Context, obj *ent.Model) (int, error)
 }
@@ -2100,6 +2156,13 @@ type MutationResolver interface {
 	BulkDisablePromptProtectionRules(ctx context.Context, ids []*objects.GUID) (bool, error)
 	PreviewPromptProtectionRule(ctx context.Context, input PromptProtectionRulePreviewInput) (*PromptProtectionRulePreviewResult, error)
 	SaveChannelModelPrices(ctx context.Context, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) ([]*ent.ChannelModelPrice, error)
+	RequestPublish(ctx context.Context, resourceType publishrequest.ResourceType, resourceID objects.GUID, comment *string) (*ent.PublishRequest, error)
+	CancelPublishRequest(ctx context.Context, id objects.GUID) (bool, error)
+	ReviewPublishRequest(ctx context.Context, id objects.GUID, action ReviewAction, comment *string) (*ent.PublishRequest, error)
+	ShareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error)
+	UnshareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error)
+	ShareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error)
+	UnshareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -2122,6 +2185,13 @@ type ProviderQuotaStatusResolver interface {
 
 	ChannelID(ctx context.Context, obj *ent.ProviderQuotaStatus) (*objects.GUID, error)
 }
+type PublishRequestResolver interface {
+	ID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error)
+
+	RequesterID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error)
+
+	ReviewerID(ctx context.Context, obj *ent.PublishRequest) (*objects.GUID, error)
+}
 type QueryResolver interface {
 	Node(ctx context.Context, id objects.GUID) (ent.Noder, error)
 	Nodes(ctx context.Context, ids []*objects.GUID) ([]ent.Noder, error)
@@ -2135,6 +2205,7 @@ type QueryResolver interface {
 	Projects(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ProjectOrder, where *ent.ProjectWhereInput) (*ent.ProjectConnection, error)
 	Prompts(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptOrder, where *ent.PromptWhereInput) (*ent.PromptConnection, error)
 	PromptProtectionRules(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PromptProtectionRuleOrder, where *ent.PromptProtectionRuleWhereInput) (*ent.PromptProtectionRuleConnection, error)
+	PublishRequests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.PublishRequestOrder, where *ent.PublishRequestWhereInput) (*ent.PublishRequestConnection, error)
 	Requests(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) (*ent.RequestConnection, error)
 	Roles(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RoleOrder, where *ent.RoleWhereInput) (*ent.RoleConnection, error)
 	Systems(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) (*ent.SystemConnection, error)
@@ -2195,6 +2266,8 @@ type QueryResolver interface {
 	QueryUnassociatedChannels(ctx context.Context) ([]*biz.UnassociatedChannel, error)
 	AutoBackupSettings(ctx context.Context) (*biz.AutoBackupSettings, error)
 	ChannelProbeData(ctx context.Context, input biz.GetChannelProbeDataInput) ([]*biz.ChannelProbeData, error)
+	MySharedChannels(ctx context.Context) ([]*ent.Channel, error)
+	MySharedModels(ctx context.Context) ([]*ent.Model, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -2271,6 +2344,8 @@ type UsageLogResolver interface {
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *ent.User) (*objects.GUID, error)
+
+	PrivateProjectID(ctx context.Context, obj *ent.User) (*objects.GUID, error)
 
 	ProjectUsers(ctx context.Context, obj *ent.User) ([]*ent.UserProject, error)
 	UserRoles(ctx context.Context, obj *ent.User) ([]*ent.UserRole, error)
@@ -3084,6 +3159,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.OrderingWeight(childComplexity), true
+	case "Channel.owner":
+		if e.complexity.Channel.Owner == nil {
+			break
+		}
+
+		return e.complexity.Channel.Owner(childComplexity), true
+	case "Channel.ownerID":
+		if e.complexity.Channel.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.Channel.OwnerID(childComplexity), true
 	case "Channel.policies":
 		if e.complexity.Channel.Policies == nil {
 			break
@@ -3119,6 +3206,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.Settings(childComplexity), true
+	case "Channel.sharedWith":
+		if e.complexity.Channel.SharedWith == nil {
+			break
+		}
+
+		return e.complexity.Channel.SharedWith(childComplexity), true
 	case "Channel.status":
 		if e.complexity.Channel.Status == nil {
 			break
@@ -3160,6 +3253,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.UsageLogs(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.UsageLogOrder), args["where"].(*ent.UsageLogWhereInput)), true
+	case "Channel.visibility":
+		if e.complexity.Channel.Visibility == nil {
+			break
+		}
+
+		return e.complexity.Channel.Visibility(childComplexity), true
 
 	case "ChannelConnection.edges":
 		if e.complexity.ChannelConnection.Edges == nil {
@@ -4644,6 +4743,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Model.Name(childComplexity), true
+	case "Model.owner":
+		if e.complexity.Model.Owner == nil {
+			break
+		}
+
+		return e.complexity.Model.Owner(childComplexity), true
+	case "Model.ownerID":
+		if e.complexity.Model.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.Model.OwnerID(childComplexity), true
 	case "Model.remark":
 		if e.complexity.Model.Remark == nil {
 			break
@@ -4656,6 +4767,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Model.Settings(childComplexity), true
+	case "Model.sharedWith":
+		if e.complexity.Model.SharedWith == nil {
+			break
+		}
+
+		return e.complexity.Model.SharedWith(childComplexity), true
 	case "Model.status":
 		if e.complexity.Model.Status == nil {
 			break
@@ -4674,6 +4791,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Model.UpdatedAt(childComplexity), true
+	case "Model.visibility":
+		if e.complexity.Model.Visibility == nil {
+			break
+		}
+
+		return e.complexity.Model.Visibility(childComplexity), true
 
 	case "ModelAssociation.channelModel":
 		if e.complexity.ModelAssociation.ChannelModel == nil {
@@ -5352,6 +5475,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.BulkUpdateChannelOrdering(childComplexity, args["input"].(BulkUpdateChannelOrderingInput)), true
+	case "Mutation.cancelPublishRequest":
+		if e.complexity.Mutation.CancelPublishRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_cancelPublishRequest_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CancelPublishRequest(childComplexity, args["id"].(objects.GUID)), true
 	case "Mutation.checkProviderQuotas":
 		if e.complexity.Mutation.CheckProviderQuotas == nil {
 			break
@@ -5732,6 +5866,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RemoveUserFromProject(childComplexity, args["input"].(RemoveUserFromProjectInput)), true
+	case "Mutation.requestPublish":
+		if e.complexity.Mutation.RequestPublish == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_requestPublish_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RequestPublish(childComplexity, args["resourceType"].(publishrequest.ResourceType), args["resourceID"].(objects.GUID), args["comment"].(*string)), true
 	case "Mutation.restore":
 		if e.complexity.Mutation.Restore == nil {
 			break
@@ -5743,6 +5888,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Restore(childComplexity, args["file"].(graphql.Upload), args["input"].(backup.RestoreOptions)), true
+	case "Mutation.reviewPublishRequest":
+		if e.complexity.Mutation.ReviewPublishRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reviewPublishRequest_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReviewPublishRequest(childComplexity, args["id"].(objects.GUID), args["action"].(ReviewAction), args["comment"].(*string)), true
 	case "Mutation.saveChannelEndpoints":
 		if e.complexity.Mutation.SaveChannelEndpoints == nil {
 			break
@@ -5776,6 +5932,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SaveProxyPreset(childComplexity, args["input"].(biz.ProxyPreset)), true
+	case "Mutation.shareChannel":
+		if e.complexity.Mutation.ShareChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_shareChannel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ShareChannel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
+	case "Mutation.shareModel":
+		if e.complexity.Mutation.ShareModel == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_shareModel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ShareModel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
 	case "Mutation.syncChannelModels":
 		if e.complexity.Mutation.SyncChannelModels == nil {
 			break
@@ -5837,6 +6015,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UnlinkOIDCIdentity(childComplexity, args["id"].(objects.GUID)), true
+	case "Mutation.unshareChannel":
+		if e.complexity.Mutation.UnshareChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unshareChannel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnshareChannel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
+	case "Mutation.unshareModel":
+		if e.complexity.Mutation.UnshareModel == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unshareModel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnshareModel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
 	case "Mutation.updateAPIKey":
 		if e.complexity.Mutation.UpdateAPIKey == nil {
 			break
@@ -7162,6 +7362,111 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ProxyPreset.Username(childComplexity), true
 
+	case "PublishRequest.createdAt":
+		if e.complexity.PublishRequest.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.CreatedAt(childComplexity), true
+	case "PublishRequest.id":
+		if e.complexity.PublishRequest.ID == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.ID(childComplexity), true
+	case "PublishRequest.requestComment":
+		if e.complexity.PublishRequest.RequestComment == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.RequestComment(childComplexity), true
+	case "PublishRequest.requester":
+		if e.complexity.PublishRequest.Requester == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.Requester(childComplexity), true
+	case "PublishRequest.requesterID":
+		if e.complexity.PublishRequest.RequesterID == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.RequesterID(childComplexity), true
+	case "PublishRequest.resourceID":
+		if e.complexity.PublishRequest.ResourceID == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.ResourceID(childComplexity), true
+	case "PublishRequest.resourceType":
+		if e.complexity.PublishRequest.ResourceType == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.ResourceType(childComplexity), true
+	case "PublishRequest.reviewComment":
+		if e.complexity.PublishRequest.ReviewComment == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.ReviewComment(childComplexity), true
+	case "PublishRequest.reviewer":
+		if e.complexity.PublishRequest.Reviewer == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.Reviewer(childComplexity), true
+	case "PublishRequest.reviewerID":
+		if e.complexity.PublishRequest.ReviewerID == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.ReviewerID(childComplexity), true
+	case "PublishRequest.status":
+		if e.complexity.PublishRequest.Status == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.Status(childComplexity), true
+	case "PublishRequest.updatedAt":
+		if e.complexity.PublishRequest.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PublishRequest.UpdatedAt(childComplexity), true
+
+	case "PublishRequestConnection.edges":
+		if e.complexity.PublishRequestConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.PublishRequestConnection.Edges(childComplexity), true
+	case "PublishRequestConnection.pageInfo":
+		if e.complexity.PublishRequestConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.PublishRequestConnection.PageInfo(childComplexity), true
+	case "PublishRequestConnection.totalCount":
+		if e.complexity.PublishRequestConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.PublishRequestConnection.TotalCount(childComplexity), true
+
+	case "PublishRequestEdge.cursor":
+		if e.complexity.PublishRequestEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.PublishRequestEdge.Cursor(childComplexity), true
+	case "PublishRequestEdge.node":
+		if e.complexity.PublishRequestEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.PublishRequestEdge.Node(childComplexity), true
+
 	case "Query.apiKeyProfileTemplates":
 		if e.complexity.Query.APIKeyProfileTemplates == nil {
 			break
@@ -7448,6 +7753,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyProjects(childComplexity), true
+	case "Query.mySharedChannels":
+		if e.complexity.Query.MySharedChannels == nil {
+			break
+		}
+
+		return e.complexity.Query.MySharedChannels(childComplexity), true
+	case "Query.mySharedModels":
+		if e.complexity.Query.MySharedModels == nil {
+			break
+		}
+
+		return e.complexity.Query.MySharedModels(childComplexity), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -7543,6 +7860,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ProxyPresets(childComplexity), true
+	case "Query.publishRequests":
+		if e.complexity.Query.PublishRequests == nil {
+			break
+		}
+
+		args, err := ec.field_Query_publishRequests_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PublishRequests(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.PublishRequestOrder), args["where"].(*ent.PublishRequestWhereInput)), true
 	case "Query.queryChannels":
 		if e.complexity.Query.QueryChannels == nil {
 			break
@@ -9952,12 +10280,36 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.OidcIdentities(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.OIDCIdentityOrder), args["where"].(*ent.OIDCIdentityWhereInput)), true
+	case "User.ownedChannels":
+		if e.complexity.User.OwnedChannels == nil {
+			break
+		}
+
+		return e.complexity.User.OwnedChannels(childComplexity), true
+	case "User.ownedModels":
+		if e.complexity.User.OwnedModels == nil {
+			break
+		}
+
+		return e.complexity.User.OwnedModels(childComplexity), true
 	case "User.preferLanguage":
 		if e.complexity.User.PreferLanguage == nil {
 			break
 		}
 
 		return e.complexity.User.PreferLanguage(childComplexity), true
+	case "User.privateProject":
+		if e.complexity.User.PrivateProject == nil {
+			break
+		}
+
+		return e.complexity.User.PrivateProject(childComplexity), true
+	case "User.privateProjectID":
+		if e.complexity.User.PrivateProjectID == nil {
+			break
+		}
+
+		return e.complexity.User.PrivateProjectID(childComplexity), true
 	case "User.projectUsers":
 		if e.complexity.User.ProjectUsers == nil {
 			break
@@ -9975,6 +10327,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.Projects(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ProjectOrder), args["where"].(*ent.ProjectWhereInput)), true
+	case "User.publishRequests":
+		if e.complexity.User.PublishRequests == nil {
+			break
+		}
+
+		return e.complexity.User.PublishRequests(childComplexity), true
+	case "User.reviewedRequests":
+		if e.complexity.User.ReviewedRequests == nil {
+			break
+		}
+
+		return e.complexity.User.ReviewedRequests(childComplexity), true
 	case "User.roles":
 		if e.complexity.User.Roles == nil {
 			break
@@ -10460,6 +10824,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateProjectInput,
 		ec.unmarshalInputCreatePromptInput,
 		ec.unmarshalInputCreatePromptProtectionRuleInput,
+		ec.unmarshalInputCreatePublishRequestInput,
 		ec.unmarshalInputCreateRequestInput,
 		ec.unmarshalInputCreateRoleInput,
 		ec.unmarshalInputCreateSystemInput,
@@ -10518,6 +10883,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProviderQuotaStatusOrder,
 		ec.unmarshalInputProviderQuotaStatusWhereInput,
 		ec.unmarshalInputProxyConfigInput,
+		ec.unmarshalInputPublishRequestOrder,
+		ec.unmarshalInputPublishRequestWhereInput,
 		ec.unmarshalInputQueryChannelInput,
 		ec.unmarshalInputQueryModelsInput,
 		ec.unmarshalInputRegexAssociationInput,
@@ -10567,6 +10934,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateProjectUserInput,
 		ec.unmarshalInputUpdatePromptInput,
 		ec.unmarshalInputUpdatePromptProtectionRuleInput,
+		ec.unmarshalInputUpdatePublishRequestInput,
 		ec.unmarshalInputUpdateQuotaEnforcementSettingsInput,
 		ec.unmarshalInputUpdateRequestInput,
 		ec.unmarshalInputUpdateRetryPolicyInput,
@@ -10691,7 +11059,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql"
+//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql" "publish_request.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -10717,6 +11085,7 @@ var sources = []*ast.Source{
 	{Name: "prompt_protection_rule.graphql", Input: sourceData("prompt_protection_rule.graphql"), BuiltIn: false},
 	{Name: "price.graphql", Input: sourceData("price.graphql"), BuiltIn: false},
 	{Name: "cost.graphql", Input: sourceData("cost.graphql"), BuiltIn: false},
+	{Name: "publish_request.graphql", Input: sourceData("publish_request.graphql"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -11226,6 +11595,17 @@ func (ec *executionContext) field_Mutation_bulkUpdateChannelOrdering_args(ctx co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_cancelPublishRequest_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_clearCache_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -11625,6 +12005,27 @@ func (ec *executionContext) field_Mutation_removeUserFromProject_args(ctx contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_requestPublish_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "resourceType", ec.unmarshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType)
+	if err != nil {
+		return nil, err
+	}
+	args["resourceType"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "resourceID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["resourceID"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "comment", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["comment"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_restore_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -11638,6 +12039,27 @@ func (ec *executionContext) field_Mutation_restore_args(ctx context.Context, raw
 		return nil, err
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reviewPublishRequest_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "action", ec.unmarshalNReviewAction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐReviewAction)
+	if err != nil {
+		return nil, err
+	}
+	args["action"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "comment", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["comment"] = arg2
 	return args, nil
 }
 
@@ -11676,6 +12098,38 @@ func (ec *executionContext) field_Mutation_saveProxyPreset_args(ctx context.Cont
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_shareChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
+	if err != nil {
+		return nil, err
+	}
+	args["userIDs"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_shareModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
+	if err != nil {
+		return nil, err
+	}
+	args["userIDs"] = arg1
 	return args, nil
 }
 
@@ -11741,6 +12195,38 @@ func (ec *executionContext) field_Mutation_unlinkOIDCIdentity_args(ctx context.C
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_unshareChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
+	if err != nil {
+		return nil, err
+	}
+	args["userIDs"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_unshareModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
+	if err != nil {
+		return nil, err
+	}
+	args["userIDs"] = arg1
 	return args, nil
 }
 
@@ -13168,6 +13654,42 @@ func (ec *executionContext) field_Query_prompts_args(ctx context.Context, rawArg
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_publishRequests_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOPublishRequestOrder2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOPublishRequestWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_queryChannels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -14302,8 +14824,20 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -16316,6 +16850,14 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -17289,6 +17831,14 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -17438,6 +17988,14 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -18053,6 +18611,172 @@ func (ec *executionContext) fieldContext_Channel_endpoints(_ context.Context, fi
 				return ec.fieldContext_ChannelEndpoint_baseURL(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEndpoint", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_ownerID(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_ownerID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Channel().OwnerID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_ownerID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_visibility(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_visibility,
+		func(ctx context.Context) (any, error) {
+			return obj.Visibility, nil
+		},
+		nil,
+		ec.marshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_visibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ChannelVisibility does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_sharedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_sharedWith,
+		func(ctx context.Context) (any, error) {
+			return obj.SharedWith, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_sharedWith(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_owner(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_owner,
+		func(ctx context.Context) (any, error) {
+			return obj.Owner(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -18848,6 +19572,14 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -19552,6 +20284,14 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -20754,8 +21494,20 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -21428,6 +22180,14 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -23082,6 +23842,14 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -25892,8 +26660,20 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -26340,6 +27120,172 @@ func (ec *executionContext) fieldContext_Model_remark(_ context.Context, field g
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Model_ownerID(ctx context.Context, field graphql.CollectedField, obj *ent.Model) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Model_ownerID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Model().OwnerID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Model_ownerID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Model",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Model_visibility(ctx context.Context, field graphql.CollectedField, obj *ent.Model) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Model_visibility,
+		func(ctx context.Context) (any, error) {
+			return obj.Visibility, nil
+		},
+		nil,
+		ec.marshalNModelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Model_visibility(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Model",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ModelVisibility does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Model_sharedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Model) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Model_sharedWith,
+		func(ctx context.Context) (any, error) {
+			return obj.SharedWith, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Model_sharedWith(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Model",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Model_owner(ctx context.Context, field graphql.CollectedField, obj *ent.Model) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Model_owner,
+		func(ctx context.Context) (any, error) {
+			return obj.Owner(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Model_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Model",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -27448,6 +28394,14 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -27696,6 +28650,14 @@ func (ec *executionContext) fieldContext_ModelEdge_node(_ context.Context, field
 				return ec.fieldContext_Model_status(ctx, field)
 			case "remark":
 				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
 			case "associatedChannelCount":
 				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
 			}
@@ -28489,6 +29451,14 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -28592,6 +29562,14 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -28695,6 +29673,14 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -28798,6 +29784,14 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -28901,6 +29895,14 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -30058,8 +31060,20 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -30137,8 +31151,20 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -30216,8 +31242,20 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -31750,8 +32788,20 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -32731,6 +33781,14 @@ func (ec *executionContext) fieldContext_Mutation_createModel(ctx context.Contex
 				return ec.fieldContext_Model_status(ctx, field)
 			case "remark":
 				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
 			case "associatedChannelCount":
 				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
 			}
@@ -32802,6 +33860,14 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateModels(ctx context.C
 				return ec.fieldContext_Model_status(ctx, field)
 			case "remark":
 				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
 			case "associatedChannelCount":
 				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
 			}
@@ -32873,6 +33939,14 @@ func (ec *executionContext) fieldContext_Mutation_updateModel(ctx context.Contex
 				return ec.fieldContext_Model_status(ctx, field)
 			case "remark":
 				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
 			case "associatedChannelCount":
 				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
 			}
@@ -34081,6 +35155,561 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelModelPrices(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_requestPublish(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_requestPublish,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RequestPublish(ctx, fc.Args["resourceType"].(publishrequest.ResourceType), fc.Args["resourceID"].(objects.GUID), fc.Args["comment"].(*string))
+		},
+		nil,
+		ec.marshalNPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_requestPublish(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublishRequest_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublishRequest_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublishRequest_updatedAt(ctx, field)
+			case "resourceType":
+				return ec.fieldContext_PublishRequest_resourceType(ctx, field)
+			case "resourceID":
+				return ec.fieldContext_PublishRequest_resourceID(ctx, field)
+			case "requesterID":
+				return ec.fieldContext_PublishRequest_requesterID(ctx, field)
+			case "status":
+				return ec.fieldContext_PublishRequest_status(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_PublishRequest_reviewerID(ctx, field)
+			case "reviewComment":
+				return ec.fieldContext_PublishRequest_reviewComment(ctx, field)
+			case "requestComment":
+				return ec.fieldContext_PublishRequest_requestComment(ctx, field)
+			case "requester":
+				return ec.fieldContext_PublishRequest_requester(ctx, field)
+			case "reviewer":
+				return ec.fieldContext_PublishRequest_reviewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequest", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_requestPublish_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_cancelPublishRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_cancelPublishRequest,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().CancelPublishRequest(ctx, fc.Args["id"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_cancelPublishRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_cancelPublishRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reviewPublishRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_reviewPublishRequest,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ReviewPublishRequest(ctx, fc.Args["id"].(objects.GUID), fc.Args["action"].(ReviewAction), fc.Args["comment"].(*string))
+		},
+		nil,
+		ec.marshalNPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_reviewPublishRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublishRequest_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublishRequest_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublishRequest_updatedAt(ctx, field)
+			case "resourceType":
+				return ec.fieldContext_PublishRequest_resourceType(ctx, field)
+			case "resourceID":
+				return ec.fieldContext_PublishRequest_resourceID(ctx, field)
+			case "requesterID":
+				return ec.fieldContext_PublishRequest_requesterID(ctx, field)
+			case "status":
+				return ec.fieldContext_PublishRequest_status(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_PublishRequest_reviewerID(ctx, field)
+			case "reviewComment":
+				return ec.fieldContext_PublishRequest_reviewComment(ctx, field)
+			case "requestComment":
+				return ec.fieldContext_PublishRequest_requestComment(ctx, field)
+			case "requester":
+				return ec.fieldContext_PublishRequest_requester(ctx, field)
+			case "reviewer":
+				return ec.fieldContext_PublishRequest_reviewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequest", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reviewPublishRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_shareChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_shareChannel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ShareChannel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_shareChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_shareChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_unshareChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_unshareChannel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UnshareChannel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_unshareChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_shareModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_shareModel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ShareModel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
+		},
+		nil,
+		ec.marshalNModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_shareModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Model_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Model_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Model_updatedAt(ctx, field)
+			case "developer":
+				return ec.fieldContext_Model_developer(ctx, field)
+			case "modelID":
+				return ec.fieldContext_Model_modelID(ctx, field)
+			case "type":
+				return ec.fieldContext_Model_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Model_name(ctx, field)
+			case "icon":
+				return ec.fieldContext_Model_icon(ctx, field)
+			case "group":
+				return ec.fieldContext_Model_group(ctx, field)
+			case "modelCard":
+				return ec.fieldContext_Model_modelCard(ctx, field)
+			case "settings":
+				return ec.fieldContext_Model_settings(ctx, field)
+			case "status":
+				return ec.fieldContext_Model_status(ctx, field)
+			case "remark":
+				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
+			case "associatedChannelCount":
+				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_shareModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_unshareModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_unshareModel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UnshareModel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
+		},
+		nil,
+		ec.marshalNModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_unshareModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Model_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Model_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Model_updatedAt(ctx, field)
+			case "developer":
+				return ec.fieldContext_Model_developer(ctx, field)
+			case "modelID":
+				return ec.fieldContext_Model_modelID(ctx, field)
+			case "type":
+				return ec.fieldContext_Model_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Model_name(ctx, field)
+			case "icon":
+				return ec.fieldContext_Model_icon(ctx, field)
+			case "group":
+				return ec.fieldContext_Model_group(ctx, field)
+			case "modelCard":
+				return ec.fieldContext_Model_modelCard(ctx, field)
+			case "settings":
+				return ec.fieldContext_Model_settings(ctx, field)
+			case "status":
+				return ec.fieldContext_Model_status(ctx, field)
+			case "remark":
+				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
+			case "associatedChannelCount":
+				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_unshareModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OAuthCredentials_accessToken(ctx context.Context, field graphql.CollectedField, obj *oauth.OAuthCredentials) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -34562,8 +36191,20 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -38469,6 +40110,14 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -38725,6 +40374,641 @@ func (ec *executionContext) fieldContext_ProxyPreset_password(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_id(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PublishRequest().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_resourceType(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_resourceType,
+		func(ctx context.Context) (any, error) {
+			return obj.ResourceType, nil
+		},
+		nil,
+		ec.marshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_resourceType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PublishRequestResourceType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_resourceID(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_resourceID,
+		func(ctx context.Context) (any, error) {
+			return obj.ResourceID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_resourceID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_requesterID(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_requesterID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PublishRequest().RequesterID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_requesterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_status(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNPublishRequestStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PublishRequestStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_reviewerID(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_reviewerID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PublishRequest().ReviewerID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_reviewerID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_reviewComment(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_reviewComment,
+		func(ctx context.Context) (any, error) {
+			return obj.ReviewComment, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_reviewComment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_requestComment(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_requestComment,
+		func(ctx context.Context) (any, error) {
+			return obj.RequestComment, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_requestComment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_requester(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_requester,
+		func(ctx context.Context) (any, error) {
+			return obj.Requester(ctx)
+		},
+		nil,
+		ec.marshalNUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_requester(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequest_reviewer(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequest) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequest_reviewer,
+		func(ctx context.Context) (any, error) {
+			return obj.Reviewer(ctx)
+		},
+		nil,
+		ec.marshalOUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequest_reviewer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequest",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "status":
+				return ec.fieldContext_User_status(ctx, field)
+			case "preferLanguage":
+				return ec.fieldContext_User_preferLanguage(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_User_isOwner(ctx, field)
+			case "scopes":
+				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
+			case "projects":
+				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_User_apiKeys(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "channelOverrideTemplates":
+				return ec.fieldContext_User_channelOverrideTemplates(ctx, field)
+			case "oidcIdentities":
+				return ec.fieldContext_User_oidcIdentities(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_User_projectUsers(ctx, field)
+			case "userRoles":
+				return ec.fieldContext_User_userRoles(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequestConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequestConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequestConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOPublishRequestEdge2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequestConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequestConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_PublishRequestEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_PublishRequestEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequestEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequestConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequestConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequestConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequestConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequestConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequestConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequestConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequestConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequestConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequestConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequestEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequestEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequestEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequestEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequestEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublishRequest_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublishRequest_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublishRequest_updatedAt(ctx, field)
+			case "resourceType":
+				return ec.fieldContext_PublishRequest_resourceType(ctx, field)
+			case "resourceID":
+				return ec.fieldContext_PublishRequest_resourceID(ctx, field)
+			case "requesterID":
+				return ec.fieldContext_PublishRequest_requesterID(ctx, field)
+			case "status":
+				return ec.fieldContext_PublishRequest_status(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_PublishRequest_reviewerID(ctx, field)
+			case "reviewComment":
+				return ec.fieldContext_PublishRequest_reviewComment(ctx, field)
+			case "requestComment":
+				return ec.fieldContext_PublishRequest_requestComment(ctx, field)
+			case "requester":
+				return ec.fieldContext_PublishRequest_requester(ctx, field)
+			case "reviewer":
+				return ec.fieldContext_PublishRequest_reviewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequest", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublishRequestEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.PublishRequestEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PublishRequestEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PublishRequestEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublishRequestEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
 		},
 	}
 	return fc, nil
@@ -39302,6 +41586,55 @@ func (ec *executionContext) fieldContext_Query_promptProtectionRules(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_publishRequests(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_publishRequests,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().PublishRequests(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.PublishRequestOrder), fc.Args["where"].(*ent.PublishRequestWhereInput))
+		},
+		nil,
+		ec.marshalNPublishRequestConnection2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_publishRequests(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_PublishRequestConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_PublishRequestConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_PublishRequestConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequestConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_publishRequests_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_requests(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -39708,6 +42041,14 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -42084,6 +44425,172 @@ func (ec *executionContext) fieldContext_Query_channelProbeData(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_mySharedChannels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_mySharedChannels,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MySharedChannels(ctx)
+		},
+		nil,
+		ec.marshalNChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_mySharedModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_mySharedModels,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MySharedModels(ctx)
+		},
+		nil,
+		ec.marshalNModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_mySharedModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Model_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Model_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Model_updatedAt(ctx, field)
+			case "developer":
+				return ec.fieldContext_Model_developer(ctx, field)
+			case "modelID":
+				return ec.fieldContext_Model_modelID(ctx, field)
+			case "type":
+				return ec.fieldContext_Model_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Model_name(ctx, field)
+			case "icon":
+				return ec.fieldContext_Model_icon(ctx, field)
+			case "group":
+				return ec.fieldContext_Model_group(ctx, field)
+			case "modelCard":
+				return ec.fieldContext_Model_modelCard(ctx, field)
+			case "settings":
+				return ec.fieldContext_Model_settings(ctx, field)
+			case "status":
+				return ec.fieldContext_Model_status(ctx, field)
+			case "remark":
+				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
+			case "associatedChannelCount":
+				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -43446,6 +45953,14 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -44525,6 +47040,14 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -46755,8 +49278,20 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -51690,6 +54225,14 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -52767,6 +55310,14 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -53508,6 +56059,35 @@ func (ec *executionContext) fieldContext_User_scopes(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _User_privateProjectID(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_privateProjectID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.User().PrivateProjectID(ctx, obj)
+		},
+		nil,
+		ec.marshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_privateProjectID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_projects(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -53553,6 +56133,347 @@ func (ec *executionContext) fieldContext_User_projects(ctx context.Context, fiel
 	if fc.Args, err = ec.field_User_projects_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_ownedChannels(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_ownedChannels,
+		func(ctx context.Context) (any, error) {
+			return obj.OwnedChannels(ctx)
+		},
+		nil,
+		ec.marshalOChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_ownedChannels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_ownedModels(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_ownedModels,
+		func(ctx context.Context) (any, error) {
+			return obj.OwnedModels(ctx)
+		},
+		nil,
+		ec.marshalOModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_ownedModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Model_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Model_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Model_updatedAt(ctx, field)
+			case "developer":
+				return ec.fieldContext_Model_developer(ctx, field)
+			case "modelID":
+				return ec.fieldContext_Model_modelID(ctx, field)
+			case "type":
+				return ec.fieldContext_Model_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Model_name(ctx, field)
+			case "icon":
+				return ec.fieldContext_Model_icon(ctx, field)
+			case "group":
+				return ec.fieldContext_Model_group(ctx, field)
+			case "modelCard":
+				return ec.fieldContext_Model_modelCard(ctx, field)
+			case "settings":
+				return ec.fieldContext_Model_settings(ctx, field)
+			case "status":
+				return ec.fieldContext_Model_status(ctx, field)
+			case "remark":
+				return ec.fieldContext_Model_remark(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Model_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Model_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Model_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Model_owner(ctx, field)
+			case "associatedChannelCount":
+				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_publishRequests(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_publishRequests,
+		func(ctx context.Context) (any, error) {
+			return obj.PublishRequests(ctx)
+		},
+		nil,
+		ec.marshalOPublishRequest2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_publishRequests(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublishRequest_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublishRequest_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublishRequest_updatedAt(ctx, field)
+			case "resourceType":
+				return ec.fieldContext_PublishRequest_resourceType(ctx, field)
+			case "resourceID":
+				return ec.fieldContext_PublishRequest_resourceID(ctx, field)
+			case "requesterID":
+				return ec.fieldContext_PublishRequest_requesterID(ctx, field)
+			case "status":
+				return ec.fieldContext_PublishRequest_status(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_PublishRequest_reviewerID(ctx, field)
+			case "reviewComment":
+				return ec.fieldContext_PublishRequest_reviewComment(ctx, field)
+			case "requestComment":
+				return ec.fieldContext_PublishRequest_requestComment(ctx, field)
+			case "requester":
+				return ec.fieldContext_PublishRequest_requester(ctx, field)
+			case "reviewer":
+				return ec.fieldContext_PublishRequest_reviewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequest", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_reviewedRequests(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_reviewedRequests,
+		func(ctx context.Context) (any, error) {
+			return obj.ReviewedRequests(ctx)
+		},
+		nil,
+		ec.marshalOPublishRequest2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_reviewedRequests(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublishRequest_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublishRequest_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublishRequest_updatedAt(ctx, field)
+			case "resourceType":
+				return ec.fieldContext_PublishRequest_resourceType(ctx, field)
+			case "resourceID":
+				return ec.fieldContext_PublishRequest_resourceID(ctx, field)
+			case "requesterID":
+				return ec.fieldContext_PublishRequest_requesterID(ctx, field)
+			case "status":
+				return ec.fieldContext_PublishRequest_status(ctx, field)
+			case "reviewerID":
+				return ec.fieldContext_PublishRequest_reviewerID(ctx, field)
+			case "reviewComment":
+				return ec.fieldContext_PublishRequest_reviewComment(ctx, field)
+			case "requestComment":
+				return ec.fieldContext_PublishRequest_requestComment(ctx, field)
+			case "requester":
+				return ec.fieldContext_PublishRequest_requester(ctx, field)
+			case "reviewer":
+				return ec.fieldContext_PublishRequest_reviewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublishRequest", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_privateProject(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_privateProject,
+		func(ctx context.Context) (any, error) {
+			return obj.PrivateProject(ctx)
+		},
+		nil,
+		ec.marshalOProject2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐProject,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_privateProject(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Project_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Project_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Project_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Project_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Project_description(ctx, field)
+			case "status":
+				return ec.fieldContext_Project_status(ctx, field)
+			case "profiles":
+				return ec.fieldContext_Project_profiles(ctx, field)
+			case "users":
+				return ec.fieldContext_Project_users(ctx, field)
+			case "roles":
+				return ec.fieldContext_Project_roles(ctx, field)
+			case "apiKeys":
+				return ec.fieldContext_Project_apiKeys(ctx, field)
+			case "requests":
+				return ec.fieldContext_Project_requests(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Project_usageLogs(ctx, field)
+			case "threads":
+				return ec.fieldContext_Project_threads(ctx, field)
+			case "traces":
+				return ec.fieldContext_Project_traces(ctx, field)
+			case "prompts":
+				return ec.fieldContext_Project_prompts(ctx, field)
+			case "apiKeyProfileTemplates":
+				return ec.fieldContext_Project_apiKeyProfileTemplates(ctx, field)
+			case "projectUsers":
+				return ec.fieldContext_Project_projectUsers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Project", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -54025,8 +56946,20 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -54698,8 +57631,20 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -55095,8 +58040,20 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "privateProjectID":
+				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
 				return ec.fieldContext_User_projects(ctx, field)
+			case "ownedChannels":
+				return ec.fieldContext_User_ownedChannels(ctx, field)
+			case "ownedModels":
+				return ec.fieldContext_User_ownedModels(ctx, field)
+			case "publishRequests":
+				return ec.fieldContext_User_publishRequests(ctx, field)
+			case "reviewedRequests":
+				return ec.fieldContext_User_reviewedRequests(ctx, field)
+			case "privateProject":
+				return ec.fieldContext_User_privateProject(ctx, field)
 			case "apiKeys":
 				return ec.fieldContext_User_apiKeys(ctx, field)
 			case "roles":
@@ -62136,7 +65093,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -63092,6 +66049,106 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.RemarkContainsFold = data
+		case "ownerID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerID = converted
+		case "ownerIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDNEQ = converted
+		case "ownerIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDIn = converted
+		case "ownerIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDNotIn = converted
+		case "ownerIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerIDIsNil = data
+		case "ownerIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerIDNotNil = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
+		case "visibilityNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityNEQ"))
+			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityNEQ = data
+		case "visibilityIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityIn"))
+			data, err := ec.unmarshalOChannelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibilityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityIn = data
+		case "visibilityNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityNotIn"))
+			data, err := ec.unmarshalOChannelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibilityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityNotIn = data
+		case "hasOwner":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwner"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwner = data
+		case "hasOwnerWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnerWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnerWith = data
 		case "hasRequests":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRequests"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -63537,7 +66594,7 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints"}
+	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -63649,6 +66706,13 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.Endpoints = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
 		}
 	}
 
@@ -63765,7 +66829,7 @@ func (ec *executionContext) unmarshalInputCreateModelInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"developer", "modelID", "type", "name", "icon", "group", "modelCard", "settings", "remark"}
+	fieldsInOrder := [...]string{"developer", "modelID", "type", "name", "icon", "group", "modelCard", "settings", "remark", "visibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -63835,6 +66899,13 @@ func (ec *executionContext) unmarshalInputCreateModelInput(ctx context.Context, 
 				return it, err
 			}
 			it.Remark = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
 		}
 	}
 
@@ -64070,6 +67141,54 @@ func (ec *executionContext) unmarshalInputCreatePromptProtectionRuleInput(ctx co
 				return it, err
 			}
 			it.Settings = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreatePublishRequestInput(ctx context.Context, obj any) (ent.CreatePublishRequestInput, error) {
+	var it ent.CreatePublishRequestInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"resourceType", "resourceID", "reviewComment", "requestComment"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "resourceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceType"))
+			data, err := ec.unmarshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceType = data
+		case "resourceID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceID = data
+		case "reviewComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewComment = data
+		case "requestComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestComment = data
 		}
 	}
 
@@ -66394,7 +69513,7 @@ func (ec *executionContext) unmarshalInputModelWhereInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "developer", "developerNEQ", "developerIn", "developerNotIn", "developerGT", "developerGTE", "developerLT", "developerLTE", "developerContains", "developerHasPrefix", "developerHasSuffix", "developerEqualFold", "developerContainsFold", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "icon", "iconNEQ", "iconIn", "iconNotIn", "iconGT", "iconGTE", "iconLT", "iconLTE", "iconContains", "iconHasPrefix", "iconHasSuffix", "iconEqualFold", "iconContainsFold", "group", "groupNEQ", "groupIn", "groupNotIn", "groupGT", "groupGTE", "groupLT", "groupLTE", "groupContains", "groupHasPrefix", "groupHasSuffix", "groupEqualFold", "groupContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "developer", "developerNEQ", "developerIn", "developerNotIn", "developerGT", "developerGTE", "developerLT", "developerLTE", "developerContains", "developerHasPrefix", "developerHasSuffix", "developerEqualFold", "developerContainsFold", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "icon", "iconNEQ", "iconIn", "iconNotIn", "iconGT", "iconGTE", "iconLT", "iconLTE", "iconContains", "iconHasPrefix", "iconHasSuffix", "iconEqualFold", "iconContainsFold", "group", "groupNEQ", "groupIn", "groupNotIn", "groupGT", "groupGTE", "groupLT", "groupLTE", "groupContains", "groupHasPrefix", "groupHasSuffix", "groupEqualFold", "groupContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "hasOwner", "hasOwnerWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -67238,6 +70357,106 @@ func (ec *executionContext) unmarshalInputModelWhereInput(ctx context.Context, o
 				return it, err
 			}
 			it.RemarkContainsFold = data
+		case "ownerID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerID = converted
+		case "ownerIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDNEQ = converted
+		case "ownerIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDIn = converted
+		case "ownerIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.OwnerIDNotIn = converted
+		case "ownerIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerIDIsNil = data
+		case "ownerIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerIDNotNil = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
+		case "visibilityNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityNEQ"))
+			data, err := ec.unmarshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityNEQ = data
+		case "visibilityIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityIn"))
+			data, err := ec.unmarshalOModelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibilityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityIn = data
+		case "visibilityNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibilityNotIn"))
+			data, err := ec.unmarshalOModelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibilityᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VisibilityNotIn = data
+		case "hasOwner":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwner"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwner = data
+		case "hasOwnerWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnerWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnerWith = data
 		}
 	}
 
@@ -71144,6 +74363,737 @@ func (ec *executionContext) unmarshalInputProxyConfigInput(ctx context.Context, 
 				return it, err
 			}
 			it.Password = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPublishRequestOrder(ctx context.Context, obj any) (ent.PublishRequestOrder, error) {
+	var it ent.PublishRequestOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNPublishRequestOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPublishRequestWhereInput(ctx context.Context, obj any) (ent.PublishRequestWhereInput, error) {
+	var it ent.PublishRequestWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "resourceType", "resourceTypeNEQ", "resourceTypeIn", "resourceTypeNotIn", "resourceID", "resourceIDNEQ", "resourceIDIn", "resourceIDNotIn", "resourceIDGT", "resourceIDGTE", "resourceIDLT", "resourceIDLTE", "requesterID", "requesterIDNEQ", "requesterIDIn", "requesterIDNotIn", "status", "statusNEQ", "statusIn", "statusNotIn", "reviewerID", "reviewerIDNEQ", "reviewerIDIn", "reviewerIDNotIn", "reviewerIDIsNil", "reviewerIDNotNil", "reviewComment", "reviewCommentNEQ", "reviewCommentIn", "reviewCommentNotIn", "reviewCommentGT", "reviewCommentGTE", "reviewCommentLT", "reviewCommentLTE", "reviewCommentContains", "reviewCommentHasPrefix", "reviewCommentHasSuffix", "reviewCommentIsNil", "reviewCommentNotNil", "reviewCommentEqualFold", "reviewCommentContainsFold", "requestComment", "requestCommentNEQ", "requestCommentIn", "requestCommentNotIn", "requestCommentGT", "requestCommentGTE", "requestCommentLT", "requestCommentLTE", "requestCommentContains", "requestCommentHasPrefix", "requestCommentHasSuffix", "requestCommentIsNil", "requestCommentNotNil", "requestCommentEqualFold", "requestCommentContainsFold", "hasRequester", "hasRequesterWith", "hasReviewer", "hasReviewerWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOPublishRequestWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOPublishRequestWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOPublishRequestWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "resourceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceType"))
+			data, err := ec.unmarshalOPublishRequestResourceType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceType = data
+		case "resourceTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceTypeNEQ"))
+			data, err := ec.unmarshalOPublishRequestResourceType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceTypeNEQ = data
+		case "resourceTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceTypeIn"))
+			data, err := ec.unmarshalOPublishRequestResourceType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceTypeIn = data
+		case "resourceTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceTypeNotIn"))
+			data, err := ec.unmarshalOPublishRequestResourceType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceTypeNotIn = data
+		case "resourceID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceID = data
+		case "resourceIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDNEQ"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDNEQ = data
+		case "resourceIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDIn = data
+		case "resourceIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDNotIn"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDNotIn = data
+		case "resourceIDGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDGT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDGT = data
+		case "resourceIDGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDGTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDGTE = data
+		case "resourceIDLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDLT"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDLT = data
+		case "resourceIDLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceIDLTE"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ResourceIDLTE = data
+		case "requesterID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requesterID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequesterID = converted
+		case "requesterIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requesterIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequesterIDNEQ = converted
+		case "requesterIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requesterIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequesterIDIn = converted
+		case "requesterIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requesterIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RequesterIDNotIn = converted
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPublishRequestStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "statusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNEQ"))
+			data, err := ec.unmarshalOPublishRequestStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNEQ = data
+		case "statusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusIn"))
+			data, err := ec.unmarshalOPublishRequestStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusIn = data
+		case "statusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statusNotIn"))
+			data, err := ec.unmarshalOPublishRequestStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StatusNotIn = data
+		case "reviewerID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ReviewerID = converted
+		case "reviewerIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ReviewerIDNEQ = converted
+		case "reviewerIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ReviewerIDIn = converted
+		case "reviewerIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ReviewerIDNotIn = converted
+		case "reviewerIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewerIDIsNil = data
+		case "reviewerIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewerIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewerIDNotNil = data
+		case "reviewComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewComment = data
+		case "reviewCommentNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentNEQ = data
+		case "reviewCommentIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentIn = data
+		case "reviewCommentNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentNotIn = data
+		case "reviewCommentGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentGT = data
+		case "reviewCommentGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentGTE = data
+		case "reviewCommentLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentLT = data
+		case "reviewCommentLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentLTE = data
+		case "reviewCommentContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentContains = data
+		case "reviewCommentHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentHasPrefix = data
+		case "reviewCommentHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentHasSuffix = data
+		case "reviewCommentIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentIsNil = data
+		case "reviewCommentNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentNotNil = data
+		case "reviewCommentEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentEqualFold = data
+		case "reviewCommentContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewCommentContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewCommentContainsFold = data
+		case "requestComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestComment = data
+		case "requestCommentNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentNEQ = data
+		case "requestCommentIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentIn = data
+		case "requestCommentNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentNotIn = data
+		case "requestCommentGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentGT = data
+		case "requestCommentGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentGTE = data
+		case "requestCommentLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentLT = data
+		case "requestCommentLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentLTE = data
+		case "requestCommentContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentContains = data
+		case "requestCommentHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentHasPrefix = data
+		case "requestCommentHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentHasSuffix = data
+		case "requestCommentIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentIsNil = data
+		case "requestCommentNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentNotNil = data
+		case "requestCommentEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentEqualFold = data
+		case "requestCommentContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestCommentContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestCommentContainsFold = data
+		case "hasRequester":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRequester"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRequester = data
+		case "hasRequesterWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasRequesterWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasRequesterWith = data
+		case "hasReviewer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasReviewer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasReviewer = data
+		case "hasReviewerWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasReviewerWith"))
+			data, err := ec.unmarshalOUserWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasReviewerWith = data
 		}
 	}
 
@@ -76936,7 +80886,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints"}
+	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "visibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -77153,6 +81103,13 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.ClearEndpoints = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
 		}
 	}
 
@@ -77433,7 +81390,7 @@ func (ec *executionContext) unmarshalInputUpdateModelInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"developer", "modelID", "type", "name", "icon", "group", "modelCard", "settings", "status", "remark", "clearRemark"}
+	fieldsInOrder := [...]string{"developer", "modelID", "type", "name", "icon", "group", "modelCard", "settings", "status", "remark", "clearRemark", "visibility"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -77517,6 +81474,13 @@ func (ec *executionContext) unmarshalInputUpdateModelInput(ctx context.Context, 
 				return it, err
 			}
 			it.ClearRemark = data
+		case "visibility":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
+			data, err := ec.unmarshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visibility = data
 		}
 	}
 
@@ -77973,6 +81937,61 @@ func (ec *executionContext) unmarshalInputUpdatePromptProtectionRuleInput(ctx co
 				return it, err
 			}
 			it.Settings = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdatePublishRequestInput(ctx context.Context, obj any) (ent.UpdatePublishRequestInput, error) {
+	var it ent.UpdatePublishRequestInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"status", "reviewComment", "clearReviewComment", "requestComment", "clearRequestComment"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOPublishRequestStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		case "reviewComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReviewComment = data
+		case "clearReviewComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearReviewComment"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearReviewComment = data
+		case "requestComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requestComment"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RequestComment = data
+		case "clearRequestComment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearRequestComment"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearRequestComment = data
 		}
 	}
 
@@ -81515,7 +85534,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "hasProjects", "hasProjectsWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "privateProjectID", "privateProjectIDNEQ", "privateProjectIDIn", "privateProjectIDNotIn", "privateProjectIDIsNil", "privateProjectIDNotNil", "hasProjects", "hasProjectsWith", "hasOwnedChannels", "hasOwnedChannelsWith", "hasOwnedModels", "hasOwnedModelsWith", "hasPublishRequests", "hasPublishRequestsWith", "hasReviewedRequests", "hasReviewedRequestsWith", "hasPrivateProject", "hasPrivateProjectWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -82254,6 +86273,64 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.IsOwnerNEQ = data
+		case "privateProjectID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PrivateProjectID = converted
+		case "privateProjectIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PrivateProjectIDNEQ = converted
+		case "privateProjectIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PrivateProjectIDIn = converted
+		case "privateProjectIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.PrivateProjectIDNotIn = converted
+		case "privateProjectIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PrivateProjectIDIsNil = data
+		case "privateProjectIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PrivateProjectIDNotNil = data
 		case "hasProjects":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasProjects"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -82268,6 +86345,76 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.HasProjectsWith = data
+		case "hasOwnedChannels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnedChannels"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnedChannels = data
+		case "hasOwnedChannelsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnedChannelsWith"))
+			data, err := ec.unmarshalOChannelWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnedChannelsWith = data
+		case "hasOwnedModels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnedModels"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnedModels = data
+		case "hasOwnedModelsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwnedModelsWith"))
+			data, err := ec.unmarshalOModelWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasOwnedModelsWith = data
+		case "hasPublishRequests":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPublishRequests"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPublishRequests = data
+		case "hasPublishRequestsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPublishRequestsWith"))
+			data, err := ec.unmarshalOPublishRequestWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPublishRequestsWith = data
+		case "hasReviewedRequests":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasReviewedRequests"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasReviewedRequests = data
+		case "hasReviewedRequestsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasReviewedRequestsWith"))
+			data, err := ec.unmarshalOPublishRequestWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasReviewedRequestsWith = data
+		case "hasPrivateProject":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPrivateProject"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPrivateProject = data
+		case "hasPrivateProjectWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasPrivateProjectWith"))
+			data, err := ec.unmarshalOProjectWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐProjectWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasPrivateProjectWith = data
 		case "hasAPIKeys":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasAPIKeys"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -82608,6 +86755,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Request(ctx, sel, obj)
+	case *ent.PublishRequest:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PublishRequest(ctx, sel, obj)
 	case *ent.ProviderQuotaStatus:
 		if obj == nil {
 			return graphql.Null
@@ -84449,6 +88601,79 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Channel_remark(ctx, field, obj)
 		case "endpoints":
 			out.Values[i] = ec._Channel_endpoints(ctx, field, obj)
+		case "ownerID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_ownerID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "visibility":
+			out.Values[i] = ec._Channel_visibility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sharedWith":
+			out.Values[i] = ec._Channel_sharedWith(ctx, field, obj)
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_owner(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "requests":
 			field := field
 
@@ -88480,6 +92705,79 @@ func (ec *executionContext) _Model(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "remark":
 			out.Values[i] = ec._Model_remark(ctx, field, obj)
+		case "ownerID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Model_ownerID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "visibility":
+			out.Values[i] = ec._Model_visibility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sharedWith":
+			out.Values[i] = ec._Model_sharedWith(ctx, field, obj)
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Model_owner(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "associatedChannelCount":
 			field := field
 
@@ -90205,6 +94503,55 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "saveChannelModelPrices":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_saveChannelModelPrices(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "requestPublish":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_requestPublish(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cancelPublishRequest":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelPublishRequest(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reviewPublishRequest":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reviewPublishRequest(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "shareChannel":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_shareChannel(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unshareChannel":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_unshareChannel(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "shareModel":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_shareModel(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unshareModel":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_unshareModel(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -92489,6 +96836,330 @@ func (ec *executionContext) _ProxyPreset(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var publishRequestImplementors = []string{"PublishRequest", "Node"}
+
+func (ec *executionContext) _PublishRequest(ctx context.Context, sel ast.SelectionSet, obj *ent.PublishRequest) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, publishRequestImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PublishRequest")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PublishRequest_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._PublishRequest_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._PublishRequest_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "resourceType":
+			out.Values[i] = ec._PublishRequest_resourceType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "resourceID":
+			out.Values[i] = ec._PublishRequest_resourceID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "requesterID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PublishRequest_requesterID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "status":
+			out.Values[i] = ec._PublishRequest_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "reviewerID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PublishRequest_reviewerID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "reviewComment":
+			out.Values[i] = ec._PublishRequest_reviewComment(ctx, field, obj)
+		case "requestComment":
+			out.Values[i] = ec._PublishRequest_requestComment(ctx, field, obj)
+		case "requester":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PublishRequest_requester(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "reviewer":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PublishRequest_reviewer(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var publishRequestConnectionImplementors = []string{"PublishRequestConnection"}
+
+func (ec *executionContext) _PublishRequestConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.PublishRequestConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, publishRequestConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PublishRequestConnection")
+		case "edges":
+			out.Values[i] = ec._PublishRequestConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._PublishRequestConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._PublishRequestConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var publishRequestEdgeImplementors = []string{"PublishRequestEdge"}
+
+func (ec *executionContext) _PublishRequestEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.PublishRequestEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, publishRequestEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PublishRequestEdge")
+		case "node":
+			out.Values[i] = ec._PublishRequestEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._PublishRequestEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -92757,6 +97428,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_promptProtectionRules(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "publishRequests":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_publishRequests(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -94071,6 +98764,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_channelProbeData(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "mySharedChannels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mySharedChannels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "mySharedModels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_mySharedModels(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -99621,6 +104358,39 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "scopes":
 			out.Values[i] = ec._User_scopes(ctx, field, obj)
+		case "privateProjectID":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_privateProjectID(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "projects":
 			field := field
 
@@ -99634,6 +104404,171 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ownedChannels":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_ownedChannels(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "ownedModels":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_ownedModels(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "publishRequests":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_publishRequests(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "reviewedRequests":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_reviewedRequests(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "privateProject":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_privateProject(ctx, field, obj)
 				return res
 			}
 
@@ -102686,6 +107621,16 @@ func (ec *executionContext) marshalNChannelTypeCount2ᚖgithubᚗcomᚋldm2060�
 	return ec._ChannelTypeCount(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx context.Context, v any) (channel.Visibility, error) {
+	var res channel.Visibility
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx context.Context, sel ast.SelectionSet, v channel.Visibility) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNChannelWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelWhereInput(ctx context.Context, v any) (*ent.ChannelWhereInput, error) {
 	res, err := ec.unmarshalInputChannelWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -104371,6 +109316,16 @@ func (ec *executionContext) marshalNModelType2githubᚗcomᚋldm2060ᚋaxonhub�
 	return v
 }
 
+func (ec *executionContext) unmarshalNModelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx context.Context, v any) (model.Visibility, error) {
+	var res model.Visibility
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNModelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx context.Context, sel ast.SelectionSet, v model.Visibility) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNModelWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelWhereInput(ctx context.Context, v any) (*ent.ModelWhereInput, error) {
 	res, err := ec.unmarshalInputModelWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -105276,6 +110231,75 @@ func (ec *executionContext) marshalNProxyType2githubᚗcomᚋldm2060ᚋaxonhub�
 	return res
 }
 
+func (ec *executionContext) marshalNPublishRequest2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest(ctx context.Context, sel ast.SelectionSet, v ent.PublishRequest) graphql.Marshaler {
+	return ec._PublishRequest(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest(ctx context.Context, sel ast.SelectionSet, v *ent.PublishRequest) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PublishRequest(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPublishRequestConnection2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestConnection(ctx context.Context, sel ast.SelectionSet, v ent.PublishRequestConnection) graphql.Marshaler {
+	return ec._PublishRequestConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPublishRequestConnection2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestConnection(ctx context.Context, sel ast.SelectionSet, v *ent.PublishRequestConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PublishRequestConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPublishRequestOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestOrderField(ctx context.Context, v any) (*ent.PublishRequestOrderField, error) {
+	var res = new(ent.PublishRequestOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPublishRequestOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.PublishRequestOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx context.Context, v any) (publishrequest.ResourceType, error) {
+	var res publishrequest.ResourceType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx context.Context, sel ast.SelectionSet, v publishrequest.ResourceType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPublishRequestStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx context.Context, v any) (publishrequest.Status, error) {
+	var res publishrequest.Status
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPublishRequestStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx context.Context, sel ast.SelectionSet, v publishrequest.Status) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPublishRequestWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInput(ctx context.Context, v any) (*ent.PublishRequestWhereInput, error) {
+	res, err := ec.unmarshalInputPublishRequestWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNQueryChannelInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQueryChannelsInput(ctx context.Context, v any) (biz.QueryChannelsInput, error) {
 	res, err := ec.unmarshalInputQueryChannelInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -105628,6 +110652,16 @@ func (ec *executionContext) marshalNRetryPolicy2ᚖgithubᚗcomᚋldm2060ᚋaxon
 		return graphql.Null
 	}
 	return ec._RetryPolicy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNReviewAction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐReviewAction(ctx context.Context, v any) (ReviewAction, error) {
+	var res ReviewAction
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNReviewAction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐReviewAction(ctx context.Context, sel ast.SelectionSet, v ReviewAction) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNRole2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐRole(ctx context.Context, sel ast.SelectionSet, v ent.Role) graphql.Marshaler {
@@ -107901,6 +112935,53 @@ func (ec *executionContext) marshalOCapabilityPolicy2githubᚗcomᚋldm2060ᚋax
 	return res
 }
 
+func (ec *executionContext) marshalOChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Channel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel(ctx context.Context, sel ast.SelectionSet, v *ent.Channel) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -108824,6 +113905,87 @@ func (ec *executionContext) unmarshalOChannelType2ᚖgithubᚗcomᚋldm2060ᚋax
 }
 
 func (ec *executionContext) marshalOChannelType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐType(ctx context.Context, sel ast.SelectionSet, v *channel.Type) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOChannelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibilityᚄ(ctx context.Context, v any) ([]channel.Visibility, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]channel.Visibility, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOChannelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibilityᚄ(ctx context.Context, sel ast.SelectionSet, v []channel.Visibility) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx context.Context, v any) (*channel.Visibility, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(channel.Visibility)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx context.Context, sel ast.SelectionSet, v *channel.Visibility) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -109917,6 +115079,53 @@ func (ec *executionContext) marshalOJSONRawMessageInput2ᚕgithubᚗcomᚋldm206
 	return ret
 }
 
+func (ec *executionContext) marshalOModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Model) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalOModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel(ctx context.Context, sel ast.SelectionSet, v *ent.Model) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -110267,6 +115476,87 @@ func (ec *executionContext) unmarshalOModelType2ᚖgithubᚗcomᚋldm2060ᚋaxon
 }
 
 func (ec *executionContext) marshalOModelType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐType(ctx context.Context, sel ast.SelectionSet, v *model.Type) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOModelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibilityᚄ(ctx context.Context, v any) ([]model.Visibility, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]model.Visibility, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNModelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOModelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibilityᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Visibility) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNModelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx context.Context, v any) (*model.Visibility, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Visibility)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOModelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋmodelᚐVisibility(ctx context.Context, sel ast.SelectionSet, v *model.Visibility) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -111563,6 +116853,304 @@ func (ec *executionContext) unmarshalOProxyConfigInput2ᚖgithubᚗcomᚋldm2060
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputProxyConfigInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPublishRequest2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.PublishRequest) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPublishRequest2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequest(ctx context.Context, sel ast.SelectionSet, v *ent.PublishRequest) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PublishRequest(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPublishRequestEdge2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.PublishRequestEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPublishRequestEdge2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOPublishRequestEdge2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestEdge(ctx context.Context, sel ast.SelectionSet, v *ent.PublishRequestEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PublishRequestEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPublishRequestOrder2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestOrder(ctx context.Context, v any) (*ent.PublishRequestOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPublishRequestOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOPublishRequestResourceType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceTypeᚄ(ctx context.Context, v any) ([]publishrequest.ResourceType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]publishrequest.ResourceType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPublishRequestResourceType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []publishrequest.ResourceType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPublishRequestResourceType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPublishRequestResourceType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx context.Context, v any) (*publishrequest.ResourceType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(publishrequest.ResourceType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPublishRequestResourceType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐResourceType(ctx context.Context, sel ast.SelectionSet, v *publishrequest.ResourceType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPublishRequestStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatusᚄ(ctx context.Context, v any) ([]publishrequest.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]publishrequest.Status, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPublishRequestStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOPublishRequestStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []publishrequest.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPublishRequestStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOPublishRequestStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx context.Context, v any) (*publishrequest.Status, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(publishrequest.Status)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPublishRequestStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋpublishrequestᚐStatus(ctx context.Context, sel ast.SelectionSet, v *publishrequest.Status) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOPublishRequestWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInputᚄ(ctx context.Context, v any) ([]*ent.PublishRequestWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.PublishRequestWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNPublishRequestWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOPublishRequestWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐPublishRequestWhereInput(ctx context.Context, v any) (*ent.PublishRequestWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPublishRequestWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
