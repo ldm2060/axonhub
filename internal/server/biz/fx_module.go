@@ -32,6 +32,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewQuotaService),
 	fx.Provide(NewProviderQuotaService),
 	fx.Provide(NewOIDCService),
+	fx.Provide(NewSignUpService),
 	fx.Provide(NewAPIKeyProfileTemplateService),
 	fx.Invoke(func(lc fx.Lifecycle, svc *APIKeyService) {
 		lc.Append(fx.Hook{

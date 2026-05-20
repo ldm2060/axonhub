@@ -36,6 +36,7 @@ type Handlers struct {
 	RequestContent *api.RequestContentHandlers
 	OIDC           *api.OIDCHandlers
 	RequestPreview *api.RequestPreviewHandlers
+	SignUp         *api.SignUpHandlers
 }
 
 type Services struct {
@@ -85,6 +86,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		unSecureAdminGroup.POST("/system/initialize", handlers.System.InitializeSystem)
 		// User Login - DO NOT AUTH
 		unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
+		unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
+		unSecureAdminGroup.GET("/auth/signup/allowed", handlers.SignUp.AllowSignUp)
 	}
 
 	oauthGroup := server.Group("/oauth", middleware.WithTimeout(server.Config.RequestTimeout))

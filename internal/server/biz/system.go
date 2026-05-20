@@ -106,6 +106,12 @@ const (
 	// SystemKeyQuotaEnforcementSettings is the key used to store the quota enforcement settings.
 	// The value is JSON-encoded QuotaEnforcementSettings struct.
 	SystemKeyQuotaEnforcementSettings = "quota_enforcement_settings"
+
+	// SystemKeyAllowSignUp controls whether user self-registration is enabled.
+	SystemKeyAllowSignUp = "allow_sign_up"
+
+	// SystemKeySignUpApprovalRequired controls whether new sign-ups require admin approval.
+	SystemKeySignUpApprovalRequired = "sign_up_approval_required"
 )
 
 // SystemGeneralSettings represents general system configuration settings.
