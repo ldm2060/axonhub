@@ -7,7 +7,9 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"net"
 	"net/smtp"
+	"time"
 
 	"go.uber.org/fx"
 
@@ -256,17 +258,23 @@ func (s *EmailService) TestConnection(ctx context.Context) error {
 		return fmt.Errorf("SMTP host not configured")
 	}
 	addr := fmt.Sprintf("%s:%d", settings.SMTPHost, settings.SMTPPort)
+	dialer := &net.Dialer{Timeout: 5 * time.Second}
 	switch settings.Encryption {
 	case "ssl":
-		conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: settings.SMTPHost})
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{ServerName: settings.SMTPHost})
 		if err != nil {
 			return fmt.Errorf("connect failed: %w", err)
 		}
 		conn.Close()
 	default:
-		c, err := smtp.Dial(addr)
+		netConn, err := dialer.Dial("tcp", addr)
 		if err != nil {
 			return fmt.Errorf("connect failed: %w", err)
+		}
+		c, err := smtp.NewClient(netConn, settings.SMTPHost)
+		if err != nil {
+			netConn.Close()
+			return fmt.Errorf("smtp client: %w", err)
 		}
 		c.Close()
 	}

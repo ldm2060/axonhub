@@ -91,7 +91,6 @@ const EMAIL_SETTINGS_QUERY = `
       encryption
       fromName
       fromAddress
-      connected
     }
   }
 `;
@@ -106,7 +105,6 @@ const UPDATE_EMAIL_SETTINGS_MUTATION = `
       encryption
       fromName
       fromAddress
-      connected
     }
   }
 `;
@@ -128,7 +126,6 @@ export interface EmailSettings {
   encryption: string;
   fromName: string;
   fromAddress: string;
-  connected: boolean;
 }
 
 export interface UpdateEmailSettingsInput {

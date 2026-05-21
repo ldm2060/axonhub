@@ -12,8 +12,10 @@ import (
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
+	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 )
 
 // RequestPublish is the resolver for the requestPublish field.
@@ -130,11 +132,41 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 		stats.TotalRequests = totalRequests
 	}
 
-	requestStats, err := r.RequestStats(ctx)
+	// Count failed requests for the user's private project.
+	failedRequests, err := r.client.Request.Query().
+		Where(request.ProjectIDEQ(projectID), request.StatusEQ(request.StatusFailed)).
+		Count(ctx)
 	if err == nil {
-		stats.RequestStats = requestStats
-	} else {
-		stats.RequestStats = &RequestStats{}
+		stats.FailedRequests = failedRequests
+	}
+
+	// Get request stats filtered by the user's private project.
+	loc := r.systemService.TimeLocation(ctx)
+	period := xtime.GetCalendarPeriods(loc)
+
+	stats.RequestStats = &RequestStats{}
+	if requestsToday, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.Today.Start)).
+		Count(ctx); err == nil {
+		stats.RequestStats.RequestsToday = requestsToday
+	}
+
+	if requestsThisWeek, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.ThisWeek.Start)).
+		Count(ctx); err == nil {
+		stats.RequestStats.RequestsThisWeek = requestsThisWeek
+	}
+
+	if requestsLastWeek, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.LastWeek.Start), usagelog.CreatedAtLT(period.LastWeek.End)).
+		Count(ctx); err == nil {
+		stats.RequestStats.RequestsLastWeek = requestsLastWeek
+	}
+
+	if requestsThisMonth, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.ThisMonth.Start)).
+		Count(ctx); err == nil {
+		stats.RequestStats.RequestsThisMonth = requestsThisMonth
 	}
 
 	return stats, nil

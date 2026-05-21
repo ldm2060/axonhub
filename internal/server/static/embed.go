@@ -18,7 +18,16 @@ var dist embed.FS
 var staticFS static.ServeFileSystem
 
 var apiPrefixes = []string{
-	"/admin",
+	"/admin/auth",
+	"/admin/graphql",
+	"/admin/playground",
+	"/admin/system",
+	"/admin/requests",
+	"/admin/codex",
+	"/admin/claudecode",
+	"/admin/antigravity",
+	"/admin/copilot",
+	"/admin/oidc",
 	"/anthropic",
 	"/doubao",
 	"/gemini",

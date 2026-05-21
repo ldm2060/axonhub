@@ -28,7 +28,7 @@ export function EmailSettingsTab() {
   });
 
   const [passwordChanged, setPasswordChanged] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -41,7 +41,6 @@ export function EmailSettingsTab() {
         fromName: settings.fromName || '',
         fromAddress: settings.fromAddress || '',
       });
-      setConnected(settings.connected || false);
       setPasswordChanged(false);
     }
   }, [settings]);
@@ -111,8 +110,17 @@ export function EmailSettingsTab() {
               <CardDescription>{t('system.email.description')}</CardDescription>
             </div>
             <div className='flex items-center gap-2'>
-              <div className={`h-3 w-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} title={connected ? t('system.email.status.connected') : t('system.email.status.disconnected')} />
-              <span className='text-muted-foreground text-sm'>{connected ? t('system.email.status.connected') : t('system.email.status.disconnected')}</span>
+              {connected !== null && (
+                <>
+                  <div
+                    className={`h-3 w-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}
+                    title={connected ? t('system.email.status.connected') : t('system.email.status.disconnected')}
+                  />
+                  <span className='text-muted-foreground text-sm'>
+                    {connected ? t('system.email.status.connected') : t('system.email.status.disconnected')}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>

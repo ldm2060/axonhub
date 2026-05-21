@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/entql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
@@ -72,6 +73,7 @@ func (PublishRequest) Policy() ent.Policy {
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
 			scopes.UserWriteScopeRule(scopes.ScopeReviewPublishRequests),
+			requesterMutationRule(),
 		},
 	}
 }
@@ -87,5 +89,47 @@ func requesterQueryRule() privacy.QueryRule {
 		f.Where(entql.FieldEQ("requester_id", user.ID))
 
 		return privacy.Allowf("User %d can query own publish requests", user.ID)
+	})
+}
+
+// publishRequestRequesterMutation is the minimal interface needed to apply the
+// requester-only mutation rule. It is satisfied by *ent.PublishRequestMutation
+// at codegen time without needing to import the ent package from schema.
+type publishRequestRequesterMutation interface {
+	ent.Mutation
+	RequesterID() (int, bool)
+	WhereP(...func(*sql.Selector))
+}
+
+// requesterMutationRule allows users to create/cancel publish requests where they
+// are the requester. Without this rule, regular users (without the review scope)
+// cannot submit a publish request for their own resources.
+func requesterMutationRule() privacy.MutationRule {
+	return privacy.MutationRuleFunc(func(ctx context.Context, m ent.Mutation) error {
+		user, ok := contexts.GetUser(ctx)
+		if !ok || user == nil {
+			return privacy.Skipf("no user in context")
+		}
+
+		mutation, ok := m.(publishRequestRequesterMutation)
+		if !ok {
+			return privacy.Skipf("not a publish request mutation")
+		}
+
+		switch mutation.Op() {
+		case ent.OpCreate:
+			requesterID, exists := mutation.RequesterID()
+			if !exists || requesterID != user.ID {
+				return privacy.Skipf("user %d can only create own publish requests", user.ID)
+			}
+			return privacy.Allowf("user %d can create own publish requests", user.ID)
+		case ent.OpUpdateOne, ent.OpDeleteOne:
+			mutation.WhereP(func(s *sql.Selector) {
+				s.Where(sql.EQ("requester_id", user.ID))
+			})
+			return privacy.Allowf("user %d can modify own publish requests", user.ID)
+		default:
+			return privacy.Skipf("operation %s not allowed for non-reviewer", mutation.Op())
+		}
 	})
 }
