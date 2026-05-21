@@ -124,9 +124,11 @@ const (
 
 // RegistrationSettings represents consolidated registration configuration settings.
 type RegistrationSettings struct {
-	AllowSignUp       bool     `json:"allow_sign_up"`
-	ApprovalRequired  bool     `json:"approval_required"`
-	DefaultUserScopes []string `json:"default_user_scopes"`
+	AllowSignUp        bool     `json:"allow_sign_up"`
+	ApprovalRequired   bool     `json:"approval_required"`
+	DefaultUserScopes  []string `json:"default_user_scopes"`
+	EmailAllowPatterns []string `json:"email_allow_patterns"`
+	EmailDenyPatterns  []string `json:"email_deny_patterns"`
 }
 
 // EmailSettings represents email/SMTP configuration settings.
@@ -1566,9 +1568,12 @@ func (s *SystemService) RegistrationSettings(ctx context.Context) (*Registration
 			DefaultUserScopes: DefaultUserScopes,
 		}
 
-		// Persist the consolidated key for future reads.
-		if err := s.SetRegistrationSettings(ctx, settings); err != nil {
-			log.Warn(ctx, "failed to persist migrated registration settings", log.Cause(err))
+		// Persist the consolidated key for future reads (raw write to skip enable-check).
+		jsonBytes, jerr := json.Marshal(settings)
+		if jerr == nil {
+			if err := s.setSystemValue(ctx, SystemKeyRegistrationSettings, string(jsonBytes)); err != nil {
+				log.Warn(ctx, "failed to persist migrated registration settings", log.Cause(err))
+			}
 		}
 
 		return settings, nil
@@ -1586,8 +1591,30 @@ func (s *SystemService) RegistrationSettings(ctx context.Context) (*Registration
 	return &settings, nil
 }
 
+// IsEmailConfigured returns true if the SMTP settings have enough fields to attempt sending mail.
+// We require host, port, and from-address as the minimum.
+func (s *SystemService) IsEmailConfigured(ctx context.Context) (bool, error) {
+	es, err := s.EmailSettings(ctx)
+	if err != nil {
+		return false, err
+	}
+	return es.SMTPHost != "" && es.SMTPPort > 0 && es.FromAddress != "", nil
+}
+
 // SetRegistrationSettings sets the consolidated registration settings.
+// Enabling self-signup requires email to be configured first, since users
+// must verify their email before they can sign in.
 func (s *SystemService) SetRegistrationSettings(ctx context.Context, settings *RegistrationSettings) error {
+	if settings.AllowSignUp {
+		ok, err := s.IsEmailConfigured(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to check email settings: %w", err)
+		}
+		if !ok {
+			return fmt.Errorf("email is not configured: configure the SMTP server before enabling self sign-up")
+		}
+	}
+
 	jsonBytes, err := json.Marshal(settings)
 	if err != nil {
 		return fmt.Errorf("failed to marshal registration settings: %w", err)

@@ -1364,9 +1364,11 @@ type ComplexityRoot struct {
 	}
 
 	RegistrationSettings struct {
-		AllowSignUp       func(childComplexity int) int
-		ApprovalRequired  func(childComplexity int) int
-		DefaultUserScopes func(childComplexity int) int
+		AllowSignUp        func(childComplexity int) int
+		ApprovalRequired   func(childComplexity int) int
+		DefaultUserScopes  func(childComplexity int) int
+		EmailAllowPatterns func(childComplexity int) int
+		EmailDenyPatterns  func(childComplexity int) int
 	}
 
 	Request struct {
@@ -8418,6 +8420,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RegistrationSettings.DefaultUserScopes(childComplexity), true
+	case "RegistrationSettings.emailAllowPatterns":
+		if e.complexity.RegistrationSettings.EmailAllowPatterns == nil {
+			break
+		}
+
+		return e.complexity.RegistrationSettings.EmailAllowPatterns(childComplexity), true
+	case "RegistrationSettings.emailDenyPatterns":
+		if e.complexity.RegistrationSettings.EmailDenyPatterns == nil {
+			break
+		}
+
+		return e.complexity.RegistrationSettings.EmailDenyPatterns(childComplexity), true
 
 	case "Request.apiKey":
 		if e.complexity.Request.APIKey == nil {
@@ -34705,6 +34719,10 @@ func (ec *executionContext) fieldContext_Mutation_updateRegistrationSettings(ctx
 				return ec.fieldContext_RegistrationSettings_approvalRequired(ctx, field)
 			case "defaultUserScopes":
 				return ec.fieldContext_RegistrationSettings_defaultUserScopes(ctx, field)
+			case "emailAllowPatterns":
+				return ec.fieldContext_RegistrationSettings_emailAllowPatterns(ctx, field)
+			case "emailDenyPatterns":
+				return ec.fieldContext_RegistrationSettings_emailDenyPatterns(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RegistrationSettings", field.Name)
 		},
@@ -45325,6 +45343,10 @@ func (ec *executionContext) fieldContext_Query_registrationSettings(_ context.Co
 				return ec.fieldContext_RegistrationSettings_approvalRequired(ctx, field)
 			case "defaultUserScopes":
 				return ec.fieldContext_RegistrationSettings_defaultUserScopes(ctx, field)
+			case "emailAllowPatterns":
+				return ec.fieldContext_RegistrationSettings_emailAllowPatterns(ctx, field)
+			case "emailDenyPatterns":
+				return ec.fieldContext_RegistrationSettings_emailDenyPatterns(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RegistrationSettings", field.Name)
 		},
@@ -46169,6 +46191,64 @@ func (ec *executionContext) _RegistrationSettings_defaultUserScopes(ctx context.
 }
 
 func (ec *executionContext) fieldContext_RegistrationSettings_defaultUserScopes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RegistrationSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RegistrationSettings_emailAllowPatterns(ctx context.Context, field graphql.CollectedField, obj *biz.RegistrationSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RegistrationSettings_emailAllowPatterns,
+		func(ctx context.Context) (any, error) {
+			return obj.EmailAllowPatterns, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RegistrationSettings_emailAllowPatterns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RegistrationSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RegistrationSettings_emailDenyPatterns(ctx context.Context, field graphql.CollectedField, obj *biz.RegistrationSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RegistrationSettings_emailDenyPatterns,
+		func(ctx context.Context) (any, error) {
+			return obj.EmailDenyPatterns, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RegistrationSettings_emailDenyPatterns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RegistrationSettings",
 		Field:      field,
@@ -84225,7 +84305,7 @@ func (ec *executionContext) unmarshalInputUpdateRegistrationSettingsInput(ctx co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"allowSignUp", "approvalRequired", "defaultUserScopes"}
+	fieldsInOrder := [...]string{"allowSignUp", "approvalRequired", "defaultUserScopes", "emailAllowPatterns", "emailDenyPatterns"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84253,6 +84333,20 @@ func (ec *executionContext) unmarshalInputUpdateRegistrationSettingsInput(ctx co
 				return it, err
 			}
 			it.DefaultUserScopes = data
+		case "emailAllowPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailAllowPatterns"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailAllowPatterns = data
+		case "emailDenyPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailDenyPatterns"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailDenyPatterns = data
 		}
 	}
 
@@ -101724,6 +101818,16 @@ func (ec *executionContext) _RegistrationSettings(ctx context.Context, sel ast.S
 			}
 		case "defaultUserScopes":
 			out.Values[i] = ec._RegistrationSettings_defaultUserScopes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "emailAllowPatterns":
+			out.Values[i] = ec._RegistrationSettings_emailAllowPatterns(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "emailDenyPatterns":
+			out.Values[i] = ec._RegistrationSettings_emailDenyPatterns(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

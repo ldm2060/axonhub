@@ -11,6 +11,8 @@ const REGISTRATION_SETTINGS_QUERY = `
       allowSignUp
       approvalRequired
       defaultUserScopes
+      emailAllowPatterns
+      emailDenyPatterns
     }
   }
 `;
@@ -21,6 +23,8 @@ const UPDATE_REGISTRATION_SETTINGS_MUTATION = `
       allowSignUp
       approvalRequired
       defaultUserScopes
+      emailAllowPatterns
+      emailDenyPatterns
     }
   }
 `;
@@ -29,12 +33,16 @@ export interface RegistrationSettings {
   allowSignUp: boolean;
   approvalRequired: boolean;
   defaultUserScopes: string[];
+  emailAllowPatterns: string[];
+  emailDenyPatterns: string[];
 }
 
 export interface UpdateRegistrationSettingsInput {
   allowSignUp?: boolean;
   approvalRequired?: boolean;
   defaultUserScopes?: string[];
+  emailAllowPatterns?: string[];
+  emailDenyPatterns?: string[];
 }
 
 export function useRegistrationSettings() {

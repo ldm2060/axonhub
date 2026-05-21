@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"go.uber.org/fx"
 
@@ -70,18 +71,27 @@ func NewSignUpService(params SignUpServiceParams) *SignUpService {
 }
 
 // AllowSignUp checks if self-registration is enabled.
+// Reads from the consolidated RegistrationSettings (with migration from the legacy key).
 func (s *SignUpService) AllowSignUp(ctx context.Context) bool {
-	value, err := s.systemService.getSystemValue(ctx, SystemKeyAllowSignUp)
+	rs, err := s.systemService.RegistrationSettings(ctx)
 	if err != nil {
 		return false
 	}
-	return value == "true"
+	return rs.AllowSignUp
 }
 
 // SignUp registers a new user and sends a verification email.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
 	if !s.AllowSignUp(ctx) {
 		return nil, "", fmt.Errorf("sign-up is not allowed")
+	}
+
+	// Validate email against allow/deny patterns.
+	rs, err := s.systemService.RegistrationSettings(ctx)
+	if err == nil {
+		if err := validateEmailPatterns(input.Email, rs.EmailAllowPatterns, rs.EmailDenyPatterns); err != nil {
+			return nil, "", err
+		}
 	}
 
 	client := s.entFromContext(ctx)
@@ -130,4 +140,38 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 	}
 
 	return newUser, "", nil
+}
+
+// validateEmailPatterns checks the email against allow and deny regex lists.
+// If allow patterns are non-empty, the email must match at least one.
+// If deny patterns are non-empty, the email must not match any.
+func validateEmailPatterns(email string, allowPatterns, denyPatterns []string) error {
+	if len(allowPatterns) > 0 {
+		matched := false
+		for _, p := range allowPatterns {
+			re, err := regexp.Compile(p)
+			if err != nil {
+				continue
+			}
+			if re.MatchString(email) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return fmt.Errorf("this email address is not in the allowed list")
+		}
+	}
+
+	for _, p := range denyPatterns {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			continue
+		}
+		if re.MatchString(email) {
+			return fmt.Errorf("this email address is not allowed")
+		}
+	}
+
+	return nil
 }

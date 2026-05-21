@@ -267,9 +267,11 @@ func (r *mutationResolver) UpdatePassThroughSettings(ctx context.Context, input 
 // UpdateRegistrationSettings is the resolver for the updateRegistrationSettings field.
 func (r *mutationResolver) UpdateRegistrationSettings(ctx context.Context, input biz.RegistrationSettings) (*biz.RegistrationSettings, error) {
 	rs := &biz.RegistrationSettings{
-		AllowSignUp:       input.AllowSignUp,
-		ApprovalRequired:  input.ApprovalRequired,
-		DefaultUserScopes: input.DefaultUserScopes,
+		AllowSignUp:        input.AllowSignUp,
+		ApprovalRequired:   input.ApprovalRequired,
+		DefaultUserScopes:  input.DefaultUserScopes,
+		EmailAllowPatterns: input.EmailAllowPatterns,
+		EmailDenyPatterns:  input.EmailDenyPatterns,
 	}
 	if err := r.systemService.SetRegistrationSettings(ctx, rs); err != nil {
 		return nil, fmt.Errorf("failed to update registration settings: %w", err)

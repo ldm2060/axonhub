@@ -333,12 +333,16 @@ type RegistrationSettings {
   allowSignUp: Boolean!
   approvalRequired: Boolean!
   defaultUserScopes: [String!]!
+  emailAllowPatterns: [String!]!
+  emailDenyPatterns: [String!]!
 }
 
 input UpdateRegistrationSettingsInput {
   allowSignUp: Boolean!
   approvalRequired: Boolean!
   defaultUserScopes: [String!]!
+  emailAllowPatterns: [String!]!
+  emailDenyPatterns: [String!]!
 }
 
 type EmailSettings {
