@@ -28,7 +28,7 @@ func NewTokenProvider(params TokenProviderParams) (*CopilotTokenProvider, error)
 	config := oauth.DeviceFlowConfig{ //nolint:gosec
 		DeviceAuthURL: "https://github.com/login/device/code",
 		TokenURL:      "https://github.com/login/oauth/access_token",
-		ClientID:      "Iv1.b507a08c87ecfe98",
+		ClientID:      "Ov23li8tweQw6odWQebz",
 		Scopes:        []string{"read:user"},
 		UserAgent:     "",
 	}

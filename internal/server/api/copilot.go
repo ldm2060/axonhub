@@ -27,8 +27,7 @@ const (
 	githubAccessTokenURL = "https://github.com/login/oauth/access_token" //nolint:gosec
 
 	//nolint:gosec // This is a public OAuth client identifier, not a secret
-	// defaultGithubCopilotClientID is the VS Code public client ID, used as fallback
-	defaultGithubCopilotClientID = "Iv1.b507a08c87ecfe98"
+	defaultGithubCopilotClientID = "Ov23li8tweQw6odWQebz"
 
 	// OAuth scopes for GitHub Copilot
 	githubCopilotScope = "read:user"
@@ -45,7 +44,7 @@ const (
 
 // getGithubCopilotClientID returns the GitHub Copilot OAuth client ID.
 // It checks the GITHUB_COPILOT_CLIENT_ID environment variable first,
-// then falls back to the default VS Code client ID.
+// then falls back to the default client ID.
 func getGithubCopilotClientID() string {
 	if clientID := os.Getenv("GITHUB_COPILOT_CLIENT_ID"); clientID != "" {
 		return clientID

@@ -207,11 +207,8 @@ func TestOutboundTransformer_TransformRequest(t *testing.T) {
 				assert.Equal(t, "application/json", req.Headers.Get("Content-Type"))
 				assert.Equal(t, "application/json", req.Headers.Get("Accept"))
 
-				// Validate LiteLLM-style editor headers
-				assert.Equal(t, DefaultEditorVersion, req.Headers.Get(EditorVersionHeader))
-				assert.Equal(t, DefaultEditorPluginVersion, req.Headers.Get(EditorPluginVersionHeader))
+				// Validate copilot headers
 				assert.Equal(t, DefaultUserAgent, req.Headers.Get(UserAgentHeader))
-				assert.Equal(t, DefaultCopilotIntegrationID, req.Headers.Get(CopilotIntegrationIDHeader))
 				assert.Equal(t, DefaultOpenAIIntent, req.Headers.Get(OpenAIIntentHeader))
 
 				// Vision header should NOT be present for text-only request

@@ -832,7 +832,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel) (*Channel
 			return nil, fmt.Errorf("failed to create CopilotTokenProvider: %w", err)
 		}
 
-		// Create the Copilot outbound transformer with LiteLLM headers
+		// Create the Copilot outbound transformer
 		transformer, err := copilot.NewOutboundTransformer(copilot.OutboundTransformerParams{
 			TokenProvider: p,
 			BaseURL:       c.BaseURL,

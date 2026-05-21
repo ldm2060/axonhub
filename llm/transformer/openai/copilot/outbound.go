@@ -28,24 +28,13 @@ var modelVersionRegex = regexp.MustCompile(`^gpt-(\d+)`)
 const (
 	DefaultCopilotBaseURL          = "https://api.githubcopilot.com"
 	CopilotChatCompletionsEndpoint = "/chat/completions"
-	EditorVersionHeader            = "Editor-Version"
-	EditorPluginVersionHeader      = "Editor-Plugin-Version"
 	UserAgentHeader                = "User-Agent"
 	OpenAIIntentHeader             = "Openai-Intent"
-	CopilotIntegrationIDHeader     = "Copilot-Integration-Id"
-	GitHubAPIVersionHeader         = "X-Github-Api-Version"
-	RequestIDHeader                = "X-Request-Id"
-	VSCodeUserAgentLibHeader       = "X-Vscode-User-Agent-Library-Version"
 	CopilotVisionRequestHeader     = "Copilot-Vision-Request"
 	InitiatorHeader                = "X-Initiator"
-	// DefaultEditorVersion is the LiteLLM-style default editor version for Copilot quota tracking.
-	DefaultEditorVersion        = "vscode/1.95.0"
-	DefaultEditorPluginVersion  = "copilot-chat/0.26.7"
-	DefaultUserAgent            = "GitHubCopilotChat/0.26.7"
-	DefaultOpenAIIntent         = "conversation-edits"
-	DefaultCopilotIntegrationID = "vscode-chat"
-	DefaultGitHubAPIVersion     = "2025-04-01"
-	DefaultVSCodeUserAgentLib   = "electron-fetch"
+
+	DefaultUserAgent    = "AxonHub"
+	DefaultOpenAIIntent = "conversation-edits"
 )
 
 type TokenProvider interface {
@@ -133,7 +122,7 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 	headers.Set("Content-Type", "application/json")
 	headers.Set("Accept", "application/json")
 
-	// LiteLLM-style editor headers required by Copilot
+	// Copilot headers
 	SetCopilotHeaders(headers)
 
 	if hasVisionContent(llmReq) {
@@ -158,13 +147,8 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 }
 
 func SetCopilotHeaders(headers http.Header) {
-	headers.Set(EditorVersionHeader, DefaultEditorVersion)
-	headers.Set(EditorPluginVersionHeader, DefaultEditorPluginVersion)
 	headers.Set(UserAgentHeader, DefaultUserAgent)
-	headers.Set(CopilotIntegrationIDHeader, DefaultCopilotIntegrationID)
 	headers.Set(OpenAIIntentHeader, DefaultOpenAIIntent)
-	headers.Set(GitHubAPIVersionHeader, DefaultGitHubAPIVersion)
-	headers.Set(VSCodeUserAgentLibHeader, DefaultVSCodeUserAgentLib)
 }
 
 func normalizeInitiator(val string) string {
