@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
-	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
@@ -33,11 +32,6 @@ type SignUpRequest struct {
 	LastName  string `json:"last_name"`
 }
 
-type SignUpResponse struct {
-	User  *objects.UserInfo `json:"user"`
-	Token string            `json:"token,omitempty"`
-}
-
 func (h *SignUpHandlers) SignUp(c *gin.Context) {
 	var req SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -45,7 +39,7 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.SignUpService.SignUp(c.Request.Context(), biz.SignUpInput{
+	_, _, err := h.SignUpService.SignUp(c.Request.Context(), biz.SignUpInput{
 		Email:     req.Email,
 		Password:  req.Password,
 		FirstName: req.FirstName,
@@ -57,10 +51,7 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SignUpResponse{
-		User:  biz.ConvertUserToUserInfo(c.Request.Context(), user),
-		Token: token,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Registration successful. Please check your email to verify your account."})
 }
 
 func (h *SignUpHandlers) AllowSignUp(c *gin.Context) {

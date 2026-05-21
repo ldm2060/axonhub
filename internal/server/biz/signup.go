@@ -7,7 +7,9 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
@@ -36,28 +38,34 @@ type SignUpInput struct {
 type SignUpService struct {
 	*AbstractService
 
-	userService   *UserService
-	authService   *AuthService
-	systemService *SystemService
+	userService      *UserService
+	authService      *AuthService
+	systemService    *SystemService
+	emailTokenService *EmailTokenService
+	emailService     *EmailService
 }
 
 // SignUpServiceParams holds the dependencies for SignUpService.
 type SignUpServiceParams struct {
 	fx.In
 
-	Ent            *ent.Client
-	UserService    *UserService
-	AuthService    *AuthService
-	SystemService  *SystemService
+	Ent               *ent.Client
+	UserService       *UserService
+	AuthService       *AuthService
+	SystemService     *SystemService
+	EmailTokenService *EmailTokenService
+	EmailService      *EmailService
 }
 
 // NewSignUpService creates a new SignUpService.
 func NewSignUpService(params SignUpServiceParams) *SignUpService {
 	return &SignUpService{
-		AbstractService: &AbstractService{db: params.Ent},
-		userService:     params.UserService,
-		authService:     params.AuthService,
-		systemService:   params.SystemService,
+		AbstractService:   &AbstractService{db: params.Ent},
+		userService:       params.UserService,
+		authService:       params.AuthService,
+		systemService:     params.SystemService,
+		emailTokenService: params.EmailTokenService,
+		emailService:      params.EmailService,
 	}
 }
 
@@ -70,7 +78,7 @@ func (s *SignUpService) AllowSignUp(ctx context.Context) bool {
 	return value == "true"
 }
 
-// SignUp registers a new user.
+// SignUp registers a new user and sends a verification email.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
 	if !s.AllowSignUp(ctx) {
 		return nil, "", fmt.Errorf("sign-up is not allowed")
@@ -87,13 +95,7 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 		return nil, "", fmt.Errorf("email already registered")
 	}
 
-	approvalValue, _ := s.systemService.getSystemValue(ctx, SystemKeySignUpApprovalRequired)
-	approvalRequired := approvalValue == "true"
-
-	status := user.StatusActivated
-	if approvalRequired {
-		status = user.StatusDeactivated
-	}
+	status := user.StatusPending
 
 	newUser, err := s.userService.CreateUser(ctx, ent.CreateUserInput{
 		Email:     input.Email,
@@ -107,13 +109,25 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
 
-	var token string
-	if !approvalRequired {
-		token, err = s.authService.GenerateJWTToken(ctx, newUser)
-		if err != nil {
-			return nil, "", fmt.Errorf("failed to generate token: %w", err)
-		}
+	// Create email verification token
+	token, err := s.emailTokenService.CreateToken(ctx, newUser.ID, emailtoken.TypeVerifyEmail)
+	if err != nil {
+		log.Error(ctx, "Failed to create email verification token", log.Cause(err), log.Int("user_id", newUser.ID))
+		return nil, "", fmt.Errorf("failed to create verification token: %w", err)
 	}
 
-	return newUser, token, nil
+	// Build verification URL using the token
+	verifyURL := fmt.Sprintf("/auth/verify-email?token=%s", token)
+
+	// Send verification email
+	userName := newUser.FirstName
+	if userName == "" {
+		userName = newUser.Email
+	}
+	if err := s.emailService.SendVerificationEmail(ctx, newUser.Email, userName, verifyURL); err != nil {
+		log.Error(ctx, "Failed to send verification email", log.Cause(err), log.Int("user_id", newUser.ID))
+		return nil, "", fmt.Errorf("failed to send verification email: %w", err)
+	}
+
+	return newUser, "", nil
 }

@@ -46,6 +46,7 @@ type Config struct {
 type Worker struct {
 	SystemService      *biz.SystemService
 	DataStorageService *biz.DataStorageService
+	EmailTokenService  *biz.EmailTokenService
 	Ent                *ent.Client
 	Config             Config
 }
@@ -56,6 +57,7 @@ type Params struct {
 	Config             Config
 	SystemService      *biz.SystemService
 	DataStorageService *biz.DataStorageService
+	EmailTokenService  *biz.EmailTokenService
 	Client             *ent.Client
 }
 
@@ -63,6 +65,7 @@ func NewWorker(params Params) *Worker {
 	w := &Worker{
 		SystemService:      params.SystemService,
 		DataStorageService: params.DataStorageService,
+		EmailTokenService:  params.EmailTokenService,
 		Ent:                params.Client,
 		Config:             params.Config,
 	}
@@ -193,6 +196,14 @@ func (w *Worker) runCleanup(ctx context.Context, manual bool, manualDays map[str
 	} else {
 		log.Info(ctx, "Successfully cleaned up channel probes",
 			log.Int("cleanup_days", 3))
+	}
+
+	// Cleanup expired email tokens (verification, password reset, etc.)
+	if err := w.EmailTokenService.CleanupExpired(ctx); err != nil {
+		log.Error(ctx, "Failed to cleanup expired email tokens",
+			log.Cause(err))
+	} else {
+		log.Info(ctx, "Successfully cleaned up expired email tokens")
 	}
 
 	if w.Config.VacuumEnabled {
