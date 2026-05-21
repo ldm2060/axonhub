@@ -13,6 +13,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -355,6 +356,25 @@ func init() {
 	datastorageDescPrimary := datastorageFields[2].Descriptor()
 	// datastorage.DefaultPrimary holds the default value on creation for the primary field.
 	datastorage.DefaultPrimary = datastorageDescPrimary.Default.(bool)
+	emailtokenMixin := schema.EmailToken{}.Mixin()
+	emailtokenMixinFields0 := emailtokenMixin[0].Fields()
+	_ = emailtokenMixinFields0
+	emailtokenFields := schema.EmailToken{}.Fields()
+	_ = emailtokenFields
+	// emailtokenDescCreatedAt is the schema descriptor for created_at field.
+	emailtokenDescCreatedAt := emailtokenMixinFields0[0].Descriptor()
+	// emailtoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	emailtoken.DefaultCreatedAt = emailtokenDescCreatedAt.Default.(func() time.Time)
+	// emailtokenDescUpdatedAt is the schema descriptor for updated_at field.
+	emailtokenDescUpdatedAt := emailtokenMixinFields0[1].Descriptor()
+	// emailtoken.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	emailtoken.DefaultUpdatedAt = emailtokenDescUpdatedAt.Default.(func() time.Time)
+	// emailtoken.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	emailtoken.UpdateDefaultUpdatedAt = emailtokenDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// emailtokenDescToken is the schema descriptor for token field.
+	emailtokenDescToken := emailtokenFields[0].Descriptor()
+	// emailtoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	emailtoken.TokenValidator = emailtokenDescToken.Validators[0].(func(string) error)
 	modelMixin := schema.Model{}.Mixin()
 	model.Policy = privacy.NewPolicies(schema.Model{})
 	model.Hooks[0] = func(next ent.Mutator) ent.Mutator {

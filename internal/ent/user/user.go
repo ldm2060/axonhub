@@ -64,6 +64,8 @@ const (
 	EdgeChannelOverrideTemplates = "channel_override_templates"
 	// EdgeOidcIdentities holds the string denoting the oidc_identities edge name in mutations.
 	EdgeOidcIdentities = "oidc_identities"
+	// EdgeEmailTokens holds the string denoting the email_tokens edge name in mutations.
+	EdgeEmailTokens = "email_tokens"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -136,6 +138,13 @@ const (
 	OidcIdentitiesInverseTable = "oidc_identities"
 	// OidcIdentitiesColumn is the table column denoting the oidc_identities relation/edge.
 	OidcIdentitiesColumn = "user_id"
+	// EmailTokensTable is the table that holds the email_tokens relation/edge.
+	EmailTokensTable = "email_tokens"
+	// EmailTokensInverseTable is the table name for the EmailToken entity.
+	// It exists in this package in order to avoid circular dependency with the "emailtoken" package.
+	EmailTokensInverseTable = "email_tokens"
+	// EmailTokensColumn is the table column denoting the email_tokens relation/edge.
+	EmailTokensColumn = "user_id"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -445,6 +454,20 @@ func ByOidcIdentities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByEmailTokensCount orders the results by email_tokens count.
+func ByEmailTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEmailTokensStep(), opts...)
+	}
+}
+
+// ByEmailTokens orders the results by email_tokens terms.
+func ByEmailTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEmailTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -540,6 +563,13 @@ func newOidcIdentitiesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OidcIdentitiesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, OidcIdentitiesTable, OidcIdentitiesColumn),
+	)
+}
+func newEmailTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EmailTokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EmailTokensTable, EmailTokensColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -105,6 +106,7 @@ func checkColumn(t, c string) error {
 			channeloverridetemplate.Table:  channeloverridetemplate.ValidColumn,
 			channelprobe.Table:             channelprobe.ValidColumn,
 			datastorage.Table:              datastorage.ValidColumn,
+			emailtoken.Table:               emailtoken.ValidColumn,
 			model.Table:                    model.ValidColumn,
 			oidcidentity.Table:             oidcidentity.ValidColumn,
 			project.Table:                  project.ValidColumn,

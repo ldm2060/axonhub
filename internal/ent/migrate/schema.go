@@ -298,6 +298,43 @@ var (
 			},
 		},
 	}
+	// EmailTokensColumns holds the columns for the "email_tokens" table.
+	EmailTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "token", Type: field.TypeString, Unique: true},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"verify_email", "reset_password"}},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "consumed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// EmailTokensTable holds the schema information for the "email_tokens" table.
+	EmailTokensTable = &schema.Table{
+		Name:       "email_tokens",
+		Columns:    EmailTokensColumns,
+		PrimaryKey: []*schema.Column{EmailTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "email_tokens_users_email_tokens",
+				Columns:    []*schema.Column{EmailTokensColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "emailtoken_token",
+				Unique:  false,
+				Columns: []*schema.Column{EmailTokensColumns[3]},
+			},
+			{
+				Name:    "emailtoken_type_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[5]},
+			},
+		},
+	}
 	// ModelsColumns holds the columns for the "models" table.
 	ModelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1091,6 +1128,7 @@ var (
 		ChannelOverrideTemplatesTable,
 		ChannelProbesTable,
 		DataStoragesTable,
+		EmailTokensTable,
 		ModelsTable,
 		OidcIdentitiesTable,
 		ProjectsTable,
@@ -1121,6 +1159,7 @@ func init() {
 	ChannelModelPriceVersionsTable.ForeignKeys[0].RefTable = ChannelModelPricesTable
 	ChannelOverrideTemplatesTable.ForeignKeys[0].RefTable = UsersTable
 	ChannelProbesTable.ForeignKeys[0].RefTable = ChannelsTable
+	EmailTokensTable.ForeignKeys[0].RefTable = UsersTable
 	ModelsTable.ForeignKeys[0].RefTable = UsersTable
 	OidcIdentitiesTable.ForeignKeys[0].RefTable = UsersTable
 	ProviderQuotaStatusTable.ForeignKeys[0].RefTable = ChannelsTable

@@ -267,6 +267,16 @@ func (r *dataStorageResolver) ID(ctx context.Context, obj *ent.DataStorage) (*ob
 }
 
 // ID is the resolver for the id field.
+func (r *emailTokenResolver) ID(ctx context.Context, obj *ent.EmailToken) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UserID is the resolver for the userID field.
+func (r *emailTokenResolver) UserID(ctx context.Context, obj *ent.EmailToken) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserID - userID"))
+}
+
+// ID is the resolver for the id field.
 func (r *modelResolver) ID(ctx context.Context, obj *ent.Model) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeModel,
@@ -1091,6 +1101,9 @@ func (r *Resolver) ChannelProbe() ChannelProbeResolver { return &channelProbeRes
 // DataStorage returns DataStorageResolver implementation.
 func (r *Resolver) DataStorage() DataStorageResolver { return &dataStorageResolver{r} }
 
+// EmailToken returns EmailTokenResolver implementation.
+func (r *Resolver) EmailToken() EmailTokenResolver { return &emailTokenResolver{r} }
+
 // Model returns ModelResolver implementation.
 func (r *Resolver) Model() ModelResolver { return &modelResolver{r} }
 
@@ -1157,6 +1170,7 @@ type channelModelPriceVersionResolver struct{ *Resolver }
 type channelOverrideTemplateResolver struct{ *Resolver }
 type channelProbeResolver struct{ *Resolver }
 type dataStorageResolver struct{ *Resolver }
+type emailTokenResolver struct{ *Resolver }
 type modelResolver struct{ *Resolver }
 type oIDCIdentityResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }

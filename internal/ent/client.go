@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -63,6 +64,8 @@ type Client struct {
 	ChannelProbe *ChannelProbeClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
+	// EmailToken is the client for interacting with the EmailToken builders.
+	EmailToken *EmailTokenClient
 	// Model is the client for interacting with the Model builders.
 	Model *ModelClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
@@ -118,6 +121,7 @@ func (c *Client) init() {
 	c.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(c.config)
 	c.ChannelProbe = NewChannelProbeClient(c.config)
 	c.DataStorage = NewDataStorageClient(c.config)
+	c.EmailToken = NewEmailTokenClient(c.config)
 	c.Model = NewModelClient(c.config)
 	c.OIDCIdentity = NewOIDCIdentityClient(c.config)
 	c.Project = NewProjectClient(c.config)
@@ -235,6 +239,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:             NewChannelProbeClient(cfg),
 		DataStorage:              NewDataStorageClient(cfg),
+		EmailToken:               NewEmailTokenClient(cfg),
 		Model:                    NewModelClient(cfg),
 		OIDCIdentity:             NewOIDCIdentityClient(cfg),
 		Project:                  NewProjectClient(cfg),
@@ -279,6 +284,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
 		ChannelProbe:             NewChannelProbeClient(cfg),
 		DataStorage:              NewDataStorageClient(cfg),
+		EmailToken:               NewEmailTokenClient(cfg),
 		Model:                    NewModelClient(cfg),
 		OIDCIdentity:             NewOIDCIdentityClient(cfg),
 		Project:                  NewProjectClient(cfg),
@@ -327,7 +333,7 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
+		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
 		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
 		c.UserProject, c.UserRole,
@@ -342,7 +348,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
+		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
 		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
 		c.UserProject, c.UserRole,
@@ -370,6 +376,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ChannelProbe.mutate(ctx, m)
 	case *DataStorageMutation:
 		return c.DataStorage.mutate(ctx, m)
+	case *EmailTokenMutation:
+		return c.EmailToken.mutate(ctx, m)
 	case *ModelMutation:
 		return c.Model.mutate(ctx, m)
 	case *OIDCIdentityMutation:
@@ -1771,6 +1779,155 @@ func (c *DataStorageClient) mutate(ctx context.Context, m *DataStorageMutation) 
 		return (&DataStorageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown DataStorage mutation op: %q", m.Op())
+	}
+}
+
+// EmailTokenClient is a client for the EmailToken schema.
+type EmailTokenClient struct {
+	config
+}
+
+// NewEmailTokenClient returns a client for the EmailToken from the given config.
+func NewEmailTokenClient(c config) *EmailTokenClient {
+	return &EmailTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `emailtoken.Hooks(f(g(h())))`.
+func (c *EmailTokenClient) Use(hooks ...Hook) {
+	c.hooks.EmailToken = append(c.hooks.EmailToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `emailtoken.Intercept(f(g(h())))`.
+func (c *EmailTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EmailToken = append(c.inters.EmailToken, interceptors...)
+}
+
+// Create returns a builder for creating a EmailToken entity.
+func (c *EmailTokenClient) Create() *EmailTokenCreate {
+	mutation := newEmailTokenMutation(c.config, OpCreate)
+	return &EmailTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EmailToken entities.
+func (c *EmailTokenClient) CreateBulk(builders ...*EmailTokenCreate) *EmailTokenCreateBulk {
+	return &EmailTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EmailTokenClient) MapCreateBulk(slice any, setFunc func(*EmailTokenCreate, int)) *EmailTokenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EmailTokenCreateBulk{err: fmt.Errorf("calling to EmailTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EmailTokenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EmailTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EmailToken.
+func (c *EmailTokenClient) Update() *EmailTokenUpdate {
+	mutation := newEmailTokenMutation(c.config, OpUpdate)
+	return &EmailTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EmailTokenClient) UpdateOne(_m *EmailToken) *EmailTokenUpdateOne {
+	mutation := newEmailTokenMutation(c.config, OpUpdateOne, withEmailToken(_m))
+	return &EmailTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EmailTokenClient) UpdateOneID(id int) *EmailTokenUpdateOne {
+	mutation := newEmailTokenMutation(c.config, OpUpdateOne, withEmailTokenID(id))
+	return &EmailTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EmailToken.
+func (c *EmailTokenClient) Delete() *EmailTokenDelete {
+	mutation := newEmailTokenMutation(c.config, OpDelete)
+	return &EmailTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EmailTokenClient) DeleteOne(_m *EmailToken) *EmailTokenDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EmailTokenClient) DeleteOneID(id int) *EmailTokenDeleteOne {
+	builder := c.Delete().Where(emailtoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EmailTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for EmailToken.
+func (c *EmailTokenClient) Query() *EmailTokenQuery {
+	return &EmailTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEmailToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EmailToken entity by its id.
+func (c *EmailTokenClient) Get(ctx context.Context, id int) (*EmailToken, error) {
+	return c.Query().Where(emailtoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EmailTokenClient) GetX(ctx context.Context, id int) *EmailToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a EmailToken.
+func (c *EmailTokenClient) QueryUser(_m *EmailToken) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(emailtoken.Table, emailtoken.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, emailtoken.UserTable, emailtoken.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EmailTokenClient) Hooks() []Hook {
+	return c.hooks.EmailToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *EmailTokenClient) Interceptors() []Interceptor {
+	return c.inters.EmailToken
+}
+
+func (c *EmailTokenClient) mutate(ctx context.Context, m *EmailTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EmailTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EmailTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EmailTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EmailTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EmailToken mutation op: %q", m.Op())
 	}
 }
 
@@ -4518,6 +4675,22 @@ func (c *UserClient) QueryOidcIdentities(_m *User) *OIDCIdentityQuery {
 	return query
 }
 
+// QueryEmailTokens queries the email_tokens edge of a User.
+func (c *UserClient) QueryEmailTokens(_m *User) *EmailTokenQuery {
+	query := (&EmailTokenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(emailtoken.Table, emailtoken.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EmailTokensTable, user.EmailTokensColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProjectUsers queries the project_users edge of a User.
 func (c *UserClient) QueryProjectUsers(_m *User) *UserProjectQuery {
 	query := (&UserProjectClient{config: c.config}).Query()
@@ -4913,14 +5086,14 @@ type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
+		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
 		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
+		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
 		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Interceptor
 	}

@@ -1685,6 +1685,7 @@ type CreateUserInput struct {
 	Scopes         []string
 	ProjectIDs     []int
 	RoleIDs        []int
+	EmailTokenIDs  []int
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.
@@ -1718,6 +1719,9 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	if v := i.RoleIDs; len(v) > 0 {
 		m.AddRoleIDs(v...)
 	}
+	if v := i.EmailTokenIDs; len(v) > 0 {
+		m.AddEmailTokenIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the UserCreate builder.
@@ -1728,24 +1732,27 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Email            *string
-	Status           *user.Status
-	PreferLanguage   *string
-	Password         *string
-	FirstName        *string
-	LastName         *string
-	ClearAvatar      bool
-	Avatar           *string
-	IsOwner          *bool
-	ClearScopes      bool
-	Scopes           []string
-	AppendScopes     []string
-	ClearProjects    bool
-	AddProjectIDs    []int
-	RemoveProjectIDs []int
-	ClearRoles       bool
-	AddRoleIDs       []int
-	RemoveRoleIDs    []int
+	Email               *string
+	Status              *user.Status
+	PreferLanguage      *string
+	Password            *string
+	FirstName           *string
+	LastName            *string
+	ClearAvatar         bool
+	Avatar              *string
+	IsOwner             *bool
+	ClearScopes         bool
+	Scopes              []string
+	AppendScopes        []string
+	ClearProjects       bool
+	AddProjectIDs       []int
+	RemoveProjectIDs    []int
+	ClearRoles          bool
+	AddRoleIDs          []int
+	RemoveRoleIDs       []int
+	ClearEmailTokens    bool
+	AddEmailTokenIDs    []int
+	RemoveEmailTokenIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation builder.
@@ -1803,6 +1810,15 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.RemoveRoleIDs; len(v) > 0 {
 		m.RemoveRoleIDs(v...)
+	}
+	if i.ClearEmailTokens {
+		m.ClearEmailTokens()
+	}
+	if v := i.AddEmailTokenIDs; len(v) > 0 {
+		m.AddEmailTokenIDs(v...)
+	}
+	if v := i.RemoveEmailTokenIDs; len(v) > 0 {
+		m.RemoveEmailTokenIDs(v...)
 	}
 }
 

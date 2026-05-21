@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
@@ -44,6 +45,7 @@ type UserQuery struct {
 	withRoles                         *RoleQuery
 	withChannelOverrideTemplates      *ChannelOverrideTemplateQuery
 	withOidcIdentities                *OIDCIdentityQuery
+	withEmailTokens                   *EmailTokenQuery
 	withProjectUsers                  *UserProjectQuery
 	withUserRoles                     *UserRoleQuery
 	loadTotal                         []func(context.Context, []*User) error
@@ -57,6 +59,7 @@ type UserQuery struct {
 	withNamedRoles                    map[string]*RoleQuery
 	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
 	withNamedOidcIdentities           map[string]*OIDCIdentityQuery
+	withNamedEmailTokens              map[string]*EmailTokenQuery
 	withNamedProjectUsers             map[string]*UserProjectQuery
 	withNamedUserRoles                map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
@@ -315,6 +318,28 @@ func (_q *UserQuery) QueryOidcIdentities() *OIDCIdentityQuery {
 	return query
 }
 
+// QueryEmailTokens chains the current query on the "email_tokens" edge.
+func (_q *UserQuery) QueryEmailTokens() *EmailTokenQuery {
+	query := (&EmailTokenClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(emailtoken.Table, emailtoken.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EmailTokensTable, user.EmailTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProjectUsers chains the current query on the "project_users" edge.
 func (_q *UserQuery) QueryProjectUsers() *UserProjectQuery {
 	query := (&UserProjectClient{config: _q.config}).Query()
@@ -561,6 +586,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withRoles:                    _q.withRoles.Clone(),
 		withChannelOverrideTemplates: _q.withChannelOverrideTemplates.Clone(),
 		withOidcIdentities:           _q.withOidcIdentities.Clone(),
+		withEmailTokens:              _q.withEmailTokens.Clone(),
 		withProjectUsers:             _q.withProjectUsers.Clone(),
 		withUserRoles:                _q.withUserRoles.Clone(),
 		// clone intermediate query.
@@ -680,6 +706,17 @@ func (_q *UserQuery) WithOidcIdentities(opts ...func(*OIDCIdentityQuery)) *UserQ
 	return _q
 }
 
+// WithEmailTokens tells the query-builder to eager-load the nodes that are connected to
+// the "email_tokens" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithEmailTokens(opts ...func(*EmailTokenQuery)) *UserQuery {
+	query := (&EmailTokenClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withEmailTokens = query
+	return _q
+}
+
 // WithProjectUsers tells the query-builder to eager-load the nodes that are connected to
 // the "project_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithProjectUsers(opts ...func(*UserProjectQuery)) *UserQuery {
@@ -786,7 +823,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [13]bool{
 			_q.withProjects != nil,
 			_q.withOwnedChannels != nil,
 			_q.withOwnedModels != nil,
@@ -797,6 +834,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withRoles != nil,
 			_q.withChannelOverrideTemplates != nil,
 			_q.withOidcIdentities != nil,
+			_q.withEmailTokens != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -893,6 +931,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withEmailTokens; query != nil {
+		if err := _q.loadEmailTokens(ctx, query, nodes,
+			func(n *User) { n.Edges.EmailTokens = []*EmailToken{} },
+			func(n *User, e *EmailToken) { n.Edges.EmailTokens = append(n.Edges.EmailTokens, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -967,6 +1012,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadOidcIdentities(ctx, query, nodes,
 			func(n *User) { n.appendNamedOidcIdentities(name) },
 			func(n *User, e *OIDCIdentity) { n.appendNamedOidcIdentities(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedEmailTokens {
+		if err := _q.loadEmailTokens(ctx, query, nodes,
+			func(n *User) { n.appendNamedEmailTokens(name) },
+			func(n *User, e *EmailToken) { n.appendNamedEmailTokens(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1359,6 +1411,36 @@ func (_q *UserQuery) loadOidcIdentities(ctx context.Context, query *OIDCIdentity
 	}
 	return nil
 }
+func (_q *UserQuery) loadEmailTokens(ctx context.Context, query *EmailTokenQuery, nodes []*User, init func(*User), assign func(*User, *EmailToken)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(emailtoken.FieldUserID)
+	}
+	query.Where(predicate.EmailToken(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.EmailTokensColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1639,6 +1721,20 @@ func (_q *UserQuery) WithNamedOidcIdentities(name string, opts ...func(*OIDCIden
 		_q.withNamedOidcIdentities = make(map[string]*OIDCIdentityQuery)
 	}
 	_q.withNamedOidcIdentities[name] = query
+	return _q
+}
+
+// WithNamedEmailTokens tells the query-builder to eager-load the nodes that are connected to the "email_tokens"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedEmailTokens(name string, opts ...func(*EmailTokenQuery)) *UserQuery {
+	query := (&EmailTokenClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedEmailTokens == nil {
+		_q.withNamedEmailTokens = make(map[string]*EmailTokenQuery)
+	}
+	_q.withNamedEmailTokens[name] = query
 	return _q
 }
 

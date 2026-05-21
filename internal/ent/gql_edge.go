@@ -242,6 +242,14 @@ func (_m *DataStorage) Executions(
 	return _m.QueryExecutions().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *EmailToken) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
+	}
+	return result, err
+}
+
 func (_m *Model) Owner(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.OwnerOrErr()
 	if IsNotLoaded(err) {
@@ -920,6 +928,18 @@ func (_m *User) OidcIdentities(
 	return _m.QueryOidcIdentities().Paginate(ctx, after, first, before, last, opts...)
 }
 
+func (_m *User) EmailTokens(ctx context.Context) (result []*EmailToken, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedEmailTokens(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.EmailTokensOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryEmailTokens().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -928,7 +948,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[10][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[11][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -949,7 +969,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[11][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[12][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {

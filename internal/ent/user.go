@@ -73,15 +73,17 @@ type UserEdges struct {
 	ChannelOverrideTemplates []*ChannelOverrideTemplate `json:"channel_override_templates,omitempty"`
 	// OidcIdentities holds the value of the oidc_identities edge.
 	OidcIdentities []*OIDCIdentity `json:"oidc_identities,omitempty"`
+	// EmailTokens holds the value of the email_tokens edge.
+	EmailTokens []*EmailToken `json:"email_tokens,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [13]bool
 	// totalCount holds the count of the edges above.
-	totalCount [12]map[string]int
+	totalCount [13]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedOwnedChannels            map[string][]*Channel
@@ -92,6 +94,7 @@ type UserEdges struct {
 	namedRoles                    map[string][]*Role
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
 	namedOidcIdentities           map[string][]*OIDCIdentity
+	namedEmailTokens              map[string][]*EmailToken
 	namedProjectUsers             map[string][]*UserProject
 	namedUserRoles                map[string][]*UserRole
 }
@@ -188,10 +191,19 @@ func (e UserEdges) OidcIdentitiesOrErr() ([]*OIDCIdentity, error) {
 	return nil, &NotLoadedError{edge: "oidc_identities"}
 }
 
+// EmailTokensOrErr returns the EmailTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) EmailTokensOrErr() ([]*EmailToken, error) {
+	if e.loadedTypes[10] {
+		return e.EmailTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "email_tokens"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[11] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -200,7 +212,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[12] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -384,6 +396,11 @@ func (_m *User) QueryChannelOverrideTemplates() *ChannelOverrideTemplateQuery {
 // QueryOidcIdentities queries the "oidc_identities" edge of the User entity.
 func (_m *User) QueryOidcIdentities() *OIDCIdentityQuery {
 	return NewUserClient(_m.config).QueryOidcIdentities(_m)
+}
+
+// QueryEmailTokens queries the "email_tokens" edge of the User entity.
+func (_m *User) QueryEmailTokens() *EmailTokenQuery {
+	return NewUserClient(_m.config).QueryEmailTokens(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -675,6 +692,30 @@ func (_m *User) appendNamedOidcIdentities(name string, edges ...*OIDCIdentity) {
 		_m.Edges.namedOidcIdentities[name] = []*OIDCIdentity{}
 	} else {
 		_m.Edges.namedOidcIdentities[name] = append(_m.Edges.namedOidcIdentities[name], edges...)
+	}
+}
+
+// NamedEmailTokens returns the EmailTokens named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedEmailTokens(name string) ([]*EmailToken, error) {
+	if _m.Edges.namedEmailTokens == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedEmailTokens[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedEmailTokens(name string, edges ...*EmailToken) {
+	if _m.Edges.namedEmailTokens == nil {
+		_m.Edges.namedEmailTokens = make(map[string][]*EmailToken)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedEmailTokens[name] = []*EmailToken{}
+	} else {
+		_m.Edges.namedEmailTokens[name] = append(_m.Edges.namedEmailTokens[name], edges...)
 	}
 }
 

@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -328,6 +329,21 @@ func (_c *UserCreate) AddOidcIdentities(v ...*OIDCIdentity) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddOidcIdentityIDs(ids...)
+}
+
+// AddEmailTokenIDs adds the "email_tokens" edge to the EmailToken entity by IDs.
+func (_c *UserCreate) AddEmailTokenIDs(ids ...int) *UserCreate {
+	_c.mutation.AddEmailTokenIDs(ids...)
+	return _c
+}
+
+// AddEmailTokens adds the "email_tokens" edges to the EmailToken entity.
+func (_c *UserCreate) AddEmailTokens(v ...*EmailToken) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddEmailTokenIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -710,6 +726,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(oidcidentity.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.EmailTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EmailTokensTable,
+			Columns: []string{user.EmailTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(emailtoken.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

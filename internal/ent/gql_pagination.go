@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -2654,6 +2655,320 @@ func (_m *DataStorage) ToEdge(order *DataStorageOrder) *DataStorageEdge {
 		order = DefaultDataStorageOrder
 	}
 	return &DataStorageEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// EmailTokenEdge is the edge representation of EmailToken.
+type EmailTokenEdge struct {
+	Node   *EmailToken `json:"node"`
+	Cursor Cursor      `json:"cursor"`
+}
+
+// EmailTokenConnection is the connection containing edges to EmailToken.
+type EmailTokenConnection struct {
+	Edges      []*EmailTokenEdge `json:"edges"`
+	PageInfo   PageInfo          `json:"pageInfo"`
+	TotalCount int               `json:"totalCount"`
+}
+
+func (c *EmailTokenConnection) build(nodes []*EmailToken, pager *emailtokenPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *EmailToken
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *EmailToken {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *EmailToken {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*EmailTokenEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &EmailTokenEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// EmailTokenPaginateOption enables pagination customization.
+type EmailTokenPaginateOption func(*emailtokenPager) error
+
+// WithEmailTokenOrder configures pagination ordering.
+func WithEmailTokenOrder(order *EmailTokenOrder) EmailTokenPaginateOption {
+	if order == nil {
+		order = DefaultEmailTokenOrder
+	}
+	o := *order
+	return func(pager *emailtokenPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultEmailTokenOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithEmailTokenFilter configures pagination filter.
+func WithEmailTokenFilter(filter func(*EmailTokenQuery) (*EmailTokenQuery, error)) EmailTokenPaginateOption {
+	return func(pager *emailtokenPager) error {
+		if filter == nil {
+			return errors.New("EmailTokenQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type emailtokenPager struct {
+	reverse bool
+	order   *EmailTokenOrder
+	filter  func(*EmailTokenQuery) (*EmailTokenQuery, error)
+}
+
+func newEmailTokenPager(opts []EmailTokenPaginateOption, reverse bool) (*emailtokenPager, error) {
+	pager := &emailtokenPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultEmailTokenOrder
+	}
+	return pager, nil
+}
+
+func (p *emailtokenPager) applyFilter(query *EmailTokenQuery) (*EmailTokenQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *emailtokenPager) toCursor(_m *EmailToken) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *emailtokenPager) applyCursors(query *EmailTokenQuery, after, before *Cursor) (*EmailTokenQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultEmailTokenOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *emailtokenPager) applyOrder(query *EmailTokenQuery) *EmailTokenQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultEmailTokenOrder.Field {
+		query = query.Order(DefaultEmailTokenOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *emailtokenPager) orderExpr(query *EmailTokenQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultEmailTokenOrder.Field {
+			b.Comma().Ident(DefaultEmailTokenOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to EmailToken.
+func (_m *EmailTokenQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...EmailTokenPaginateOption,
+) (*EmailTokenConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newEmailTokenPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &EmailTokenConnection{Edges: []*EmailTokenEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// EmailTokenOrderFieldCreatedAt orders EmailToken by created_at.
+	EmailTokenOrderFieldCreatedAt = &EmailTokenOrderField{
+		Value: func(_m *EmailToken) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: emailtoken.FieldCreatedAt,
+		toTerm: emailtoken.ByCreatedAt,
+		toCursor: func(_m *EmailToken) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// EmailTokenOrderFieldUpdatedAt orders EmailToken by updated_at.
+	EmailTokenOrderFieldUpdatedAt = &EmailTokenOrderField{
+		Value: func(_m *EmailToken) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: emailtoken.FieldUpdatedAt,
+		toTerm: emailtoken.ByUpdatedAt,
+		toCursor: func(_m *EmailToken) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f EmailTokenOrderField) String() string {
+	var str string
+	switch f.column {
+	case EmailTokenOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case EmailTokenOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f EmailTokenOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *EmailTokenOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("EmailTokenOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *EmailTokenOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *EmailTokenOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid EmailTokenOrderField", str)
+	}
+	return nil
+}
+
+// EmailTokenOrderField defines the ordering field of EmailToken.
+type EmailTokenOrderField struct {
+	// Value extracts the ordering value from the given EmailToken.
+	Value    func(*EmailToken) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) emailtoken.OrderOption
+	toCursor func(*EmailToken) Cursor
+}
+
+// EmailTokenOrder defines the ordering of EmailToken.
+type EmailTokenOrder struct {
+	Direction OrderDirection        `json:"direction"`
+	Field     *EmailTokenOrderField `json:"field"`
+}
+
+// DefaultEmailTokenOrder is the default ordering of EmailToken.
+var DefaultEmailTokenOrder = &EmailTokenOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &EmailTokenOrderField{
+		Value: func(_m *EmailToken) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: emailtoken.FieldID,
+		toTerm: emailtoken.ByID,
+		toCursor: func(_m *EmailToken) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts EmailToken into EmailTokenEdge.
+func (_m *EmailToken) ToEdge(order *EmailTokenOrder) *EmailTokenEdge {
+	if order == nil {
+		order = DefaultEmailTokenOrder
+	}
+	return &EmailTokenEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

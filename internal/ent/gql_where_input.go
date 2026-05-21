@@ -15,6 +15,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
@@ -3624,6 +3625,386 @@ func (i *DataStorageWhereInput) P() (predicate.DataStorage, error) {
 		return predicates[0], nil
 	default:
 		return datastorage.And(predicates...), nil
+	}
+}
+
+// EmailTokenWhereInput represents a where input for filtering EmailToken queries.
+type EmailTokenWhereInput struct {
+	Predicates []predicate.EmailToken  `json:"-"`
+	Not        *EmailTokenWhereInput   `json:"not,omitempty"`
+	Or         []*EmailTokenWhereInput `json:"or,omitempty"`
+	And        []*EmailTokenWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "token" field predicates.
+	Token             *string  `json:"token,omitempty"`
+	TokenNEQ          *string  `json:"tokenNEQ,omitempty"`
+	TokenIn           []string `json:"tokenIn,omitempty"`
+	TokenNotIn        []string `json:"tokenNotIn,omitempty"`
+	TokenGT           *string  `json:"tokenGT,omitempty"`
+	TokenGTE          *string  `json:"tokenGTE,omitempty"`
+	TokenLT           *string  `json:"tokenLT,omitempty"`
+	TokenLTE          *string  `json:"tokenLTE,omitempty"`
+	TokenContains     *string  `json:"tokenContains,omitempty"`
+	TokenHasPrefix    *string  `json:"tokenHasPrefix,omitempty"`
+	TokenHasSuffix    *string  `json:"tokenHasSuffix,omitempty"`
+	TokenEqualFold    *string  `json:"tokenEqualFold,omitempty"`
+	TokenContainsFold *string  `json:"tokenContainsFold,omitempty"`
+
+	// "type" field predicates.
+	Type      *emailtoken.Type  `json:"type,omitempty"`
+	TypeNEQ   *emailtoken.Type  `json:"typeNEQ,omitempty"`
+	TypeIn    []emailtoken.Type `json:"typeIn,omitempty"`
+	TypeNotIn []emailtoken.Type `json:"typeNotIn,omitempty"`
+
+	// "expires_at" field predicates.
+	ExpiresAt      *time.Time  `json:"expiresAt,omitempty"`
+	ExpiresAtNEQ   *time.Time  `json:"expiresAtNEQ,omitempty"`
+	ExpiresAtIn    []time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNotIn []time.Time `json:"expiresAtNotIn,omitempty"`
+	ExpiresAtGT    *time.Time  `json:"expiresAtGT,omitempty"`
+	ExpiresAtGTE   *time.Time  `json:"expiresAtGTE,omitempty"`
+	ExpiresAtLT    *time.Time  `json:"expiresAtLT,omitempty"`
+	ExpiresAtLTE   *time.Time  `json:"expiresAtLTE,omitempty"`
+
+	// "consumed_at" field predicates.
+	ConsumedAt       *time.Time  `json:"consumedAt,omitempty"`
+	ConsumedAtNEQ    *time.Time  `json:"consumedAtNEQ,omitempty"`
+	ConsumedAtIn     []time.Time `json:"consumedAtIn,omitempty"`
+	ConsumedAtNotIn  []time.Time `json:"consumedAtNotIn,omitempty"`
+	ConsumedAtGT     *time.Time  `json:"consumedAtGT,omitempty"`
+	ConsumedAtGTE    *time.Time  `json:"consumedAtGTE,omitempty"`
+	ConsumedAtLT     *time.Time  `json:"consumedAtLT,omitempty"`
+	ConsumedAtLTE    *time.Time  `json:"consumedAtLTE,omitempty"`
+	ConsumedAtIsNil  bool        `json:"consumedAtIsNil,omitempty"`
+	ConsumedAtNotNil bool        `json:"consumedAtNotNil,omitempty"`
+
+	// "user_id" field predicates.
+	UserID      *int  `json:"userID,omitempty"`
+	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn    []int `json:"userIDIn,omitempty"`
+	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+
+	// "user" edge predicates.
+	HasUser     *bool             `json:"hasUser,omitempty"`
+	HasUserWith []*UserWhereInput `json:"hasUserWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *EmailTokenWhereInput) AddPredicates(predicates ...predicate.EmailToken) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the EmailTokenWhereInput filter on the EmailTokenQuery builder.
+func (i *EmailTokenWhereInput) Filter(q *EmailTokenQuery) (*EmailTokenQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyEmailTokenWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyEmailTokenWhereInput is returned in case the EmailTokenWhereInput is empty.
+var ErrEmptyEmailTokenWhereInput = errors.New("ent: empty predicate EmailTokenWhereInput")
+
+// P returns a predicate for filtering emailtokens.
+// An error is returned if the input is empty or invalid.
+func (i *EmailTokenWhereInput) P() (predicate.EmailToken, error) {
+	var predicates []predicate.EmailToken
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, emailtoken.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.EmailToken, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, emailtoken.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.EmailToken, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, emailtoken.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, emailtoken.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, emailtoken.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, emailtoken.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, emailtoken.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, emailtoken.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, emailtoken.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, emailtoken.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, emailtoken.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, emailtoken.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, emailtoken.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, emailtoken.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, emailtoken.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, emailtoken.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, emailtoken.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, emailtoken.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, emailtoken.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, emailtoken.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, emailtoken.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, emailtoken.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Token != nil {
+		predicates = append(predicates, emailtoken.TokenEQ(*i.Token))
+	}
+	if i.TokenNEQ != nil {
+		predicates = append(predicates, emailtoken.TokenNEQ(*i.TokenNEQ))
+	}
+	if len(i.TokenIn) > 0 {
+		predicates = append(predicates, emailtoken.TokenIn(i.TokenIn...))
+	}
+	if len(i.TokenNotIn) > 0 {
+		predicates = append(predicates, emailtoken.TokenNotIn(i.TokenNotIn...))
+	}
+	if i.TokenGT != nil {
+		predicates = append(predicates, emailtoken.TokenGT(*i.TokenGT))
+	}
+	if i.TokenGTE != nil {
+		predicates = append(predicates, emailtoken.TokenGTE(*i.TokenGTE))
+	}
+	if i.TokenLT != nil {
+		predicates = append(predicates, emailtoken.TokenLT(*i.TokenLT))
+	}
+	if i.TokenLTE != nil {
+		predicates = append(predicates, emailtoken.TokenLTE(*i.TokenLTE))
+	}
+	if i.TokenContains != nil {
+		predicates = append(predicates, emailtoken.TokenContains(*i.TokenContains))
+	}
+	if i.TokenHasPrefix != nil {
+		predicates = append(predicates, emailtoken.TokenHasPrefix(*i.TokenHasPrefix))
+	}
+	if i.TokenHasSuffix != nil {
+		predicates = append(predicates, emailtoken.TokenHasSuffix(*i.TokenHasSuffix))
+	}
+	if i.TokenEqualFold != nil {
+		predicates = append(predicates, emailtoken.TokenEqualFold(*i.TokenEqualFold))
+	}
+	if i.TokenContainsFold != nil {
+		predicates = append(predicates, emailtoken.TokenContainsFold(*i.TokenContainsFold))
+	}
+	if i.Type != nil {
+		predicates = append(predicates, emailtoken.TypeEQ(*i.Type))
+	}
+	if i.TypeNEQ != nil {
+		predicates = append(predicates, emailtoken.TypeNEQ(*i.TypeNEQ))
+	}
+	if len(i.TypeIn) > 0 {
+		predicates = append(predicates, emailtoken.TypeIn(i.TypeIn...))
+	}
+	if len(i.TypeNotIn) > 0 {
+		predicates = append(predicates, emailtoken.TypeNotIn(i.TypeNotIn...))
+	}
+	if i.ExpiresAt != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtEQ(*i.ExpiresAt))
+	}
+	if i.ExpiresAtNEQ != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtNEQ(*i.ExpiresAtNEQ))
+	}
+	if len(i.ExpiresAtIn) > 0 {
+		predicates = append(predicates, emailtoken.ExpiresAtIn(i.ExpiresAtIn...))
+	}
+	if len(i.ExpiresAtNotIn) > 0 {
+		predicates = append(predicates, emailtoken.ExpiresAtNotIn(i.ExpiresAtNotIn...))
+	}
+	if i.ExpiresAtGT != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtGT(*i.ExpiresAtGT))
+	}
+	if i.ExpiresAtGTE != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtGTE(*i.ExpiresAtGTE))
+	}
+	if i.ExpiresAtLT != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtLT(*i.ExpiresAtLT))
+	}
+	if i.ExpiresAtLTE != nil {
+		predicates = append(predicates, emailtoken.ExpiresAtLTE(*i.ExpiresAtLTE))
+	}
+	if i.ConsumedAt != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtEQ(*i.ConsumedAt))
+	}
+	if i.ConsumedAtNEQ != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtNEQ(*i.ConsumedAtNEQ))
+	}
+	if len(i.ConsumedAtIn) > 0 {
+		predicates = append(predicates, emailtoken.ConsumedAtIn(i.ConsumedAtIn...))
+	}
+	if len(i.ConsumedAtNotIn) > 0 {
+		predicates = append(predicates, emailtoken.ConsumedAtNotIn(i.ConsumedAtNotIn...))
+	}
+	if i.ConsumedAtGT != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtGT(*i.ConsumedAtGT))
+	}
+	if i.ConsumedAtGTE != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtGTE(*i.ConsumedAtGTE))
+	}
+	if i.ConsumedAtLT != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtLT(*i.ConsumedAtLT))
+	}
+	if i.ConsumedAtLTE != nil {
+		predicates = append(predicates, emailtoken.ConsumedAtLTE(*i.ConsumedAtLTE))
+	}
+	if i.ConsumedAtIsNil {
+		predicates = append(predicates, emailtoken.ConsumedAtIsNil())
+	}
+	if i.ConsumedAtNotNil {
+		predicates = append(predicates, emailtoken.ConsumedAtNotNil())
+	}
+	if i.UserID != nil {
+		predicates = append(predicates, emailtoken.UserIDEQ(*i.UserID))
+	}
+	if i.UserIDNEQ != nil {
+		predicates = append(predicates, emailtoken.UserIDNEQ(*i.UserIDNEQ))
+	}
+	if len(i.UserIDIn) > 0 {
+		predicates = append(predicates, emailtoken.UserIDIn(i.UserIDIn...))
+	}
+	if len(i.UserIDNotIn) > 0 {
+		predicates = append(predicates, emailtoken.UserIDNotIn(i.UserIDNotIn...))
+	}
+
+	if i.HasUser != nil {
+		p := emailtoken.HasUser()
+		if !*i.HasUser {
+			p = emailtoken.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUserWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasUserWith))
+		for _, w := range i.HasUserWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUserWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, emailtoken.HasUserWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyEmailTokenWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return emailtoken.And(predicates...), nil
 	}
 }
 
@@ -11464,6 +11845,10 @@ type UserWhereInput struct {
 	HasOidcIdentities     *bool                     `json:"hasOidcIdentities,omitempty"`
 	HasOidcIdentitiesWith []*OIDCIdentityWhereInput `json:"hasOidcIdentitiesWith,omitempty"`
 
+	// "email_tokens" edge predicates.
+	HasEmailTokens     *bool                   `json:"hasEmailTokens,omitempty"`
+	HasEmailTokensWith []*EmailTokenWhereInput `json:"hasEmailTokensWith,omitempty"`
+
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
 	HasProjectUsersWith []*UserProjectWhereInput `json:"hasProjectUsersWith,omitempty"`
@@ -12072,6 +12457,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasOidcIdentitiesWith(with...))
+	}
+	if i.HasEmailTokens != nil {
+		p := user.HasEmailTokens()
+		if !*i.HasEmailTokens {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasEmailTokensWith) > 0 {
+		with := make([]predicate.EmailToken, 0, len(i.HasEmailTokensWith))
+		for _, w := range i.HasEmailTokensWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasEmailTokensWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasEmailTokensWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()

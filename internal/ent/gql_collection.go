@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -1767,6 +1768,140 @@ func newDataStoragePaginateArgs(rv map[string]any) *datastoragePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*DataStorageWhereInput); ok {
 		args.opts = append(args.opts, WithDataStorageFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *EmailTokenQuery) CollectFields(ctx context.Context, satisfies ...string) (*EmailTokenQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *EmailTokenQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(emailtoken.Columns))
+		selectedFields = []string{emailtoken.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[emailtoken.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldUserID)
+				fieldSeen[emailtoken.FieldUserID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[emailtoken.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldCreatedAt)
+				fieldSeen[emailtoken.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[emailtoken.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldUpdatedAt)
+				fieldSeen[emailtoken.FieldUpdatedAt] = struct{}{}
+			}
+		case "token":
+			if _, ok := fieldSeen[emailtoken.FieldToken]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldToken)
+				fieldSeen[emailtoken.FieldToken] = struct{}{}
+			}
+		case "type":
+			if _, ok := fieldSeen[emailtoken.FieldType]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldType)
+				fieldSeen[emailtoken.FieldType] = struct{}{}
+			}
+		case "expiresAt":
+			if _, ok := fieldSeen[emailtoken.FieldExpiresAt]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldExpiresAt)
+				fieldSeen[emailtoken.FieldExpiresAt] = struct{}{}
+			}
+		case "consumedAt":
+			if _, ok := fieldSeen[emailtoken.FieldConsumedAt]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldConsumedAt)
+				fieldSeen[emailtoken.FieldConsumedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[emailtoken.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldUserID)
+				fieldSeen[emailtoken.FieldUserID] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type emailtokenPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []EmailTokenPaginateOption
+}
+
+func newEmailTokenPaginateArgs(rv map[string]any) *emailtokenPaginateArgs {
+	args := &emailtokenPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &EmailTokenOrder{Field: &EmailTokenOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithEmailTokenOrder(order))
+			}
+		case *EmailTokenOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithEmailTokenOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*EmailTokenWhereInput); ok {
+		args.opts = append(args.opts, WithEmailTokenFilter(v.Filter))
 	}
 	return args
 }
@@ -6083,6 +6218,19 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "emailTokens":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&EmailTokenClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, emailtokenImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedEmailTokens(alias, func(wq *EmailTokenQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -6126,10 +6274,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})
@@ -6137,10 +6285,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[10] == nil {
-								nodes[i].Edges.totalCount[10] = make(map[string]int)
+							if nodes[i].Edges.totalCount[11] == nil {
+								nodes[i].Edges.totalCount[11] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[10][alias] = n
+							nodes[i].Edges.totalCount[11][alias] = n
 						}
 						return nil
 					})
@@ -6215,10 +6363,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[12][alias] = n
 						}
 						return nil
 					})
@@ -6226,10 +6374,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[12][alias] = n
 						}
 						return nil
 					})
