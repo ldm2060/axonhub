@@ -1,0 +1,8 @@
+Registration Not Approved - {{.BrandName}}
+
+Hello {{.RecipientName}},
+
+We're sorry to inform you that your registration request for {{.BrandName}} has not been approved by an administrator. If you believe this is a mistake, please contact your system administrator.
+
+---
+This email was sent by {{.BrandName}}.

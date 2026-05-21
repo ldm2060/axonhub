@@ -1,0 +1,10 @@
+Your Account Has Been Approved - {{.BrandName}}
+
+Hello {{.RecipientName}},
+
+Great news! Your account has been approved by an administrator. You can now sign in and start using {{.BrandName}}.
+
+Sign in here: {{.ActionURL}}
+
+---
+This email was sent by {{.BrandName}}.

@@ -1,0 +1,12 @@
+Verify Your Email - {{.BrandName}}
+
+Hello {{.RecipientName}},
+
+Thank you for signing up. Please verify your email address by clicking the link below:
+
+{{.ActionURL}}
+
+If you did not create an account, you can safely ignore this email.
+
+---
+This email was sent by {{.BrandName}}.

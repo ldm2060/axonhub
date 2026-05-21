@@ -1,0 +1,14 @@
+New User Requires Approval - {{.BrandName}}
+
+Hello {{.RecipientName}},
+
+A new user has registered and requires your approval:
+
+User: {{.Extra}}
+
+Please review and approve or reject this registration:
+
+{{.ActionURL}}
+
+---
+This email was sent by {{.BrandName}}.
