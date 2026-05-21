@@ -571,6 +571,12 @@ models:
   UpdateSystemModelSettingsInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.SystemModelSettings
+  DeveloperModelSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.DeveloperModelSettings
+  DeveloperModelSettingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.DeveloperModelSettings
   SystemChannelSettings:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.SystemChannelSettings

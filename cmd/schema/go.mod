@@ -126,6 +126,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible // indirect
 	github.com/kaptinlin/jsonrepair v0.2.4 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/ldm2060/afero-s3 v0.1.0 // indirect
 	github.com/ldm2060/afero-webdav v0.0.0-20260128073818-3f60e732e991 // indirect

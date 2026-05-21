@@ -9,6 +9,7 @@ require (
 	github.com/google/jsonschema-go v0.3.1-0.20251120200837-98a387e3b975
 	github.com/google/uuid v1.6.0
 	github.com/kaptinlin/jsonrepair v0.2.4
+	github.com/klauspost/compress v1.17.9
 	github.com/samber/lo v1.52.0
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1

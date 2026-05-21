@@ -19,7 +19,7 @@ export function ModelsDialogs() {
       {open === 'batchCreate' && <ModelsBatchCreateDialog />}
       {open === 'delete' && <ModelsDeleteDialog />}
       {open === 'archive' && <ModelsArchiveDialog />}
-      {open === 'association' && <ModelsAssociationDialog />}
+      {(open === 'association' || open === 'developerAssociation') && <ModelsAssociationDialog />}
       {open === 'settings' && <ModelSettingsDialog />}
       {open === 'unassociated' && <ModelsUnassociatedDialog />}
       {open === 'share' && currentRow && (
