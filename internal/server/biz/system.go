@@ -112,7 +112,33 @@ const (
 
 	// SystemKeySignUpApprovalRequired controls whether new sign-ups require admin approval.
 	SystemKeySignUpApprovalRequired = "sign_up_approval_required"
+
+	// SystemKeyRegistrationSettings is the key used to store consolidated registration settings.
+	// The value is JSON-encoded RegistrationSettings struct.
+	SystemKeyRegistrationSettings = "registration_settings"
+
+	// SystemKeyEmailSettings is the key used to store email/SMTP settings.
+	// The value is JSON-encoded EmailSettings struct.
+	SystemKeyEmailSettings = "email_settings"
 )
+
+// RegistrationSettings represents consolidated registration configuration settings.
+type RegistrationSettings struct {
+	AllowSignUp       bool     `json:"allow_sign_up"`
+	ApprovalRequired  bool     `json:"approval_required"`
+	DefaultUserScopes []string `json:"default_user_scopes"`
+}
+
+// EmailSettings represents email/SMTP configuration settings.
+type EmailSettings struct {
+	SMTPHost     string `json:"smtp_host"`
+	SMTPPort     int    `json:"smtp_port"`
+	SMTPUser     string `json:"smtp_user"`
+	SMTPPassword string `json:"smtp_password"`
+	Encryption   string `json:"encryption"` // "ssl" | "starttls" | "none"
+	FromName     string `json:"from_name"`
+	FromAddress  string `json:"from_address"`
+}
 
 // SystemGeneralSettings represents general system configuration settings.
 type SystemGeneralSettings struct {
@@ -1511,4 +1537,91 @@ func (s *SystemService) UpdateAutoBackupLastRun(ctx context.Context, lastError s
 	settings.LastBackupError = lastError
 
 	return s.SetAutoBackupSettings(ctx, *settings)
+}
+
+// RegistrationSettings retrieves the consolidated registration settings.
+// If the key is not found, it attempts to migrate from the old separate keys
+// (allow_sign_up and sign_up_approval_required) and persists the consolidated form.
+func (s *SystemService) RegistrationSettings(ctx context.Context) (*RegistrationSettings, error) {
+	value, err := s.getSystemValue(ctx, SystemKeyRegistrationSettings)
+	if err != nil && !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to get registration settings: %w", err)
+	}
+
+	if ent.IsNotFound(err) || value == "" {
+		// Migrate from old separate keys.
+		allowSignUp := false
+		if v, err := s.getSystemValue(ctx, SystemKeyAllowSignUp); err == nil {
+			allowSignUp = v == "true"
+		}
+
+		approvalRequired := false
+		if v, err := s.getSystemValue(ctx, SystemKeySignUpApprovalRequired); err == nil {
+			approvalRequired = v == "true"
+		}
+
+		settings := &RegistrationSettings{
+			AllowSignUp:       allowSignUp,
+			ApprovalRequired:  approvalRequired,
+			DefaultUserScopes: DefaultUserScopes,
+		}
+
+		// Persist the consolidated key for future reads.
+		if err := s.SetRegistrationSettings(ctx, settings); err != nil {
+			log.Warn(ctx, "failed to persist migrated registration settings", log.Cause(err))
+		}
+
+		return settings, nil
+	}
+
+	var settings RegistrationSettings
+	if err := json.Unmarshal([]byte(value), &settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal registration settings: %w", err)
+	}
+
+	if settings.DefaultUserScopes == nil {
+		settings.DefaultUserScopes = DefaultUserScopes
+	}
+
+	return &settings, nil
+}
+
+// SetRegistrationSettings sets the consolidated registration settings.
+func (s *SystemService) SetRegistrationSettings(ctx context.Context, settings *RegistrationSettings) error {
+	jsonBytes, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal registration settings: %w", err)
+	}
+
+	return s.setSystemValue(ctx, SystemKeyRegistrationSettings, string(jsonBytes))
+}
+
+// EmailSettings retrieves the email/SMTP settings configuration.
+// Returns an empty struct if not found.
+func (s *SystemService) EmailSettings(ctx context.Context) (*EmailSettings, error) {
+	value, err := s.getSystemValue(ctx, SystemKeyEmailSettings)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return &EmailSettings{}, nil
+		}
+
+		return nil, fmt.Errorf("failed to get email settings: %w", err)
+	}
+
+	var settings EmailSettings
+	if err := json.Unmarshal([]byte(value), &settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal email settings: %w", err)
+	}
+
+	return &settings, nil
+}
+
+// SetEmailSettings sets the email/SMTP settings configuration.
+func (s *SystemService) SetEmailSettings(ctx context.Context, settings *EmailSettings) error {
+	jsonBytes, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal email settings: %w", err)
+	}
+
+	return s.setSystemValue(ctx, SystemKeyEmailSettings, string(jsonBytes))
 }
