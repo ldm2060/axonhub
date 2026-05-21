@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/samber/lo"
 	"go.uber.org/fx"
@@ -27,6 +28,8 @@ type UserServiceParams struct {
 	CacheConfig    xcache.Config
 	Ent            *ent.Client
 	ProjectService *ProjectService `optional:"true"`
+	EmailService   *EmailService   `optional:"true"`
+	SystemService  *SystemService  `optional:"true"`
 }
 
 type UserService struct {
@@ -35,6 +38,8 @@ type UserService struct {
 	UserCache           xcache.Cache[ent.User]
 	permissionValidator *PermissionValidator
 	projectService      *ProjectService
+	emailService        *EmailService
+	systemService       *SystemService
 }
 
 func NewUserService(params UserServiceParams) *UserService {
@@ -45,6 +50,8 @@ func NewUserService(params UserServiceParams) *UserService {
 		UserCache:           xcache.NewFromConfig[ent.User](params.CacheConfig),
 		permissionValidator: NewPermissionValidator(),
 		projectService:      params.ProjectService,
+		emailService:        params.EmailService,
+		systemService:       params.SystemService,
 	}
 }
 
@@ -597,4 +604,120 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 
 		return nil
 	})
+}
+
+// ApproveUser approves a pending user, activates their account, and sends an approval email.
+func (s *UserService) ApproveUser(ctx context.Context, userID int) error {
+	u, err := s.entFromContext(ctx).User.Get(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("get user: %w", err)
+	}
+	if u.Status != user.StatusPending {
+		return fmt.Errorf("user is not pending approval")
+	}
+
+	rs, err := s.systemService.RegistrationSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("get registration settings: %w", err)
+	}
+
+	_, err = s.entFromContext(ctx).User.UpdateOneID(userID).
+		SetStatus(user.StatusActivated).
+		SetScopes(rs.DefaultUserScopes).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("approve user: %w", err)
+	}
+
+	// Send approval email (best effort, don't fail on error)
+	if s.emailService != nil {
+		signInURL := "/sign-in"
+		_ = s.emailService.SendApprovedEmail(ctx, u.Email, u.FirstName+" "+u.LastName, signInURL)
+	}
+
+	s.invalidateUserCache(ctx, userID)
+	return nil
+}
+
+// RejectUser rejects a pending user, sends a rejection email, and deletes the user record.
+func (s *UserService) RejectUser(ctx context.Context, userID int) error {
+	u, err := s.entFromContext(ctx).User.Get(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("get user: %w", err)
+	}
+	if u.Status != user.StatusPending {
+		return fmt.Errorf("user is not pending approval")
+	}
+
+	// Send rejection email (best effort, don't fail on error)
+	if s.emailService != nil {
+		_ = s.emailService.SendRejectedEmail(ctx, u.Email, u.FirstName+" "+u.LastName)
+	}
+
+	err = s.entFromContext(ctx).User.DeleteOneID(userID).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+
+	s.invalidateUserCache(ctx, userID)
+	return nil
+}
+
+// MarkEmailVerified sets the email_verified_at timestamp for a user.
+func (s *UserService) MarkEmailVerified(ctx context.Context, userID int) error {
+	_, err := s.entFromContext(ctx).User.UpdateOneID(userID).
+		SetEmailVerifiedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("mark email verified: %w", err)
+	}
+	s.invalidateUserCache(ctx, userID)
+	return nil
+}
+
+// ActivateUser activates a pending user with default scopes from registration settings.
+func (s *UserService) ActivateUser(ctx context.Context, userID int) error {
+	rs, err := s.systemService.RegistrationSettings(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = s.entFromContext(ctx).User.UpdateOneID(userID).
+		SetStatus(user.StatusActivated).
+		SetScopes(rs.DefaultUserScopes).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("activate user: %w", err)
+	}
+	s.invalidateUserCache(ctx, userID)
+	return nil
+}
+
+// GetByEmail finds a user by their email address.
+func (s *UserService) GetByEmail(ctx context.Context, email string) (*ent.User, error) {
+	return s.entFromContext(ctx).User.Query().
+		Where(user.EmailEQ(email)).
+		Only(ctx)
+}
+
+// ResetPassword updates a user's password to a new hashed value.
+func (s *UserService) ResetPassword(ctx context.Context, userID int, newPassword string) error {
+	hashed, err := HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	_, err = s.entFromContext(ctx).User.UpdateOneID(userID).
+		SetPassword(hashed).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("reset password: %w", err)
+	}
+	s.invalidateUserCache(ctx, userID)
+	return nil
+}
+
+// ListOwners returns all activated users who are owners.
+func (s *UserService) ListOwners(ctx context.Context) ([]*ent.User, error) {
+	return s.entFromContext(ctx).User.Query().
+		Where(user.IsOwner(true), user.StatusEQ(user.StatusActivated)).
+		All(ctx)
 }

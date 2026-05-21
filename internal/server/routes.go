@@ -37,6 +37,7 @@ type Handlers struct {
 	OIDC           *api.OIDCHandlers
 	RequestPreview *api.RequestPreviewHandlers
 	SignUp         *api.SignUpHandlers
+	EmailToken     *api.EmailTokenAPI
 }
 
 type Services struct {
@@ -88,6 +89,10 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
 		unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
 		unSecureAdminGroup.GET("/auth/signup/allowed", handlers.SignUp.AllowSignUp)
+		unSecureAdminGroup.GET("/auth/verify-email", handlers.EmailToken.VerifyEmail)
+		unSecureAdminGroup.POST("/auth/resend-verification", handlers.EmailToken.ResendVerification)
+		unSecureAdminGroup.POST("/auth/forgot-password", handlers.EmailToken.ForgotPassword)
+		unSecureAdminGroup.POST("/auth/reset-password", handlers.EmailToken.ResetPassword)
 	}
 
 	oauthGroup := server.Group("/oauth", middleware.WithTimeout(server.Config.RequestTimeout))
