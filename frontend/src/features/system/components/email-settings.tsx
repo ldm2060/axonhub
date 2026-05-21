@@ -22,7 +22,7 @@ export function EmailSettingsTab() {
     smtpPort: 587,
     smtpUser: '',
     smtpPassword: '',
-    encryption: 'STARTTLS',
+    encryption: 'starttls',
     fromName: '',
     fromAddress: '',
   });
@@ -36,8 +36,8 @@ export function EmailSettingsTab() {
         smtpHost: settings.smtpHost || '',
         smtpPort: settings.smtpPort || 587,
         smtpUser: settings.smtpUser || '',
-        smtpPassword: settings.smtpPassword ? '********' : '',
-        encryption: settings.encryption || 'STARTTLS',
+        smtpPassword: settings.smtpPassword || '',
+        encryption: settings.encryption || 'starttls',
         fromName: settings.fromName || '',
         fromAddress: settings.fromAddress || '',
       });
@@ -58,7 +58,7 @@ export function EmailSettingsTab() {
       formData.smtpPort !== (settings.smtpPort || 587) ||
       formData.smtpUser !== (settings.smtpUser || '') ||
       passwordChanged ||
-      formData.encryption !== (settings.encryption || 'STARTTLS') ||
+      formData.encryption !== (settings.encryption || 'starttls') ||
       formData.fromName !== (settings.fromName || '') ||
       formData.fromAddress !== (settings.fromAddress || '')
     : false;
@@ -71,7 +71,7 @@ export function EmailSettingsTab() {
       encryption: formData.encryption,
       fromName: formData.fromName,
       fromAddress: formData.fromAddress,
-      smtpPassword: passwordChanged ? formData.smtpPassword : (settings?.smtpPassword || ''),
+      smtpPassword: formData.smtpPassword,
     };
 
     const result = await updateSettings.mutateAsync(input as any);
@@ -172,15 +172,15 @@ export function EmailSettingsTab() {
               className='flex gap-6'
             >
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='SSL_TLS' id='encryption-ssl' />
+                <RadioGroupItem value='ssl' id='encryption-ssl' />
                 <Label htmlFor='encryption-ssl' className='cursor-pointer font-normal'>{t('system.email.encryption.options.sslTls')}</Label>
               </div>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='STARTTLS' id='encryption-starttls' />
+                <RadioGroupItem value='starttls' id='encryption-starttls' />
                 <Label htmlFor='encryption-starttls' className='cursor-pointer font-normal'>{t('system.email.encryption.options.starttls')}</Label>
               </div>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='NONE' id='encryption-none' />
+                <RadioGroupItem value='none' id='encryption-none' />
                 <Label htmlFor='encryption-none' className='cursor-pointer font-normal'>{t('system.email.encryption.options.none')}</Label>
               </div>
             </RadioGroup>

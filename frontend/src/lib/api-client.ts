@@ -151,9 +151,8 @@ export const authApi = {
     first_name: string;
     last_name: string;
   }): Promise<{
-    user?: AuthUser;
-    token?: string;
-    pending?: boolean;
+    message: string;
+    pending: boolean;
   }> =>
     apiRequest('/admin/auth/signup', {
       method: 'POST',
@@ -195,19 +194,19 @@ export const authApi = {
       body: { code },
     }),
 
-  forgotPassword: (email: string): Promise<{ success: boolean }> =>
+  forgotPassword: (email: string): Promise<{ message: string }> =>
     apiRequest('/admin/auth/forgot-password', {
       method: 'POST',
       body: { email },
     }),
 
-  resetPassword: (token: string, password: string): Promise<{ success: boolean }> =>
+  resetPassword: (token: string, password: string): Promise<{ message: string }> =>
     apiRequest('/admin/auth/reset-password', {
       method: 'POST',
       body: { token, password },
     }),
 
-  resendVerification: (email: string): Promise<{ success: boolean }> =>
+  resendVerification: (email: string): Promise<{ message: string }> =>
     apiRequest('/admin/auth/resend-verification', {
       method: 'POST',
       body: { email },

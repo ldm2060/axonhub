@@ -165,7 +165,7 @@ func (h *EmailTokenAPI) ResendVerification(c *gin.Context) {
 	}
 
 	// Send verification email
-	verifyURL := fmt.Sprintf("/auth/verify-email?token=%s", token)
+	verifyURL := fmt.Sprintf("/admin/auth/verify-email?token=%s", token)
 	userName := u.FirstName
 	if userName == "" {
 		userName = u.Email
@@ -217,7 +217,7 @@ func (h *EmailTokenAPI) ForgotPassword(c *gin.Context) {
 	}
 
 	// Send reset email
-	resetURL := fmt.Sprintf("/auth/reset-password?token=%s", token)
+	resetURL := fmt.Sprintf("/reset-password?token=%s", token)
 	userName := u.FirstName
 	if userName == "" {
 		userName = u.Email
