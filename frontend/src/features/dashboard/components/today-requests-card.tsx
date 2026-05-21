@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDashboardStats } from '../data/dashboard';
-import { useDashboardMode } from '../context';
+import { useDashboardStats, type DashboardMode } from '../data/dashboard';
 
-export function TodayRequestsCard() {
+interface TodayRequestsCardProps {
+  mode: DashboardMode;
+}
+
+export function TodayRequestsCard({ mode }: TodayRequestsCardProps) {
   const { t } = useTranslation();
-  const mode = useDashboardMode();
   const { data: stats, isLoading, error } = useDashboardStats(mode);
 
   if (isLoading) {

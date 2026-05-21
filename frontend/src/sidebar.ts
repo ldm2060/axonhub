@@ -12,6 +12,8 @@ import {
   IconNote,
   IconShare,
   IconSend,
+  IconUsers,
+  IconUsersGroup,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +94,16 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.dataStorages'),
           url: '/admin/data-storages',
           icon: IconDatabase,
+        } as NavLink,
+        {
+          title: t('sidebar.items.users'),
+          url: '/admin/users',
+          icon: IconUsers,
+        } as NavLink,
+        {
+          title: t('sidebar.items.roles'),
+          url: '/admin/roles',
+          icon: IconUsersGroup,
         } as NavLink,
       ],
     },

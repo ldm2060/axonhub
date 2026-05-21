@@ -17,16 +17,16 @@ import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
+import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authInitializationRouteImport } from './routes/(auth)/initialization'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedSharedIndexRouteImport } from './routes/_authenticated/shared/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedRolesIndexRouteImport } from './routes/_authenticated/roles/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
 import { Route as AuthenticatedMyModelsIndexRouteImport } from './routes/_authenticated/my-models/index'
@@ -49,7 +49,9 @@ import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/
 import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
 import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
+import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
 import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
 import { Route as AuthenticatedAdminPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/admin/prompt-protection-rules/index'
 import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
@@ -99,6 +101,11 @@ const errors401Route = errors401RouteImport.update({
   path: '/401',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
+  id: '/(auth)/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authSignUpRoute = authSignUpRouteImport.update({
   id: '/(auth)/sign-up',
   path: '/sign-up',
@@ -107,6 +114,11 @@ const authSignUpRoute = authSignUpRouteImport.update({
 const authSignInRoute = authSignInRouteImport.update({
   id: '/(auth)/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authResetPasswordRoute = authResetPasswordRouteImport.update({
+  id: '/(auth)/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authInitializationRoute = authInitializationRouteImport.update({
@@ -130,11 +142,6 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSharedIndexRoute =
   AuthenticatedSharedIndexRouteImport.update({
     id: '/shared/',
@@ -147,11 +154,6 @@ const AuthenticatedSettingsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedRolesIndexRoute = AuthenticatedRolesIndexRouteImport.update({
-  id: '/roles/',
-  path: '/roles/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedProjectsIndexRoute =
   AuthenticatedProjectsIndexRouteImport.update({
     id: '/projects/',
@@ -281,10 +283,22 @@ const AuthenticatedProjectApiKeysIndexRoute =
     path: '/project/api-keys/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSystemIndexRoute =
   AuthenticatedAdminSystemIndexRouteImport.update({
     id: '/system/',
     path: '/system/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRolesIndexRoute =
+  AuthenticatedAdminRolesIndexRouteImport.update({
+    id: '/roles/',
+    path: '/roles/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminPublishRequestsIndexRoute =
@@ -348,8 +362,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/initialization': typeof authInitializationRoute
+  '/reset-password': typeof authResetPasswordRoute
   '/sign-in': typeof authSignInRoute
   '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
@@ -370,10 +386,8 @@ export interface FileRoutesByFullPath {
   '/my-models/': typeof AuthenticatedMyModelsIndexRoute
   '/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
-  '/roles/': typeof AuthenticatedRolesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/shared/': typeof AuthenticatedSharedIndexRoute
-  '/users/': typeof AuthenticatedUsersIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -383,7 +397,9 @@ export interface FileRoutesByFullPath {
   '/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
   '/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -396,8 +412,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/initialization': typeof authInitializationRoute
+  '/reset-password': typeof authResetPasswordRoute
   '/sign-in': typeof authSignInRoute
   '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
@@ -419,10 +437,8 @@ export interface FileRoutesByTo {
   '/my-models': typeof AuthenticatedMyModelsIndexRoute
   '/permission-demo': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
-  '/roles': typeof AuthenticatedRolesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/shared': typeof AuthenticatedSharedIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -432,7 +448,9 @@ export interface FileRoutesByTo {
   '/admin/models': typeof AuthenticatedAdminModelsIndexRoute
   '/admin/prompt-protection-rules': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/admin/roles': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system': typeof AuthenticatedAdminSystemIndexRoute
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/playground': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
@@ -449,8 +467,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/initialization': typeof authInitializationRoute
+  '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/sign-up': typeof authSignUpRoute
+  '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(errors)/401': typeof errors401Route
   '/(errors)/403': typeof errors403Route
   '/(errors)/404': typeof errors404Route
@@ -472,10 +492,8 @@ export interface FileRoutesById {
   '/_authenticated/my-models/': typeof AuthenticatedMyModelsIndexRoute
   '/_authenticated/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
-  '/_authenticated/roles/': typeof AuthenticatedRolesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/shared/': typeof AuthenticatedSharedIndexRoute
-  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -485,7 +503,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
   '/_authenticated/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/_authenticated/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/_authenticated/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/_authenticated/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/_authenticated/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -503,8 +523,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/forgot-password'
     | '/initialization'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-email'
     | '/401'
     | '/403'
     | '/404'
@@ -525,10 +547,8 @@ export interface FileRouteTypes {
     | '/my-models/'
     | '/permission-demo/'
     | '/projects/'
-    | '/roles/'
     | '/settings/'
     | '/shared/'
-    | '/users/'
     | '/admin/dashboard/channel-success-rates'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -538,7 +558,9 @@ export interface FileRouteTypes {
     | '/admin/models/'
     | '/admin/prompt-protection-rules/'
     | '/admin/publish-requests/'
+    | '/admin/roles/'
     | '/admin/system/'
+    | '/admin/users/'
     | '/project/api-keys/'
     | '/project/playground/'
     | '/project/prompts/'
@@ -551,8 +573,10 @@ export interface FileRouteTypes {
   to:
     | '/forgot-password'
     | '/initialization'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-email'
     | '/401'
     | '/403'
     | '/404'
@@ -574,10 +598,8 @@ export interface FileRouteTypes {
     | '/my-models'
     | '/permission-demo'
     | '/projects'
-    | '/roles'
     | '/settings'
     | '/shared'
-    | '/users'
     | '/admin/dashboard/channel-success-rates'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -587,7 +609,9 @@ export interface FileRouteTypes {
     | '/admin/models'
     | '/admin/prompt-protection-rules'
     | '/admin/publish-requests'
+    | '/admin/roles'
     | '/admin/system'
+    | '/admin/users'
     | '/project/api-keys'
     | '/project/playground'
     | '/project/prompts'
@@ -603,8 +627,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/initialization'
+    | '/(auth)/reset-password'
     | '/(auth)/sign-in'
     | '/(auth)/sign-up'
+    | '/(auth)/verify-email'
     | '/(errors)/401'
     | '/(errors)/403'
     | '/(errors)/404'
@@ -626,10 +652,8 @@ export interface FileRouteTypes {
     | '/_authenticated/my-models/'
     | '/_authenticated/permission-demo/'
     | '/_authenticated/projects/'
-    | '/_authenticated/roles/'
     | '/_authenticated/settings/'
     | '/_authenticated/shared/'
-    | '/_authenticated/users/'
     | '/_authenticated/admin/dashboard/channel-success-rates'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
@@ -639,7 +663,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/models/'
     | '/_authenticated/admin/prompt-protection-rules/'
     | '/_authenticated/admin/publish-requests/'
+    | '/_authenticated/admin/roles/'
     | '/_authenticated/admin/system/'
+    | '/_authenticated/admin/users/'
     | '/_authenticated/project/api-keys/'
     | '/_authenticated/project/playground/'
     | '/_authenticated/project/prompts/'
@@ -654,8 +680,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authInitializationRoute: typeof authInitializationRoute
+  authResetPasswordRoute: typeof authResetPasswordRoute
   authSignInRoute: typeof authSignInRoute
   authSignUpRoute: typeof authSignUpRoute
+  authVerifyEmailRoute: typeof authVerifyEmailRoute
   errors401Route: typeof errors401Route
   errors403Route: typeof errors403Route
   errors404Route: typeof errors404Route
@@ -722,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof errors401RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/verify-email': {
+      id: '/(auth)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/sign-up': {
       id: '/(auth)/sign-up'
       path: '/sign-up'
@@ -734,6 +769,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof authSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/reset-password': {
+      id: '/(auth)/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof authResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/initialization': {
@@ -764,13 +806,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/users/': {
-      id: '/_authenticated/users/'
-      path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/shared/': {
       id: '/_authenticated/shared/'
       path: '/shared'
@@ -784,13 +819,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/roles/': {
-      id: '/_authenticated/roles/'
-      path: '/roles'
-      fullPath: '/roles/'
-      preLoaderRoute: typeof AuthenticatedRolesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projects/': {
       id: '/_authenticated/projects/'
@@ -946,11 +974,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectApiKeysIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/system/': {
       id: '/_authenticated/admin/system/'
       path: '/system'
       fullPath: '/admin/system/'
       preLoaderRoute: typeof AuthenticatedAdminSystemIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/roles/': {
+      id: '/_authenticated/admin/roles/'
+      path: '/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AuthenticatedAdminRolesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/publish-requests/': {
@@ -1027,7 +1069,9 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminModelsIndexRoute: typeof AuthenticatedAdminModelsIndexRoute
   AuthenticatedAdminPromptProtectionRulesIndexRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   AuthenticatedAdminPublishRequestsIndexRoute: typeof AuthenticatedAdminPublishRequestsIndexRoute
+  AuthenticatedAdminRolesIndexRoute: typeof AuthenticatedAdminRolesIndexRoute
   AuthenticatedAdminSystemIndexRoute: typeof AuthenticatedAdminSystemIndexRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
@@ -1043,7 +1087,9 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
       AuthenticatedAdminPromptProtectionRulesIndexRoute,
     AuthenticatedAdminPublishRequestsIndexRoute:
       AuthenticatedAdminPublishRequestsIndexRoute,
+    AuthenticatedAdminRolesIndexRoute: AuthenticatedAdminRolesIndexRoute,
     AuthenticatedAdminSystemIndexRoute: AuthenticatedAdminSystemIndexRoute,
+    AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
@@ -1087,9 +1133,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyModelsIndexRoute: typeof AuthenticatedMyModelsIndexRoute
   AuthenticatedPermissionDemoIndexRoute: typeof AuthenticatedPermissionDemoIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
-  AuthenticatedRolesIndexRoute: typeof AuthenticatedRolesIndexRoute
   AuthenticatedSharedIndexRoute: typeof AuthenticatedSharedIndexRoute
-  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
   AuthenticatedProjectTracesTraceIdRoute: typeof AuthenticatedProjectTracesTraceIdRoute
@@ -1116,9 +1160,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyModelsIndexRoute: AuthenticatedMyModelsIndexRoute,
   AuthenticatedPermissionDemoIndexRoute: AuthenticatedPermissionDemoIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
-  AuthenticatedRolesIndexRoute: AuthenticatedRolesIndexRoute,
   AuthenticatedSharedIndexRoute: AuthenticatedSharedIndexRoute,
-  AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
     AuthenticatedProjectRequestsRequestIdRoute,
   AuthenticatedProjectThreadsThreadIdRoute:
@@ -1144,8 +1186,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authInitializationRoute: authInitializationRoute,
+  authResetPasswordRoute: authResetPasswordRoute,
   authSignInRoute: authSignInRoute,
   authSignUpRoute: authSignUpRoute,
+  authVerifyEmailRoute: authVerifyEmailRoute,
   errors401Route: errors401Route,
   errors403Route: errors403Route,
   errors404Route: errors404Route,

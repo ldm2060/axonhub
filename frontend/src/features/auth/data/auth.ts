@@ -124,29 +124,9 @@ export function useSignUpAllowed() {
 }
 
 export function useSignUp() {
-  const { setUser, setAccessToken } = useAuthStore((state) => state.auth);
-  const router = useRouter();
-
   return useMutation({
     mutationFn: async (input: SignUpInput) => {
       return await authApi.signUp(input);
-    },
-    onSuccess: (data) => {
-      setTokenToStorage(data.token);
-
-      const userLanguage = data.user.preferLanguage || 'en';
-
-      setAccessToken(data.token);
-      setUser(data.user);
-
-      if (userLanguage !== i18n.language) {
-        i18n.changeLanguage(userLanguage);
-      }
-
-      toast.success(i18n.t('auth.signUp.success'));
-
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
-      router.navigate({ to: redirectPath });
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to sign up';

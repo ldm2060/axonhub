@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDashboardStats } from '../data/dashboard';
-import { useDashboardMode } from '../context';
+import { useDashboardStats, type DashboardMode } from '../data/dashboard';
 
-export function TotalRequestsCard() {
+interface TotalRequestsCardProps {
+  mode: DashboardMode;
+}
+
+export function TotalRequestsCard({ mode }: TotalRequestsCardProps) {
   const { t } = useTranslation();
-  const mode = useDashboardMode();
   const { data: stats, isLoading, error } = useDashboardStats(mode);
 
   const calculateGrowth = (current: number, previous: number): { percentage: number; isPositive: boolean } => {

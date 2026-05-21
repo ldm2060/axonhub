@@ -10,6 +10,6 @@ function ProtectedUsers() {
   );
 }
 
-export const Route = createFileRoute('/_authenticated/users/')({
+export const Route = createFileRoute('/_authenticated/admin/users/')({
   component: ProtectedUsers,
 });

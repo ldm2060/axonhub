@@ -4,12 +4,14 @@ import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDashboardStats } from '../data/dashboard';
-import { useDashboardMode } from '../context';
+import { useDashboardStats, type DashboardMode } from '../data/dashboard';
 
-export function SuccessRateCard() {
+interface SuccessRateCardProps {
+  mode: DashboardMode;
+}
+
+export function SuccessRateCard({ mode }: SuccessRateCardProps) {
   const { t } = useTranslation();
-  const mode = useDashboardMode();
   const { data: stats, isLoading, error } = useDashboardStats(mode);
 
   if (isLoading) {

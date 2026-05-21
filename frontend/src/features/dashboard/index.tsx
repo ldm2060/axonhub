@@ -1,10 +1,9 @@
-import { useState, useMemo, useContext } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import { BarChart3, Brain, Key, Zap, User, Folder } from 'lucide-react';
+import { BarChart3, Brain, Key, Zap } from 'lucide-react';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/header';
 import { formatNumber } from '@/utils/format-number';
 import { TimePeriodSelector, type TimePeriod } from '@/components/time-period-selector';
@@ -26,14 +25,15 @@ import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { CollapsibleSection } from './components/collapsible-section';
 import { ReviewQueue } from './components/review-queue';
-import { useDashboardStats } from './data/dashboard';
-import { DashboardModeContext, type DashboardMode } from './context';
+import { useDashboardStats, type DashboardMode } from './data/dashboard';
 
-export default function DashboardPage() {
+interface DashboardPageProps {
+  mode: DashboardMode;
+}
+
+export default function DashboardPage({ mode }: DashboardPageProps) {
   const { t } = useTranslation();
-  const initialMode = useContext(DashboardModeContext);
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(initialMode);
-  const { isLoading, error } = useDashboardStats(dashboardMode);
+  const { isLoading, error } = useDashboardStats(mode);
   const [modelTotalRequests, setModelTotalRequests] = useState(0);
   const [channelTotalRequests, setChannelTotalRequests] = useState(0);
 
@@ -85,81 +85,39 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardModeContext.Provider value={dashboardMode}>
-      <div className='flex-1 space-y-6 p-8 pt-6'>
-        <Header />
+    <div className='flex-1 space-y-6 p-8 pt-6'>
+      <Header />
 
-        {/* Dashboard view toggle */}
-        <Tabs
-          value={dashboardMode}
-          onValueChange={(value) => setDashboardMode(value as DashboardMode)}
-        >
-          <TabsList>
-            <TabsTrigger value='project' className='gap-1.5'>
-              <Folder className='h-3.5 w-3.5' />
-              {t('dashboard.project')}
-            </TabsTrigger>
-            <TabsTrigger value='personal' className='gap-1.5'>
-              <User className='h-3.5 w-3.5' />
-              {t('dashboard.personal')}
-            </TabsTrigger>
-          </TabsList>
+      <DashboardContent
+        mode={mode}
+        modelPerformanceDescription={modelPerformanceDescription}
+        channelPerformanceDescription={channelPerformanceDescription}
+        channelTimePeriod={channelTimePeriod}
+        setChannelTimePeriod={setChannelTimePeriod}
+        channelTokensTimePeriod={channelTokensTimePeriod}
+        setChannelTokensTimePeriod={setChannelTokensTimePeriod}
+        modelTimePeriod={modelTimePeriod}
+        setModelTimePeriod={setModelTimePeriod}
+        modelTokensTimePeriod={modelTokensTimePeriod}
+        setModelTokensTimePeriod={setModelTokensTimePeriod}
+        apiKeyTimePeriod={apiKeyTimePeriod}
+        setApiKeyTimePeriod={setApiKeyTimePeriod}
+        apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
+        setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
+        modelTotalRequests={modelTotalRequests}
+        setModelTotalRequests={setModelTotalRequests}
+        channelTotalRequests={channelTotalRequests}
+        setChannelTotalRequests={setChannelTotalRequests}
+      />
 
-          <TabsContent value='project'>
-            <DashboardContent
-              modelPerformanceDescription={modelPerformanceDescription}
-              channelPerformanceDescription={channelPerformanceDescription}
-              channelTimePeriod={channelTimePeriod}
-              setChannelTimePeriod={setChannelTimePeriod}
-              channelTokensTimePeriod={channelTokensTimePeriod}
-              setChannelTokensTimePeriod={setChannelTokensTimePeriod}
-              modelTimePeriod={modelTimePeriod}
-              setModelTimePeriod={setModelTimePeriod}
-              modelTokensTimePeriod={modelTokensTimePeriod}
-              setModelTokensTimePeriod={setModelTokensTimePeriod}
-              apiKeyTimePeriod={apiKeyTimePeriod}
-              setApiKeyTimePeriod={setApiKeyTimePeriod}
-              apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
-              setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
-              modelTotalRequests={modelTotalRequests}
-              setModelTotalRequests={setModelTotalRequests}
-              channelTotalRequests={channelTotalRequests}
-              setChannelTotalRequests={setChannelTotalRequests}
-            />
-          </TabsContent>
-
-          <TabsContent value='personal'>
-            <DashboardContent
-              modelPerformanceDescription={modelPerformanceDescription}
-              channelPerformanceDescription={channelPerformanceDescription}
-              channelTimePeriod={channelTimePeriod}
-              setChannelTimePeriod={setChannelTimePeriod}
-              channelTokensTimePeriod={channelTokensTimePeriod}
-              setChannelTokensTimePeriod={setChannelTokensTimePeriod}
-              modelTimePeriod={modelTimePeriod}
-              setModelTimePeriod={setModelTimePeriod}
-              modelTokensTimePeriod={modelTokensTimePeriod}
-              setModelTokensTimePeriod={setModelTokensTimePeriod}
-              apiKeyTimePeriod={apiKeyTimePeriod}
-              setApiKeyTimePeriod={setApiKeyTimePeriod}
-              apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
-              setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
-              modelTotalRequests={modelTotalRequests}
-              setModelTotalRequests={setModelTotalRequests}
-              channelTotalRequests={channelTotalRequests}
-              setChannelTotalRequests={setChannelTotalRequests}
-            />
-          </TabsContent>
-        </Tabs>
-
-        {/* Review Queue - always visible regardless of tab */}
-        <ReviewQueue />
-      </div>
-    </DashboardModeContext.Provider>
+      {/* Review Queue - always visible */}
+      <ReviewQueue />
+    </div>
   );
 }
 
 interface DashboardContentProps {
+  mode: DashboardMode;
   modelPerformanceDescription: string;
   channelPerformanceDescription: string;
   channelTimePeriod: TimePeriod;
@@ -181,6 +139,7 @@ interface DashboardContentProps {
 }
 
 function DashboardContent({
+  mode,
   modelPerformanceDescription,
   channelPerformanceDescription,
   channelTimePeriod,
@@ -207,10 +166,10 @@ function DashboardContent({
       {/* Overview section - always shown */}
       <section className='space-y-4'>
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
-          <TotalRequestsCard />
-          <SuccessRateCard />
+          <TotalRequestsCard mode={mode} />
+          <SuccessRateCard mode={mode} />
           <TokenStatsCard />
-          <TodayRequestsCard />
+          <TodayRequestsCard mode={mode} />
         </div>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
           <Card className='hover-card col-span-1 lg:col-span-4'>

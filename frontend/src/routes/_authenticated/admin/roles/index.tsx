@@ -10,6 +10,6 @@ function ProtectedRoles() {
   );
 }
 
-export const Route = createFileRoute('/_authenticated/roles/')({
+export const Route = createFileRoute('/_authenticated/admin/roles/')({
   component: ProtectedRoles,
 });
