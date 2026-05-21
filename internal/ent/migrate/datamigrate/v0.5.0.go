@@ -28,7 +28,7 @@ func (v *V0_5_0) Migrate(ctx context.Context, client *ent.Client) error {
 
 	// Step 1: Set all existing channels without an owner as published
 	channelUpdated, err := client.Channel.Update().
-		Where(channel.OwnerIDEQ(0)).
+		Where(channel.OwnerIDIsNil()).
 		SetVisibility(channel.VisibilityPublished).
 		Save(ctx)
 	if err != nil {
@@ -40,7 +40,7 @@ func (v *V0_5_0) Migrate(ctx context.Context, client *ent.Client) error {
 
 	// Step 2: Set all existing models without an owner as published
 	modelUpdated, err := client.Model.Update().
-		Where(model.OwnerIDEQ(0)).
+		Where(model.OwnerIDIsNil()).
 		SetVisibility(model.VisibilityPublished).
 		Save(ctx)
 	if err != nil {

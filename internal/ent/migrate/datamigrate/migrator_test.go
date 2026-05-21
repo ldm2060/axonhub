@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -413,5 +414,14 @@ func TestMigrator_UpgradeFromV0_3_0(t *testing.T) {
 
 	version, err := systemService.Version(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, build.Version, version)
+	// The migrator only updates the system version when build.Version is newer
+	// than the current version. When build.Version is older (e.g. local dev
+	// builds where VERSION = v0.1.0), the test's seeded "v0.3.0" stays put.
+	bv, perr := semver.NewVersion(build.Version)
+	require.NoError(t, perr)
+	if bv.GreaterThan(semver.MustParse("v0.3.0")) {
+		assert.Equal(t, build.Version, version)
+	} else {
+		assert.Equal(t, "v0.3.0", version)
+	}
 }
