@@ -8,29 +8,33 @@ import { useErrorHandler } from '@/hooks/use-error-handler';
 const REGISTRATION_SETTINGS_QUERY = `
   query RegistrationSettings {
     registrationSettings {
-      enabled
-      mode
-      defaultScopes
+      allowSignUp
+      approvalRequired
+      defaultUserScopes
     }
   }
 `;
 
 const UPDATE_REGISTRATION_SETTINGS_MUTATION = `
   mutation UpdateRegistrationSettings($input: UpdateRegistrationSettingsInput!) {
-    updateRegistrationSettings(input: $input)
+    updateRegistrationSettings(input: $input) {
+      allowSignUp
+      approvalRequired
+      defaultUserScopes
+    }
   }
 `;
 
 export interface RegistrationSettings {
-  enabled: boolean;
-  mode: string;
-  defaultScopes: string[];
+  allowSignUp: boolean;
+  approvalRequired: boolean;
+  defaultUserScopes: string[];
 }
 
 export interface UpdateRegistrationSettingsInput {
-  enabled?: boolean;
-  mode?: string;
-  defaultScopes?: string[];
+  allowSignUp?: boolean;
+  approvalRequired?: boolean;
+  defaultUserScopes?: string[];
 }
 
 export function useRegistrationSettings() {
@@ -74,7 +78,7 @@ const EMAIL_SETTINGS_QUERY = `
     emailSettings {
       smtpHost
       smtpPort
-      smtpUsername
+      smtpUser
       smtpPassword
       encryption
       fromName
@@ -86,20 +90,32 @@ const EMAIL_SETTINGS_QUERY = `
 
 const UPDATE_EMAIL_SETTINGS_MUTATION = `
   mutation UpdateEmailSettings($input: UpdateEmailSettingsInput!) {
-    updateEmailSettings(input: $input)
+    updateEmailSettings(input: $input) {
+      smtpHost
+      smtpPort
+      smtpUser
+      smtpPassword
+      encryption
+      fromName
+      fromAddress
+      connected
+    }
   }
 `;
 
 const TEST_EMAIL_CONNECTION_MUTATION = `
   mutation TestEmailConnection {
-    testEmailConnection
+    testEmailConnection {
+      success
+      message
+    }
   }
 `;
 
 export interface EmailSettings {
   smtpHost: string;
   smtpPort: number;
-  smtpUsername: string;
+  smtpUser: string;
   smtpPassword: string;
   encryption: string;
   fromName: string;
@@ -110,7 +126,7 @@ export interface EmailSettings {
 export interface UpdateEmailSettingsInput {
   smtpHost?: string;
   smtpPort?: number;
-  smtpUsername?: string;
+  smtpUser?: string;
   smtpPassword?: string;
   encryption?: string;
   fromName?: string;
@@ -139,7 +155,7 @@ export function useUpdateEmailSettings() {
 
   return useMutation({
     mutationFn: async (input: UpdateEmailSettingsInput) => {
-      const data = await graphqlRequest<{ updateEmailSettings: boolean }>(UPDATE_EMAIL_SETTINGS_MUTATION, { input });
+      const data = await graphqlRequest<{ updateEmailSettings: EmailSettings }>(UPDATE_EMAIL_SETTINGS_MUTATION, { input });
       return data.updateEmailSettings;
     },
     onSuccess: () => {
@@ -155,11 +171,15 @@ export function useUpdateEmailSettings() {
 export function useTestEmailConnection() {
   return useMutation({
     mutationFn: async () => {
-      const data = await graphqlRequest<{ testEmailConnection: boolean }>(TEST_EMAIL_CONNECTION_MUTATION);
+      const data = await graphqlRequest<{ testEmailConnection: { success: boolean; message: string } }>(TEST_EMAIL_CONNECTION_MUTATION);
       return data.testEmailConnection;
     },
-    onSuccess: () => {
-      toast.success(i18n.t('system.email.testSuccess'));
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(i18n.t('system.email.testSuccess'));
+      } else {
+        toast.error(result.message || i18n.t('system.email.testFailed'));
+      }
     },
     onError: () => {
       toast.error(i18n.t('system.email.testFailed'));

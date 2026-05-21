@@ -20,7 +20,7 @@ export function EmailSettingsTab() {
   const [formData, setFormData] = useState({
     smtpHost: '',
     smtpPort: 587,
-    smtpUsername: '',
+    smtpUser: '',
     smtpPassword: '',
     encryption: 'STARTTLS',
     fromName: '',
@@ -35,7 +35,7 @@ export function EmailSettingsTab() {
       setFormData({
         smtpHost: settings.smtpHost || '',
         smtpPort: settings.smtpPort || 587,
-        smtpUsername: settings.smtpUsername || '',
+        smtpUser: settings.smtpUser || '',
         smtpPassword: settings.smtpPassword ? '********' : '',
         encryption: settings.encryption || 'STARTTLS',
         fromName: settings.fromName || '',
@@ -56,7 +56,7 @@ export function EmailSettingsTab() {
   const hasChanges = settings
     ? formData.smtpHost !== (settings.smtpHost || '') ||
       formData.smtpPort !== (settings.smtpPort || 587) ||
-      formData.smtpUsername !== (settings.smtpUsername || '') ||
+      formData.smtpUser !== (settings.smtpUser || '') ||
       passwordChanged ||
       formData.encryption !== (settings.encryption || 'STARTTLS') ||
       formData.fromName !== (settings.fromName || '') ||
@@ -67,15 +67,12 @@ export function EmailSettingsTab() {
     const input: Record<string, unknown> = {
       smtpHost: formData.smtpHost,
       smtpPort: formData.smtpPort,
-      smtpUsername: formData.smtpUsername,
+      smtpUser: formData.smtpUser,
       encryption: formData.encryption,
       fromName: formData.fromName,
       fromAddress: formData.fromAddress,
+      smtpPassword: passwordChanged ? formData.smtpPassword : (settings?.smtpPassword || ''),
     };
-
-    if (passwordChanged) {
-      input.smtpPassword = formData.smtpPassword;
-    }
 
     const result = await updateSettings.mutateAsync(input as any);
     if (result) {
@@ -86,7 +83,7 @@ export function EmailSettingsTab() {
   const handleTestConnection = async () => {
     try {
       const result = await testConnection.mutateAsync();
-      setConnected(result);
+      setConnected(result.success);
     } catch {
       setConnected(false);
     }
@@ -144,12 +141,12 @@ export function EmailSettingsTab() {
 
           <div className='grid grid-cols-2 gap-4'>
             <div className='space-y-2'>
-              <Label htmlFor='smtp-username'>{t('system.email.smtpUsername.label')}</Label>
+              <Label htmlFor='smtp-username'>{t('system.email.smtpUser.label')}</Label>
               <Input
                 id='smtp-username'
-                value={formData.smtpUsername}
-                onChange={(e) => handleInputChange('smtpUsername', e.target.value)}
-                placeholder={t('system.email.smtpUsername.placeholder')}
+                value={formData.smtpUser}
+                onChange={(e) => handleInputChange('smtpUser', e.target.value)}
+                placeholder={t('system.email.smtpUser.placeholder')}
               />
             </div>
             <div className='space-y-2'>

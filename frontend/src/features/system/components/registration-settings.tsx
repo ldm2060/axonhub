@@ -23,9 +23,9 @@ export function RegistrationSettingsTab() {
 
   useEffect(() => {
     if (settings) {
-      setEnabled(settings.enabled);
-      setMode(settings.mode || 'auto');
-      setDefaultScopes(settings.defaultScopes || []);
+      setEnabled(settings.allowSignUp);
+      setMode(settings.approvalRequired ? 'approval' : 'auto');
+      setDefaultScopes(settings.defaultUserScopes || []);
     }
   }, [settings]);
 
@@ -33,7 +33,11 @@ export function RegistrationSettingsTab() {
     const previousValue = enabled;
     setEnabled(checked);
     try {
-      await updateSettings.mutateAsync({ enabled: checked });
+      await updateSettings.mutateAsync({
+        allowSignUp: checked,
+        approvalRequired: mode === 'approval',
+        defaultUserScopes: defaultScopes,
+      });
     } catch {
       setEnabled(previousValue);
     }
@@ -43,7 +47,11 @@ export function RegistrationSettingsTab() {
     const previousValue = mode;
     setMode(newMode);
     try {
-      await updateSettings.mutateAsync({ mode: newMode });
+      await updateSettings.mutateAsync({
+        allowSignUp: enabled,
+        approvalRequired: newMode === 'approval',
+        defaultUserScopes: defaultScopes,
+      });
     } catch {
       setMode(previousValue);
     }
