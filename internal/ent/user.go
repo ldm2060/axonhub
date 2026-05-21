@@ -43,6 +43,8 @@ type User struct {
 	IsOwner bool `json:"is_owner,omitempty"`
 	// User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
 	Scopes []string `json:"scopes,omitempty"`
+	// When the user verified their email
+	EmailVerifiedAt *time.Time `json:"email_verified_at,omitempty"`
 	// PrivateProjectID holds the value of the "private_project_id" field.
 	PrivateProjectID *int `json:"private_project_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -231,7 +233,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case user.FieldEmail, user.FieldStatus, user.FieldPreferLanguage, user.FieldPassword, user.FieldFirstName, user.FieldLastName, user.FieldAvatar:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldEmailVerifiedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -327,6 +329,13 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &_m.Scopes); err != nil {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
+			}
+		case user.FieldEmailVerifiedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field email_verified_at", values[i])
+			} else if value.Valid {
+				_m.EmailVerifiedAt = new(time.Time)
+				*_m.EmailVerifiedAt = value.Time
 			}
 		case user.FieldPrivateProjectID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -470,6 +479,11 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
+	builder.WriteString(", ")
+	if v := _m.EmailVerifiedAt; v != nil {
+		builder.WriteString("email_verified_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	if v := _m.PrivateProjectID; v != nil {
 		builder.WriteString("private_project_id=")

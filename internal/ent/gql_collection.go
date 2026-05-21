@@ -6458,6 +6458,11 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				selectedFields = append(selectedFields, user.FieldScopes)
 				fieldSeen[user.FieldScopes] = struct{}{}
 			}
+		case "emailVerifiedAt":
+			if _, ok := fieldSeen[user.FieldEmailVerifiedAt]; !ok {
+				selectedFields = append(selectedFields, user.FieldEmailVerifiedAt)
+				fieldSeen[user.FieldEmailVerifiedAt] = struct{}{}
+			}
 		case "privateProjectID":
 			if _, ok := fieldSeen[user.FieldPrivateProjectID]; !ok {
 				selectedFields = append(selectedFields, user.FieldPrivateProjectID)

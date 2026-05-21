@@ -204,6 +204,26 @@ func (_u *UserUpdate) ClearScopes() *UserUpdate {
 	return _u
 }
 
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (_u *UserUpdate) SetEmailVerifiedAt(v time.Time) *UserUpdate {
+	_u.mutation.SetEmailVerifiedAt(v)
+	return _u
+}
+
+// SetNillableEmailVerifiedAt sets the "email_verified_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableEmailVerifiedAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetEmailVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (_u *UserUpdate) ClearEmailVerifiedAt() *UserUpdate {
+	_u.mutation.ClearEmailVerifiedAt()
+	return _u
+}
+
 // SetPrivateProjectID sets the "private_project_id" field.
 func (_u *UserUpdate) SetPrivateProjectID(v int) *UserUpdate {
 	_u.mutation.SetPrivateProjectID(v)
@@ -788,6 +808,12 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ScopesCleared() {
 		_spec.ClearField(user.FieldScopes, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.EmailVerifiedAt(); ok {
+		_spec.SetField(user.FieldEmailVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EmailVerifiedAtCleared() {
+		_spec.ClearField(user.FieldEmailVerifiedAt, field.TypeTime)
 	}
 	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1567,6 +1593,26 @@ func (_u *UserUpdateOne) ClearScopes() *UserUpdateOne {
 	return _u
 }
 
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (_u *UserUpdateOne) SetEmailVerifiedAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetEmailVerifiedAt(v)
+	return _u
+}
+
+// SetNillableEmailVerifiedAt sets the "email_verified_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableEmailVerifiedAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetEmailVerifiedAt(*v)
+	}
+	return _u
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (_u *UserUpdateOne) ClearEmailVerifiedAt() *UserUpdateOne {
+	_u.mutation.ClearEmailVerifiedAt()
+	return _u
+}
+
 // SetPrivateProjectID sets the "private_project_id" field.
 func (_u *UserUpdateOne) SetPrivateProjectID(v int) *UserUpdateOne {
 	_u.mutation.SetPrivateProjectID(v)
@@ -2181,6 +2227,12 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.ScopesCleared() {
 		_spec.ClearField(user.FieldScopes, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.EmailVerifiedAt(); ok {
+		_spec.SetField(user.FieldEmailVerifiedAt, field.TypeTime, value)
+	}
+	if _u.mutation.EmailVerifiedAtCleared() {
+		_spec.ClearField(user.FieldEmailVerifiedAt, field.TypeTime)
 	}
 	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{

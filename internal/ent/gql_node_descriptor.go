@@ -2799,7 +2799,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "User",
-		Fields: make([]*Field, 12),
+		Fields: make([]*Field, 13),
 		Edges:  make([]*Edge, 13),
 	}
 	var buf []byte
@@ -2891,10 +2891,18 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "scopes",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.PrivateProjectID); err != nil {
+	if buf, err = json.Marshal(_m.EmailVerifiedAt); err != nil {
 		return nil, err
 	}
 	node.Fields[11] = &Field{
+		Type:  "time.Time",
+		Name:  "email_verified_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PrivateProjectID); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
 		Type:  "int",
 		Name:  "private_project_id",
 		Value: string(buf),

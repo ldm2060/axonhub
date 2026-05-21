@@ -11797,6 +11797,18 @@ type UserWhereInput struct {
 	IsOwner    *bool `json:"isOwner,omitempty"`
 	IsOwnerNEQ *bool `json:"isOwnerNEQ,omitempty"`
 
+	// "email_verified_at" field predicates.
+	EmailVerifiedAt       *time.Time  `json:"emailVerifiedAt,omitempty"`
+	EmailVerifiedAtNEQ    *time.Time  `json:"emailVerifiedAtNEQ,omitempty"`
+	EmailVerifiedAtIn     []time.Time `json:"emailVerifiedAtIn,omitempty"`
+	EmailVerifiedAtNotIn  []time.Time `json:"emailVerifiedAtNotIn,omitempty"`
+	EmailVerifiedAtGT     *time.Time  `json:"emailVerifiedAtGT,omitempty"`
+	EmailVerifiedAtGTE    *time.Time  `json:"emailVerifiedAtGTE,omitempty"`
+	EmailVerifiedAtLT     *time.Time  `json:"emailVerifiedAtLT,omitempty"`
+	EmailVerifiedAtLTE    *time.Time  `json:"emailVerifiedAtLTE,omitempty"`
+	EmailVerifiedAtIsNil  bool        `json:"emailVerifiedAtIsNil,omitempty"`
+	EmailVerifiedAtNotNil bool        `json:"emailVerifiedAtNotNil,omitempty"`
+
 	// "private_project_id" field predicates.
 	PrivateProjectID       *int  `json:"privateProjectID,omitempty"`
 	PrivateProjectIDNEQ    *int  `json:"privateProjectIDNEQ,omitempty"`
@@ -12258,6 +12270,36 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 	}
 	if i.IsOwnerNEQ != nil {
 		predicates = append(predicates, user.IsOwnerNEQ(*i.IsOwnerNEQ))
+	}
+	if i.EmailVerifiedAt != nil {
+		predicates = append(predicates, user.EmailVerifiedAtEQ(*i.EmailVerifiedAt))
+	}
+	if i.EmailVerifiedAtNEQ != nil {
+		predicates = append(predicates, user.EmailVerifiedAtNEQ(*i.EmailVerifiedAtNEQ))
+	}
+	if len(i.EmailVerifiedAtIn) > 0 {
+		predicates = append(predicates, user.EmailVerifiedAtIn(i.EmailVerifiedAtIn...))
+	}
+	if len(i.EmailVerifiedAtNotIn) > 0 {
+		predicates = append(predicates, user.EmailVerifiedAtNotIn(i.EmailVerifiedAtNotIn...))
+	}
+	if i.EmailVerifiedAtGT != nil {
+		predicates = append(predicates, user.EmailVerifiedAtGT(*i.EmailVerifiedAtGT))
+	}
+	if i.EmailVerifiedAtGTE != nil {
+		predicates = append(predicates, user.EmailVerifiedAtGTE(*i.EmailVerifiedAtGTE))
+	}
+	if i.EmailVerifiedAtLT != nil {
+		predicates = append(predicates, user.EmailVerifiedAtLT(*i.EmailVerifiedAtLT))
+	}
+	if i.EmailVerifiedAtLTE != nil {
+		predicates = append(predicates, user.EmailVerifiedAtLTE(*i.EmailVerifiedAtLTE))
+	}
+	if i.EmailVerifiedAtIsNil {
+		predicates = append(predicates, user.EmailVerifiedAtIsNil())
+	}
+	if i.EmailVerifiedAtNotNil {
+		predicates = append(predicates, user.EmailVerifiedAtNotNil())
 	}
 	if i.PrivateProjectID != nil {
 		predicates = append(predicates, user.PrivateProjectIDEQ(*i.PrivateProjectID))

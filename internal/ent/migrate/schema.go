@@ -980,7 +980,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
 		{Name: "email", Type: field.TypeString},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"activated", "deactivated"}, Default: "activated"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "activated", "deactivated"}, Default: "pending"},
 		{Name: "prefer_language", Type: field.TypeString, Default: "en"},
 		{Name: "password", Type: field.TypeString},
 		{Name: "first_name", Type: field.TypeString, Default: ""},
@@ -988,6 +988,7 @@ var (
 		{Name: "avatar", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "mediumtext"}},
 		{Name: "is_owner", Type: field.TypeBool, Default: false},
 		{Name: "scopes", Type: field.TypeJSON, Nullable: true},
+		{Name: "email_verified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "private_project_id", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -998,7 +999,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_projects_private_project",
-				Columns:    []*schema.Column{UsersColumns[13]},
+				Columns:    []*schema.Column{UsersColumns[14]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

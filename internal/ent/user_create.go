@@ -177,6 +177,20 @@ func (_c *UserCreate) SetScopes(v []string) *UserCreate {
 	return _c
 }
 
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (_c *UserCreate) SetEmailVerifiedAt(v time.Time) *UserCreate {
+	_c.mutation.SetEmailVerifiedAt(v)
+	return _c
+}
+
+// SetNillableEmailVerifiedAt sets the "email_verified_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillableEmailVerifiedAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetEmailVerifiedAt(*v)
+	}
+	return _c
+}
+
 // SetPrivateProjectID sets the "private_project_id" field.
 func (_c *UserCreate) SetPrivateProjectID(v int) *UserCreate {
 	_c.mutation.SetPrivateProjectID(v)
@@ -563,6 +577,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Scopes(); ok {
 		_spec.SetField(user.FieldScopes, field.TypeJSON, value)
 		_node.Scopes = value
+	}
+	if value, ok := _c.mutation.EmailVerifiedAt(); ok {
+		_spec.SetField(user.FieldEmailVerifiedAt, field.TypeTime, value)
+		_node.EmailVerifiedAt = &value
 	}
 	if nodes := _c.mutation.ProjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -983,6 +1001,24 @@ func (u *UserUpsert) ClearScopes() *UserUpsert {
 	return u
 }
 
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (u *UserUpsert) SetEmailVerifiedAt(v time.Time) *UserUpsert {
+	u.Set(user.FieldEmailVerifiedAt, v)
+	return u
+}
+
+// UpdateEmailVerifiedAt sets the "email_verified_at" field to the value that was provided on create.
+func (u *UserUpsert) UpdateEmailVerifiedAt() *UserUpsert {
+	u.SetExcluded(user.FieldEmailVerifiedAt)
+	return u
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (u *UserUpsert) ClearEmailVerifiedAt() *UserUpsert {
+	u.SetNull(user.FieldEmailVerifiedAt)
+	return u
+}
+
 // SetPrivateProjectID sets the "private_project_id" field.
 func (u *UserUpsert) SetPrivateProjectID(v int) *UserUpsert {
 	u.Set(user.FieldPrivateProjectID, v)
@@ -1218,6 +1254,27 @@ func (u *UserUpsertOne) UpdateScopes() *UserUpsertOne {
 func (u *UserUpsertOne) ClearScopes() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearScopes()
+	})
+}
+
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (u *UserUpsertOne) SetEmailVerifiedAt(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmailVerifiedAt(v)
+	})
+}
+
+// UpdateEmailVerifiedAt sets the "email_verified_at" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateEmailVerifiedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmailVerifiedAt()
+	})
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (u *UserUpsertOne) ClearEmailVerifiedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearEmailVerifiedAt()
 	})
 }
 
@@ -1625,6 +1682,27 @@ func (u *UserUpsertBulk) UpdateScopes() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearScopes() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearScopes()
+	})
+}
+
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (u *UserUpsertBulk) SetEmailVerifiedAt(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmailVerifiedAt(v)
+	})
+}
+
+// UpdateEmailVerifiedAt sets the "email_verified_at" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateEmailVerifiedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmailVerifiedAt()
+	})
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (u *UserUpsertBulk) ClearEmailVerifiedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearEmailVerifiedAt()
 	})
 }
 

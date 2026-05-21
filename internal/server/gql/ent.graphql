@@ -2010,6 +2010,10 @@ input CreateUserInput {
   User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
   """
   scopes: [String!]
+  """
+  When the user verified their email
+  """
+  emailVerifiedAt: Time
   projectIDs: [ID!]
   roleIDs: [ID!]
   emailTokenIDs: [ID!]
@@ -6861,6 +6865,11 @@ input UpdateUserInput {
   scopes: [String!]
   appendScopes: [String!]
   clearScopes: Boolean
+  """
+  When the user verified their email
+  """
+  emailVerifiedAt: Time
+  clearEmailVerifiedAt: Boolean
   addProjectIDs: [ID!]
   removeProjectIDs: [ID!]
   clearProjects: Boolean
@@ -7356,6 +7365,10 @@ type User implements Node {
   User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
   """
   scopes: [String!]
+  """
+  When the user verified their email
+  """
+  emailVerifiedAt: Time
   privateProjectID: ID
   projects(
     """
@@ -7734,6 +7747,7 @@ input UserRoleWhereInput {
 UserStatus is enum for the field status
 """
 enum UserStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/user.Status") {
+  pending
   activated
   deactivated
 }
@@ -7872,6 +7886,19 @@ input UserWhereInput {
   """
   isOwner: Boolean
   isOwnerNEQ: Boolean
+  """
+  email_verified_at field predicates
+  """
+  emailVerifiedAt: Time
+  emailVerifiedAtNEQ: Time
+  emailVerifiedAtIn: [Time!]
+  emailVerifiedAtNotIn: [Time!]
+  emailVerifiedAtGT: Time
+  emailVerifiedAtGTE: Time
+  emailVerifiedAtLT: Time
+  emailVerifiedAtLTE: Time
+  emailVerifiedAtIsNil: Boolean
+  emailVerifiedAtNotNil: Boolean
   """
   private_project_id field predicates
   """

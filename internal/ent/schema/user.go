@@ -37,7 +37,7 @@ func (User) Indexes() []ent.Index {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("email"),
-		field.Enum("status").Values("activated", "deactivated").Default("activated"),
+		field.Enum("status").Values("pending", "activated", "deactivated").Default("pending"),
 		field.String("prefer_language").Default("en").Comment("用户偏好语言"),
 		field.String("password").Sensitive(),
 		field.String("first_name").Default(""),
@@ -53,6 +53,7 @@ func (User) Fields() []ent.Field {
 			Comment("User scopes in system level: write_channels, read_channels, add_users, read_users, etc.").
 			Default([]string{}).
 			Optional(),
+			field.Time("email_verified_at").Optional().Nillable().Comment("When the user verified their email"),
 			field.Int("private_project_id").Optional().Nillable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }

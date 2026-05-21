@@ -1874,6 +1874,7 @@ type ComplexityRoot struct {
 		CreatedAt                func(childComplexity int) int
 		Email                    func(childComplexity int) int
 		EmailTokens              func(childComplexity int) int
+		EmailVerifiedAt          func(childComplexity int) int
 		FirstName                func(childComplexity int) int
 		ID                       func(childComplexity int) int
 		IsOwner                  func(childComplexity int) int
@@ -10335,6 +10336,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.EmailTokens(childComplexity), true
+	case "User.emailVerifiedAt":
+		if e.complexity.User.EmailVerifiedAt == nil {
+			break
+		}
+
+		return e.complexity.User.EmailVerifiedAt(childComplexity), true
 	case "User.firstName":
 		if e.complexity.User.FirstName == nil {
 			break
@@ -14916,6 +14923,8 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -18843,6 +18852,8 @@ func (ec *executionContext) fieldContext_Channel_owner(_ context.Context, field 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -21590,6 +21601,8 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -25725,6 +25738,8 @@ func (ec *executionContext) fieldContext_EmailToken_user(_ context.Context, fiel
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -27071,6 +27086,8 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -27671,6 +27688,8 @@ func (ec *executionContext) fieldContext_Model_owner(_ context.Context, field gr
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -31475,6 +31494,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -31568,6 +31589,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -31661,6 +31684,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -33209,6 +33234,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -36614,6 +36641,8 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -41140,6 +41169,8 @@ func (ec *executionContext) fieldContext_PublishRequest_requester(_ context.Cont
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -41221,6 +41252,8 @@ func (ec *executionContext) fieldContext_PublishRequest_reviewer(_ context.Conte
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -49746,6 +49779,8 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -56529,6 +56564,35 @@ func (ec *executionContext) fieldContext_User_scopes(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _User_emailVerifiedAt(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_emailVerifiedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.EmailVerifiedAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_emailVerifiedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_privateProjectID(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -57465,6 +57529,8 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -58152,6 +58218,8 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -58563,6 +58631,8 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_isOwner(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
+			case "emailVerifiedAt":
+				return ec.fieldContext_User_emailVerifiedAt(ctx, field)
 			case "privateProjectID":
 				return ec.fieldContext_User_privateProjectID(ctx, field)
 			case "projects":
@@ -68312,7 +68382,7 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "avatar", "isOwner", "scopes", "projectIDs", "roleIDs", "emailTokenIDs"}
+	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "avatar", "isOwner", "scopes", "emailVerifiedAt", "projectIDs", "roleIDs", "emailTokenIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -68382,6 +68452,13 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Scopes = data
+		case "emailVerifiedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAt = data
 		case "projectIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectIDs"))
 			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
@@ -84057,7 +84134,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "avatar", "clearAvatar", "isOwner", "scopes", "appendScopes", "clearScopes", "addProjectIDs", "removeProjectIDs", "clearProjects", "addRoleIDs", "removeRoleIDs", "clearRoles", "addEmailTokenIDs", "removeEmailTokenIDs", "clearEmailTokens"}
+	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "avatar", "clearAvatar", "isOwner", "scopes", "appendScopes", "clearScopes", "emailVerifiedAt", "clearEmailVerifiedAt", "addProjectIDs", "removeProjectIDs", "clearProjects", "addRoleIDs", "removeRoleIDs", "clearRoles", "addEmailTokenIDs", "removeEmailTokenIDs", "clearEmailTokens"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84148,6 +84225,20 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.ClearScopes = data
+		case "emailVerifiedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAt = data
+		case "clearEmailVerifiedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearEmailVerifiedAt"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearEmailVerifiedAt = data
 		case "addProjectIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addProjectIDs"))
 			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
@@ -86688,7 +86779,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "privateProjectID", "privateProjectIDNEQ", "privateProjectIDIn", "privateProjectIDNotIn", "privateProjectIDIsNil", "privateProjectIDNotNil", "hasProjects", "hasProjectsWith", "hasOwnedChannels", "hasOwnedChannelsWith", "hasOwnedModels", "hasOwnedModelsWith", "hasPublishRequests", "hasPublishRequestsWith", "hasReviewedRequests", "hasReviewedRequestsWith", "hasPrivateProject", "hasPrivateProjectWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasEmailTokens", "hasEmailTokensWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "avatar", "avatarNEQ", "avatarIn", "avatarNotIn", "avatarGT", "avatarGTE", "avatarLT", "avatarLTE", "avatarContains", "avatarHasPrefix", "avatarHasSuffix", "avatarIsNil", "avatarNotNil", "avatarEqualFold", "avatarContainsFold", "isOwner", "isOwnerNEQ", "emailVerifiedAt", "emailVerifiedAtNEQ", "emailVerifiedAtIn", "emailVerifiedAtNotIn", "emailVerifiedAtGT", "emailVerifiedAtGTE", "emailVerifiedAtLT", "emailVerifiedAtLTE", "emailVerifiedAtIsNil", "emailVerifiedAtNotNil", "privateProjectID", "privateProjectIDNEQ", "privateProjectIDIn", "privateProjectIDNotIn", "privateProjectIDIsNil", "privateProjectIDNotNil", "hasProjects", "hasProjectsWith", "hasOwnedChannels", "hasOwnedChannelsWith", "hasOwnedModels", "hasOwnedModelsWith", "hasPublishRequests", "hasPublishRequestsWith", "hasReviewedRequests", "hasReviewedRequestsWith", "hasPrivateProject", "hasPrivateProjectWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasEmailTokens", "hasEmailTokensWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -87427,6 +87518,76 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.IsOwnerNEQ = data
+		case "emailVerifiedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAt = data
+		case "emailVerifiedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtNEQ = data
+		case "emailVerifiedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtIn = data
+		case "emailVerifiedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtNotIn = data
+		case "emailVerifiedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtGT = data
+		case "emailVerifiedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtGTE = data
+		case "emailVerifiedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtLT = data
+		case "emailVerifiedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtLTE = data
+		case "emailVerifiedAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtIsNil = data
+		case "emailVerifiedAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailVerifiedAtNotNil = data
 		case "privateProjectID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateProjectID"))
 			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
@@ -105753,6 +105914,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "scopes":
 			out.Values[i] = ec._User_scopes(ctx, field, obj)
+		case "emailVerifiedAt":
+			out.Values[i] = ec._User_emailVerifiedAt(ctx, field, obj)
 		case "privateProjectID":
 			field := field
 

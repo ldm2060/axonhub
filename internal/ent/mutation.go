@@ -27315,6 +27315,7 @@ type UserMutation struct {
 	is_owner                          *bool
 	scopes                            *[]string
 	appendscopes                      []string
+	email_verified_at                 *time.Time
 	clearedFields                     map[string]struct{}
 	projects                          map[int]struct{}
 	removedprojects                   map[int]struct{}
@@ -27949,6 +27950,55 @@ func (m *UserMutation) ResetScopes() {
 	m.scopes = nil
 	m.appendscopes = nil
 	delete(m.clearedFields, user.FieldScopes)
+}
+
+// SetEmailVerifiedAt sets the "email_verified_at" field.
+func (m *UserMutation) SetEmailVerifiedAt(t time.Time) {
+	m.email_verified_at = &t
+}
+
+// EmailVerifiedAt returns the value of the "email_verified_at" field in the mutation.
+func (m *UserMutation) EmailVerifiedAt() (r time.Time, exists bool) {
+	v := m.email_verified_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmailVerifiedAt returns the old "email_verified_at" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldEmailVerifiedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmailVerifiedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmailVerifiedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmailVerifiedAt: %w", err)
+	}
+	return oldValue.EmailVerifiedAt, nil
+}
+
+// ClearEmailVerifiedAt clears the value of the "email_verified_at" field.
+func (m *UserMutation) ClearEmailVerifiedAt() {
+	m.email_verified_at = nil
+	m.clearedFields[user.FieldEmailVerifiedAt] = struct{}{}
+}
+
+// EmailVerifiedAtCleared returns if the "email_verified_at" field was cleared in this mutation.
+func (m *UserMutation) EmailVerifiedAtCleared() bool {
+	_, ok := m.clearedFields[user.FieldEmailVerifiedAt]
+	return ok
+}
+
+// ResetEmailVerifiedAt resets all changes to the "email_verified_at" field.
+func (m *UserMutation) ResetEmailVerifiedAt() {
+	m.email_verified_at = nil
+	delete(m.clearedFields, user.FieldEmailVerifiedAt)
 }
 
 // SetPrivateProjectID sets the "private_project_id" field.
@@ -28709,7 +28759,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -28746,6 +28796,9 @@ func (m *UserMutation) Fields() []string {
 	if m.scopes != nil {
 		fields = append(fields, user.FieldScopes)
 	}
+	if m.email_verified_at != nil {
+		fields = append(fields, user.FieldEmailVerifiedAt)
+	}
 	if m.private_project != nil {
 		fields = append(fields, user.FieldPrivateProjectID)
 	}
@@ -28781,6 +28834,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.IsOwner()
 	case user.FieldScopes:
 		return m.Scopes()
+	case user.FieldEmailVerifiedAt:
+		return m.EmailVerifiedAt()
 	case user.FieldPrivateProjectID:
 		return m.PrivateProjectID()
 	}
@@ -28816,6 +28871,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldIsOwner(ctx)
 	case user.FieldScopes:
 		return m.OldScopes(ctx)
+	case user.FieldEmailVerifiedAt:
+		return m.OldEmailVerifiedAt(ctx)
 	case user.FieldPrivateProjectID:
 		return m.OldPrivateProjectID(ctx)
 	}
@@ -28911,6 +28968,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetScopes(v)
 		return nil
+	case user.FieldEmailVerifiedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmailVerifiedAt(v)
+		return nil
 	case user.FieldPrivateProjectID:
 		v, ok := value.(int)
 		if !ok {
@@ -28969,6 +29033,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldScopes) {
 		fields = append(fields, user.FieldScopes)
 	}
+	if m.FieldCleared(user.FieldEmailVerifiedAt) {
+		fields = append(fields, user.FieldEmailVerifiedAt)
+	}
 	if m.FieldCleared(user.FieldPrivateProjectID) {
 		fields = append(fields, user.FieldPrivateProjectID)
 	}
@@ -28991,6 +29058,9 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldScopes:
 		m.ClearScopes()
+		return nil
+	case user.FieldEmailVerifiedAt:
+		m.ClearEmailVerifiedAt()
 		return nil
 	case user.FieldPrivateProjectID:
 		m.ClearPrivateProjectID()
@@ -29038,6 +29108,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldScopes:
 		m.ResetScopes()
+		return nil
+	case user.FieldEmailVerifiedAt:
+		m.ResetEmailVerifiedAt()
 		return nil
 	case user.FieldPrivateProjectID:
 		m.ResetPrivateProjectID()

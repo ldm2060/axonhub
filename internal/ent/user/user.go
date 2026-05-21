@@ -42,6 +42,8 @@ const (
 	FieldIsOwner = "is_owner"
 	// FieldScopes holds the string denoting the scopes field in the database.
 	FieldScopes = "scopes"
+	// FieldEmailVerifiedAt holds the string denoting the email_verified_at field in the database.
+	FieldEmailVerifiedAt = "email_verified_at"
 	// FieldPrivateProjectID holds the string denoting the private_project_id field in the database.
 	FieldPrivateProjectID = "private_project_id"
 	// EdgeProjects holds the string denoting the projects edge name in mutations.
@@ -176,6 +178,7 @@ var Columns = []string{
 	FieldAvatar,
 	FieldIsOwner,
 	FieldScopes,
+	FieldEmailVerifiedAt,
 	FieldPrivateProjectID,
 }
 
@@ -230,11 +233,12 @@ var (
 // Status defines the type for the "status" enum field.
 type Status string
 
-// StatusActivated is the default value of the Status enum.
-const DefaultStatus = StatusActivated
+// StatusPending is the default value of the Status enum.
+const DefaultStatus = StatusPending
 
 // Status values.
 const (
+	StatusPending     Status = "pending"
 	StatusActivated   Status = "activated"
 	StatusDeactivated Status = "deactivated"
 )
@@ -246,7 +250,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusActivated, StatusDeactivated:
+	case StatusPending, StatusActivated, StatusDeactivated:
 		return nil
 	default:
 		return fmt.Errorf("user: invalid enum value for status field: %q", s)
@@ -314,6 +318,11 @@ func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
 // ByIsOwner orders the results by the is_owner field.
 func ByIsOwner(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsOwner, opts...).ToFunc()
+}
+
+// ByEmailVerifiedAt orders the results by the email_verified_at field.
+func ByEmailVerifiedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmailVerifiedAt, opts...).ToFunc()
 }
 
 // ByPrivateProjectID orders the results by the private_project_id field.
