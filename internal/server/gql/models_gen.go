@@ -432,6 +432,11 @@ type TestChannelPayload struct {
 	Error   *string `json:"error,omitempty"`
 }
 
+type TestEmailResult struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
 type TokenStats struct {
 	TotalInputTokensToday      int        `json:"totalInputTokensToday"`
 	TotalOutputTokensToday     int        `json:"totalOutputTokensToday"`

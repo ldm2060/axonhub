@@ -108,6 +108,22 @@ func (r *mutationResolver) UnlinkOIDCIdentity(ctx context.Context, id objects.GU
 	return true, nil
 }
 
+// ApproveUser is the resolver for the approveUser field.
+func (r *mutationResolver) ApproveUser(ctx context.Context, id int) (bool, error) {
+	if err := r.userService.ApproveUser(ctx, id); err != nil {
+		return false, fmt.Errorf("failed to approve user: %w", err)
+	}
+	return true, nil
+}
+
+// RejectUser is the resolver for the rejectUser field.
+func (r *mutationResolver) RejectUser(ctx context.Context, id int) (bool, error) {
+	if err := r.userService.RejectUser(ctx, id); err != nil {
+		return false, fmt.Errorf("failed to reject user: %w", err)
+	}
+	return true, nil
+}
+
 // Me is the resolver for the me field.
 func (r *queryResolver) Me(ctx context.Context) (*objects.UserInfo, error) {
 	// Get current user from context

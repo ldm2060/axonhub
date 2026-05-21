@@ -329,6 +329,44 @@ type GcCleanupPreviewItem {
     retentionDays: Int!
 }
 
+type RegistrationSettings {
+  allowSignUp: Boolean!
+  approvalRequired: Boolean!
+  defaultUserScopes: [String!]!
+}
+
+input UpdateRegistrationSettingsInput {
+  allowSignUp: Boolean!
+  approvalRequired: Boolean!
+  defaultUserScopes: [String!]!
+}
+
+type EmailSettings {
+  smtpHost: String!
+  smtpPort: Int!
+  smtpUser: String!
+  smtpPassword: String!
+  encryption: String!
+  fromName: String!
+  fromAddress: String!
+  connected: Boolean!
+}
+
+input UpdateEmailSettingsInput {
+  smtpHost: String!
+  smtpPort: Int!
+  smtpUser: String!
+  smtpPassword: String!
+  encryption: String!
+  fromName: String!
+  fromAddress: String!
+}
+
+type TestEmailResult {
+  success: Boolean!
+  message: String!
+}
+
 extend type Mutation {
   updateBrandSettings(input: UpdateBrandSettingsInput!): Boolean!
   updateStoragePolicy(input: UpdateStoragePolicyInput!): Boolean!
@@ -349,6 +387,9 @@ extend type Mutation {
   deleteProxyPreset(url: String!): Boolean!
   updateUserAgentPassThroughSettings(input: UpdateUserAgentPassThroughSettingsInput!): Boolean!
   updatePassThroughSettings(input: UpdatePassThroughSettingsInput!): Boolean!
+  updateRegistrationSettings(input: UpdateRegistrationSettingsInput!): RegistrationSettings!
+  updateEmailSettings(input: UpdateEmailSettingsInput!): EmailSettings!
+  testEmailConnection: TestEmailResult!
 }
 
 extend type Query {
@@ -414,6 +455,8 @@ extend type Query {
   userAgentPassThroughSettings: UserAgentPassThroughSettings!
   passThroughSettings: PassThroughSettings!
   getCacheDiagnostics(input: GetCacheDiagnosticsInput): GetCacheDiagnosticsPayload!
+  registrationSettings: RegistrationSettings!
+  emailSettings: EmailSettings!
 }
 
 extend type Mutation {

@@ -75,6 +75,7 @@ type ResolverRoot interface {
 	ChannelProbeData() ChannelProbeDataResolver
 	ChannelSettings() ChannelSettingsResolver
 	DataStorage() DataStorageResolver
+	EmailSettings() EmailSettingsResolver
 	EmailToken() EmailTokenResolver
 	Model() ModelResolver
 	Mutation() MutationResolver
@@ -642,6 +643,17 @@ type ComplexityRoot struct {
 		Reason     func(childComplexity int) int
 	}
 
+	EmailSettings struct {
+		Connected    func(childComplexity int) int
+		Encryption   func(childComplexity int) int
+		FromAddress  func(childComplexity int) int
+		FromName     func(childComplexity int) int
+		SMTPHost     func(childComplexity int) int
+		SMTPPassword func(childComplexity int) int
+		SMTPPort     func(childComplexity int) int
+		SMTPUser     func(childComplexity int) int
+	}
+
 	EmailToken struct {
 		ConsumedAt func(childComplexity int) int
 		CreatedAt  func(childComplexity int) int
@@ -878,6 +890,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddUserToProject                     func(childComplexity int, input AddUserToProjectInput) int
 		ApplyChannelOverrideTemplate         func(childComplexity int, input ApplyChannelOverrideTemplateInput) int
+		ApproveUser                          func(childComplexity int, id int) int
 		Backup                               func(childComplexity int, input backup.BackupOptions) int
 		BulkArchiveAPIKeys                   func(childComplexity int, ids []*objects.GUID) int
 		BulkArchiveChannels                  func(childComplexity int, ids []*objects.GUID) int
@@ -937,6 +950,7 @@ type ComplexityRoot struct {
 		EnableSelectedChannelAPIKeys         func(childComplexity int, channelID objects.GUID, keys []string) int
 		LoadAPIKeyProfileTemplate            func(childComplexity int, input LoadAPIKeyProfileTemplateInput) int
 		PreviewPromptProtectionRule          func(childComplexity int, input PromptProtectionRulePreviewInput) int
+		RejectUser                           func(childComplexity int, id int) int
 		RemoveUserFromProject                func(childComplexity int, input RemoveUserFromProjectInput) int
 		RequestPublish                       func(childComplexity int, resourceType publishrequest.ResourceType, resourceID objects.GUID, comment *string) int
 		Restore                              func(childComplexity int, file graphql.Upload, input backup.RestoreOptions) int
@@ -949,6 +963,7 @@ type ComplexityRoot struct {
 		SyncChannelModels                    func(childComplexity int, channelID objects.GUID, pattern *string) int
 		TestChannel                          func(childComplexity int, input TestChannelInput) int
 		TestChannelAPIKeys                   func(childComplexity int, channelID objects.GUID, modelID *string) int
+		TestEmailConnection                  func(childComplexity int) int
 		TriggerAutoBackup                    func(childComplexity int) int
 		TriggerGcCleanup                     func(childComplexity int, input gc.TriggerGcCleanupInput) int
 		UnlinkOIDCIdentity                   func(childComplexity int, id objects.GUID) int
@@ -965,6 +980,7 @@ type ComplexityRoot struct {
 		UpdateChannelStatus                  func(childComplexity int, id objects.GUID, status channel.Status) int
 		UpdateDataStorage                    func(childComplexity int, id objects.GUID, input ent.UpdateDataStorageInput) int
 		UpdateDefaultDataStorage             func(childComplexity int, input UpdateDefaultDataStorageInput) int
+		UpdateEmailSettings                  func(childComplexity int, input biz.EmailSettings) int
 		UpdateMe                             func(childComplexity int, input UpdateMeInput) int
 		UpdateModel                          func(childComplexity int, id objects.GUID, input ent.UpdateModelInput) int
 		UpdateModelStatus                    func(childComplexity int, id objects.GUID, status model.Status) int
@@ -979,6 +995,7 @@ type ComplexityRoot struct {
 		UpdatePromptProtectionRuleStatus     func(childComplexity int, id objects.GUID, status promptprotectionrule.Status) int
 		UpdatePromptStatus                   func(childComplexity int, id objects.GUID, status prompt.Status) int
 		UpdateQuotaEnforcementSettings       func(childComplexity int, input UpdateQuotaEnforcementSettingsInput) int
+		UpdateRegistrationSettings           func(childComplexity int, input biz.RegistrationSettings) int
 		UpdateRetryPolicy                    func(childComplexity int, input biz.RetryPolicy) int
 		UpdateRole                           func(childComplexity int, id objects.GUID, input ent.UpdateRoleInput) int
 		UpdateStoragePolicy                  func(childComplexity int, input biz.StoragePolicy) int
@@ -1279,6 +1296,7 @@ type ComplexityRoot struct {
 		DashboardOverview            func(childComplexity int) int
 		DataStorages                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.DataStorageOrder, where *ent.DataStorageWhereInput) int
 		DefaultDataStorageID         func(childComplexity int) int
+		EmailSettings                func(childComplexity int) int
 		FastestChannels              func(childComplexity int, input FastestChannelsInput) int
 		FastestModels                func(childComplexity int, input FastestChannelsInput) int
 		FetchModels                  func(childComplexity int, input biz.FetchModelsInput) int
@@ -1306,6 +1324,7 @@ type ComplexityRoot struct {
 		QueryModels                  func(childComplexity int, input QueryModelsInput) int
 		QueryUnassociatedChannels    func(childComplexity int) int
 		QuotaEnforcementSettings     func(childComplexity int) int
+		RegistrationSettings         func(childComplexity int) int
 		RequestStats                 func(childComplexity int) int
 		RequestStatsByAPIKey         func(childComplexity int, timeWindow *string) int
 		RequestStatsByChannel        func(childComplexity int, timeWindow *string) int
@@ -1342,6 +1361,12 @@ type ComplexityRoot struct {
 	RegexAssociation struct {
 		Exclude func(childComplexity int) int
 		Pattern func(childComplexity int) int
+	}
+
+	RegistrationSettings struct {
+		AllowSignUp       func(childComplexity int) int
+		ApprovalRequired  func(childComplexity int) int
+		DefaultUserScopes func(childComplexity int) int
 	}
 
 	Request struct {
@@ -1678,6 +1703,11 @@ type ComplexityRoot struct {
 	TestChannelPayload struct {
 		Error   func(childComplexity int) int
 		Latency func(childComplexity int) int
+		Message func(childComplexity int) int
+		Success func(childComplexity int) int
+	}
+
+	TestEmailResult struct {
 		Message func(childComplexity int) int
 		Success func(childComplexity int) int
 	}
@@ -2059,6 +2089,9 @@ type ChannelSettingsResolver interface {
 type DataStorageResolver interface {
 	ID(ctx context.Context, obj *ent.DataStorage) (*objects.GUID, error)
 }
+type EmailSettingsResolver interface {
+	Connected(ctx context.Context, obj *biz.EmailSettings) (bool, error)
+}
 type EmailTokenResolver interface {
 	ID(ctx context.Context, obj *ent.EmailToken) (*objects.GUID, error)
 
@@ -2130,6 +2163,8 @@ type MutationResolver interface {
 	UpdateMe(ctx context.Context, input UpdateMeInput) (*ent.User, error)
 	UpdateMyPassword(ctx context.Context, input UpdateMyPasswordInput) (bool, error)
 	UnlinkOIDCIdentity(ctx context.Context, id objects.GUID) (bool, error)
+	ApproveUser(ctx context.Context, id int) (bool, error)
+	RejectUser(ctx context.Context, id int) (bool, error)
 	UpdateBrandSettings(ctx context.Context, input UpdateBrandSettingsInput) (bool, error)
 	UpdateStoragePolicy(ctx context.Context, input biz.StoragePolicy) (bool, error)
 	UpdateRetryPolicy(ctx context.Context, input biz.RetryPolicy) (bool, error)
@@ -2149,6 +2184,9 @@ type MutationResolver interface {
 	DeleteProxyPreset(ctx context.Context, url string) (bool, error)
 	UpdateUserAgentPassThroughSettings(ctx context.Context, input UpdateUserAgentPassThroughSettingsInput) (bool, error)
 	UpdatePassThroughSettings(ctx context.Context, input UpdatePassThroughSettingsInput) (bool, error)
+	UpdateRegistrationSettings(ctx context.Context, input biz.RegistrationSettings) (*biz.RegistrationSettings, error)
+	UpdateEmailSettings(ctx context.Context, input biz.EmailSettings) (*biz.EmailSettings, error)
+	TestEmailConnection(ctx context.Context) (*TestEmailResult, error)
 	ClearCache(ctx context.Context, input ClearCacheInput) (*ClearCachePayload, error)
 	CreateModel(ctx context.Context, input ent.CreateModelInput) (*ent.Model, error)
 	BulkCreateModels(ctx context.Context, inputs []*ent.CreateModelInput) ([]*ent.Model, error)
@@ -2283,6 +2321,8 @@ type QueryResolver interface {
 	UserAgentPassThroughSettings(ctx context.Context) (*UserAgentPassThroughSettings, error)
 	PassThroughSettings(ctx context.Context) (*PassThroughSettings, error)
 	GetCacheDiagnostics(ctx context.Context, input *GetCacheDiagnosticsInput) (*GetCacheDiagnosticsPayload, error)
+	RegistrationSettings(ctx context.Context) (*biz.RegistrationSettings, error)
+	EmailSettings(ctx context.Context) (*biz.EmailSettings, error)
 	FetchModels(ctx context.Context, input biz.FetchModelsInput) (*FetchModelsPayload, error)
 	QueryModels(ctx context.Context, input QueryModelsInput) ([]*biz.ModelIdentityWithStatus, error)
 	QueryModelChannelConnections(ctx context.Context, associations []*objects.ModelAssociation) ([]*biz.ModelChannelConnection, error)
@@ -4431,6 +4471,55 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DisabledAPIKey.Reason(childComplexity), true
 
+	case "EmailSettings.connected":
+		if e.complexity.EmailSettings.Connected == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.Connected(childComplexity), true
+	case "EmailSettings.encryption":
+		if e.complexity.EmailSettings.Encryption == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.Encryption(childComplexity), true
+	case "EmailSettings.fromAddress":
+		if e.complexity.EmailSettings.FromAddress == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.FromAddress(childComplexity), true
+	case "EmailSettings.fromName":
+		if e.complexity.EmailSettings.FromName == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.FromName(childComplexity), true
+	case "EmailSettings.smtpHost":
+		if e.complexity.EmailSettings.SMTPHost == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.SMTPHost(childComplexity), true
+	case "EmailSettings.smtpPassword":
+		if e.complexity.EmailSettings.SMTPPassword == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.SMTPPassword(childComplexity), true
+	case "EmailSettings.smtpPort":
+		if e.complexity.EmailSettings.SMTPPort == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.SMTPPort(childComplexity), true
+	case "EmailSettings.smtpUser":
+		if e.complexity.EmailSettings.SMTPUser == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.SMTPUser(childComplexity), true
+
 	case "EmailToken.consumedAt":
 		if e.complexity.EmailToken.ConsumedAt == nil {
 			break
@@ -5290,6 +5379,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ApplyChannelOverrideTemplate(childComplexity, args["input"].(ApplyChannelOverrideTemplateInput)), true
+	case "Mutation.approveUser":
+		if e.complexity.Mutation.ApproveUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_approveUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ApproveUser(childComplexity, args["id"].(int)), true
 	case "Mutation.backup":
 		if e.complexity.Mutation.Backup == nil {
 			break
@@ -5934,6 +6034,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.PreviewPromptProtectionRule(childComplexity, args["input"].(PromptProtectionRulePreviewInput)), true
+	case "Mutation.rejectUser":
+		if e.complexity.Mutation.RejectUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_rejectUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RejectUser(childComplexity, args["id"].(int)), true
 	case "Mutation.removeUserFromProject":
 		if e.complexity.Mutation.RemoveUserFromProject == nil {
 			break
@@ -6066,6 +6177,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.TestChannelAPIKeys(childComplexity, args["channelID"].(objects.GUID), args["modelID"].(*string)), true
+	case "Mutation.testEmailConnection":
+		if e.complexity.Mutation.TestEmailConnection == nil {
+			break
+		}
+
+		return e.complexity.Mutation.TestEmailConnection(childComplexity), true
 	case "Mutation.triggerAutoBackup":
 		if e.complexity.Mutation.TriggerAutoBackup == nil {
 			break
@@ -6237,6 +6354,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateDefaultDataStorage(childComplexity, args["input"].(UpdateDefaultDataStorageInput)), true
+	case "Mutation.updateEmailSettings":
+		if e.complexity.Mutation.UpdateEmailSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateEmailSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateEmailSettings(childComplexity, args["input"].(biz.EmailSettings)), true
 	case "Mutation.updateMe":
 		if e.complexity.Mutation.UpdateMe == nil {
 			break
@@ -6391,6 +6519,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateQuotaEnforcementSettings(childComplexity, args["input"].(UpdateQuotaEnforcementSettingsInput)), true
+	case "Mutation.updateRegistrationSettings":
+		if e.complexity.Mutation.UpdateRegistrationSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateRegistrationSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateRegistrationSettings(childComplexity, args["input"].(biz.RegistrationSettings)), true
 	case "Mutation.updateRetryPolicy":
 		if e.complexity.Mutation.UpdateRetryPolicy == nil {
 			break
@@ -7759,6 +7898,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.DefaultDataStorageID(childComplexity), true
+	case "Query.emailSettings":
+		if e.complexity.Query.EmailSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.EmailSettings(childComplexity), true
 	case "Query.fastestChannels":
 		if e.complexity.Query.FastestChannels == nil {
 			break
@@ -8001,6 +8146,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.QuotaEnforcementSettings(childComplexity), true
+	case "Query.registrationSettings":
+		if e.complexity.Query.RegistrationSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.RegistrationSettings(childComplexity), true
 	case "Query.requestStats":
 		if e.complexity.Query.RequestStats == nil {
 			break
@@ -8248,6 +8399,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RegexAssociation.Pattern(childComplexity), true
+
+	case "RegistrationSettings.allowSignUp":
+		if e.complexity.RegistrationSettings.AllowSignUp == nil {
+			break
+		}
+
+		return e.complexity.RegistrationSettings.AllowSignUp(childComplexity), true
+	case "RegistrationSettings.approvalRequired":
+		if e.complexity.RegistrationSettings.ApprovalRequired == nil {
+			break
+		}
+
+		return e.complexity.RegistrationSettings.ApprovalRequired(childComplexity), true
+	case "RegistrationSettings.defaultUserScopes":
+		if e.complexity.RegistrationSettings.DefaultUserScopes == nil {
+			break
+		}
+
+		return e.complexity.RegistrationSettings.DefaultUserScopes(childComplexity), true
 
 	case "Request.apiKey":
 		if e.complexity.Request.APIKey == nil {
@@ -9526,6 +9696,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.TestChannelPayload.Success(childComplexity), true
+
+	case "TestEmailResult.message":
+		if e.complexity.TestEmailResult.Message == nil {
+			break
+		}
+
+		return e.complexity.TestEmailResult.Message(childComplexity), true
+	case "TestEmailResult.success":
+		if e.complexity.TestEmailResult.Success == nil {
+			break
+		}
+
+		return e.complexity.TestEmailResult.Success(childComplexity), true
 
 	case "Thread.createdAt":
 		if e.complexity.Thread.CreatedAt == nil {
@@ -11023,6 +11206,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateChannelProbeSettingInput,
 		ec.unmarshalInputUpdateDataStorageInput,
 		ec.unmarshalInputUpdateDefaultDataStorageInput,
+		ec.unmarshalInputUpdateEmailSettingsInput,
 		ec.unmarshalInputUpdateMeInput,
 		ec.unmarshalInputUpdateModelInput,
 		ec.unmarshalInputUpdateMyPasswordInput,
@@ -11035,6 +11219,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdatePromptProtectionRuleInput,
 		ec.unmarshalInputUpdatePublishRequestInput,
 		ec.unmarshalInputUpdateQuotaEnforcementSettingsInput,
+		ec.unmarshalInputUpdateRegistrationSettingsInput,
 		ec.unmarshalInputUpdateRequestInput,
 		ec.unmarshalInputUpdateRetryPolicyInput,
 		ec.unmarshalInputUpdateRoleInput,
@@ -11427,6 +11612,17 @@ func (ec *executionContext) field_Mutation_applyChannelOverrideTemplate_args(ctx
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_approveUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -12093,6 +12289,17 @@ func (ec *executionContext) field_Mutation_previewPromptProtectionRule_args(ctx 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_rejectUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_removeUserFromProject_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -12495,6 +12702,17 @@ func (ec *executionContext) field_Mutation_updateDefaultDataStorage_args(ctx con
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateEmailSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateEmailSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateMe_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -12687,6 +12905,17 @@ func (ec *executionContext) field_Mutation_updateQuotaEnforcementSettings_args(c
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateRegistrationSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateRegistrationSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -25460,6 +25689,238 @@ func (ec *executionContext) fieldContext_DisabledAPIKey_reason(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailSettings_smtpHost(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_smtpHost,
+		func(ctx context.Context) (any, error) {
+			return obj.SMTPHost, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_smtpHost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_smtpPort(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_smtpPort,
+		func(ctx context.Context) (any, error) {
+			return obj.SMTPPort, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_smtpPort(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_smtpUser(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_smtpUser,
+		func(ctx context.Context) (any, error) {
+			return obj.SMTPUser, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_smtpUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_smtpPassword(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_smtpPassword,
+		func(ctx context.Context) (any, error) {
+			return obj.SMTPPassword, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_smtpPassword(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_encryption(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_encryption,
+		func(ctx context.Context) (any, error) {
+			return obj.Encryption, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_encryption(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_fromName(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_fromName,
+		func(ctx context.Context) (any, error) {
+			return obj.FromName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_fromName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_fromAddress(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_fromAddress,
+		func(ctx context.Context) (any, error) {
+			return obj.FromAddress, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_fromAddress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailSettings_connected(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_connected,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.EmailSettings().Connected(ctx, obj)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_connected(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailToken_id(ctx context.Context, field graphql.CollectedField, obj *ent.EmailToken) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -33364,6 +33825,88 @@ func (ec *executionContext) fieldContext_Mutation_unlinkOIDCIdentity(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_approveUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_approveUser,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().ApproveUser(ctx, fc.Args["id"].(int))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_approveUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_approveUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_rejectUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_rejectUser,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().RejectUser(ctx, fc.Args["id"].(int))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_rejectUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_rejectUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updateBrandSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -34127,6 +34670,149 @@ func (ec *executionContext) fieldContext_Mutation_updatePassThroughSettings(ctx 
 	if fc.Args, err = ec.field_Mutation_updatePassThroughSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateRegistrationSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateRegistrationSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateRegistrationSettings(ctx, fc.Args["input"].(biz.RegistrationSettings))
+		},
+		nil,
+		ec.marshalNRegistrationSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateRegistrationSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "allowSignUp":
+				return ec.fieldContext_RegistrationSettings_allowSignUp(ctx, field)
+			case "approvalRequired":
+				return ec.fieldContext_RegistrationSettings_approvalRequired(ctx, field)
+			case "defaultUserScopes":
+				return ec.fieldContext_RegistrationSettings_defaultUserScopes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RegistrationSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateRegistrationSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateEmailSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateEmailSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateEmailSettings(ctx, fc.Args["input"].(biz.EmailSettings))
+		},
+		nil,
+		ec.marshalNEmailSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateEmailSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "smtpHost":
+				return ec.fieldContext_EmailSettings_smtpHost(ctx, field)
+			case "smtpPort":
+				return ec.fieldContext_EmailSettings_smtpPort(ctx, field)
+			case "smtpUser":
+				return ec.fieldContext_EmailSettings_smtpUser(ctx, field)
+			case "smtpPassword":
+				return ec.fieldContext_EmailSettings_smtpPassword(ctx, field)
+			case "encryption":
+				return ec.fieldContext_EmailSettings_encryption(ctx, field)
+			case "fromName":
+				return ec.fieldContext_EmailSettings_fromName(ctx, field)
+			case "fromAddress":
+				return ec.fieldContext_EmailSettings_fromAddress(ctx, field)
+			case "connected":
+				return ec.fieldContext_EmailSettings_connected(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateEmailSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_testEmailConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_testEmailConnection,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Mutation().TestEmailConnection(ctx)
+		},
+		nil,
+		ec.marshalNTestEmailResult2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTestEmailResult,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_testEmailConnection(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "success":
+				return ec.fieldContext_TestEmailResult_success(ctx, field)
+			case "message":
+				return ec.fieldContext_TestEmailResult_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TestEmailResult", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -44609,6 +45295,90 @@ func (ec *executionContext) fieldContext_Query_getCacheDiagnostics(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_registrationSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_registrationSettings,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().RegistrationSettings(ctx)
+		},
+		nil,
+		ec.marshalNRegistrationSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_registrationSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "allowSignUp":
+				return ec.fieldContext_RegistrationSettings_allowSignUp(ctx, field)
+			case "approvalRequired":
+				return ec.fieldContext_RegistrationSettings_approvalRequired(ctx, field)
+			case "defaultUserScopes":
+				return ec.fieldContext_RegistrationSettings_defaultUserScopes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RegistrationSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_emailSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_emailSettings,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().EmailSettings(ctx)
+		},
+		nil,
+		ec.marshalNEmailSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_emailSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "smtpHost":
+				return ec.fieldContext_EmailSettings_smtpHost(ctx, field)
+			case "smtpPort":
+				return ec.fieldContext_EmailSettings_smtpPort(ctx, field)
+			case "smtpUser":
+				return ec.fieldContext_EmailSettings_smtpUser(ctx, field)
+			case "smtpPassword":
+				return ec.fieldContext_EmailSettings_smtpPassword(ctx, field)
+			case "encryption":
+				return ec.fieldContext_EmailSettings_encryption(ctx, field)
+			case "fromName":
+				return ec.fieldContext_EmailSettings_fromName(ctx, field)
+			case "fromAddress":
+				return ec.fieldContext_EmailSettings_fromAddress(ctx, field)
+			case "connected":
+				return ec.fieldContext_EmailSettings_connected(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_fetchModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -45319,6 +46089,93 @@ func (ec *executionContext) fieldContext_RegexAssociation_exclude(_ context.Cont
 				return ec.fieldContext_ExcludeAssociation_channelTags(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExcludeAssociation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RegistrationSettings_allowSignUp(ctx context.Context, field graphql.CollectedField, obj *biz.RegistrationSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RegistrationSettings_allowSignUp,
+		func(ctx context.Context) (any, error) {
+			return obj.AllowSignUp, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RegistrationSettings_allowSignUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RegistrationSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RegistrationSettings_approvalRequired(ctx context.Context, field graphql.CollectedField, obj *biz.RegistrationSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RegistrationSettings_approvalRequired,
+		func(ctx context.Context) (any, error) {
+			return obj.ApprovalRequired, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RegistrationSettings_approvalRequired(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RegistrationSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RegistrationSettings_defaultUserScopes(ctx context.Context, field graphql.CollectedField, obj *biz.RegistrationSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RegistrationSettings_defaultUserScopes,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultUserScopes, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RegistrationSettings_defaultUserScopes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RegistrationSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -52097,6 +52954,64 @@ func (ec *executionContext) _TestChannelPayload_error(ctx context.Context, field
 func (ec *executionContext) fieldContext_TestChannelPayload_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TestChannelPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TestEmailResult_success(ctx context.Context, field graphql.CollectedField, obj *TestEmailResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TestEmailResult_success,
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TestEmailResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TestEmailResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TestEmailResult_message(ctx context.Context, field graphql.CollectedField, obj *TestEmailResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TestEmailResult_message,
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TestEmailResult_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TestEmailResult",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -82537,6 +83452,75 @@ func (ec *executionContext) unmarshalInputUpdateDefaultDataStorageInput(ctx cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateEmailSettingsInput(ctx context.Context, obj any) (biz.EmailSettings, error) {
+	var it biz.EmailSettings
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"smtpHost", "smtpPort", "smtpUser", "smtpPassword", "encryption", "fromName", "fromAddress"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "smtpHost":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smtpHost"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SMTPHost = data
+		case "smtpPort":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smtpPort"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SMTPPort = data
+		case "smtpUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smtpUser"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SMTPUser = data
+		case "smtpPassword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("smtpPassword"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SMTPPassword = data
+		case "encryption":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("encryption"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Encryption = data
+		case "fromName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromName = data
+		case "fromAddress":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromAddress"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromAddress = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateMeInput(ctx context.Context, obj any) (UpdateMeInput, error) {
 	var it UpdateMeInput
 	asMap := map[string]any{}
@@ -83228,6 +84212,47 @@ func (ec *executionContext) unmarshalInputUpdateQuotaEnforcementSettingsInput(ct
 				return it, err
 			}
 			it.Mode = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateRegistrationSettingsInput(ctx context.Context, obj any) (biz.RegistrationSettings, error) {
+	var it biz.RegistrationSettings
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"allowSignUp", "approvalRequired", "defaultUserScopes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "allowSignUp":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowSignUp"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AllowSignUp = data
+		case "approvalRequired":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("approvalRequired"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ApprovalRequired = data
+		case "defaultUserScopes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultUserScopes"))
+			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DefaultUserScopes = data
 		}
 	}
 
@@ -93366,6 +94391,111 @@ func (ec *executionContext) _DisabledAPIKey(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var emailSettingsImplementors = []string{"EmailSettings"}
+
+func (ec *executionContext) _EmailSettings(ctx context.Context, sel ast.SelectionSet, obj *biz.EmailSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailSettings")
+		case "smtpHost":
+			out.Values[i] = ec._EmailSettings_smtpHost(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "smtpPort":
+			out.Values[i] = ec._EmailSettings_smtpPort(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "smtpUser":
+			out.Values[i] = ec._EmailSettings_smtpUser(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "smtpPassword":
+			out.Values[i] = ec._EmailSettings_smtpPassword(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "encryption":
+			out.Values[i] = ec._EmailSettings_encryption(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "fromName":
+			out.Values[i] = ec._EmailSettings_fromName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "fromAddress":
+			out.Values[i] = ec._EmailSettings_fromAddress(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "connected":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._EmailSettings_connected(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailTokenImplementors = []string{"EmailToken", "Node"}
 
 func (ec *executionContext) _EmailToken(ctx context.Context, sel ast.SelectionSet, obj *ent.EmailToken) graphql.Marshaler {
@@ -95698,6 +96828,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "approveUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_approveUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rejectUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_rejectUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updateBrandSettings":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateBrandSettings(ctx, field)
@@ -95827,6 +96971,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updatePassThroughSettings":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updatePassThroughSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateRegistrationSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateRegistrationSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateEmailSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateEmailSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "testEmailConnection":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_testEmailConnection(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -100178,6 +101343,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "registrationSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_registrationSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "emailSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_emailSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "fetchModels":
 			field := field
 
@@ -100469,6 +101678,55 @@ func (ec *executionContext) _RegexAssociation(ctx context.Context, sel ast.Selec
 			}
 		case "exclude":
 			out.Values[i] = ec._RegexAssociation_exclude(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var registrationSettingsImplementors = []string{"RegistrationSettings"}
+
+func (ec *executionContext) _RegistrationSettings(ctx context.Context, sel ast.SelectionSet, obj *biz.RegistrationSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, registrationSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RegistrationSettings")
+		case "allowSignUp":
+			out.Values[i] = ec._RegistrationSettings_allowSignUp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "approvalRequired":
+			out.Values[i] = ec._RegistrationSettings_approvalRequired(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "defaultUserScopes":
+			out.Values[i] = ec._RegistrationSettings_defaultUserScopes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -103831,6 +105089,50 @@ func (ec *executionContext) _TestChannelPayload(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._TestChannelPayload_message(ctx, field, obj)
 		case "error":
 			out.Values[i] = ec._TestChannelPayload_error(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var testEmailResultImplementors = []string{"TestEmailResult"}
+
+func (ec *executionContext) _TestEmailResult(ctx context.Context, sel ast.SelectionSet, obj *TestEmailResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, testEmailResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TestEmailResult")
+		case "success":
+			out.Values[i] = ec._TestEmailResult_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._TestEmailResult_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -109861,6 +111163,20 @@ func (ec *executionContext) marshalNDisabledAPIKey2ᚖgithubᚗcomᚋldm2060ᚋa
 	return ec._DisabledAPIKey(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNEmailSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings(ctx context.Context, sel ast.SelectionSet, v biz.EmailSettings) graphql.Marshaler {
+	return ec._EmailSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNEmailSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings(ctx context.Context, sel ast.SelectionSet, v *biz.EmailSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EmailSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEmailToken2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐEmailToken(ctx context.Context, sel ast.SelectionSet, v *ent.EmailToken) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -111966,6 +113282,20 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRegistrationSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings(ctx context.Context, sel ast.SelectionSet, v biz.RegistrationSettings) graphql.Marshaler {
+	return ec._RegistrationSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRegistrationSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings(ctx context.Context, sel ast.SelectionSet, v *biz.RegistrationSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RegistrationSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNRemoveUserFromProjectInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐRemoveUserFromProjectInput(ctx context.Context, v any) (RemoveUserFromProjectInput, error) {
 	res, err := ec.unmarshalInputRemoveUserFromProjectInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -112767,6 +114097,20 @@ func (ec *executionContext) marshalNTestChannelPayload2ᚖgithubᚗcomᚋldm2060
 	return ec._TestChannelPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNTestEmailResult2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTestEmailResult(ctx context.Context, sel ast.SelectionSet, v TestEmailResult) graphql.Marshaler {
+	return ec._TestEmailResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTestEmailResult2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTestEmailResult(ctx context.Context, sel ast.SelectionSet, v *TestEmailResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TestEmailResult(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNThreadConnection2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐThreadConnection(ctx context.Context, sel ast.SelectionSet, v ent.ThreadConnection) graphql.Marshaler {
 	return ec._ThreadConnection(ctx, sel, &v)
 }
@@ -113210,6 +114554,11 @@ func (ec *executionContext) unmarshalNUpdateDefaultDataStorageInput2githubᚗcom
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateEmailSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings(ctx context.Context, v any) (biz.EmailSettings, error) {
+	res, err := ec.unmarshalInputUpdateEmailSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateMeInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateMeInput(ctx context.Context, v any) (UpdateMeInput, error) {
 	res, err := ec.unmarshalInputUpdateMeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -113257,6 +114606,11 @@ func (ec *executionContext) unmarshalNUpdatePromptProtectionRuleInput2githubᚗc
 
 func (ec *executionContext) unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput(ctx context.Context, v any) (UpdateQuotaEnforcementSettingsInput, error) {
 	res, err := ec.unmarshalInputUpdateQuotaEnforcementSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateRegistrationSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings(ctx context.Context, v any) (biz.RegistrationSettings, error) {
+	res, err := ec.unmarshalInputUpdateRegistrationSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -679,3 +679,12 @@ models:
   DeleteDisabledAPIKeysPayload:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.DeleteDisabledAPIKeysResult
+  UpdateRegistrationSettingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.RegistrationSettings
+  RegistrationSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.RegistrationSettings
+  UpdateEmailSettingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.EmailSettings

@@ -49,6 +49,8 @@ extend type Mutation {
     updateMe(input: UpdateMeInput!): User!
     updateMyPassword(input: UpdateMyPasswordInput!): Boolean!
     unlinkOIDCIdentity(id: ID!): Boolean!
+    approveUser(id: Int!): Boolean!
+    rejectUser(id: Int!): Boolean!
 }
 
 input UpdateMyPasswordInput {

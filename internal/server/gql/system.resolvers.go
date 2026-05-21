@@ -20,6 +20,11 @@ import (
 	"github.com/samber/lo"
 )
 
+// Connected is the resolver for the connected field.
+func (r *emailSettingsResolver) Connected(ctx context.Context, obj *biz.EmailSettings) (bool, error) {
+	return r.emailService.TestConnection(ctx) == nil, nil
+}
+
 // UpdateBrandSettings is the resolver for the updateBrandSettings field.
 func (r *mutationResolver) UpdateBrandSettings(ctx context.Context, input UpdateBrandSettingsInput) (bool, error) {
 	if input.BrandName != nil {
@@ -257,6 +262,66 @@ func (r *mutationResolver) UpdatePassThroughSettings(ctx context.Context, input 
 	}
 
 	return true, nil
+}
+
+// UpdateRegistrationSettings is the resolver for the updateRegistrationSettings field.
+func (r *mutationResolver) UpdateRegistrationSettings(ctx context.Context, input biz.RegistrationSettings) (*biz.RegistrationSettings, error) {
+	rs := &biz.RegistrationSettings{
+		AllowSignUp:       input.AllowSignUp,
+		ApprovalRequired:  input.ApprovalRequired,
+		DefaultUserScopes: input.DefaultUserScopes,
+	}
+	if err := r.systemService.SetRegistrationSettings(ctx, rs); err != nil {
+		return nil, fmt.Errorf("failed to update registration settings: %w", err)
+	}
+	return r.systemService.RegistrationSettings(ctx)
+}
+
+// UpdateEmailSettings is the resolver for the updateEmailSettings field.
+func (r *mutationResolver) UpdateEmailSettings(ctx context.Context, input biz.EmailSettings) (*biz.EmailSettings, error) {
+	// If the password looks masked, keep the existing one.
+	const maskedPassword = "••••••••"
+	if input.SMTPPassword == maskedPassword {
+		current, err := r.systemService.EmailSettings(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read current email settings: %w", err)
+		}
+		input.SMTPPassword = current.SMTPPassword
+	}
+
+	if err := r.systemService.SetEmailSettings(ctx, &input); err != nil {
+		return nil, fmt.Errorf("failed to update email settings: %w", err)
+	}
+
+	es, err := r.systemService.EmailSettings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get email settings: %w", err)
+	}
+	if es.SMTPPassword != "" {
+		es.SMTPPassword = maskedPassword
+	}
+	return es, nil
+}
+
+// TestEmailConnection is the resolver for the testEmailConnection field.
+func (r *mutationResolver) TestEmailConnection(ctx context.Context) (*TestEmailResult, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("user not found in context")
+	}
+
+	err := r.emailService.SendTestEmail(ctx, user.Email)
+	if err != nil {
+		return &TestEmailResult{
+			Success: false,
+			Message: fmt.Sprintf("failed to send test email: %v", err),
+		}, nil
+	}
+
+	return &TestEmailResult{
+		Success: true,
+		Message: fmt.Sprintf("Test email sent to %s", user.Email),
+	}, nil
 }
 
 // ClearCache is the resolver for the clearCache field.
@@ -525,3 +590,26 @@ func (r *queryResolver) GetCacheDiagnostics(ctx context.Context, input *GetCache
 		Targets:  normalizeDiagnosticsTargets(targets),
 	}, nil
 }
+
+// RegistrationSettings is the resolver for the registrationSettings field.
+func (r *queryResolver) RegistrationSettings(ctx context.Context) (*biz.RegistrationSettings, error) {
+	return r.systemService.RegistrationSettings(ctx)
+}
+
+// EmailSettings is the resolver for the emailSettings field.
+func (r *queryResolver) EmailSettings(ctx context.Context) (*biz.EmailSettings, error) {
+	es, err := r.systemService.EmailSettings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get email settings: %w", err)
+	}
+	// Mask the password so it is never returned to the client.
+	if es.SMTPPassword != "" {
+		es.SMTPPassword = "••••••••"
+	}
+	return es, nil
+}
+
+// EmailSettings returns EmailSettingsResolver implementation.
+func (r *Resolver) EmailSettings() EmailSettingsResolver { return &emailSettingsResolver{r} }
+
+type emailSettingsResolver struct{ *Resolver }
