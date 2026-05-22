@@ -7,6 +7,7 @@ package gql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -603,6 +604,27 @@ func (r *queryResolver) GetCacheDiagnostics(ctx context.Context, input *GetCache
 		FileName: fmt.Sprintf("axonhub-channel-model-cache-diagnostics-%s.json", time.Now().UTC().Format("20060102T150405Z")),
 		Content:  content,
 		Targets:  normalizeDiagnosticsTargets(targets),
+	}, nil
+}
+
+// GetMemoryDiagnostics is the resolver for the getMemoryDiagnostics field.
+func (r *queryResolver) GetMemoryDiagnostics(ctx context.Context) (*GetCacheDiagnosticsPayload, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil || !user.IsOwner {
+		return nil, ErrNotOwner
+	}
+
+	result := r.memorySampler.Snapshot()
+
+	content, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal memory diagnostics: %w", err)
+	}
+
+	return &GetCacheDiagnosticsPayload{
+		FileName: fmt.Sprintf("memory-diagnostics-%s.json", time.Now().UTC().Format("20060102T150405Z")),
+		Content:  string(content),
+		Targets:  nil,
 	}, nil
 }
 

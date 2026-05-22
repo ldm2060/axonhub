@@ -471,6 +471,7 @@ extend type Query {
   userAgentPassThroughSettings: UserAgentPassThroughSettings!
   passThroughSettings: PassThroughSettings!
   getCacheDiagnostics(input: GetCacheDiagnosticsInput): GetCacheDiagnosticsPayload!
+  getMemoryDiagnostics: GetCacheDiagnosticsPayload!
   registrationSettings: RegistrationSettings!
   emailSettings: EmailSettings!
 }
