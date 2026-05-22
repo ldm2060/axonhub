@@ -64,10 +64,10 @@ func (s *EmailService) brandName(ctx context.Context) string {
 
 func (s *EmailService) renderTemplate(name string, data *emailTemplateData) (string, string, error) {
 	var htmlBuf, textBuf bytes.Buffer
-	if err := s.htmlTemplates.ExecuteTemplate(&htmlBuf, "email/templates/"+name+".html", data); err != nil {
+	if err := s.htmlTemplates.ExecuteTemplate(&htmlBuf, name+".html", data); err != nil {
 		return "", "", fmt.Errorf("render html template %s: %w", name, err)
 	}
-	if err := s.textTemplates.ExecuteTemplate(&textBuf, "email/templates/"+name+".txt", data); err != nil {
+	if err := s.textTemplates.ExecuteTemplate(&textBuf, name+".txt", data); err != nil {
 		return "", "", fmt.Errorf("render text template %s: %w", name, err)
 	}
 	return htmlBuf.String(), textBuf.String(), nil
