@@ -649,14 +649,15 @@ type ComplexityRoot struct {
 	}
 
 	EmailSettings struct {
-		Connected    func(childComplexity int) int
-		Encryption   func(childComplexity int) int
-		FromAddress  func(childComplexity int) int
-		FromName     func(childComplexity int) int
-		SMTPHost     func(childComplexity int) int
-		SMTPPassword func(childComplexity int) int
-		SMTPPort     func(childComplexity int) int
-		SMTPUser     func(childComplexity int) int
+		Connected     func(childComplexity int) int
+		Encryption    func(childComplexity int) int
+		FromAddress   func(childComplexity int) int
+		FromName      func(childComplexity int) int
+		SMTPHost      func(childComplexity int) int
+		SMTPPassword  func(childComplexity int) int
+		SMTPPort      func(childComplexity int) int
+		SMTPUser      func(childComplexity int) int
+		SkipTLSVerify func(childComplexity int) int
 	}
 
 	EmailToken struct {
@@ -1307,6 +1308,7 @@ type ComplexityRoot struct {
 		FastestModels                func(childComplexity int, input FastestChannelsInput) int
 		FetchModels                  func(childComplexity int, input biz.FetchModelsInput) int
 		GetCacheDiagnostics          func(childComplexity int, input *GetCacheDiagnosticsInput) int
+		GetMemoryDiagnostics         func(childComplexity int) int
 		Me                           func(childComplexity int) int
 		ModelPerformanceStats        func(childComplexity int) int
 		Models                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
@@ -2330,6 +2332,7 @@ type QueryResolver interface {
 	UserAgentPassThroughSettings(ctx context.Context) (*UserAgentPassThroughSettings, error)
 	PassThroughSettings(ctx context.Context) (*PassThroughSettings, error)
 	GetCacheDiagnostics(ctx context.Context, input *GetCacheDiagnosticsInput) (*GetCacheDiagnosticsPayload, error)
+	GetMemoryDiagnostics(ctx context.Context) (*GetCacheDiagnosticsPayload, error)
 	RegistrationSettings(ctx context.Context) (*biz.RegistrationSettings, error)
 	EmailSettings(ctx context.Context) (*biz.EmailSettings, error)
 	FetchModels(ctx context.Context, input biz.FetchModelsInput) (*FetchModelsPayload, error)
@@ -4541,6 +4544,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.EmailSettings.SMTPUser(childComplexity), true
+	case "EmailSettings.skipTLSVerify":
+		if e.complexity.EmailSettings.SkipTLSVerify == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.SkipTLSVerify(childComplexity), true
 
 	case "EmailToken.consumedAt":
 		if e.complexity.EmailToken.ConsumedAt == nil {
@@ -7976,6 +7985,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetCacheDiagnostics(childComplexity, args["input"].(*GetCacheDiagnosticsInput)), true
+	case "Query.getMemoryDiagnostics":
+		if e.complexity.Query.GetMemoryDiagnostics == nil {
+			break
+		}
+
+		return e.complexity.Query.GetMemoryDiagnostics(childComplexity), true
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
 			break
@@ -25961,6 +25976,35 @@ func (ec *executionContext) fieldContext_EmailSettings_encryption(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailSettings_skipTLSVerify(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_skipTLSVerify,
+		func(ctx context.Context) (any, error) {
+			return obj.SkipTLSVerify, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_skipTLSVerify(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailSettings_fromName(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -34920,6 +34964,8 @@ func (ec *executionContext) fieldContext_Mutation_updateEmailSettings(ctx contex
 				return ec.fieldContext_EmailSettings_smtpPassword(ctx, field)
 			case "encryption":
 				return ec.fieldContext_EmailSettings_encryption(ctx, field)
+			case "skipTLSVerify":
+				return ec.fieldContext_EmailSettings_skipTLSVerify(ctx, field)
 			case "fromName":
 				return ec.fieldContext_EmailSettings_fromName(ctx, field)
 			case "fromAddress":
@@ -45459,6 +45505,43 @@ func (ec *executionContext) fieldContext_Query_getCacheDiagnostics(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getMemoryDiagnostics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getMemoryDiagnostics,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().GetMemoryDiagnostics(ctx)
+		},
+		nil,
+		ec.marshalNGetCacheDiagnosticsPayload2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐGetCacheDiagnosticsPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getMemoryDiagnostics(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "fileName":
+				return ec.fieldContext_GetCacheDiagnosticsPayload_fileName(ctx, field)
+			case "content":
+				return ec.fieldContext_GetCacheDiagnosticsPayload_content(ctx, field)
+			case "targets":
+				return ec.fieldContext_GetCacheDiagnosticsPayload_targets(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GetCacheDiagnosticsPayload", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_registrationSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -45534,6 +45617,8 @@ func (ec *executionContext) fieldContext_Query_emailSettings(_ context.Context, 
 				return ec.fieldContext_EmailSettings_smtpPassword(ctx, field)
 			case "encryption":
 				return ec.fieldContext_EmailSettings_encryption(ctx, field)
+			case "skipTLSVerify":
+				return ec.fieldContext_EmailSettings_skipTLSVerify(ctx, field)
 			case "fromName":
 				return ec.fieldContext_EmailSettings_fromName(ctx, field)
 			case "fromAddress":
@@ -83761,7 +83846,7 @@ func (ec *executionContext) unmarshalInputUpdateEmailSettingsInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"smtpHost", "smtpPort", "smtpUser", "smtpPassword", "encryption", "fromName", "fromAddress"}
+	fieldsInOrder := [...]string{"smtpHost", "smtpPort", "smtpUser", "smtpPassword", "encryption", "skipTLSVerify", "fromName", "fromAddress"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -83803,6 +83888,13 @@ func (ec *executionContext) unmarshalInputUpdateEmailSettingsInput(ctx context.C
 				return it, err
 			}
 			it.Encryption = data
+		case "skipTLSVerify":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipTLSVerify"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SkipTLSVerify = data
 		case "fromName":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromName"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -94794,6 +94886,11 @@ func (ec *executionContext) _EmailSettings(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "skipTLSVerify":
+			out.Values[i] = ec._EmailSettings_skipTLSVerify(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "fromName":
 			out.Values[i] = ec._EmailSettings_fromName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -101703,6 +101800,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCacheDiagnostics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getMemoryDiagnostics":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getMemoryDiagnostics(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

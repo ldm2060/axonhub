@@ -26,12 +26,13 @@ type PROCESS_MEMORY_COUNTERS struct {
 }
 
 func readRSSPlatform() uint64 {
-	process := syscall.CurrentProcess()
+	// GetCurrentProcess returns a pseudo-handle with value -1
+	currentProcess := ^uintptr(0) // -1 = GetCurrentProcess pseudo-handle
 	var counters PROCESS_MEMORY_COUNTERS
 	counters.CB = uint32(unsafe.Sizeof(counters))
 
 	ret, _, _ := procGetProcessMemoryInfo.Call(
-		process,
+		currentProcess,
 		uintptr(unsafe.Pointer(&counters)),
 		uintptr(unsafe.Sizeof(counters)),
 	)

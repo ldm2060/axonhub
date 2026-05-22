@@ -363,6 +363,7 @@ type EmailSettings {
   smtpUser: String!
   smtpPassword: String!
   encryption: String!
+  skipTLSVerify: Boolean!
   fromName: String!
   fromAddress: String!
   connected: Boolean!
@@ -374,6 +375,7 @@ input UpdateEmailSettingsInput {
   smtpUser: String!
   smtpPassword: String!
   encryption: String!
+  skipTLSVerify: Boolean
   fromName: String!
   fromAddress: String!
 }
