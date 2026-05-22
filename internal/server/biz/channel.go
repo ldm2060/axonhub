@@ -11,6 +11,7 @@ import (
 	"github.com/samber/lo"
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
@@ -792,9 +793,11 @@ func (svc *ChannelService) UnshareChannel(ctx context.Context, channelID, ownerI
 // ListSharedWithUser returns channels shared with the given user.
 func (svc *ChannelService) ListSharedWithUser(ctx context.Context, userID int) ([]*ent.Channel, error) {
 	client := svc.entFromContext(ctx)
-	channels, err := client.Channel.Query().
-		Where(channel.VisibilityEQ(channel.VisibilityShared)).
-		All(ctx)
+	channels, err := authz.RunWithSystemBypass(ctx, "list-shared-channels", func(ctx context.Context) ([]*ent.Channel, error) {
+		return client.Channel.Query().
+			Where(channel.VisibilityEQ(channel.VisibilityShared)).
+			All(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}

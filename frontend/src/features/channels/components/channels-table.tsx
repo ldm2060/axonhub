@@ -64,6 +64,7 @@ interface DataTableProps {
   onModelFilterChange: (filter: string) => void;
   onHealthColumnVisibilityChange?: (visible: boolean) => void;
   canWrite?: boolean;
+  showStatusFilter?: boolean;
 }
 
 const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
@@ -99,6 +100,7 @@ export function ChannelsTable({
   onModelFilterChange,
   onHealthColumnVisibilityChange,
   canWrite = true,
+  showStatusFilter = true,
 }: DataTableProps) {
   const { t } = useTranslation();
   const { setSelectedChannels, setResetRowSelection, setOpen } = useChannels();
@@ -292,6 +294,7 @@ export function ChannelsTable({
         selectedCount={selectedCount}
         selectedTypeTab={selectedTypeTab}
         showErrorOnly={showErrorOnly}
+        showStatusFilter={showStatusFilter}
         onExitErrorOnlyMode={onExitErrorOnlyMode}
       />
       <div className='shadow-soft relative mt-4 flex-1 overflow-auto rounded-2xl border border-[var(--table-border)]'>

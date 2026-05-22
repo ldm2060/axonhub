@@ -8,9 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -245,6 +247,64 @@ func setupTestChannelService(t *testing.T) (*ChannelService, *ent.Client) {
 	svc := NewChannelServiceForTest(client)
 
 	return svc, client
+}
+
+func TestChannelService_ListSharedWithUser_ReturnsChannelsSharedWithUser(t *testing.T) {
+	svc, client := setupTestChannelService(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	setupCtx := authz.WithTestBypass(ctx)
+
+	owner, err := client.User.Create().
+		SetEmail("shared-owner@example.com").
+		SetPassword("password").
+		SetStatus(user.StatusActivated).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	viewer, err := client.User.Create().
+		SetEmail("shared-viewer@example.com").
+		SetPassword("password").
+		SetStatus(user.StatusActivated).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	shared, err := client.Channel.Create().
+		SetType(channel.TypeOpenai).
+		SetName("Shared With Viewer").
+		SetBaseURL("https://api.openai.com/v1").
+		SetCredentials(objects.ChannelCredentials{APIKey: "key"}).
+		SetSupportedModels([]string{"gpt-4"}).
+		SetDefaultTestModel("gpt-4").
+		SetStatus(channel.StatusEnabled).
+		SetOwnerID(owner.ID).
+		SetVisibility(channel.VisibilityShared).
+		SetSharedWith([]int{viewer.ID}).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	_, err = client.Channel.Create().
+		SetType(channel.TypeOpenai).
+		SetName("Not Shared With Viewer").
+		SetBaseURL("https://api.openai.com/v1").
+		SetCredentials(objects.ChannelCredentials{APIKey: "key"}).
+		SetSupportedModels([]string{"gpt-4"}).
+		SetDefaultTestModel("gpt-4").
+		SetStatus(channel.StatusEnabled).
+		SetOwnerID(owner.ID).
+		SetVisibility(channel.VisibilityShared).
+		SetSharedWith([]int{}).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	queryCtx := contexts.WithUser(ctx, viewer)
+	channels, err := svc.ListSharedWithUser(queryCtx, viewer.ID)
+
+	require.NoError(t, err)
+	require.Len(t, channels, 1)
+	require.Equal(t, shared.ID, channels[0].ID)
 }
 
 func TestChannelService_CreateChannel(t *testing.T) {

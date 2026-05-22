@@ -16,6 +16,14 @@ import { ChannelsTypeTabs } from './components/channels-type-tabs';
 import ChannelsProvider from './context/channels-context';
 import { useQueryChannels, useChannelTypes, useErrorChannelsCount, useChannelProbeData } from './data/channels';
 import { useProvidersData } from '@/features/models/data/providers';
+import { useMySharedChannels } from '@/features/shared/data/shared';
+import {
+  type PersonalChannelSource,
+  isPersonalChannelSourceReadOnly,
+  buildPersonalChannelWhere,
+  filterSharedPersonalChannels,
+  filterPersonalChannelRows,
+} from './personal-channel-source';
 
 const ChannelsDialogs = lazy(() => import('./components/channels-dialogs').then((m) => ({ default: m.ChannelsDialogs })));
 
@@ -27,6 +35,11 @@ function PersonalChannelsContent() {
 
   useProvidersData();
   const { channelPermissions } = usePermissions();
+  const canWrite = channelPermissions.canWrite;
+
+  const [source, setSource] = useState<PersonalChannelSource>('mine');
+  const isReadOnly = isPersonalChannelSourceReadOnly(source);
+
   const { pageSize, setCursors, setPageSize, resetCursor, paginationArgs } = usePaginationSearch({
     defaultPageSize: 20,
     pageSizeStorageKey: 'my-channels-table-page-size',
@@ -66,7 +79,10 @@ function PersonalChannelsContent() {
     localStorage.setItem('my-channels-table-sorting', JSON.stringify(sorting));
   }, [sorting]);
 
-  const { data: channelTypeCounts = [] } = useChannelTypes(statusFilter.length > 0 ? statusFilter : ['enabled', 'disabled'], currentUser?.id);
+  const { data: channelTypeCounts = [] } = useChannelTypes(
+    statusFilter.length > 0 ? statusFilter : ['enabled', 'disabled'],
+    currentUser?.id,
+  );
   const { data: errorCount = 0 } = useErrorChannelsCount(currentUser?.id);
   const debouncedNameFilter = useDebounce(nameFilter, 300);
 
@@ -78,30 +94,33 @@ function PersonalChannelsContent() {
   }, [selectedTypeTab, channelTypeCounts]);
 
   const whereClause = useMemo(() => {
-    const where: Record<string, string | string[] | boolean> = {};
+    const base: Record<string, string | string[] | boolean> = {};
     if (debouncedNameFilter) {
-      where.nameContainsFold = debouncedNameFilter;
+      base.nameContainsFold = debouncedNameFilter;
     }
     const combinedTypeFilter = [...typeFilter];
     if (tabFilteredTypes.length > 0) {
       combinedTypeFilter.push(...tabFilteredTypes);
     }
     if (combinedTypeFilter.length > 0) {
-      where.typeIn = Array.from(new Set(combinedTypeFilter));
+      base.typeIn = Array.from(new Set(combinedTypeFilter));
     }
     if (statusFilter.length > 0) {
-      where.statusIn = statusFilter;
-    } else {
-      where.statusIn = ['enabled', 'disabled'];
+      base.statusIn = statusFilter;
     }
     if (showErrorOnly) {
-      where.errorMessageNotNil = true;
+      base.errorMessageNotNil = true;
     }
-    if (currentUser?.id) {
-      where.ownerID = currentUser.id;
-    }
-    return Object.keys(where).length > 0 ? where : undefined;
-  }, [debouncedNameFilter, tabFilteredTypes, statusFilter, showErrorOnly, currentUser?.id]);
+    return base;
+  }, [debouncedNameFilter, tabFilteredTypes, typeFilter, statusFilter, showErrorOnly]);
+
+  const mineWhereClause = useMemo(() => {
+    return buildPersonalChannelWhere('mine', String(currentUser?.id), whereClause);
+  }, [currentUser?.id, whereClause]);
+
+  const publicWhereClause = useMemo(() => {
+    return buildPersonalChannelWhere('public', String(currentUser?.id), whereClause);
+  }, [currentUser?.id, whereClause]);
 
   const currentOrderBy = useMemo(() => {
     if (sorting.length === 0) {
@@ -126,49 +145,93 @@ function PersonalChannelsContent() {
   }, [sorting]);
 
   const {
-    data,
-    isLoading,
-    error: _error,
+    data: mineData,
+    isLoading: mineLoading,
   } = useQueryChannels({
     ...paginationArgs,
-    where: whereClause,
+    where: mineWhereClause,
     orderBy: currentOrderBy,
     hasTag: tagFilter || undefined,
     model: modelFilter || undefined,
   });
 
+  const {
+    data: publicData,
+    isLoading: publicLoading,
+  } = useQueryChannels({
+    ...paginationArgs,
+    where: publicWhereClause,
+    orderBy: currentOrderBy,
+    hasTag: tagFilter || undefined,
+    model: modelFilter || undefined,
+  });
+
+  const { data: sharedRaw = [], isLoading: sharedLoading } = useMySharedChannels();
+  const sharedChannels = useMemo(
+    () => filterSharedPersonalChannels(sharedRaw, currentUser?.id),
+    [sharedRaw, currentUser?.id],
+  );
+  const sharedFiltered = useMemo(
+    () =>
+      filterPersonalChannelRows(sharedChannels, {
+        nameContainsFold: debouncedNameFilter,
+        typeIn: typeFilter.length > 0 ? typeFilter : tabFilteredTypes.length > 0 ? tabFilteredTypes : [],
+        hasTag: tagFilter || undefined,
+        model: modelFilter || undefined,
+      }),
+    [sharedChannels, debouncedNameFilter, typeFilter, tabFilteredTypes, tagFilter, modelFilter],
+  );
+
+  const activeData = useMemo(() => {
+    if (source === 'mine') return mineData;
+    if (source === 'public') return publicData;
+    return undefined;
+  }, [source, mineData, publicData]);
+
+  const isLoading = source === 'shared' ? sharedLoading : source === 'public' ? publicLoading : mineLoading;
+  const activePageInfo = source === 'shared' ? undefined : activeData?.pageInfo;
+  const activeTotalCount = source === 'shared' ? sharedFiltered.length : activeData?.totalCount;
+
   const channelIDs = useMemo(() => {
-    return data?.edges?.map((edge) => edge.node.id) || [];
-  }, [data?.edges]);
+    if (source === 'shared') return sharedFiltered.map((c) => c.id);
+    return activeData?.edges?.map((edge) => edge.node.id) || [];
+  }, [source, activeData?.edges, sharedFiltered]);
 
   const { data: probeData } = useChannelProbeData(channelIDs, { enabled: isHealthColumnVisible });
 
   const channelsWithProbeData = useMemo(() => {
-    if (!data?.edges) return [];
+    if (source === 'shared') {
+      const probeMap = new Map(probeData?.map((probe) => [probe.channelID, probe.points]) || []);
+      return sharedFiltered.map((channel) => ({
+        ...channel,
+        probePoints: probeMap.get(channel.id) || [],
+      }));
+    }
+    if (!activeData?.edges) return [];
     const probeMap = new Map(probeData?.map((probe) => [probe.channelID, probe.points]) || []);
-    return data.edges.map((edge) => ({
+    return activeData.edges.map((edge) => ({
       ...edge.node,
       probePoints: probeMap.get(edge.node.id) || [],
     }));
-  }, [data?.edges, probeData]);
+  }, [source, activeData?.edges, sharedFiltered, probeData]);
 
   const handleNextPage = useCallback(() => {
-    if (data?.pageInfo?.hasNextPage && data?.pageInfo?.endCursor) {
-      setCursors(data.pageInfo.startCursor ?? undefined, data.pageInfo.endCursor ?? undefined, 'after');
+    if (activeData?.pageInfo?.hasNextPage && activeData?.pageInfo?.endCursor) {
+      setCursors(activeData.pageInfo.startCursor ?? undefined, activeData.pageInfo.endCursor ?? undefined, 'after');
     }
-  }, [data?.pageInfo, setCursors]);
+  }, [activeData?.pageInfo, setCursors]);
 
   const handlePreviousPage = useCallback(() => {
-    if (data?.pageInfo?.hasPreviousPage) {
-      setCursors(data.pageInfo.startCursor ?? undefined, data.pageInfo.endCursor ?? undefined, 'before');
+    if (activeData?.pageInfo?.hasPreviousPage) {
+      setCursors(activeData.pageInfo.startCursor ?? undefined, activeData.pageInfo.endCursor ?? undefined, 'before');
     }
-  }, [data?.pageInfo, setCursors]);
+  }, [activeData?.pageInfo, setCursors]);
 
   const handlePageSizeChange = useCallback(
     (newPageSize: number) => {
       setPageSize(newPageSize);
     },
-    [setPageSize]
+    [setPageSize],
   );
 
   const handleNameFilterChange = useCallback(
@@ -176,7 +239,7 @@ function PersonalChannelsContent() {
       setNameFilter(filter);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleTypeFilterChange = useCallback(
@@ -184,7 +247,7 @@ function PersonalChannelsContent() {
       setTypeFilter(filters);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleTabChange = useCallback(
@@ -193,7 +256,7 @@ function PersonalChannelsContent() {
       setTypeFilter([]);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleStatusFilterChange = useCallback(
@@ -201,7 +264,7 @@ function PersonalChannelsContent() {
       setStatusFilter(filters);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleTagFilterChange = useCallback(
@@ -209,7 +272,7 @@ function PersonalChannelsContent() {
       setTagFilter(filter);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleModelFilterChange = useCallback(
@@ -217,7 +280,7 @@ function PersonalChannelsContent() {
       setModelFilter(filter);
       resetCursor();
     },
-    []
+    [],
   );
 
   const handleFilterErrorChannels = useCallback(() => {
@@ -230,7 +293,20 @@ function PersonalChannelsContent() {
     resetCursor();
   }, []);
 
-  const columns = useMemo(() => createColumns(t, channelPermissions.canWrite, { hideOrderingWeight: true }), [t, channelPermissions.canWrite]);
+  const handleSourceChange = useCallback(
+    (newSource: PersonalChannelSource) => {
+      setSource(newSource);
+      setTypeFilter([]);
+      setSelectedTypeTab('all');
+      resetCursor();
+    },
+    [],
+  );
+
+  const columns = useMemo(
+    () => createColumns(t, isReadOnly ? false : canWrite, { hideOrderingWeight: true }),
+    [t, isReadOnly, canWrite],
+  );
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
@@ -240,14 +316,33 @@ function PersonalChannelsContent() {
         showErrorOnly={showErrorOnly}
         onExitErrorOnlyMode={handleExitErrorOnlyMode}
       />
-      <ChannelsTypeTabs typeCounts={channelTypeCounts} selectedTab={selectedTypeTab} onTabChange={handleTabChange} />
+      <div className='mb-6 w-full overflow-hidden'>
+        <div className='hide-scroll flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth'>
+          {(['public', 'shared', 'mine'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => handleSourceChange(s)}
+              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-all ${
+                source === s
+                  ? 'bg-primary text-primary-foreground shadow-primary/20 shadow-md'
+                  : 'bg-card border-border text-foreground hover:border-primary hover:text-primary border'
+              }`}
+            >
+              {t(`channels.sources.${s}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+      {source === 'mine' && (
+        <ChannelsTypeTabs typeCounts={channelTypeCounts} selectedTab={selectedTypeTab} onTabChange={handleTabChange} />
+      )}
       <ChannelsTable
         loading={isLoading}
         data={channelsWithProbeData}
         columns={columns}
-        pageInfo={data?.pageInfo}
+        pageInfo={activePageInfo}
         pageSize={pageSize}
-        totalCount={data?.totalCount}
+        totalCount={activeTotalCount}
         nameFilter={nameFilter}
         typeFilter={typeFilter}
         statusFilter={statusFilter}
@@ -268,7 +363,8 @@ function PersonalChannelsContent() {
         onTagFilterChange={handleTagFilterChange}
         onModelFilterChange={handleModelFilterChange}
         onHealthColumnVisibilityChange={setIsHealthColumnVisible}
-        canWrite={channelPermissions.canWrite}
+        canWrite={isReadOnly ? false : canWrite}
+        showStatusFilter={!isReadOnly}
       />
     </div>
   );

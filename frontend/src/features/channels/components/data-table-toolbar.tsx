@@ -13,18 +13,16 @@ import { DataTableViewOptions } from './data-table-view-options';
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   isFiltered?: boolean;
-  selectedCount?: number;
-  selectedTypeTab?: string;
   showErrorOnly?: boolean;
+  showStatusFilter?: boolean;
   onExitErrorOnlyMode?: () => void;
 }
 
 export function DataTableToolbar<TData>({
   table,
   isFiltered: externalIsFiltered,
-  selectedCount: externalSelectedCount,
-  selectedTypeTab = 'all',
   showErrorOnly,
+  showStatusFilter = true,
   onExitErrorOnlyMode,
 }: DataTableToolbarProps<TData>) {
   const { t } = useTranslation();
@@ -102,7 +100,7 @@ export function DataTableToolbar<TData>({
           className='bg-card border-border focus:ring-primary/20 placeholder-muted-foreground text-foreground w-full rounded-xl border py-2 pr-4 pl-10 text-sm shadow-sm transition-all focus:ring-2 focus:outline-none'
         />
       </div>
-      {table.getColumn('status') && (
+      {showStatusFilter && table.getColumn('status') && (
         <DataTableFacetedFilter column={table.getColumn('status')} title={t('channels.filters.status')} options={channelStatuses} />
       )}
       {table.getColumn('tags') && tagOptions?.length > 0 && (
