@@ -17,7 +17,23 @@ var dist embed.FS
 
 var staticFS static.ServeFileSystem
 
+// spaAdminPrefixes are admin sub-paths that serve the SPA frontend.
+// Checked before apiPrefixes so they serve index.html instead of 404.
+// Note: "/admin" is handled as an exact match only, not as a blanket prefix.
+var spaAdminPrefixes = []string{
+	"/admin/channels",
+	"/admin/dashboard",
+	"/admin/data-storages",
+	"/admin/models",
+	"/admin/prompt-protection-rules",
+	"/admin/publish-requests",
+	"/admin/roles",
+	"/admin/system",
+	"/admin/users",
+}
+
 var apiPrefixes = []string{
+	"/admin",
 	"/admin/auth",
 	"/admin/graphql",
 	"/admin/playground",
@@ -48,6 +64,11 @@ func init() {
 func Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
+
+		if isSPAAdminPath(path) {
+			serveSPAIndex(c)
+			return
+		}
 
 		if isAPIPath(path) {
 			serveAPINotFound(c, path)
@@ -84,6 +105,19 @@ func serveSPAIndex(c *gin.Context) {
 
 func isAPIPath(path string) bool {
 	for _, prefix := range apiPrefixes {
+		if hasPathPrefix(path, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isSPAAdminPath(path string) bool {
+	if path == "/admin" || path == "/admin/" {
+		return true
+	}
+	for _, prefix := range spaAdminPrefixes {
 		if hasPathPrefix(path, prefix) {
 			return true
 		}

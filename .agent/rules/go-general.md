@@ -10,6 +10,7 @@ globs: "**/*.go"
 1. The development server is managed by `air`; do not restart it manually.
 2. Do not run `go build`, `make build-backend`, `make build`, or `golangci-lint run` unless the user explicitly asks.
 3. Use the owning Go module for commands. In particular, run Go commands for `llm/` from the `llm/` directory.
+4. Before committing any Go code changes, run `make test-backend-all` and ensure all tests pass. Fix any failures before proceeding with the commit.
 
 ## Coding Conventions
 

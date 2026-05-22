@@ -9,7 +9,7 @@ This file provides guidance to AI coding assistants when working with code in th
 1. Do NOT run lint or build commands unless explicitly requested by the user.
 2. Do NOT restart the development server — it's already started and managed.
 3. All summary files should be stored in `.agent/summary` directory if available.
-4. After making code changes, commit immediately — do not wait for the user to ask.
+4. After making code changes, run lint check locally (if tools are available), then commit immediately — do not wait for the user to ask.
 
 ## Configuration
 
