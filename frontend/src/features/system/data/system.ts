@@ -733,6 +733,26 @@ export function useCheckForUpdate() {
   });
 }
 
+function downloadBlob(fileName: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function base64ToBytes(content: string) {
+  const binary = atob(content);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 export function useExportCacheDiagnostics() {
   const { handleError } = useErrorHandler();
 
@@ -746,14 +766,7 @@ export function useExportCacheDiagnostics() {
     },
     onSuccess: (data) => {
       const blob = new Blob([data.content], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = data.fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(data.fileName, blob);
       toast.success(i18n.t('system.diagnostics.cache.exportSuccess'));
     },
     onError: (error) => {
@@ -773,15 +786,8 @@ export function useExportMemoryDiagnostics() {
       return data.getMemoryDiagnostics;
     },
     onSuccess: (data) => {
-      const blob = new Blob([data.content], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = data.fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const blob = new Blob([base64ToBytes(data.content)], { type: 'application/zip' });
+      downloadBlob(data.fileName, blob);
       toast.success(i18n.t('system.memory_diagnostics.success'));
     },
     onError: (error) => {

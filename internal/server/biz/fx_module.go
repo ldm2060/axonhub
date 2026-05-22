@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
@@ -113,7 +114,14 @@ var Module = fx.Module("biz",
 	fx.Invoke(func(lc fx.Lifecycle, sampler *MemorySampler) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				go sampler.Run()
+				go func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Error(context.Background(), "memory sampler panicked", log.Any("panic", r))
+						}
+					}()
+					sampler.Run()
+				}()
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {

@@ -1,12 +1,17 @@
 package gql
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"encoding/base64"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
@@ -88,4 +93,33 @@ func TestMutationResolver_UpdateSystemChannelSettings_MergesProbeWithoutOverwrit
 	require.False(t, setting.Probe.Enabled)
 	require.Equal(t, biz.ProbeFrequency1Hour, setting.Probe.Frequency)
 	require.Equal(t, biz.AutoSyncFrequencySixHours, setting.AutoSync.Frequency)
+}
+
+func TestQueryResolver_GetMemoryDiagnostics_ReturnsBase64ZipBundle(t *testing.T) {
+	sampler := biz.NewMemorySampler()
+	resolver := &queryResolver{&Resolver{memorySampler: sampler}}
+	ctx := contexts.WithUser(context.Background(), &ent.User{IsOwner: true})
+
+	payload, err := resolver.GetMemoryDiagnostics(ctx)
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(payload.FileName, "memory-diagnostics-"))
+	require.True(t, strings.HasSuffix(payload.FileName, ".zip"))
+	require.Empty(t, payload.Targets)
+
+	zipBytes, err := base64.StdEncoding.DecodeString(payload.Content)
+	require.NoError(t, err)
+	require.NotEmpty(t, zipBytes)
+
+	zr, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
+	require.NoError(t, err)
+
+	entries := make(map[string]bool, len(zr.File))
+	for _, f := range zr.File {
+		entries[f.Name] = true
+	}
+	require.True(t, entries["summary.json"])
+	require.True(t, entries["current.json"])
+	require.True(t, entries["samples.jsonl"])
+	require.True(t, entries["heap.pprof"])
+	require.True(t, entries["goroutines.txt"])
 }

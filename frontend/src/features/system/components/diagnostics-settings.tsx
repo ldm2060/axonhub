@@ -69,7 +69,7 @@ export function DiagnosticsSettings() {
                 <h4 className='text-sm font-medium'>{t('system.memory_diagnostics.title')}</h4>
                 <p className='text-muted-foreground text-sm'>{t('system.memory_diagnostics.description')}</p>
               </div>
-              <Button variant='outline' size='sm' onClick={() => exportMemoryDiagnostics()} disabled={isExportingMemory} className='w-full sm:w-auto'>
+              <Button data-testid='export-memory-diagnostics' variant='outline' size='sm' onClick={() => exportMemoryDiagnostics()} disabled={isExportingMemory} className='w-full sm:w-auto'>
                 <Download className={`mr-2 h-4 w-4 ${isExportingMemory ? 'animate-spin' : ''}`} />
                 {t('system.memory_diagnostics.export')}
               </Button>

@@ -1,7 +1,9 @@
 package biz
 
 import (
+	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"runtime"
 	"runtime/pprof"
@@ -19,12 +21,21 @@ const (
 )
 
 type MemorySample struct {
-	Timestamp  time.Time `json:"ts"`
-	HeapAlloc  uint64    `json:"heapAlloc"`
-	HeapInuse  uint64    `json:"heapInuse"`
-	Sys        uint64    `json:"sys"`
-	Goroutines int       `json:"goroutines"`
-	RSSBytes   uint64    `json:"rssBytes"`
+	Timestamp     time.Time `json:"ts"`
+	HeapAlloc     uint64    `json:"heapAlloc"`
+	HeapInuse     uint64    `json:"heapInuse"`
+	HeapSys       uint64    `json:"heapSys"`
+	HeapIdle      uint64    `json:"heapIdle"`
+	HeapReleased  uint64    `json:"heapReleased"`
+	HeapObjects   uint64    `json:"heapObjects"`
+	Sys           uint64    `json:"sys"`
+	TotalAlloc    uint64    `json:"totalAlloc"`
+	Mallocs       uint64    `json:"mallocs"`
+	Frees         uint64    `json:"frees"`
+	NumGC         uint32    `json:"numGC"`
+	GCCPUFraction float64   `json:"gcCpuFraction"`
+	Goroutines    int       `json:"goroutines"`
+	RSSBytes      uint64    `json:"rssBytes"`
 }
 
 type MemorySampler struct {
@@ -34,6 +45,7 @@ type MemorySampler struct {
 	count     int
 	startTime time.Time
 	stopCh    chan struct{}
+	stopOnce  sync.Once
 }
 
 func NewMemorySampler() *MemorySampler {
@@ -65,12 +77,21 @@ func (ms *MemorySampler) sample() {
 	runtime.ReadMemStats(&m)
 
 	sample := MemorySample{
-		Timestamp:  time.Now().UTC(),
-		HeapAlloc:  m.HeapAlloc,
-		HeapInuse:  m.HeapInuse,
-		Sys:        m.Sys,
-		Goroutines: runtime.NumGoroutine(),
-		RSSBytes:   readRSS(),
+		Timestamp:     time.Now().UTC(),
+		HeapAlloc:     m.HeapAlloc,
+		HeapInuse:     m.HeapInuse,
+		HeapSys:       m.HeapSys,
+		HeapIdle:      m.HeapIdle,
+		HeapReleased:  m.HeapReleased,
+		HeapObjects:   m.HeapObjects,
+		Sys:           m.Sys,
+		TotalAlloc:    m.TotalAlloc,
+		Mallocs:       m.Mallocs,
+		Frees:         m.Frees,
+		NumGC:         m.NumGC,
+		GCCPUFraction: m.GCCPUFraction,
+		Goroutines:    runtime.NumGoroutine(),
+		RSSBytes:      readRSS(),
 	}
 
 	ms.mu.Lock()
@@ -83,7 +104,9 @@ func (ms *MemorySampler) sample() {
 }
 
 func (ms *MemorySampler) Stop() {
-	close(ms.stopCh)
+	ms.stopOnce.Do(func() {
+		close(ms.stopCh)
+	})
 }
 
 func readRSS() uint64 {
@@ -130,7 +153,7 @@ type ProcessInfo struct {
 }
 
 type CurrentSnapshot struct {
-	MemStats   MemStatsSnapshot       `json:"memStats"`
+	MemStats   MemStatsSnapshot `json:"memStats"`
 	Goroutines struct {
 		Count     int                   `json:"count"`
 		TopStacks []GoroutineStackEntry `json:"topStacks"`
@@ -145,6 +168,10 @@ type MemoryDiagnosticsResult struct {
 }
 
 func (ms *MemorySampler) Snapshot() *MemoryDiagnosticsResult {
+	return ms.snapshot(collectGoroutineTopStacks())
+}
+
+func (ms *MemorySampler) snapshot(topStacks []GoroutineStackEntry) *MemoryDiagnosticsResult {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
@@ -170,7 +197,6 @@ func (ms *MemorySampler) Snapshot() *MemoryDiagnosticsResult {
 	}
 
 	goroutineCount := runtime.NumGoroutine()
-	topStacks := collectGoroutineTopStacks()
 
 	rss := readRSS()
 	cpu := readCPUPlatform()
@@ -229,9 +255,105 @@ func (ms *MemorySampler) Snapshot() *MemoryDiagnosticsResult {
 
 	return &MemoryDiagnosticsResult{
 		ExportedAt: time.Now().UTC().Format(time.RFC3339),
-		Current:   current,
-		History:   history,
+		Current:    current,
+		History:    history,
 	}
+}
+
+func (ms *MemorySampler) ExportBundle() ([]byte, error) {
+	runtime.GC()
+	result := ms.snapshot(nil)
+
+	heapProfile, err := collectProfileBytes("heap", 0)
+	if err != nil {
+		return nil, err
+	}
+	goroutineProfile, err := collectProfileBytes("goroutine", 2)
+	if err != nil {
+		return nil, err
+	}
+	result.Current.Goroutines.TopStacks = goroutineTopStacksFromProfile(goroutineProfile)
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+
+	summary := struct {
+		FormatVersion         int    `json:"formatVersion"`
+		ExportedAt            string `json:"exportedAt"`
+		RetentionHours        int    `json:"retentionHours"`
+		SampleIntervalSeconds int    `json:"sampleIntervalSeconds"`
+		SampleCount           int    `json:"sampleCount"`
+	}{
+		FormatVersion:         1,
+		ExportedAt:            result.ExportedAt,
+		RetentionHours:        int((sampleInterval * ringSize) / time.Hour),
+		SampleIntervalSeconds: int(sampleInterval / time.Second),
+		SampleCount:           len(result.History),
+	}
+
+	if err := addJSONZipEntry(zw, "summary.json", summary); err != nil {
+		return nil, err
+	}
+	if err := addJSONZipEntry(zw, "current.json", result.Current); err != nil {
+		return nil, err
+	}
+	if err := addSamplesZipEntry(zw, result.History); err != nil {
+		return nil, err
+	}
+	if err := addZipEntry(zw, "heap.pprof", heapProfile); err != nil {
+		return nil, err
+	}
+	if err := addZipEntry(zw, "goroutines.txt", goroutineProfile); err != nil {
+		return nil, err
+	}
+	if err := zw.Close(); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func addJSONZipEntry(zw *zip.Writer, name string, v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal %s: %w", name, err)
+	}
+	return addZipEntry(zw, name, data)
+}
+
+func addSamplesZipEntry(zw *zip.Writer, samples []MemorySample) error {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	for _, sample := range samples {
+		if err := enc.Encode(sample); err != nil {
+			return fmt.Errorf("failed to marshal samples.jsonl: %w", err)
+		}
+	}
+	return addZipEntry(zw, "samples.jsonl", buf.Bytes())
+}
+
+func collectProfileBytes(profileName string, debug int) ([]byte, error) {
+	profile := pprof.Lookup(profileName)
+	if profile == nil {
+		return nil, fmt.Errorf("profile %q not found", profileName)
+	}
+
+	var buf bytes.Buffer
+	if err := profile.WriteTo(&buf, debug); err != nil {
+		return nil, fmt.Errorf("failed to write %s profile: %w", profileName, err)
+	}
+	return buf.Bytes(), nil
+}
+
+func addZipEntry(zw *zip.Writer, name string, data []byte) error {
+	w, err := zw.Create(name)
+	if err != nil {
+		return fmt.Errorf("failed to create %s: %w", name, err)
+	}
+	if _, err := w.Write(data); err != nil {
+		return fmt.Errorf("failed to write %s: %w", name, err)
+	}
+	return nil
 }
 
 func formatBytes(b uint64) string {
@@ -253,18 +375,16 @@ func formatBytes(b uint64) string {
 }
 
 func collectGoroutineTopStacks() []GoroutineStackEntry {
-	p := pprof.Lookup("goroutine")
-	if p == nil {
+	profile, err := collectProfileBytes("goroutine", 2)
+	if err != nil {
 		return nil
 	}
+	return goroutineTopStacksFromProfile(profile)
+}
 
-	var buf bytes.Buffer
-	if err := p.WriteTo(&buf, 2); err != nil {
-		return nil
-	}
-
+func goroutineTopStacksFromProfile(profile []byte) []GoroutineStackEntry {
 	stackCount := make(map[string]int)
-	lines := bytes.Split(buf.Bytes(), []byte("\n"))
+	lines := bytes.Split(profile, []byte("\n"))
 	var currentStack []string
 	var inStack bool
 

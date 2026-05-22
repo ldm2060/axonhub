@@ -7,7 +7,7 @@ package gql
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -614,16 +614,14 @@ func (r *queryResolver) GetMemoryDiagnostics(ctx context.Context) (*GetCacheDiag
 		return nil, ErrNotOwner
 	}
 
-	result := r.memorySampler.Snapshot()
-
-	content, err := json.MarshalIndent(result, "", "  ")
+	bundle, err := r.memorySampler.ExportBundle()
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal memory diagnostics: %w", err)
+		return nil, fmt.Errorf("failed to build memory diagnostics export: %w", err)
 	}
 
 	return &GetCacheDiagnosticsPayload{
-		FileName: fmt.Sprintf("memory-diagnostics-%s.json", time.Now().UTC().Format("20060102T150405Z")),
-		Content:  string(content),
+		FileName: fmt.Sprintf("memory-diagnostics-%s.zip", time.Now().UTC().Format("20060102T150405Z")),
+		Content:  base64.StdEncoding.EncodeToString(bundle),
 		Targets:  nil,
 	}, nil
 }

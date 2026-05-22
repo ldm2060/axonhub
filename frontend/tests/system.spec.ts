@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import { gotoAndEnsureAuth, waitForGraphQLOperation } from './auth.utils'
+
+const memoryDiagnosticsZipBase64 = 'UEsDBBQAAAAIACG2t1iPyUwQCwAAAAkAAAAIAAAAdGVzdC50eHMrSS0uAQBQSwECFAMUAAAACAAhtrdYj8lMEAsAAAAJAAAACAAAAAAAAAAAAAAAgAEAAAAAdGVzdC50eHRQSwUGAAAAAAEAAQA2AAAAMQAAAAAA'
 
 test.describe('Admin System Management', () => {
   test.beforeEach(async ({ page }) => {
@@ -58,5 +61,43 @@ test.describe('Admin System Management', () => {
       // If no specific storage text, just verify the tab is active
       await expect(storageTab).toHaveAttribute('aria-selected', 'true')
     }
+  })
+
+  test('downloads memory diagnostics as a zip file', async ({ page }) => {
+    await page.route('**/graphql', async (route) => {
+      const body = route.request().postData() || ''
+      if (!body.includes('GetMemoryDiagnostics') && !body.includes('getMemoryDiagnostics')) {
+        await route.fallback()
+        return
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            getMemoryDiagnostics: {
+              fileName: 'memory-diagnostics-test.zip',
+              content: memoryDiagnosticsZipBase64,
+              targets: [],
+            },
+          },
+        }),
+      })
+    })
+
+    const diagnosticsTab = page.getByRole('tab', { name: /Diagnostics|诊断/i })
+    await diagnosticsTab.click()
+    await expect(diagnosticsTab).toHaveAttribute('aria-selected', 'true')
+
+    const downloadPromise = page.waitForEvent('download')
+    await page.getByTestId('export-memory-diagnostics').click()
+    const download = await downloadPromise
+
+    expect(download.suggestedFilename()).toBe('memory-diagnostics-test.zip')
+    const path = await download.path()
+    expect(path).toBeTruthy()
+    const file = await readFile(path!)
+    expect(file.subarray(0, 2).toString()).toBe('PK')
   })
 })
