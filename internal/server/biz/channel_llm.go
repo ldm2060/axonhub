@@ -1073,14 +1073,15 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 	for _, mapping := range ch.Settings.ModelMappings {
 		// Only add if the target model is supported
 		if slices.Contains(ch.SupportedModels, mapping.To) {
-			if _, exists := entries[mapping.From]; !exists {
+			existing, exists := entries[mapping.From]
+			if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
 				entries[mapping.From] = ChannelModelEntry{
 					RequestModel: mapping.From,
 					ActualModel:  mapping.To,
 					Source:       "mapping",
 				}
 				// When hideMappedModels is enabled, remove mapped models from the entries
-				if ch.Settings.HideMappedModels {
+				if ch.Settings.HideMappedModels && mapping.To != mapping.From {
 					delete(entries, mapping.To)
 				}
 			}

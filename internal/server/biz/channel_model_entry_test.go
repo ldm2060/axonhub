@@ -120,6 +120,23 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 		},
 		{
+			name: "hideOriginalModels: keeps same-name mapping",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4"},
+					Settings: &objects.ChannelSettings{
+						ModelMappings: []objects.ModelMapping{
+							{From: "gpt-4", To: "gpt-4"},
+						},
+						HideOriginalModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "mapping"},
+			},
+		},
+		{
 			name: "nil settings",
 			channel: &Channel{
 				Channel: &ent.Channel{
