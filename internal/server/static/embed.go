@@ -21,7 +21,6 @@ var apiPrefixes = []string{
 	"/admin/auth",
 	"/admin/graphql",
 	"/admin/playground",
-	"/admin/system",
 	"/admin/requests",
 	"/admin/codex",
 	"/admin/claudecode",

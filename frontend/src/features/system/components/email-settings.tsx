@@ -81,6 +81,20 @@ export function EmailSettingsTab() {
 
   const handleTestConnection = async () => {
     try {
+      // Save settings first so the test uses the current form values
+      if (hasChanges) {
+        const input: Record<string, unknown> = {
+          smtpHost: formData.smtpHost,
+          smtpPort: formData.smtpPort,
+          smtpUser: formData.smtpUser,
+          encryption: formData.encryption,
+          fromName: formData.fromName,
+          fromAddress: formData.fromAddress,
+          smtpPassword: formData.smtpPassword,
+        };
+        await updateSettings.mutateAsync(input as any);
+        setPasswordChanged(false);
+      }
       const result = await testConnection.mutateAsync();
       setConnected(result.success);
     } catch {
@@ -225,7 +239,7 @@ export function EmailSettingsTab() {
               type='button'
               variant='outline'
               onClick={handleTestConnection}
-              disabled={testConnection.isPending}
+              disabled={testConnection.isPending || updateSettings.isPending}
             >
               {testConnection.isPending ? (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />

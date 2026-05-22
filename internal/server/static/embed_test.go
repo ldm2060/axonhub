@@ -89,3 +89,24 @@ func TestHandler_DoesNotFallbackMissingStaticAssetToSPAIndex(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, recorder.Code)
 	require.NotContains(t, recorder.Header().Get("Content-Type"), "text/html")
 }
+
+func TestHandler_ServesSPAForAdminSystemRoute(t *testing.T) {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	useTestStaticFS(t)
+
+	router := gin.New()
+	router.NoRoute(Handler())
+
+	for _, path := range []string{"/admin/system", "/admin/system/"} {
+		t.Run(path, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, path, nil)
+
+			router.ServeHTTP(recorder, req)
+
+			require.Equal(t, http.StatusOK, recorder.Code)
+			require.Contains(t, recorder.Header().Get("Content-Type"), "text/html")
+		})
+	}
+}

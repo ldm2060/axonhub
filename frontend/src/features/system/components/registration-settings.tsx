@@ -57,6 +57,8 @@ export function RegistrationSettingsTab() {
         allowSignUp: checked,
         approvalRequired: mode === 'approval',
         defaultUserScopes: defaultScopes,
+        emailAllowPatterns: allowPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
+        emailDenyPatterns: denyPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
       });
     } catch (err: any) {
       setEnabled(previousValue);
@@ -75,6 +77,8 @@ export function RegistrationSettingsTab() {
         allowSignUp: enabled,
         approvalRequired: newMode === 'approval',
         defaultUserScopes: defaultScopes,
+        emailAllowPatterns: allowPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
+        emailDenyPatterns: denyPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
       });
     } catch {
       setMode(previousValue);
