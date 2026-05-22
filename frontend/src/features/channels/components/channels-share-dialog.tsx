@@ -32,7 +32,7 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
 
   // Fetch all users for the sharing dropdown
   const { data: usersData } = useUsers(
-    { first: 100, where: { statusIn: ['enabled'] } },
+    { first: 100, where: { statusIn: ['activated'] } },
     { disableAutoFetch: false }
   );
 
