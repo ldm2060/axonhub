@@ -7,6 +7,7 @@ import (
 
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/user"
@@ -82,6 +83,8 @@ func (s *SignUpService) AllowSignUp(ctx context.Context) bool {
 
 // SignUp registers a new user and sends a verification email.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
+	ctx = authz.WithSystemBypass(ctx, "signup")
+
 	if !s.AllowSignUp(ctx) {
 		return nil, "", fmt.Errorf("sign-up is not allowed")
 	}
