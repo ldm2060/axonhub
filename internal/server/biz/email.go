@@ -111,14 +111,15 @@ func (s *EmailService) Send(ctx context.Context, to, subject, htmlBody, textBody
 
 	switch settings.Encryption {
 	case "ssl":
-		return s.sendSSL(addr, tlsConfig, auth, settings.FromAddress, to, msg.Bytes())
+		return s.sendSSL(ctx, addr, tlsConfig, auth, settings.FromAddress, to, msg.Bytes())
 	default:
-		return s.sendDefault(addr, settings.SMTPHost, tlsConfig, auth, settings, settings.FromAddress, to, msg.Bytes())
+		return s.sendDefault(ctx, addr, settings.SMTPHost, tlsConfig, auth, settings, settings.FromAddress, to, msg.Bytes())
 	}
 }
 
-func (s *EmailService) sendSSL(addr string, tlsConfig *tls.Config, auth smtp.Auth, from, to string, msg []byte) error {
-	conn, err := tls.Dial("tcp", addr, tlsConfig)
+func (s *EmailService) sendSSL(ctx context.Context, addr string, tlsConfig *tls.Config, auth smtp.Auth, from, to string, msg []byte) error {
+	dialer := &tls.Dialer{Config: tlsConfig}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return fmt.Errorf("smtp tls dial: %w", err)
 	}
@@ -136,7 +137,7 @@ func (s *EmailService) sendSSL(addr string, tlsConfig *tls.Config, auth smtp.Aut
 	return s.sendMail(c, from, to, msg)
 }
 
-func (s *EmailService) sendDefault(addr, host string, tlsConfig *tls.Config, auth smtp.Auth, settings *EmailSettings, from, to string, msg []byte) error {
+func (s *EmailService) sendDefault(ctx context.Context, addr, host string, tlsConfig *tls.Config, auth smtp.Auth, settings *EmailSettings, from, to string, msg []byte) error {
 	c, err := smtp.Dial(addr)
 	if err != nil {
 		return fmt.Errorf("smtp dial: %w", err)
@@ -269,7 +270,11 @@ func (s *EmailService) TestConnection(ctx context.Context) error {
 	}
 	switch settings.Encryption {
 	case "ssl":
-		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+		tlsDialer := &tls.Dialer{
+			Config: tlsConfig,
+			NetDialer: &net.Dialer{Timeout: 5 * time.Second},
+		}
+		conn, err := tlsDialer.DialContext(ctx, "tcp", addr)
 		if err != nil {
 			return fmt.Errorf("connect failed: %w", err)
 		}

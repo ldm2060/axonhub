@@ -10,10 +10,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/samber/lo"
-	"go.uber.org/fx"
-	"go.uber.org/zap"
-
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/build"
 	"github.com/ldm2060/axonhub/internal/contexts"
@@ -26,6 +22,9 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/samber/lo"
+	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 const (
