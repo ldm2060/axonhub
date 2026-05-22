@@ -89,6 +89,7 @@ const EMAIL_SETTINGS_QUERY = `
       smtpUser
       smtpPassword
       encryption
+      skipTLSVerify
       fromName
       fromAddress
     }
@@ -103,6 +104,7 @@ const UPDATE_EMAIL_SETTINGS_MUTATION = `
       smtpUser
       smtpPassword
       encryption
+      skipTLSVerify
       fromName
       fromAddress
     }
@@ -124,6 +126,7 @@ export interface EmailSettings {
   smtpUser: string;
   smtpPassword: string;
   encryption: string;
+  skipTLSVerify: boolean;
   fromName: string;
   fromAddress: string;
 }
@@ -134,6 +137,7 @@ export interface UpdateEmailSettingsInput {
   smtpUser?: string;
   smtpPassword?: string;
   encryption?: string;
+  skipTLSVerify?: boolean;
   fromName?: string;
   fromAddress?: string;
 }

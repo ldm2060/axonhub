@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useEmailSettings, useUpdateEmailSettings, useTestEmailConnection } from '../data/registration-email-settings';
 
@@ -23,6 +24,7 @@ export function EmailSettingsTab() {
     smtpUser: '',
     smtpPassword: '',
     encryption: 'starttls',
+    skipTLSVerify: false,
     fromName: '',
     fromAddress: '',
   });
@@ -38,6 +40,7 @@ export function EmailSettingsTab() {
         smtpUser: settings.smtpUser || '',
         smtpPassword: settings.smtpPassword || '',
         encryption: settings.encryption || 'starttls',
+        skipTLSVerify: settings.skipTLSVerify || false,
         fromName: settings.fromName || '',
         fromAddress: settings.fromAddress || '',
       });
@@ -45,7 +48,7 @@ export function EmailSettingsTab() {
     }
   }, [settings]);
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (field === 'smtpPassword') {
       setPasswordChanged(true);
@@ -58,6 +61,7 @@ export function EmailSettingsTab() {
       formData.smtpUser !== (settings.smtpUser || '') ||
       passwordChanged ||
       formData.encryption !== (settings.encryption || 'starttls') ||
+      formData.skipTLSVerify !== (settings.skipTLSVerify || false) ||
       formData.fromName !== (settings.fromName || '') ||
       formData.fromAddress !== (settings.fromAddress || '')
     : false;
@@ -68,6 +72,7 @@ export function EmailSettingsTab() {
       smtpPort: formData.smtpPort,
       smtpUser: formData.smtpUser,
       encryption: formData.encryption,
+      skipTLSVerify: formData.skipTLSVerify,
       fromName: formData.fromName,
       fromAddress: formData.fromAddress,
       smtpPassword: formData.smtpPassword,
@@ -81,13 +86,13 @@ export function EmailSettingsTab() {
 
   const handleTestConnection = async () => {
     try {
-      // Save settings first so the test uses the current form values
       if (hasChanges) {
         const input: Record<string, unknown> = {
           smtpHost: formData.smtpHost,
           smtpPort: formData.smtpPort,
           smtpUser: formData.smtpUser,
           encryption: formData.encryption,
+          skipTLSVerify: formData.skipTLSVerify,
           fromName: formData.fromName,
           fromAddress: formData.fromAddress,
           smtpPassword: formData.smtpPassword,
@@ -207,6 +212,20 @@ export function EmailSettingsTab() {
               </div>
             </RadioGroup>
           </div>
+
+          {formData.encryption !== 'none' && (
+            <div className='flex items-center justify-between'>
+              <div className='space-y-0.5'>
+                <Label htmlFor='skip-tls-verify'>{t('system.email.skipTLSVerify.label')}</Label>
+                <div className='text-muted-foreground text-sm'>{t('system.email.skipTLSVerify.description')}</div>
+              </div>
+              <Switch
+                id='skip-tls-verify'
+                checked={formData.skipTLSVerify}
+                onCheckedChange={(checked) => handleInputChange('skipTLSVerify', checked)}
+              />
+            </div>
+          )}
 
           <Separator />
 

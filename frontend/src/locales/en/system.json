@@ -423,6 +423,8 @@
   "system.email.encryption.options.sslTls": "SSL/TLS",
   "system.email.encryption.options.starttls": "STARTTLS",
   "system.email.encryption.options.none": "None",
+  "system.email.skipTLSVerify.label": "Skip TLS Certificate Verification",
+  "system.email.skipTLSVerify.description": "Enable this if your SMTP server uses a self-signed or mismatched certificate. Disabling certificate verification reduces security.",
   "system.email.fromName.label": "From Name",
   "system.email.fromName.placeholder": "AxonHub",
   "system.email.fromAddress.label": "From Address",

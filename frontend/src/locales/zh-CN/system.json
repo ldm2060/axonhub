@@ -423,6 +423,8 @@
   "system.email.encryption.options.sslTls": "SSL/TLS",
   "system.email.encryption.options.starttls": "STARTTLS",
   "system.email.encryption.options.none": "无",
+  "system.email.skipTLSVerify.label": "跳过 TLS 证书验证",
+  "system.email.skipTLSVerify.description": "当 SMTP 服务器使用自签名证书或证书域名不匹配时启用此选项。关闭证书验证会降低安全性。",
   "system.email.fromName.label": "发件人名称",
   "system.email.fromName.placeholder": "AxonHub",
   "system.email.fromAddress.label": "发件人地址",

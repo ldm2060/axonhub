@@ -104,23 +104,27 @@ func (s *EmailService) Send(ctx context.Context, to, subject, htmlBody, textBody
 
 	addr := fmt.Sprintf("%s:%d", settings.SMTPHost, settings.SMTPPort)
 	auth := smtp.PlainAuth("", settings.SMTPUser, settings.SMTPPassword, settings.SMTPHost)
+	tlsConfig := &tls.Config{ServerName: settings.SMTPHost}
+	if settings.SkipTLSVerify {
+		tlsConfig.InsecureSkipVerify = true
+	}
 
 	switch settings.Encryption {
 	case "ssl":
-		return s.sendSSL(addr, settings.SMTPHost, auth, settings.FromAddress, to, msg.Bytes())
+		return s.sendSSL(addr, tlsConfig, auth, settings.FromAddress, to, msg.Bytes())
 	default:
-		return s.sendDefault(addr, settings.SMTPHost, auth, settings, settings.FromAddress, to, msg.Bytes())
+		return s.sendDefault(addr, settings.SMTPHost, tlsConfig, auth, settings, settings.FromAddress, to, msg.Bytes())
 	}
 }
 
-func (s *EmailService) sendSSL(addr, host string, auth smtp.Auth, from, to string, msg []byte) error {
-	conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: host})
+func (s *EmailService) sendSSL(addr string, tlsConfig *tls.Config, auth smtp.Auth, from, to string, msg []byte) error {
+	conn, err := tls.Dial("tcp", addr, tlsConfig)
 	if err != nil {
 		return fmt.Errorf("smtp tls dial: %w", err)
 	}
 	defer conn.Close()
 
-	c, err := smtp.NewClient(conn, host)
+	c, err := smtp.NewClient(conn, tlsConfig.ServerName)
 	if err != nil {
 		return fmt.Errorf("smtp client: %w", err)
 	}
@@ -132,7 +136,7 @@ func (s *EmailService) sendSSL(addr, host string, auth smtp.Auth, from, to strin
 	return s.sendMail(c, from, to, msg)
 }
 
-func (s *EmailService) sendDefault(addr, host string, auth smtp.Auth, settings *EmailSettings, from, to string, msg []byte) error {
+func (s *EmailService) sendDefault(addr, host string, tlsConfig *tls.Config, auth smtp.Auth, settings *EmailSettings, from, to string, msg []byte) error {
 	c, err := smtp.Dial(addr)
 	if err != nil {
 		return fmt.Errorf("smtp dial: %w", err)
@@ -140,7 +144,7 @@ func (s *EmailService) sendDefault(addr, host string, auth smtp.Auth, settings *
 	defer c.Close()
 
 	if settings.Encryption == "starttls" {
-		if err := c.StartTLS(&tls.Config{ServerName: host}); err != nil {
+		if err := c.StartTLS(tlsConfig); err != nil {
 			return fmt.Errorf("smtp starttls: %w", err)
 		}
 	}
@@ -259,9 +263,13 @@ func (s *EmailService) TestConnection(ctx context.Context) error {
 	}
 	addr := fmt.Sprintf("%s:%d", settings.SMTPHost, settings.SMTPPort)
 	dialer := &net.Dialer{Timeout: 5 * time.Second}
+	tlsConfig := &tls.Config{ServerName: settings.SMTPHost}
+	if settings.SkipTLSVerify {
+		tlsConfig.InsecureSkipVerify = true
+	}
 	switch settings.Encryption {
 	case "ssl":
-		conn, err := tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{ServerName: settings.SMTPHost})
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
 		if err != nil {
 			return fmt.Errorf("connect failed: %w", err)
 		}

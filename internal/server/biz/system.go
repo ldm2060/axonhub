@@ -133,13 +133,14 @@ type RegistrationSettings struct {
 
 // EmailSettings represents email/SMTP configuration settings.
 type EmailSettings struct {
-	SMTPHost     string `json:"smtp_host"`
-	SMTPPort     int    `json:"smtp_port"`
-	SMTPUser     string `json:"smtp_user"`
-	SMTPPassword string `json:"smtp_password"`
-	Encryption   string `json:"encryption"` // "ssl" | "starttls" | "none"
-	FromName     string `json:"from_name"`
-	FromAddress  string `json:"from_address"`
+	SMTPHost       string `json:"smtp_host"`
+	SMTPPort       int    `json:"smtp_port"`
+	SMTPUser       string `json:"smtp_user"`
+	SMTPPassword   string `json:"smtp_password"`
+	Encryption     string `json:"encryption"` // "ssl" | "starttls" | "none"
+	SkipTLSVerify  bool   `json:"skip_tls_verify"`
+	FromName       string `json:"from_name"`
+	FromAddress    string `json:"from_address"`
 }
 
 // SystemGeneralSettings represents general system configuration settings.

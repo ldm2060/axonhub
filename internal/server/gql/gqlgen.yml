@@ -694,3 +694,6 @@ models:
   UpdateEmailSettingsInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.EmailSettings
+  EmailSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.EmailSettings
