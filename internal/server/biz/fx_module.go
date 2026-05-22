@@ -37,6 +37,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewEmailService),
 	fx.Provide(NewPublishRequestService),
 	fx.Provide(NewAPIKeyProfileTemplateService),
+	fx.Provide(NewMemorySampler),
 	fx.Invoke(func(lc fx.Lifecycle, svc *APIKeyService) {
 		lc.Append(fx.Hook{
 			OnStop: func(ctx context.Context) error {
@@ -106,6 +107,18 @@ var Module = fx.Module("biz",
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
 				return svc.RegisterScheduledTasks(ctx, s)
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, sampler *MemorySampler) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				go sampler.Run()
+				return nil
+			},
+			OnStop: func(ctx context.Context) error {
+				sampler.Stop()
+				return nil
 			},
 		})
 	}),
