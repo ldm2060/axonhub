@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.go ]]; then gofmt -w \"$file\" 2>/dev/null; elif [[ \"$file\" == *.ts || \"$file\" == *.tsx || \"$file\" == *.js || \"$file\" == *.jsx || \"$file\" == *.css || \"$file\" == *.html ]]; then cd frontend && npx prettier --write \"${file#frontend/}\" 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; case \"$file\" in *.db|*.db-shm|*.db-wal|*.exe|*.env|*.env.*) echo 'BLOCK: Direct edits to this file type are not allowed.' >&2; exit 1;; esac"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(gofmt:*)",
+      "Bash(npx prettier:*)",
+      "Bash(make generate:*)",
+      "Bash(make generate-openapi:*)"
+    ]
+  }
+}
