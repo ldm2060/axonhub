@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -42,9 +44,10 @@ func New(config Config) *Server {
 type Server struct {
 	*gin.Engine
 
-	Config Config
-	server *http.Server
-	addr   string
+	Config      Config
+	server      *http.Server
+	pprofServer *http.Server
+	addr        string
 }
 
 func (srv *Server) Run() error {
@@ -62,6 +65,31 @@ func (srv *Server) Run() error {
 	}
 	srv.addr = addr
 
+	if srv.Config.Pprof.Enabled {
+		pprofAddr := fmt.Sprintf("%s:%d", srv.Config.Pprof.Host, srv.Config.Pprof.Port)
+		mux := http.NewServeMux()
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+		srv.pprofServer = &http.Server{
+			Addr:              pprofAddr,
+			Handler:           mux,
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+
+		log.Info(context.Background(), "starting pprof server",
+			log.String("addr", pprofAddr))
+
+		go func() {
+			if err := srv.pprofServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Error(context.Background(), "pprof server error", log.Cause(err))
+			}
+		}()
+	}
+
 	err := srv.server.ListenAndServe()
 	if err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
@@ -75,6 +103,12 @@ func (srv *Server) Run() error {
 }
 
 func (srv *Server) Shutdown(ctx context.Context) error {
+	if srv.pprofServer != nil {
+		if err := srv.pprofServer.Shutdown(ctx); err != nil {
+			log.Error(ctx, "pprof server shutdown error", log.Cause(err))
+		}
+	}
+
 	return srv.server.Shutdown(ctx)
 }
 

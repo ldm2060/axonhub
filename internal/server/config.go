@@ -23,10 +23,17 @@ type Config struct {
 	Trace     tracing.Config `conf:"trace" yaml:"trace" json:"trace"`
 	Dashboard Dashboard      `conf:"dashboard" yaml:"dashboard" json:"dashboard"`
 
-	Debug            bool `conf:"debug" yaml:"debug" json:"debug"`
-	DisableSSLVerify bool `conf:"disable_ssl_verify" yaml:"disable_ssl_verify" json:"disable_ssl_verify"`
-	CORS             CORS `conf:"cors" yaml:"cors" json:"cors"`
-	API              API  `conf:"api" yaml:"api" json:"api"`
+	Debug            bool   `conf:"debug" yaml:"debug" json:"debug"`
+	DisableSSLVerify bool   `conf:"disable_ssl_verify" yaml:"disable_ssl_verify" json:"disable_ssl_verify"`
+	CORS             CORS   `conf:"cors" yaml:"cors" json:"cors"`
+	API              API    `conf:"api" yaml:"api" json:"api"`
+	Pprof            Pprof  `conf:"pprof" yaml:"pprof" json:"pprof"`
+}
+
+type Pprof struct {
+	Enabled bool   `conf:"enabled" yaml:"enabled" json:"enabled"`
+	Host    string `conf:"host" yaml:"host" json:"host"`
+	Port    int    `conf:"port" yaml:"port" json:"port"`
 }
 
 // Dashboard holds configuration for the dashboard cache settings.

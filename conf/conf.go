@@ -182,6 +182,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.api.auth.allow_no_auth", false)
 	v.SetDefault("server.api.auth.key_prefix", "ah")
 
+	// Pprof defaults
+	v.SetDefault("server.pprof.enabled", false)
+	v.SetDefault("server.pprof.host", "127.0.0.1")
+	v.SetDefault("server.pprof.port", 6060)
+
 	// Database defaults
 	v.SetDefault("db.dialect", "sqlite3")
 	v.SetDefault("db.dsn", "file:axonhub.db?cache=shared&_fk=1&_pragma=journal_mode(WAL)")
