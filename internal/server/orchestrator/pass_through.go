@@ -332,11 +332,30 @@ func applyPassThroughStream(outbound *PersistentOutboundTransformer, systemServi
 		)
 
 		go func() {
-			for stream.Next() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Warn(ctx, "applyPassThroughStream drain goroutine panicked, recovering",
+						log.Any("panic", r),
+						log.String("channel", channel.Name),
+					)
+				}
+				_ = stream.Close()
+			}()
+
+			for {
+				select {
+				case <-ctx.Done():
+					log.Debug(ctx, "context canceled, stopping pass-through drain goroutine",
+						log.String("channel", channel.Name))
+					return
+				default:
+				}
+
+				if !stream.Next() {
+					return
+				}
 				_ = stream.Current()
 			}
-
-			stream.Close()
 		}()
 
 		return &passThroughChannelStream{ctx: ctx, ch: rawCh, errRef: errRef, cancel: cancel}, nil

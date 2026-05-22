@@ -4,16 +4,24 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"time"
 
 	"github.com/ldm2060/axonhub/internal/dumper"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/pkg/xcontext"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
 	"github.com/ldm2060/axonhub/llm/transformer"
 )
+
+// persistTimeout bounds how long inbound persistence may keep references to
+// per-request response data (chunks, body, transformer, etc.) after the client
+// context is done. Storage backends (DB, S3/GCS/WebDAV) that hang beyond this
+// timeout release the data instead of pinning it on a goroutine indefinitely.
+const persistTimeout = 30 * time.Second
 
 // InboundPersistentStream wraps a stream and tracks all responses for final saving to database.
 // It implements the streams.Stream interface and handles persistence in the Close method.
@@ -120,7 +128,8 @@ func (ts *InboundPersistentStream) Close() error {
 	// was incomplete or corrupted.
 	if streamErr != nil && !errors.Is(streamErr, context.Canceled) && !errors.Is(streamErr, context.DeadlineExceeded) {
 		if ts.request != nil {
-			persistCtx := context.WithoutCancel(ctx)
+			persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+			defer cancel()
 
 			if err := ts.requestService.UpdateRequestStatusFromError(persistCtx, ts.request.ID, streamErr); err != nil {
 				log.Warn(persistCtx, "Failed to update request status from error", log.Cause(err))
@@ -138,7 +147,9 @@ func (ts *InboundPersistentStream) Close() error {
 	var aggErr error
 
 	if len(ts.responseChunks) > 0 && !ts.state.StreamCompleted {
-		responseBody, meta, aggErr = ts.transformer.AggregateStreamChunks(context.WithoutCancel(ctx), ts.responseChunks)
+		aggCtx, aggCancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+		responseBody, meta, aggErr = ts.transformer.AggregateStreamChunks(aggCtx, ts.responseChunks)
+		aggCancel()
 		if aggErr == nil && meta.ID != "" && len(responseBody) > 0 && isCompletedAggregated(meta) {
 			log.Debug(ctx, "Stream has valid complete response without terminal event, treating as completed")
 			ts.state.StreamCompleted = true
@@ -149,7 +160,8 @@ func (ts *InboundPersistentStream) Close() error {
 	// Skip the error path if we determined the stream actually completed successfully above.
 	if (ctxErr != nil || streamErr != nil) && !ts.state.StreamCompleted {
 		if ts.request != nil {
-			persistCtx := context.WithoutCancel(ctx)
+			persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+			defer cancel()
 
 			errToReport := ctxErr
 			if errToReport == nil {
@@ -172,7 +184,8 @@ func (ts *InboundPersistentStream) Close() error {
 		log.Debug(ctx, "Stream ended without terminal event or completed response, treating as incomplete")
 
 		if ts.request != nil {
-			persistCtx := context.WithoutCancel(ctx)
+			persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+			defer cancel()
 
 			errToReport := errors.New("stream ended without terminal event or completed response")
 
@@ -189,10 +202,16 @@ func (ts *InboundPersistentStream) Close() error {
 
 	// We already aggregated the chunks above, so pass them directly to avoid double-aggregation
 	if len(responseBody) > 0 {
-		ts._persistResponse(context.WithoutCancel(ctx), responseBody, meta)
+		persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+		ts._persistResponse(persistCtx, responseBody, meta)
+		cancel()
 	} else {
 		ts.persistResponseChunks(ctx)
 	}
+
+	// Release accumulated chunk references so the GC can reclaim them
+	// once the wrapper stream and its caller drop their references.
+	ts.responseChunks = nil
 
 	return ts.stream.Close()
 }

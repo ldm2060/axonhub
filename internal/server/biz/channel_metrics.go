@@ -597,3 +597,20 @@ func (m *PerformanceRecord) MarkCanceled() {
 func (m *PerformanceRecord) IsValid() bool {
 	return m.ChannelID > 0 && m.RequestCompleted
 }
+
+// PurgeChannelMetrics removes all in-memory metrics for the given channel id.
+// Called from channel mutation paths (delete / disable) so per-channel state
+// is not retained for channels that no longer exist.
+func (svc *ChannelService) PurgeChannelMetrics(channelID int) {
+	svc.channelPerfMetricsLock.Lock()
+	delete(svc.channelPerfMetrics, channelID)
+	svc.channelPerfMetricsLock.Unlock()
+
+	svc.channelErrorCountsLock.Lock()
+	delete(svc.channelErrorCounts, channelID)
+	svc.channelErrorCountsLock.Unlock()
+
+	svc.apiKeyErrorCountsLock.Lock()
+	delete(svc.apiKeyErrorCounts, channelID)
+	svc.apiKeyErrorCountsLock.Unlock()
+}

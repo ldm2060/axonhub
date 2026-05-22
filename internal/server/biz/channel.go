@@ -709,6 +709,7 @@ func (svc *ChannelService) DeleteChannel(ctx context.Context, id int) error {
 	}
 
 	svc.forgetLimiter(id)
+	svc.PurgeChannelMetrics(id)
 	svc.asyncReloadChannels()
 
 	return nil

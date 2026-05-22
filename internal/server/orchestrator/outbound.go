@@ -140,7 +140,9 @@ func (ts *OutboundPersistentStream) Close() error {
 	aggregatedCompleted := false
 
 	if len(ts.responseChunks) > 0 {
-		responseBody, meta, aggErr = ts.transformer.AggregateStreamChunks(context.WithoutCancel(ctx), ts.state.RawProviderRequest, ts.responseChunks)
+		aggCtx, aggCancel := xcontext.DetachWithTimeout(ctx, 10*time.Second)
+		responseBody, meta, aggErr = ts.transformer.AggregateStreamChunks(aggCtx, ts.state.RawProviderRequest, ts.responseChunks)
+		aggCancel()
 		aggregatedCompleted = aggErr == nil && isCompletedAggregated(meta)
 		ts.logFinalizationDecision(ctx, "aggregated_outbound_chunks", streamErr, ctxErr, aggregatedCompleted, aggErr)
 		if aggregatedCompleted {
@@ -198,10 +200,16 @@ func (ts *OutboundPersistentStream) Close() error {
 	ts.logFinalizationDecision(ctx, decision, streamErr, ctxErr, aggregatedCompleted, aggErr)
 
 	if len(responseBody) > 0 {
-		ts.persistAggregatedResponse(context.WithoutCancel(ctx), responseBody, meta)
+		persistCtx, persistCancel := xcontext.DetachWithTimeout(ctx, 10*time.Second)
+		ts.persistAggregatedResponse(persistCtx, responseBody, meta)
+		persistCancel()
 	} else {
 		ts.persistResponseChunks(ctx)
 	}
+
+	// Release accumulated chunk references so the GC can reclaim them
+	// once this wrapper and its caller drop their references.
+	ts.responseChunks = nil
 
 	return ts.stream.Close()
 }

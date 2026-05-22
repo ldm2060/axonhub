@@ -110,11 +110,23 @@ func (b *Buffer) LastAppendedAt() time.Time {
 }
 
 // Close marks the buffer as closed, preventing further appends.
+//
+// Callers should drop their reference to the buffer once they are done
+// consuming any final chunks. The live-preview reader path drains
+// remaining chunks via Read() after the buffer is closed, then exits;
+// once both the producer wrapper (live_streaming.go) and the registry
+// (stream_preview.go) drop their references the GC reclaims the chunks
+// slice. We intentionally do NOT nil chunks here so post-Close readers
+// can still observe the final state.
 func (b *Buffer) Close() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.closed = true
 	b.broadcastLocked()
+	// Release the subscriber set: every subscriber will exit its loop on
+	// the broadcast above and the channel becomes unreachable once they
+	// drop their channel reference, so retaining the map is wasteful.
+	b.subscribers = nil
 }
 
 // IsClosed returns true if the buffer is closed.
