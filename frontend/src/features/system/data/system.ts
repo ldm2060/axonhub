@@ -42,6 +42,16 @@ const GET_CACHE_DIAGNOSTICS_QUERY = `
   }
 `;
 
+const GET_MEMORY_DIAGNOSTICS_QUERY = `
+  query GetMemoryDiagnostics {
+    getMemoryDiagnostics {
+      fileName
+      content
+      targets
+    }
+  }
+`;
+
 const CLEAR_CACHE_MUTATION = `
   mutation ClearCache($input: ClearCacheInput!) {
     clearCache(input: $input) {
@@ -748,6 +758,34 @@ export function useExportCacheDiagnostics() {
     },
     onError: (error) => {
       handleError(error, i18n.t('system.diagnostics.cache.exportFailed'));
+    },
+  });
+}
+
+export function useExportMemoryDiagnostics() {
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async () => {
+      const data = await graphqlRequest<{ getMemoryDiagnostics: GetCacheDiagnosticsPayload }>(
+        GET_MEMORY_DIAGNOSTICS_QUERY
+      );
+      return data.getMemoryDiagnostics;
+    },
+    onSuccess: (data) => {
+      const blob = new Blob([data.content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(i18n.t('system.memory_diagnostics.success'));
+    },
+    onError: (error) => {
+      handleError(error, i18n.t('system.memory_diagnostics.error'));
     },
   });
 }

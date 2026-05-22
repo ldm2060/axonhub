@@ -13,14 +13,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useClearCache, useExportCacheDiagnostics } from '../data/system';
+import { useClearCache, useExportCacheDiagnostics, useExportMemoryDiagnostics } from '../data/system';
 
 export function DiagnosticsSettings() {
   const { t } = useTranslation();
   const { mutate: exportDiagnostics, isPending: isExportingDiagnostics } = useExportCacheDiagnostics();
   const { mutate: clearCache, isPending: isClearingCache } = useClearCache();
+  const { mutate: exportMemoryDiagnostics, isPending: isExportingMemory } = useExportMemoryDiagnostics();
 
   return (
     <div className='space-y-6'>
@@ -60,6 +61,18 @@ export function DiagnosticsSettings() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+            </div>
+          </div>
+          <div className='rounded-lg border p-3 sm:p-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+              <div className='space-y-1 min-w-0'>
+                <h4 className='text-sm font-medium'>{t('system.memory_diagnostics.title')}</h4>
+                <p className='text-muted-foreground text-sm'>{t('system.memory_diagnostics.description')}</p>
+              </div>
+              <Button variant='outline' size='sm' onClick={() => exportMemoryDiagnostics()} disabled={isExportingMemory} className='w-full sm:w-auto'>
+                <Download className={`mr-2 h-4 w-4 ${isExportingMemory ? 'animate-spin' : ''}`} />
+                {t('system.memory_diagnostics.export')}
+              </Button>
             </div>
           </div>
         </CardContent>
