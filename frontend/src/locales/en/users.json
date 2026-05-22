@@ -11,6 +11,7 @@
   "users.columns.projectOwner": "Project Owner",
   "users.columns.projectRoles": "Project Roles",
   "users.columns.projectScopes": "Project Scopes",
+  "users.status.pending": "Pending",
   "users.status.activated": "Activated",
   "users.status.deactivated": "Deactivated",
   "users.badges.owner": "Owner",

@@ -84,11 +84,13 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
       header: t('common.columns.status'),
       cell: ({ row }) => {
         const status = row.getValue('status') as string;
-        return (
-          <Badge variant={status === 'activated' ? 'default' : 'secondary'}>
-            {status === 'activated' ? t('users.status.activated') : t('users.status.deactivated')}
-          </Badge>
-        );
+        const statusLabel =
+          status === 'activated'
+            ? t('users.status.activated')
+            : status === 'pending'
+              ? t('users.status.pending')
+              : t('users.status.deactivated');
+        return <Badge variant={status === 'activated' ? 'default' : 'secondary'}>{statusLabel}</Badge>;
       },
     },
     {

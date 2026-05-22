@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { pageInfoSchema } from '@/gql/pagination';
 import { passwordSchema } from '@/lib/validation';
 
-export const userStatusSchema = z.enum(['activated', 'deactivated']);
+export const userStatusSchema = z.enum(['pending', 'activated', 'deactivated']);
 export type UserStatus = z.infer<typeof userStatusSchema>;
 
 // Project-level user schema - includes project-specific information

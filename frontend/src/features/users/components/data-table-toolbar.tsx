@@ -29,6 +29,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
               column={table.getColumn('status')}
               title={t('users.filters.status')}
               options={[
+                { label: t('users.status.pending'), value: 'pending' },
                 { label: t('users.status.activated'), value: 'activated' },
                 { label: t('users.status.deactivated'), value: 'deactivated' },
               ]}

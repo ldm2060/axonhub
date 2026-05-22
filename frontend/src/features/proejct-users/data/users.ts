@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useRequestPermissions } from '@/hooks/useRequestPermissions';
-import { User, UserConnection, ProjectUser, CreateUserInput, UpdateUserInput, userSchema, projectUserSchema } from './schema';
+import { User, UserConnection, ProjectUser, CreateUserInput, UpdateUserInput, type UserStatus, userSchema, projectUserSchema } from './schema';
 
 // Dynamic GraphQL query builder for project-level users
 // This query fetches users with their project-specific information (owner status and scopes)
@@ -268,11 +268,11 @@ export function useUpdateUserStatus() {
   const { handleError } = useErrorHandler();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'activated' | 'deactivated' }) => {
+    mutationFn: async ({ id, status }: { id: string; status: UserStatus }) => {
       try {
         const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-        const data = await graphqlRequest<{ updateUserStatus: boolean }>(UPDATE_USER_STATUS_MUTATION, { id, status }, headers);
-        return data.updateUserStatus;
+        const data = await graphqlRequest<{ updateUserStatus: User }>(UPDATE_USER_STATUS_MUTATION, { id, status }, headers);
+        return userSchema.parse(data.updateUserStatus);
       } catch (error) {
         handleError(error, { context: 'Update User Status' });
         throw error;
@@ -281,7 +281,7 @@ export function useUpdateUserStatus() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
-      const statusText = variables.status === 'activated' ? t('users.status.activated') : t('users.status.deactivated');
+      const statusText = t(`users.status.${variables.status}`);
       toast.success(t('users.messages.statusUpdateSuccess', { status: statusText }));
     },
   });

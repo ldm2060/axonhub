@@ -4,7 +4,7 @@ import { USERS_QUERY, CREATE_USER_MUTATION, UPDATE_USER_MUTATION, UPDATE_USER_ST
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useErrorHandler } from '@/hooks/use-error-handler';
-import { User, UserConnection, CreateUserInput, UpdateUserInput, userConnectionSchema, userSchema } from './schema';
+import { User, UserConnection, CreateUserInput, UpdateUserInput, type UserStatus, userConnectionSchema, userSchema } from './schema';
 
 // Query hooks
 export function useUsers(
@@ -108,14 +108,14 @@ export function useUpdateUserStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'activated' | 'deactivated' }) => {
-      const response = await graphqlRequest<{ updateUserStatus: boolean }>(UPDATE_USER_STATUS_MUTATION, { id, status });
-      return response.updateUserStatus;
+    mutationFn: async ({ id, status }: { id: string; status: UserStatus }) => {
+      const response = await graphqlRequest<{ updateUserStatus: User }>(UPDATE_USER_STATUS_MUTATION, { id, status });
+      return userSchema.parse(response.updateUserStatus);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
-      const statusText = variables.status === 'activated' ? t('users.status.activated') : t('users.status.deactivated');
+      const statusText = t(`users.status.${variables.status}`);
       toast.success(t('users.messages.statusUpdateSuccess', { status: statusText }));
     },
     onError: () => {

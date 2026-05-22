@@ -11,6 +11,7 @@
   "users.columns.projectOwner": "项目所有者",
   "users.columns.projectRoles": "项目角色",
   "users.columns.projectScopes": "项目权限",
+  "users.status.pending": "待激活",
   "users.status.activated": "已激活",
   "users.status.deactivated": "已停用",
   "users.badges.owner": "所有者",
