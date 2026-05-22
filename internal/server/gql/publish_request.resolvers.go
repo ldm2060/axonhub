@@ -119,20 +119,21 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 		return nil, fmt.Errorf("failed to resolve private project: %w", err)
 	}
 
+	ctx = contexts.WithProjectID(ctx, projectID)
+
 	stats := &DashboardOverview{
 		TotalRequests:       0,
 		FailedRequests:      0,
 		AverageResponseTime: nil,
 	}
 
-	totalRequests, err := r.client.UsageLog.Query().
-		Where(usagelog.ProjectIDEQ(projectID)).
+	totalRequests, err := r.client.Request.Query().
+		Where(request.ProjectIDEQ(projectID)).
 		Count(ctx)
 	if err == nil {
 		stats.TotalRequests = totalRequests
 	}
 
-	// Count failed requests for the user's private project.
 	failedRequests, err := r.client.Request.Query().
 		Where(request.ProjectIDEQ(projectID), request.StatusEQ(request.StatusFailed)).
 		Count(ctx)
