@@ -72,26 +72,6 @@ func (r *mutationResolver) UnshareChannel(ctx context.Context, id objects.GUID, 
 	return r.channelService.UnshareChannel(ctx, id.ID, user.ID, ids)
 }
 
-// ShareModel is the resolver for the shareModel field.
-func (r *mutationResolver) ShareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error) {
-	user, ok := contexts.GetUser(ctx)
-	if !ok || user == nil {
-		return nil, fmt.Errorf("unauthorized")
-	}
-	ids := guidSliceToIntSlice(userIDs)
-	return r.modelService.ShareModel(ctx, id.ID, user.ID, ids)
-}
-
-// UnshareModel is the resolver for the unshareModel field.
-func (r *mutationResolver) UnshareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error) {
-	user, ok := contexts.GetUser(ctx)
-	if !ok || user == nil {
-		return nil, fmt.Errorf("unauthorized")
-	}
-	ids := guidSliceToIntSlice(userIDs)
-	return r.modelService.UnshareModel(ctx, id.ID, user.ID, ids)
-}
-
 // MySharedChannels is the resolver for the mySharedChannels field.
 func (r *queryResolver) MySharedChannels(ctx context.Context) ([]*ent.Channel, error) {
 	user, ok := contexts.GetUser(ctx)
@@ -99,15 +79,6 @@ func (r *queryResolver) MySharedChannels(ctx context.Context) ([]*ent.Channel, e
 		return nil, fmt.Errorf("unauthorized")
 	}
 	return r.channelService.ListSharedWithUser(ctx, user.ID)
-}
-
-// MySharedModels is the resolver for the mySharedModels field.
-func (r *queryResolver) MySharedModels(ctx context.Context) ([]*ent.Model, error) {
-	user, ok := contexts.GetUser(ctx)
-	if !ok || user == nil {
-		return nil, fmt.Errorf("unauthorized")
-	}
-	return r.modelService.ListSharedWithUser(ctx, user.ID)
 }
 
 // MyDashboard is the resolver for the myDashboard field.

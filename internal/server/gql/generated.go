@@ -666,6 +666,7 @@ type ComplexityRoot struct {
 		Encryption    func(childComplexity int) int
 		FromAddress   func(childComplexity int) int
 		FromName      func(childComplexity int) int
+		PublicURL     func(childComplexity int) int
 		SMTPHost      func(childComplexity int) int
 		SMTPPassword  func(childComplexity int) int
 		SMTPPort      func(childComplexity int) int
@@ -979,7 +980,6 @@ type ComplexityRoot struct {
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
 		ShareChannel                         func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
-		ShareModel                           func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
 		SyncChannelModels                    func(childComplexity int, channelID objects.GUID, pattern *string) int
 		TestChannel                          func(childComplexity int, input TestChannelInput) int
 		TestChannelAPIKeys                   func(childComplexity int, channelID objects.GUID, modelID *string) int
@@ -988,7 +988,6 @@ type ComplexityRoot struct {
 		TriggerGcCleanup                     func(childComplexity int, input gc.TriggerGcCleanupInput) int
 		UnlinkOIDCIdentity                   func(childComplexity int, id objects.GUID) int
 		UnshareChannel                       func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
-		UnshareModel                         func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
 		UpdateAPIKey                         func(childComplexity int, id objects.GUID, input ent.UpdateAPIKeyInput) int
 		UpdateAPIKeyProfileTemplate          func(childComplexity int, id objects.GUID, input ent.UpdateAPIKeyProfileTemplateInput, profile *objects.APIKeyProfile) int
 		UpdateAPIKeyProfiles                 func(childComplexity int, id objects.GUID, input objects.APIKeyProfiles) int
@@ -1328,7 +1327,6 @@ type ComplexityRoot struct {
 		MyDashboard                  func(childComplexity int) int
 		MyProjects                   func(childComplexity int) int
 		MySharedChannels             func(childComplexity int) int
-		MySharedModels               func(childComplexity int) int
 		Node                         func(childComplexity int, id objects.GUID) int
 		Nodes                        func(childComplexity int, ids []*objects.GUID) int
 		OidcIdentities               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
@@ -2247,8 +2245,6 @@ type MutationResolver interface {
 	ReviewPublishRequest(ctx context.Context, id objects.GUID, action ReviewAction, comment *string) (*ent.PublishRequest, error)
 	ShareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error)
 	UnshareChannel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Channel, error)
-	ShareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error)
-	UnshareModel(ctx context.Context, id objects.GUID, userIDs []*objects.GUID) (*ent.Model, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -2356,7 +2352,6 @@ type QueryResolver interface {
 	AutoBackupSettings(ctx context.Context) (*biz.AutoBackupSettings, error)
 	ChannelProbeData(ctx context.Context, input biz.GetChannelProbeDataInput) ([]*biz.ChannelProbeData, error)
 	MySharedChannels(ctx context.Context) ([]*ent.Channel, error)
-	MySharedModels(ctx context.Context) ([]*ent.Model, error)
 	MyDashboard(ctx context.Context) (*DashboardOverview, error)
 }
 type RequestResolver interface {
@@ -4578,6 +4573,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.EmailSettings.FromName(childComplexity), true
+	case "EmailSettings.publicUrl":
+		if e.complexity.EmailSettings.PublicURL == nil {
+			break
+		}
+
+		return e.complexity.EmailSettings.PublicURL(childComplexity), true
 	case "EmailSettings.smtpHost":
 		if e.complexity.EmailSettings.SMTPHost == nil {
 			break
@@ -6228,17 +6229,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.ShareChannel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
-	case "Mutation.shareModel":
-		if e.complexity.Mutation.ShareModel == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_shareModel_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ShareModel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
 	case "Mutation.syncChannelModels":
 		if e.complexity.Mutation.SyncChannelModels == nil {
 			break
@@ -6317,17 +6307,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UnshareChannel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
-	case "Mutation.unshareModel":
-		if e.complexity.Mutation.UnshareModel == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_unshareModel_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UnshareModel(childComplexity, args["id"].(objects.GUID), args["userIDs"].([]*objects.GUID)), true
 	case "Mutation.updateAPIKey":
 		if e.complexity.Mutation.UpdateAPIKey == nil {
 			break
@@ -8090,12 +8069,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MySharedChannels(childComplexity), true
-	case "Query.mySharedModels":
-		if e.complexity.Query.MySharedModels == nil {
-			break
-		}
-
-		return e.complexity.Query.MySharedModels(childComplexity), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -12551,22 +12524,6 @@ func (ec *executionContext) field_Mutation_shareChannel_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_shareModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
-	if err != nil {
-		return nil, err
-	}
-	args["userIDs"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_syncChannelModels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -12633,22 +12590,6 @@ func (ec *executionContext) field_Mutation_unlinkOIDCIdentity_args(ctx context.C
 }
 
 func (ec *executionContext) field_Mutation_unshareChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "userIDs", ec.unmarshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ)
-	if err != nil {
-		return nil, err
-	}
-	args["userIDs"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_unshareModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
@@ -26350,6 +26291,35 @@ func (ec *executionContext) fieldContext_EmailSettings_fromAddress(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailSettings_publicUrl(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailSettings_publicUrl,
+		func(ctx context.Context) (any, error) {
+			return obj.PublicURL, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailSettings_publicUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailSettings_connected(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -35257,6 +35227,8 @@ func (ec *executionContext) fieldContext_Mutation_updateEmailSettings(ctx contex
 				return ec.fieldContext_EmailSettings_fromName(ctx, field)
 			case "fromAddress":
 				return ec.fieldContext_EmailSettings_fromAddress(ctx, field)
+			case "publicUrl":
+				return ec.fieldContext_EmailSettings_publicUrl(ctx, field)
 			case "connected":
 				return ec.fieldContext_EmailSettings_connected(ctx, field)
 			}
@@ -37177,164 +37149,6 @@ func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_unshareChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_shareModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Mutation_shareModel,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().ShareModel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
-		},
-		nil,
-		ec.marshalNModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Mutation_shareModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Model_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Model_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Model_updatedAt(ctx, field)
-			case "developer":
-				return ec.fieldContext_Model_developer(ctx, field)
-			case "modelID":
-				return ec.fieldContext_Model_modelID(ctx, field)
-			case "type":
-				return ec.fieldContext_Model_type(ctx, field)
-			case "name":
-				return ec.fieldContext_Model_name(ctx, field)
-			case "icon":
-				return ec.fieldContext_Model_icon(ctx, field)
-			case "group":
-				return ec.fieldContext_Model_group(ctx, field)
-			case "modelCard":
-				return ec.fieldContext_Model_modelCard(ctx, field)
-			case "settings":
-				return ec.fieldContext_Model_settings(ctx, field)
-			case "status":
-				return ec.fieldContext_Model_status(ctx, field)
-			case "remark":
-				return ec.fieldContext_Model_remark(ctx, field)
-			case "ownerID":
-				return ec.fieldContext_Model_ownerID(ctx, field)
-			case "visibility":
-				return ec.fieldContext_Model_visibility(ctx, field)
-			case "sharedWith":
-				return ec.fieldContext_Model_sharedWith(ctx, field)
-			case "owner":
-				return ec.fieldContext_Model_owner(ctx, field)
-			case "associatedChannelCount":
-				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_shareModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_unshareModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Mutation_unshareModel,
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UnshareModel(ctx, fc.Args["id"].(objects.GUID), fc.Args["userIDs"].([]*objects.GUID))
-		},
-		nil,
-		ec.marshalNModel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModel,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Mutation_unshareModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Model_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Model_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Model_updatedAt(ctx, field)
-			case "developer":
-				return ec.fieldContext_Model_developer(ctx, field)
-			case "modelID":
-				return ec.fieldContext_Model_modelID(ctx, field)
-			case "type":
-				return ec.fieldContext_Model_type(ctx, field)
-			case "name":
-				return ec.fieldContext_Model_name(ctx, field)
-			case "icon":
-				return ec.fieldContext_Model_icon(ctx, field)
-			case "group":
-				return ec.fieldContext_Model_group(ctx, field)
-			case "modelCard":
-				return ec.fieldContext_Model_modelCard(ctx, field)
-			case "settings":
-				return ec.fieldContext_Model_settings(ctx, field)
-			case "status":
-				return ec.fieldContext_Model_status(ctx, field)
-			case "remark":
-				return ec.fieldContext_Model_remark(ctx, field)
-			case "ownerID":
-				return ec.fieldContext_Model_ownerID(ctx, field)
-			case "visibility":
-				return ec.fieldContext_Model_visibility(ctx, field)
-			case "sharedWith":
-				return ec.fieldContext_Model_sharedWith(ctx, field)
-			case "owner":
-				return ec.fieldContext_Model_owner(ctx, field)
-			case "associatedChannelCount":
-				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_unshareModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -45910,6 +45724,8 @@ func (ec *executionContext) fieldContext_Query_emailSettings(_ context.Context, 
 				return ec.fieldContext_EmailSettings_fromName(ctx, field)
 			case "fromAddress":
 				return ec.fieldContext_EmailSettings_fromAddress(ctx, field)
+			case "publicUrl":
+				return ec.fieldContext_EmailSettings_publicUrl(ctx, field)
 			case "connected":
 				return ec.fieldContext_EmailSettings_connected(ctx, field)
 			}
@@ -46291,73 +46107,6 @@ func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Contex
 				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_mySharedModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_mySharedModels,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().MySharedModels(ctx)
-		},
-		nil,
-		ec.marshalNModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐModelᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_mySharedModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Model_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Model_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Model_updatedAt(ctx, field)
-			case "developer":
-				return ec.fieldContext_Model_developer(ctx, field)
-			case "modelID":
-				return ec.fieldContext_Model_modelID(ctx, field)
-			case "type":
-				return ec.fieldContext_Model_type(ctx, field)
-			case "name":
-				return ec.fieldContext_Model_name(ctx, field)
-			case "icon":
-				return ec.fieldContext_Model_icon(ctx, field)
-			case "group":
-				return ec.fieldContext_Model_group(ctx, field)
-			case "modelCard":
-				return ec.fieldContext_Model_modelCard(ctx, field)
-			case "settings":
-				return ec.fieldContext_Model_settings(ctx, field)
-			case "status":
-				return ec.fieldContext_Model_status(ctx, field)
-			case "remark":
-				return ec.fieldContext_Model_remark(ctx, field)
-			case "ownerID":
-				return ec.fieldContext_Model_ownerID(ctx, field)
-			case "visibility":
-				return ec.fieldContext_Model_visibility(ctx, field)
-			case "sharedWith":
-				return ec.fieldContext_Model_sharedWith(ctx, field)
-			case "owner":
-				return ec.fieldContext_Model_owner(ctx, field)
-			case "associatedChannelCount":
-				return ec.fieldContext_Model_associatedChannelCount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
 	}
 	return fc, nil
@@ -84358,7 +84107,7 @@ func (ec *executionContext) unmarshalInputUpdateEmailSettingsInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"smtpHost", "smtpPort", "smtpUser", "smtpPassword", "encryption", "skipTLSVerify", "fromName", "fromAddress"}
+	fieldsInOrder := [...]string{"smtpHost", "smtpPort", "smtpUser", "smtpPassword", "encryption", "skipTLSVerify", "fromName", "fromAddress", "publicUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -84421,6 +84170,13 @@ func (ec *executionContext) unmarshalInputUpdateEmailSettingsInput(ctx context.C
 				return it, err
 			}
 			it.FromAddress = data
+		case "publicUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicUrl"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PublicURL = data
 		}
 	}
 
@@ -95510,6 +95266,11 @@ func (ec *executionContext) _EmailSettings(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "publicUrl":
+			out.Values[i] = ec._EmailSettings_publicUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "connected":
 			field := field
 
@@ -98315,20 +98076,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "unshareChannel":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_unshareChannel(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "shareModel":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_shareModel(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "unshareModel":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_unshareModel(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -102629,28 +102376,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_mySharedChannels(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "mySharedModels":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_mySharedModels(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

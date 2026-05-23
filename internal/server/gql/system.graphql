@@ -366,6 +366,7 @@ type EmailSettings {
   skipTLSVerify: Boolean!
   fromName: String!
   fromAddress: String!
+  publicUrl: String!
   connected: Boolean!
 }
 
@@ -378,6 +379,7 @@ input UpdateEmailSettingsInput {
   skipTLSVerify: Boolean
   fromName: String!
   fromAddress: String!
+  publicUrl: String
 }
 
 type TestEmailResult {
