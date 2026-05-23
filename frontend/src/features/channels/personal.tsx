@@ -16,7 +16,7 @@ import { ChannelsTypeTabs } from './components/channels-type-tabs';
 import ChannelsProvider from './context/channels-context';
 import { useQueryChannels, useChannelTypes, useErrorChannelsCount, useChannelProbeData } from './data/channels';
 import { useProvidersData } from '@/features/models/data/providers';
-import { useMySharedChannels } from '@/features/shared/data/shared';
+import { useMySharedChannels } from './data/shared';
 import {
   type PersonalChannelSource,
   isPersonalChannelSourceReadOnly,
