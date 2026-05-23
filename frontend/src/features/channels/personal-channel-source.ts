@@ -39,11 +39,22 @@ export function buildPersonalChannelWhere(source: PersonalChannelSource, current
   }
 
   where.statusIn = ['enabled'];
-  if (currentUserId) {
-    where.ownerIDNEQ = currentUserId;
-  }
+  // Do NOT set ownerIDNEQ here — SQL NULL != value yields UNKNOWN, which
+  // excludes channels with owner_id = NULL.  Instead, filter the current
+  // user's own channels on the client side (see filterOwnedPersonalChannels).
   where.visibility = source === 'public' ? 'published' : 'shared';
   return where;
+}
+
+export function filterOwnedPersonalChannels<T extends PersonalChannelOwnerItem>(channels: T[], currentUserId: string | number | undefined) {
+  const currentUserIdText = currentUserId == null ? undefined : String(currentUserId);
+
+  return channels.filter((channel) => {
+    if (!currentUserIdText) {
+      return true;
+    }
+    return String(channel.ownerID ?? '') !== currentUserIdText;
+  });
 }
 
 export function filterSharedPersonalChannels<T extends PersonalChannelOwnerItem>(channels: T[], currentUserId: string | number | undefined) {

@@ -22,6 +22,7 @@ import {
   isPersonalChannelSourceReadOnly,
   buildPersonalChannelWhere,
   filterSharedPersonalChannels,
+  filterOwnedPersonalChannels,
   filterPersonalChannelRows,
 } from './personal-channel-source';
 
@@ -182,11 +183,23 @@ function PersonalChannelsContent() {
     [sharedChannels, debouncedNameFilter, typeFilter, tabFilteredTypes, tagFilter, modelFilter],
   );
 
+  const publicDataFiltered = useMemo(() => {
+    if (!publicData?.edges) return publicData;
+    const filteredEdges = publicData.edges.filter((edge) =>
+      filterOwnedPersonalChannels([edge.node], currentUser?.id).length > 0,
+    );
+    return {
+      ...publicData,
+      edges: filteredEdges,
+      totalCount: publicData.totalCount - (publicData.edges.length - filteredEdges.length),
+    };
+  }, [publicData, currentUser?.id]);
+
   const activeData = useMemo(() => {
     if (source === 'mine') return mineData;
-    if (source === 'public') return publicData;
+    if (source === 'public') return publicDataFiltered;
     return undefined;
-  }, [source, mineData, publicData]);
+  }, [source, mineData, publicDataFiltered]);
 
   const isLoading = source === 'shared' ? sharedLoading : source === 'public' ? publicLoading : mineLoading;
   const activePageInfo = source === 'shared' ? undefined : activeData?.pageInfo;

@@ -4,6 +4,7 @@ import {
   buildPersonalChannelWhere,
   filterPersonalChannelRows,
   filterSharedPersonalChannels,
+  filterOwnedPersonalChannels,
   isPersonalChannelSourceReadOnly,
   type PersonalChannelSource,
 } from './personal-channel-source.js';
@@ -18,13 +19,11 @@ test('builds owner-first channel filters for personal channel sources', () => {
 
   assert.deepEqual(buildPersonalChannelWhere('public', currentUserId, {}), {
     statusIn: ['enabled'],
-    ownerIDNEQ: currentUserId,
     visibility: 'published',
   });
 
   assert.deepEqual(buildPersonalChannelWhere('shared', currentUserId, {}), {
     statusIn: ['enabled'],
-    ownerIDNEQ: currentUserId,
     visibility: 'shared',
   });
 });
@@ -48,7 +47,6 @@ test('applies existing channel filters to every personal channel source', () => 
     typeIn: ['openai'],
     errorMessageNotNil: true,
     statusIn: ['enabled'],
-    ownerIDNEQ: '7',
     visibility: 'published',
   });
 });
@@ -67,6 +65,17 @@ test('filters shared channels to enabled channels owned by other users', () => {
   ];
 
   assert.deepEqual(filterSharedPersonalChannels(channels, '42').map((channel) => channel.id), ['enabled']);
+});
+
+test('filters owned personal channels excluding current user', () => {
+  const channels = [
+    { id: 'owned', name: 'Owned', status: 'enabled', ownerID: '42', type: 'openai' },
+    { id: 'null-owner', name: 'System', status: 'enabled', ownerID: null, type: 'openai' },
+    { id: 'other', name: 'Other', status: 'enabled', ownerID: '9', type: 'openai' },
+  ];
+
+  assert.deepEqual(filterOwnedPersonalChannels(channels, '42').map((c) => c.id), ['null-owner', 'other']);
+  assert.deepEqual(filterOwnedPersonalChannels(channels, undefined).map((c) => c.id), ['owned', 'null-owner', 'other']);
 });
 
 test('filters personal channel rows with the table filters used by shared channels', () => {
