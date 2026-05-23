@@ -3,10 +3,14 @@
 import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@/utils/format-number';
 import { FastestPerformersCard } from './fastest-performers-card';
-import { useFastestModels } from '../data/fastest-performers';
+import { useFastestModels, type DashboardMode } from '../data/fastest-performers';
 import type { FastestModel } from '../data/fastest-performers';
 
-export function FastestModelsCard() {
+interface FastestModelsCardProps {
+  mode: DashboardMode;
+}
+
+export function FastestModelsCard({ mode }: FastestModelsCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -16,6 +20,7 @@ export function FastestModelsCard() {
       noDataLabel={t('dashboard.cards.fastestPerformers.noData')}
       useData={useFastestModels}
       getName={(item) => item.modelName}
+      mode={mode}
     />
   );
 }

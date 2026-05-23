@@ -6,7 +6,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { Loader2 } from 'lucide-react';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTokensByChannel } from '../data/dashboard';
+import { useTokensByChannel, type DashboardMode } from '../data/dashboard';
 import type { TimePeriod } from '@/components/time-period-selector';
 import { ChartLegend } from './chart-legend';
 
@@ -20,11 +20,12 @@ const TOKEN_COLORS = {
 
 interface TokensByChannelChartProps {
   timePeriod: TimePeriod;
+  mode: DashboardMode;
 }
 
-export function TokensByChannelChart({ timePeriod }: TokensByChannelChartProps) {
+export function TokensByChannelChart({ timePeriod, mode }: TokensByChannelChartProps) {
   const { t } = useTranslation();
-  const { data: tokenData, isLoading, isFetching, error } = useTokensByChannel(timePeriod);
+  const { data: tokenData, isLoading, isFetching, error } = useTokensByChannel(timePeriod, mode);
 
   if (isLoading) {
     return (

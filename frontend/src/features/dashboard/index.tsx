@@ -168,7 +168,7 @@ function DashboardContent({
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
           <TotalRequestsCard mode={mode} />
           <SuccessRateCard mode={mode} />
-          <TokenStatsCard />
+          <TokenStatsCard mode={mode} />
           <TodayRequestsCard mode={mode} />
         </div>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
@@ -177,7 +177,7 @@ function DashboardContent({
               <CardTitle>{t('dashboard.charts.dailyRequestOverview')}</CardTitle>
             </CardHeader>
             <CardContent className='pl-2'>
-              <DailyRequestStats />
+              <DailyRequestStats mode={mode} />
             </CardContent>
           </Card>
           <Card className='hover-card col-span-1 lg:col-span-3'>
@@ -185,13 +185,15 @@ function DashboardContent({
               <CardTitle>{t('dashboard.charts.channelSuccessRate')}</CardTitle>
               <CardDescription>{t('dashboard.charts.channelSuccessRateDescription')}</CardDescription>
               <CardAction>
-                <Link to='/dashboard/channel-success-rates' className='text-sm text-primary hover:underline'>
-                  {t('dashboard.viewAll')}
-                </Link>
+                {mode === 'project' && (
+                  <Link to='/dashboard/channel-success-rates' className='text-sm text-primary hover:underline'>
+                    {t('dashboard.viewAll')}
+                  </Link>
+                )}
               </CardAction>
             </CardHeader>
             <CardContent>
-              <ChannelSuccessRate />
+              <ChannelSuccessRate mode={mode} />
             </CardContent>
           </Card>
         </div>
@@ -213,7 +215,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <RequestsByChannelChart timePeriod={channelTimePeriod} />
+              <RequestsByChannelChart timePeriod={channelTimePeriod} mode={mode} />
             </CardContent>
           </Card>
           <Card className='hover-card'>
@@ -225,7 +227,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <TokensByChannelChart timePeriod={channelTokensTimePeriod} />
+              <TokensByChannelChart timePeriod={channelTokensTimePeriod} mode={mode} />
             </CardContent>
           </Card>
         </div>
@@ -247,7 +249,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <RequestsByModelChart timePeriod={modelTimePeriod} />
+              <RequestsByModelChart timePeriod={modelTimePeriod} mode={mode} />
             </CardContent>
           </Card>
           <Card className='hover-card'>
@@ -259,7 +261,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <TokensByModelChart timePeriod={modelTokensTimePeriod} />
+              <TokensByModelChart timePeriod={modelTokensTimePeriod} mode={mode} />
             </CardContent>
           </Card>
         </div>
@@ -281,7 +283,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <RequestsByAPIKeyChart timePeriod={apiKeyTimePeriod} />
+              <RequestsByAPIKeyChart timePeriod={apiKeyTimePeriod} mode={mode} />
             </CardContent>
           </Card>
           <Card className='hover-card'>
@@ -293,7 +295,7 @@ function DashboardContent({
               </CardAction>
             </CardHeader>
             <CardContent>
-              <TokensByAPIKeyChart timePeriod={apiKeyTokensTimePeriod} />
+              <TokensByAPIKeyChart timePeriod={apiKeyTokensTimePeriod} mode={mode} />
             </CardContent>
           </Card>
         </div>
@@ -312,11 +314,11 @@ function DashboardContent({
               <CardDescription>{modelPerformanceDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ModelPerformanceStats onTotalRequestsChange={setModelTotalRequests} />
+              <ModelPerformanceStats onTotalRequestsChange={setModelTotalRequests} mode={mode} />
             </CardContent>
           </Card>
           <div className='col-span-1 lg:col-span-3'>
-            <FastestModelsCard />
+            <FastestModelsCard mode={mode} />
           </div>
         </div>
         <div className='grid gap-4 md:grid-cols-1 lg:grid-cols-7'>
@@ -326,11 +328,11 @@ function DashboardContent({
               <CardDescription>{channelPerformanceDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChannelPerformanceStats onTotalRequestsChange={setChannelTotalRequests} />
+              <ChannelPerformanceStats onTotalRequestsChange={setChannelTotalRequests} mode={mode} />
             </CardContent>
           </Card>
           <div className='col-span-1 lg:col-span-3'>
-            <FastestChannelsCard />
+            <FastestChannelsCard mode={mode} />
           </div>
         </div>
       </CollapsibleSection>

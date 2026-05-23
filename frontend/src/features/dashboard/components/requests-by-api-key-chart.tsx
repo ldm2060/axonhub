@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeneralSettings } from '../../system/data/system';
-import { useRequestsByAPIKey, useCostByAPIKey } from '../data/dashboard';
+import { useRequestsByAPIKey, useCostByAPIKey, type DashboardMode } from '../data/dashboard';
 import type { TimePeriod } from '@/components/time-period-selector';
 import { ChartLegend } from './chart-legend';
 
@@ -15,13 +15,14 @@ const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--cha
 
 interface RequestsByAPIKeyChartProps {
   timePeriod: TimePeriod;
+  mode: DashboardMode;
 }
 
-export function RequestsByAPIKeyChart({ timePeriod }: RequestsByAPIKeyChartProps) {
+export function RequestsByAPIKeyChart({ timePeriod, mode }: RequestsByAPIKeyChartProps) {
   const { t, i18n } = useTranslation();
-  
-  const { data: apiKeyData, isLoading: isRequestsLoading, isFetching: isRequestsFetching, error: requestsError } = useRequestsByAPIKey(timePeriod);
-  const { data: costData, isLoading: isCostLoading, isFetching: isCostFetching, error: costError } = useCostByAPIKey(timePeriod);
+
+  const { data: apiKeyData, isLoading: isRequestsLoading, isFetching: isRequestsFetching, error: requestsError } = useRequestsByAPIKey(timePeriod, mode);
+  const { data: costData, isLoading: isCostLoading, isFetching: isCostFetching, error: costError } = useCostByAPIKey(timePeriod, mode);
   const { data: generalSettings, isLoading: isSettingsLoading, isFetching: isSettingsFetching } = useGeneralSettings();
 
   const isLoading = isRequestsLoading || isCostLoading || isSettingsLoading;

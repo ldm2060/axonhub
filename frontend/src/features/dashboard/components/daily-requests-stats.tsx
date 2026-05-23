@@ -6,11 +6,15 @@ import { CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Area, AreaCh
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeneralSettings } from '../../system/data/system';
-import { useDailyRequestStats } from '../data/dashboard';
+import { useDailyRequestStats, type DashboardMode } from '../data/dashboard';
 
-export function DailyRequestStats() {
+interface DailyRequestStatsProps {
+  mode: DashboardMode;
+}
+
+export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
   const { t, i18n } = useTranslation();
-  const { data: dailyStats, isLoading: isStatsLoading, error } = useDailyRequestStats();
+  const { data: dailyStats, isLoading: isStatsLoading, error } = useDailyRequestStats(mode);
   const { data: generalSettings, isLoading: isSettingsLoading } = useGeneralSettings();
 
   const isLoading = isStatsLoading || isSettingsLoading;

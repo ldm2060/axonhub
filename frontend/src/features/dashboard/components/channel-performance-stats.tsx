@@ -1,15 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { PerformanceChart } from './performance-chart';
 import type { PerformanceDataPoint } from './performance-chart';
-import { useChannelPerformanceStats } from '../data/dashboard';
+import { useChannelPerformanceStats, type DashboardMode } from '../data/dashboard';
 
 interface ChannelPerformanceStatsProps {
   onTotalRequestsChange?: (total: number) => void;
+  mode: DashboardMode;
 }
 
-export function ChannelPerformanceStats({ onTotalRequestsChange }: ChannelPerformanceStatsProps) {
+export function ChannelPerformanceStats({ onTotalRequestsChange, mode }: ChannelPerformanceStatsProps) {
   const { t } = useTranslation();
-  const { data: performanceStats, isLoading, error } = useChannelPerformanceStats();
+  const { data: performanceStats, isLoading, error } = useChannelPerformanceStats(mode);
 
   const mappedData = performanceStats?.map((stat) => ({
     date: stat.date,

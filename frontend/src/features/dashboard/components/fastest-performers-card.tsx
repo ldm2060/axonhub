@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { formatNumber } from '@/utils/format-number';
 import { TimePeriodSelector, type FastestTimeWindow } from '@/components/time-period-selector';
 import { safeNumber, safeToFixed, sanitizeChartData, type ChartData } from '../utils/chart-helpers';
+import type { DashboardMode } from '../data/dashboard';
 import { ChartLegend, type ChartLegendItem } from './chart-legend';
 
 // 5 colors matches the slice limit in chartData processing (.slice(0, 5))
@@ -88,8 +89,9 @@ interface FastestPerformersCardProps<T extends ThroughputData> {
   title: string;
   description: (totalRequests: number) => string;
   noDataLabel: string;
-  useData: (timeWindow: string) => UseQueryResult<T[], Error>;
+  useData: (timeWindow: string, limit?: number, mode?: DashboardMode) => UseQueryResult<T[], Error>;
   getName: (item: T) => string | null;
+  mode: DashboardMode;
 }
 
 export function FastestPerformersCard<T extends ThroughputData>({
@@ -98,11 +100,12 @@ export function FastestPerformersCard<T extends ThroughputData>({
   noDataLabel,
   useData,
   getName,
+  mode,
 }: FastestPerformersCardProps<T>) {
   const { t } = useTranslation();
   const [timeWindow, setTimeWindow] = useState<FastestTimeWindow>('month');
 
-  const { data: items, isLoading, isFetching, error } = useData(timeWindow);
+  const { data: items, isLoading, isFetching, error } = useData(timeWindow, undefined, mode);
 
   if (isLoading && !items) {
     return (

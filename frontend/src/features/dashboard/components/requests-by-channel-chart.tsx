@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeneralSettings } from '../../system/data/system';
-import { useRequestsByChannel, useCostByChannel } from '../data/dashboard';
+import { useRequestsByChannel, useCostByChannel, type DashboardMode } from '../data/dashboard';
 import type { TimePeriod } from '@/components/time-period-selector';
 import { ChartLegend } from './chart-legend';
 
@@ -15,12 +15,13 @@ const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--cha
 
 interface RequestsByChannelChartProps {
   timePeriod: TimePeriod;
+  mode: DashboardMode;
 }
 
-export function RequestsByChannelChart({ timePeriod }: RequestsByChannelChartProps) {
+export function RequestsByChannelChart({ timePeriod, mode }: RequestsByChannelChartProps) {
   const { t, i18n } = useTranslation();
-  const { data: channelData, isLoading: isRequestsLoading, isFetching: isRequestsFetching, error: requestsError } = useRequestsByChannel(timePeriod);
-  const { data: costData, isLoading: isCostLoading, isFetching: isCostFetching, error: costError } = useCostByChannel(timePeriod);
+  const { data: channelData, isLoading: isRequestsLoading, isFetching: isRequestsFetching, error: requestsError } = useRequestsByChannel(timePeriod, mode);
+  const { data: costData, isLoading: isCostLoading, isFetching: isCostFetching, error: costError } = useCostByChannel(timePeriod, mode);
   const { data: generalSettings, isLoading: isSettingsLoading, isFetching: isSettingsFetching } = useGeneralSettings();
 
   const isLoading = isRequestsLoading || isCostLoading || isSettingsLoading;

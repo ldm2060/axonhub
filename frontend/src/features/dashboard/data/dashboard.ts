@@ -87,18 +87,6 @@ export const dailyRequestStatsSchema = z.object({
   cost: z.number(),
 });
 
-export const hourlyRequestStatsSchema = z.object({
-  hour: z.number(),
-  count: z.number(),
-});
-
-export const topProjectsSchema = z.object({
-  projectId: z.string(),
-  projectName: z.string(),
-  projectDescription: z.string(),
-  requestCount: z.number(),
-});
-
 export const channelSuccessRateSchema = z.object({
   channelId: z.string(),
   channelName: z.string(),
@@ -139,8 +127,6 @@ export type CostByChannel = z.infer<typeof costByChannelSchema>;
 export type CostByModel = z.infer<typeof costByModelSchema>;
 export type CostByAPIKey = z.infer<typeof costByAPIKeySchema>;
 export type DailyRequestStats = z.infer<typeof dailyRequestStatsSchema>;
-export type HourlyRequestStats = z.infer<typeof hourlyRequestStatsSchema>;
-export type TopProjects = z.infer<typeof topProjectsSchema>;
 export type ChannelSuccessRate = z.infer<typeof channelSuccessRateSchema>;
 export type ModelPerformanceStat = z.infer<typeof modelPerformanceStatSchema>;
 export type ChannelPerformanceStat = z.infer<typeof channelPerformanceStatSchema>;
@@ -163,26 +149,10 @@ export const tokenStatsSchema = z.object({
 
 export type TokenStats = z.infer<typeof tokenStatsSchema>;
 
-// GraphQL queries
+// GraphQL queries - Admin
 const DASHBOARD_STATS_QUERY = `
   query GetDashboardStats {
     dashboardOverview {
-      totalRequests
-      requestStats {
-        requestsToday
-        requestsThisWeek
-        requestsLastWeek
-        requestsThisMonth
-      }
-      failedRequests
-      averageResponseTime
-    }
-  }
-`;
-
-const MY_DASHBOARD_STATS_QUERY = `
-  query GetMyDashboardStats {
-    myDashboard {
       totalRequests
       requestStats {
         requestsToday
@@ -304,26 +274,6 @@ const DAILY_REQUEST_STATS_QUERY = `
   }
 `;
 
-const HOURLY_REQUEST_STATS_QUERY = `
-  query GetHourlyRequestStats($date: String) {
-    hourlyRequestStats(date: $date) {
-      hour
-      count
-    }
-  }
-`;
-
-const TOP_PROJECTS_QUERY = `
-  query GetTopProjects {
-    topRequestsProjects {
-      projectId
-      projectName
-      projectDescription
-      requestCount
-    }
-  }
-`;
-
 const CHANNEL_SUCCESS_RATES_QUERY = `
   query GetChannelSuccessRates($timeWindow: String, $limit: Int) {
     channelSuccessRates(timeWindow: $timeWindow, limit: $limit) {
@@ -364,12 +314,194 @@ const CHANNEL_PERFORMANCE_STATS_QUERY = `
   }
 `;
 
-// (removed) Old usageLogs-based token stats query is deprecated in favor of backend tokenStats aggregation
-
-// Backend-provided token stats aggregation
 const TOKEN_STATS_AGGR_QUERY = `
   query GetTokenStats {
     tokenStats {
+      totalInputTokensToday
+      totalOutputTokensToday
+      totalCachedTokensToday
+      totalInputTokensThisWeek
+      totalOutputTokensThisWeek
+      totalCachedTokensThisWeek
+      totalInputTokensThisMonth
+      totalOutputTokensThisMonth
+      totalCachedTokensThisMonth
+      totalInputTokensAllTime
+      totalOutputTokensAllTime
+      totalCachedTokensAllTime
+      lastUpdated
+    }
+  }
+`;
+
+// GraphQL queries - Personal (myXxx)
+const MY_DASHBOARD_STATS_QUERY = `
+  query GetMyDashboardStats {
+    myDashboard {
+      totalRequests
+      requestStats {
+        requestsToday
+        requestsThisWeek
+        requestsLastWeek
+        requestsThisMonth
+      }
+      failedRequests
+      averageResponseTime
+    }
+  }
+`;
+
+const MY_REQUESTS_BY_CHANNEL_QUERY = `
+  query GetMyRequestsByChannel($timeWindow: String) {
+    myRequestStatsByChannel(timeWindow: $timeWindow) {
+      channelName
+      count
+    }
+  }
+`;
+
+const MY_REQUESTS_BY_MODEL_QUERY = `
+  query GetMyRequestsByModel($timeWindow: String) {
+    myRequestStatsByModel(timeWindow: $timeWindow) {
+      modelId
+      count
+    }
+  }
+`;
+
+const MY_REQUESTS_BY_API_KEY_QUERY = `
+  query GetMyRequestsByAPIKey($timeWindow: String) {
+    myRequestStatsByAPIKey(timeWindow: $timeWindow) {
+      apiKeyId
+      apiKeyName
+      count
+    }
+  }
+`;
+
+const MY_TOKENS_BY_API_KEY_QUERY = `
+  query GetMyTokensByAPIKey($timeWindow: String) {
+    myTokenStatsByAPIKey(timeWindow: $timeWindow) {
+      apiKeyId
+      apiKeyName
+      inputTokens
+      outputTokens
+      cachedTokens
+      reasoningTokens
+      totalTokens
+    }
+  }
+`;
+
+const MY_TOKENS_BY_CHANNEL_QUERY = `
+  query GetMyTokensByChannel($timeWindow: String) {
+    myTokenStatsByChannel(timeWindow: $timeWindow) {
+      channelId
+      channelName
+      inputTokens
+      outputTokens
+      cachedTokens
+      reasoningTokens
+      totalTokens
+    }
+  }
+`;
+
+const MY_TOKENS_BY_MODEL_QUERY = `
+  query GetMyTokensByModel($timeWindow: String) {
+    myTokenStatsByModel(timeWindow: $timeWindow) {
+      modelId
+      inputTokens
+      outputTokens
+      cachedTokens
+      reasoningTokens
+      totalTokens
+    }
+  }
+`;
+
+const MY_COST_BY_CHANNEL_QUERY = `
+  query GetMyCostByChannel($timeWindow: String) {
+    myCostStatsByChannel(timeWindow: $timeWindow) {
+      channelName
+      cost
+    }
+  }
+`;
+
+const MY_COST_BY_MODEL_QUERY = `
+  query GetMyCostByModel($timeWindow: String) {
+    myCostStatsByModel(timeWindow: $timeWindow) {
+      modelId
+      cost
+    }
+  }
+`;
+
+const MY_COST_BY_API_KEY_QUERY = `
+  query GetMyCostByAPIKey($timeWindow: String) {
+    myCostStatsByAPIKey(timeWindow: $timeWindow) {
+      apiKeyId
+      apiKeyName
+      cost
+    }
+  }
+`;
+
+const MY_DAILY_REQUEST_STATS_QUERY = `
+  query GetMyDailyRequestStats {
+    myDailyRequestStats {
+      date
+      count
+      tokens
+      cost
+    }
+  }
+`;
+
+const MY_CHANNEL_SUCCESS_RATES_QUERY = `
+  query GetMyChannelSuccessRates($timeWindow: String, $limit: Int) {
+    myChannelSuccessRates(timeWindow: $timeWindow, limit: $limit) {
+      channelId
+      channelName
+      channelType
+      channelDisabled
+      successCount
+      failedCount
+      totalCount
+      successRate
+    }
+  }
+`;
+
+const MY_MODEL_PERFORMANCE_STATS_QUERY = `
+  query MyModelPerformanceStats {
+    myModelPerformanceStats {
+      date
+      modelId
+      throughput
+      ttftMs
+      requestCount
+    }
+  }
+`;
+
+const MY_CHANNEL_PERFORMANCE_STATS_QUERY = `
+  query MyChannelPerformanceStats {
+    myChannelPerformanceStats {
+      date
+      channelId
+      channelName
+      throughput
+      ttftMs
+      requestCount
+    }
+  }
+`;
+
+const MY_TOKEN_STATS_AGGR_QUERY = `
+  query GetMyTokenStats {
+    myTokenStats {
       totalInputTokensToday
       totalOutputTokensToday
       totalCachedTokensToday
@@ -398,222 +530,215 @@ export function useDashboardStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: DashboardStats }>(query);
       return dashboardStatsSchema.parse(data[fieldName]);
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 }
 
-export function useRequestsByChannel(timeWindow?: string) {
+export function useRequestsByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByChannel', timeWindow],
+    queryKey: ['requestStatsByChannel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ requestStatsByChannel: RequestsByChannel[] }>(
-        REQUESTS_BY_CHANNEL_QUERY,
-        { timeWindow }
-      );
-      return data.requestStatsByChannel.map((item) => requestsByChannelSchema.parse(item));
+      const query = isPersonal ? MY_REQUESTS_BY_CHANNEL_QUERY : REQUESTS_BY_CHANNEL_QUERY;
+      const fieldName = isPersonal ? 'myRequestStatsByChannel' : 'requestStatsByChannel';
+      const data = await graphqlRequest<{ [key: string]: RequestsByChannel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => requestsByChannelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useRequestsByModel(timeWindow?: string) {
+export function useRequestsByModel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByModel', timeWindow],
+    queryKey: ['requestStatsByModel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ requestStatsByModel: RequestsByModel[] }>(
-        REQUESTS_BY_MODEL_QUERY,
-        { timeWindow }
-      );
-      return data.requestStatsByModel.map((item) => requestsByModelSchema.parse(item));
+      const query = isPersonal ? MY_REQUESTS_BY_MODEL_QUERY : REQUESTS_BY_MODEL_QUERY;
+      const fieldName = isPersonal ? 'myRequestStatsByModel' : 'requestStatsByModel';
+      const data = await graphqlRequest<{ [key: string]: RequestsByModel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => requestsByModelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useRequestsByAPIKey(timeWindow?: string) {
+export function useRequestsByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByAPIKey', timeWindow],
+    queryKey: ['requestStatsByAPIKey', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ requestStatsByAPIKey: RequestsByAPIKey[] }>(
-        REQUESTS_BY_API_KEY_QUERY,
-        { timeWindow }
-      );
-      return data.requestStatsByAPIKey.map((item) => requestsByAPIKeySchema.parse(item));
+      const query = isPersonal ? MY_REQUESTS_BY_API_KEY_QUERY : REQUESTS_BY_API_KEY_QUERY;
+      const fieldName = isPersonal ? 'myRequestStatsByAPIKey' : 'requestStatsByAPIKey';
+      const data = await graphqlRequest<{ [key: string]: RequestsByAPIKey[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => requestsByAPIKeySchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useTokensByAPIKey(timeWindow?: string) {
+export function useTokensByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByAPIKey', timeWindow],
+    queryKey: ['tokenStatsByAPIKey', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ tokenStatsByAPIKey: TokensByAPIKey[] }>(
-        TOKENS_BY_API_KEY_QUERY,
-        { timeWindow }
-      );
-      return data.tokenStatsByAPIKey.map((item) => tokensByAPIKeySchema.parse(item));
+      const query = isPersonal ? MY_TOKENS_BY_API_KEY_QUERY : TOKENS_BY_API_KEY_QUERY;
+      const fieldName = isPersonal ? 'myTokenStatsByAPIKey' : 'tokenStatsByAPIKey';
+      const data = await graphqlRequest<{ [key: string]: TokensByAPIKey[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => tokensByAPIKeySchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useTokensByChannel(timeWindow?: string) {
+export function useTokensByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByChannel', timeWindow],
+    queryKey: ['tokenStatsByChannel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ tokenStatsByChannel: TokensByChannel[] }>(
-        TOKENS_BY_CHANNEL_QUERY,
-        { timeWindow }
-      );
-      return data.tokenStatsByChannel.map((item) => tokensByChannelSchema.parse(item));
+      const query = isPersonal ? MY_TOKENS_BY_CHANNEL_QUERY : TOKENS_BY_CHANNEL_QUERY;
+      const fieldName = isPersonal ? 'myTokenStatsByChannel' : 'tokenStatsByChannel';
+      const data = await graphqlRequest<{ [key: string]: TokensByChannel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => tokensByChannelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useTokensByModel(timeWindow?: string) {
+export function useTokensByModel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByModel', timeWindow],
+    queryKey: ['tokenStatsByModel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ tokenStatsByModel: TokensByModel[] }>(
-        TOKENS_BY_MODEL_QUERY,
-        { timeWindow }
-      );
-      return data.tokenStatsByModel.map((item) => tokensByModelSchema.parse(item));
+      const query = isPersonal ? MY_TOKENS_BY_MODEL_QUERY : TOKENS_BY_MODEL_QUERY;
+      const fieldName = isPersonal ? 'myTokenStatsByModel' : 'tokenStatsByModel';
+      const data = await graphqlRequest<{ [key: string]: TokensByModel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => tokensByModelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useCostByChannel(timeWindow?: string) {
+export function useCostByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByChannel', timeWindow],
+    queryKey: ['costStatsByChannel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ costStatsByChannel: CostByChannel[] }>(
-        COST_BY_CHANNEL_QUERY,
-        { timeWindow }
-      );
-      return data.costStatsByChannel.map((item) => costByChannelSchema.parse(item));
+      const query = isPersonal ? MY_COST_BY_CHANNEL_QUERY : COST_BY_CHANNEL_QUERY;
+      const fieldName = isPersonal ? 'myCostStatsByChannel' : 'costStatsByChannel';
+      const data = await graphqlRequest<{ [key: string]: CostByChannel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => costByChannelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useCostByModel(timeWindow?: string) {
+export function useCostByModel(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByModel', timeWindow],
+    queryKey: ['costStatsByModel', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ costStatsByModel: CostByModel[] }>(
-        COST_BY_MODEL_QUERY,
-        { timeWindow }
-      );
-      return data.costStatsByModel.map((item) => costByModelSchema.parse(item));
+      const query = isPersonal ? MY_COST_BY_MODEL_QUERY : COST_BY_MODEL_QUERY;
+      const fieldName = isPersonal ? 'myCostStatsByModel' : 'costStatsByModel';
+      const data = await graphqlRequest<{ [key: string]: CostByModel[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => costByModelSchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useCostByAPIKey(timeWindow?: string) {
+export function useCostByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByAPIKey', timeWindow],
+    queryKey: ['costStatsByAPIKey', timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ costStatsByAPIKey: CostByAPIKey[] }>(
-        COST_BY_API_KEY_QUERY,
-        { timeWindow }
-      );
-      return data.costStatsByAPIKey.map((item) => costByAPIKeySchema.parse(item));
+      const query = isPersonal ? MY_COST_BY_API_KEY_QUERY : COST_BY_API_KEY_QUERY;
+      const fieldName = isPersonal ? 'myCostStatsByAPIKey' : 'costStatsByAPIKey';
+      const data = await graphqlRequest<{ [key: string]: CostByAPIKey[] }>(query, { timeWindow });
+      return data[fieldName].map((item) => costByAPIKeySchema.parse(item));
     },
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useDailyRequestStats() {
+export function useDailyRequestStats(mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['dailyRequestStats'],
+    queryKey: ['dailyRequestStats', mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ dailyRequestStats: DailyRequestStats[] }>(DAILY_REQUEST_STATS_QUERY);
-      return data.dailyRequestStats.map((item) => dailyRequestStatsSchema.parse(item));
-    },
-    refetchInterval: 300000, // Refetch every 5 minutes
-  });
-}
-
-export function useHourlyRequestStats(date?: string) {
-  return useQuery({
-    queryKey: ['hourlyRequestStats', date],
-    queryFn: async () => {
-      const data = await graphqlRequest<{ hourlyRequestStats: HourlyRequestStats[] }>(HOURLY_REQUEST_STATS_QUERY, { date });
-      return data.hourlyRequestStats.map((item) => hourlyRequestStatsSchema.parse(item));
+      const query = isPersonal ? MY_DAILY_REQUEST_STATS_QUERY : DAILY_REQUEST_STATS_QUERY;
+      const fieldName = isPersonal ? 'myDailyRequestStats' : 'dailyRequestStats';
+      const data = await graphqlRequest<{ [key: string]: DailyRequestStats[] }>(query);
+      return data[fieldName].map((item) => dailyRequestStatsSchema.parse(item));
     },
     refetchInterval: 300000,
   });
 }
 
-export function useTopProjects() {
+export function useTokenStats(mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['topRequestsProjects'],
+    queryKey: ['tokenStats', mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ topRequestsProjects: TopProjects[] }>(TOP_PROJECTS_QUERY);
-      return data.topRequestsProjects.map((item) => topProjectsSchema.parse(item));
+      const query = isPersonal ? MY_TOKEN_STATS_AGGR_QUERY : TOKEN_STATS_AGGR_QUERY;
+      const fieldName = isPersonal ? 'myTokenStats' : 'tokenStats';
+      const data = await graphqlRequest<{ [key: string]: TokenStats }>(query);
+      return tokenStatsSchema.parse(data[fieldName]);
     },
     refetchInterval: 300000,
   });
 }
 
-export function useTokenStats() {
+export function useChannelSuccessRates(limit?: number, timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStats'],
+    queryKey: ['channelSuccessRates', limit, timeWindow, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ tokenStats: TokenStats }>(TOKEN_STATS_AGGR_QUERY);
-      return tokenStatsSchema.parse(data.tokenStats);
-    },
-    refetchInterval: 300000, // Refetch every 5 minutes
-  });
-}
-
-export function useChannelSuccessRates(limit?: number, timeWindow?: string) {
-  return useQuery({
-    queryKey: ['channelSuccessRates', limit, timeWindow],
-    queryFn: async () => {
-      const data = await graphqlRequest<{ channelSuccessRates: ChannelSuccessRate[] }>(
-        CHANNEL_SUCCESS_RATES_QUERY,
+      const query = isPersonal ? MY_CHANNEL_SUCCESS_RATES_QUERY : CHANNEL_SUCCESS_RATES_QUERY;
+      const fieldName = isPersonal ? 'myChannelSuccessRates' : 'channelSuccessRates';
+      const data = await graphqlRequest<{ [key: string]: ChannelSuccessRate[] }>(
+        query,
         { ...(timeWindow != null && { timeWindow }), ...(limit != null && { limit }) }
       );
-      return data.channelSuccessRates.map((item) => channelSuccessRateSchema.parse(item));
+      return data[fieldName].map((item) => channelSuccessRateSchema.parse(item));
     },
     refetchInterval: 300000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useModelPerformanceStats() {
+export function useModelPerformanceStats(mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['modelPerformanceStats'],
+    queryKey: ['modelPerformanceStats', mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ modelPerformanceStats: ModelPerformanceStat[] }>(MODEL_PERFORMANCE_STATS_QUERY);
-      return data.modelPerformanceStats.map((item) => modelPerformanceStatSchema.parse(item));
+      const query = isPersonal ? MY_MODEL_PERFORMANCE_STATS_QUERY : MODEL_PERFORMANCE_STATS_QUERY;
+      const fieldName = isPersonal ? 'myModelPerformanceStats' : 'modelPerformanceStats';
+      const data = await graphqlRequest<{ [key: string]: ModelPerformanceStat[] }>(query);
+      return data[fieldName].map((item) => modelPerformanceStatSchema.parse(item));
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
 }
 
-export function useChannelPerformanceStats() {
+export function useChannelPerformanceStats(mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['channelPerformanceStats'],
+    queryKey: ['channelPerformanceStats', mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ channelPerformanceStats: ChannelPerformanceStat[] }>(CHANNEL_PERFORMANCE_STATS_QUERY);
-      return data.channelPerformanceStats.map((item) => channelPerformanceStatSchema.parse(item));
+      const query = isPersonal ? MY_CHANNEL_PERFORMANCE_STATS_QUERY : CHANNEL_PERFORMANCE_STATS_QUERY;
+      const fieldName = isPersonal ? 'myChannelPerformanceStats' : 'channelPerformanceStats';
+      const data = await graphqlRequest<{ [key: string]: ChannelPerformanceStat[] }>(query);
+      return data[fieldName].map((item) => channelPerformanceStatSchema.parse(item));
     },
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
 }

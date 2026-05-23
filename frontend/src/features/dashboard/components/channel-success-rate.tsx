@@ -2,11 +2,15 @@ import { ActivityIcon, CheckCircle2Icon, XCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useChannelSuccessRates } from '../data/dashboard';
+import { useChannelSuccessRates, type DashboardMode } from '../data/dashboard';
 
-export function ChannelSuccessRate() {
+interface ChannelSuccessRateProps {
+  mode: DashboardMode;
+}
+
+export function ChannelSuccessRate({ mode }: ChannelSuccessRateProps) {
   const { t } = useTranslation();
-  const { data: channels, isLoading, error } = useChannelSuccessRates();
+  const { data: channels, isLoading, error } = useChannelSuccessRates(undefined, undefined, mode);
 
   if (isLoading) {
     return (

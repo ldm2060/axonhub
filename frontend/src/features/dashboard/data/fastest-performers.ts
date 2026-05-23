@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
+export type { DashboardMode } from './dashboard';
 
-// Refetch interval constant (30 seconds)
 const REFETCH_INTERVAL_MS = 30000;
 
-// Schema definitions for regular queries
 export const fastestChannelSchema = z.object({
   channelId: z.string(),
   channelName: z.string(),
@@ -30,12 +29,11 @@ export const fastestChannelsInputSchema = z.object({
   limit: z.number().optional().default(5),
 });
 
-// Type exports
 export type FastestChannel = z.infer<typeof fastestChannelSchema>;
 export type FastestModel = z.infer<typeof fastestModelSchema>;
 export type FastestChannelsInput = z.infer<typeof fastestChannelsInputSchema>;
 
-// GraphQL queries
+// Admin queries
 const FASTEST_CHANNELS_QUERY = `
   query GetFastestChannels($input: FastestChannelsInput!) {
     fastestChannels(input: $input) {
@@ -63,34 +61,66 @@ const FASTEST_MODELS_QUERY = `
   }
 `;
 
-// Query hooks
-export function useFastestChannels(timeWindow: string = 'day', limit: number = 5) {
+// Personal queries
+const MY_FASTEST_CHANNELS_QUERY = `
+  query GetMyFastestChannels($input: FastestChannelsInput!) {
+    myFastestChannels(input: $input) {
+      channelId
+      channelName
+      channelType
+      throughput
+      tokensCount
+      latencyMs
+      requestCount
+    }
+  }
+`;
+
+const MY_FASTEST_MODELS_QUERY = `
+  query GetMyFastestModels($input: FastestChannelsInput!) {
+    myFastestModels(input: $input) {
+      modelId
+      modelName
+      throughput
+      tokensCount
+      latencyMs
+      requestCount
+    }
+  }
+`;
+
+export function useFastestChannels(timeWindow: string = 'day', limit: number = 5, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['fastestChannels', timeWindow, limit],
+    queryKey: ['fastestChannels', timeWindow, limit, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ fastestChannels: FastestChannel[] }>(
-        FASTEST_CHANNELS_QUERY,
+      const query = isPersonal ? MY_FASTEST_CHANNELS_QUERY : FASTEST_CHANNELS_QUERY;
+      const fieldName = isPersonal ? 'myFastestChannels' : 'fastestChannels';
+      const data = await graphqlRequest<{ [key: string]: FastestChannel[] }>(
+        query,
         { input: { timeWindow, limit } }
       );
-      return data.fastestChannels.map((item) => fastestChannelSchema.parse(item));
+      return data[fieldName].map((item) => fastestChannelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching to prevent flash
+    placeholderData: (previousData) => previousData,
   });
 }
 
-export function useFastestModels(timeWindow: string = 'day', limit: number = 5) {
+export function useFastestModels(timeWindow: string = 'day', limit: number = 5, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['fastestModels', timeWindow, limit],
+    queryKey: ['fastestModels', timeWindow, limit, mode],
     queryFn: async () => {
-      const data = await graphqlRequest<{ fastestModels: FastestModel[] }>(
-        FASTEST_MODELS_QUERY,
+      const query = isPersonal ? MY_FASTEST_MODELS_QUERY : FASTEST_MODELS_QUERY;
+      const fieldName = isPersonal ? 'myFastestModels' : 'fastestModels';
+      const data = await graphqlRequest<{ [key: string]: FastestModel[] }>(
+        query,
         { input: { timeWindow, limit } }
       );
-      return data.fastestModels.map((item) => fastestModelSchema.parse(item));
+      return data[fieldName].map((item) => fastestModelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching to prevent flash
+    placeholderData: (previousData) => previousData,
   });
 }
-

@@ -1,15 +1,16 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PerformanceChart, PerformanceDataPoint } from './performance-chart';
-import { useModelPerformanceStats, ModelPerformanceStat } from '../data/dashboard';
+import { useModelPerformanceStats, ModelPerformanceStat, type DashboardMode } from '../data/dashboard';
 
 interface ModelPerformanceStatsProps {
   onTotalRequestsChange?: (total: number) => void;
+  mode: DashboardMode;
 }
 
-export function ModelPerformanceStats({ onTotalRequestsChange }: ModelPerformanceStatsProps) {
+export function ModelPerformanceStats({ onTotalRequestsChange, mode }: ModelPerformanceStatsProps) {
   const { t } = useTranslation();
-  const { data: performanceStats, isLoading, error } = useModelPerformanceStats();
+  const { data: performanceStats, isLoading, error } = useModelPerformanceStats(mode);
 
   const mappedData: PerformanceDataPoint[] | undefined = useMemo(() =>
     performanceStats?.map((stat: ModelPerformanceStat) => ({

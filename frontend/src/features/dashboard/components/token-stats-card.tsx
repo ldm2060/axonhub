@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useTokenStats } from '../data/dashboard';
+import { useTokenStats, type DashboardMode } from '../data/dashboard';
 
 type TimeRange = 'allTime' | 'thisMonth' | 'thisWeek' | 'thisDay';
 
@@ -69,9 +69,13 @@ function LastUpdatedInfo({ lastUpdated, locale, t }: LastUpdatedInfoProps) {
   );
 }
 
-export function TokenStatsCard() {
+interface TokenStatsCardProps {
+  mode: DashboardMode;
+}
+
+export function TokenStatsCard({ mode }: TokenStatsCardProps) {
   const { t, i18n } = useTranslation();
-  const { data: stats, isLoading, error } = useTokenStats();
+  const { data: stats, isLoading, error } = useTokenStats(mode);
   const [timeRange, setTimeRange] = useState<TimeRange>('thisDay');
 
   if (isLoading) {
