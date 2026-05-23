@@ -1,7 +1,6 @@
 {
   "share.dialog.title": "分享: {{name}}",
   "share.dialog.description.channel": "管理此渠道的共享和可见性。",
-  "share.dialog.description.model": "管理此模型的共享和可见性。",
   "share.dialog.visibility": "可见性",
   "share.dialog.addUser": "添加用户",
   "share.dialog.searchUsers": "搜索用户...",
@@ -11,7 +10,6 @@
   "share.dialog.requestPublish": "申请发布",
   "share.dialog.requestPublishTitle": "申请发布",
   "share.dialog.requestPublishDescription.channel": "申请发布渠道\"{{name}}\"。审批通过后，所有用户将可见。",
-  "share.dialog.requestPublishDescription.model": "申请发布模型\"{{name}}\"。审批通过后，所有用户将可见。",
   "share.dialog.publishComment": "备注（可选）",
   "share.dialog.publishCommentPlaceholder": "添加审核备注...",
   "share.dialog.submitPublishRequest": "提交申请",

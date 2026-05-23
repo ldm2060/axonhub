@@ -1,7 +1,6 @@
 {
   "share.dialog.title": "Share: {{name}}",
   "share.dialog.description.channel": "Manage sharing and visibility for this channel.",
-  "share.dialog.description.model": "Manage sharing and visibility for this model.",
   "share.dialog.visibility": "Visibility",
   "share.dialog.addUser": "Add User",
   "share.dialog.searchUsers": "Search users...",
@@ -11,7 +10,6 @@
   "share.dialog.requestPublish": "Request Publish",
   "share.dialog.requestPublishTitle": "Request Publish",
   "share.dialog.requestPublishDescription.channel": "Request to publish channel \"{{name}}\". This will make it visible to all users after approval.",
-  "share.dialog.requestPublishDescription.model": "Request to publish model \"{{name}}\". This will make it visible to all users after approval.",
   "share.dialog.publishComment": "Comment (optional)",
   "share.dialog.publishCommentPlaceholder": "Add a comment for the reviewer...",
   "share.dialog.submitPublishRequest": "Submit Request",
