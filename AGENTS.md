@@ -6,9 +6,14 @@ This file provides guidance to AI coding assistants when working with code in th
 
 ## Global Rules
 
-1. Do NOT run lint or build commands unless explicitly requested by the user.
-2. Do NOT restart the development server — it's already started and managed.
-3. All summary files should be stored in `.agent/summary` directory if available.
+1. Do NOT restart the development server — it's already started and managed.
+2. All summary files should be stored in `.agent/summary` directory if available.
+3. **Before every commit, you MUST run the following verification commands and ensure they all pass:**
+   - **Build**: `go build ./...` and `cd llm && go build ./...`
+   - **Lint**: `golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && golangci-lint run --timeout 10m --max-same-issues 50 ./...`
+   - **Test**: `go test ./...` and `cd llm && go test ./...`
+   
+   If any command fails, fix the issues before committing. Do NOT commit code that doesn't compile or fails tests.
 4. After making code changes, run lint check locally (if tools are available), then commit immediately — do not wait for the user to ask.
 
 ## Configuration
