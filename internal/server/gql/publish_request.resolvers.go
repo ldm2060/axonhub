@@ -9,13 +9,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 // RequestPublish is the resolver for the requestPublish field.
@@ -114,12 +117,25 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 		return nil, fmt.Errorf("unauthorized")
 	}
 
-	projectID, err := r.userService.EnsurePrivateProject(ctx, user)
+	// Collect all project IDs the user belongs to (private + shared + public).
+	projectIDs, err := r.client.UserProject.Query().
+		Where(userproject.UserIDEQ(user.ID)).
+		QueryProject().
+		IDs(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve private project: %w", err)
+		return nil, fmt.Errorf("failed to get user projects: %w", err)
 	}
 
-	ctx = contexts.WithProjectID(ctx, projectID)
+	if len(projectIDs) == 0 {
+		// Fallback: ensure private project exists
+		privateProjectID, err := r.userService.EnsurePrivateProject(ctx, user)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve private project: %w", err)
+		}
+		projectIDs = []int{privateProjectID}
+	}
+
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
 
 	stats := &DashboardOverview{
 		TotalRequests:       0,
@@ -127,45 +143,51 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 		AverageResponseTime: nil,
 	}
 
-	totalRequests, err := r.client.Request.Query().
-		Where(request.ProjectIDEQ(projectID)).
-		Count(ctx)
-	if err == nil {
-		stats.TotalRequests = totalRequests
+	// Count total and failed requests across all user projects.
+	var statusCounts []struct {
+		Status request.Status `json:"status"`
+		Count  int            `json:"count"`
+	}
+	if err := r.client.Request.Query().
+		Where(request.ProjectIDIn(projectIDs...)).
+		GroupBy(request.FieldStatus).
+		Aggregate(ent.Count()).
+		Scan(ctx, &statusCounts); err != nil {
+		// log.Warn not imported; silently continue with zeros
+	} else {
+		for _, sc := range statusCounts {
+			stats.TotalRequests += sc.Count
+			if sc.Status == request.StatusFailed {
+				stats.FailedRequests = sc.Count
+			}
+		}
 	}
 
-	failedRequests, err := r.client.Request.Query().
-		Where(request.ProjectIDEQ(projectID), request.StatusEQ(request.StatusFailed)).
-		Count(ctx)
-	if err == nil {
-		stats.FailedRequests = failedRequests
-	}
-
-	// Get request stats filtered by the user's private project.
+	// Get request stats filtered by the user's projects.
 	loc := r.systemService.TimeLocation(ctx)
 	period := xtime.GetCalendarPeriods(loc)
 
 	stats.RequestStats = &RequestStats{}
 	if requestsToday, err := r.client.UsageLog.Query().
-		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.Today.Start)).
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.Today.Start)).
 		Count(ctx); err == nil {
 		stats.RequestStats.RequestsToday = requestsToday
 	}
 
 	if requestsThisWeek, err := r.client.UsageLog.Query().
-		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.ThisWeek.Start)).
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.ThisWeek.Start)).
 		Count(ctx); err == nil {
 		stats.RequestStats.RequestsThisWeek = requestsThisWeek
 	}
 
 	if requestsLastWeek, err := r.client.UsageLog.Query().
-		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.LastWeek.Start), usagelog.CreatedAtLT(period.LastWeek.End)).
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.LastWeek.Start), usagelog.CreatedAtLT(period.LastWeek.End)).
 		Count(ctx); err == nil {
 		stats.RequestStats.RequestsLastWeek = requestsLastWeek
 	}
 
 	if requestsThisMonth, err := r.client.UsageLog.Query().
-		Where(usagelog.ProjectIDEQ(projectID), usagelog.CreatedAtGTE(period.ThisMonth.Start)).
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.ThisMonth.Start)).
 		Count(ctx); err == nil {
 		stats.RequestStats.RequestsThisMonth = requestsThisMonth
 	}
