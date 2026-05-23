@@ -110,8 +110,26 @@ export type ChannelStatus = z.infer<typeof channelStatusSchema>;
 export const capabilityPolicySchema = z.enum(['unlimited', 'require', 'forbid']);
 export type CapabilityPolicy = z.infer<typeof capabilityPolicySchema>;
 
+export const channelAvailabilityRuleTypeSchema = z.enum(['available', 'unavailable']);
+export type ChannelAvailabilityRuleType = z.infer<typeof channelAvailabilityRuleTypeSchema>;
+
+export const channelAvailabilityRuleSchema = z.object({
+  type: channelAvailabilityRuleTypeSchema,
+  days: z.array(z.number().int().min(1).max(7)).optional().nullable(),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format'),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format'),
+  enabled: z.boolean(),
+});
+export type ChannelAvailabilityRule = z.infer<typeof channelAvailabilityRuleSchema>;
+
+export const channelAvailabilitySchema = z.object({
+  rules: z.array(channelAvailabilityRuleSchema),
+});
+export type ChannelAvailability = z.infer<typeof channelAvailabilitySchema>;
+
 export const channelPoliciesSchema = z.object({
   stream: capabilityPolicySchema.optional(),
+  availability: channelAvailabilitySchema.optional().nullable(),
 });
 export type ChannelPolicies = z.infer<typeof channelPoliciesSchema>;
 
