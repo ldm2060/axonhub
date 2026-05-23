@@ -80,20 +80,32 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		publicGroup.GET("/health", handlers.System.Health)
 	}
 
-	unSecureAdminGroup := server.Group("/admin", middleware.WithTimeout(server.Config.RequestTimeout))
-	{
-		// System Status and Initialize - DO NOT AUTH
-		unSecureAdminGroup.GET("/system/status", handlers.System.GetSystemStatus)
-		unSecureAdminGroup.POST("/system/initialize", handlers.System.InitializeSystem)
-		// User Login - DO NOT AUTH
-		unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
-		unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
-		unSecureAdminGroup.GET("/auth/signup/allowed", handlers.SignUp.AllowSignUp)
-		unSecureAdminGroup.GET("/auth/verify-email", handlers.EmailToken.VerifyEmail)
-		unSecureAdminGroup.POST("/auth/resend-verification", handlers.EmailToken.ResendVerification)
-		unSecureAdminGroup.POST("/auth/forgot-password", handlers.EmailToken.ForgotPassword)
-		unSecureAdminGroup.POST("/auth/reset-password", handlers.EmailToken.ResetPassword)
-	}
+	// Auth routes (preferred, no /admin prefix)
+		authGroup := server.Group("/auth", middleware.WithTimeout(server.Config.RequestTimeout))
+		{
+			authGroup.POST("/signin", handlers.Auth.SignIn)
+			authGroup.POST("/signup", handlers.SignUp.SignUp)
+			authGroup.GET("/signup/allowed", handlers.SignUp.AllowSignUp)
+			authGroup.GET("/verify-email", handlers.EmailToken.VerifyEmail)
+			authGroup.POST("/resend-verification", handlers.EmailToken.ResendVerification)
+			authGroup.POST("/forgot-password", handlers.EmailToken.ForgotPassword)
+			authGroup.POST("/reset-password", handlers.EmailToken.ResetPassword)
+		}
+
+		unSecureAdminGroup := server.Group("/admin", middleware.WithTimeout(server.Config.RequestTimeout))
+		{
+			// System Status and Initialize - DO NOT AUTH
+			unSecureAdminGroup.GET("/system/status", handlers.System.GetSystemStatus)
+			unSecureAdminGroup.POST("/system/initialize", handlers.System.InitializeSystem)
+			// Legacy auth routes (backward compatibility)
+			unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
+			unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
+			unSecureAdminGroup.GET("/auth/signup/allowed", handlers.SignUp.AllowSignUp)
+			unSecureAdminGroup.GET("/auth/verify-email", handlers.EmailToken.VerifyEmail)
+			unSecureAdminGroup.POST("/auth/resend-verification", handlers.EmailToken.ResendVerification)
+			unSecureAdminGroup.POST("/auth/forgot-password", handlers.EmailToken.ForgotPassword)
+			unSecureAdminGroup.POST("/auth/reset-password", handlers.EmailToken.ResetPassword)
+		}
 
 	oauthGroup := server.Group("/oauth", middleware.WithTimeout(server.Config.RequestTimeout))
 	{

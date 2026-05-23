@@ -5032,6 +5032,10 @@ type RequestExecution implements Node {
   dataStorageID: ID
   externalID: String
   modelID: String!
+  """
+  Reasoning effort sent to the channel
+  """
+  reasoningEffort: String
   format: String!
   requestBody: JSONRawMessage! @goField(forceResolver: true)
   responseBody: JSONRawMessage @goField(forceResolver: true)
@@ -5228,6 +5232,24 @@ input RequestExecutionWhereInput {
   modelIDHasSuffix: String
   modelIDEqualFold: String
   modelIDContainsFold: String
+  """
+  reasoning_effort field predicates
+  """
+  reasoningEffort: String
+  reasoningEffortNEQ: String
+  reasoningEffortIn: [String!]
+  reasoningEffortNotIn: [String!]
+  reasoningEffortGT: String
+  reasoningEffortGTE: String
+  reasoningEffortLT: String
+  reasoningEffortLTE: String
+  reasoningEffortContains: String
+  reasoningEffortHasPrefix: String
+  reasoningEffortHasSuffix: String
+  reasoningEffortIsNil: Boolean
+  reasoningEffortNotNil: Boolean
+  reasoningEffortEqualFold: String
+  reasoningEffortContainsFold: String
   """
   format field predicates
   """

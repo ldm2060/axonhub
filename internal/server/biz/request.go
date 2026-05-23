@@ -244,6 +244,7 @@ func (s *RequestService) CreateRequestExecution(
 	ctx context.Context,
 	channel *Channel,
 	modelID string,
+	reasoningEffort string,
 	request *ent.Request,
 	channelRequest httpclient.Request,
 	format llm.APIFormat,
@@ -319,6 +320,10 @@ func (s *RequestService) CreateRequestExecution(
 	// Use the same data storage as the request
 	if request.DataStorageID != 0 {
 		mut = mut.SetDataStorageID(request.DataStorageID)
+	}
+
+	if reasoningEffort != "" {
+		mut = mut.SetReasoningEffort(reasoningEffort)
 	}
 
 	execution, err := mut.Save(ctx)

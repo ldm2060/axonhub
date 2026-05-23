@@ -130,7 +130,7 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 	}
 
 	// Build verification URL using the token
-	verifyURL := s.emailService.BuildURL(fmt.Sprintf("/admin/auth/verify-email?token=%s", token))
+	verifyURL := s.emailService.BuildURL(fmt.Sprintf("/auth/verify-email?token=%s", token))
 
 	// Send verification email
 	userName := newUser.FirstName

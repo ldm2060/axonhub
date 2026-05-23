@@ -35,6 +35,7 @@
   "requests.columns.responseChunks": "Response Chunks",
   "requests.columns.requestHeaders": "Request Headers",
   "requests.columns.executedModelId": "Executed Model ID",
+  "requests.columns.executedReasoningEffort": "Actual Reasoning Effort",
   "requests.columns.retryProcess": "Retry Process",
   "requests.columns.mappedModel": "Mapped Model",
   "requests.status.pending": "Pending",

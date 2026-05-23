@@ -48,6 +48,10 @@ func (RequestExecution) Fields() []ent.Field {
 			Optional().
 			MaxLen(512),
 		field.String("model_id").Immutable(),
+		field.String("reasoning_effort").
+			Optional().
+			Immutable().
+			Comment("Reasoning effort sent to the channel"),
 		//  The format of the request, e.g: openai/chat_completions, claude/messages, openai/response.
 		field.String("format").Immutable().Default("openai/chat_completions"),
 		// The original request to the provider.

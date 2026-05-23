@@ -71,7 +71,7 @@ func (h *EmailTokenAPI) checkRateLimit(key string) bool {
 	return true
 }
 
-// VerifyEmail handles GET /admin/auth/verify-email?token=...
+// VerifyEmail handles GET /auth/verify-email?token=...
 // Validates the token, marks email as verified, and redirects to the frontend.
 func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -126,7 +126,7 @@ type ResendVerificationRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-// ResendVerification handles POST /admin/auth/resend-verification
+// ResendVerification handles POST /auth/resend-verification
 // Rate-limited per email. Resends verification email to pending users with unverified emails.
 func (h *EmailTokenAPI) ResendVerification(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -165,7 +165,7 @@ func (h *EmailTokenAPI) ResendVerification(c *gin.Context) {
 	}
 
 	// Send verification email
-	verifyURL := h.emailService.BuildURL(fmt.Sprintf("/admin/auth/verify-email?token=%s", token))
+	verifyURL := h.emailService.BuildURL(fmt.Sprintf("/auth/verify-email?token=%s", token))
 	userName := u.FirstName
 	if userName == "" {
 		userName = u.Email
@@ -180,7 +180,7 @@ type ForgotPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-// ForgotPassword handles POST /admin/auth/forgot-password
+// ForgotPassword handles POST /auth/forgot-password
 // Rate-limited per email. Creates a reset token and sends a reset email.
 func (h *EmailTokenAPI) ForgotPassword(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -233,7 +233,7 @@ type ResetPasswordRequest struct {
 	Password string `json:"password" binding:"required,min=8"`
 }
 
-// ResetPassword handles POST /admin/auth/reset-password
+// ResetPassword handles POST /auth/reset-password
 // Validates the token, consumes it, and sets the new password.
 func (h *EmailTokenAPI) ResetPassword(c *gin.Context) {
 	ctx := c.Request.Context()

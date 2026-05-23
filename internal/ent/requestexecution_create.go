@@ -122,6 +122,20 @@ func (_c *RequestExecutionCreate) SetModelID(v string) *RequestExecutionCreate {
 	return _c
 }
 
+// SetReasoningEffort sets the "reasoning_effort" field.
+func (_c *RequestExecutionCreate) SetReasoningEffort(v string) *RequestExecutionCreate {
+	_c.mutation.SetReasoningEffort(v)
+	return _c
+}
+
+// SetNillableReasoningEffort sets the "reasoning_effort" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableReasoningEffort(v *string) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetReasoningEffort(*v)
+	}
+	return _c
+}
+
 // SetFormat sets the "format" field.
 func (_c *RequestExecutionCreate) SetFormat(v string) *RequestExecutionCreate {
 	_c.mutation.SetFormat(v)
@@ -404,6 +418,10 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 	if value, ok := _c.mutation.ModelID(); ok {
 		_spec.SetField(requestexecution.FieldModelID, field.TypeString, value)
 		_node.ModelID = value
+	}
+	if value, ok := _c.mutation.ReasoningEffort(); ok {
+		_spec.SetField(requestexecution.FieldReasoningEffort, field.TypeString, value)
+		_node.ReasoningEffort = value
 	}
 	if value, ok := _c.mutation.Format(); ok {
 		_spec.SetField(requestexecution.FieldFormat, field.TypeString, value)
@@ -794,6 +812,9 @@ func (u *RequestExecutionUpsertOne) UpdateNewValues() *RequestExecutionUpsertOne
 		}
 		if _, exists := u.create.mutation.ModelID(); exists {
 			s.SetIgnore(requestexecution.FieldModelID)
+		}
+		if _, exists := u.create.mutation.ReasoningEffort(); exists {
+			s.SetIgnore(requestexecution.FieldReasoningEffort)
 		}
 		if _, exists := u.create.mutation.Format(); exists {
 			s.SetIgnore(requestexecution.FieldFormat)
@@ -1273,6 +1294,9 @@ func (u *RequestExecutionUpsertBulk) UpdateNewValues() *RequestExecutionUpsertBu
 			}
 			if _, exists := b.mutation.ModelID(); exists {
 				s.SetIgnore(requestexecution.FieldModelID)
+			}
+			if _, exists := b.mutation.ReasoningEffort(); exists {
+				s.SetIgnore(requestexecution.FieldReasoningEffort)
 			}
 			if _, exists := b.mutation.Format(); exists {
 				s.SetIgnore(requestexecution.FieldFormat)

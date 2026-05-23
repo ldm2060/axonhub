@@ -140,7 +140,7 @@ export const authApi = {
     user: AuthUser;
     token: string;
   }> =>
-    apiRequest('/admin/auth/signin', {
+    apiRequest('/auth/signin', {
       method: 'POST',
       body: data,
     }),
@@ -154,12 +154,12 @@ export const authApi = {
     message: string;
     pending: boolean;
   }> =>
-    apiRequest('/admin/auth/signup', {
+    apiRequest('/auth/signup', {
       method: 'POST',
       body: data,
     }),
 
-  isSignUpAllowed: (): Promise<{ allowed: boolean }> => apiRequest('/admin/auth/signup/allowed'),
+  isSignUpAllowed: (): Promise<{ allowed: boolean }> => apiRequest('/auth/signup/allowed'),
 
   getOIDCProviders: (): Promise<{
     data: {
@@ -195,13 +195,13 @@ export const authApi = {
     }),
 
   forgotPassword: (email: string): Promise<{ message: string }> =>
-    apiRequest('/admin/auth/forgot-password', {
+    apiRequest('/auth/forgot-password', {
       method: 'POST',
       body: { email },
     }),
 
   resetPassword: (token: string, password: string): Promise<{ message: string }> =>
-    apiRequest('/admin/auth/reset-password', {
+    apiRequest('/auth/reset-password', {
       method: 'POST',
       body: { token, password },
     }),

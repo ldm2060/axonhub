@@ -35,6 +35,7 @@
   "requests.columns.responseChunks": "响应块",
   "requests.columns.requestHeaders": "请求头",
   "requests.columns.executedModelId": "执行模型ID",
+  "requests.columns.executedReasoningEffort": "实际推理强度",
   "requests.columns.retryProcess": "重试过程",
   "requests.columns.mappedModel": "映射模型",
   "requests.status.pending": "等待中",

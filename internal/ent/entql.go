@@ -468,6 +468,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldDataStorageID:              {Type: field.TypeInt, Column: requestexecution.FieldDataStorageID},
 			requestexecution.FieldExternalID:                 {Type: field.TypeString, Column: requestexecution.FieldExternalID},
 			requestexecution.FieldModelID:                    {Type: field.TypeString, Column: requestexecution.FieldModelID},
+			requestexecution.FieldReasoningEffort:            {Type: field.TypeString, Column: requestexecution.FieldReasoningEffort},
 			requestexecution.FieldFormat:                     {Type: field.TypeString, Column: requestexecution.FieldFormat},
 			requestexecution.FieldRequestBody:                {Type: field.TypeJSON, Column: requestexecution.FieldRequestBody},
 			requestexecution.FieldResponseBody:               {Type: field.TypeJSON, Column: requestexecution.FieldResponseBody},
@@ -3826,6 +3827,11 @@ func (f *RequestExecutionFilter) WhereExternalID(p entql.StringP) {
 // WhereModelID applies the entql string predicate on the model_id field.
 func (f *RequestExecutionFilter) WhereModelID(p entql.StringP) {
 	f.Where(p.Field(requestexecution.FieldModelID))
+}
+
+// WhereReasoningEffort applies the entql string predicate on the reasoning_effort field.
+func (f *RequestExecutionFilter) WhereReasoningEffort(p entql.StringP) {
+	f.Where(p.Field(requestexecution.FieldReasoningEffort))
 }
 
 // WhereFormat applies the entql string predicate on the format field.

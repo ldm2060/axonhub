@@ -118,10 +118,41 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       enableSorting: false,
       enableHiding: true,
       cell: ({ row }) => {
-        const reasoningEffort = row.original.reasoningEffort;
+        const request = row.original;
+        const reasoningEffort = request.reasoningEffort;
 
         if (!reasoningEffort) {
           return <div className='text-muted-foreground text-xs'>-</div>;
+        }
+
+        // Check if there are any executions with different reasoning effort
+        const executions = request.executions?.edges?.map((edge) => edge.node) || [];
+        const executionEfforts = Array.from(new Set(executions.map((exe) => exe?.reasoningEffort || ''))).filter(
+          (effort) => effort && effort !== reasoningEffort
+        );
+
+        if (executionEfforts.length > 0) {
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type='button'
+                  className='flex w-fit cursor-help items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50'
+                >
+                  <span>{reasoningEffort}</span>
+                  <IconRoute className='h-3.5 w-3.5 opacity-80' />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side='right' className='border-sky-200 bg-white dark:bg-zinc-900'>
+                <div className='flex items-center gap-2 p-2'>
+                  <span className='text-muted-foreground text-xs whitespace-nowrap'>{t('requests.columns.executedReasoningEffort')}:</span>
+                  <span className='rounded bg-sky-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-sky-800 dark:bg-sky-900/40 dark:text-sky-200'>
+                    {executionEfforts[0]}
+                  </span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
         }
 
         return (

@@ -60,6 +60,7 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
               edges {
                 node {
                   modelID
+                  reasoningEffort
                   status
                   channel {
                     id
