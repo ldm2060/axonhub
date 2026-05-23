@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net"
 	"net/smtp"
+	"strings"
 	"time"
 
 	"go.uber.org/fx"
@@ -30,14 +31,16 @@ type emailTemplateData struct {
 type EmailServiceParams struct {
 	fx.In
 
-	Ent            *ent.Client
-	SystemService  *SystemService
+	Ent           *ent.Client
+	SystemService *SystemService
+	PublicURL     string `name:"public_url"`
 }
 
 // EmailService handles sending emails via SMTP with HTML/text templates.
 type EmailService struct {
 	db            *ent.Client
 	systemService *SystemService
+	publicURL     string
 	htmlTemplates *template.Template
 	textTemplates *template.Template
 }
@@ -49,9 +52,19 @@ func NewEmailService(params EmailServiceParams) *EmailService {
 	return &EmailService{
 		db:            params.Ent,
 		systemService: params.SystemService,
+		publicURL:     strings.TrimSuffix(params.PublicURL, "/"),
 		htmlTemplates: htmlTmpl,
 		textTemplates: textTmpl,
 	}
+}
+
+// BuildURL prepends the configured public URL to a path.
+// If public_url is not configured, the path is returned as-is (relative).
+func (s *EmailService) BuildURL(path string) string {
+	if s.publicURL != "" {
+		return s.publicURL + path
+	}
+	return path
 }
 
 func (s *EmailService) brandName(ctx context.Context) string {
