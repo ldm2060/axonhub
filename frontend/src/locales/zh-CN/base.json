@@ -354,5 +354,5 @@
   "auth.signIn.verificationFailed": "验证链接无效或已过期。",
   "settings.nav.appearance": "外观",
   "settings.nav.display": "显示",
-  "settings.nav.notifications": "通知",
+  "settings.nav.notifications": "通知"
   }

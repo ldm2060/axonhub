@@ -354,5 +354,5 @@
   "auth.signIn.verificationFailed": "Verification link invalid or expired.",
   "settings.nav.appearance": "Appearance",
   "settings.nav.display": "Display",
-  "settings.nav.notifications": "Notifications",
+  "settings.nav.notifications": "Notifications"
   }

@@ -10,7 +10,7 @@
 !LICENSE
 !Dockerfile
 !VERSION
-
+*.exe
 
 # Unignore all dirs
 !*/
