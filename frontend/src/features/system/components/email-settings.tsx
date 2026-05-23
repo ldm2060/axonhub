@@ -19,6 +19,7 @@ export function EmailSettingsTab() {
   const testConnection = useTestEmailConnection();
 
   const [formData, setFormData] = useState({
+    publicUrl: '',
     smtpHost: '',
     smtpPort: 587,
     smtpUser: '',
@@ -35,6 +36,7 @@ export function EmailSettingsTab() {
   useEffect(() => {
     if (settings) {
       setFormData({
+        publicUrl: settings.publicUrl || '',
         smtpHost: settings.smtpHost || '',
         smtpPort: settings.smtpPort || 587,
         smtpUser: settings.smtpUser || '',
@@ -56,7 +58,8 @@ export function EmailSettingsTab() {
   };
 
   const hasChanges = settings
-    ? formData.smtpHost !== (settings.smtpHost || '') ||
+    ? formData.publicUrl !== (settings.publicUrl || '') ||
+      formData.smtpHost !== (settings.smtpHost || '') ||
       formData.smtpPort !== (settings.smtpPort || 587) ||
       formData.smtpUser !== (settings.smtpUser || '') ||
       passwordChanged ||
@@ -68,6 +71,7 @@ export function EmailSettingsTab() {
 
   const handleSave = async () => {
     const input: Record<string, unknown> = {
+      publicUrl: formData.publicUrl,
       smtpHost: formData.smtpHost,
       smtpPort: formData.smtpPort,
       smtpUser: formData.smtpUser,
@@ -88,6 +92,7 @@ export function EmailSettingsTab() {
     try {
       if (hasChanges) {
         const input: Record<string, unknown> = {
+          publicUrl: formData.publicUrl,
           smtpHost: formData.smtpHost,
           smtpPort: formData.smtpPort,
           smtpUser: formData.smtpUser,
@@ -118,6 +123,25 @@ export function EmailSettingsTab() {
 
   return (
     <div className='space-y-6'>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('system.email.publicUrl.title')}</CardTitle>
+          <CardDescription>{t('system.email.publicUrl.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className='max-w-md space-y-2'>
+            <Label htmlFor='public-url'>{t('system.email.publicUrl.label')}</Label>
+            <Input
+              id='public-url'
+              value={formData.publicUrl}
+              onChange={(e) => handleInputChange('publicUrl', e.target.value)}
+              placeholder={t('system.email.publicUrl.placeholder')}
+            />
+            <div className='text-muted-foreground text-sm'>{t('system.email.publicUrl.help')}</div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <div className='flex items-center justify-between'>

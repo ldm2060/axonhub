@@ -433,5 +433,10 @@
   "system.email.testSuccess": "测试邮件发送成功",
   "system.email.testFailed": "测试邮件发送失败",
   "system.email.status.connected": "已连接",
-  "system.email.status.disconnected": "未连接"
+  "system.email.status.disconnected": "未连接",
+  "system.email.publicUrl.title": "公开 URL",
+  "system.email.publicUrl.description": "用于构造系统邮件链接（验证、密码重置等）的基础 URL。",
+  "system.email.publicUrl.label": "公开 URL",
+  "system.email.publicUrl.placeholder": "https://example.com",
+  "system.email.publicUrl.help": "必须设置才能使邮件中的链接可点击。如未设置，系统将回退到请求的 Host 头。"
 }

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -631,7 +632,8 @@ func (s *UserService) ApproveUser(ctx context.Context, userID int) error {
 
 	// Send approval email (best effort, don't fail on error)
 	if s.emailService != nil {
-		signInURL := "/sign-in"
+		baseURL, _ := contexts.GetBaseURL(ctx)
+		signInURL := s.emailService.BuildURLWithBase(ctx, "/sign-in", baseURL)
 		_ = s.emailService.SendApprovedEmail(ctx, u.Email, u.FirstName+" "+u.LastName, signInURL)
 	}
 

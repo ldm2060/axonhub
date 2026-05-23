@@ -433,5 +433,10 @@
   "system.email.testSuccess": "Test email sent successfully",
   "system.email.testFailed": "Failed to send test email",
   "system.email.status.connected": "Connected",
-  "system.email.status.disconnected": "Not connected"
+  "system.email.status.disconnected": "Not connected",
+  "system.email.publicUrl.title": "Public URL",
+  "system.email.publicUrl.description": "The base URL used to construct links in system emails (verification, password reset, etc.).",
+  "system.email.publicUrl.label": "Public URL",
+  "system.email.publicUrl.placeholder": "https://example.com",
+  "system.email.publicUrl.help": "Required for email links to work. If not set, the system falls back to the request Host header."
 }

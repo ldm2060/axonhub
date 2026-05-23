@@ -140,6 +140,7 @@ type EmailSettings struct {
 	SkipTLSVerify  bool   `json:"skip_tls_verify"`
 	FromName       string `json:"from_name"`
 	FromAddress    string `json:"from_address"`
+	PublicURL      string `json:"public_url"`
 }
 
 // SystemGeneralSettings represents general system configuration settings.

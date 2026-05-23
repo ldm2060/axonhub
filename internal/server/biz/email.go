@@ -59,18 +59,24 @@ func NewEmailService(params EmailServiceParams) *EmailService {
 }
 
 // BuildURL prepends the configured public URL to a path.
-// If public_url is not configured, the path is returned as-is (relative).
-func (s *EmailService) BuildURL(path string) string {
-	return s.BuildURLWithBase(path, "")
+// Falls back to DB-stored EmailSettings.PublicURL, then returns the path as-is (relative).
+func (s *EmailService) BuildURL(ctx context.Context, path string) string {
+	return s.BuildURLWithBase(ctx, path, "")
 }
 
 // BuildURLWithBase prepends a base URL to a path.
-// If baseURL is provided, it is used; otherwise falls back to the configured publicURL.
-// If neither is set, the path is returned as-is (relative).
-func (s *EmailService) BuildURLWithBase(path, baseURL string) string {
+// Priority: explicit baseURL arg > config-based publicURL > DB-stored EmailSettings.PublicURL.
+// If none is set, the path is returned as-is (relative).
+func (s *EmailService) BuildURLWithBase(ctx context.Context, path, baseURL string) string {
 	base := strings.TrimSuffix(baseURL, "/")
 	if base == "" {
 		base = s.publicURL
+	}
+	if base == "" {
+		es, err := s.systemService.EmailSettings(ctx)
+		if err == nil && es.PublicURL != "" {
+			base = strings.TrimSuffix(es.PublicURL, "/")
+		}
 	}
 	if base != "" {
 		return base + path
