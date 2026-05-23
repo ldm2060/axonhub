@@ -324,7 +324,27 @@ const (
 )
 
 type ChannelPolicies struct {
-	Stream CapabilityPolicy `json:"stream,omitempty"`
+	Stream       CapabilityPolicy      `json:"stream,omitempty"`
+	Availability *ChannelAvailability  `json:"availability,omitempty"`
+}
+
+type ChannelAvailabilityRuleType string
+
+const (
+	ChannelAvailabilityRuleTypeAvailable   ChannelAvailabilityRuleType = "available"
+	ChannelAvailabilityRuleTypeUnavailable ChannelAvailabilityRuleType = "unavailable"
+)
+
+type ChannelAvailability struct {
+	Rules []ChannelAvailabilityRule `json:"rules"`
+}
+
+type ChannelAvailabilityRule struct {
+	Type      ChannelAvailabilityRuleType `json:"type"`
+	Days      []int                       `json:"days,omitempty"`  // 1=Mon ... 7=Sun; nil/empty = every day
+	StartTime string                      `json:"startTime"`      // "HH:MM" 24-hour
+	EndTime   string                      `json:"endTime"`        // "HH:MM" 24-hour
+	Enabled   bool                        `json:"enabled"`
 }
 
 // ParseOverrideOperations parses the override parameters string.
