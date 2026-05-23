@@ -1,7 +1,7 @@
 import React from 'react';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
-import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive } from '@tabler/icons-react';
+import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconRefresh } from '@tabler/icons-react';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -20,6 +20,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { openDialog } = useApiKeysContext();
   const { apiKeyPermissions } = usePermissions();
   const apiKey = row.original;
+  const canRotateApiKey = apiKey.status !== 'archived' && apiKey.type !== 'noauth';
   const [open, setOpen] = React.useState(false);
   const [chartOpen, setChartOpen] = React.useState(false);
 
@@ -55,6 +56,11 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const handleViewChart = () => {
     setOpen(false);
     setTimeout(() => setChartOpen(true), 0);
+  };
+
+  const handleRotate = (apiKey: ApiKey) => {
+    setOpen(false);
+    setTimeout(() => openDialog('rotate', apiKey), 0);
   };
 
   return (
@@ -107,6 +113,15 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                   <IconArchive className='mr-2 h-4 w-4' />
                   {t('common.buttons.archive')}
                 </DropdownMenuItem>
+              )}
+              {canRotateApiKey && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleRotate(apiKey)}>
+                    <IconRefresh className='mr-2 h-4 w-4' />
+                    {t('apikeys.dialogs.rotate.title')}
+                  </DropdownMenuItem>
+                </>
               )}
             </>
           )}

@@ -1260,6 +1260,7 @@ ChannelType is enum for the field type
 enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.Type") {
   openai
   openai_responses
+  atlascloud
   codex
   vercel
   anthropic

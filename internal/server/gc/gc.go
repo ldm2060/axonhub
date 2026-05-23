@@ -198,12 +198,13 @@ func (w *Worker) runCleanup(ctx context.Context, manual bool, manualDays map[str
 			log.Int("cleanup_days", 3))
 	}
 
-	// Cleanup expired email tokens (verification, password reset, etc.)
-	if err := w.EmailTokenService.CleanupExpired(ctx); err != nil {
-		log.Error(ctx, "Failed to cleanup expired email tokens",
-			log.Cause(err))
-	} else {
-		log.Info(ctx, "Successfully cleaned up expired email tokens")
+	if w.EmailTokenService != nil {
+		if err := w.EmailTokenService.CleanupExpired(ctx); err != nil {
+			log.Error(ctx, "Failed to cleanup expired email tokens",
+				log.Cause(err))
+		} else {
+			log.Info(ctx, "Successfully cleaned up expired email tokens")
+		}
 	}
 
 	if w.Config.VacuumEnabled {
@@ -254,6 +255,12 @@ func (w *Worker) cleanupOldRequestExecutions(ctx context.Context, cutoffTime tim
 
 	for {
 		executions, err := w.Ent.RequestExecution.Query().
+			Select(
+				requestexecution.FieldID,
+				requestexecution.FieldProjectID,
+				requestexecution.FieldDataStorageID,
+				requestexecution.FieldRequestID,
+			).
 			Where(requestexecution.CreatedAtLT(cutoffTime)).
 			Order(ent.Asc(requestexecution.FieldID)).
 			Limit(batchSize).
@@ -297,6 +304,11 @@ func (w *Worker) cleanupOldRequestsRecords(ctx context.Context, cutoffTime time.
 
 	for {
 		reqs, err := w.Ent.Request.Query().
+			Select(
+				request.FieldID,
+				request.FieldProjectID,
+				request.FieldDataStorageID,
+			).
 			Where(request.CreatedAtLT(cutoffTime)).
 			Order(ent.Asc(request.FieldID)).
 			Limit(batchSize).

@@ -566,6 +566,10 @@ func (s *APIKeyService) invalidateAPIKeyCaches(ctx context.Context, keys ...stri
 	}
 
 	cacheKeys := buildAPIKeyCacheKeys(keys)
+	for _, cacheKey := range cacheKeys {
+		s.APIKeyCache.Invalidate(cacheKey)
+	}
+
 	if err := s.apiKeyNotifier.Notify(ctx, live.NewInvalidateKeysEvent(cacheKeys...)); err != nil {
 		log.Warn(ctx, "api key cache watcher notify failed", log.Cause(err))
 	}
@@ -634,6 +638,38 @@ func (s *APIKeyService) BulkEnableAPIKeys(ctx context.Context, ids []int) error 
 // BulkArchiveAPIKeys archives multiple API keys by their IDs.
 func (s *APIKeyService) BulkArchiveAPIKeys(ctx context.Context, ids []int) error {
 	return s.bulkUpdateAPIKeyStatus(ctx, ids, apikey.StatusArchived, "archive")
+}
+
+// RotateAPIKey rotates an API key by generating a new key value while preserving all other properties.
+// This is useful when a key is compromised or when an employee leaves, without losing usage statistics.
+func (s *APIKeyService) RotateAPIKey(ctx context.Context, id int) (*ent.APIKey, error) {
+	client := s.entFromContext(ctx)
+
+	existing, err := client.APIKey.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get API key: %w", err)
+	}
+
+	if existing.Type == apikey.TypeNoauth {
+		return nil, fmt.Errorf("noauth type API key cannot be rotated")
+	}
+
+	newKey, err := GenerateAPIKey(s.keyPrefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate new API key: %w", err)
+	}
+
+	oldKey := existing.Key
+	rotated, err := client.APIKey.UpdateOneID(id).
+		SetKey(newKey).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to rotate API key: %w", err)
+	}
+
+	s.invalidateAPIKeyCaches(ctx, oldKey, newKey)
+
+	return rotated, nil
 }
 
 func (s *APIKeyService) EnsureNoAuthAPIKey(ctx context.Context) (*ent.APIKey, error) {
