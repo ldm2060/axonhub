@@ -56,7 +56,7 @@ func (Model) Fields() []ent.Field {
 			Optional().Nillable().
 			Comment("User-defined remark or note for the Model"),
 			field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
+			field.Enum("visibility").Values("private", "shared", "published").Default("published").Annotations(entgql.OrderField("VISIBILITY")),
 			field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
