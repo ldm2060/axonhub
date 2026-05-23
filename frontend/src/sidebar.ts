@@ -10,7 +10,6 @@ import {
   IconBaselineDensityMedium,
   IconAi,
   IconNote,
-  IconShare,
   IconSend,
   IconUsers,
   IconUsersGroup,
@@ -124,11 +123,6 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.myModels'),
           url: '/my-models',
           icon: IconRobot,
-        } as NavLink,
-        {
-          title: t('sidebar.items.sharedWithMe'),
-          url: '/shared',
-          icon: IconShare,
         } as NavLink,
         {
           title: t('sidebar.items.apiKeys'),
