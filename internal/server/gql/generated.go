@@ -326,6 +326,18 @@ type ComplexityRoot struct {
 		Visibility              func(childComplexity int) int
 	}
 
+	ChannelAvailability struct {
+		Rules func(childComplexity int) int
+	}
+
+	ChannelAvailabilityRule struct {
+		Days      func(childComplexity int) int
+		Enabled   func(childComplexity int) int
+		EndTime   func(childComplexity int) int
+		StartTime func(childComplexity int) int
+		Type      func(childComplexity int) int
+	}
+
 	ChannelConnection struct {
 		Edges      func(childComplexity int) int
 		PageInfo   func(childComplexity int) int
@@ -456,7 +468,8 @@ type ComplexityRoot struct {
 	}
 
 	ChannelPolicies struct {
-		Stream func(childComplexity int) int
+		Availability func(childComplexity int) int
+		Stream       func(childComplexity int) int
 	}
 
 	ChannelProbe struct {
@@ -3337,6 +3350,44 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Channel.Visibility(childComplexity), true
 
+	case "ChannelAvailability.rules":
+		if e.complexity.ChannelAvailability.Rules == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailability.Rules(childComplexity), true
+
+	case "ChannelAvailabilityRule.days":
+		if e.complexity.ChannelAvailabilityRule.Days == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailabilityRule.Days(childComplexity), true
+	case "ChannelAvailabilityRule.enabled":
+		if e.complexity.ChannelAvailabilityRule.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailabilityRule.Enabled(childComplexity), true
+	case "ChannelAvailabilityRule.endTime":
+		if e.complexity.ChannelAvailabilityRule.EndTime == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailabilityRule.EndTime(childComplexity), true
+	case "ChannelAvailabilityRule.startTime":
+		if e.complexity.ChannelAvailabilityRule.StartTime == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailabilityRule.StartTime(childComplexity), true
+	case "ChannelAvailabilityRule.type":
+		if e.complexity.ChannelAvailabilityRule.Type == nil {
+			break
+		}
+
+		return e.complexity.ChannelAvailabilityRule.Type(childComplexity), true
+
 	case "ChannelConnection.edges":
 		if e.complexity.ChannelConnection.Edges == nil {
 			break
@@ -3805,6 +3856,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ChannelPerformanceStat.TtftMs(childComplexity), true
 
+	case "ChannelPolicies.availability":
+		if e.complexity.ChannelPolicies.Availability == nil {
+			break
+		}
+
+		return e.complexity.ChannelPolicies.Availability(childComplexity), true
 	case "ChannelPolicies.stream":
 		if e.complexity.ChannelPolicies.Stream == nil {
 			break
@@ -11135,6 +11192,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBulkImportChannelItem,
 		ec.unmarshalInputBulkImportChannelsInput,
 		ec.unmarshalInputBulkUpdateChannelOrderingInput,
+		ec.unmarshalInputChannelAvailabilityInput,
+		ec.unmarshalInputChannelAvailabilityRuleInput,
 		ec.unmarshalInputChannelCredentialsInput,
 		ec.unmarshalInputChannelEndpointInput,
 		ec.unmarshalInputChannelModelAssociationInput,
@@ -18829,6 +18888,8 @@ func (ec *executionContext) fieldContext_Channel_policies(_ context.Context, fie
 			switch field.Name {
 			case "stream":
 				return ec.fieldContext_ChannelPolicies_stream(ctx, field)
+			case "availability":
+				return ec.fieldContext_ChannelPolicies_availability(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelPolicies", field.Name)
 		},
@@ -19669,6 +19730,192 @@ func (ec *executionContext) fieldContext_Channel_liveLimiterStats(_ context.Cont
 				return ec.fieldContext_ChannelLimiterStats_queueSize(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelLimiterStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailability_rules(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailability) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailability_rules,
+		func(ctx context.Context) (any, error) {
+			return obj.Rules, nil
+		},
+		nil,
+		ec.marshalNChannelAvailabilityRule2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailability_rules(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ChannelAvailabilityRule_type(ctx, field)
+			case "days":
+				return ec.fieldContext_ChannelAvailabilityRule_days(ctx, field)
+			case "startTime":
+				return ec.fieldContext_ChannelAvailabilityRule_startTime(ctx, field)
+			case "endTime":
+				return ec.fieldContext_ChannelAvailabilityRule_endTime(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelAvailabilityRule_enabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelAvailabilityRule", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailabilityRule_type(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailabilityRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailabilityRule_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNChannelAvailabilityRuleType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleType,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailabilityRule_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailabilityRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ChannelAvailabilityRuleType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailabilityRule_days(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailabilityRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailabilityRule_days,
+		func(ctx context.Context) (any, error) {
+			return obj.Days, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailabilityRule_days(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailabilityRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailabilityRule_startTime(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailabilityRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailabilityRule_startTime,
+		func(ctx context.Context) (any, error) {
+			return obj.StartTime, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailabilityRule_startTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailabilityRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailabilityRule_endTime(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailabilityRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailabilityRule_endTime,
+		func(ctx context.Context) (any, error) {
+			return obj.EndTime, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailabilityRule_endTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailabilityRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAvailabilityRule_enabled(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailabilityRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAvailabilityRule_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAvailabilityRule_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAvailabilityRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22319,6 +22566,39 @@ func (ec *executionContext) fieldContext_ChannelPolicies_stream(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type CapabilityPolicy does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPolicies_availability(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPolicies) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPolicies_availability,
+		func(ctx context.Context) (any, error) {
+			return obj.Availability, nil
+		},
+		nil,
+		ec.marshalOChannelAvailability2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailability,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPolicies_availability(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPolicies",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "rules":
+				return ec.fieldContext_ChannelAvailability_rules(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelAvailability", field.Name)
 		},
 	}
 	return fc, nil
@@ -64091,6 +64371,88 @@ func (ec *executionContext) unmarshalInputBulkUpdateChannelOrderingInput(ctx con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputChannelAvailabilityInput(ctx context.Context, obj any) (objects.ChannelAvailability, error) {
+	var it objects.ChannelAvailability
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"rules"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "rules":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rules"))
+			data, err := ec.unmarshalNChannelAvailabilityRuleInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rules = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChannelAvailabilityRuleInput(ctx context.Context, obj any) (objects.ChannelAvailabilityRule, error) {
+	var it objects.ChannelAvailabilityRule
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type", "days", "startTime", "endTime", "enabled"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNChannelAvailabilityRuleType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "days":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("days"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Days = data
+		case "startTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartTime = data
+		case "endTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndTime = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputChannelCredentialsInput(ctx context.Context, obj any) (objects.ChannelCredentials, error) {
 	var it objects.ChannelCredentials
 	asMap := map[string]any{}
@@ -66197,7 +66559,7 @@ func (ec *executionContext) unmarshalInputChannelPoliciesInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"stream"}
+	fieldsInOrder := [...]string{"stream", "availability"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -66211,6 +66573,13 @@ func (ec *executionContext) unmarshalInputChannelPoliciesInput(ctx context.Conte
 				return it, err
 			}
 			it.Stream = data
+		case "availability":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("availability"))
+			data, err := ec.unmarshalOChannelAvailabilityInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailability(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Availability = data
 		}
 	}
 
@@ -92023,6 +92392,101 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var channelAvailabilityImplementors = []string{"ChannelAvailability"}
+
+func (ec *executionContext) _ChannelAvailability(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelAvailability) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelAvailabilityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelAvailability")
+		case "rules":
+			out.Values[i] = ec._ChannelAvailability_rules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelAvailabilityRuleImplementors = []string{"ChannelAvailabilityRule"}
+
+func (ec *executionContext) _ChannelAvailabilityRule(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelAvailabilityRule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelAvailabilityRuleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelAvailabilityRule")
+		case "type":
+			out.Values[i] = ec._ChannelAvailabilityRule_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "days":
+			out.Values[i] = ec._ChannelAvailabilityRule_days(ctx, field, obj)
+		case "startTime":
+			out.Values[i] = ec._ChannelAvailabilityRule_startTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endTime":
+			out.Values[i] = ec._ChannelAvailabilityRule_endTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enabled":
+			out.Values[i] = ec._ChannelAvailabilityRule_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var channelConnectionImplementors = []string{"ChannelConnection"}
 
 func (ec *executionContext) _ChannelConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.ChannelConnection) graphql.Marshaler {
@@ -93326,6 +93790,8 @@ func (ec *executionContext) _ChannelPolicies(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("ChannelPolicies")
 		case "stream":
 			out.Values[i] = ec._ChannelPolicies_stream(ctx, field, obj)
+		case "availability":
+			out.Values[i] = ec._ChannelPolicies_availability(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -110452,6 +110918,91 @@ func (ec *executionContext) marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhub�
 	return ec._Channel(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNChannelAvailabilityRule2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRule(ctx context.Context, sel ast.SelectionSet, v objects.ChannelAvailabilityRule) graphql.Marshaler {
+	return ec._ChannelAvailabilityRule(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelAvailabilityRule2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.ChannelAvailabilityRule) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelAvailabilityRule2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRule(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNChannelAvailabilityRuleInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRule(ctx context.Context, v any) (objects.ChannelAvailabilityRule, error) {
+	res, err := ec.unmarshalInputChannelAvailabilityRuleInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNChannelAvailabilityRuleInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleᚄ(ctx context.Context, v any) ([]objects.ChannelAvailabilityRule, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]objects.ChannelAvailabilityRule, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelAvailabilityRuleInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRule(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNChannelAvailabilityRuleType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleType(ctx context.Context, v any) (objects.ChannelAvailabilityRuleType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := objects.ChannelAvailabilityRuleType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannelAvailabilityRuleType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailabilityRuleType(ctx context.Context, sel ast.SelectionSet, v objects.ChannelAvailabilityRuleType) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNChannelConnection2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelConnection(ctx context.Context, sel ast.SelectionSet, v ent.ChannelConnection) graphql.Marshaler {
 	return ec._ChannelConnection(ctx, sel, &v)
 }
@@ -116683,6 +117234,21 @@ func (ec *executionContext) marshalOChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhub�
 		return graphql.Null
 	}
 	return ec._Channel(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOChannelAvailability2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailability(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelAvailability) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChannelAvailability(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOChannelAvailabilityInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailability(ctx context.Context, v any) (*objects.ChannelAvailability, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChannelAvailabilityInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOChannelCredentials2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelCredentials(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelCredentials) graphql.Marshaler {

@@ -116,12 +116,43 @@ enum CapabilityPolicy {
   forbid
 }
 
+enum ChannelAvailabilityRuleType {
+  available
+  unavailable
+}
+
+type ChannelAvailabilityRule {
+  type: ChannelAvailabilityRuleType!
+  days: [Int!]
+  startTime: String!
+  endTime: String!
+  enabled: Boolean!
+}
+
+type ChannelAvailability {
+  rules: [ChannelAvailabilityRule!]!
+}
+
+input ChannelAvailabilityRuleInput {
+  type: ChannelAvailabilityRuleType!
+  days: [Int!]
+  startTime: String!
+  endTime: String!
+  enabled: Boolean!
+}
+
+input ChannelAvailabilityInput {
+  rules: [ChannelAvailabilityRuleInput!]!
+}
+
 type ChannelPolicies {
   stream: CapabilityPolicy
+  availability: ChannelAvailability
 }
 
 input ChannelPoliciesInput {
   stream: CapabilityPolicy
+  availability: ChannelAvailabilityInput
 }
 
 input ModelMappingInput {

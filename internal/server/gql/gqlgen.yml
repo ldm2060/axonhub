@@ -127,6 +127,21 @@ models:
   ChannelPoliciesInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelPolicies
+  ChannelAvailabilityRuleType:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelAvailabilityRuleType
+  ChannelAvailabilityRule:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelAvailabilityRule
+  ChannelAvailability:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelAvailability
+  ChannelAvailabilityRuleInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelAvailabilityRule
+  ChannelAvailabilityInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelAvailability
   ChannelSettings:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
