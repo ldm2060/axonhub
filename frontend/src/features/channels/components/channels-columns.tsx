@@ -45,7 +45,7 @@ import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
-import { Channel } from '../data/schema';
+import { Channel, ChannelPolicies } from '../data/schema';
 import { ChannelHealthCell } from './channel-health-cell';
 import { ChannelLimiterCell } from './channel-limiter-cell';
 import { ChannelsStatusDialog } from './channels-status-dialog';
@@ -57,13 +57,44 @@ const MAX_WEIGHT = 100;
 const formatWeight = (value: number) => Number(value.toFixed(WEIGHT_PRECISION));
 const clampWeight = (value: number) => formatWeight(Math.min(MAX_WEIGHT, Math.max(MIN_WEIGHT, value)));
 
+function isChannelCurrentlyAvailable(policies?: ChannelPolicies | null): boolean {
+  if (!policies?.availability?.rules?.length) return true;
+  const now = new Date();
+  const weekday = now.getDay() === 0 ? 7 : now.getDay();
+  const hhmm = now.toTimeString().slice(0, 5);
+  let available = true;
+  let matched = false;
+  for (const rule of policies.availability.rules) {
+    if (!rule.enabled) continue;
+    if (rule.days?.length && !rule.days.includes(weekday)) continue;
+    if (!matchesTimeWindow(hhmm, rule.startTime, rule.endTime)) continue;
+    matched = true;
+    available = rule.type === 'available';
+  }
+  if (!matched) {
+    // When no rule matches: if any enabled "available" rule exists, treat as whitelist → unavailable
+    for (const rule of policies.availability.rules) {
+      if (rule.enabled && rule.type === 'available') return false;
+    }
+    return true;
+  }
+  return available;
+}
+
+function matchesTimeWindow(hhmm: string, start: string, end: string): boolean {
+  if (start <= end) return hhmm >= start && hhmm < end;
+  return hhmm >= start || hhmm < end;
+}
+
 // Status Switch Cell Component to handle status toggle with confirmation dialog
 const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
+  const { t } = useTranslation();
   const channel = row.original;
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isEnabled = channel.status === 'enabled';
   const isArchived = channel.status === 'archived';
+  const isTimeUnavailable = !isChannelCurrentlyAvailable(channel.policies);
 
   const handleSwitchClick = useCallback(() => {
     if (!isArchived) {
@@ -72,8 +103,13 @@ const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
   }, [isArchived]);
 
   return (
-    <div className='flex justify-center'>
+    <div className='flex items-center justify-center'>
       <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={isArchived} data-testid='channel-status-switch' />
+      {isTimeUnavailable && (
+        <Badge variant='outline' className='ml-1 text-xs'>
+          {t('channels.columns.timeUnavailable')}
+        </Badge>
+      )}
       {dialogOpen && <ChannelsStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={channel} />}
     </div>
   );
