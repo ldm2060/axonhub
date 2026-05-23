@@ -111,6 +111,13 @@ var Module = fx.Module("biz",
 			},
 		})
 	}),
+	fx.Invoke(func(lc fx.Lifecycle, svc *PublishRequestService, s *scheduler.Scheduler) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return svc.RegisterScheduledTasks(ctx, s)
+			},
+		})
+	}),
 	fx.Invoke(func(lc fx.Lifecycle, sampler *MemorySampler) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
