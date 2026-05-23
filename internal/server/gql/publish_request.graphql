@@ -4,13 +4,10 @@ extend type Mutation {
   reviewPublishRequest(id: ID!, action: ReviewAction!, comment: String): PublishRequest!
   shareChannel(id: ID!, userIDs: [ID!]!): Channel!
   unshareChannel(id: ID!, userIDs: [ID!]!): Channel!
-  shareModel(id: ID!, userIDs: [ID!]!): Model!
-  unshareModel(id: ID!, userIDs: [ID!]!): Model!
 }
 
 extend type Query {
   mySharedChannels: [Channel!]!
-  mySharedModels: [Model!]!
   myDashboard: DashboardOverview!
 }
 
