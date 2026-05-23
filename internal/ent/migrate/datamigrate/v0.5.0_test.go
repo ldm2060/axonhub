@@ -63,7 +63,8 @@ func createV0_5_0TestModel(t *testing.T, client *ent.Client, ctx context.Context
 		SetIcon("test-icon").
 		SetGroup("test-group").
 		SetModelCard(&objects.ModelCard{}).
-		SetSettings(&objects.ModelSettings{})
+		SetSettings(&objects.ModelSettings{}).
+		SetVisibility(model.VisibilityPrivate)
 
 	if ownerID != 0 {
 		creator = creator.SetOwnerID(ownerID)

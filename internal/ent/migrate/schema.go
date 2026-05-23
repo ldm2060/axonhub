@@ -351,7 +351,7 @@ var (
 		{Name: "settings", Type: field.TypeJSON},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled", "archived"}, Default: "disabled"},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
-		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"private", "shared", "published"}, Default: "private"},
+		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"private", "shared", "published"}, Default: "published"},
 		{Name: "shared_with", Type: field.TypeJSON, Nullable: true},
 		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
 	}

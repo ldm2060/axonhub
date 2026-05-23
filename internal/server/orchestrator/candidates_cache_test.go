@@ -121,6 +121,8 @@ func TestDefaultSelector_SelectModelCandidates_Cache(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
+		selector.ChannelService = newTestChannelServiceForChannels(client)
+
 		// Clear cache to force refresh
 		selector.cacheMu.Lock()
 		selector.associationCache = make(map[string]*associationCacheEntry)

@@ -172,8 +172,8 @@ func StatusValidator(s Status) error {
 // Visibility defines the type for the "visibility" enum field.
 type Visibility string
 
-// VisibilityPrivate is the default value of the Visibility enum.
-const DefaultVisibility = VisibilityPrivate
+// VisibilityPublished is the default value of the Visibility enum.
+const DefaultVisibility = VisibilityPublished
 
 // Visibility values.
 const (
