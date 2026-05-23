@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TagsAutocompleteInput } from '@/components/ui/tags-autocomplete-input';
 import { Textarea } from '@/components/ui/textarea';
@@ -2074,6 +2075,167 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           </FormItem>
                         )}
                       />
+
+                      {/* Availability Schedule */}
+                      <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                          {t('channels.dialogs.fields.availability.label')}
+                        </FormLabel>
+                        <div className='space-y-3 md:col-span-6'>
+                          <div className='flex items-center gap-2'>
+                            <Switch
+                              checked={!!form.watch('policies.availability')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  form.setValue('policies.availability', { rules: [] }, { shouldDirty: true, shouldTouch: true });
+                                } else {
+                                  form.setValue('policies.availability', null, { shouldDirty: true, shouldTouch: true });
+                                }
+                              }}
+                            />
+                            <span className='text-sm'>{t('channels.dialogs.fields.availability.enable')}</span>
+                          </div>
+                          <p className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.description')}</p>
+
+                          {form.watch('policies.availability') && (
+                            <div className='space-y-3'>
+                              {(form.watch('policies.availability.rules') || []).map((rule, index) => {
+                                const rules = form.watch('policies.availability.rules') || [];
+                                const dayKeys = [
+                                  { value: 1, label: t('channels.dialogs.fields.availability.rule.days.mon') },
+                                  { value: 2, label: t('channels.dialogs.fields.availability.rule.days.tue') },
+                                  { value: 3, label: t('channels.dialogs.fields.availability.rule.days.wed') },
+                                  { value: 4, label: t('channels.dialogs.fields.availability.rule.days.thu') },
+                                  { value: 5, label: t('channels.dialogs.fields.availability.rule.days.fri') },
+                                  { value: 6, label: t('channels.dialogs.fields.availability.rule.days.sat') },
+                                  { value: 7, label: t('channels.dialogs.fields.availability.rule.days.sun') },
+                                ];
+                                const allDaysUnchecked = !rule.days || rule.days.length === 0;
+
+                                return (
+                                  <div key={index} className='bg-muted/50 rounded-lg border p-3 space-y-3'>
+                                    <div className='flex items-center justify-between'>
+                                      <div className='flex items-center gap-2'>
+                                        <SelectDropdown
+                                          defaultValue={rule.type || 'unavailable'}
+                                          onValueChange={(value) => {
+                                            const newRules = [...rules];
+                                            newRules[index] = { ...newRules[index], type: value as 'available' | 'unavailable' };
+                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                          }}
+                                          placeholder={t('channels.dialogs.fields.availability.rule.type.label')}
+                                          isControlled={true}
+                                          items={[
+                                            { value: 'available', label: t('channels.dialogs.fields.availability.rule.type.available') },
+                                            { value: 'unavailable', label: t('channels.dialogs.fields.availability.rule.type.unavailable') },
+                                          ]}
+                                        />
+                                        <div className='flex items-center gap-1.5'>
+                                          <Switch
+                                            checked={rule.enabled !== false}
+                                            onCheckedChange={(checked) => {
+                                              const newRules = [...rules];
+                                              newRules[index] = { ...newRules[index], enabled: checked };
+                                              form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                            }}
+                                          />
+                                          <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.enabled.label')}</span>
+                                        </div>
+                                      </div>
+                                      <Button
+                                        type='button'
+                                        variant='ghost'
+                                        size='sm'
+                                        className='text-muted-foreground hover:text-destructive h-7 w-7 p-0'
+                                        onClick={() => {
+                                          const newRules = rules.filter((_, i) => i !== index);
+                                          form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                        }}
+                                      >
+                                        <Trash2 className='h-4 w-4' />
+                                      </Button>
+                                    </div>
+
+                                    <div className='space-y-1.5'>
+                                      <span className='text-muted-foreground text-xs'>
+                                        {t('channels.dialogs.fields.availability.rule.days.label')}
+                                        {allDaysUnchecked && (
+                                          <span className='ml-1'>({t('channels.dialogs.fields.availability.rule.days.all')})</span>
+                                        )}
+                                      </span>
+                                      <div className='flex flex-wrap gap-1.5'>
+                                        {dayKeys.map((day) => (
+                                          <label key={day.value} className='flex cursor-pointer items-center gap-1'>
+                                            <Checkbox
+                                              checked={rule.days?.includes(day.value) ?? false}
+                                              onCheckedChange={(checked) => {
+                                                const newRules = [...rules];
+                                                const currentDays = newRules[index].days || [];
+                                                const newDays = checked
+                                                  ? [...currentDays, day.value].sort((a, b) => a - b)
+                                                  : currentDays.filter((d) => d !== day.value);
+                                                newRules[index] = { ...newRules[index], days: newDays.length > 0 ? newDays : null };
+                                                form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                              }}
+                                            />
+                                            <span className='text-xs'>{day.label}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    <div className='flex items-center gap-3'>
+                                      <div className='flex items-center gap-1.5'>
+                                        <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.startTime.label')}</span>
+                                        <Input
+                                          type='time'
+                                          value={rule.startTime || '00:00'}
+                                          onChange={(e) => {
+                                            const newRules = [...rules];
+                                            newRules[index] = { ...newRules[index], startTime: e.target.value };
+                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                          }}
+                                          className='h-7 w-[5.5rem] text-xs'
+                                        />
+                                      </div>
+                                      <span className='text-muted-foreground text-xs'>—</span>
+                                      <div className='flex items-center gap-1.5'>
+                                        <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.endTime.label')}</span>
+                                        <Input
+                                          type='time'
+                                          value={rule.endTime || '23:59'}
+                                          onChange={(e) => {
+                                            const newRules = [...rules];
+                                            newRules[index] = { ...newRules[index], endTime: e.target.value };
+                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                          }}
+                                          className='h-7 w-[5.5rem] text-xs'
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              <Button
+                                type='button'
+                                variant='outline'
+                                size='sm'
+                                onClick={() => {
+                                  const currentRules = form.watch('policies.availability.rules') || [];
+                                  form.setValue('policies.availability.rules', [
+                                    ...currentRules,
+                                    { type: 'unavailable', days: null, startTime: '00:00', endTime: '23:59', enabled: true },
+                                  ], { shouldDirty: true, shouldTouch: true });
+                                }}
+                              >
+                                <Plus className='mr-1 h-3 w-3' />
+                                {t('channels.dialogs.fields.availability.addRule')}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </FormItem>
 
                       <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
                         <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
