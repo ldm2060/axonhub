@@ -61,8 +61,19 @@ func NewEmailService(params EmailServiceParams) *EmailService {
 // BuildURL prepends the configured public URL to a path.
 // If public_url is not configured, the path is returned as-is (relative).
 func (s *EmailService) BuildURL(path string) string {
-	if s.publicURL != "" {
-		return s.publicURL + path
+	return s.BuildURLWithBase(path, "")
+}
+
+// BuildURLWithBase prepends a base URL to a path.
+// If baseURL is provided, it is used; otherwise falls back to the configured publicURL.
+// If neither is set, the path is returned as-is (relative).
+func (s *EmailService) BuildURLWithBase(path, baseURL string) string {
+	base := strings.TrimSuffix(baseURL, "/")
+	if base == "" {
+		base = s.publicURL
+	}
+	if base != "" {
+		return base + path
 	}
 	return path
 }

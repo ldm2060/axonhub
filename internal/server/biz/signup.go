@@ -8,6 +8,7 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/user"
@@ -130,7 +131,8 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 	}
 
 	// Build verification URL using the token
-	verifyURL := s.emailService.BuildURL(fmt.Sprintf("/auth/verify-email?token=%s", token))
+	baseURL, _ := contexts.GetBaseURL(ctx)
+	verifyURL := s.emailService.BuildURLWithBase(fmt.Sprintf("/auth/verify-email?token=%s", token), baseURL)
 
 	// Send verification email
 	userName := newUser.FirstName

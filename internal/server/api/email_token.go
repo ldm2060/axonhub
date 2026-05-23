@@ -46,6 +46,15 @@ func NewEmailTokenAPI(params EmailTokenAPIParams) *EmailTokenAPI {
 	}
 }
 
+// requestBaseURL derives the base URL from the request when public_url is not configured.
+func requestBaseURL(c *gin.Context) string {
+	scheme := "http"
+	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	return fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+}
+
 // checkRateLimit enforces a 1 request per minute rate limit per key.
 // Returns true if the request is allowed, false if rate limited.
 func (h *EmailTokenAPI) checkRateLimit(key string) bool {
@@ -77,48 +86,48 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	ctx := c.Request.Context()
 	token := c.Query("token")
 	if token == "" {
-		c.Redirect(http.StatusFound, "/sign-in?verified=0")
+		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	userID, err := h.emailTokenService.ValidateToken(ctx, token, emailtoken.TypeVerifyEmail)
 	if err != nil {
-		c.Redirect(http.StatusFound, "/sign-in?verified=0")
+		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	// Consume the token
 	if err := h.emailTokenService.ConsumeToken(ctx, token); err != nil {
-		c.Redirect(http.StatusFound, "/sign-in?verified=0")
+		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	// Mark email as verified
 	if err := h.userService.MarkEmailVerified(ctx, userID); err != nil {
-		c.Redirect(http.StatusFound, "/sign-in?verified=0")
+		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	// Check if approval is required
 	rs, err := h.systemService.RegistrationSettings(ctx)
 	if err != nil {
-		c.Redirect(http.StatusFound, "/sign-in?verified=1&pending=1")
+		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
 	if rs.ApprovalRequired {
 		// Update user status to pending (keep pending for admin approval)
-		c.Redirect(http.StatusFound, "/sign-in?verified=1&pending=1")
+		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
 	// Auto-activate the user
 	if err := h.userService.ActivateUser(ctx, userID); err != nil {
-		c.Redirect(http.StatusFound, "/sign-in?verified=1&pending=1")
+		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/sign-in?verified=1")
+	c.Redirect(http.StatusFound, "/verify-email?verified=1")
 }
 
 // ResendVerificationRequest is the request body for resending a verification email.
@@ -165,7 +174,7 @@ func (h *EmailTokenAPI) ResendVerification(c *gin.Context) {
 	}
 
 	// Send verification email
-	verifyURL := h.emailService.BuildURL(fmt.Sprintf("/auth/verify-email?token=%s", token))
+	verifyURL := h.emailService.BuildURLWithBase(fmt.Sprintf("/auth/verify-email?token=%s", token), requestBaseURL(c))
 	userName := u.FirstName
 	if userName == "" {
 		userName = u.Email
@@ -217,7 +226,7 @@ func (h *EmailTokenAPI) ForgotPassword(c *gin.Context) {
 	}
 
 	// Send reset email
-	resetURL := h.emailService.BuildURL(fmt.Sprintf("/reset-password?token=%s", token))
+	resetURL := h.emailService.BuildURLWithBase(fmt.Sprintf("/reset-password?token=%s", token), requestBaseURL(c))
 	userName := u.FirstName
 	if userName == "" {
 		userName = u.Email

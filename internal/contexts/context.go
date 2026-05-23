@@ -125,6 +125,24 @@ func GetChannelAPIKey(ctx context.Context) (string, bool) {
 	return "", false
 }
 
+// WithBaseURL stores the request-derived base URL (scheme://host) in the context.
+func WithBaseURL(ctx context.Context, baseURL string) context.Context {
+	container := getContainer(ctx)
+	container.BaseURL = &baseURL
+
+	return withContainer(ctx, container)
+}
+
+// GetBaseURL retrieves the request-derived base URL from the context.
+func GetBaseURL(ctx context.Context) (string, bool) {
+	container := getContainer(ctx)
+	if container.BaseURL != nil {
+		return *container.BaseURL, true
+	}
+
+	return "", false
+}
+
 // WithProjectID stores the project ID in the context.
 func WithProjectID(ctx context.Context, projectID int) context.Context {
 	container := getContainer(ctx)

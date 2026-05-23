@@ -24,6 +24,9 @@ type contextContainer struct {
 
 	// ChannelAPIKey stores the API key used for the channel request (not the user's API key)
 	ChannelAPIKey *string
+
+	// BaseURL stores the request-derived base URL (scheme://host) for building absolute URLs.
+	BaseURL *string
 }
 
 // getContainer retrieves the existing container from context, or creates a new one and stores it in the context if it doesn't exist.

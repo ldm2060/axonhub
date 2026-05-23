@@ -1,11 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
@@ -42,7 +44,15 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	_, _, err := h.SignUpService.SignUp(c.Request.Context(), biz.SignUpInput{
+	scheme := "http"
+	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	ctx := contexts.WithBaseURL(c.Request.Context(), baseURL)
+
+	_, _, err := h.SignUpService.SignUp(ctx, biz.SignUpInput{
 		Email:     req.Email,
 		Password:  req.Password,
 		FirstName: req.FirstName,
