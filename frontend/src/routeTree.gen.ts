@@ -25,7 +25,6 @@ import { Route as authInitializationRouteImport } from './routes/(auth)/initiali
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
-import { Route as AuthenticatedSharedIndexRouteImport } from './routes/_authenticated/shared/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
@@ -142,12 +141,6 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSharedIndexRoute =
-  AuthenticatedSharedIndexRouteImport.update({
-    id: '/shared/',
-    path: '/shared/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
@@ -387,7 +380,6 @@ export interface FileRoutesByFullPath {
   '/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/shared/': typeof AuthenticatedSharedIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -438,7 +430,6 @@ export interface FileRoutesByTo {
   '/permission-demo': typeof AuthenticatedPermissionDemoIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/shared': typeof AuthenticatedSharedIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -493,7 +484,6 @@ export interface FileRoutesById {
   '/_authenticated/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/_authenticated/shared/': typeof AuthenticatedSharedIndexRoute
   '/_authenticated/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -548,7 +538,6 @@ export interface FileRouteTypes {
     | '/permission-demo/'
     | '/projects/'
     | '/settings/'
-    | '/shared/'
     | '/admin/dashboard/channel-success-rates'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -599,7 +588,6 @@ export interface FileRouteTypes {
     | '/permission-demo'
     | '/projects'
     | '/settings'
-    | '/shared'
     | '/admin/dashboard/channel-success-rates'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
@@ -653,7 +641,6 @@ export interface FileRouteTypes {
     | '/_authenticated/permission-demo/'
     | '/_authenticated/projects/'
     | '/_authenticated/settings/'
-    | '/_authenticated/shared/'
     | '/_authenticated/admin/dashboard/channel-success-rates'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
@@ -804,13 +791,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/shared/': {
-      id: '/_authenticated/shared/'
-      path: '/shared'
-      fullPath: '/shared/'
-      preLoaderRoute: typeof AuthenticatedSharedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/': {
@@ -1133,7 +1113,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyModelsIndexRoute: typeof AuthenticatedMyModelsIndexRoute
   AuthenticatedPermissionDemoIndexRoute: typeof AuthenticatedPermissionDemoIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
-  AuthenticatedSharedIndexRoute: typeof AuthenticatedSharedIndexRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
   AuthenticatedProjectTracesTraceIdRoute: typeof AuthenticatedProjectTracesTraceIdRoute
@@ -1160,7 +1139,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyModelsIndexRoute: AuthenticatedMyModelsIndexRoute,
   AuthenticatedPermissionDemoIndexRoute: AuthenticatedPermissionDemoIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
-  AuthenticatedSharedIndexRoute: AuthenticatedSharedIndexRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
     AuthenticatedProjectRequestsRequestIdRoute,
   AuthenticatedProjectThreadsThreadIdRoute:
