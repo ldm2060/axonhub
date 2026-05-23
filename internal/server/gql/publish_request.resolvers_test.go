@@ -47,6 +47,7 @@ func setupTestMyDashboardResolver(t *testing.T) (*queryResolver, context.Context
 	requestCtx := ent.NewContext(context.Background(), client)
 	requestCtx = contexts.WithUser(requestCtx, loadedUser)
 	requestCtx = authz.NewUserContext(requestCtx, loadedUser.ID)
+	requestCtx = authz.WithTestBypass(requestCtx)
 
 	resolver := &queryResolver{&Resolver{
 		client:        client,
