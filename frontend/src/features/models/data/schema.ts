@@ -150,8 +150,6 @@ export const modelSchema = z.object({
   remark: z.string().optional().nullable(),
   associatedChannelCount: z.number(),
   ownerID: z.string().optional().nullable(),
-  visibility: z.enum(['private', 'shared', 'published']).default('private'),
-  sharedWith: z.array(z.number()).optional().default([]).nullable(),
 });
 export type Model = z.infer<typeof modelSchema>;
 
