@@ -84,15 +84,6 @@ func (m *persistRequestExecutionMiddleware) OnOutboundRawRequest(ctx context.Con
 	reasoningEffort := ""
 	if state.LlmRequest != nil {
 		reasoningEffort = state.LlmRequest.ReasoningEffort
-
-		// When TransformerMetadata stores the original effort (e.g. Anthropic output_config.effort "max"),
-		// that's the actual value sent to the channel. Use it instead of the internal representation
-		// (e.g. "xhigh") so the UI can show the difference between request and execution values.
-		if md := state.LlmRequest.TransformerMetadata; md != nil {
-			if effort, ok := md["output_config_effort"].(string); ok && effort != "" {
-				reasoningEffort = effort
-			}
-		}
 	}
 
 	requestExec, err := state.RequestService.CreateRequestExecution(

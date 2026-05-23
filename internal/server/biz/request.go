@@ -67,6 +67,53 @@ func (s *RequestService) shouldUseExternalStorage(_ context.Context, ds *ent.Dat
 // _InvalidRequestBodyJSON returns a JSON object indicating invalid text.
 var _InvalidRequestBodyJSON = objects.JSONRawMessage(`{"message":"invalid text"}`)
 
+const transformerMetadataKeyOutputConfigEffort = "output_config_effort"
+
+func requestReasoningEffort(llmRequest *llm.Request) string {
+	if llmRequest == nil {
+		return ""
+	}
+
+	if effort, ok := llmRequest.TransformerMetadata[transformerMetadataKeyOutputConfigEffort].(string); ok && effort != "" {
+		return effort
+	}
+
+	return llmRequest.ReasoningEffort
+}
+
+func executionReasoningEffort(channelRequest httpclient.Request, requestBodyBytes objects.JSONRawMessage, fallback string) string {
+	for _, body := range [][]byte{channelRequest.JSONBody, channelRequest.Body, requestBodyBytes} {
+		if effort := reasoningEffortFromJSON(body); effort != "" {
+			return effort
+		}
+	}
+
+	return fallback
+}
+
+func reasoningEffortFromJSON(body []byte) string {
+	if len(body) == 0 {
+		return ""
+	}
+
+	var payload struct {
+		ReasoningEffort string `json:"reasoning_effort"`
+		OutputConfig    *struct {
+			Effort string `json:"effort"`
+		} `json:"output_config"`
+	}
+
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return ""
+	}
+
+	if payload.OutputConfig != nil && payload.OutputConfig.Effort != "" {
+		return payload.OutputConfig.Effort
+	}
+
+	return payload.ReasoningEffort
+}
+
 // GenerateRequestBodyKey generates the storage key for request body.
 func GenerateRequestBodyKey(projectID, requestID int) string {
 	return fmt.Sprintf("/%d/requests/%d/request_body.json", projectID, requestID)
@@ -180,8 +227,8 @@ func (s *RequestService) CreateRequest(
 		mut = mut.SetClientIP(httpRequest.ClientIP)
 	}
 
-	if llmRequest.ReasoningEffort != "" {
-		mut = mut.SetReasoningEffort(llmRequest.ReasoningEffort)
+	if effort := requestReasoningEffort(llmRequest); effort != "" {
+		mut = mut.SetReasoningEffort(effort)
 	}
 
 	// Determine if we should store in database or external storage
@@ -317,13 +364,13 @@ func (s *RequestService) CreateRequestExecution(
 		SetStream(request.Stream).
 		SetRequestHeaders(requestHeadersBytes)
 
+	if effort := executionReasoningEffort(channelRequest, requestBodyBytes, reasoningEffort); effort != "" {
+		mut = mut.SetReasoningEffort(effort)
+	}
+
 	// Use the same data storage as the request
 	if request.DataStorageID != 0 {
 		mut = mut.SetDataStorageID(request.DataStorageID)
-	}
-
-	if reasoningEffort != "" {
-		mut = mut.SetReasoningEffort(reasoningEffort)
 	}
 
 	execution, err := mut.Save(ctx)
