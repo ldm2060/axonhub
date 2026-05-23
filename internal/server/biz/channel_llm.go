@@ -1037,7 +1037,8 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 		prefix := ch.Settings.ExtraModelPrefix
 		for _, model := range ch.SupportedModels {
 			prefixedModel := prefix + "/" + model
-			if _, exists := entries[prefixedModel]; !exists {
+			existing, exists := entries[prefixedModel]
+			if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
 				entries[prefixedModel] = ChannelModelEntry{
 					RequestModel: prefixedModel,
 					ActualModel:  model,
@@ -1058,7 +1059,8 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 			// Only process models that have the prefix
 			if after, ok := strings.CutPrefix(model, prefix); ok {
 				trimmedModel := after
-				if _, exists := entries[trimmedModel]; !exists {
+				existing, exists := entries[trimmedModel]
+				if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
 					entries[trimmedModel] = ChannelModelEntry{
 						RequestModel: trimmedModel,
 						ActualModel:  model,

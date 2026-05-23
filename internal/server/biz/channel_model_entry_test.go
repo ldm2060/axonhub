@@ -238,6 +238,37 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 				{RequestModel: "gpt-4", ActualModel: "gpt-4-turbo", Source: "mapping"},
 			},
 		},
+		{
+			name: "hideOriginalModels: auto_trim overrides same-name direct model",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"claude-4-opus", "anthropic/claude-4-opus"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"anthropic"},
+						HideOriginalModels:      true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "claude-4-opus", ActualModel: "anthropic/claude-4-opus", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "hideOriginalModels: prefix overrides same-name direct model",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"custom/gpt-4", "custom/custom/gpt-4"},
+					Settings: &objects.ChannelSettings{
+						ExtraModelPrefix:   "custom",
+						HideOriginalModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "custom/custom/gpt-4", ActualModel: "custom/gpt-4", Source: "prefix"},
+				{RequestModel: "custom/custom/custom/gpt-4", ActualModel: "custom/custom/gpt-4", Source: "prefix"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
