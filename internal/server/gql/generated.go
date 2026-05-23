@@ -1324,9 +1324,27 @@ type ComplexityRoot struct {
 		Me                           func(childComplexity int) int
 		ModelPerformanceStats        func(childComplexity int) int
 		Models                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) int
+		MyChannelPerformanceStats    func(childComplexity int) int
+		MyChannelSuccessRates        func(childComplexity int, timeWindow *string, limit *int) int
+		MyCostStatsByAPIKey          func(childComplexity int, timeWindow *string) int
+		MyCostStatsByChannel         func(childComplexity int, timeWindow *string) int
+		MyCostStatsByModel           func(childComplexity int, timeWindow *string) int
+		MyDailyRequestStats          func(childComplexity int) int
 		MyDashboard                  func(childComplexity int) int
+		MyFastestChannels            func(childComplexity int, input FastestChannelsInput) int
+		MyFastestModels              func(childComplexity int, input FastestChannelsInput) int
+		MyModelPerformanceStats      func(childComplexity int) int
 		MyProjects                   func(childComplexity int) int
+		MyRequestStats               func(childComplexity int, timeWindow *string) int
+		MyRequestStatsByAPIKey       func(childComplexity int, timeWindow *string) int
+		MyRequestStatsByChannel      func(childComplexity int, timeWindow *string) int
+		MyRequestStatsByModel        func(childComplexity int, timeWindow *string) int
 		MySharedChannels             func(childComplexity int) int
+		MyTokenStats                 func(childComplexity int) int
+		MyTokenStatsByAPIKey         func(childComplexity int, timeWindow *string) int
+		MyTokenStatsByChannel        func(childComplexity int, timeWindow *string) int
+		MyTokenStatsByModel          func(childComplexity int, timeWindow *string) int
+		MyTopRequestsProjects        func(childComplexity int) int
 		Node                         func(childComplexity int, id objects.GUID) int
 		Nodes                        func(childComplexity int, ids []*objects.GUID) int
 		OidcIdentities               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
@@ -2353,6 +2371,24 @@ type QueryResolver interface {
 	ChannelProbeData(ctx context.Context, input biz.GetChannelProbeDataInput) ([]*biz.ChannelProbeData, error)
 	MySharedChannels(ctx context.Context) ([]*ent.Channel, error)
 	MyDashboard(ctx context.Context) (*DashboardOverview, error)
+	MyRequestStats(ctx context.Context, timeWindow *string) (*RequestStats, error)
+	MyRequestStatsByChannel(ctx context.Context, timeWindow *string) ([]*RequestStatsByChannel, error)
+	MyRequestStatsByModel(ctx context.Context, timeWindow *string) ([]*RequestStatsByModel, error)
+	MyRequestStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*RequestStatsByAPIKey, error)
+	MyTokenStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*TokenStatsByAPIKey, error)
+	MyDailyRequestStats(ctx context.Context) ([]*DailyRequestStats, error)
+	MyTokenStats(ctx context.Context) (*TokenStats, error)
+	MyChannelSuccessRates(ctx context.Context, timeWindow *string, limit *int) ([]*ChannelSuccessRate, error)
+	MyFastestChannels(ctx context.Context, input FastestChannelsInput) ([]*FastestChannel, error)
+	MyFastestModels(ctx context.Context, input FastestChannelsInput) ([]*FastestModel, error)
+	MyModelPerformanceStats(ctx context.Context) ([]*ModelPerformanceStat, error)
+	MyChannelPerformanceStats(ctx context.Context) ([]*ChannelPerformanceStat, error)
+	MyTokenStatsByChannel(ctx context.Context, timeWindow *string) ([]*TokenStatsByChannel, error)
+	MyTokenStatsByModel(ctx context.Context, timeWindow *string) ([]*TokenStatsByModel, error)
+	MyCostStatsByChannel(ctx context.Context, timeWindow *string) ([]*CostStatsByChannel, error)
+	MyCostStatsByModel(ctx context.Context, timeWindow *string) ([]*CostStatsByModel, error)
+	MyCostStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*CostStatsByAPIKey, error)
+	MyTopRequestsProjects(ctx context.Context) ([]*TopRequestsProjects, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -8051,24 +8087,197 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Models(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ModelOrder), args["where"].(*ent.ModelWhereInput)), true
+	case "Query.myChannelPerformanceStats":
+		if e.complexity.Query.MyChannelPerformanceStats == nil {
+			break
+		}
+
+		return e.complexity.Query.MyChannelPerformanceStats(childComplexity), true
+	case "Query.myChannelSuccessRates":
+		if e.complexity.Query.MyChannelSuccessRates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myChannelSuccessRates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyChannelSuccessRates(childComplexity, args["timeWindow"].(*string), args["limit"].(*int)), true
+	case "Query.myCostStatsByAPIKey":
+		if e.complexity.Query.MyCostStatsByAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myCostStatsByAPIKey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyCostStatsByAPIKey(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myCostStatsByChannel":
+		if e.complexity.Query.MyCostStatsByChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myCostStatsByChannel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyCostStatsByChannel(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myCostStatsByModel":
+		if e.complexity.Query.MyCostStatsByModel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myCostStatsByModel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyCostStatsByModel(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myDailyRequestStats":
+		if e.complexity.Query.MyDailyRequestStats == nil {
+			break
+		}
+
+		return e.complexity.Query.MyDailyRequestStats(childComplexity), true
 	case "Query.myDashboard":
 		if e.complexity.Query.MyDashboard == nil {
 			break
 		}
 
 		return e.complexity.Query.MyDashboard(childComplexity), true
+	case "Query.myFastestChannels":
+		if e.complexity.Query.MyFastestChannels == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myFastestChannels_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyFastestChannels(childComplexity, args["input"].(FastestChannelsInput)), true
+	case "Query.myFastestModels":
+		if e.complexity.Query.MyFastestModels == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myFastestModels_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyFastestModels(childComplexity, args["input"].(FastestChannelsInput)), true
+	case "Query.myModelPerformanceStats":
+		if e.complexity.Query.MyModelPerformanceStats == nil {
+			break
+		}
+
+		return e.complexity.Query.MyModelPerformanceStats(childComplexity), true
 	case "Query.myProjects":
 		if e.complexity.Query.MyProjects == nil {
 			break
 		}
 
 		return e.complexity.Query.MyProjects(childComplexity), true
+	case "Query.myRequestStats":
+		if e.complexity.Query.MyRequestStats == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRequestStats_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRequestStats(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myRequestStatsByAPIKey":
+		if e.complexity.Query.MyRequestStatsByAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRequestStatsByAPIKey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRequestStatsByAPIKey(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myRequestStatsByChannel":
+		if e.complexity.Query.MyRequestStatsByChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRequestStatsByChannel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRequestStatsByChannel(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myRequestStatsByModel":
+		if e.complexity.Query.MyRequestStatsByModel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRequestStatsByModel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRequestStatsByModel(childComplexity, args["timeWindow"].(*string)), true
 	case "Query.mySharedChannels":
 		if e.complexity.Query.MySharedChannels == nil {
 			break
 		}
 
 		return e.complexity.Query.MySharedChannels(childComplexity), true
+	case "Query.myTokenStats":
+		if e.complexity.Query.MyTokenStats == nil {
+			break
+		}
+
+		return e.complexity.Query.MyTokenStats(childComplexity), true
+	case "Query.myTokenStatsByAPIKey":
+		if e.complexity.Query.MyTokenStatsByAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myTokenStatsByAPIKey_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyTokenStatsByAPIKey(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myTokenStatsByChannel":
+		if e.complexity.Query.MyTokenStatsByChannel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myTokenStatsByChannel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyTokenStatsByChannel(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myTokenStatsByModel":
+		if e.complexity.Query.MyTokenStatsByModel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myTokenStatsByModel_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyTokenStatsByModel(childComplexity, args["timeWindow"].(*string)), true
+	case "Query.myTopRequestsProjects":
+		if e.complexity.Query.MyTopRequestsProjects == nil {
+			break
+		}
+
+		return e.complexity.Query.MyTopRequestsProjects(childComplexity), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -13871,6 +14080,154 @@ func (ec *executionContext) field_Query_models_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myChannelSuccessRates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "limit", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myCostStatsByAPIKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myCostStatsByChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myCostStatsByModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myFastestChannels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNFastestChannelsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐFastestChannelsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myFastestModels_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNFastestChannelsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐFastestChannelsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myRequestStatsByAPIKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myRequestStatsByChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myRequestStatsByModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myRequestStats_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myTokenStatsByAPIKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myTokenStatsByChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myTokenStatsByModel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
 	return args, nil
 }
 
@@ -46146,6 +46503,906 @@ func (ec *executionContext) fieldContext_Query_myDashboard(_ context.Context, fi
 				return ec.fieldContext_DashboardOverview_averageResponseTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardOverview", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myRequestStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myRequestStats,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyRequestStats(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNRequestStats2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐRequestStats,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myRequestStats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "requestsToday":
+				return ec.fieldContext_RequestStats_requestsToday(ctx, field)
+			case "requestsThisWeek":
+				return ec.fieldContext_RequestStats_requestsThisWeek(ctx, field)
+			case "requestsLastWeek":
+				return ec.fieldContext_RequestStats_requestsLastWeek(ctx, field)
+			case "requestsThisMonth":
+				return ec.fieldContext_RequestStats_requestsThisMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStats", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myRequestStats_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myRequestStatsByChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myRequestStatsByChannel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyRequestStatsByChannel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNRequestStatsByChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐRequestStatsByChannelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myRequestStatsByChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelName":
+				return ec.fieldContext_RequestStatsByChannel_channelName(ctx, field)
+			case "count":
+				return ec.fieldContext_RequestStatsByChannel_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatsByChannel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myRequestStatsByChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myRequestStatsByModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myRequestStatsByModel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyRequestStatsByModel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNRequestStatsByModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐRequestStatsByModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myRequestStatsByModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_RequestStatsByModel_modelId(ctx, field)
+			case "count":
+				return ec.fieldContext_RequestStatsByModel_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatsByModel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myRequestStatsByModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myRequestStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myRequestStatsByAPIKey,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyRequestStatsByAPIKey(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNRequestStatsByAPIKey2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐRequestStatsByAPIKeyᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myRequestStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "apiKeyId":
+				return ec.fieldContext_RequestStatsByAPIKey_apiKeyId(ctx, field)
+			case "apiKeyName":
+				return ec.fieldContext_RequestStatsByAPIKey_apiKeyName(ctx, field)
+			case "count":
+				return ec.fieldContext_RequestStatsByAPIKey_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestStatsByAPIKey", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myRequestStatsByAPIKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myTokenStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myTokenStatsByAPIKey,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyTokenStatsByAPIKey(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNTokenStatsByAPIKey2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTokenStatsByAPIKeyᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myTokenStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "apiKeyId":
+				return ec.fieldContext_TokenStatsByAPIKey_apiKeyId(ctx, field)
+			case "apiKeyName":
+				return ec.fieldContext_TokenStatsByAPIKey_apiKeyName(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_TokenStatsByAPIKey_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_TokenStatsByAPIKey_outputTokens(ctx, field)
+			case "cachedTokens":
+				return ec.fieldContext_TokenStatsByAPIKey_cachedTokens(ctx, field)
+			case "reasoningTokens":
+				return ec.fieldContext_TokenStatsByAPIKey_reasoningTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_TokenStatsByAPIKey_totalTokens(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TokenStatsByAPIKey", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myTokenStatsByAPIKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myDailyRequestStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myDailyRequestStats,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyDailyRequestStats(ctx)
+		},
+		nil,
+		ec.marshalNDailyRequestStats2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDailyRequestStatsᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myDailyRequestStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "date":
+				return ec.fieldContext_DailyRequestStats_date(ctx, field)
+			case "count":
+				return ec.fieldContext_DailyRequestStats_count(ctx, field)
+			case "tokens":
+				return ec.fieldContext_DailyRequestStats_tokens(ctx, field)
+			case "cost":
+				return ec.fieldContext_DailyRequestStats_cost(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DailyRequestStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myTokenStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myTokenStats,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyTokenStats(ctx)
+		},
+		nil,
+		ec.marshalNTokenStats2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTokenStats,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myTokenStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "totalInputTokensToday":
+				return ec.fieldContext_TokenStats_totalInputTokensToday(ctx, field)
+			case "totalOutputTokensToday":
+				return ec.fieldContext_TokenStats_totalOutputTokensToday(ctx, field)
+			case "totalCachedTokensToday":
+				return ec.fieldContext_TokenStats_totalCachedTokensToday(ctx, field)
+			case "totalInputTokensThisWeek":
+				return ec.fieldContext_TokenStats_totalInputTokensThisWeek(ctx, field)
+			case "totalOutputTokensThisWeek":
+				return ec.fieldContext_TokenStats_totalOutputTokensThisWeek(ctx, field)
+			case "totalCachedTokensThisWeek":
+				return ec.fieldContext_TokenStats_totalCachedTokensThisWeek(ctx, field)
+			case "totalInputTokensThisMonth":
+				return ec.fieldContext_TokenStats_totalInputTokensThisMonth(ctx, field)
+			case "totalOutputTokensThisMonth":
+				return ec.fieldContext_TokenStats_totalOutputTokensThisMonth(ctx, field)
+			case "totalCachedTokensThisMonth":
+				return ec.fieldContext_TokenStats_totalCachedTokensThisMonth(ctx, field)
+			case "totalInputTokensAllTime":
+				return ec.fieldContext_TokenStats_totalInputTokensAllTime(ctx, field)
+			case "totalOutputTokensAllTime":
+				return ec.fieldContext_TokenStats_totalOutputTokensAllTime(ctx, field)
+			case "totalCachedTokensAllTime":
+				return ec.fieldContext_TokenStats_totalCachedTokensAllTime(ctx, field)
+			case "lastUpdated":
+				return ec.fieldContext_TokenStats_lastUpdated(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TokenStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myChannelSuccessRates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myChannelSuccessRates,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyChannelSuccessRates(ctx, fc.Args["timeWindow"].(*string), fc.Args["limit"].(*int))
+		},
+		nil,
+		ec.marshalNChannelSuccessRate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐChannelSuccessRateᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myChannelSuccessRates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_ChannelSuccessRate_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_ChannelSuccessRate_channelName(ctx, field)
+			case "channelType":
+				return ec.fieldContext_ChannelSuccessRate_channelType(ctx, field)
+			case "channelDisabled":
+				return ec.fieldContext_ChannelSuccessRate_channelDisabled(ctx, field)
+			case "successCount":
+				return ec.fieldContext_ChannelSuccessRate_successCount(ctx, field)
+			case "failedCount":
+				return ec.fieldContext_ChannelSuccessRate_failedCount(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_ChannelSuccessRate_totalCount(ctx, field)
+			case "successRate":
+				return ec.fieldContext_ChannelSuccessRate_successRate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelSuccessRate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myChannelSuccessRates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myFastestChannels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myFastestChannels,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyFastestChannels(ctx, fc.Args["input"].(FastestChannelsInput))
+		},
+		nil,
+		ec.marshalNFastestChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐFastestChannelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myFastestChannels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_FastestChannel_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_FastestChannel_channelName(ctx, field)
+			case "channelType":
+				return ec.fieldContext_FastestChannel_channelType(ctx, field)
+			case "throughput":
+				return ec.fieldContext_FastestChannel_throughput(ctx, field)
+			case "tokensCount":
+				return ec.fieldContext_FastestChannel_tokensCount(ctx, field)
+			case "latencyMs":
+				return ec.fieldContext_FastestChannel_latencyMs(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_FastestChannel_requestCount(ctx, field)
+			case "confidenceLevel":
+				return ec.fieldContext_FastestChannel_confidenceLevel(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FastestChannel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myFastestChannels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myFastestModels(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myFastestModels,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyFastestModels(ctx, fc.Args["input"].(FastestChannelsInput))
+		},
+		nil,
+		ec.marshalNFastestModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐFastestModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myFastestModels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_FastestModel_modelId(ctx, field)
+			case "modelName":
+				return ec.fieldContext_FastestModel_modelName(ctx, field)
+			case "throughput":
+				return ec.fieldContext_FastestModel_throughput(ctx, field)
+			case "tokensCount":
+				return ec.fieldContext_FastestModel_tokensCount(ctx, field)
+			case "latencyMs":
+				return ec.fieldContext_FastestModel_latencyMs(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_FastestModel_requestCount(ctx, field)
+			case "confidenceLevel":
+				return ec.fieldContext_FastestModel_confidenceLevel(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FastestModel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myFastestModels_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myModelPerformanceStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myModelPerformanceStats,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyModelPerformanceStats(ctx)
+		},
+		nil,
+		ec.marshalNModelPerformanceStat2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐModelPerformanceStatᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myModelPerformanceStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "date":
+				return ec.fieldContext_ModelPerformanceStat_date(ctx, field)
+			case "modelId":
+				return ec.fieldContext_ModelPerformanceStat_modelId(ctx, field)
+			case "throughput":
+				return ec.fieldContext_ModelPerformanceStat_throughput(ctx, field)
+			case "ttftMs":
+				return ec.fieldContext_ModelPerformanceStat_ttftMs(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_ModelPerformanceStat_requestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModelPerformanceStat", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myChannelPerformanceStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myChannelPerformanceStats,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyChannelPerformanceStats(ctx)
+		},
+		nil,
+		ec.marshalNChannelPerformanceStat2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐChannelPerformanceStatᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myChannelPerformanceStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "date":
+				return ec.fieldContext_ChannelPerformanceStat_date(ctx, field)
+			case "channelId":
+				return ec.fieldContext_ChannelPerformanceStat_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_ChannelPerformanceStat_channelName(ctx, field)
+			case "throughput":
+				return ec.fieldContext_ChannelPerformanceStat_throughput(ctx, field)
+			case "ttftMs":
+				return ec.fieldContext_ChannelPerformanceStat_ttftMs(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_ChannelPerformanceStat_requestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelPerformanceStat", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myTokenStatsByChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myTokenStatsByChannel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyTokenStatsByChannel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNTokenStatsByChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTokenStatsByChannelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myTokenStatsByChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_TokenStatsByChannel_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_TokenStatsByChannel_channelName(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_TokenStatsByChannel_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_TokenStatsByChannel_outputTokens(ctx, field)
+			case "cachedTokens":
+				return ec.fieldContext_TokenStatsByChannel_cachedTokens(ctx, field)
+			case "reasoningTokens":
+				return ec.fieldContext_TokenStatsByChannel_reasoningTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_TokenStatsByChannel_totalTokens(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TokenStatsByChannel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myTokenStatsByChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myTokenStatsByModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myTokenStatsByModel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyTokenStatsByModel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNTokenStatsByModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTokenStatsByModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myTokenStatsByModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_TokenStatsByModel_modelId(ctx, field)
+			case "inputTokens":
+				return ec.fieldContext_TokenStatsByModel_inputTokens(ctx, field)
+			case "outputTokens":
+				return ec.fieldContext_TokenStatsByModel_outputTokens(ctx, field)
+			case "cachedTokens":
+				return ec.fieldContext_TokenStatsByModel_cachedTokens(ctx, field)
+			case "reasoningTokens":
+				return ec.fieldContext_TokenStatsByModel_reasoningTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_TokenStatsByModel_totalTokens(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TokenStatsByModel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myTokenStatsByModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myCostStatsByChannel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myCostStatsByChannel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyCostStatsByChannel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNCostStatsByChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCostStatsByChannelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myCostStatsByChannel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelName":
+				return ec.fieldContext_CostStatsByChannel_channelName(ctx, field)
+			case "cost":
+				return ec.fieldContext_CostStatsByChannel_cost(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CostStatsByChannel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myCostStatsByChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myCostStatsByModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myCostStatsByModel,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyCostStatsByModel(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNCostStatsByModel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCostStatsByModelᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myCostStatsByModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_CostStatsByModel_modelId(ctx, field)
+			case "cost":
+				return ec.fieldContext_CostStatsByModel_cost(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CostStatsByModel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myCostStatsByModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myCostStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myCostStatsByAPIKey,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyCostStatsByAPIKey(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNCostStatsByAPIKey2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCostStatsByAPIKeyᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myCostStatsByAPIKey(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "apiKeyId":
+				return ec.fieldContext_CostStatsByAPIKey_apiKeyId(ctx, field)
+			case "apiKeyName":
+				return ec.fieldContext_CostStatsByAPIKey_apiKeyName(ctx, field)
+			case "cost":
+				return ec.fieldContext_CostStatsByAPIKey_cost(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CostStatsByAPIKey", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myCostStatsByAPIKey_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myTopRequestsProjects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myTopRequestsProjects,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyTopRequestsProjects(ctx)
+		},
+		nil,
+		ec.marshalNTopRequestsProjects2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTopRequestsProjectsᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myTopRequestsProjects(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "projectId":
+				return ec.fieldContext_TopRequestsProjects_projectId(ctx, field)
+			case "projectName":
+				return ec.fieldContext_TopRequestsProjects_projectName(ctx, field)
+			case "projectDescription":
+				return ec.fieldContext_TopRequestsProjects_projectDescription(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_TopRequestsProjects_requestCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TopRequestsProjects", field.Name)
 		},
 	}
 	return fc, nil
@@ -102398,6 +103655,402 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_myDashboard(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myRequestStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRequestStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myRequestStatsByChannel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRequestStatsByChannel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myRequestStatsByModel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRequestStatsByModel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myRequestStatsByAPIKey":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRequestStatsByAPIKey(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myTokenStatsByAPIKey":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myTokenStatsByAPIKey(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myDailyRequestStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myDailyRequestStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myTokenStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myTokenStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myChannelSuccessRates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myChannelSuccessRates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myFastestChannels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myFastestChannels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myFastestModels":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myFastestModels(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myModelPerformanceStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myModelPerformanceStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myChannelPerformanceStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myChannelPerformanceStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myTokenStatsByChannel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myTokenStatsByChannel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myTokenStatsByModel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myTokenStatsByModel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myCostStatsByChannel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myCostStatsByChannel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myCostStatsByModel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myCostStatsByModel(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myCostStatsByAPIKey":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myCostStatsByAPIKey(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myTopRequestsProjects":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myTopRequestsProjects(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

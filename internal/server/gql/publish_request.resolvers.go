@@ -8,17 +8,28 @@ package gql
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
+	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/internal/scopes"
+	"github.com/samber/lo"
 )
 
 // RequestPublish is the resolver for the requestPublish field.
@@ -83,29 +94,10 @@ func (r *queryResolver) MySharedChannels(ctx context.Context) ([]*ent.Channel, e
 
 // MyDashboard is the resolver for the myDashboard field.
 func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, error) {
-	user, ok := contexts.GetUser(ctx)
-	if !ok || user == nil {
-		return nil, fmt.Errorf("unauthorized")
-	}
-
-	// Collect all project IDs the user belongs to (private + shared + public).
-	projectIDs, err := r.client.UserProject.Query().
-		Where(userproject.UserIDEQ(user.ID)).
-		QueryProject().
-		IDs(ctx)
+	projectIDs, err := r.getUserProjectIDs(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user projects: %w", err)
+		return nil, err
 	}
-
-	if len(projectIDs) == 0 {
-		// Fallback: ensure private project exists
-		privateProjectID, err := r.userService.EnsurePrivateProject(ctx, user)
-		if err != nil {
-			return nil, fmt.Errorf("failed to resolve private project: %w", err)
-		}
-		projectIDs = []int{privateProjectID}
-	}
-
 	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
 
 	stats := &DashboardOverview{
@@ -164,4 +156,1306 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 	}
 
 	return stats, nil
+}
+
+func (r *queryResolver) getUserProjectIDs(ctx context.Context) ([]int, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+	projectIDs, err := r.client.UserProject.Query().
+		Where(userproject.UserIDEQ(user.ID)).
+		QueryProject().
+		IDs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user projects: %w", err)
+	}
+	if len(projectIDs) == 0 {
+		privateProjectID, err := r.userService.EnsurePrivateProject(ctx, user)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve private project: %w", err)
+		}
+		projectIDs = []int{privateProjectID}
+	}
+	return projectIDs, nil
+}
+
+// MyRequestStats is the resolver for the myRequestStats field.
+func (r *queryResolver) MyRequestStats(ctx context.Context, timeWindow *string) (*RequestStats, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	stats := &RequestStats{}
+	loc := r.systemService.TimeLocation(ctx)
+	period := xtime.GetCalendarPeriods(loc)
+
+	if n, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.Today.Start)).
+		Count(ctx); err == nil {
+		stats.RequestsToday = n
+	}
+	if n, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.ThisWeek.Start)).
+		Count(ctx); err == nil {
+		stats.RequestsThisWeek = n
+	}
+	if n, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.LastWeek.Start), usagelog.CreatedAtLT(period.LastWeek.End)).
+		Count(ctx); err == nil {
+		stats.RequestsLastWeek = n
+	}
+	if n, err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(period.ThisMonth.Start)).
+		Count(ctx); err == nil {
+		stats.RequestsThisMonth = n
+	}
+
+	return stats, nil
+}
+
+// MyRequestStatsByChannel is the resolver for the myRequestStatsByChannel field.
+func (r *queryResolver) MyRequestStatsByChannel(ctx context.Context, timeWindow *string) ([]*RequestStatsByChannel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type channelStats struct {
+		ChannelName string `json:"channel_name"`
+		Count       int    `json:"count"`
+	}
+	var results []channelStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			channelTable := sql.Table(channel.Table)
+			s.Join(channelTable).On(
+				s.C(usagelog.FieldChannelID),
+				channelTable.C(channel.FieldID),
+			)
+			s.Where(sql.EQ(channelTable.C(channel.FieldDeletedAt), 0))
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(channelTable.C(channel.FieldName))
+			s.Select(
+				sql.As(channelTable.C(channel.FieldName), "channel_name"),
+				sql.As(sql.Count(s.C(usagelog.FieldID)), "count"),
+			)
+			s.OrderBy(sql.Desc("count")).Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my requests by channel: %w", err)
+	}
+
+	return lo.Map(results, func(item channelStats, _ int) *RequestStatsByChannel {
+		return &RequestStatsByChannel{
+			ChannelName: item.ChannelName,
+			Count:       item.Count,
+		}
+	}), nil
+}
+
+// MyRequestStatsByModel is the resolver for the myRequestStatsByModel field.
+func (r *queryResolver) MyRequestStatsByModel(ctx context.Context, timeWindow *string) ([]*RequestStatsByModel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type modelStats struct {
+		ModelID string `json:"model_id"`
+		Count   int    `json:"request_count"`
+	}
+	var results []modelStats
+
+	query := r.client.UsageLog.Query().Where(usagelog.ProjectIDIn(projectIDs...))
+	if applyFilter {
+		query = query.Where(usagelog.CreatedAtGTE(since))
+	}
+
+	err = query.
+		GroupBy(usagelog.FieldModelID).
+		Aggregate(ent.As(ent.Count(), "request_count")).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my requests by model: %w", err)
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Count > results[j].Count
+	})
+	if len(results) > 10 {
+		results = results[:10]
+	}
+
+	return lo.Map(results, func(item modelStats, _ int) *RequestStatsByModel {
+		return &RequestStatsByModel{
+			ModelID: item.ModelID,
+			Count:   item.Count,
+		}
+	}), nil
+}
+
+// MyRequestStatsByAPIKey is the resolver for the myRequestStatsByAPIKey field.
+func (r *queryResolver) MyRequestStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*RequestStatsByAPIKey, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type apiKeyStats struct {
+		APIKeyID int `json:"api_key_id"`
+		Count    int `json:"request_count"`
+	}
+	var results []apiKeyStats
+
+	query := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.APIKeyIDNotNil())
+	if applyFilter {
+		query = query.Where(usagelog.CreatedAtGTE(since))
+	}
+
+	err = query.
+		GroupBy(usagelog.FieldAPIKeyID).
+		Aggregate(ent.As(ent.Count(), "request_count")).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my requests by API key: %w", err)
+	}
+	if len(results) == 0 {
+		return []*RequestStatsByAPIKey{}, nil
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Count > results[j].Count
+	})
+	if len(results) > 10 {
+		results = results[:10]
+	}
+
+	apiKeyIDs := lo.Map(results, func(item apiKeyStats, _ int) int { return item.APIKeyID })
+	apiKeys, err := r.client.APIKey.Query().Where(apikey.IDIn(apiKeyIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get API keys: %w", err)
+	}
+	apiKeyMap := lo.SliceToMap(apiKeys, func(ak *ent.APIKey) (int, *ent.APIKey) { return ak.ID, ak })
+
+	var response []*RequestStatsByAPIKey
+	for _, result := range results {
+		if ak, exists := apiKeyMap[result.APIKeyID]; exists {
+			response = append(response, &RequestStatsByAPIKey{
+				APIKeyID:   objects.GUID{Type: "APIKey", ID: result.APIKeyID},
+				APIKeyName: ak.Name,
+				Count:      result.Count,
+			})
+		}
+	}
+	return response, nil
+}
+
+// MyTokenStatsByAPIKey is the resolver for the myTokenStatsByAPIKey field.
+func (r *queryResolver) MyTokenStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*TokenStatsByAPIKey, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type tokenStats struct {
+		APIKeyID        int   `json:"api_key_id"`
+		InputTokens     int64 `json:"input_tokens"`
+		OutputTokens    int64 `json:"output_tokens"`
+		CachedTokens    int64 `json:"cached_tokens"`
+		ReasoningTokens int64 `json:"reasoning_tokens"`
+	}
+	var results []tokenStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.APIKeyIDNotNil()).
+		Modify(func(s *sql.Selector) {
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(s.C(usagelog.FieldAPIKeyID))
+			s.Select(
+				sql.As(s.C(usagelog.FieldAPIKeyID), "api_key_id"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptTokens)), "input_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "output_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptCachedTokens)), "cached_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionReasoningTokens)), "reasoning_tokens"),
+			)
+			s.OrderBy(sql.Desc(fmt.Sprintf("COALESCE(SUM(%s), 0) + COALESCE(SUM(%s), 0)",
+				s.C(usagelog.FieldPromptTokens), s.C(usagelog.FieldCompletionTokens))))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my tokens by API key: %w", err)
+	}
+	if len(results) == 0 {
+		return []*TokenStatsByAPIKey{}, nil
+	}
+
+	apiKeyIDs := lo.Map(results, func(item tokenStats, _ int) int { return item.APIKeyID })
+	apiKeys, err := r.client.APIKey.Query().Where(apikey.IDIn(apiKeyIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get API keys: %w", err)
+	}
+	apiKeyMap := lo.SliceToMap(apiKeys, func(ak *ent.APIKey) (int, *ent.APIKey) { return ak.ID, ak })
+
+	var response []*TokenStatsByAPIKey
+	for _, result := range results {
+		if ak, exists := apiKeyMap[result.APIKeyID]; exists {
+			response = append(response, &TokenStatsByAPIKey{
+				APIKeyID:        objects.GUID{Type: "APIKey", ID: result.APIKeyID},
+				APIKeyName:      ak.Name,
+				InputTokens:     int(result.InputTokens),
+				OutputTokens:    int(result.OutputTokens),
+				CachedTokens:    int(result.CachedTokens),
+				ReasoningTokens: int(result.ReasoningTokens),
+				TotalTokens:     int(result.InputTokens + result.OutputTokens),
+			})
+		}
+	}
+	return response, nil
+}
+
+// MyDailyRequestStats is the resolver for the myDailyRequestStats field.
+func (r *queryResolver) MyDailyRequestStats(ctx context.Context) ([]*DailyRequestStats, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	daysCount := 30
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	type dailyStats struct {
+		Date   string  `json:"date"`
+		Count  int     `json:"total_count"`
+		Tokens int     `json:"total_tokens"`
+		Cost   float64 `json:"total_cost"`
+	}
+	var results []dailyStats
+
+	err = r.client.UsageLog.Query().
+		Where(
+			usagelog.ProjectIDIn(projectIDs...),
+			usagelog.CreatedAtGTE(startDateUTC),
+			usagelog.CreatedAtLT(nowUTC),
+		).
+		Modify(func(s *sql.Selector) {
+			var dateExpr string
+			createdAtCol := s.C(usagelog.FieldCreatedAt)
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+			s.Select(
+				sql.As(dateExpr, "date"),
+				sql.As(sql.Count(s.C(usagelog.FieldID)), "total_count"),
+				sql.As(sql.Sum(s.C(usagelog.FieldTotalTokens)), "total_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			).
+				GroupBy(dateExpr).
+				OrderBy("date")
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my daily request stats: %w", err)
+	}
+
+	statsMap := lo.SliceToMap(results, func(item dailyStats) (string, dailyStats) {
+		return item.Date, item
+	})
+
+	response := make([]*DailyRequestStats, 0, daysCount)
+	for i := range daysCount {
+		date := startDateLocal.AddDate(0, 0, i)
+		dateStr := date.Format("2006-01-02")
+		if stats, exists := statsMap[dateStr]; exists {
+			response = append(response, &DailyRequestStats{
+				Date: dateStr, Count: stats.Count, Tokens: stats.Tokens, Cost: stats.Cost,
+			})
+		} else {
+			response = append(response, &DailyRequestStats{Date: dateStr, Count: 0, Tokens: 0, Cost: 0})
+		}
+	}
+	return response, nil
+}
+
+// MyTokenStats is the resolver for the myTokenStats field.
+func (r *queryResolver) MyTokenStats(ctx context.Context) (*TokenStats, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	stats := &TokenStats{}
+	loc := r.systemService.TimeLocation(ctx)
+	period := xtime.GetCalendarPeriods(loc)
+
+	getTokenSums := func(since time.Time) (input, output, cached int) {
+		type tokenSums struct {
+			InputTokens  int `json:"input_tokens"`
+			OutputTokens int `json:"output_tokens"`
+			CachedTokens int `json:"cached_tokens"`
+		}
+		var records []tokenSums
+		err := r.client.UsageLog.Query().
+			Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(since)).
+			Modify(func(s *sql.Selector) {
+				s.Select(
+					sql.As(sql.Sum(usagelog.FieldPromptTokens), "input_tokens"),
+					sql.As(sql.Sum(usagelog.FieldCompletionTokens), "output_tokens"),
+					sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptCachedTokens)), "cached_tokens"),
+				)
+			}).
+			Scan(ctx, &records)
+		if err != nil || len(records) == 0 {
+			return 0, 0, 0
+		}
+		return records[0].InputTokens, records[0].OutputTokens, records[0].CachedTokens
+	}
+
+	input, output, cached := getTokenSums(period.Today.Start)
+	stats.TotalInputTokensToday = input
+	stats.TotalOutputTokensToday = output
+	stats.TotalCachedTokensToday = cached
+
+	input, output, cached = getTokenSums(period.ThisWeek.Start)
+	stats.TotalInputTokensThisWeek = input
+	stats.TotalOutputTokensThisWeek = output
+	stats.TotalCachedTokensThisWeek = cached
+
+	input, output, cached = getTokenSums(period.ThisMonth.Start)
+	stats.TotalInputTokensThisMonth = input
+	stats.TotalOutputTokensThisMonth = output
+	stats.TotalCachedTokensThisMonth = cached
+
+	// All-time: aggregate across all user project usage logs
+	type allTimeTokenSums struct {
+		InputTokens  int `json:"input_tokens"`
+		OutputTokens int `json:"output_tokens"`
+		CachedTokens int `json:"cached_tokens"`
+	}
+	var allTimeRecords []allTimeTokenSums
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			s.Select(
+				sql.As(sql.Sum(usagelog.FieldPromptTokens), "input_tokens"),
+				sql.As(sql.Sum(usagelog.FieldCompletionTokens), "output_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptCachedTokens)), "cached_tokens"),
+			)
+		}).
+		Scan(ctx, &allTimeRecords)
+	if err == nil && len(allTimeRecords) > 0 {
+		stats.TotalInputTokensAllTime = allTimeRecords[0].InputTokens
+		stats.TotalOutputTokensAllTime = allTimeRecords[0].OutputTokens
+		stats.TotalCachedTokensAllTime = allTimeRecords[0].CachedTokens
+	}
+	lastUpdated := time.Now().UTC()
+	stats.LastUpdated = &lastUpdated
+
+	return stats, nil
+}
+
+// MyChannelSuccessRates is the resolver for the myChannelSuccessRates field.
+func (r *queryResolver) MyChannelSuccessRates(ctx context.Context, timeWindow *string, limit *int) ([]*ChannelSuccessRate, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	if timeWindow == nil || *timeWindow == "" {
+		defaultWindow := "day"
+		timeWindow = &defaultWindow
+	}
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	limitCount := 0
+	if limit != nil && *limit > 0 {
+		limitCount = *limit
+	}
+
+	type channelExecutionStats struct {
+		ChannelID    int `json:"channel_id"`
+		SuccessCount int `json:"success_count"`
+		FailedCount  int `json:"failed_count"`
+	}
+	var results []channelExecutionStats
+
+	err = r.client.RequestExecution.Query().
+		Where(requestexecution.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			s.Select(
+				requestexecution.FieldChannelID,
+				sql.As("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)", "success_count"),
+				sql.As("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END)", "failed_count"),
+			).
+				Where(sql.NotNull(requestexecution.FieldChannelID))
+			if applyFilter {
+				s.Where(sql.GTE(s.C(requestexecution.FieldCreatedAt), since))
+			}
+			s.GroupBy(requestexecution.FieldChannelID)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my channel execution stats: %w", err)
+	}
+	if len(results) == 0 {
+		return []*ChannelSuccessRate{}, nil
+	}
+
+	var response []*ChannelSuccessRate
+	for _, result := range results {
+		totalCount := result.SuccessCount + result.FailedCount
+		var successRate float64
+		if totalCount > 0 {
+			successRate = float64(result.SuccessCount) / float64(totalCount) * 100
+		}
+		response = append(response, &ChannelSuccessRate{
+			ChannelID:       objects.GUID{Type: "Channel", ID: result.ChannelID},
+			ChannelName:     "",
+			ChannelType:     "",
+			ChannelDisabled: false,
+			SuccessCount:    result.SuccessCount,
+			FailedCount:     result.FailedCount,
+			TotalCount:      totalCount,
+			SuccessRate:     successRate,
+		})
+	}
+
+	sort.Slice(response, func(i, j int) bool {
+		return response[i].TotalCount > response[j].TotalCount
+	})
+	if limitCount > 0 && len(response) > limitCount {
+		response = response[:limitCount]
+	}
+
+	channelIDs := lo.Map(response, func(item *ChannelSuccessRate, _ int) int { return item.ChannelID.ID })
+	ctx = schematype.SkipSoftDelete(ctx)
+	channels, err := r.client.Channel.Query().Where(channel.IDIn(channelIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get channel details: %w", err)
+	}
+	channelMap := lo.SliceToMap(channels, func(ch *ent.Channel) (int, *ent.Channel) { return ch.ID, ch })
+	for _, item := range response {
+		if ch, exists := channelMap[item.ChannelID.ID]; exists {
+			item.ChannelName = ch.Name
+			item.ChannelType = string(ch.Type)
+			item.ChannelDisabled = ch.Status != "enabled"
+		}
+	}
+
+	return response, nil
+}
+
+// MyFastestChannels is the resolver for the myFastestChannels field.
+func (r *queryResolver) MyFastestChannels(ctx context.Context, input FastestChannelsInput) ([]*FastestChannel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	if input.Limit == nil || *input.Limit <= 0 {
+		input.Limit = new(int)
+		*input.Limit = 5
+	}
+	if *input.Limit > 100 {
+		*input.Limit = 100
+	}
+
+	loc := r.systemService.TimeLocation(ctx)
+	period := xtime.GetCalendarPeriods(loc)
+
+	var since time.Time
+	switch input.TimeWindow {
+	case "day":
+		since = period.Today.Start
+	case "week":
+		since = period.ThisWeek.Start
+	case "month":
+		since = period.ThisMonth.Start
+	default:
+		since = period.Today.Start
+	}
+
+	type aggResult struct {
+		ChannelID    int     `json:"channel_id"`
+		TokensCount  int64   `json:"tokens_count"`
+		LatencyMs    int64   `json:"latency_ms"`
+		RequestCount int64   `json:"request_count"`
+		Throughput   float64 `json:"throughput"`
+	}
+	var aggResults []aggResult
+
+	sqlLimit := max(*input.Limit*4, 20)
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(since)).
+		Modify(func(s *sql.Selector) {
+			reTable := sql.Table(requestexecution.Table)
+			s.Join(reTable).On(s.C(usagelog.FieldRequestID), reTable.C(requestexecution.FieldRequestID))
+			s.Where(sql.EQ(reTable.C(requestexecution.FieldStatus), "completed"))
+			s.Where(sql.NotNull(reTable.C(requestexecution.FieldChannelID)))
+			s.GroupBy(reTable.C(requestexecution.FieldChannelID))
+			s.Select(
+				sql.As(reTable.C(requestexecution.FieldChannelID), "channel_id"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "tokens_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsLatencyMs)), "latency_ms"),
+				sql.As(sql.Count("*"), "request_count"),
+				sql.As(fmt.Sprintf("CASE WHEN COALESCE(SUM(%s), 0) > 0 AND COALESCE(SUM(%s), 0) > 0 THEN CAST(COALESCE(SUM(%s), 0) AS FLOAT) / (CAST(COALESCE(SUM(%s), 0) AS FLOAT) / 1000.0) ELSE 0 END",
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs),
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs)), "throughput"),
+			)
+			s.OrderBy(sql.Desc("throughput"))
+			s.Limit(sqlLimit)
+		}).
+		Scan(ctx, &aggResults)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my fastest channels: %w", err)
+	}
+	if len(aggResults) == 0 {
+		return []*FastestChannel{}, nil
+	}
+
+	channelIDs := lo.Map(aggResults, func(item aggResult, _ int) int { return item.ChannelID })
+	ctx = schematype.SkipSoftDelete(ctx)
+	channels, err := r.client.Channel.Query().Where(channel.IDIn(channelIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get channel names: %w", err)
+	}
+	channelMap := lo.SliceToMap(channels, func(ch *ent.Channel) (int, *ent.Channel) { return ch.ID, ch })
+
+	resultsToShow := calculateConfidenceAndSort(aggResults,
+		func(item aggResult) int64 { return item.RequestCount },
+		func(item aggResult) float64 { return item.Throughput },
+		*input.Limit,
+	)
+
+	return lo.Map(resultsToShow, func(item scoredItem[aggResult], _ int) *FastestChannel {
+		chName := ""
+		chType := ""
+		if ch, exists := channelMap[item.stats.ChannelID]; exists {
+			chName = ch.Name
+			chType = string(ch.Type)
+		}
+		return &FastestChannel{
+			ChannelID:       objects.GUID{Type: "Channel", ID: item.stats.ChannelID},
+			ChannelName:     chName,
+			ChannelType:     chType,
+			Throughput:      item.stats.Throughput,
+			TokensCount:     safeIntFromInt64(item.stats.TokensCount),
+			LatencyMs:       safeIntFromInt64(item.stats.LatencyMs),
+			RequestCount:    safeIntFromInt64(item.stats.RequestCount),
+			ConfidenceLevel: item.confidence,
+		}
+	}), nil
+}
+
+// MyFastestModels is the resolver for the myFastestModels field.
+func (r *queryResolver) MyFastestModels(ctx context.Context, input FastestChannelsInput) ([]*FastestModel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	if input.Limit == nil || *input.Limit <= 0 {
+		input.Limit = new(int)
+		*input.Limit = 5
+	}
+	if *input.Limit > 100 {
+		*input.Limit = 100
+	}
+
+	loc := r.systemService.TimeLocation(ctx)
+	period := xtime.GetCalendarPeriods(loc)
+
+	var since time.Time
+	switch input.TimeWindow {
+	case "day":
+		since = period.Today.Start
+	case "week":
+		since = period.ThisWeek.Start
+	case "month":
+		since = period.ThisMonth.Start
+	default:
+		since = period.Today.Start
+	}
+
+	type aggResult struct {
+		ModelID      string  `json:"model_id"`
+		TokensCount  int64   `json:"tokens_count"`
+		LatencyMs    int64   `json:"latency_ms"`
+		RequestCount int64   `json:"request_count"`
+		Throughput   float64 `json:"throughput"`
+	}
+	var aggResults []aggResult
+
+	query := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(since))
+
+	err = query.
+		Modify(func(s *sql.Selector) {
+			reTable := sql.Table(requestexecution.Table)
+			s.Join(reTable).On(s.C(usagelog.FieldRequestID), reTable.C(requestexecution.FieldRequestID))
+			s.Where(sql.EQ(reTable.C(requestexecution.FieldStatus), "completed"))
+			s.GroupBy(s.C(usagelog.FieldModelID))
+			s.Select(
+				s.C(usagelog.FieldModelID),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "tokens_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsLatencyMs)), "latency_ms"),
+				sql.As(sql.Count("*"), "request_count"),
+				sql.As(fmt.Sprintf("CASE WHEN COALESCE(SUM(%s), 0) > 0 AND COALESCE(SUM(%s), 0) > 0 THEN CAST(COALESCE(SUM(%s), 0) AS FLOAT) / (CAST(COALESCE(SUM(%s), 0) AS FLOAT) / 1000.0) ELSE 0 END",
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs),
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs)), "throughput"),
+			)
+			s.OrderBy(sql.Desc("throughput"))
+			sqlLimit := max(*input.Limit*4, 20)
+			s.Limit(sqlLimit)
+		}).
+		Scan(ctx, &aggResults)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my fastest models: %w", err)
+	}
+	if len(aggResults) == 0 {
+		return []*FastestModel{}, nil
+	}
+
+	resultsToShow := calculateConfidenceAndSort(aggResults,
+		func(item aggResult) int64 { return item.RequestCount },
+		func(item aggResult) float64 { return item.Throughput },
+		*input.Limit,
+	)
+
+	// Fetch model names
+	modelIDs := lo.Map(aggResults, func(item aggResult, _ int) string { return item.ModelID })
+	modelNames := make(map[string]string)
+	if len(modelIDs) > 0 {
+		models, err := r.client.Model.Query().Where(model.ModelIDIn(modelIDs...)).All(ctx)
+		if err == nil {
+			for _, m := range models {
+				modelNames[m.ModelID] = m.Name
+			}
+		}
+	}
+
+	return lo.Map(resultsToShow, func(item scoredItem[aggResult], _ int) *FastestModel {
+		name := item.stats.ModelID
+		if n, ok := modelNames[item.stats.ModelID]; ok {
+			name = n
+		}
+		return &FastestModel{
+			ModelID:         item.stats.ModelID,
+			ModelName:       name,
+			Throughput:      item.stats.Throughput,
+			TokensCount:     safeIntFromInt64(item.stats.TokensCount),
+			LatencyMs:       safeIntFromInt64(item.stats.LatencyMs),
+			RequestCount:    safeIntFromInt64(item.stats.RequestCount),
+			ConfidenceLevel: item.confidence,
+		}
+	}), nil
+}
+
+// MyModelPerformanceStats is the resolver for the myModelPerformanceStats field.
+func (r *queryResolver) MyModelPerformanceStats(ctx context.Context) ([]*ModelPerformanceStat, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	daysCount := 30
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	type dailyModelStat struct {
+		Date         string   `json:"date"`
+		ModelID      string   `json:"model_id"`
+		TokensCount  int64    `json:"tokens_count"`
+		LatencyMs    int64    `json:"latency_ms"`
+		FirstTokenMs *float64 `json:"first_token_ms"`
+		RequestCount int64    `json:"request_count"`
+		Throughput   *float64 `json:"throughput"`
+	}
+
+	var rawResults []dailyModelStat
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(startDateUTC)).
+		Modify(func(s *sql.Selector) {
+			reTable := sql.Table(requestexecution.Table)
+			s.Join(reTable).On(s.C(usagelog.FieldRequestID), reTable.C(requestexecution.FieldRequestID))
+			s.Where(sql.EQ(reTable.C(requestexecution.FieldStatus), "completed"))
+
+			var dateExpr string
+			createdAtCol := s.C(usagelog.FieldCreatedAt)
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+
+			s.Select(
+				sql.As(dateExpr, "date"),
+				s.C(usagelog.FieldModelID),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "tokens_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsLatencyMs)), "latency_ms"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsFirstTokenLatencyMs)), "first_token_ms"),
+				sql.As(sql.Count("*"), "request_count"),
+				sql.As(fmt.Sprintf("CASE WHEN COALESCE(SUM(%s), 0) > 0 AND COALESCE(SUM(%s), 0) > 0 THEN CAST(COALESCE(SUM(%s), 0) AS FLOAT) / (CAST(COALESCE(SUM(%s), 0) AS FLOAT) / 1000.0) ELSE 0 END",
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs),
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs)), "throughput"),
+			)
+			s.GroupBy(dateExpr, s.C(usagelog.FieldModelID))
+			s.OrderBy("date")
+		}).
+		Scan(ctx, &rawResults)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my model performance stats: %w", err)
+	}
+
+	type ModelStatsBucket struct {
+		totalRequests int64
+		results       []*ModelPerformanceStat
+	}
+	modelStats := make(map[string]*ModelStatsBucket)
+	for _, raw := range rawResults {
+		var ttftMs *float64
+		if raw.FirstTokenMs != nil && *raw.FirstTokenMs > 0 {
+			ttftMs = raw.FirstTokenMs
+		}
+		var throughput *float64
+		if raw.Throughput != nil && *raw.Throughput > 0 {
+			throughput = raw.Throughput
+		}
+		stat := &ModelPerformanceStat{
+			Date:         raw.Date,
+			ModelID:      raw.ModelID,
+			Throughput:   throughput,
+			TtftMs:       ttftMs,
+			RequestCount: safeIntFromInt64(raw.RequestCount),
+		}
+		if modelStats[raw.ModelID] == nil {
+			modelStats[raw.ModelID] = &ModelStatsBucket{}
+		}
+		modelStats[raw.ModelID].totalRequests += raw.RequestCount
+		modelStats[raw.ModelID].results = append(modelStats[raw.ModelID].results, stat)
+	}
+
+	type modelInfo struct {
+		modelID      string
+		requestCount int64
+	}
+	modelInfos := lo.MapToSlice(modelStats, func(modelID string, stats *ModelStatsBucket) modelInfo {
+		return modelInfo{modelID: modelID, requestCount: stats.totalRequests}
+	})
+	topModels := calculateConfidenceAndSort(modelInfos, func(m modelInfo) int64 { return m.requestCount }, func(m modelInfo) float64 { return float64(m.requestCount) }, topPerformersLimit)
+
+	statsResults := make([]*ModelPerformanceStat, 0)
+	for _, item := range topModels {
+		statsResults = append(statsResults, modelStats[item.stats.modelID].results...)
+	}
+	return statsResults, nil
+}
+
+// MyChannelPerformanceStats is the resolver for the myChannelPerformanceStats field.
+func (r *queryResolver) MyChannelPerformanceStats(ctx context.Context) ([]*ChannelPerformanceStat, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	daysCount := 30
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	_, offsetSeconds := nowLocal.Zone()
+
+	// For personal scope, build from execution data since probes aren't project-scoped
+	return r.buildMyChannelPerformanceStatsFromExecutions(ctx, projectIDs, startDateLocal, offsetSeconds, daysCount)
+}
+
+func (r *queryResolver) buildMyChannelPerformanceStatsFromExecutions(ctx context.Context, projectIDs []int, startDateLocal time.Time, offsetSeconds int, daysCount int) ([]*ChannelPerformanceStat, error) {
+	startDateUTC := startDateLocal.UTC()
+	loc := r.systemService.TimeLocation(ctx)
+
+	type dailyChannelStat struct {
+		Date         string `json:"date"`
+		ChannelID    int    `json:"channel_id"`
+		TokensCount  int64  `json:"tokens_count"`
+		LatencyMs    int64  `json:"latency_ms"`
+		FirstTokenMs *float64 `json:"first_token_ms"`
+		RequestCount int64  `json:"request_count"`
+		Throughput   *float64 `json:"throughput"`
+	}
+
+	var results []dailyChannelStat
+
+	err := r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.CreatedAtGTE(startDateUTC)).
+		Modify(func(s *sql.Selector) {
+			reTable := sql.Table(requestexecution.Table)
+			s.Join(reTable).On(s.C(usagelog.FieldRequestID), reTable.C(requestexecution.FieldRequestID))
+			s.Where(sql.EQ(reTable.C(requestexecution.FieldStatus), "completed"))
+			s.Where(sql.NotNull(reTable.C(requestexecution.FieldChannelID)))
+
+			var dateExpr string
+			createdAtCol := reTable.C(requestexecution.FieldCreatedAt)
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+
+			s.Select(
+				sql.As(dateExpr, "date"),
+				sql.As(reTable.C(requestexecution.FieldChannelID), "channel_id"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "tokens_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsLatencyMs)), "latency_ms"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", reTable.C(requestexecution.FieldMetricsFirstTokenLatencyMs)), "first_token_ms"),
+				sql.As(sql.Count("*"), "request_count"),
+				sql.As(fmt.Sprintf("CASE WHEN COALESCE(SUM(%s), 0) > 0 AND COALESCE(SUM(%s), 0) > 0 THEN CAST(COALESCE(SUM(%s), 0) AS FLOAT) / (CAST(COALESCE(SUM(%s), 0) AS FLOAT) / 1000.0) ELSE 0 END",
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs),
+					s.C(usagelog.FieldCompletionTokens),
+					reTable.C(requestexecution.FieldMetricsLatencyMs)), "throughput"),
+			)
+			s.GroupBy(dateExpr, reTable.C(requestexecution.FieldChannelID))
+			s.OrderBy("date")
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my channel performance stats: %w", err)
+	}
+
+	// Group by channel and rank
+	type ChannelStatsBucket struct {
+		totalRequests int64
+		results       []*ChannelPerformanceStat
+	}
+	channelStats := make(map[int]*ChannelStatsBucket)
+	for _, raw := range results {
+		var ttftMs *float64
+		if raw.FirstTokenMs != nil && *raw.FirstTokenMs > 0 {
+			ttftMs = raw.FirstTokenMs
+		}
+		var throughput *float64
+		if raw.Throughput != nil && *raw.Throughput > 0 {
+			throughput = raw.Throughput
+		}
+		stat := &ChannelPerformanceStat{
+			Date:         raw.Date,
+			ChannelID:    fmt.Sprintf("%d", raw.ChannelID),
+			ChannelName:  "",
+			Throughput:   throughput,
+			TtftMs:       ttftMs,
+			RequestCount: safeIntFromInt64(raw.RequestCount),
+		}
+		if channelStats[raw.ChannelID] == nil {
+			channelStats[raw.ChannelID] = &ChannelStatsBucket{}
+		}
+		channelStats[raw.ChannelID].totalRequests += raw.RequestCount
+		channelStats[raw.ChannelID].results = append(channelStats[raw.ChannelID].results, stat)
+	}
+
+	type channelInfo struct {
+		channelID    int
+		requestCount int64
+	}
+	channelInfos := lo.MapToSlice(channelStats, func(channelID int, stats *ChannelStatsBucket) channelInfo {
+		return channelInfo{channelID: channelID, requestCount: stats.totalRequests}
+	})
+	topChannels := calculateConfidenceAndSort(channelInfos, func(c channelInfo) int64 { return c.requestCount }, func(c channelInfo) float64 { return float64(c.requestCount) }, topPerformersLimit)
+
+	// Fetch channel names
+	channelIDs := lo.Map(topChannels, func(item scoredItem[channelInfo], _ int) int { return item.stats.channelID })
+	ctx = schematype.SkipSoftDelete(ctx)
+	channels, err := r.client.Channel.Query().Where(channel.IDIn(channelIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get channel names: %w", err)
+	}
+	channelNameMap := lo.SliceToMap(channels, func(ch *ent.Channel) (int, string) { return ch.ID, ch.Name })
+
+	// Build final response with zero-fill
+	var allStats []*ChannelPerformanceStat
+	for _, item := range topChannels {
+		name := channelNameMap[item.stats.channelID]
+		for _, stat := range channelStats[item.stats.channelID].results {
+			stat.ChannelName = name
+			allStats = append(allStats, stat)
+		}
+	}
+
+	return allStats, nil
+}
+
+// MyTokenStatsByChannel is the resolver for the myTokenStatsByChannel field.
+func (r *queryResolver) MyTokenStatsByChannel(ctx context.Context, timeWindow *string) ([]*TokenStatsByChannel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type channelTokenStats struct {
+		ChannelID       int    `json:"channel_id"`
+		ChannelName     string `json:"channel_name"`
+		InputTokens     int64  `json:"input_tokens"`
+		OutputTokens    int64  `json:"output_tokens"`
+		CachedTokens    int64  `json:"cached_tokens"`
+		ReasoningTokens int64  `json:"reasoning_tokens"`
+	}
+	var results []channelTokenStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			channelTable := sql.Table(channel.Table)
+			s.Join(channelTable).On(
+				s.C(usagelog.FieldChannelID),
+				channelTable.C(channel.FieldID),
+			)
+			s.Where(sql.EQ(channelTable.C(channel.FieldDeletedAt), 0))
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(channelTable.C(channel.FieldID), channelTable.C(channel.FieldName))
+			s.Select(
+				sql.As(channelTable.C(channel.FieldID), "channel_id"),
+				sql.As(channelTable.C(channel.FieldName), "channel_name"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptTokens)), "input_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "output_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptCachedTokens)), "cached_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionReasoningTokens)), "reasoning_tokens"),
+			)
+			s.OrderBy(sql.Desc(fmt.Sprintf("COALESCE(SUM(%s), 0) + COALESCE(SUM(%s), 0)",
+				s.C(usagelog.FieldPromptTokens), s.C(usagelog.FieldCompletionTokens))))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my tokens by channel: %w", err)
+	}
+
+	return lo.Map(results, func(item channelTokenStats, _ int) *TokenStatsByChannel {
+		return &TokenStatsByChannel{
+			ChannelID:       objects.GUID{Type: "Channel", ID: item.ChannelID},
+			ChannelName:     item.ChannelName,
+			InputTokens:     int(item.InputTokens),
+			OutputTokens:    int(item.OutputTokens),
+			CachedTokens:    int(item.CachedTokens),
+			ReasoningTokens: int(item.ReasoningTokens),
+			TotalTokens:     int(item.InputTokens + item.OutputTokens),
+		}
+	}), nil
+}
+
+// MyTokenStatsByModel is the resolver for the myTokenStatsByModel field.
+func (r *queryResolver) MyTokenStatsByModel(ctx context.Context, timeWindow *string) ([]*TokenStatsByModel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type modelTokenStats struct {
+		ModelID         string `json:"model_id"`
+		InputTokens     int64  `json:"input_tokens"`
+		OutputTokens    int64  `json:"output_tokens"`
+		CachedTokens    int64  `json:"cached_tokens"`
+		ReasoningTokens int64  `json:"reasoning_tokens"`
+	}
+	var results []modelTokenStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(s.C(usagelog.FieldModelID))
+			s.Select(
+				s.C(usagelog.FieldModelID),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptTokens)), "input_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionTokens)), "output_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldPromptCachedTokens)), "cached_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldCompletionReasoningTokens)), "reasoning_tokens"),
+			)
+			s.OrderBy(sql.Desc(fmt.Sprintf("COALESCE(SUM(%s), 0) + COALESCE(SUM(%s), 0)",
+				s.C(usagelog.FieldPromptTokens), s.C(usagelog.FieldCompletionTokens))))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my tokens by model: %w", err)
+	}
+
+	return lo.Map(results, func(item modelTokenStats, _ int) *TokenStatsByModel {
+		return &TokenStatsByModel{
+			ModelID:         item.ModelID,
+			InputTokens:     int(item.InputTokens),
+			OutputTokens:    int(item.OutputTokens),
+			CachedTokens:    int(item.CachedTokens),
+			ReasoningTokens: int(item.ReasoningTokens),
+			TotalTokens:     int(item.InputTokens + item.OutputTokens),
+		}
+	}), nil
+}
+
+// MyCostStatsByChannel is the resolver for the myCostStatsByChannel field.
+func (r *queryResolver) MyCostStatsByChannel(ctx context.Context, timeWindow *string) ([]*CostStatsByChannel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type channelCostStats struct {
+		ChannelName string  `json:"channel_name"`
+		Cost        float64 `json:"total_cost"`
+	}
+	var results []channelCostStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			channelTable := sql.Table(channel.Table)
+			s.Join(channelTable).On(
+				s.C(usagelog.FieldChannelID),
+				channelTable.C(channel.FieldID),
+			)
+			s.Where(sql.EQ(channelTable.C(channel.FieldDeletedAt), 0))
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(channelTable.C(channel.FieldName))
+			s.Select(
+				sql.As(channelTable.C(channel.FieldName), "channel_name"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			)
+			s.OrderBy(sql.Desc("total_cost"))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my cost by channel: %w", err)
+	}
+
+	return lo.Map(results, func(item channelCostStats, _ int) *CostStatsByChannel {
+		return &CostStatsByChannel{ChannelName: item.ChannelName, Cost: item.Cost}
+	}), nil
+}
+
+// MyCostStatsByModel is the resolver for the myCostStatsByModel field.
+func (r *queryResolver) MyCostStatsByModel(ctx context.Context, timeWindow *string) ([]*CostStatsByModel, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type modelCostStats struct {
+		ModelID string  `json:"model_id"`
+		Cost    float64 `json:"total_cost"`
+	}
+	var results []modelCostStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(s.C(usagelog.FieldModelID))
+			s.Select(
+				s.C(usagelog.FieldModelID),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			)
+			s.OrderBy(sql.Desc("total_cost"))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my cost by model: %w", err)
+	}
+
+	return lo.Map(results, func(item modelCostStats, _ int) *CostStatsByModel {
+		return &CostStatsByModel{ModelID: item.ModelID, Cost: item.Cost}
+	}), nil
+}
+
+// MyCostStatsByAPIKey is the resolver for the myCostStatsByAPIKey field.
+func (r *queryResolver) MyCostStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*CostStatsByAPIKey, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
+
+	type apiKeyCostStats struct {
+		APIKeyID int     `json:"api_key_id"`
+		Cost     float64 `json:"total_cost"`
+	}
+	var results []apiKeyCostStats
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...), usagelog.APIKeyIDNotNil()).
+		Modify(func(s *sql.Selector) {
+			if applyFilter {
+				s.Where(sql.GTE(s.C(usagelog.FieldCreatedAt), since))
+			}
+			s.GroupBy(s.C(usagelog.FieldAPIKeyID))
+			s.Select(
+				s.C(usagelog.FieldAPIKeyID),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			)
+			s.OrderBy(sql.Desc("total_cost"))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my cost by API key: %w", err)
+	}
+	if len(results) == 0 {
+		return []*CostStatsByAPIKey{}, nil
+	}
+
+	apiKeyIDs := lo.Map(results, func(item apiKeyCostStats, _ int) int { return item.APIKeyID })
+	apiKeys, err := r.client.APIKey.Query().Where(apikey.IDIn(apiKeyIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get API keys: %w", err)
+	}
+	apiKeyMap := lo.SliceToMap(apiKeys, func(ak *ent.APIKey) (int, *ent.APIKey) { return ak.ID, ak })
+
+	var response []*CostStatsByAPIKey
+	for _, result := range results {
+		if ak, exists := apiKeyMap[result.APIKeyID]; exists {
+			response = append(response, &CostStatsByAPIKey{
+				APIKeyID:   objects.GUID{Type: "APIKey", ID: result.APIKeyID},
+				APIKeyName: ak.Name,
+				Cost:       result.Cost,
+			})
+		}
+	}
+	return response, nil
+}
+
+// MyTopRequestsProjects is the resolver for the myTopRequestsProjects field.
+func (r *queryResolver) MyTopRequestsProjects(ctx context.Context) ([]*TopRequestsProjects, error) {
+	projectIDs, err := r.getUserProjectIDs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	type projectRequestCount struct {
+		ProjectID    int `json:"project_id"`
+		RequestCount int `json:"request_count"`
+	}
+	var results []projectRequestCount
+
+	err = r.client.UsageLog.Query().
+		Where(usagelog.ProjectIDIn(projectIDs...)).
+		Modify(func(s *sql.Selector) {
+			s.Select(
+				usagelog.FieldProjectID,
+				sql.As(sql.Count("*"), "request_count"),
+			).
+				GroupBy(usagelog.FieldProjectID).
+				OrderBy(sql.Desc("request_count"))
+			s.Limit(10)
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my top projects: %w", err)
+	}
+	if len(results) == 0 {
+		return []*TopRequestsProjects{}, nil
+	}
+
+	projIDs := lo.Map(results, func(item projectRequestCount, _ int) int { return item.ProjectID })
+	projects, err := r.client.Project.Query().Where(project.IDIn(projIDs...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get project details: %w", err)
+	}
+	projectMap := lo.SliceToMap(projects, func(p *ent.Project) (int, *ent.Project) { return p.ID, p })
+
+	var response []*TopRequestsProjects
+	for _, result := range results {
+		if p, exists := projectMap[result.ProjectID]; exists {
+			response = append(response, &TopRequestsProjects{
+				ProjectID:          objects.GUID{Type: "Project", ID: p.ID},
+				ProjectName:        p.Name,
+				ProjectDescription: p.Description,
+				RequestCount:       result.RequestCount,
+			})
+		}
+	}
+	return response, nil
 }

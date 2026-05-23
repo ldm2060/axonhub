@@ -605,9 +605,8 @@ func (r *queryResolver) TopRequestsProjects(ctx context.Context) ([]*TopRequests
 
 	var results []projectRequestCount
 
-	// Use database aggregation without ordering (GroupBy doesn't support Order)
+	// Use database aggregation with limit applied inside Modify (after GROUP BY)
 	err := r.client.UsageLog.Query().
-		Limit(limitCount).
 		Modify(func(s *sql.Selector) {
 			s.Select(
 				usagelog.FieldProjectID,
@@ -615,6 +614,7 @@ func (r *queryResolver) TopRequestsProjects(ctx context.Context) ([]*TopRequests
 			).
 				GroupBy(usagelog.FieldProjectID).
 				OrderBy(sql.Desc("request_count"))
+			s.Limit(limitCount)
 		}).
 		Scan(ctx, &results)
 	if err != nil {

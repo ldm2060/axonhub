@@ -9,6 +9,24 @@ extend type Mutation {
 extend type Query {
   mySharedChannels: [Channel!]!
   myDashboard: DashboardOverview!
+  myRequestStats(timeWindow: String): RequestStats!
+  myRequestStatsByChannel(timeWindow: String): [RequestStatsByChannel!]!
+  myRequestStatsByModel(timeWindow: String): [RequestStatsByModel!]!
+  myRequestStatsByAPIKey(timeWindow: String): [RequestStatsByAPIKey!]!
+  myTokenStatsByAPIKey(timeWindow: String): [TokenStatsByAPIKey!]!
+  myDailyRequestStats: [DailyRequestStats!]!
+  myTokenStats: TokenStats!
+  myChannelSuccessRates(timeWindow: String, limit: Int): [ChannelSuccessRate!]!
+  myFastestChannels(input: FastestChannelsInput!): [FastestChannel!]!
+  myFastestModels(input: FastestChannelsInput!): [FastestModel!]!
+  myModelPerformanceStats: [ModelPerformanceStat!]!
+  myChannelPerformanceStats: [ChannelPerformanceStat!]!
+  myTokenStatsByChannel(timeWindow: String): [TokenStatsByChannel!]!
+  myTokenStatsByModel(timeWindow: String): [TokenStatsByModel!]!
+  myCostStatsByChannel(timeWindow: String): [CostStatsByChannel!]!
+  myCostStatsByModel(timeWindow: String): [CostStatsByModel!]!
+  myCostStatsByAPIKey(timeWindow: String): [CostStatsByAPIKey!]!
+  myTopRequestsProjects: [TopRequestsProjects!]!
 }
 
 enum ReviewAction {
