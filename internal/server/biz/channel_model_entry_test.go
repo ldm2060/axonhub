@@ -254,7 +254,38 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 		},
 		{
-			name: "hideOriginalModels: prefix overrides same-name direct model",
+			name: "hideOriginalModels: keeps models without transforms",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4", "claude-3"},
+					Settings: &objects.ChannelSettings{
+						HideOriginalModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "direct"},
+				{RequestModel: "claude-3", ActualModel: "claude-3", Source: "direct"},
+			},
+		},
+		{
+			name: "hideOriginalModels: hides only models with transforms, keeps others",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4", "deepseek-chat"},
+					Settings: &objects.ChannelSettings{
+						ExtraModelPrefix:  "deepseek",
+						HideOriginalModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "deepseek/gpt-4", ActualModel: "gpt-4", Source: "prefix"},
+				{RequestModel: "deepseek/deepseek-chat", ActualModel: "deepseek-chat", Source: "prefix"},
+			},
+		},
+			{
+				name: "hideOriginalModels: prefix overrides same-name direct model",
 			channel: &Channel{
 				Channel: &ent.Channel{
 					SupportedModels: []string{"custom/gpt-4", "custom/custom/gpt-4"},
