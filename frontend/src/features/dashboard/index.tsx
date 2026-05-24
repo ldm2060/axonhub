@@ -25,6 +25,7 @@ import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { CollapsibleSection } from './components/collapsible-section';
 import { ReviewQueue } from './components/review-queue';
+import { UserUsageStatsSection } from './components/user-usage-stats-section';
 import { useDashboardStats, type DashboardMode } from './data/dashboard';
 
 interface DashboardPageProps {
@@ -336,6 +337,9 @@ function DashboardContent({
           </div>
         </div>
       </CollapsibleSection>
+
+      {/* User Statistics - admin only */}
+      {mode === 'project' && <UserUsageStatsSection />}
     </div>
   );
 }

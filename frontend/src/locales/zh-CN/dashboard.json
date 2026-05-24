@@ -101,5 +101,39 @@
   "publish.approveSuccess": "请求已批准",
   "publish.rejectSuccess": "请求已拒绝",
   "publish.reviewComment": "审核评论",
-  "publish.reviewCommentPlaceholder": "可选的审核评论..."
+  "publish.reviewCommentPlaceholder": "可选的审核评论...",
+  "userStats": {
+    "title": "用户统计",
+    "searchPlaceholder": "搜索用户...",
+    "noData": "暂无用户数据",
+    "cards": {
+      "totalUsers": "总用户数",
+      "active7d": "7日活跃",
+      "active30d": "30日活跃"
+    },
+    "columns": {
+      "userName": "用户",
+      "email": "邮箱",
+      "requests": "请求数",
+      "successRate": "成功率",
+      "tokens": "Token",
+      "cost": "费用",
+      "lastActive": "最后活跃"
+    },
+    "timeRange": {
+      "all": "全部时间",
+      "last7d": "最近7天",
+      "last30d": "最近30天"
+    },
+    "sortBy": {
+      "requestCount": "请求数",
+      "totalCost": "费用",
+      "totalTokens": "Token数",
+      "lastActiveAt": "最后活跃"
+    },
+    "sortOrder": {
+      "asc": "升序",
+      "desc": "降序"
+    }
+  }
 }

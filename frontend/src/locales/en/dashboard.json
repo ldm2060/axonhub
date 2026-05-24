@@ -101,5 +101,39 @@
   "publish.approveSuccess": "Request approved successfully",
   "publish.rejectSuccess": "Request rejected successfully",
   "publish.reviewComment": "Review Comment",
-  "publish.reviewCommentPlaceholder": "Optional review comment..."
+  "publish.reviewCommentPlaceholder": "Optional review comment...",
+  "userStats": {
+    "title": "User Statistics",
+    "searchPlaceholder": "Search users...",
+    "noData": "No user data available",
+    "cards": {
+      "totalUsers": "Total Users",
+      "active7d": "7-Day Active",
+      "active30d": "30-Day Active"
+    },
+    "columns": {
+      "userName": "User",
+      "email": "Email",
+      "requests": "Requests",
+      "successRate": "Success Rate",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "lastActive": "Last Active"
+    },
+    "timeRange": {
+      "all": "All Time",
+      "last7d": "Last 7 Days",
+      "last30d": "Last 30 Days"
+    },
+    "sortBy": {
+      "requestCount": "Requests",
+      "totalCost": "Cost",
+      "totalTokens": "Tokens",
+      "lastActiveAt": "Last Active"
+    },
+    "sortOrder": {
+      "asc": "Asc",
+      "desc": "Desc"
+    }
+  }
 }
