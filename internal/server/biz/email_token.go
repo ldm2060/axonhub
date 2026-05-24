@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -15,6 +16,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 )
+
+var errEmailCodeUnchanged = errors.New("email code unchanged")
 
 // EmailTokenServiceParams holds the dependencies for EmailTokenService.
 type EmailTokenServiceParams struct {
@@ -94,7 +97,7 @@ func (s *EmailTokenService) CreateEmailCode(ctx context.Context, email string, t
 		if err == nil {
 			return code, nil
 		}
-		if !ent.IsConstraintError(err) {
+		if !ent.IsConstraintError(err) && !errors.Is(err, errEmailCodeUnchanged) {
 			return "", err
 		}
 		lastErr = err
@@ -111,6 +114,7 @@ func (s *EmailTokenService) saveEmailCode(ctx context.Context, normalizedEmail s
 		Where(
 			emailtoken.TypeEQ(tokenType),
 			emailtoken.EmailEQ(normalizedEmail),
+			emailtoken.TokenNEQ(code),
 		).
 		SetToken(code).
 		SetExpiresAt(expiresAt).
@@ -121,6 +125,20 @@ func (s *EmailTokenService) saveEmailCode(ctx context.Context, normalizedEmail s
 	}
 	if updated > 0 {
 		return nil
+	}
+
+	exists, err := client.EmailToken.Query().
+		Where(
+			emailtoken.TypeEQ(tokenType),
+			emailtoken.EmailEQ(normalizedEmail),
+			emailtoken.Token(code),
+		).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("check existing email code: %w", err)
+	}
+	if exists {
+		return errEmailCodeUnchanged
 	}
 
 	_, err = client.EmailToken.Create().

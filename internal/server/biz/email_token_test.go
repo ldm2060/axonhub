@@ -63,6 +63,43 @@ func TestEmailTokenService_CreateEmailCodeSupersedesPreviousCode(t *testing.T) {
 	require.Equal(t, 1, count)
 }
 
+func TestEmailTokenService_SaveEmailCodeDoesNotReactivateSameCode(t *testing.T) {
+	svc, client, ctx := setupTestEmailTokenService(t)
+	defer client.Close()
+
+	code, err := svc.CreateEmailCode(ctx, "user@example.com", emailtoken.TypeVerifyEmail, 5*time.Minute)
+	require.NoError(t, err)
+
+	err = svc.ConsumeEmailCode(ctx, "user@example.com", code, emailtoken.TypeVerifyEmail)
+	require.NoError(t, err)
+
+	persistedBefore, err := client.EmailToken.Query().
+		Where(
+			emailtoken.EmailEQ("user@example.com"),
+			emailtoken.TypeEQ(emailtoken.TypeVerifyEmail),
+		).
+		Only(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, persistedBefore.ConsumedAt)
+
+	err = svc.saveEmailCode(ctx, "user@example.com", emailtoken.TypeVerifyEmail, code, 5*time.Minute)
+	require.Error(t, err)
+
+	persistedAfter, err := client.EmailToken.Query().
+		Where(
+			emailtoken.EmailEQ("user@example.com"),
+			emailtoken.TypeEQ(emailtoken.TypeVerifyEmail),
+		).
+		Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, persistedBefore.ExpiresAt, persistedAfter.ExpiresAt)
+	require.NotNil(t, persistedAfter.ConsumedAt)
+	require.Equal(t, *persistedBefore.ConsumedAt, *persistedAfter.ConsumedAt)
+
+	_, err = svc.ValidateEmailCode(ctx, "user@example.com", code, emailtoken.TypeVerifyEmail)
+	require.Error(t, err)
+}
+
 func TestEmailTokenService_ValidateEmailCodeRejectsWrongExpiredAndConsumedCodes(t *testing.T) {
 	svc, client, ctx := setupTestEmailTokenService(t)
 	defer client.Close()
