@@ -38,6 +38,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -124,6 +125,7 @@ func checkColumn(t, c string) error {
 			user.Table:                     user.ValidColumn,
 			userproject.Table:              userproject.ValidColumn,
 			userrole.Table:                 userrole.ValidColumn,
+			userusagestats.Table:           userusagestats.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

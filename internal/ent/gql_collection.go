@@ -36,6 +36,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
@@ -6236,6 +6237,19 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "userUsageStats":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserUsageStatsClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, userusagestatsImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedUserUsageStats(alias, func(wq *UserUsageStatsQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -6279,10 +6293,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[12][alias] = n
 						}
 						return nil
 					})
@@ -6290,10 +6304,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[11] == nil {
-								nodes[i].Edges.totalCount[11] = make(map[string]int)
+							if nodes[i].Edges.totalCount[12] == nil {
+								nodes[i].Edges.totalCount[12] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[11][alias] = n
+							nodes[i].Edges.totalCount[12][alias] = n
 						}
 						return nil
 					})
@@ -6368,10 +6382,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[12] == nil {
-								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[12][alias] = n
+							nodes[i].Edges.totalCount[13][alias] = n
 						}
 						return nil
 					})
@@ -6379,10 +6393,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[12] == nil {
-								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[12][alias] = n
+							nodes[i].Edges.totalCount[13][alias] = n
 						}
 						return nil
 					})
@@ -6810,6 +6824,155 @@ func newUserRolePaginateArgs(rv map[string]any) *userrolePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*UserRoleWhereInput); ok {
 		args.opts = append(args.opts, WithUserRoleFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UserUsageStatsQuery) CollectFields(ctx context.Context, satisfies ...string) (*UserUsageStatsQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UserUsageStatsQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(userusagestats.Columns))
+		selectedFields = []string{userusagestats.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withUser = query
+			if _, ok := fieldSeen[userusagestats.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldUserID)
+				fieldSeen[userusagestats.FieldUserID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[userusagestats.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldCreatedAt)
+				fieldSeen[userusagestats.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[userusagestats.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldUpdatedAt)
+				fieldSeen[userusagestats.FieldUpdatedAt] = struct{}{}
+			}
+		case "userID":
+			if _, ok := fieldSeen[userusagestats.FieldUserID]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldUserID)
+				fieldSeen[userusagestats.FieldUserID] = struct{}{}
+			}
+		case "requestCount":
+			if _, ok := fieldSeen[userusagestats.FieldRequestCount]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldRequestCount)
+				fieldSeen[userusagestats.FieldRequestCount] = struct{}{}
+			}
+		case "successCount":
+			if _, ok := fieldSeen[userusagestats.FieldSuccessCount]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldSuccessCount)
+				fieldSeen[userusagestats.FieldSuccessCount] = struct{}{}
+			}
+		case "promptTokens":
+			if _, ok := fieldSeen[userusagestats.FieldPromptTokens]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldPromptTokens)
+				fieldSeen[userusagestats.FieldPromptTokens] = struct{}{}
+			}
+		case "completionTokens":
+			if _, ok := fieldSeen[userusagestats.FieldCompletionTokens]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldCompletionTokens)
+				fieldSeen[userusagestats.FieldCompletionTokens] = struct{}{}
+			}
+		case "totalTokens":
+			if _, ok := fieldSeen[userusagestats.FieldTotalTokens]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldTotalTokens)
+				fieldSeen[userusagestats.FieldTotalTokens] = struct{}{}
+			}
+		case "totalCost":
+			if _, ok := fieldSeen[userusagestats.FieldTotalCost]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldTotalCost)
+				fieldSeen[userusagestats.FieldTotalCost] = struct{}{}
+			}
+		case "lastActiveAt":
+			if _, ok := fieldSeen[userusagestats.FieldLastActiveAt]; !ok {
+				selectedFields = append(selectedFields, userusagestats.FieldLastActiveAt)
+				fieldSeen[userusagestats.FieldLastActiveAt] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type userusagestatsPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UserUsageStatsPaginateOption
+}
+
+func newUserUsageStatsPaginateArgs(rv map[string]any) *userusagestatsPaginateArgs {
+	args := &userusagestatsPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UserUsageStatsOrder{Field: &UserUsageStatsOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUserUsageStatsOrder(order))
+			}
+		case *UserUsageStatsOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUserUsageStatsOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UserUsageStatsWhereInput); ok {
+		args.opts = append(args.opts, WithUserUsageStatsFilter(v.Filter))
 	}
 	return args
 }

@@ -41,6 +41,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // Client is the client that holds all ent builders.
@@ -100,6 +101,8 @@ type Client struct {
 	UserProject *UserProjectClient
 	// UserRole is the client for interacting with the UserRole builders.
 	UserRole *UserRoleClient
+	// UserUsageStats is the client for interacting with the UserUsageStats builders.
+	UserUsageStats *UserUsageStatsClient
 	// additional fields for node api
 	tables tables
 }
@@ -139,6 +142,7 @@ func (c *Client) init() {
 	c.User = NewUserClient(c.config)
 	c.UserProject = NewUserProjectClient(c.config)
 	c.UserRole = NewUserRoleClient(c.config)
+	c.UserUsageStats = NewUserUsageStatsClient(c.config)
 }
 
 type (
@@ -257,6 +261,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		User:                     NewUserClient(cfg),
 		UserProject:              NewUserProjectClient(cfg),
 		UserRole:                 NewUserRoleClient(cfg),
+		UserUsageStats:           NewUserUsageStatsClient(cfg),
 	}, nil
 }
 
@@ -302,6 +307,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		User:                     NewUserClient(cfg),
 		UserProject:              NewUserProjectClient(cfg),
 		UserRole:                 NewUserRoleClient(cfg),
+		UserUsageStats:           NewUserUsageStatsClient(cfg),
 	}, nil
 }
 
@@ -336,7 +342,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
 		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
-		c.UserProject, c.UserRole,
+		c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Use(hooks...)
 	}
@@ -351,7 +357,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
 		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
-		c.UserProject, c.UserRole,
+		c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -412,6 +418,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.UserProject.mutate(ctx, m)
 	case *UserRoleMutation:
 		return c.UserRole.mutate(ctx, m)
+	case *UserUsageStatsMutation:
+		return c.UserUsageStats.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -4691,6 +4699,22 @@ func (c *UserClient) QueryEmailTokens(_m *User) *EmailTokenQuery {
 	return query
 }
 
+// QueryUserUsageStats queries the user_usage_stats edge of a User.
+func (c *UserClient) QueryUserUsageStats(_m *User) *UserUsageStatsQuery {
+	query := (&UserUsageStatsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userusagestats.Table, userusagestats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserUsageStatsTable, user.UserUsageStatsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryProjectUsers queries the project_users edge of a User.
 func (c *UserClient) QueryProjectUsers(_m *User) *UserProjectQuery {
 	query := (&UserProjectClient{config: c.config}).Query()
@@ -5081,6 +5105,155 @@ func (c *UserRoleClient) mutate(ctx context.Context, m *UserRoleMutation) (Value
 	}
 }
 
+// UserUsageStatsClient is a client for the UserUsageStats schema.
+type UserUsageStatsClient struct {
+	config
+}
+
+// NewUserUsageStatsClient returns a client for the UserUsageStats from the given config.
+func NewUserUsageStatsClient(c config) *UserUsageStatsClient {
+	return &UserUsageStatsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userusagestats.Hooks(f(g(h())))`.
+func (c *UserUsageStatsClient) Use(hooks ...Hook) {
+	c.hooks.UserUsageStats = append(c.hooks.UserUsageStats, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userusagestats.Intercept(f(g(h())))`.
+func (c *UserUsageStatsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserUsageStats = append(c.inters.UserUsageStats, interceptors...)
+}
+
+// Create returns a builder for creating a UserUsageStats entity.
+func (c *UserUsageStatsClient) Create() *UserUsageStatsCreate {
+	mutation := newUserUsageStatsMutation(c.config, OpCreate)
+	return &UserUsageStatsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserUsageStats entities.
+func (c *UserUsageStatsClient) CreateBulk(builders ...*UserUsageStatsCreate) *UserUsageStatsCreateBulk {
+	return &UserUsageStatsCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserUsageStatsClient) MapCreateBulk(slice any, setFunc func(*UserUsageStatsCreate, int)) *UserUsageStatsCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserUsageStatsCreateBulk{err: fmt.Errorf("calling to UserUsageStatsClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserUsageStatsCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserUsageStatsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserUsageStats.
+func (c *UserUsageStatsClient) Update() *UserUsageStatsUpdate {
+	mutation := newUserUsageStatsMutation(c.config, OpUpdate)
+	return &UserUsageStatsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserUsageStatsClient) UpdateOne(_m *UserUsageStats) *UserUsageStatsUpdateOne {
+	mutation := newUserUsageStatsMutation(c.config, OpUpdateOne, withUserUsageStats(_m))
+	return &UserUsageStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserUsageStatsClient) UpdateOneID(id int) *UserUsageStatsUpdateOne {
+	mutation := newUserUsageStatsMutation(c.config, OpUpdateOne, withUserUsageStatsID(id))
+	return &UserUsageStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserUsageStats.
+func (c *UserUsageStatsClient) Delete() *UserUsageStatsDelete {
+	mutation := newUserUsageStatsMutation(c.config, OpDelete)
+	return &UserUsageStatsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserUsageStatsClient) DeleteOne(_m *UserUsageStats) *UserUsageStatsDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserUsageStatsClient) DeleteOneID(id int) *UserUsageStatsDeleteOne {
+	builder := c.Delete().Where(userusagestats.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserUsageStatsDeleteOne{builder}
+}
+
+// Query returns a query builder for UserUsageStats.
+func (c *UserUsageStatsClient) Query() *UserUsageStatsQuery {
+	return &UserUsageStatsQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserUsageStats},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserUsageStats entity by its id.
+func (c *UserUsageStatsClient) Get(ctx context.Context, id int) (*UserUsageStats, error) {
+	return c.Query().Where(userusagestats.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserUsageStatsClient) GetX(ctx context.Context, id int) *UserUsageStats {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserUsageStats.
+func (c *UserUsageStatsClient) QueryUser(_m *UserUsageStats) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userusagestats.Table, userusagestats.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userusagestats.UserTable, userusagestats.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserUsageStatsClient) Hooks() []Hook {
+	return c.hooks.UserUsageStats
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserUsageStatsClient) Interceptors() []Interceptor {
+	return c.inters.UserUsageStats
+}
+
+func (c *UserUsageStatsClient) mutate(ctx context.Context, m *UserUsageStatsMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserUsageStatsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserUsageStatsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserUsageStatsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserUsageStatsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserUsageStats mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -5088,13 +5261,14 @@ type (
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Hook
+		Thread, Trace, UsageLog, User, UserProject, UserRole, UserUsageStats []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, User, UserProject, UserRole []ent.Interceptor
+		Thread, Trace, UsageLog, User, UserProject, UserRole,
+		UserUsageStats []ent.Interceptor
 	}
 )

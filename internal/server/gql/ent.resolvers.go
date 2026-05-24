@@ -1069,6 +1069,21 @@ func (r *userRoleResolver) RoleID(ctx context.Context, obj *ent.UserRole) (*obje
 	}, nil
 }
 
+// ID is the resolver for the id field.
+func (r *userUsageStatsResolver) ID(ctx context.Context, obj *ent.UserUsageStats) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UserID is the resolver for the userID field.
+func (r *userUsageStatsResolver) UserID(ctx context.Context, obj *ent.UserUsageStats) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserID - userID"))
+}
+
+// User is the resolver for the user field.
+func (r *userUsageStatsResolver) User(ctx context.Context, obj *ent.UserUsageStats) (*ent.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
+}
+
 // APIKey returns APIKeyResolver implementation.
 func (r *Resolver) APIKey() APIKeyResolver { return &aPIKeyResolver{r} }
 
@@ -1162,6 +1177,9 @@ func (r *Resolver) UserProject() UserProjectResolver { return &userProjectResolv
 // UserRole returns UserRoleResolver implementation.
 func (r *Resolver) UserRole() UserRoleResolver { return &userRoleResolver{r} }
 
+// UserUsageStats returns UserUsageStatsResolver implementation.
+func (r *Resolver) UserUsageStats() UserUsageStatsResolver { return &userUsageStatsResolver{r} }
+
 type aPIKeyResolver struct{ *Resolver }
 type aPIKeyProfileTemplateResolver struct{ *Resolver }
 type channelResolver struct{ *Resolver }
@@ -1189,3 +1207,4 @@ type usageLogResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
 type userProjectResolver struct{ *Resolver }
 type userRoleResolver struct{ *Resolver }
+type userUsageStatsResolver struct{ *Resolver }

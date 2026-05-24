@@ -1674,19 +1674,20 @@ func (c *UsageLogUpdateOne) SetInput(i UpdateUsageLogInput) *UsageLogUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Email           string
-	Status          *user.Status
-	PreferLanguage  *string
-	Password        string
-	FirstName       *string
-	LastName        *string
-	Avatar          *string
-	IsOwner         *bool
-	Scopes          []string
-	EmailVerifiedAt *time.Time
-	ProjectIDs      []int
-	RoleIDs         []int
-	EmailTokenIDs   []int
+	Email            string
+	Status           *user.Status
+	PreferLanguage   *string
+	Password         string
+	FirstName        *string
+	LastName         *string
+	Avatar           *string
+	IsOwner          *bool
+	Scopes           []string
+	EmailVerifiedAt  *time.Time
+	ProjectIDs       []int
+	RoleIDs          []int
+	EmailTokenIDs    []int
+	UserUsageStatIDs []int
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.
@@ -1726,6 +1727,9 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	if v := i.EmailTokenIDs; len(v) > 0 {
 		m.AddEmailTokenIDs(v...)
 	}
+	if v := i.UserUsageStatIDs; len(v) > 0 {
+		m.AddUserUsageStatIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the UserCreate builder.
@@ -1736,29 +1740,32 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Email                *string
-	Status               *user.Status
-	PreferLanguage       *string
-	Password             *string
-	FirstName            *string
-	LastName             *string
-	ClearAvatar          bool
-	Avatar               *string
-	IsOwner              *bool
-	ClearScopes          bool
-	Scopes               []string
-	AppendScopes         []string
-	ClearEmailVerifiedAt bool
-	EmailVerifiedAt      *time.Time
-	ClearProjects        bool
-	AddProjectIDs        []int
-	RemoveProjectIDs     []int
-	ClearRoles           bool
-	AddRoleIDs           []int
-	RemoveRoleIDs        []int
-	ClearEmailTokens     bool
-	AddEmailTokenIDs     []int
-	RemoveEmailTokenIDs  []int
+	Email                  *string
+	Status                 *user.Status
+	PreferLanguage         *string
+	Password               *string
+	FirstName              *string
+	LastName               *string
+	ClearAvatar            bool
+	Avatar                 *string
+	IsOwner                *bool
+	ClearScopes            bool
+	Scopes                 []string
+	AppendScopes           []string
+	ClearEmailVerifiedAt   bool
+	EmailVerifiedAt        *time.Time
+	ClearProjects          bool
+	AddProjectIDs          []int
+	RemoveProjectIDs       []int
+	ClearRoles             bool
+	AddRoleIDs             []int
+	RemoveRoleIDs          []int
+	ClearEmailTokens       bool
+	AddEmailTokenIDs       []int
+	RemoveEmailTokenIDs    []int
+	ClearUserUsageStats    bool
+	AddUserUsageStatIDs    []int
+	RemoveUserUsageStatIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation builder.
@@ -1831,6 +1838,15 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.RemoveEmailTokenIDs; len(v) > 0 {
 		m.RemoveEmailTokenIDs(v...)
+	}
+	if i.ClearUserUsageStats {
+		m.ClearUserUsageStats()
+	}
+	if v := i.AddUserUsageStatIDs; len(v) > 0 {
+		m.AddUserUsageStatIDs(v...)
+	}
+	if v := i.RemoveUserUsageStatIDs; len(v) > 0 {
+		m.RemoveUserUsageStatIDs(v...)
 	}
 }
 

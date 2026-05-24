@@ -32,6 +32,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 	"github.com/ldm2060/axonhub/internal/objects"
 
 	"entgo.io/ent"
@@ -1018,6 +1019,45 @@ func init() {
 	userrole.DefaultUpdatedAt = userroleDescUpdatedAt.Default.(func() time.Time)
 	// userrole.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	userrole.UpdateDefaultUpdatedAt = userroleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	userusagestatsMixin := schema.UserUsageStats{}.Mixin()
+	userusagestatsMixinFields0 := userusagestatsMixin[0].Fields()
+	_ = userusagestatsMixinFields0
+	userusagestatsFields := schema.UserUsageStats{}.Fields()
+	_ = userusagestatsFields
+	// userusagestatsDescCreatedAt is the schema descriptor for created_at field.
+	userusagestatsDescCreatedAt := userusagestatsMixinFields0[0].Descriptor()
+	// userusagestats.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userusagestats.DefaultCreatedAt = userusagestatsDescCreatedAt.Default.(func() time.Time)
+	// userusagestatsDescUpdatedAt is the schema descriptor for updated_at field.
+	userusagestatsDescUpdatedAt := userusagestatsMixinFields0[1].Descriptor()
+	// userusagestats.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userusagestats.DefaultUpdatedAt = userusagestatsDescUpdatedAt.Default.(func() time.Time)
+	// userusagestats.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	userusagestats.UpdateDefaultUpdatedAt = userusagestatsDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userusagestatsDescRequestCount is the schema descriptor for request_count field.
+	userusagestatsDescRequestCount := userusagestatsFields[1].Descriptor()
+	// userusagestats.DefaultRequestCount holds the default value on creation for the request_count field.
+	userusagestats.DefaultRequestCount = userusagestatsDescRequestCount.Default.(int)
+	// userusagestatsDescSuccessCount is the schema descriptor for success_count field.
+	userusagestatsDescSuccessCount := userusagestatsFields[2].Descriptor()
+	// userusagestats.DefaultSuccessCount holds the default value on creation for the success_count field.
+	userusagestats.DefaultSuccessCount = userusagestatsDescSuccessCount.Default.(int)
+	// userusagestatsDescPromptTokens is the schema descriptor for prompt_tokens field.
+	userusagestatsDescPromptTokens := userusagestatsFields[3].Descriptor()
+	// userusagestats.DefaultPromptTokens holds the default value on creation for the prompt_tokens field.
+	userusagestats.DefaultPromptTokens = userusagestatsDescPromptTokens.Default.(int64)
+	// userusagestatsDescCompletionTokens is the schema descriptor for completion_tokens field.
+	userusagestatsDescCompletionTokens := userusagestatsFields[4].Descriptor()
+	// userusagestats.DefaultCompletionTokens holds the default value on creation for the completion_tokens field.
+	userusagestats.DefaultCompletionTokens = userusagestatsDescCompletionTokens.Default.(int64)
+	// userusagestatsDescTotalTokens is the schema descriptor for total_tokens field.
+	userusagestatsDescTotalTokens := userusagestatsFields[5].Descriptor()
+	// userusagestats.DefaultTotalTokens holds the default value on creation for the total_tokens field.
+	userusagestats.DefaultTotalTokens = userusagestatsDescTotalTokens.Default.(int64)
+	// userusagestatsDescTotalCost is the schema descriptor for total_cost field.
+	userusagestatsDescTotalCost := userusagestatsFields[6].Descriptor()
+	// userusagestats.DefaultTotalCost holds the default value on creation for the total_cost field.
+	userusagestats.DefaultTotalCost = userusagestatsDescTotalCost.Default.(float64)
 }
 
 const (

@@ -940,6 +940,18 @@ func (_m *User) EmailTokens(ctx context.Context) (result []*EmailToken, err erro
 	return result, err
 }
 
+func (_m *User) UserUsageStats(ctx context.Context) (result []*UserUsageStats, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedUserUsageStats(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.UserUsageStatsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUserUsageStats().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -948,7 +960,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[11][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[12][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -969,7 +981,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[12][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[13][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {
@@ -1010,6 +1022,14 @@ func (_m *UserRole) Role(ctx context.Context) (*Role, error) {
 	result, err := _m.Edges.RoleOrErr()
 	if IsNotLoaded(err) {
 		result, err = _m.QueryRole().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UserUsageStats) User(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.UserOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUser().Only(ctx)
 	}
 	return result, err
 }

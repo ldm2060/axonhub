@@ -26,6 +26,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // UserQuery is the builder for querying User entities.
@@ -46,6 +47,7 @@ type UserQuery struct {
 	withChannelOverrideTemplates      *ChannelOverrideTemplateQuery
 	withOidcIdentities                *OIDCIdentityQuery
 	withEmailTokens                   *EmailTokenQuery
+	withUserUsageStats                *UserUsageStatsQuery
 	withProjectUsers                  *UserProjectQuery
 	withUserRoles                     *UserRoleQuery
 	loadTotal                         []func(context.Context, []*User) error
@@ -60,6 +62,7 @@ type UserQuery struct {
 	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
 	withNamedOidcIdentities           map[string]*OIDCIdentityQuery
 	withNamedEmailTokens              map[string]*EmailTokenQuery
+	withNamedUserUsageStats           map[string]*UserUsageStatsQuery
 	withNamedProjectUsers             map[string]*UserProjectQuery
 	withNamedUserRoles                map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
@@ -340,6 +343,28 @@ func (_q *UserQuery) QueryEmailTokens() *EmailTokenQuery {
 	return query
 }
 
+// QueryUserUsageStats chains the current query on the "user_usage_stats" edge.
+func (_q *UserQuery) QueryUserUsageStats() *UserUsageStatsQuery {
+	query := (&UserUsageStatsClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userusagestats.Table, userusagestats.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserUsageStatsTable, user.UserUsageStatsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProjectUsers chains the current query on the "project_users" edge.
 func (_q *UserQuery) QueryProjectUsers() *UserProjectQuery {
 	query := (&UserProjectClient{config: _q.config}).Query()
@@ -587,6 +612,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withChannelOverrideTemplates: _q.withChannelOverrideTemplates.Clone(),
 		withOidcIdentities:           _q.withOidcIdentities.Clone(),
 		withEmailTokens:              _q.withEmailTokens.Clone(),
+		withUserUsageStats:           _q.withUserUsageStats.Clone(),
 		withProjectUsers:             _q.withProjectUsers.Clone(),
 		withUserRoles:                _q.withUserRoles.Clone(),
 		// clone intermediate query.
@@ -717,6 +743,17 @@ func (_q *UserQuery) WithEmailTokens(opts ...func(*EmailTokenQuery)) *UserQuery 
 	return _q
 }
 
+// WithUserUsageStats tells the query-builder to eager-load the nodes that are connected to
+// the "user_usage_stats" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUserUsageStats(opts ...func(*UserUsageStatsQuery)) *UserQuery {
+	query := (&UserUsageStatsClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUserUsageStats = query
+	return _q
+}
+
 // WithProjectUsers tells the query-builder to eager-load the nodes that are connected to
 // the "project_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithProjectUsers(opts ...func(*UserProjectQuery)) *UserQuery {
@@ -823,7 +860,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [13]bool{
+		loadedTypes = [14]bool{
 			_q.withProjects != nil,
 			_q.withOwnedChannels != nil,
 			_q.withOwnedModels != nil,
@@ -835,6 +872,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withChannelOverrideTemplates != nil,
 			_q.withOidcIdentities != nil,
 			_q.withEmailTokens != nil,
+			_q.withUserUsageStats != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -938,6 +976,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withUserUsageStats; query != nil {
+		if err := _q.loadUserUsageStats(ctx, query, nodes,
+			func(n *User) { n.Edges.UserUsageStats = []*UserUsageStats{} },
+			func(n *User, e *UserUsageStats) { n.Edges.UserUsageStats = append(n.Edges.UserUsageStats, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -1019,6 +1064,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadEmailTokens(ctx, query, nodes,
 			func(n *User) { n.appendNamedEmailTokens(name) },
 			func(n *User, e *EmailToken) { n.appendNamedEmailTokens(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUserUsageStats {
+		if err := _q.loadUserUsageStats(ctx, query, nodes,
+			func(n *User) { n.appendNamedUserUsageStats(name) },
+			func(n *User, e *UserUsageStats) { n.appendNamedUserUsageStats(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1441,6 +1493,36 @@ func (_q *UserQuery) loadEmailTokens(ctx context.Context, query *EmailTokenQuery
 	}
 	return nil
 }
+func (_q *UserQuery) loadUserUsageStats(ctx context.Context, query *UserUsageStatsQuery, nodes []*User, init func(*User), assign func(*User, *UserUsageStats)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userusagestats.FieldUserID)
+	}
+	query.Where(predicate.UserUsageStats(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserUsageStatsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1735,6 +1817,20 @@ func (_q *UserQuery) WithNamedEmailTokens(name string, opts ...func(*EmailTokenQ
 		_q.withNamedEmailTokens = make(map[string]*EmailTokenQuery)
 	}
 	_q.withNamedEmailTokens[name] = query
+	return _q
+}
+
+// WithNamedUserUsageStats tells the query-builder to eager-load the nodes that are connected to the "user_usage_stats"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedUserUsageStats(name string, opts ...func(*UserUsageStatsQuery)) *UserQuery {
+	query := (&UserUsageStatsClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUserUsageStats == nil {
+		_q.withNamedUserUsageStats = make(map[string]*UserUsageStatsQuery)
+	}
+	_q.withNamedUserUsageStats[name] = query
 	return _q
 }
 

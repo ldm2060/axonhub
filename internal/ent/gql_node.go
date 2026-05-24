@@ -40,6 +40,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -178,6 +179,11 @@ var userroleImplementors = []string{"UserRole", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*UserRole) IsNode() {}
+
+var userusagestatsImplementors = []string{"UserUsageStats", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UserUsageStats) IsNode() {}
 
 var errNodeInvalidID = &NotFoundError{"node"}
 
@@ -467,6 +473,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(userrole.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, userroleImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case userusagestats.Table:
+		query := c.UserUsageStats.Query().
+			Where(userusagestats.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, userusagestatsImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -948,6 +963,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.UserRole.Query().
 			Where(userrole.IDIn(ids...))
 		query, err := query.CollectFields(ctx, userroleImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case userusagestats.Table:
+		query := c.UserUsageStats.Query().
+			Where(userusagestats.IDIn(ids...))
+		query, err := query.CollectFields(ctx, userusagestatsImplementors...)
 		if err != nil {
 			return nil, err
 		}

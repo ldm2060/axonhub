@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -358,6 +359,21 @@ func (_c *UserCreate) AddEmailTokens(v ...*EmailToken) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddEmailTokenIDs(ids...)
+}
+
+// AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
+func (_c *UserCreate) AddUserUsageStatIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUserUsageStatIDs(ids...)
+	return _c
+}
+
+// AddUserUsageStats adds the "user_usage_stats" edges to the UserUsageStats entity.
+func (_c *UserCreate) AddUserUsageStats(v ...*UserUsageStats) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUserUsageStatIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -760,6 +776,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(emailtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UserUsageStatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

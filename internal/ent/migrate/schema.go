@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -1095,6 +1096,41 @@ var (
 			},
 		},
 	}
+	// UserUsageStatsColumns holds the columns for the "user_usage_stats" table.
+	UserUsageStatsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "request_count", Type: field.TypeInt, Default: 0},
+		{Name: "success_count", Type: field.TypeInt, Default: 0},
+		{Name: "prompt_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "completion_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "total_tokens", Type: field.TypeInt64, Default: 0},
+		{Name: "total_cost", Type: field.TypeFloat64, Default: 0},
+		{Name: "last_active_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// UserUsageStatsTable holds the schema information for the "user_usage_stats" table.
+	UserUsageStatsTable = &schema.Table{
+		Name:       "user_usage_stats",
+		Columns:    UserUsageStatsColumns,
+		PrimaryKey: []*schema.Column{UserUsageStatsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_usage_stats_users_user_usage_stats",
+				Columns:    []*schema.Column{UserUsageStatsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userusagestats_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserUsageStatsColumns[10]},
+			},
+		},
+	}
 	// ProjectPromptsColumns holds the columns for the "project_prompts" table.
 	ProjectPromptsColumns = []*schema.Column{
 		{Name: "project_id", Type: field.TypeInt},
@@ -1148,6 +1184,7 @@ var (
 		UsersTable,
 		UserProjectsTable,
 		UserRolesTable,
+		UserUsageStatsTable,
 		ProjectPromptsTable,
 	}
 )
@@ -1187,6 +1224,10 @@ func init() {
 	UserProjectsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
+	UserUsageStatsTable.ForeignKeys[0].RefTable = UsersTable
+	UserUsageStatsTable.Annotation = &entsql.Annotation{
+		Table: "user_usage_stats",
+	}
 	ProjectPromptsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectPromptsTable.ForeignKeys[1].RefTable = PromptsTable
 }

@@ -77,15 +77,17 @@ type UserEdges struct {
 	OidcIdentities []*OIDCIdentity `json:"oidc_identities,omitempty"`
 	// EmailTokens holds the value of the email_tokens edge.
 	EmailTokens []*EmailToken `json:"email_tokens,omitempty"`
+	// UserUsageStats holds the value of the user_usage_stats edge.
+	UserUsageStats []*UserUsageStats `json:"user_usage_stats,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [13]bool
+	loadedTypes [14]bool
 	// totalCount holds the count of the edges above.
-	totalCount [13]map[string]int
+	totalCount [14]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedOwnedChannels            map[string][]*Channel
@@ -97,6 +99,7 @@ type UserEdges struct {
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
 	namedOidcIdentities           map[string][]*OIDCIdentity
 	namedEmailTokens              map[string][]*EmailToken
+	namedUserUsageStats           map[string][]*UserUsageStats
 	namedProjectUsers             map[string][]*UserProject
 	namedUserRoles                map[string][]*UserRole
 }
@@ -202,10 +205,19 @@ func (e UserEdges) EmailTokensOrErr() ([]*EmailToken, error) {
 	return nil, &NotLoadedError{edge: "email_tokens"}
 }
 
+// UserUsageStatsOrErr returns the UserUsageStats value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserUsageStatsOrErr() ([]*UserUsageStats, error) {
+	if e.loadedTypes[11] {
+		return e.UserUsageStats, nil
+	}
+	return nil, &NotLoadedError{edge: "user_usage_stats"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[12] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -214,7 +226,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[13] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -410,6 +422,11 @@ func (_m *User) QueryOidcIdentities() *OIDCIdentityQuery {
 // QueryEmailTokens queries the "email_tokens" edge of the User entity.
 func (_m *User) QueryEmailTokens() *EmailTokenQuery {
 	return NewUserClient(_m.config).QueryEmailTokens(_m)
+}
+
+// QueryUserUsageStats queries the "user_usage_stats" edge of the User entity.
+func (_m *User) QueryUserUsageStats() *UserUsageStatsQuery {
+	return NewUserClient(_m.config).QueryUserUsageStats(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -730,6 +747,30 @@ func (_m *User) appendNamedEmailTokens(name string, edges ...*EmailToken) {
 		_m.Edges.namedEmailTokens[name] = []*EmailToken{}
 	} else {
 		_m.Edges.namedEmailTokens[name] = append(_m.Edges.namedEmailTokens[name], edges...)
+	}
+}
+
+// NamedUserUsageStats returns the UserUsageStats named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedUserUsageStats(name string) ([]*UserUsageStats, error) {
+	if _m.Edges.namedUserUsageStats == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUserUsageStats[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedUserUsageStats(name string, edges ...*UserUsageStats) {
+	if _m.Edges.namedUserUsageStats == nil {
+		_m.Edges.namedUserUsageStats = make(map[string][]*UserUsageStats)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUserUsageStats[name] = []*UserUsageStats{}
+	} else {
+		_m.Edges.namedUserUsageStats[name] = append(_m.Edges.namedUserUsageStats[name], edges...)
 	}
 }
 

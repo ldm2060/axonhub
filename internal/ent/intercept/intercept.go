@@ -35,6 +35,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -795,6 +796,33 @@ func (f TraverseUserRole) Traverse(ctx context.Context, q ent.Query) error {
 	return fmt.Errorf("unexpected query type %T. expect *ent.UserRoleQuery", q)
 }
 
+// The UserUsageStatsFunc type is an adapter to allow the use of ordinary function as a Querier.
+type UserUsageStatsFunc func(context.Context, *ent.UserUsageStatsQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f UserUsageStatsFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.UserUsageStatsQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.UserUsageStatsQuery", q)
+}
+
+// The TraverseUserUsageStats type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseUserUsageStats func(context.Context, *ent.UserUsageStatsQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseUserUsageStats) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseUserUsageStats) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.UserUsageStatsQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.UserUsageStatsQuery", q)
+}
+
 // NewQuery returns the generic Query interface for the given typed query.
 func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
@@ -850,6 +878,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.UserProjectQuery, predicate.UserProject, userproject.OrderOption]{typ: ent.TypeUserProject, tq: q}, nil
 	case *ent.UserRoleQuery:
 		return &query[*ent.UserRoleQuery, predicate.UserRole, userrole.OrderOption]{typ: ent.TypeUserRole, tq: q}, nil
+	case *ent.UserUsageStatsQuery:
+		return &query[*ent.UserUsageStatsQuery, predicate.UserUsageStats, userusagestats.OrderOption]{typ: ent.TypeUserUsageStats, tq: q}, nil
 	default:
 		return nil, fmt.Errorf("unknown query type %T", q)
 	}

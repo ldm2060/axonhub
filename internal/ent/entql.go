@@ -30,6 +30,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -39,7 +40,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 26)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 27)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -654,6 +655,29 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldRoleID:    {Type: field.TypeInt, Column: userrole.FieldRoleID},
 			userrole.FieldCreatedAt: {Type: field.TypeTime, Column: userrole.FieldCreatedAt},
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
+		},
+	}
+	graph.Nodes[26] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   userusagestats.Table,
+			Columns: userusagestats.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: userusagestats.FieldID,
+			},
+		},
+		Type: "UserUsageStats",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			userusagestats.FieldCreatedAt:        {Type: field.TypeTime, Column: userusagestats.FieldCreatedAt},
+			userusagestats.FieldUpdatedAt:        {Type: field.TypeTime, Column: userusagestats.FieldUpdatedAt},
+			userusagestats.FieldUserID:           {Type: field.TypeInt, Column: userusagestats.FieldUserID},
+			userusagestats.FieldRequestCount:     {Type: field.TypeInt, Column: userusagestats.FieldRequestCount},
+			userusagestats.FieldSuccessCount:     {Type: field.TypeInt, Column: userusagestats.FieldSuccessCount},
+			userusagestats.FieldPromptTokens:     {Type: field.TypeInt64, Column: userusagestats.FieldPromptTokens},
+			userusagestats.FieldCompletionTokens: {Type: field.TypeInt64, Column: userusagestats.FieldCompletionTokens},
+			userusagestats.FieldTotalTokens:      {Type: field.TypeInt64, Column: userusagestats.FieldTotalTokens},
+			userusagestats.FieldTotalCost:        {Type: field.TypeFloat64, Column: userusagestats.FieldTotalCost},
+			userusagestats.FieldLastActiveAt:     {Type: field.TypeTime, Column: userusagestats.FieldLastActiveAt},
 		},
 	}
 	graph.MustAddE(
@@ -1461,6 +1485,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"EmailToken",
 	)
 	graph.MustAddE(
+		"user_usage_stats",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"UserUsageStats",
+	)
+	graph.MustAddE(
 		"project_users",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1531,6 +1567,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"UserRole",
 		"Role",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   userusagestats.UserTable,
+			Columns: []string{userusagestats.UserColumn},
+			Bidi:    false,
+		},
+		"UserUsageStats",
+		"User",
 	)
 	return graph
 }()
@@ -4779,6 +4827,20 @@ func (f *UserFilter) WhereHasEmailTokensWith(preds ...predicate.EmailToken) {
 	})))
 }
 
+// WhereHasUserUsageStats applies a predicate to check if query has an edge user_usage_stats.
+func (f *UserFilter) WhereHasUserUsageStats() {
+	f.Where(entql.HasEdge("user_usage_stats"))
+}
+
+// WhereHasUserUsageStatsWith applies a predicate to check if query has an edge user_usage_stats with a given conditions (other predicates).
+func (f *UserFilter) WhereHasUserUsageStatsWith(preds ...predicate.UserUsageStats) {
+	f.Where(entql.HasEdgeWith("user_usage_stats", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -4987,6 +5049,110 @@ func (f *UserRoleFilter) WhereHasRole() {
 // WhereHasRoleWith applies a predicate to check if query has an edge role with a given conditions (other predicates).
 func (f *UserRoleFilter) WhereHasRoleWith(preds ...predicate.Role) {
 	f.Where(entql.HasEdgeWith("role", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (_q *UserUsageStatsQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UserUsageStatsQuery builder.
+func (_q *UserUsageStatsQuery) Filter() *UserUsageStatsFilter {
+	return &UserUsageStatsFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UserUsageStatsMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UserUsageStatsMutation builder.
+func (m *UserUsageStatsMutation) Filter() *UserUsageStatsFilter {
+	return &UserUsageStatsFilter{config: m.config, predicateAdder: m}
+}
+
+// UserUsageStatsFilter provides a generic filtering capability at runtime for UserUsageStatsQuery.
+type UserUsageStatsFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UserUsageStatsFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UserUsageStatsFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(userusagestats.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UserUsageStatsFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(userusagestats.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UserUsageStatsFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(userusagestats.FieldUpdatedAt))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *UserUsageStatsFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(userusagestats.FieldUserID))
+}
+
+// WhereRequestCount applies the entql int predicate on the request_count field.
+func (f *UserUsageStatsFilter) WhereRequestCount(p entql.IntP) {
+	f.Where(p.Field(userusagestats.FieldRequestCount))
+}
+
+// WhereSuccessCount applies the entql int predicate on the success_count field.
+func (f *UserUsageStatsFilter) WhereSuccessCount(p entql.IntP) {
+	f.Where(p.Field(userusagestats.FieldSuccessCount))
+}
+
+// WherePromptTokens applies the entql int64 predicate on the prompt_tokens field.
+func (f *UserUsageStatsFilter) WherePromptTokens(p entql.Int64P) {
+	f.Where(p.Field(userusagestats.FieldPromptTokens))
+}
+
+// WhereCompletionTokens applies the entql int64 predicate on the completion_tokens field.
+func (f *UserUsageStatsFilter) WhereCompletionTokens(p entql.Int64P) {
+	f.Where(p.Field(userusagestats.FieldCompletionTokens))
+}
+
+// WhereTotalTokens applies the entql int64 predicate on the total_tokens field.
+func (f *UserUsageStatsFilter) WhereTotalTokens(p entql.Int64P) {
+	f.Where(p.Field(userusagestats.FieldTotalTokens))
+}
+
+// WhereTotalCost applies the entql float64 predicate on the total_cost field.
+func (f *UserUsageStatsFilter) WhereTotalCost(p entql.Float64P) {
+	f.Where(p.Field(userusagestats.FieldTotalCost))
+}
+
+// WhereLastActiveAt applies the entql time.Time predicate on the last_active_at field.
+func (f *UserUsageStatsFilter) WhereLastActiveAt(p entql.TimeP) {
+	f.Where(p.Field(userusagestats.FieldLastActiveAt))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *UserUsageStatsFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *UserUsageStatsFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

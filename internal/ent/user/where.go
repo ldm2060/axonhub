@@ -1008,6 +1008,29 @@ func HasEmailTokensWith(preds ...predicate.EmailToken) predicate.User {
 	})
 }
 
+// HasUserUsageStats applies the HasEdge predicate on the "user_usage_stats" edge.
+func HasUserUsageStats() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UserUsageStatsTable, UserUsageStatsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserUsageStatsWith applies the HasEdge predicate on the "user_usage_stats" edge with a given conditions (other predicates).
+func HasUserUsageStatsWith(preds ...predicate.UserUsageStats) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUserUsageStatsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProjectUsers applies the HasEdge predicate on the "project_users" edge.
 func HasProjectUsers() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

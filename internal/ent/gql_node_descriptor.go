@@ -30,6 +30,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // Node in the graph.
@@ -2808,7 +2809,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "User",
 		Fields: make([]*Field, 13),
-		Edges:  make([]*Edge, 13),
+		Edges:  make([]*Edge, 14),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -3026,22 +3027,32 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[11] = &Edge{
-		Type: "UserProject",
-		Name: "project_users",
+		Type: "UserUsageStats",
+		Name: "user_usage_stats",
 	}
-	err = _m.QueryProjectUsers().
-		Select(userproject.FieldID).
+	err = _m.QueryUserUsageStats().
+		Select(userusagestats.FieldID).
 		Scan(ctx, &node.Edges[11].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[12] = &Edge{
+		Type: "UserProject",
+		Name: "project_users",
+	}
+	err = _m.QueryProjectUsers().
+		Select(userproject.FieldID).
+		Scan(ctx, &node.Edges[12].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[13] = &Edge{
 		Type: "UserRole",
 		Name: "user_roles",
 	}
 	err = _m.QueryUserRoles().
 		Select(userrole.FieldID).
-		Scan(ctx, &node.Edges[12].IDs)
+		Scan(ctx, &node.Edges[13].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -3186,6 +3197,108 @@ func (_m *UserRole) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryRole().
 		Select(role.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *UserUsageStats) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UserUsageStats",
+		Fields: make([]*Field, 10),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserID); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "user_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RequestCount); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "request_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.SuccessCount); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "success_count",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PromptTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "int64",
+		Name:  "prompt_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.CompletionTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "int64",
+		Name:  "completion_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TotalTokens); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "int64",
+		Name:  "total_tokens",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TotalCost); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "float64",
+		Name:  "total_cost",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastActiveAt); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "time.Time",
+		Name:  "last_active_at",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "user",
+	}
+	err = _m.QueryUser().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {
 		return nil, err
 	}

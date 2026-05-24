@@ -25,6 +25,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
+	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -399,6 +400,21 @@ func (_u *UserUpdate) AddEmailTokens(v ...*EmailToken) *UserUpdate {
 	return _u.AddEmailTokenIDs(ids...)
 }
 
+// AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
+func (_u *UserUpdate) AddUserUsageStatIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddUserUsageStatIDs(ids...)
+	return _u
+}
+
+// AddUserUsageStats adds the "user_usage_stats" edges to the UserUsageStats entity.
+func (_u *UserUpdate) AddUserUsageStats(v ...*UserUsageStats) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserUsageStatIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdate) AddProjectUserIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -648,6 +664,27 @@ func (_u *UserUpdate) RemoveEmailTokens(v ...*EmailToken) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveEmailTokenIDs(ids...)
+}
+
+// ClearUserUsageStats clears all "user_usage_stats" edges to the UserUsageStats entity.
+func (_u *UserUpdate) ClearUserUsageStats() *UserUpdate {
+	_u.mutation.ClearUserUsageStats()
+	return _u
+}
+
+// RemoveUserUsageStatIDs removes the "user_usage_stats" edge to UserUsageStats entities by IDs.
+func (_u *UserUpdate) RemoveUserUsageStatIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveUserUsageStatIDs(ids...)
+	return _u
+}
+
+// RemoveUserUsageStats removes "user_usage_stats" edges to UserUsageStats entities.
+func (_u *UserUpdate) RemoveUserUsageStats(v ...*UserUsageStats) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserUsageStatIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -1318,6 +1355,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.UserUsageStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUserUsageStatsIDs(); len(nodes) > 0 && !_u.mutation.UserUsageStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserUsageStatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.ProjectUsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1788,6 +1870,21 @@ func (_u *UserUpdateOne) AddEmailTokens(v ...*EmailToken) *UserUpdateOne {
 	return _u.AddEmailTokenIDs(ids...)
 }
 
+// AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
+func (_u *UserUpdateOne) AddUserUsageStatIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddUserUsageStatIDs(ids...)
+	return _u
+}
+
+// AddUserUsageStats adds the "user_usage_stats" edges to the UserUsageStats entity.
+func (_u *UserUpdateOne) AddUserUsageStats(v ...*UserUsageStats) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUserUsageStatIDs(ids...)
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
 func (_u *UserUpdateOne) AddProjectUserIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddProjectUserIDs(ids...)
@@ -2037,6 +2134,27 @@ func (_u *UserUpdateOne) RemoveEmailTokens(v ...*EmailToken) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveEmailTokenIDs(ids...)
+}
+
+// ClearUserUsageStats clears all "user_usage_stats" edges to the UserUsageStats entity.
+func (_u *UserUpdateOne) ClearUserUsageStats() *UserUpdateOne {
+	_u.mutation.ClearUserUsageStats()
+	return _u
+}
+
+// RemoveUserUsageStatIDs removes the "user_usage_stats" edge to UserUsageStats entities by IDs.
+func (_u *UserUpdateOne) RemoveUserUsageStatIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveUserUsageStatIDs(ids...)
+	return _u
+}
+
+// RemoveUserUsageStats removes "user_usage_stats" edges to UserUsageStats entities.
+func (_u *UserUpdateOne) RemoveUserUsageStats(v ...*UserUsageStats) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUserUsageStatIDs(ids...)
 }
 
 // ClearProjectUsers clears all "project_users" edges to the UserProject entity.
@@ -2730,6 +2848,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(emailtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UserUsageStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUserUsageStatsIDs(); len(nodes) > 0 && !_u.mutation.UserUsageStatsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserUsageStatsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserUsageStatsTable,
+			Columns: []string{user.UserUsageStatsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
