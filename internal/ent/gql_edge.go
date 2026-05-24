@@ -247,7 +247,7 @@ func (_m *EmailToken) User(ctx context.Context) (*User, error) {
 	if IsNotLoaded(err) {
 		result, err = _m.QueryUser().Only(ctx)
 	}
-	return result, err
+	return result, MaskNotFound(err)
 }
 
 func (_m *Model) Owner(ctx context.Context) (*User, error) {

@@ -2,7 +2,10 @@ package biz
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,6 +36,18 @@ func NewEmailTokenService(params EmailTokenServiceParams) *EmailTokenService {
 	}
 }
 
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func generateEmailCode() (string, error) {
+	value, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return "", fmt.Errorf("generate email code: %w", err)
+	}
+	return fmt.Sprintf("%06d", value.Int64()), nil
+}
+
 // CreateToken generates a UUID token, stores it with a 24-hour expiry, and returns the token string.
 func (s *EmailTokenService) CreateToken(ctx context.Context, userID int, tokenType emailtoken.Type) (string, error) {
 	token := uuid.New().String()
@@ -57,12 +72,86 @@ func (s *EmailTokenService) ValidateToken(ctx context.Context, token string, tok
 			emailtoken.TypeEQ(tokenType),
 			emailtoken.ExpiresAtGT(xtime.UTCNow()),
 			emailtoken.ConsumedAtIsNil(),
+			emailtoken.UserIDNotNil(),
 		).
 		Only(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("validate email token: %w", err)
 	}
-	return t.UserID, nil
+	return *t.UserID, nil
+}
+
+func (s *EmailTokenService) CreateEmailCode(ctx context.Context, email string, tokenType emailtoken.Type, ttl time.Duration) (string, error) {
+	normalizedEmail := normalizeEmail(email)
+	client := s.entFromContext(ctx)
+
+	_, err := client.EmailToken.Update().
+		Where(
+			emailtoken.TypeEQ(tokenType),
+			emailtoken.EmailEQ(normalizedEmail),
+			emailtoken.ConsumedAtIsNil(),
+		).
+		SetConsumedAt(xtime.UTCNow()).
+		Save(ctx)
+	if err != nil {
+		return "", fmt.Errorf("consume previous email codes: %w", err)
+	}
+
+	var lastErr error
+	for range 5 {
+		code, err := generateEmailCode()
+		if err != nil {
+			return "", err
+		}
+		_, err = client.EmailToken.Create().
+			SetToken(code).
+			SetType(tokenType).
+			SetEmail(normalizedEmail).
+			SetExpiresAt(xtime.UTCNow().Add(ttl)).
+			Save(ctx)
+		if err == nil {
+			return code, nil
+		}
+		lastErr = err
+	}
+
+	return "", fmt.Errorf("create email code: %w", lastErr)
+}
+
+func (s *EmailTokenService) ValidateEmailCode(ctx context.Context, email, code string, tokenType emailtoken.Type) (*ent.EmailToken, error) {
+	t, err := s.entFromContext(ctx).EmailToken.Query().
+		Where(
+			emailtoken.Token(code),
+			emailtoken.TypeEQ(tokenType),
+			emailtoken.EmailEQ(normalizeEmail(email)),
+			emailtoken.ExpiresAtGT(xtime.UTCNow()),
+			emailtoken.ConsumedAtIsNil(),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("validate email code: %w", err)
+	}
+	return t, nil
+}
+
+func (s *EmailTokenService) ConsumeEmailCode(ctx context.Context, email, code string, tokenType emailtoken.Type) error {
+	updated, err := s.entFromContext(ctx).EmailToken.Update().
+		Where(
+			emailtoken.Token(code),
+			emailtoken.TypeEQ(tokenType),
+			emailtoken.EmailEQ(normalizeEmail(email)),
+			emailtoken.ExpiresAtGT(xtime.UTCNow()),
+			emailtoken.ConsumedAtIsNil(),
+		).
+		SetConsumedAt(xtime.UTCNow()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("consume email code: %w", err)
+	}
+	if updated != 1 {
+		return fmt.Errorf("consume email code: token not found")
+	}
+	return nil
 }
 
 // ConsumeToken marks a token as consumed by setting consumed_at to the current time.

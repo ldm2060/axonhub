@@ -1829,6 +1829,11 @@ func (_q *EmailTokenQuery) collectField(ctx context.Context, oneNode bool, opCtx
 				selectedFields = append(selectedFields, emailtoken.FieldType)
 				fieldSeen[emailtoken.FieldType] = struct{}{}
 			}
+		case "email":
+			if _, ok := fieldSeen[emailtoken.FieldEmail]; !ok {
+				selectedFields = append(selectedFields, emailtoken.FieldEmail)
+				fieldSeen[emailtoken.FieldEmail] = struct{}{}
+			}
 		case "expiresAt":
 			if _, ok := fieldSeen[emailtoken.FieldExpiresAt]; !ok {
 				selectedFields = append(selectedFields, emailtoken.FieldExpiresAt)

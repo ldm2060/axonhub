@@ -416,7 +416,10 @@ func (_q *EmailTokenQuery) loadUser(ctx context.Context, query *UserQuery, nodes
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*EmailToken)
 	for i := range nodes {
-		fk := nodes[i].UserID
+		if nodes[i].UserID == nil {
+			continue
+		}
+		fk := *nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}

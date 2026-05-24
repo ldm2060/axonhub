@@ -25,6 +25,8 @@ const (
 	FieldToken = "token"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
 	FieldExpiresAt = "expires_at"
 	// FieldConsumedAt holds the string denoting the consumed_at field in the database.
@@ -51,6 +53,7 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldToken,
 	FieldType,
+	FieldEmail,
 	FieldExpiresAt,
 	FieldConsumedAt,
 	FieldUserID,
@@ -126,6 +129,11 @@ func ByToken(opts ...sql.OrderTermOption) OrderOption {
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByEmail orders the results by the email field.
+func ByEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
 // ByExpiresAt orders the results by the expires_at field.

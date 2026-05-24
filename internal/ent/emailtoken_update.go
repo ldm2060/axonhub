@@ -64,6 +64,26 @@ func (_u *EmailTokenUpdate) SetNillableType(v *emailtoken.Type) *EmailTokenUpdat
 	return _u
 }
 
+// SetEmail sets the "email" field.
+func (_u *EmailTokenUpdate) SetEmail(v string) *EmailTokenUpdate {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *EmailTokenUpdate) SetNillableEmail(v *string) *EmailTokenUpdate {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *EmailTokenUpdate) ClearEmail() *EmailTokenUpdate {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_u *EmailTokenUpdate) SetExpiresAt(v time.Time) *EmailTokenUpdate {
 	_u.mutation.SetExpiresAt(v)
@@ -109,6 +129,12 @@ func (_u *EmailTokenUpdate) SetNillableUserID(v *int) *EmailTokenUpdate {
 	if v != nil {
 		_u.SetUserID(*v)
 	}
+	return _u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (_u *EmailTokenUpdate) ClearUserID() *EmailTokenUpdate {
+	_u.mutation.ClearUserID()
 	return _u
 }
 
@@ -176,9 +202,6 @@ func (_u *EmailTokenUpdate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "EmailToken.type": %w`, err)}
 		}
 	}
-	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "EmailToken.user"`)
-	}
 	return nil
 }
 
@@ -208,6 +231,12 @@ func (_u *EmailTokenUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(emailtoken.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(emailtoken.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(emailtoken.FieldEmail, field.TypeString)
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(emailtoken.FieldExpiresAt, field.TypeTime, value)
@@ -303,6 +332,26 @@ func (_u *EmailTokenUpdateOne) SetNillableType(v *emailtoken.Type) *EmailTokenUp
 	return _u
 }
 
+// SetEmail sets the "email" field.
+func (_u *EmailTokenUpdateOne) SetEmail(v string) *EmailTokenUpdateOne {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *EmailTokenUpdateOne) SetNillableEmail(v *string) *EmailTokenUpdateOne {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *EmailTokenUpdateOne) ClearEmail() *EmailTokenUpdateOne {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_u *EmailTokenUpdateOne) SetExpiresAt(v time.Time) *EmailTokenUpdateOne {
 	_u.mutation.SetExpiresAt(v)
@@ -348,6 +397,12 @@ func (_u *EmailTokenUpdateOne) SetNillableUserID(v *int) *EmailTokenUpdateOne {
 	if v != nil {
 		_u.SetUserID(*v)
 	}
+	return _u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (_u *EmailTokenUpdateOne) ClearUserID() *EmailTokenUpdateOne {
+	_u.mutation.ClearUserID()
 	return _u
 }
 
@@ -428,9 +483,6 @@ func (_u *EmailTokenUpdateOne) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "EmailToken.type": %w`, err)}
 		}
 	}
-	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "EmailToken.user"`)
-	}
 	return nil
 }
 
@@ -477,6 +529,12 @@ func (_u *EmailTokenUpdateOne) sqlSave(ctx context.Context) (_node *EmailToken, 
 	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(emailtoken.FieldType, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(emailtoken.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(emailtoken.FieldEmail, field.TypeString)
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(emailtoken.FieldExpiresAt, field.TypeTime, value)

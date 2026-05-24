@@ -9126,6 +9126,7 @@ type EmailTokenMutation struct {
 	updated_at    *time.Time
 	token         *string
 	_type         *emailtoken.Type
+	email         *string
 	expires_at    *time.Time
 	consumed_at   *time.Time
 	clearedFields map[string]struct{}
@@ -9378,6 +9379,55 @@ func (m *EmailTokenMutation) ResetType() {
 	m._type = nil
 }
 
+// SetEmail sets the "email" field.
+func (m *EmailTokenMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *EmailTokenMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the EmailToken entity.
+// If the EmailToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EmailTokenMutation) OldEmail(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ClearEmail clears the value of the "email" field.
+func (m *EmailTokenMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[emailtoken.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *EmailTokenMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[emailtoken.FieldEmail]
+	return ok
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *EmailTokenMutation) ResetEmail() {
+	m.email = nil
+	delete(m.clearedFields, emailtoken.FieldEmail)
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (m *EmailTokenMutation) SetExpiresAt(t time.Time) {
 	m.expires_at = &t
@@ -9480,7 +9530,7 @@ func (m *EmailTokenMutation) UserID() (r int, exists bool) {
 // OldUserID returns the old "user_id" field's value of the EmailToken entity.
 // If the EmailToken object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EmailTokenMutation) OldUserID(ctx context.Context) (v int, err error) {
+func (m *EmailTokenMutation) OldUserID(ctx context.Context) (v *int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
 	}
@@ -9494,9 +9544,22 @@ func (m *EmailTokenMutation) OldUserID(ctx context.Context) (v int, err error) {
 	return oldValue.UserID, nil
 }
 
+// ClearUserID clears the value of the "user_id" field.
+func (m *EmailTokenMutation) ClearUserID() {
+	m.user = nil
+	m.clearedFields[emailtoken.FieldUserID] = struct{}{}
+}
+
+// UserIDCleared returns if the "user_id" field was cleared in this mutation.
+func (m *EmailTokenMutation) UserIDCleared() bool {
+	_, ok := m.clearedFields[emailtoken.FieldUserID]
+	return ok
+}
+
 // ResetUserID resets all changes to the "user_id" field.
 func (m *EmailTokenMutation) ResetUserID() {
 	m.user = nil
+	delete(m.clearedFields, emailtoken.FieldUserID)
 }
 
 // ClearUser clears the "user" edge to the User entity.
@@ -9507,7 +9570,7 @@ func (m *EmailTokenMutation) ClearUser() {
 
 // UserCleared reports if the "user" edge to the User entity was cleared.
 func (m *EmailTokenMutation) UserCleared() bool {
-	return m.cleareduser
+	return m.UserIDCleared() || m.cleareduser
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
@@ -9560,7 +9623,7 @@ func (m *EmailTokenMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EmailTokenMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.created_at != nil {
 		fields = append(fields, emailtoken.FieldCreatedAt)
 	}
@@ -9572,6 +9635,9 @@ func (m *EmailTokenMutation) Fields() []string {
 	}
 	if m._type != nil {
 		fields = append(fields, emailtoken.FieldType)
+	}
+	if m.email != nil {
+		fields = append(fields, emailtoken.FieldEmail)
 	}
 	if m.expires_at != nil {
 		fields = append(fields, emailtoken.FieldExpiresAt)
@@ -9598,6 +9664,8 @@ func (m *EmailTokenMutation) Field(name string) (ent.Value, bool) {
 		return m.Token()
 	case emailtoken.FieldType:
 		return m.GetType()
+	case emailtoken.FieldEmail:
+		return m.Email()
 	case emailtoken.FieldExpiresAt:
 		return m.ExpiresAt()
 	case emailtoken.FieldConsumedAt:
@@ -9621,6 +9689,8 @@ func (m *EmailTokenMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldToken(ctx)
 	case emailtoken.FieldType:
 		return m.OldType(ctx)
+	case emailtoken.FieldEmail:
+		return m.OldEmail(ctx)
 	case emailtoken.FieldExpiresAt:
 		return m.OldExpiresAt(ctx)
 	case emailtoken.FieldConsumedAt:
@@ -9663,6 +9733,13 @@ func (m *EmailTokenMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetType(v)
+		return nil
+	case emailtoken.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
 		return nil
 	case emailtoken.FieldExpiresAt:
 		v, ok := value.(time.Time)
@@ -9718,8 +9795,14 @@ func (m *EmailTokenMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *EmailTokenMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(emailtoken.FieldEmail) {
+		fields = append(fields, emailtoken.FieldEmail)
+	}
 	if m.FieldCleared(emailtoken.FieldConsumedAt) {
 		fields = append(fields, emailtoken.FieldConsumedAt)
+	}
+	if m.FieldCleared(emailtoken.FieldUserID) {
+		fields = append(fields, emailtoken.FieldUserID)
 	}
 	return fields
 }
@@ -9735,8 +9818,14 @@ func (m *EmailTokenMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *EmailTokenMutation) ClearField(name string) error {
 	switch name {
+	case emailtoken.FieldEmail:
+		m.ClearEmail()
+		return nil
 	case emailtoken.FieldConsumedAt:
 		m.ClearConsumedAt()
+		return nil
+	case emailtoken.FieldUserID:
+		m.ClearUserID()
 		return nil
 	}
 	return fmt.Errorf("unknown EmailToken nullable field %s", name)
@@ -9757,6 +9846,9 @@ func (m *EmailTokenMutation) ResetField(name string) error {
 		return nil
 	case emailtoken.FieldType:
 		m.ResetType()
+		return nil
+	case emailtoken.FieldEmail:
+		m.ResetEmail()
 		return nil
 	case emailtoken.FieldExpiresAt:
 		m.ResetExpiresAt()

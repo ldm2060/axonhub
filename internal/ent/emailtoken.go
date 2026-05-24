@@ -26,12 +26,14 @@ type EmailToken struct {
 	Token string `json:"token,omitempty"`
 	// Type holds the value of the "type" field.
 	Type emailtoken.Type `json:"type,omitempty"`
+	// Email holds the value of the "email" field.
+	Email *string `json:"email,omitempty"`
 	// ExpiresAt holds the value of the "expires_at" field.
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 	// ConsumedAt holds the value of the "consumed_at" field.
 	ConsumedAt *time.Time `json:"consumed_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
-	UserID int `json:"user_id,omitempty"`
+	UserID *int `json:"user_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EmailTokenQuery when eager-loading is set.
 	Edges        EmailTokenEdges `json:"edges"`
@@ -67,7 +69,7 @@ func (*EmailToken) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case emailtoken.FieldID, emailtoken.FieldUserID:
 			values[i] = new(sql.NullInt64)
-		case emailtoken.FieldToken, emailtoken.FieldType:
+		case emailtoken.FieldToken, emailtoken.FieldType, emailtoken.FieldEmail:
 			values[i] = new(sql.NullString)
 		case emailtoken.FieldCreatedAt, emailtoken.FieldUpdatedAt, emailtoken.FieldExpiresAt, emailtoken.FieldConsumedAt:
 			values[i] = new(sql.NullTime)
@@ -116,6 +118,13 @@ func (_m *EmailToken) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Type = emailtoken.Type(value.String)
 			}
+		case emailtoken.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				_m.Email = new(string)
+				*_m.Email = value.String
+			}
 		case emailtoken.FieldExpiresAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
@@ -133,7 +142,8 @@ func (_m *EmailToken) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				_m.UserID = int(value.Int64)
+				_m.UserID = new(int)
+				*_m.UserID = int(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -188,6 +198,11 @@ func (_m *EmailToken) String() string {
 	builder.WriteString("type=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Type))
 	builder.WriteString(", ")
+	if v := _m.Email; v != nil {
+		builder.WriteString("email=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
 	builder.WriteString("expires_at=")
 	builder.WriteString(_m.ExpiresAt.Format(time.ANSIC))
 	builder.WriteString(", ")
@@ -196,8 +211,10 @@ func (_m *EmailToken) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
+	if v := _m.UserID; v != nil {
+		builder.WriteString("user_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
