@@ -13,6 +13,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
@@ -118,6 +119,7 @@ func (svc *UserUsageStatsService) refreshStats(ctx context.Context) {
 type usageAggregation struct {
 	UserID           int        `json:"user_id"`
 	RequestCount     int        `json:"request_count"`
+	SuccessCount     int        `json:"success_count"`
 	PromptTokens     int64      `json:"prompt_tokens"`
 	CompletionTokens int64      `json:"completion_tokens"`
 	TotalTokens      int64      `json:"total_tokens"`
@@ -137,21 +139,24 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 	}
 
 	query := fmt.Sprintf(`
-		SELECT
-			ak.%s as user_id,
-			COUNT(*) as request_count,
-			COALESCE(SUM(ul.%s), 0) as prompt_tokens,
-			COALESCE(SUM(ul.%s), 0) as completion_tokens,
-			COALESCE(SUM(ul.%s), 0) as total_tokens,
-			COALESCE(SUM(ul.%s), 0) as total_cost,
-			MAX(ul.%s) as last_active_at
-		FROM %s ul
-		JOIN %s ak ON ul.%s = ak.%s
-		WHERE ak.%s = 0
-		GROUP BY ak.%s
-		HAVING ak.%s > 0
-	`,
+			SELECT
+				ak.%s as user_id,
+				COUNT(*) as request_count,
+				SUM(CASE WHEN re.%s = 'success' THEN 1 ELSE 0 END) as success_count,
+				COALESCE(SUM(ul.%s), 0) as prompt_tokens,
+				COALESCE(SUM(ul.%s), 0) as completion_tokens,
+				COALESCE(SUM(ul.%s), 0) as total_tokens,
+				COALESCE(SUM(ul.%s), 0) as total_cost,
+				MAX(ul.%s) as last_active_at
+			FROM %s ul
+			JOIN %s ak ON ul.%s = ak.%s
+			JOIN %s re ON ul.%s = re.%s
+			WHERE ak.%s = 0
+			GROUP BY ak.%s
+			HAVING ak.%s > 0
+		`,
 		apikey.FieldUserID,
+		requestexecution.FieldStatus,
 		usagelog.FieldPromptTokens,
 		usagelog.FieldCompletionTokens,
 		usagelog.FieldTotalTokens,
@@ -161,6 +166,9 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 		apikey.Table,
 		usagelog.FieldAPIKeyID,
 		apikey.FieldID,
+		requestexecution.Table,
+		usagelog.FieldRequestID,
+		requestexecution.FieldRequestID,
 		apikey.FieldDeletedAt,
 		apikey.FieldUserID,
 		apikey.FieldUserID,
@@ -178,6 +186,7 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 		if err := rows.Scan(
 			&agg.UserID,
 			&agg.RequestCount,
+			&agg.SuccessCount,
 			&agg.PromptTokens,
 			&agg.CompletionTokens,
 			&agg.TotalTokens,
@@ -207,7 +216,7 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 			// Update existing record
 			update := client.UserUsageStats.UpdateOneID(existing.ID).
 				SetRequestCount(agg.RequestCount).
-				SetSuccessCount(agg.RequestCount). // For now, success = request count (Task 4 will add RequestExecution join)
+				SetSuccessCount(agg.SuccessCount).
 				SetPromptTokens(agg.PromptTokens).
 				SetCompletionTokens(agg.CompletionTokens).
 				SetTotalTokens(agg.TotalTokens).
@@ -225,7 +234,7 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 			create := client.UserUsageStats.Create().
 				SetUserID(agg.UserID).
 				SetRequestCount(agg.RequestCount).
-				SetSuccessCount(agg.RequestCount).
+				SetSuccessCount(agg.SuccessCount).
 				SetPromptTokens(agg.PromptTokens).
 				SetCompletionTokens(agg.CompletionTokens).
 				SetTotalTokens(agg.TotalTokens).
