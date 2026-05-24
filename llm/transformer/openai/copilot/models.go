@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -17,30 +18,55 @@ type CopilotModelsResponse struct {
 
 // CopilotModel represents a single model from the Copilot /models API.
 type CopilotModel struct {
-	ID                 string   `json:"id"`
-	Name               string   `json:"name"`
-	ModelPickerEnabled bool     `json:"model_picker_enabled"`
-	Version            string   `json:"version"`
-	SupportedEndpoints []string `json:"supported_endpoints"`
-	Policy             struct {
-		State string `json:"state"`
-	} `json:"policy"`
-	Capabilities struct {
-		Family string `json:"family"`
-		Limits struct {
-			MaxContextWindowTokens int `json:"max_context_window_tokens"`
-			MaxOutputTokens        int `json:"max_output_tokens"`
-			MaxPromptTokens        int `json:"max_prompt_tokens"`
-		} `json:"limits"`
-		Supports struct {
-			Vision            bool     `json:"vision"`
-			ToolCalls         bool     `json:"tool_calls"`
-			Streaming         bool     `json:"streaming"`
-			StructuredOutputs bool     `json:"structured_outputs"`
-			AdaptiveThinking  bool     `json:"adaptive_thinking"`
-			ReasoningEffort   []string `json:"reasoning_effort"`
-		} `json:"supports"`
-	} `json:"capabilities"`
+	ID                 string                   `json:"id"`
+	Name               string                   `json:"name"`
+	ModelPickerEnabled bool                     `json:"model_picker_enabled"`
+	Version            string                   `json:"version"`
+	SupportedEndpoints []string                 `json:"supported_endpoints"`
+	Policy             CopilotModelPolicy       `json:"policy"`
+	Capabilities       CopilotModelCapabilities `json:"capabilities"`
+}
+
+type CopilotModelPolicy struct {
+	State string `json:"state"`
+}
+
+type CopilotModelCapabilities struct {
+	Family   string               `json:"family"`
+	Limits   CopilotModelLimits   `json:"limits"`
+	Supports CopilotModelSupports `json:"supports"`
+}
+
+type CopilotModelLimits struct {
+	MaxContextWindowTokens int `json:"max_context_window_tokens"`
+	MaxOutputTokens        int `json:"max_output_tokens"`
+	MaxPromptTokens        int `json:"max_prompt_tokens"`
+}
+
+type CopilotModelSupports struct {
+	Vision            bool     `json:"vision"`
+	ToolCalls         bool     `json:"tool_calls"`
+	Streaming         bool     `json:"streaming"`
+	StructuredOutputs bool     `json:"structured_outputs"`
+	AdaptiveThinking  bool     `json:"adaptive_thinking"`
+	ReasoningEffort   []string `json:"reasoning_effort"`
+	MaxThinkingBudget int      `json:"max_thinking_budget"`
+}
+
+func (m CopilotModel) SupportsAnthropicMessages() bool {
+	return slices.Contains(m.SupportedEndpoints, "/v1/messages")
+}
+
+func (m CopilotModel) HasAdaptiveThinking() bool {
+	return m.Capabilities.Supports.AdaptiveThinking
+}
+
+func (m CopilotModel) ReasoningEfforts() []string {
+	return m.Capabilities.Supports.ReasoningEffort
+}
+
+func (m CopilotModel) MaxThinkingBudget() int {
+	return m.Capabilities.Supports.MaxThinkingBudget
 }
 
 // FetchModels fetches the available models from the Copilot /models API.
