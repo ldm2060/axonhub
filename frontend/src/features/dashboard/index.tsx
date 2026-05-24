@@ -186,7 +186,7 @@ function DashboardContent({
               <CardDescription>{t('dashboard.charts.channelSuccessRateDescription')}</CardDescription>
               <CardAction>
                 {mode === 'project' && (
-                  <Link to='/dashboard/channel-success-rates' className='text-sm text-primary hover:underline'>
+                  <Link to='/admin/dashboard/channel-success-rates' className='text-sm text-primary hover:underline'>
                     {t('dashboard.viewAll')}
                   </Link>
                 )}
