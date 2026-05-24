@@ -1368,3 +1368,562 @@ func TestGetAnthropicTransformer_WithModelInfo(t *testing.T) {
 	// Verify base URL is correct
 	assert.Equal(t, "https://api.githubcopilot.com/v1", transformer.anthropicBaseURL())
 }
+
+func TestTransformAnthropicRequest_Headers(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+		ModelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	request := &llm.Request{
+		Model: "claude-sonnet-4.6",
+		Messages: []llm.Message{
+			{
+				Role:    "user",
+				Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+			},
+		},
+	}
+
+	httpReq, err := transformer.TransformRequest(ctx, request)
+	require.NoError(t, err)
+	require.NotNil(t, httpReq)
+
+	// Verify anthropic-beta header
+	assert.Equal(t, "interleaved-thinking-2025-05-14", httpReq.Headers.Get("anthropic-beta"))
+
+	// Verify Authorization is Bearer with Copilot token
+	assert.Equal(t, httpclient.AuthTypeBearer, httpReq.Auth.Type)
+	assert.Equal(t, mockToken, httpReq.Auth.APIKey)
+
+	// Verify Copilot-specific headers
+	assert.Equal(t, DefaultUserAgent, httpReq.Headers.Get(UserAgentHeader))
+	assert.Equal(t, DefaultOpenAIIntent, httpReq.Headers.Get(OpenAIIntentHeader))
+
+	// Verify X-Api-Key is removed (Anthropic uses Bearer auth for Copilot)
+	assert.Empty(t, httpReq.Headers.Get("X-Api-Key"))
+
+	// Verify X-Initiator header
+	assert.Equal(t, "user", httpReq.Headers.Get(InitiatorHeader))
+
+	// Verify Content-Type is application/json (Anthropic format)
+	assert.Equal(t, "application/json", httpReq.Headers.Get("Content-Type"))
+}
+
+func TestTransformAnthropicRequest_VisionHeader(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+		ModelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	t.Run("vision header present for image request", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "claude-sonnet-4.6",
+			Messages: []llm.Message{
+				{
+					Role: "user",
+					Content: llm.MessageContent{
+						MultipleContent: []llm.MessageContentPart{
+							{
+								Type:     "image_url",
+								ImageURL: &llm.ImageURL{URL: "https://example.com/image.png"},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		httpReq, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Equal(t, "true", httpReq.Headers.Get(CopilotVisionRequestHeader))
+	})
+
+	t.Run("no vision header for text-only request", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "claude-sonnet-4.6",
+			Messages: []llm.Message{
+				{
+					Role:    "user",
+					Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+				},
+			},
+		}
+
+		httpReq, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Empty(t, httpReq.Headers.Get(CopilotVisionRequestHeader))
+	})
+}
+
+func TestTransformAnthropicRequest_XInitiator(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+		ModelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	t.Run("agent initiator for assistant last message", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "claude-sonnet-4.6",
+			Messages: []llm.Message{
+				{
+					Role:    "user",
+					Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+				},
+				{
+					Role:    "assistant",
+					Content: llm.MessageContent{Content: lo.ToPtr("Hi there")},
+				},
+			},
+		}
+
+		httpReq, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Equal(t, "agent", httpReq.Headers.Get(InitiatorHeader))
+	})
+
+	t.Run("user initiator for user last message", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "claude-sonnet-4.6",
+			Messages: []llm.Message{
+				{
+					Role:    "user",
+					Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+				},
+			},
+		}
+
+		httpReq, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Equal(t, "user", httpReq.Headers.Get(InitiatorHeader))
+	})
+}
+
+func TestStripMaxTokens(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "removes max_tokens",
+			input:    `{"model":"gpt-4o","messages":[],"max_tokens":4096}`,
+			expected: `{"messages":[],"model":"gpt-4o"}`,
+		},
+		{
+			name:     "removes max_output_tokens",
+			input:    `{"model":"gpt-4o","messages":[],"max_output_tokens":16384}`,
+			expected: `{"messages":[],"model":"gpt-4o"}`,
+		},
+		{
+			name:     "removes both max_tokens and max_output_tokens",
+			input:    `{"model":"gpt-4o","max_tokens":4096,"max_output_tokens":16384,"messages":[]}`,
+			expected: `{"messages":[],"model":"gpt-4o"}`,
+		},
+		{
+			name:     "no changes when fields are absent",
+			input:    `{"model":"gpt-4o","messages":[]}`,
+			expected: `{"messages":[],"model":"gpt-4o"}`,
+		},
+		{
+			name:     "returns original on invalid JSON",
+			input:    `not json`,
+			expected: `not json`,
+		},
+		{
+			name:     "empty body",
+			input:    ``,
+			expected: ``,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := stripMaxTokens([]byte(tt.input))
+
+			// For valid JSON cases, compare as JSON objects
+			if tt.input != `` && tt.input != `not json` {
+				var expectedMap, resultMap map[string]any
+				errExpected := json.Unmarshal([]byte(tt.expected), &expectedMap)
+				errResult := json.Unmarshal(result, &resultMap)
+				require.NoError(t, errExpected)
+				require.NoError(t, errResult)
+				assert.Equal(t, expectedMap, resultMap)
+			} else {
+				assert.Equal(t, tt.expected, string(result))
+			}
+		})
+	}
+}
+
+func TestIsGPTModel(t *testing.T) {
+	tests := []struct {
+		model    string
+		expected bool
+	}{
+		// GPT models
+		{"gpt-4o", true},
+		{"gpt-4o-mini", true},
+		{"gpt-4.1", true},
+		{"gpt-5", true},
+		{"gpt-5.4", true},
+		{"gpt-5-mini", true},
+		{"GPT-4O", true},
+		// o-series models
+		{"o1", true},
+		{"o1-mini", true},
+		{"o1-preview", true},
+		{"o3", true},
+		{"o3-mini", true},
+		{"o4", true},
+		{"o4-mini", true},
+		// non-GPT/non-o models
+		{"claude-sonnet-4.6", false},
+		{"claude-opus-4.6", false},
+		{"gemini-pro", false},
+		{"", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.model, func(t *testing.T) {
+			assert.Equal(t, tt.expected, isGPTModel(tt.model))
+		})
+	}
+}
+
+func TestTransformRequest_StripsMaxTokensForGPT(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+	})
+	require.NoError(t, err)
+
+	request := &llm.Request{
+		Model: "gpt-4o",
+		Messages: []llm.Message{
+			{
+				Role:    "user",
+				Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+			},
+		},
+	}
+
+	httpReq, err := transformer.TransformRequest(ctx, request)
+	require.NoError(t, err)
+	require.NotNil(t, httpReq)
+
+	var body map[string]any
+	err = json.Unmarshal(httpReq.Body, &body)
+	require.NoError(t, err)
+
+	_, hasMaxTokens := body["max_tokens"]
+	assert.False(t, hasMaxTokens, "max_tokens should be stripped from GPT model request")
+
+	_, hasMaxOutputTokens := body["max_output_tokens"]
+	assert.False(t, hasMaxOutputTokens, "max_output_tokens should be stripped from GPT model request")
+}
+
+func TestTransformRequest_StripsMaxTokensForOSeries(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+	})
+	require.NoError(t, err)
+
+	for _, model := range []string{"o1", "o3", "o4-mini"} {
+		t.Run(model, func(t *testing.T) {
+			request := &llm.Request{
+				Model: model,
+				Messages: []llm.Message{
+					{
+						Role:    "user",
+						Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+					},
+				},
+			}
+
+			httpReq, err := transformer.TransformRequest(ctx, request)
+			require.NoError(t, err)
+			require.NotNil(t, httpReq)
+
+			var body map[string]any
+			err = json.Unmarshal(httpReq.Body, &body)
+			require.NoError(t, err)
+
+			_, hasMaxTokens := body["max_tokens"]
+			assert.False(t, hasMaxTokens, "max_tokens should be stripped from o-series model")
+
+			_, hasMaxOutputTokens := body["max_output_tokens"]
+			assert.False(t, hasMaxOutputTokens, "max_output_tokens should be stripped from o-series model")
+		})
+	}
+}
+
+func TestTransformRequest_DoesNotStripMaxTokensForNonGPT(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+	})
+	require.NoError(t, err)
+
+	request := &llm.Request{
+		Model: "claude-sonnet-4.6",
+		Messages: []llm.Message{
+			{
+				Role:    "user",
+				Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+			},
+		},
+	}
+
+	httpReq, err := transformer.TransformRequest(ctx, request)
+	require.NoError(t, err)
+	require.NotNil(t, httpReq)
+
+	var body map[string]any
+	err = json.Unmarshal(httpReq.Body, &body)
+	require.NoError(t, err)
+
+	assert.Contains(t, body, "model")
+}
+
+func TestTransformResponse_AnthropicRouting(t *testing.T) {
+	ctx := context.Background()
+
+	transformer := &OutboundTransformer{
+		modelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+		lastModel: "claude-sonnet-4.6",
+		baseURL:   "https://api.githubcopilot.com",
+	}
+
+	httpResp := &httpclient.Response{
+		StatusCode: 200,
+		Body: []byte(`{
+			"id": "msg_123",
+			"type": "message",
+			"role": "assistant",
+			"model": "claude-sonnet-4-20250514",
+			"content": [{"type": "text", "text": "Hello from Anthropic"}],
+			"stop_reason": "end_turn",
+			"usage": {"input_tokens": 10, "output_tokens": 20}
+		}`),
+	}
+
+	resp, err := transformer.TransformResponse(ctx, httpResp)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	assert.Equal(t, "msg_123", resp.ID)
+}
+
+func TestTransformResponse_NonAnthropicRouting(t *testing.T) {
+	ctx := context.Background()
+
+	transformer := &OutboundTransformer{
+		modelInfo: nil,
+		lastModel: "gpt-4o",
+	}
+
+	httpResp := &httpclient.Response{
+		StatusCode: 200,
+		Body: []byte(`{
+			"id": "chatcmpl-123",
+			"object": "chat.completion",
+			"created": 1700000000,
+			"model": "gpt-4o",
+			"choices": [{
+				"index": 0,
+				"message": {"role": "assistant", "content": "Hello!"},
+				"finish_reason": "stop"
+			}]
+		}`),
+	}
+
+	resp, err := transformer.TransformResponse(ctx, httpResp)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	assert.Equal(t, "chatcmpl-123", resp.ID)
+	assert.Equal(t, "chat.completion", resp.Object)
+}
+
+func TestTransformStream_AnthropicRouting(t *testing.T) {
+	ctx := context.Background()
+
+	transformer := &OutboundTransformer{
+		modelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+		lastModel: "claude-sonnet-4.6",
+		baseURL:   "https://api.githubcopilot.com",
+	}
+
+	mockStream := &mockHTTPStream{
+		events: []*httpclient.StreamEvent{
+			{Data: []byte(`data: {"type":"message_start","message":{"id":"msg_123","type":"message","role":"assistant","model":"claude-sonnet-4-20250514","content":[],"usage":{"input_tokens":10,"output_tokens":0}}}`)},
+			{Data: []byte(`data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}`)},
+			{Data: []byte(`data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}`)},
+			{Data: []byte(`data: {"type":"content_block_stop","index":0}`)},
+			{Data: []byte(`data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":10}}`)},
+			{Data: []byte(`data: {"type":"message_stop"}`)},
+		},
+	}
+
+	req := &httpclient.Request{
+		Method: "POST",
+		URL:    "https://api.githubcopilot.com/v1/messages",
+	}
+
+	result, err := transformer.TransformStream(ctx, req, mockStream)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	assert.True(t, result.Next())
+	resp := result.Current()
+	assert.NotNil(t, resp)
+
+	result.Close()
+}
+
+func TestTransformStream_NonAnthropicRouting(t *testing.T) {
+	ctx := context.Background()
+
+	transformer := &OutboundTransformer{
+		modelInfo: nil,
+		lastModel: "gpt-4o",
+		baseURL:   "https://api.githubcopilot.com",
+	}
+
+	mockStream := &mockHTTPStream{
+		events: []*httpclient.StreamEvent{
+			{Data: []byte(`{"id":"chatcmpl-123","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}`)},
+			{Data: []byte(`[DONE]`)},
+		},
+	}
+
+	req := &httpclient.Request{
+		Method: "POST",
+		URL:    "https://api.githubcopilot.com/chat/completions",
+	}
+
+	result, err := transformer.TransformStream(ctx, req, mockStream)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	assert.True(t, result.Next())
+	resp := result.Current()
+	assert.NotNil(t, resp)
+
+	result.Close()
+}
+
+// mockHTTPStream implements streams.Stream[*httpclient.StreamEvent] for testing.
+type mockHTTPStream struct {
+	events   []*httpclient.StreamEvent
+	position int
+	current  *httpclient.StreamEvent
+	closed   bool
+}
+
+func (s *mockHTTPStream) Next() bool {
+	if s.position >= len(s.events) {
+		return false
+	}
+	s.current = s.events[s.position]
+	s.position++
+	return true
+}
+
+func (s *mockHTTPStream) Current() *httpclient.StreamEvent {
+	return s.current
+}
+
+func (s *mockHTTPStream) Err() error {
+	return nil
+}
+
+func (s *mockHTTPStream) Close() error {
+	s.closed = true
+	return nil
+}
+
+func TestTransformRequest_LastModelSet(t *testing.T) {
+	ctx := context.Background()
+	mockToken := "ghu_testtoken123"
+
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: mockToken},
+		ModelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	t.Run("lastModel set for Anthropic model", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "claude-sonnet-4.6",
+			Messages: []llm.Message{
+				{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("Hello")}},
+			},
+		}
+		_, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Equal(t, "claude-sonnet-4.6", transformer.lastModel)
+	})
+
+	t.Run("lastModel set for GPT model", func(t *testing.T) {
+		request := &llm.Request{
+			Model: "gpt-4o",
+			Messages: []llm.Message{
+				{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("Hello")}},
+			},
+		}
+		_, err := transformer.TransformRequest(ctx, request)
+		require.NoError(t, err)
+		assert.Equal(t, "gpt-4o", transformer.lastModel)
+	})
+}

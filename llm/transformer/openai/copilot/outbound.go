@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
+	"github.com/samber/lo"
 )
 
 var modelVersionRegex = regexp.MustCompile(`^gpt-(\d+)`)
@@ -278,6 +279,12 @@ func (t *OutboundTransformer) TransformResponse(ctx context.Context, httpResp *h
 		return nil, errors.New("response body is empty")
 	}
 
+	// Route Anthropic Messages responses through the Anthropic transformer
+	if t.usesAnthropicMessages(t.lastModel) {
+		delegate := t.getAnthropicTransformer()
+		return delegate.TransformResponse(ctx, httpResp)
+	}
+
 	// Check if this is a Responses API response (has "output" field or "object" == "response")
 	isResponsesFormat := gjson.GetBytes(httpResp.Body, "output").Exists() ||
 		gjson.GetBytes(httpResp.Body, "object").String() == "response"
@@ -328,6 +335,12 @@ func (t *OutboundTransformer) TransformResponse(ctx context.Context, httpResp *h
 }
 
 func (t *OutboundTransformer) TransformStream(ctx context.Context, req *httpclient.Request, stream streams.Stream[*httpclient.StreamEvent]) (streams.Stream[*llm.Response], error) {
+	// Route Anthropic Messages streams through the Anthropic transformer
+	if t.usesAnthropicMessages(t.lastModel) {
+		delegate := t.getAnthropicTransformer()
+		return delegate.TransformStream(ctx, req, stream)
+	}
+
 	// Check if this is a Responses API format stream (Codex) or Chat Completions format
 	// Peek at the first event to determine the format
 	var (
@@ -686,10 +699,43 @@ func (t *OutboundTransformer) getAnthropicTransformer() transformer.Outbound {
 }
 
 // transformAnthropicRequest routes the request through the Anthropic Messages API.
-// The request is already transformed (model variant applied) before reaching this method.
+// After delegating to the Anthropic transformer for request building, it overrides
+// the result with Copilot-specific auth and headers.
 func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, llmReq *llm.Request) (*httpclient.Request, error) {
 	anthropicTransformer := t.getAnthropicTransformer()
-	return anthropicTransformer.TransformRequest(ctx, llmReq)
+	result, err := anthropicTransformer.TransformRequest(ctx, llmReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform request for Anthropic Messages API: %w", err)
+	}
+
+	// Override auth with Copilot token
+	token, err := t.tokenProvider.GetToken(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get copilot token: %w", err)
+	}
+	result.Auth = &httpclient.AuthConfig{
+		Type:   httpclient.AuthTypeBearer,
+		APIKey: token,
+	}
+
+	// Inject Copilot-specific headers
+	SetCopilotHeaders(result.Headers)
+
+	// Inject anthropic-beta header for interleaved thinking (matching OpenCode)
+	result.Headers.Set("anthropic-beta", "interleaved-thinking-2025-05-14")
+
+	// Add vision header if request contains image content
+	if hasVisionContent(llmReq) {
+		result.Headers.Set(CopilotVisionRequestHeader, "true")
+	}
+
+	// Determine X-Initiator for Copilot billing control
+	result.Headers.Set(InitiatorHeader, resolveCopilotInitiator(llmReq))
+
+	// Remove Anthropic X-Api-Key header since we use Bearer auth through Copilot
+	result.Headers.Del("X-Api-Key")
+
+	return result, nil
 }
 
 // prependedStream is a stream that yields a first event before forwarding to the upstream stream.
@@ -754,18 +800,60 @@ func parseModelVariant(model string) (string, *ModelVariant) {
 }
 
 // applyVariant applies a model variant to the request, modifying reasoning/thinking parameters.
+// When a variant model is requested (e.g., "claude-sonnet-4-20250514:high"), it looks up the
+// base model in modelInfo, generates variants, finds the matching one, and applies its parameters.
 func (t *OutboundTransformer) applyVariant(llmReq *llm.Request, baseModel string, variant *ModelVariant) *llm.Request {
-	// Create a shallow copy of the request to avoid mutating the original
-	req := *llmReq
+	req := *llmReq // shallow copy
+
+	info, ok := t.modelInfo[baseModel]
+	if !ok {
+		return &req
+	}
+
+	variants := GenerateVariants(info)
+	for _, v := range variants {
+		if v.Effort == variant.Effort {
+			switch v.Type {
+			case "reasoning":
+				req.ReasoningEffort = v.Effort
+				req.ReasoningSummary = lo.ToPtr("auto")
+			case "adaptive":
+				if req.TransformerMetadata == nil {
+					req.TransformerMetadata = map[string]any{}
+				}
+				req.TransformerMetadata[anthropic.TransformerMetadataKeyThinkingType] = "adaptive"
+				if info.IsOpus && v.Effort == "high" {
+					req.TransformerMetadata[anthropic.TransformerMetadataKeyThinkingDisplay] = "summarized"
+				}
+			case "budget":
+				req.ReasoningBudget = lo.ToPtr(int64(v.BudgetTokens))
+			}
+			break
+		}
+	}
+
 	return &req
 }
 
-// isGPTModel checks if the model is a GPT-4 or GPT-5 model that should have max_tokens stripped.
+// isGPTModel checks if the model is a GPT or o-series model that should have max_tokens stripped.
+// Matches OpenCode's behavior: gpt-, o1, o3, o4 prefixes.
 func isGPTModel(model string) bool {
-	return strings.HasPrefix(strings.ToLower(model), "gpt-")
+	lower := strings.ToLower(model)
+	return strings.HasPrefix(lower, "gpt-") || strings.HasPrefix(lower, "o1") || strings.HasPrefix(lower, "o3") || strings.HasPrefix(lower, "o4")
 }
 
-// stripMaxTokens removes the max_tokens field from JSON bodies for GPT models.
+// stripMaxTokens removes max_tokens and max_output_tokens fields from JSON bodies.
+// OpenAI models don't accept these fields; they must be omitted.
 func stripMaxTokens(body []byte) []byte {
-	return body
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return body
+	}
+	delete(raw, "max_tokens")
+	delete(raw, "max_output_tokens")
+	newBody, err := json.Marshal(raw)
+	if err != nil {
+		return body
+	}
+	return newBody
 }
