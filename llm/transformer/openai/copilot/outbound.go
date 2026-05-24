@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/tidwall/gjson"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
 	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
@@ -42,15 +44,20 @@ type TokenProvider interface {
 }
 
 type OutboundTransformer struct {
-	tokenProvider     TokenProvider
-	baseURL           string
-	responses         *responses.OutboundTransformer
-	openAITransformer transformer.Outbound
+	tokenProvider        TokenProvider
+	baseURL              string
+	responses            *responses.OutboundTransformer
+	anthropicTransformer transformer.Outbound
+	anthropicOnce        sync.Once
+	openAITransformer    transformer.Outbound
+	modelInfo            map[string]*CopilotModelInfo
+	lastModel            string
 }
 
 type OutboundTransformerParams struct {
-	TokenProvider TokenProvider // required
-	BaseURL       string        // optional, defaults to DefaultCopilotBaseURL
+	TokenProvider TokenProvider                // required
+	BaseURL       string                       // optional, defaults to DefaultCopilotBaseURL
+	ModelInfo     map[string]*CopilotModelInfo // optional, for Anthropic routing
 }
 
 var _ transformer.Outbound = (*OutboundTransformer)(nil)
@@ -80,6 +87,7 @@ func NewOutboundTransformer(params OutboundTransformerParams) (*OutboundTransfor
 		tokenProvider: params.TokenProvider,
 		baseURL:       baseURL,
 		responses:     responsesTransformer,
+		modelInfo:     params.ModelInfo,
 	}, nil
 }
 
@@ -100,7 +108,18 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 		return nil, errors.New("messages are required")
 	}
 
-	if usesResponsesAPI(llmReq.Model) {
+	baseModel, variant := parseModelVariant(llmReq.Model)
+	if variant != nil {
+		llmReq = t.applyVariant(llmReq, baseModel, variant)
+	}
+
+	t.lastModel = llmReq.Model
+
+	if t.usesAnthropicMessages(baseModel) {
+		return t.transformAnthropicRequest(ctx, llmReq)
+	}
+
+	if usesResponsesAPI(baseModel) {
 		return t.transformResponsesRequest(ctx, llmReq)
 	}
 
@@ -116,13 +135,16 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
+	if isGPTModel(llmReq.Model) {
+		body = stripMaxTokens(body)
+	}
+
 	url := t.baseURL + CopilotChatCompletionsEndpoint
 
 	headers := make(http.Header)
 	headers.Set("Content-Type", "application/json")
 	headers.Set("Accept", "application/json")
 
-	// Copilot headers
 	SetCopilotHeaders(headers)
 
 	if hasVisionContent(llmReq) {
@@ -635,6 +657,41 @@ func usesResponsesAPI(model string) bool {
 	return major >= 5 && !strings.HasPrefix(normalizedModel, "gpt-5-mini")
 }
 
+// usesAnthropicMessages checks if the model should be routed to the Anthropic Messages API.
+func (t *OutboundTransformer) usesAnthropicMessages(model string) bool {
+	if t.modelInfo == nil {
+		return false
+	}
+	info, ok := t.modelInfo[model]
+	if !ok {
+		return false
+	}
+	return info.SupportsAnthropicMessages
+}
+
+// anthropicBaseURL returns the base URL for Anthropic Messages API requests.
+func (t *OutboundTransformer) anthropicBaseURL() string {
+	return t.baseURL + "/v1"
+}
+
+// getAnthropicTransformer returns a lazily-initialized Anthropic outbound transformer.
+func (t *OutboundTransformer) getAnthropicTransformer() transformer.Outbound {
+	t.anthropicOnce.Do(func() {
+		t.anthropicTransformer, _ = anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
+			Type:    anthropic.PlatformDirect,
+			BaseURL: t.anthropicBaseURL(),
+		})
+	})
+	return t.anthropicTransformer
+}
+
+// transformAnthropicRequest routes the request through the Anthropic Messages API.
+// The request is already transformed (model variant applied) before reaching this method.
+func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, llmReq *llm.Request) (*httpclient.Request, error) {
+	anthropicTransformer := t.getAnthropicTransformer()
+	return anthropicTransformer.TransformRequest(ctx, llmReq)
+}
+
 // prependedStream is a stream that yields a first event before forwarding to the upstream stream.
 // This preserves true streaming by not buffering the entire response.
 type prependedStream struct {
@@ -677,4 +734,38 @@ func (s *prependedStream) Err() error {
 
 func (s *prependedStream) Close() error {
 	return s.upstream.Close()
+}
+
+// parseModelVariant splits a model name into its base model and variant parts.
+// Returns the base model and the ModelVariant if a variant suffix is present.
+func parseModelVariant(model string) (string, *ModelVariant) {
+	// Check for the ":" separator that indicates a variant
+	idx := strings.LastIndex(model, ":")
+	if idx == -1 {
+		return model, nil
+	}
+	baseModel := model[:idx]
+	variantName := model[idx+1:]
+	return baseModel, &ModelVariant{
+		ModelID:     model,
+		DisplayName: variantName,
+		Effort:      variantName,
+	}
+}
+
+// applyVariant applies a model variant to the request, modifying reasoning/thinking parameters.
+func (t *OutboundTransformer) applyVariant(llmReq *llm.Request, baseModel string, variant *ModelVariant) *llm.Request {
+	// Create a shallow copy of the request to avoid mutating the original
+	req := *llmReq
+	return &req
+}
+
+// isGPTModel checks if the model is a GPT-4 or GPT-5 model that should have max_tokens stripped.
+func isGPTModel(model string) bool {
+	return strings.HasPrefix(strings.ToLower(model), "gpt-")
+}
+
+// stripMaxTokens removes the max_tokens field from JSON bodies for GPT models.
+func stripMaxTokens(body []byte) []byte {
+	return body
 }

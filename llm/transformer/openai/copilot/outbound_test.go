@@ -1207,3 +1207,164 @@ func TestInferCopilotInitiator(t *testing.T) {
 		})
 	}
 }
+
+func TestUsesAnthropicMessages(t *testing.T) {
+	// Create model info map with various models
+	modelInfo := map[string]*CopilotModelInfo{
+		"claude-sonnet-4.6": {
+			ModelID:                   "claude-sonnet-4.6",
+			SupportsAnthropicMessages: true,
+		},
+		"claude-opus-4.6": {
+			ModelID:                   "claude-opus-4.6",
+			SupportsAnthropicMessages: true,
+		},
+		"gpt-5.4": {
+			ModelID:                   "gpt-5.4",
+			SupportsAnthropicMessages: false,
+		},
+		"gpt-4o": {
+			ModelID:                   "gpt-4o",
+			SupportsAnthropicMessages: false,
+		},
+	}
+
+	tests := []struct {
+		name      string
+		modelInfo map[string]*CopilotModelInfo
+		model     string
+		expected  bool
+	}{
+		{
+			name:      "claude model with Anthropic support returns true",
+			modelInfo: modelInfo,
+			model:     "claude-sonnet-4.6",
+			expected:  true,
+		},
+		{
+			name:      "another claude model with Anthropic support returns true",
+			modelInfo: modelInfo,
+			model:     "claude-opus-4.6",
+			expected:  true,
+		},
+		{
+			name:      "GPT model without Anthropic support returns false",
+			modelInfo: modelInfo,
+			model:     "gpt-5.4",
+			expected:  false,
+		},
+		{
+			name:      "GPT-4o without Anthropic support returns false",
+			modelInfo: modelInfo,
+			model:     "gpt-4o",
+			expected:  false,
+		},
+		{
+			name:      "unknown model returns false",
+			modelInfo: modelInfo,
+			model:     "unknown-model",
+			expected:  false,
+		},
+		{
+			name:      "nil modelInfo returns false",
+			modelInfo: nil,
+			model:     "claude-sonnet-4.6",
+			expected:  false,
+		},
+		{
+			name:      "empty modelInfo map returns false",
+			modelInfo: map[string]*CopilotModelInfo{},
+			model:     "claude-sonnet-4.6",
+			expected:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transformer := &OutboundTransformer{
+				modelInfo: tt.modelInfo,
+			}
+			result := transformer.usesAnthropicMessages(tt.model)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestAnthropicBaseURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		baseURL  string
+		expected string
+	}{
+		{
+			name:     "default Copilot base URL",
+			baseURL:  "https://api.githubcopilot.com",
+			expected: "https://api.githubcopilot.com/v1",
+		},
+		{
+			name:     "custom base URL",
+			baseURL:  "https://custom.copilot.api",
+			expected: "https://custom.copilot.api/v1",
+		},
+		{
+			name:     "base URL without trailing slash",
+			baseURL:  "https://api.githubcopilot.com",
+			expected: "https://api.githubcopilot.com/v1",
+		},
+		{
+			name:     "base URL with port",
+			baseURL:  "https://localhost:8080",
+			expected: "https://localhost:8080/v1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			transformer := &OutboundTransformer{
+				baseURL: tt.baseURL,
+			}
+			result := transformer.anthropicBaseURL()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetAnthropicTransformer_LazyInit(t *testing.T) {
+	transformer := &OutboundTransformer{
+		baseURL: "https://api.githubcopilot.com",
+	}
+
+	// First call should initialize
+	anthropicT := transformer.getAnthropicTransformer()
+	assert.NotNil(t, anthropicT)
+	assert.Equal(t, llm.APIFormatAnthropicMessage, anthropicT.APIFormat())
+
+	// Second call should return the same instance
+	anthropicT2 := transformer.getAnthropicTransformer()
+	assert.NotNil(t, anthropicT2)
+	// Same pointer check confirms sync.Once works
+	assert.Same(t, anthropicT, anthropicT2,
+		"getAnthropicTransformer should return the same instance on subsequent calls")
+}
+
+func TestGetAnthropicTransformer_WithModelInfo(t *testing.T) {
+	transformer, err := NewOutboundTransformer(OutboundTransformerParams{
+		TokenProvider: &mockTokenProvider{token: "test-token"},
+		BaseURL:       "https://api.githubcopilot.com",
+		ModelInfo: map[string]*CopilotModelInfo{
+			"claude-sonnet-4.6": {
+				ModelID:                   "claude-sonnet-4.6",
+				SupportsAnthropicMessages: true,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	// Verify modelInfo is set correctly
+	assert.NotNil(t, transformer.modelInfo)
+	assert.True(t, transformer.usesAnthropicMessages("claude-sonnet-4.6"))
+	assert.False(t, transformer.usesAnthropicMessages("gpt-4o"))
+
+	// Verify base URL is correct
+	assert.Equal(t, "https://api.githubcopilot.com/v1", transformer.anthropicBaseURL())
+}
