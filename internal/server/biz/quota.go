@@ -220,7 +220,7 @@ func (s *QuotaService) requestCount(ctx context.Context, apiKeyID int, window Qu
 	}
 
 	if window.End != nil {
-		q = q.Where(usagelog.CreatedAtLT(*window.End))
+		q = q.Where(usagelog.CreatedAtLTE(*window.End))
 	}
 
 	n, err := q.Count(ctx)
@@ -247,7 +247,7 @@ func (s *QuotaService) usageAgg(ctx context.Context, apiKeyID int, window QuotaW
 		}
 
 		if window.End != nil {
-			q = q.Where(usagelog.CreatedAtLT(*window.End))
+			q = q.Where(usagelog.CreatedAtLTE(*window.End))
 		}
 
 		switch {

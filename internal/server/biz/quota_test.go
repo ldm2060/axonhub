@@ -240,6 +240,53 @@ func TestQuotaService_PastDurationMinute_RequestCountExceeded(t *testing.T) {
 	require.Contains(t, res.Message, "requests quota exceeded")
 }
 
+func TestQuotaService_RequestCountIncludesWindowEndBoundary(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=0")
+	defer client.Close()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	ctx = authz.WithTestBypass(ctx)
+
+	p, err := client.Project.Create().
+		SetName("p").
+		SetStatus(project.StatusActive).
+		Save(ctx)
+	require.NoError(t, err)
+
+	windowEnd := time.Now().UTC()
+	apiKeyID := 11
+
+	req, err := client.Request.Create().
+		SetProjectID(p.ID).
+		SetAPIKeyID(apiKeyID).
+		SetModelID("m").
+		SetFormat("openai/chat_completions").
+		SetStatus(request.StatusCompleted).
+		SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+		SetCreatedAt(windowEnd).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.UsageLog.Create().
+		SetRequestID(req.ID).
+		SetAPIKeyID(apiKeyID).
+		SetProjectID(p.ID).
+		SetChannelID(1).
+		SetModelID("m").
+		SetCreatedAt(windowEnd).
+		Save(ctx)
+	require.NoError(t, err)
+
+	systemService := NewSystemService(SystemServiceParams{Ent: client})
+	svc := NewQuotaService(client, systemService)
+	windowStart := windowEnd.Add(-time.Minute)
+
+	count, err := svc.requestCount(ctx, apiKeyID, QuotaWindow{Start: &windowStart, End: &windowEnd})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), count)
+}
+
 func TestQuotaWindow_PastDurationMinute(t *testing.T) {
 	now := time.Date(2026, 1, 20, 1, 2, 3, 0, time.UTC)
 	window, err := quotaWindow(now, objects.APIKeyQuotaPeriod{

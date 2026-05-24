@@ -35,15 +35,35 @@ func setupTestSignUpService(t *testing.T) (*SignUpService, *ent.Client) {
 	}
 
 	svc := &SignUpService{
-		AbstractService:    &AbstractService{db: client},
-		userService:        userService,
-		authService:        &AuthService{},
-		systemService:      systemService,
-		emailTokenService:  emailTokenService,
-		emailService:       &EmailService{db: client, systemService: systemService},
+		AbstractService:   &AbstractService{db: client},
+		userService:       userService,
+		authService:       &AuthService{},
+		systemService:     systemService,
+		emailTokenService: emailTokenService,
+		emailService:      &EmailService{db: client, systemService: systemService},
 	}
 
 	return svc, client
+}
+
+func TestAllowSignUp_NoAuthContextReadsRegistrationSettings(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := context.Background()
+	setupCtx = ent.NewContext(setupCtx, client)
+	setupCtx = authz.WithTestBypass(setupCtx)
+
+	rs := &RegistrationSettings{AllowSignUp: true, DefaultUserScopes: DefaultUserScopes}
+	rsBytes, err := json.Marshal(rs)
+	require.NoError(t, err)
+	err = svc.systemService.setSystemValue(setupCtx, SystemKeyRegistrationSettings, string(rsBytes))
+	require.NoError(t, err)
+
+	plainCtx := context.Background()
+	plainCtx = ent.NewContext(plainCtx, client)
+
+	require.True(t, svc.AllowSignUp(plainCtx))
 }
 
 // TestSignUp_CheckExistingUser_NoAuthContext verifies that the email-existence

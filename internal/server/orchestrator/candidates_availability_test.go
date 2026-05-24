@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -172,19 +173,24 @@ func TestAvailabilitySelector_Select(t *testing.T) {
 func TestAvailabilitySelector_AvailableRuleWhitelist(t *testing.T) {
 	t.Parallel()
 
-	// Channel A has a "available" whitelist rule for a tiny window (02:00-03:00).
-	// Since the current time is almost certainly not in that window, IsChannelAvailable
-	// will return false (whitelist behavior: no matching rule → unavailable).
+	outsideHour := (time.Now().Hour() + 12) % 24
+	startTime := time.Date(0, 1, 1, outsideHour, 0, 0, 0, time.Local)
+	endTime := startTime.Add(time.Hour)
+
+	// Channel A has an "available" whitelist rule for an hour far from now.
+	// Since the current time is outside that window, IsChannelAvailable returns
+	// false (whitelist behavior: no matching rule → unavailable).
 	channelA := &biz.Channel{
 		Channel: &ent.Channel{
+			ID: 1,
 			Policies: objects.ChannelPolicies{
 				Availability: &objects.ChannelAvailability{
 					Rules: []objects.ChannelAvailabilityRule{
 						{
 							Type:      objects.ChannelAvailabilityRuleTypeAvailable,
 							Days:      nil,
-							StartTime: "02:00",
-							EndTime:   "03:00",
+							StartTime: startTime.Format("15:04"),
+							EndTime:   endTime.Format("15:04"),
 							Enabled:   true,
 						},
 					},
@@ -196,6 +202,7 @@ func TestAvailabilitySelector_AvailableRuleWhitelist(t *testing.T) {
 	// Channel B has no availability rules → always passes through.
 	channelB := &biz.Channel{
 		Channel: &ent.Channel{
+			ID:       2,
 			Policies: objects.ChannelPolicies{},
 		},
 	}
