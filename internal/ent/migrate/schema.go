@@ -318,10 +318,10 @@ var (
 		PrimaryKey: []*schema.Column{EmailTokensColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "email_tokens_users_email_tokens",
+				Symbol:     "email_tokens_users_user",
 				Columns:    []*schema.Column{EmailTokensColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
+				OnDelete:   schema.Cascade,
 			},
 		},
 		Indexes: []*schema.Index{

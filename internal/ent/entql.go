@@ -901,7 +901,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -1477,7 +1477,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"email_tokens",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EmailTokensTable,
 			Columns: []string{user.EmailTokensColumn},
 			Bidi:    false,

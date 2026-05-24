@@ -76,7 +76,7 @@ func (_q *EmailTokenQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(emailtoken.Table, emailtoken.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, emailtoken.UserTable, emailtoken.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, emailtoken.UserTable, emailtoken.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil

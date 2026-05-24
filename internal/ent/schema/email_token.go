@@ -34,10 +34,9 @@ func (EmailToken) Fields() []ent.Field {
 // Edges of the EmailToken.
 func (EmailToken) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).
-			Ref("email_tokens").
-			Unique().
+		edge.To("user", User.Type).
 			Field("user_id").
+			Unique().
 			Annotations(
 				entsql.OnDelete(entsql.Cascade),
 			),

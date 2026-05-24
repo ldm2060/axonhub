@@ -93,7 +93,7 @@ func (User) Edges() []ent.Edge {
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 				entgql.RelayConnection(),
 			),
-		edge.To("email_tokens", EmailToken.Type),
+		edge.From("email_tokens", EmailToken.Type).Ref("user"),
 		edge.To("user_usage_stats", UserUsageStats.Type),
 	}
 }

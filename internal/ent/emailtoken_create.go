@@ -240,7 +240,7 @@ func (_c *EmailTokenCreate) createSpec() (*EmailToken, *sqlgraph.CreateSpec) {
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,

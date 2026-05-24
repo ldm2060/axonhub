@@ -250,7 +250,7 @@ func (_u *EmailTokenUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -263,7 +263,7 @@ func (_u *EmailTokenUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -548,7 +548,7 @@ func (_u *EmailTokenUpdateOne) sqlSave(ctx context.Context) (_node *EmailToken, 
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -561,7 +561,7 @@ func (_u *EmailTokenUpdateOne) sqlSave(ctx context.Context) (_node *EmailToken, 
 	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,

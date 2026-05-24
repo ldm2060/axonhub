@@ -678,6 +678,7 @@ type ComplexityRoot struct {
 	EmailToken struct {
 		ConsumedAt func(childComplexity int) int
 		CreatedAt  func(childComplexity int) int
+		Email      func(childComplexity int) int
 		ExpiresAt  func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Token      func(childComplexity int) int
@@ -4707,6 +4708,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.EmailToken.CreatedAt(childComplexity), true
+	case "EmailToken.email":
+		if e.complexity.EmailToken.Email == nil {
+			break
+		}
+
+		return e.complexity.EmailToken.Email(childComplexity), true
 	case "EmailToken.expiresAt":
 		if e.complexity.EmailToken.ExpiresAt == nil {
 			break
@@ -27148,6 +27155,35 @@ func (ec *executionContext) fieldContext_EmailToken_type(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _EmailToken_email(ctx context.Context, field graphql.CollectedField, obj *ent.EmailToken) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_EmailToken_email,
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_EmailToken_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailToken",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailToken_expiresAt(ctx context.Context, field graphql.CollectedField, obj *ent.EmailToken) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -27216,9 +27252,9 @@ func (ec *executionContext) _EmailToken_userID(ctx context.Context, field graphq
 			return ec.resolvers.EmailToken().UserID(ctx, obj)
 		},
 		nil,
-		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		ec.marshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -27245,9 +27281,9 @@ func (ec *executionContext) _EmailToken_user(ctx context.Context, field graphql.
 			return obj.User(ctx)
 		},
 		nil,
-		ec.marshalNUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
+		ec.marshalOUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUser,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -60268,6 +60304,8 @@ func (ec *executionContext) fieldContext_User_emailTokens(_ context.Context, fie
 				return ec.fieldContext_EmailToken_token(ctx, field)
 			case "type":
 				return ec.fieldContext_EmailToken_type(ctx, field)
+			case "email":
+				return ec.fieldContext_EmailToken_email(ctx, field)
 			case "expiresAt":
 				return ec.fieldContext_EmailToken_expiresAt(ctx, field)
 			case "consumedAt":
@@ -73241,7 +73279,7 @@ func (ec *executionContext) unmarshalInputEmailTokenWhereInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "token", "tokenNEQ", "tokenIn", "tokenNotIn", "tokenGT", "tokenGTE", "tokenLT", "tokenLTE", "tokenContains", "tokenHasPrefix", "tokenHasSuffix", "tokenEqualFold", "tokenContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "consumedAt", "consumedAtNEQ", "consumedAtIn", "consumedAtNotIn", "consumedAtGT", "consumedAtGTE", "consumedAtLT", "consumedAtLTE", "consumedAtIsNil", "consumedAtNotNil", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "hasUser", "hasUserWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "token", "tokenNEQ", "tokenIn", "tokenNotIn", "tokenGT", "tokenGTE", "tokenLT", "tokenLTE", "tokenContains", "tokenHasPrefix", "tokenHasSuffix", "tokenEqualFold", "tokenContainsFold", "type", "typeNEQ", "typeIn", "typeNotIn", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailIsNil", "emailNotNil", "emailEqualFold", "emailContainsFold", "expiresAt", "expiresAtNEQ", "expiresAtIn", "expiresAtNotIn", "expiresAtGT", "expiresAtGTE", "expiresAtLT", "expiresAtLTE", "consumedAt", "consumedAtNEQ", "consumedAtIn", "consumedAtNotIn", "consumedAtGT", "consumedAtGTE", "consumedAtLT", "consumedAtLTE", "consumedAtIsNil", "consumedAtNotNil", "userID", "userIDNEQ", "userIDIn", "userIDNotIn", "userIDIsNil", "userIDNotNil", "hasUser", "hasUserWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -73588,6 +73626,111 @@ func (ec *executionContext) unmarshalInputEmailTokenWhereInput(ctx context.Conte
 				return it, err
 			}
 			it.TypeNotIn = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "emailNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailNEQ = data
+		case "emailIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailIn = data
+		case "emailNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailNotIn = data
+		case "emailGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailGT = data
+		case "emailGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailGTE = data
+		case "emailLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailLT = data
+		case "emailLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailLTE = data
+		case "emailContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailContains = data
+		case "emailHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailHasPrefix = data
+		case "emailHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailHasSuffix = data
+		case "emailIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailIsNil = data
+		case "emailNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailNotNil = data
+		case "emailEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailEqualFold = data
+		case "emailContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmailContainsFold = data
 		case "expiresAt":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -73758,6 +73901,20 @@ func (ec *executionContext) unmarshalInputEmailTokenWhereInput(ctx context.Conte
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
 			it.UserIDNotIn = converted
+		case "userIDIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDIsNil = data
+		case "userIDNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIDNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIDNotNil = data
 		case "hasUser":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUser"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -98821,6 +98978,8 @@ func (ec *executionContext) _EmailToken(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "email":
+			out.Values[i] = ec._EmailToken_email(ctx, field, obj)
 		case "expiresAt":
 			out.Values[i] = ec._EmailToken_expiresAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -98831,16 +98990,13 @@ func (ec *executionContext) _EmailToken(ctx context.Context, sel ast.SelectionSe
 		case "userID":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._EmailToken_userID(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -98867,16 +99023,13 @@ func (ec *executionContext) _EmailToken(ctx context.Context, sel ast.SelectionSe
 		case "user":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._EmailToken_user(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
