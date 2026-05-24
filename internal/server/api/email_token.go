@@ -9,9 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
@@ -86,24 +88,34 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	ctx := c.Request.Context()
 	token := c.Query("token")
 	if token == "" {
+		log.Warn(ctx, "Email verification requested without token")
 		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	userID, err := h.emailTokenService.ValidateToken(ctx, token, emailtoken.TypeVerifyEmail)
 	if err != nil {
+		log.Error(ctx, "Email verification token validation failed",
+			zap.Error(err),
+			zap.String("token_prefix", token[:min(8, len(token))]))
 		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	// Consume the token
 	if err := h.emailTokenService.ConsumeToken(ctx, token); err != nil {
+		log.Error(ctx, "Failed to consume email verification token",
+			zap.Error(err),
+			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
 
 	// Mark email as verified
 	if err := h.userService.MarkEmailVerified(ctx, userID); err != nil {
+		log.Error(ctx, "Failed to mark email as verified",
+			zap.Error(err),
+			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
@@ -111,22 +123,31 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	// Check if approval is required
 	rs, err := h.systemService.RegistrationSettings(ctx)
 	if err != nil {
+		log.Error(ctx, "Failed to check registration settings during email verification",
+			zap.Error(err),
+			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
 	if rs.ApprovalRequired {
-		// Update user status to pending (keep pending for admin approval)
+		log.Info(ctx, "Email verified, awaiting admin approval",
+			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
 	// Auto-activate the user
 	if err := h.userService.ActivateUser(ctx, userID); err != nil {
+		log.Error(ctx, "Failed to activate user after email verification",
+			zap.Error(err),
+			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
+	log.Info(ctx, "Email verified and user activated",
+		zap.Int("user_id", userID))
 	c.Redirect(http.StatusFound, "/verify-email?verified=1")
 }
 

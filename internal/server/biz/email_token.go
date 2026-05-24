@@ -10,6 +10,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
+	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 )
 
 // EmailTokenServiceParams holds the dependencies for EmailTokenService.
@@ -38,7 +39,7 @@ func (s *EmailTokenService) CreateToken(ctx context.Context, userID int, tokenTy
 	_, err := s.entFromContext(ctx).EmailToken.Create().
 		SetToken(token).
 		SetType(tokenType).
-		SetExpiresAt(time.Now().Add(24*time.Hour)).
+		SetExpiresAt(xtime.UTCNow().Add(24 * time.Hour)).
 		SetUserID(userID).
 		Save(ctx)
 	if err != nil {
@@ -54,7 +55,7 @@ func (s *EmailTokenService) ValidateToken(ctx context.Context, token string, tok
 		Where(
 			emailtoken.Token(token),
 			emailtoken.TypeEQ(tokenType),
-			emailtoken.ExpiresAtGT(time.Now()),
+			emailtoken.ExpiresAtGT(xtime.UTCNow()),
 			emailtoken.ConsumedAtIsNil(),
 		).
 		Only(ctx)
@@ -68,7 +69,7 @@ func (s *EmailTokenService) ValidateToken(ctx context.Context, token string, tok
 func (s *EmailTokenService) ConsumeToken(ctx context.Context, token string) error {
 	_, err := s.entFromContext(ctx).EmailToken.Update().
 		Where(emailtoken.Token(token)).
-		SetConsumedAt(time.Now()).
+		SetConsumedAt(xtime.UTCNow()).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("consume email token: %w", err)
@@ -79,7 +80,7 @@ func (s *EmailTokenService) ConsumeToken(ctx context.Context, token string) erro
 // CleanupExpired deletes all email tokens that have passed their expiry time.
 func (s *EmailTokenService) CleanupExpired(ctx context.Context) error {
 	_, err := s.entFromContext(ctx).EmailToken.Delete().
-		Where(emailtoken.ExpiresAtLT(time.Now())).
+		Where(emailtoken.ExpiresAtLT(xtime.UTCNow())).
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("cleanup expired email tokens: %w", err)
