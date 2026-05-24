@@ -9,8 +9,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
@@ -27,6 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/gql/qb"
 	"github.com/samber/lo"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -1735,4 +1738,87 @@ func (r *queryResolver) CostStatsByAPIKey(ctx context.Context, timeWindow *strin
 	}
 
 	return response, nil
+}
+
+// UserUsageStats is the resolver for the userUsageStats field.
+func (r *queryResolver) UserUsageStats(ctx context.Context, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) (*UserUsageStatsPayload, error) {
+	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+
+	// Map sort field from GraphQL enum to biz sort field
+	var sortField biz.SortField
+	switch sortBy {
+	case UserStatsSortFieldRequestCount:
+		sortField = biz.SortFieldRequestCount
+	case UserStatsSortFieldTotalCost:
+		sortField = biz.SortFieldTotalCost
+	case UserStatsSortFieldTotalTokens:
+		sortField = biz.SortFieldTotalTokens
+	case UserStatsSortFieldLastActiveAt:
+		sortField = biz.SortFieldLastActiveAt
+	default:
+		sortField = biz.SortFieldTotalTokens
+	}
+
+	// Map sort order from entgql.OrderDirection to "asc"/"desc"
+	sortOrderStr := strings.ToLower(sortOrder.String())
+
+	// Handle optional search parameter
+	searchStr := ""
+	if search != nil {
+		searchStr = *search
+	}
+
+	// Call biz service
+	result, err := r.userUsageStatsService.QueryUserUsageStats(ctx, biz.QueryUserUsageStatsInput{
+		TimeRange: timeRange,
+		Search:    searchStr,
+		SortField: sortField,
+		SortOrder: sortOrderStr,
+		Page:      page,
+		PageSize:  pageSize,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query user usage stats: %w", err)
+	}
+
+	// Build response by enriching stats with user information
+	stats := make([]*UserUsageStat, 0, len(result.Stats))
+	for _, s := range result.Stats {
+		u, err := getNilableUser(ctx, r.client, s.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user %d: %w", s.UserID, err)
+		}
+
+		var userName, userEmail string
+		if u != nil {
+			userName = strings.TrimSpace(u.FirstName + " " + u.LastName)
+			userEmail = u.Email
+		}
+
+		var successRate float64
+		if s.RequestCount > 0 {
+			successRate = float64(s.SuccessCount) / float64(s.RequestCount)
+		}
+
+		stats = append(stats, &UserUsageStat{
+			UserID:           s.UserID,
+			UserName:         userName,
+			UserEmail:        userEmail,
+			RequestCount:     s.RequestCount,
+			SuccessCount:     s.SuccessCount,
+			SuccessRate:      successRate,
+			PromptTokens:     safeIntFromInt64(s.PromptTokens),
+			CompletionTokens: safeIntFromInt64(s.CompletionTokens),
+			TotalTokens:      safeIntFromInt64(s.TotalTokens),
+			TotalCost:        s.TotalCost,
+			LastActiveAt:     s.LastActiveAt,
+		})
+	}
+
+	return &UserUsageStatsPayload{
+		Stats:          stats,
+		TotalUsers:     result.TotalUsers,
+		ActiveUsers7d:  result.Active7D,
+		ActiveUsers30d: result.Active30D,
+	}, nil
 }

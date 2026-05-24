@@ -559,6 +559,27 @@ type UserAgentPassThroughSettings struct {
 	Enabled bool `json:"enabled"`
 }
 
+type UserUsageStat struct {
+	UserID           int        `json:"userID"`
+	UserName         string     `json:"userName"`
+	UserEmail        string     `json:"userEmail"`
+	RequestCount     int        `json:"requestCount"`
+	SuccessCount     int        `json:"successCount"`
+	SuccessRate      float64    `json:"successRate"`
+	PromptTokens     int        `json:"promptTokens"`
+	CompletionTokens int        `json:"completionTokens"`
+	TotalTokens      int        `json:"totalTokens"`
+	TotalCost        float64    `json:"totalCost"`
+	LastActiveAt     *time.Time `json:"lastActiveAt,omitempty"`
+}
+
+type UserUsageStatsPayload struct {
+	Stats          []*UserUsageStat `json:"stats"`
+	TotalUsers     int              `json:"totalUsers"`
+	ActiveUsers7d  int              `json:"activeUsers7d"`
+	ActiveUsers30d int              `json:"activeUsers30d"`
+}
+
 type VersionCheck struct {
 	CurrentVersion string `json:"currentVersion"`
 	LatestVersion  string `json:"latestVersion"`
@@ -724,6 +745,65 @@ func (e *ReviewAction) UnmarshalJSON(b []byte) error {
 }
 
 func (e ReviewAction) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type UserStatsSortField string
+
+const (
+	UserStatsSortFieldRequestCount UserStatsSortField = "REQUEST_COUNT"
+	UserStatsSortFieldTotalCost    UserStatsSortField = "TOTAL_COST"
+	UserStatsSortFieldTotalTokens  UserStatsSortField = "TOTAL_TOKENS"
+	UserStatsSortFieldLastActiveAt UserStatsSortField = "LAST_ACTIVE_AT"
+)
+
+var AllUserStatsSortField = []UserStatsSortField{
+	UserStatsSortFieldRequestCount,
+	UserStatsSortFieldTotalCost,
+	UserStatsSortFieldTotalTokens,
+	UserStatsSortFieldLastActiveAt,
+}
+
+func (e UserStatsSortField) IsValid() bool {
+	switch e {
+	case UserStatsSortFieldRequestCount, UserStatsSortFieldTotalCost, UserStatsSortFieldTotalTokens, UserStatsSortFieldLastActiveAt:
+		return true
+	}
+	return false
+}
+
+func (e UserStatsSortField) String() string {
+	return string(e)
+}
+
+func (e *UserStatsSortField) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserStatsSortField(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserStatsSortField", str)
+	}
+	return nil
+}
+
+func (e UserStatsSortField) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *UserStatsSortField) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e UserStatsSortField) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -1387,6 +1387,7 @@ type ComplexityRoot struct {
 		Traces                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
 		UsageLogs                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
 		UserAgentPassThroughSettings func(childComplexity int) int
+		UserUsageStats               func(childComplexity int, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) int
 		Users                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) int
 		VideoStorageSettings         func(childComplexity int) int
 		WebhookNotifierConfig        func(childComplexity int) int
@@ -2029,6 +2030,20 @@ type ComplexityRoot struct {
 		UserID    func(childComplexity int) int
 	}
 
+	UserUsageStat struct {
+		CompletionTokens func(childComplexity int) int
+		LastActiveAt     func(childComplexity int) int
+		PromptTokens     func(childComplexity int) int
+		RequestCount     func(childComplexity int) int
+		SuccessCount     func(childComplexity int) int
+		SuccessRate      func(childComplexity int) int
+		TotalCost        func(childComplexity int) int
+		TotalTokens      func(childComplexity int) int
+		UserEmail        func(childComplexity int) int
+		UserID           func(childComplexity int) int
+		UserName         func(childComplexity int) int
+	}
+
 	UserUsageStats struct {
 		CompletionTokens func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
@@ -2042,6 +2057,13 @@ type ComplexityRoot struct {
 		UpdatedAt        func(childComplexity int) int
 		User             func(childComplexity int) int
 		UserID           func(childComplexity int) int
+	}
+
+	UserUsageStatsPayload struct {
+		ActiveUsers30d func(childComplexity int) int
+		ActiveUsers7d  func(childComplexity int) int
+		Stats          func(childComplexity int) int
+		TotalUsers     func(childComplexity int) int
 	}
 
 	VersionCheck struct {
@@ -2357,6 +2379,7 @@ type QueryResolver interface {
 	CostStatsByChannel(ctx context.Context, timeWindow *string) ([]*CostStatsByChannel, error)
 	CostStatsByModel(ctx context.Context, timeWindow *string) ([]*CostStatsByModel, error)
 	CostStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*CostStatsByAPIKey, error)
+	UserUsageStats(ctx context.Context, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) (*UserUsageStatsPayload, error)
 	AllScopes(ctx context.Context, level *string) ([]*ScopeInfo, error)
 	Me(ctx context.Context) (*objects.UserInfo, error)
 	MyProjects(ctx context.Context) ([]*ent.Project, error)
@@ -8670,6 +8693,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.UserAgentPassThroughSettings(childComplexity), true
+	case "Query.userUsageStats":
+		if e.complexity.Query.UserUsageStats == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userUsageStats_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserUsageStats(childComplexity, args["timeRange"].(biz.TimeRange), args["search"].(*string), args["sortBy"].(UserStatsSortField), args["sortOrder"].(entgql.OrderDirection), args["page"].(int), args["pageSize"].(int)), true
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
 			break
@@ -11240,6 +11274,73 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UserRole.UserID(childComplexity), true
 
+	case "UserUsageStat.completionTokens":
+		if e.complexity.UserUsageStat.CompletionTokens == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.CompletionTokens(childComplexity), true
+	case "UserUsageStat.lastActiveAt":
+		if e.complexity.UserUsageStat.LastActiveAt == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.LastActiveAt(childComplexity), true
+	case "UserUsageStat.promptTokens":
+		if e.complexity.UserUsageStat.PromptTokens == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.PromptTokens(childComplexity), true
+	case "UserUsageStat.requestCount":
+		if e.complexity.UserUsageStat.RequestCount == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.RequestCount(childComplexity), true
+	case "UserUsageStat.successCount":
+		if e.complexity.UserUsageStat.SuccessCount == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.SuccessCount(childComplexity), true
+	case "UserUsageStat.successRate":
+		if e.complexity.UserUsageStat.SuccessRate == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.SuccessRate(childComplexity), true
+	case "UserUsageStat.totalCost":
+		if e.complexity.UserUsageStat.TotalCost == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.TotalCost(childComplexity), true
+	case "UserUsageStat.totalTokens":
+		if e.complexity.UserUsageStat.TotalTokens == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.TotalTokens(childComplexity), true
+	case "UserUsageStat.userEmail":
+		if e.complexity.UserUsageStat.UserEmail == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.UserEmail(childComplexity), true
+	case "UserUsageStat.userID":
+		if e.complexity.UserUsageStat.UserID == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.UserID(childComplexity), true
+	case "UserUsageStat.userName":
+		if e.complexity.UserUsageStat.UserName == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStat.UserName(childComplexity), true
+
 	case "UserUsageStats.completionTokens":
 		if e.complexity.UserUsageStats.CompletionTokens == nil {
 			break
@@ -11312,6 +11413,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserUsageStats.UserID(childComplexity), true
+
+	case "UserUsageStatsPayload.activeUsers30d":
+		if e.complexity.UserUsageStatsPayload.ActiveUsers30d == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStatsPayload.ActiveUsers30d(childComplexity), true
+	case "UserUsageStatsPayload.activeUsers7d":
+		if e.complexity.UserUsageStatsPayload.ActiveUsers7d == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStatsPayload.ActiveUsers7d(childComplexity), true
+	case "UserUsageStatsPayload.stats":
+		if e.complexity.UserUsageStatsPayload.Stats == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStatsPayload.Stats(childComplexity), true
+	case "UserUsageStatsPayload.totalUsers":
+		if e.complexity.UserUsageStatsPayload.TotalUsers == nil {
+			break
+		}
+
+		return e.complexity.UserUsageStatsPayload.TotalUsers(childComplexity), true
 
 	case "VersionCheck.currentVersion":
 		if e.complexity.VersionCheck.CurrentVersion == nil {
@@ -14885,6 +15011,42 @@ func (ec *executionContext) field_Query_usageLogs_args(ctx context.Context, rawA
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_userUsageStats_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeRange", ec.unmarshalNTimeRange2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐTimeRange)
+	if err != nil {
+		return nil, err
+	}
+	args["timeRange"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "search", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["search"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "sortBy", ec.unmarshalNUserStatsSortField2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserStatsSortField)
+	if err != nil {
+		return nil, err
+	}
+	args["sortBy"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "sortOrder", ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection)
+	if err != nil {
+		return nil, err
+	}
+	args["sortOrder"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "page", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["page"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "pageSize", ec.unmarshalNInt2int)
+	if err != nil {
+		return nil, err
+	}
+	args["pageSize"] = arg5
 	return args, nil
 }
 
@@ -45287,6 +45449,57 @@ func (ec *executionContext) fieldContext_Query_costStatsByAPIKey(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_userUsageStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_userUsageStats,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().UserUsageStats(ctx, fc.Args["timeRange"].(biz.TimeRange), fc.Args["search"].(*string), fc.Args["sortBy"].(UserStatsSortField), fc.Args["sortOrder"].(entgql.OrderDirection), fc.Args["page"].(int), fc.Args["pageSize"].(int))
+		},
+		nil,
+		ec.marshalNUserUsageStatsPayload2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStatsPayload,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_userUsageStats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "stats":
+				return ec.fieldContext_UserUsageStatsPayload_stats(ctx, field)
+			case "totalUsers":
+				return ec.fieldContext_UserUsageStatsPayload_totalUsers(ctx, field)
+			case "activeUsers7d":
+				return ec.fieldContext_UserUsageStatsPayload_activeUsers7d(ctx, field)
+			case "activeUsers30d":
+				return ec.fieldContext_UserUsageStatsPayload_activeUsers30d(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserUsageStatsPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userUsageStats_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_allScopes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -61593,6 +61806,325 @@ func (ec *executionContext) fieldContext_UserRole_role(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _UserUsageStat_userID(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_userID,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_userName(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_userName,
+		func(ctx context.Context) (any, error) {
+			return obj.UserName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_userName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_userEmail(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_userEmail,
+		func(ctx context.Context) (any, error) {
+			return obj.UserEmail, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_userEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_requestCount(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_requestCount,
+		func(ctx context.Context) (any, error) {
+			return obj.RequestCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_requestCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_successCount(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_successCount,
+		func(ctx context.Context) (any, error) {
+			return obj.SuccessCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_successCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_successRate(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_successRate,
+		func(ctx context.Context) (any, error) {
+			return obj.SuccessRate, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_successRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_promptTokens(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_promptTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.PromptTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_promptTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_completionTokens(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_completionTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.CompletionTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_completionTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_totalTokens(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_totalTokens,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalTokens, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_totalTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_totalCost(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_totalCost,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCost, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_totalCost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStat_lastActiveAt(ctx context.Context, field graphql.CollectedField, obj *UserUsageStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStat_lastActiveAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastActiveAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStat_lastActiveAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserUsageStats_id(ctx context.Context, field graphql.CollectedField, obj *ent.UserUsageStats) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -61992,6 +62524,146 @@ func (ec *executionContext) fieldContext_UserUsageStats_user(_ context.Context, 
 				return ec.fieldContext_User_userRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStatsPayload_stats(ctx context.Context, field graphql.CollectedField, obj *UserUsageStatsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStatsPayload_stats,
+		func(ctx context.Context) (any, error) {
+			return obj.Stats, nil
+		},
+		nil,
+		ec.marshalNUserUsageStat2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStatᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStatsPayload_stats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStatsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userID":
+				return ec.fieldContext_UserUsageStat_userID(ctx, field)
+			case "userName":
+				return ec.fieldContext_UserUsageStat_userName(ctx, field)
+			case "userEmail":
+				return ec.fieldContext_UserUsageStat_userEmail(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_UserUsageStat_requestCount(ctx, field)
+			case "successCount":
+				return ec.fieldContext_UserUsageStat_successCount(ctx, field)
+			case "successRate":
+				return ec.fieldContext_UserUsageStat_successRate(ctx, field)
+			case "promptTokens":
+				return ec.fieldContext_UserUsageStat_promptTokens(ctx, field)
+			case "completionTokens":
+				return ec.fieldContext_UserUsageStat_completionTokens(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_UserUsageStat_totalTokens(ctx, field)
+			case "totalCost":
+				return ec.fieldContext_UserUsageStat_totalCost(ctx, field)
+			case "lastActiveAt":
+				return ec.fieldContext_UserUsageStat_lastActiveAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserUsageStat", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStatsPayload_totalUsers(ctx context.Context, field graphql.CollectedField, obj *UserUsageStatsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStatsPayload_totalUsers,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalUsers, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStatsPayload_totalUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStatsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStatsPayload_activeUsers7d(ctx context.Context, field graphql.CollectedField, obj *UserUsageStatsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStatsPayload_activeUsers7d,
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveUsers7d, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStatsPayload_activeUsers7d(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStatsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserUsageStatsPayload_activeUsers30d(ctx context.Context, field graphql.CollectedField, obj *UserUsageStatsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserUsageStatsPayload_activeUsers30d,
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveUsers30d, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserUsageStatsPayload_activeUsers30d(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserUsageStatsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -104449,6 +105121,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userUsageStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userUsageStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "allScopes":
 			field := field
 
@@ -112499,6 +113193,92 @@ func (ec *executionContext) _UserRole(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var userUsageStatImplementors = []string{"UserUsageStat"}
+
+func (ec *executionContext) _UserUsageStat(ctx context.Context, sel ast.SelectionSet, obj *UserUsageStat) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userUsageStatImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserUsageStat")
+		case "userID":
+			out.Values[i] = ec._UserUsageStat_userID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userName":
+			out.Values[i] = ec._UserUsageStat_userName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userEmail":
+			out.Values[i] = ec._UserUsageStat_userEmail(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "requestCount":
+			out.Values[i] = ec._UserUsageStat_requestCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "successCount":
+			out.Values[i] = ec._UserUsageStat_successCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "successRate":
+			out.Values[i] = ec._UserUsageStat_successRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "promptTokens":
+			out.Values[i] = ec._UserUsageStat_promptTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "completionTokens":
+			out.Values[i] = ec._UserUsageStat_completionTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalTokens":
+			out.Values[i] = ec._UserUsageStat_totalTokens(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCost":
+			out.Values[i] = ec._UserUsageStat_totalCost(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastActiveAt":
+			out.Values[i] = ec._UserUsageStat_lastActiveAt(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var userUsageStatsImplementors = []string{"UserUsageStats", "Node"}
 
 func (ec *executionContext) _UserUsageStats(ctx context.Context, sel ast.SelectionSet, obj *ent.UserUsageStats) graphql.Marshaler {
@@ -112660,6 +113440,60 @@ func (ec *executionContext) _UserUsageStats(ctx context.Context, sel ast.Selecti
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userUsageStatsPayloadImplementors = []string{"UserUsageStatsPayload"}
+
+func (ec *executionContext) _UserUsageStatsPayload(ctx context.Context, sel ast.SelectionSet, obj *UserUsageStatsPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userUsageStatsPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserUsageStatsPayload")
+		case "stats":
+			out.Values[i] = ec._UserUsageStatsPayload_stats(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalUsers":
+			out.Values[i] = ec._UserUsageStatsPayload_totalUsers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "activeUsers7d":
+			out.Values[i] = ec._UserUsageStatsPayload_activeUsers7d(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "activeUsers30d":
+			out.Values[i] = ec._UserUsageStatsPayload_activeUsers30d(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -118529,6 +119363,23 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNTimeRange2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐTimeRange(ctx context.Context, v any) (biz.TimeRange, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := biz.TimeRange(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTimeRange2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐTimeRange(ctx context.Context, sel ast.SelectionSet, v biz.TimeRange) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNTokenStats2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTokenStats(ctx context.Context, sel ast.SelectionSet, v TokenStats) graphql.Marshaler {
 	return ec._TokenStats(ctx, sel, &v)
 }
@@ -119268,6 +120119,16 @@ func (ec *executionContext) unmarshalNUserRoleWhereInput2ᚖgithubᚗcomᚋldm20
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUserStatsSortField2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserStatsSortField(ctx context.Context, v any) (UserStatsSortField, error) {
+	var res UserStatsSortField
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserStatsSortField2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserStatsSortField(ctx context.Context, sel ast.SelectionSet, v UserStatsSortField) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNUserStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋuserᚐStatus(ctx context.Context, v any) (user.Status, error) {
 	var res user.Status
 	err := res.UnmarshalGQL(v)
@@ -119276,6 +120137,60 @@ func (ec *executionContext) unmarshalNUserStatus2githubᚗcomᚋldm2060ᚋaxonhu
 
 func (ec *executionContext) marshalNUserStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋuserᚐStatus(ctx context.Context, sel ast.SelectionSet, v user.Status) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNUserUsageStat2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStatᚄ(ctx context.Context, sel ast.SelectionSet, v []*UserUsageStat) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUserUsageStat2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStat(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUserUsageStat2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStat(ctx context.Context, sel ast.SelectionSet, v *UserUsageStat) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserUsageStat(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUserUsageStats2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserUsageStats(ctx context.Context, sel ast.SelectionSet, v *ent.UserUsageStats) graphql.Marshaler {
@@ -119302,6 +120217,20 @@ func (ec *executionContext) marshalNUserUsageStatsOrderField2ᚖgithubᚗcomᚋl
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalNUserUsageStatsPayload2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStatsPayload(ctx context.Context, sel ast.SelectionSet, v UserUsageStatsPayload) graphql.Marshaler {
+	return ec._UserUsageStatsPayload(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserUsageStatsPayload2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUserUsageStatsPayload(ctx context.Context, sel ast.SelectionSet, v *UserUsageStatsPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserUsageStatsPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNUserUsageStatsWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUserUsageStatsWhereInput(ctx context.Context, v any) (*ent.UserUsageStatsWhereInput, error) {

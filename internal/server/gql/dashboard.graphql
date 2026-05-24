@@ -240,4 +240,49 @@ extend type Query {
   costStatsByChannel(timeWindow: String): [CostStatsByChannel!]!
   costStatsByModel(timeWindow: String): [CostStatsByModel!]!
   costStatsByAPIKey(timeWindow: String): [CostStatsByAPIKey!]!
+  """
+  Get user usage statistics with pagination, search, and sorting
+  """
+  userUsageStats(
+    timeRange: TimeRange!
+    search: String
+    sortBy: UserStatsSortField!
+    sortOrder: OrderDirection!
+    page: Int!
+    pageSize: Int!
+  ): UserUsageStatsPayload!
+}
+
+type UserUsageStat {
+  userID: Int!
+  userName: String!
+  userEmail: String!
+  requestCount: Int!
+  successCount: Int!
+  successRate: Float!
+  promptTokens: Int!
+  completionTokens: Int!
+  totalTokens: Int!
+  totalCost: Float!
+  lastActiveAt: Time
+}
+
+type UserUsageStatsPayload {
+  stats: [UserUsageStat!]!
+  totalUsers: Int!
+  activeUsers7d: Int!
+  activeUsers30d: Int!
+}
+
+enum UserStatsSortField {
+  REQUEST_COUNT
+  TOTAL_COST
+  TOTAL_TOKENS
+  LAST_ACTIVE_AT
+}
+
+enum TimeRange {
+  LAST_7D
+  LAST_30D
+  ALL
 }

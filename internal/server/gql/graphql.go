@@ -83,6 +83,7 @@ type Dependencies struct {
 	GCWorker                       *gc.Worker
 	VideoWorker                    *video_storage.Worker
 	MemorySampler                  *biz.MemorySampler
+	UserUsageStatsService          *biz.UserUsageStatsService
 }
 
 type GraphqlHandler struct {
@@ -125,6 +126,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.GCWorker,
 			deps.VideoWorker,
 			deps.MemorySampler,
+			deps.UserUsageStatsService,
 		),
 	)
 
