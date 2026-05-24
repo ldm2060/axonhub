@@ -27,6 +27,8 @@ var DefaultUserScopes = []string{
 	string(scopes.ScopeWriteRequests),
 	string(scopes.ScopeReadPrompts),
 	string(scopes.ScopeWritePrompts),
+	string(scopes.ScopeReadRoles),
+	string(scopes.ScopeWriteRoles),
 }
 
 // SignUpInput is the input for user self-registration.

@@ -63,12 +63,21 @@ func (s *ProjectService) CreatePrivateProject(ctx context.Context, userID int) (
 		return 0, fmt.Errorf("failed to create private project: %w", err)
 	}
 
-	// Assign user as project owner
+	// Assign user as project owner with default project-level scopes
 	_, err = client.UserProject.Create().
 		SetUserID(userID).
 		SetProjectID(proj.ID).
 		SetIsOwner(true).
-		SetScopes([]string{}).
+		SetScopes([]string{
+			string(scopes.ScopeReadAPIKeys),
+			string(scopes.ScopeWriteAPIKeys),
+			string(scopes.ScopeReadRequests),
+			string(scopes.ScopeWriteRequests),
+			string(scopes.ScopeReadPrompts),
+			string(scopes.ScopeWritePrompts),
+			string(scopes.ScopeReadRoles),
+			string(scopes.ScopeWriteRoles),
+		}).
 		Save(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to assign project owner: %w", err)
