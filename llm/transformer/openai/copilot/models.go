@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -67,6 +68,99 @@ func (m CopilotModel) ReasoningEfforts() []string {
 
 func (m CopilotModel) MaxThinkingBudget() int {
 	return m.Capabilities.Supports.MaxThinkingBudget
+}
+
+// CopilotModelInfo is a flattened summary of a CopilotModel, pre-computed for
+// fast lookups during request transformation.
+type CopilotModelInfo struct {
+	ModelID                   string
+	SupportedEndpoints        []string
+	SupportsAnthropicMessages bool
+	SupportsAdaptiveThinking  bool
+	ReasoningEfforts          []string
+	MaxThinkingBudget         int
+	MaxContextWindowTokens    int
+	MaxOutputTokens           int
+	SupportsVision            bool
+	SupportsToolCalls         bool
+	SupportsStreaming         bool
+	SupportsStructuredOutputs bool
+	IsOpus                    bool
+}
+
+// ModelVariant represents a derived variant of a base model (e.g. "gpt-4.1:high").
+type ModelVariant struct {
+	ModelID      string
+	DisplayName  string
+	Type         string // "reasoning", "adaptive", or "budget"
+	Effort       string // "low", "medium", "high", "max"
+	BudgetTokens int    // for budget-based variants
+}
+
+// BuildModelInfoMap builds a lookup table from model ID to CopilotModelInfo.
+func BuildModelInfoMap(models []CopilotModel) map[string]*CopilotModelInfo {
+	m := make(map[string]*CopilotModelInfo, len(models))
+	for _, model := range models {
+		info := &CopilotModelInfo{
+			ModelID:                   model.ID,
+			SupportedEndpoints:        model.SupportedEndpoints,
+			SupportsAnthropicMessages: model.SupportsAnthropicMessages(),
+			SupportsAdaptiveThinking:  model.HasAdaptiveThinking(),
+			ReasoningEfforts:          model.ReasoningEfforts(),
+			MaxThinkingBudget:         model.MaxThinkingBudget(),
+			MaxContextWindowTokens:    model.Capabilities.Limits.MaxContextWindowTokens,
+			MaxOutputTokens:           model.Capabilities.Limits.MaxOutputTokens,
+			SupportsVision:            model.Capabilities.Supports.Vision,
+			SupportsToolCalls:         model.Capabilities.Supports.ToolCalls,
+			SupportsStreaming:         model.Capabilities.Supports.Streaming,
+			SupportsStructuredOutputs: model.Capabilities.Supports.StructuredOutputs,
+			IsOpus:                    strings.Contains(model.ID, "opus"),
+		}
+		m[model.ID] = info
+	}
+	return m
+}
+
+// GenerateVariants produces model variants for a given CopilotModelInfo.
+// Models with reasoning efforts get per-effort variants (type "reasoning" or
+// "adaptive"). Models without efforts but with a thinking budget get "high" and
+// "max" budget variants.
+func GenerateVariants(info *CopilotModelInfo) []ModelVariant {
+	var variants []ModelVariant
+
+	if len(info.ReasoningEfforts) > 0 {
+		for _, effort := range info.ReasoningEfforts {
+			variantType := "reasoning"
+			if info.SupportsAdaptiveThinking {
+				variantType = "adaptive"
+			}
+			variants = append(variants, ModelVariant{
+				ModelID:     info.ModelID + ":" + effort,
+				DisplayName: effort,
+				Type:        variantType,
+				Effort:      effort,
+			})
+		}
+	} else if info.MaxThinkingBudget > 0 {
+		variants = append(variants,
+			ModelVariant{
+				ModelID:      info.ModelID + ":high",
+				DisplayName:  "high",
+				Type:         "budget",
+				Effort:       "high",
+				BudgetTokens: info.MaxThinkingBudget / 2,
+			},
+			ModelVariant{
+				ModelID:      info.ModelID + ":max",
+				DisplayName:  "max",
+				Type:         "budget",
+				Effort:       "max",
+				BudgetTokens: info.MaxThinkingBudget - 1,
+			},
+		)
+	}
+
+	return variants
 }
 
 // FetchModels fetches the available models from the Copilot /models API.
