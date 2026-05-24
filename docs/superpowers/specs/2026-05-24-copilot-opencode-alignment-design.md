@@ -101,8 +101,8 @@ type OutboundTransformer struct {
 
 When routing to `/v1/messages`, create an Anthropic outbound transformer with:
 - `BaseURL`: `{copilotBaseURL}/v1` (e.g., `https://api.githubcopilot.com/v1`)
-- `EndpointPath`: empty string (Anthropic transformer default path `/messages` applies)
-- Auth: Bearer token from Copilot token provider (override Anthropic transformer's auth)
+- `EndpointPath`: leave empty — the Anthropic transformer automatically appends its default path `/messages`, producing the correct final URL `https://api.githubcopilot.com/v1/messages`
+- Auth: Bearer token from Copilot token provider (override the Anthropic transformer's own auth config, since Copilot uses its own OAuth token, not an Anthropic API key)
 
 **Response Handling:**
 
