@@ -336,6 +336,11 @@ var (
 				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[6]},
 			},
 			{
+				Name:    "emailtoken_type_email",
+				Unique:  true,
+				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[5]},
+			},
+			{
 				Name:    "emailtoken_type_email_expires_at",
 				Unique:  false,
 				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[5], EmailTokensColumns[6]},

@@ -48,6 +48,7 @@ func (EmailToken) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("token"),
 		index.Fields("type", "expires_at"),
+		index.Fields("type", "email").Unique(),
 		index.Fields("type", "email", "expires_at"),
 	}
 }

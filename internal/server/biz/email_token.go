@@ -83,19 +83,6 @@ func (s *EmailTokenService) ValidateToken(ctx context.Context, token string, tok
 
 func (s *EmailTokenService) CreateEmailCode(ctx context.Context, email string, tokenType emailtoken.Type, ttl time.Duration) (string, error) {
 	normalizedEmail := normalizeEmail(email)
-	client := s.entFromContext(ctx)
-
-	_, err := client.EmailToken.Update().
-		Where(
-			emailtoken.TypeEQ(tokenType),
-			emailtoken.EmailEQ(normalizedEmail),
-			emailtoken.ConsumedAtIsNil(),
-		).
-		SetConsumedAt(xtime.UTCNow()).
-		Save(ctx)
-	if err != nil {
-		return "", fmt.Errorf("consume previous email codes: %w", err)
-	}
 
 	var lastErr error
 	for range 5 {
@@ -103,19 +90,49 @@ func (s *EmailTokenService) CreateEmailCode(ctx context.Context, email string, t
 		if err != nil {
 			return "", err
 		}
-		_, err = client.EmailToken.Create().
-			SetToken(code).
-			SetType(tokenType).
-			SetEmail(normalizedEmail).
-			SetExpiresAt(xtime.UTCNow().Add(ttl)).
-			Save(ctx)
+		err = s.saveEmailCode(ctx, normalizedEmail, tokenType, code, ttl)
 		if err == nil {
 			return code, nil
+		}
+		if !ent.IsConstraintError(err) {
+			return "", err
 		}
 		lastErr = err
 	}
 
 	return "", fmt.Errorf("create email code: %w", lastErr)
+}
+
+func (s *EmailTokenService) saveEmailCode(ctx context.Context, normalizedEmail string, tokenType emailtoken.Type, code string, ttl time.Duration) error {
+	expiresAt := xtime.UTCNow().Add(ttl)
+	client := s.entFromContext(ctx)
+
+	updated, err := client.EmailToken.Update().
+		Where(
+			emailtoken.TypeEQ(tokenType),
+			emailtoken.EmailEQ(normalizedEmail),
+		).
+		SetToken(code).
+		SetExpiresAt(expiresAt).
+		ClearConsumedAt().
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("update email code: %w", err)
+	}
+	if updated > 0 {
+		return nil
+	}
+
+	_, err = client.EmailToken.Create().
+		SetToken(code).
+		SetType(tokenType).
+		SetEmail(normalizedEmail).
+		SetExpiresAt(expiresAt).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("create email code row: %w", err)
+	}
+	return nil
 }
 
 func (s *EmailTokenService) ValidateEmailCode(ctx context.Context, email, code string, tokenType emailtoken.Type) (*ent.EmailToken, error) {

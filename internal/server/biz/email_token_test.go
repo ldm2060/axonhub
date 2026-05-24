@@ -52,6 +52,15 @@ func TestEmailTokenService_CreateEmailCodeSupersedesPreviousCode(t *testing.T) {
 
 	_, err = svc.ValidateEmailCode(ctx, "user@example.com", newCode, emailtoken.TypeVerifyEmail)
 	require.NoError(t, err)
+
+	count, err := client.EmailToken.Query().
+		Where(
+			emailtoken.EmailEQ("user@example.com"),
+			emailtoken.TypeEQ(emailtoken.TypeVerifyEmail),
+		).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, count)
 }
 
 func TestEmailTokenService_ValidateEmailCodeRejectsWrongExpiredAndConsumedCodes(t *testing.T) {
