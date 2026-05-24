@@ -832,10 +832,24 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel) (*Channel
 			return nil, fmt.Errorf("failed to create CopilotTokenProvider: %w", err)
 		}
 
+		// Fetch Copilot model info for routing decisions (Anthropic Messages vs Chat Completions).
+		// If fetching fails, the transformer handles nil modelInfo gracefully by defaulting to Chat Completions.
+		baseURL := c.BaseURL
+		if baseURL == "" {
+			baseURL = copilot.DefaultCopilotBaseURL
+		}
+		modelInfo, fetchErr := copilot.FetchModelInfoMap(context.Background(), httpClient, baseURL, creds.AccessToken)
+		if fetchErr != nil {
+			log.Warn(context.Background(), "failed to fetch copilot model info, routing will default to chat completions",
+				log.Cause(fetchErr),
+				log.String("channel", c.Name))
+		}
+
 		// Create the Copilot outbound transformer
 		transformer, err := copilot.NewOutboundTransformer(copilot.OutboundTransformerParams{
 			TokenProvider: p,
 			BaseURL:       c.BaseURL,
+			ModelInfo:     modelInfo,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create github_copilot outbound transformer: %w", err)
