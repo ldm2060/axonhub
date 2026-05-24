@@ -15,7 +15,7 @@ import (
 
 func setupTestEmailTokenService(t *testing.T) (*EmailTokenService, *ent.Client, context.Context) {
 	t.Helper()
-	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=0")
 	ctx := context.Background()
 	ctx = ent.NewContext(ctx, client)
 	ctx = authz.WithTestBypass(ctx)
