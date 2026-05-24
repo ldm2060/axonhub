@@ -210,4 +210,25 @@ func ModelIDs(models []CopilotModel) []string {
 	return ids
 }
 
+// FetchModelsWithInfo fetches models and returns both the model IDs and a
+// CopilotModelInfo lookup table for routing decisions.
+func FetchModelsWithInfo(ctx context.Context, httpClient *httpclient.HttpClient, baseURL, accessToken string) ([]string, map[string]*CopilotModelInfo, error) {
+	models, err := FetchModels(ctx, httpClient, baseURL, accessToken)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ModelIDs(models), BuildModelInfoMap(models), nil
+}
+
+// FetchModelInfoMap fetches models and returns only the CopilotModelInfo lookup table.
+func FetchModelInfoMap(ctx context.Context, httpClient *httpclient.HttpClient, baseURL, accessToken string) (map[string]*CopilotModelInfo, error) {
+	models, err := FetchModels(ctx, httpClient, baseURL, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return BuildModelInfoMap(models), nil
+}
+
 const fetchModelsTimeout = 5 * time.Second

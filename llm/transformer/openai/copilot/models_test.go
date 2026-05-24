@@ -1,9 +1,15 @@
 package copilot
 
 import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 func TestCopilotModel_SupportsAnthropicMessages(t *testing.T) {
@@ -151,4 +157,95 @@ func TestGenerateVariants_NoCapabilities(t *testing.T) {
 	}
 	variants := GenerateVariants(info)
 	assert.Empty(t, variants)
+}
+
+func TestFetchModelsWithInfo(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"data": []map[string]interface{}{
+				{
+					"id":                  "gpt-4.1",
+					"model_picker_enabled": true,
+					"policy":              map[string]string{"state": "enabled"},
+					"capabilities": map[string]interface{}{
+						"supports": map[string]interface{}{
+							"reasoning_effort": []string{"low", "medium", "high"},
+						},
+					},
+				},
+				{
+					"id":                  "claude-sonnet-4-20250514",
+					"model_picker_enabled": true,
+					"policy":              map[string]string{"state": "enabled"},
+					"supported_endpoints": []string{"/v1/messages", "/chat/completions"},
+					"capabilities": map[string]interface{}{
+						"supports": map[string]interface{}{
+							"adaptive_thinking": true,
+						},
+					},
+				},
+				{
+					"id":                  "disabled-model",
+					"model_picker_enabled": false,
+					"policy":              map[string]string{"state": "enabled"},
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	httpClient := httpclient.NewHttpClientWithClient(server.Client())
+	ids, infoMap, err := FetchModelsWithInfo(context.Background(), httpClient, server.URL, "test-token")
+	assert.NoError(t, err)
+
+	assert.Len(t, ids, 2) // disabled-model filtered out
+	assert.Contains(t, ids, "gpt-4.1")
+	assert.Contains(t, ids, "claude-sonnet-4-20250514")
+
+	assert.NotNil(t, infoMap["gpt-4.1"])
+	assert.False(t, infoMap["gpt-4.1"].SupportsAnthropicMessages)
+
+	assert.NotNil(t, infoMap["claude-sonnet-4-20250514"])
+	assert.True(t, infoMap["claude-sonnet-4-20250514"].SupportsAnthropicMessages)
+	assert.True(t, infoMap["claude-sonnet-4-20250514"].SupportsAdaptiveThinking)
+}
+
+func TestFetchModelInfoMap(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"data": []map[string]interface{}{
+				{
+					"id":                  "gpt-4.1",
+					"model_picker_enabled": true,
+					"policy":              map[string]string{"state": "enabled"},
+				},
+				{
+					"id":                  "claude-sonnet-4-20250514",
+					"model_picker_enabled": true,
+					"policy":              map[string]string{"state": "enabled"},
+					"supported_endpoints": []string{"/v1/messages", "/chat/completions"},
+					"capabilities": map[string]interface{}{
+						"supports": map[string]interface{}{
+							"adaptive_thinking": true,
+						},
+					},
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	httpClient := httpclient.NewHttpClientWithClient(server.Client())
+	infoMap, err := FetchModelInfoMap(context.Background(), httpClient, server.URL, "test-token")
+	assert.NoError(t, err)
+
+	assert.Len(t, infoMap, 2)
+	assert.NotNil(t, infoMap["gpt-4.1"])
+	assert.False(t, infoMap["gpt-4.1"].SupportsAnthropicMessages)
+	assert.NotNil(t, infoMap["claude-sonnet-4-20250514"])
+	assert.True(t, infoMap["claude-sonnet-4-20250514"].SupportsAnthropicMessages)
 }
