@@ -147,7 +147,10 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 		{APIFormat: llm.APIFormatJinaEmbedding.String()},
 	},
 	channel.TypeGithub:           openAICompatibleDefaultEndpoints,
-	channel.TypeGithubCopilot:    {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
+	channel.TypeGithubCopilot: {
+		{APIFormat: llm.APIFormatOpenAIChatCompletion.String()},
+		{APIFormat: llm.APIFormatAnthropicMessage.String()},
+	},
 	channel.TypeClaudecode:       {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeCerebras:         {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
 	channel.TypeAntigravity:      {{APIFormat: llm.APIFormatGeminiContents.String()}},
