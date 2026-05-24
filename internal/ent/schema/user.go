@@ -94,6 +94,7 @@ func (User) Edges() []ent.Edge {
 				entgql.RelayConnection(),
 			),
 		edge.To("email_tokens", EmailToken.Type),
+		edge.To("user_usage_stats", UserUsageStats.Type),
 	}
 }
 
