@@ -697,7 +697,7 @@ func (s *UserService) ActivateUser(ctx context.Context, userID int) error {
 // GetByEmail finds a user by their email address.
 func (s *UserService) GetByEmail(ctx context.Context, email string) (*ent.User, error) {
 	return s.entFromContext(ctx).User.Query().
-		Where(user.EmailEQ(email)).
+		Where(user.EmailEQ(normalizeEmail(email))).
 		Only(ctx)
 }
 

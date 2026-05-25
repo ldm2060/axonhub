@@ -1473,3 +1473,23 @@ func TestUpdateProjectUser_UpdateIsOwner_PermissionDenied(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, userProject.IsOwner)
 }
+
+func TestUserService_GetByEmail_NormalizesEmailLookup(t *testing.T) {
+	userService, client := setupTestUserService(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	ctx = authz.WithTestBypass(ctx)
+
+	createdUser, err := client.User.Create().
+		SetEmail("user@example.com").
+		SetPassword("hashedpassword").
+		SetStatus(user.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+
+	foundUser, err := userService.GetByEmail(ctx, "User@Example.COM")
+	require.NoError(t, err)
+	require.Equal(t, createdUser.ID, foundUser.ID)
+}
