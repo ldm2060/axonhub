@@ -2293,10 +2293,11 @@ type EmailToken implements Node {
   updatedAt: Time!
   token: String!
   type: EmailTokenType!
+  email: String
   expiresAt: Time!
   consumedAt: Time
-  userID: ID!
-  user: User!
+  userID: ID
+  user: User
 }
 """
 Ordering options for EmailToken connections
@@ -2390,6 +2391,24 @@ input EmailTokenWhereInput {
   typeIn: [EmailTokenType!]
   typeNotIn: [EmailTokenType!]
   """
+  email field predicates
+  """
+  email: String
+  emailNEQ: String
+  emailIn: [String!]
+  emailNotIn: [String!]
+  emailGT: String
+  emailGTE: String
+  emailLT: String
+  emailLTE: String
+  emailContains: String
+  emailHasPrefix: String
+  emailHasSuffix: String
+  emailIsNil: Boolean
+  emailNotNil: Boolean
+  emailEqualFold: String
+  emailContainsFold: String
+  """
   expires_at field predicates
   """
   expiresAt: Time
@@ -2420,6 +2439,8 @@ input EmailTokenWhereInput {
   userIDNEQ: ID
   userIDIn: [ID!]
   userIDNotIn: [ID!]
+  userIDIsNil: Boolean
+  userIDNotNil: Boolean
   """
   user edge predicates
   """

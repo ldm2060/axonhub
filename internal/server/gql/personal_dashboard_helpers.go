@@ -10,6 +10,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
@@ -19,6 +20,9 @@ import (
 )
 
 func (r *queryResolver) getUserProjectIDs(ctx context.Context) ([]int, error) {
+	// Personal project query is already scoped to the current user, allow unconditionally.
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
+
 	user, ok := contexts.GetUser(ctx)
 	if !ok || user == nil {
 		return nil, fmt.Errorf("unauthorized")

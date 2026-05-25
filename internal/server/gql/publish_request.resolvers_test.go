@@ -109,3 +109,64 @@ func TestQueryResolver_MyDashboardCountsRequestsForPrivateProject(t *testing.T) 
 	require.Equal(t, 2, stats.TotalRequests)
 	require.Equal(t, 1, stats.FailedRequests)
 }
+
+// TestQueryResolver_MyDashboard_NormalUserWithoutReadDashboardScope verifies that a
+// normal (non-owner) user without the read_dashboard scope can still access their
+// personal dashboard. This is the regression test for the bug where all my* resolvers
+// used WithScopeDecision(ScopeReadDashboard), which denied access for normal users.
+func TestQueryResolver_MyDashboard_NormalUserWithoutReadDashboardScope(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=0")
+	setupCtx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
+
+	projectService := biz.NewProjectService(biz.ProjectServiceParams{Ent: client})
+	userService := biz.NewUserService(biz.UserServiceParams{
+		Ent:            client,
+		ProjectService: projectService,
+	})
+	systemService := biz.NewSystemService(biz.SystemServiceParams{
+		Ent:         client,
+		CacheConfig: xcache.Config{Mode: xcache.ModeMemory},
+	})
+
+	// Create a normal user with default scopes (no read_dashboard).
+	testUser, err := userService.CreateUser(setupCtx, ent.CreateUserInput{
+		Email:    "normal-user@example.com",
+		Password: "password",
+		Status:   lo.ToPtr(user.StatusActivated),
+		Scopes:   biz.DefaultUserScopes, // read_channels etc., but NOT read_dashboard
+	})
+	require.NoError(t, err)
+	loadedUser, err := userService.GetUserByID(setupCtx, testUser.ID)
+	require.NoError(t, err)
+	require.NotNil(t, loadedUser.PrivateProjectID)
+
+	// Build a context with a real user principal (NOT test bypass).
+	// This simulates actual request conditions where the privacy framework enforces scope decisions.
+	requestCtx := ent.NewContext(context.Background(), client)
+	requestCtx = contexts.WithUser(requestCtx, loadedUser)
+	requestCtx = authz.NewUserContext(requestCtx, loadedUser.ID)
+
+	resolver := &queryResolver{&Resolver{
+		client:        client,
+		userService:   userService,
+		systemService: systemService,
+	}}
+
+	// Seed data using bypass for setup.
+	projectID := *loadedUser.PrivateProjectID
+	_, err = client.Request.Create().
+		SetProjectID(projectID).
+		SetModelID("model-a").
+		SetFormat("openai/chat_completions").
+		SetStatus(request.StatusCompleted).
+		SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+		Save(authz.WithTestBypass(ent.NewContext(context.Background(), client)))
+	require.NoError(t, err)
+
+	// A normal user should be able to access their personal dashboard without read_dashboard scope.
+	stats, err := resolver.MyDashboard(requestCtx)
+	require.NoError(t, err, "normal user should be able to access personal dashboard without read_dashboard scope")
+	require.GreaterOrEqual(t, stats.TotalRequests, 1)
+
+	defer client.Close()
+}

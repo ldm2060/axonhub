@@ -244,6 +244,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			emailtoken.FieldUpdatedAt:  {Type: field.TypeTime, Column: emailtoken.FieldUpdatedAt},
 			emailtoken.FieldToken:      {Type: field.TypeString, Column: emailtoken.FieldToken},
 			emailtoken.FieldType:       {Type: field.TypeEnum, Column: emailtoken.FieldType},
+			emailtoken.FieldEmail:      {Type: field.TypeString, Column: emailtoken.FieldEmail},
 			emailtoken.FieldExpiresAt:  {Type: field.TypeTime, Column: emailtoken.FieldExpiresAt},
 			emailtoken.FieldConsumedAt: {Type: field.TypeTime, Column: emailtoken.FieldConsumedAt},
 			emailtoken.FieldUserID:     {Type: field.TypeInt, Column: emailtoken.FieldUserID},
@@ -900,7 +901,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"user",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -1476,7 +1477,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"email_tokens",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EmailTokensTable,
 			Columns: []string{user.EmailTokensColumn},
 			Bidi:    false,
@@ -2639,6 +2640,11 @@ func (f *EmailTokenFilter) WhereToken(p entql.StringP) {
 // WhereType applies the entql string predicate on the type field.
 func (f *EmailTokenFilter) WhereType(p entql.StringP) {
 	f.Where(p.Field(emailtoken.FieldType))
+}
+
+// WhereEmail applies the entql string predicate on the email field.
+func (f *EmailTokenFilter) WhereEmail(p entql.StringP) {
+	f.Where(p.Field(emailtoken.FieldEmail))
 }
 
 // WhereExpiresAt applies the entql time.Time predicate on the expires_at field.

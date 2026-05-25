@@ -63,6 +63,20 @@ func (_c *EmailTokenCreate) SetType(v emailtoken.Type) *EmailTokenCreate {
 	return _c
 }
 
+// SetEmail sets the "email" field.
+func (_c *EmailTokenCreate) SetEmail(v string) *EmailTokenCreate {
+	_c.mutation.SetEmail(v)
+	return _c
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_c *EmailTokenCreate) SetNillableEmail(v *string) *EmailTokenCreate {
+	if v != nil {
+		_c.SetEmail(*v)
+	}
+	return _c
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_c *EmailTokenCreate) SetExpiresAt(v time.Time) *EmailTokenCreate {
 	_c.mutation.SetExpiresAt(v)
@@ -86,6 +100,14 @@ func (_c *EmailTokenCreate) SetNillableConsumedAt(v *time.Time) *EmailTokenCreat
 // SetUserID sets the "user_id" field.
 func (_c *EmailTokenCreate) SetUserID(v int) *EmailTokenCreate {
 	_c.mutation.SetUserID(v)
+	return _c
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_c *EmailTokenCreate) SetNillableUserID(v *int) *EmailTokenCreate {
+	if v != nil {
+		_c.SetUserID(*v)
+	}
 	return _c
 }
 
@@ -160,12 +182,6 @@ func (_c *EmailTokenCreate) check() error {
 	if _, ok := _c.mutation.ExpiresAt(); !ok {
 		return &ValidationError{Name: "expires_at", err: errors.New(`ent: missing required field "EmailToken.expires_at"`)}
 	}
-	if _, ok := _c.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "EmailToken.user_id"`)}
-	}
-	if len(_c.mutation.UserIDs()) == 0 {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "EmailToken.user"`)}
-	}
 	return nil
 }
 
@@ -209,6 +225,10 @@ func (_c *EmailTokenCreate) createSpec() (*EmailToken, *sqlgraph.CreateSpec) {
 		_spec.SetField(emailtoken.FieldType, field.TypeEnum, value)
 		_node.Type = value
 	}
+	if value, ok := _c.mutation.Email(); ok {
+		_spec.SetField(emailtoken.FieldEmail, field.TypeString, value)
+		_node.Email = &value
+	}
 	if value, ok := _c.mutation.ExpiresAt(); ok {
 		_spec.SetField(emailtoken.FieldExpiresAt, field.TypeTime, value)
 		_node.ExpiresAt = value
@@ -220,7 +240,7 @@ func (_c *EmailTokenCreate) createSpec() (*EmailToken, *sqlgraph.CreateSpec) {
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   emailtoken.UserTable,
 			Columns: []string{emailtoken.UserColumn},
 			Bidi:    false,
@@ -231,7 +251,7 @@ func (_c *EmailTokenCreate) createSpec() (*EmailToken, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.UserID = nodes[0]
+		_node.UserID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -322,6 +342,24 @@ func (u *EmailTokenUpsert) UpdateType() *EmailTokenUpsert {
 	return u
 }
 
+// SetEmail sets the "email" field.
+func (u *EmailTokenUpsert) SetEmail(v string) *EmailTokenUpsert {
+	u.Set(emailtoken.FieldEmail, v)
+	return u
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *EmailTokenUpsert) UpdateEmail() *EmailTokenUpsert {
+	u.SetExcluded(emailtoken.FieldEmail)
+	return u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (u *EmailTokenUpsert) ClearEmail() *EmailTokenUpsert {
+	u.SetNull(emailtoken.FieldEmail)
+	return u
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (u *EmailTokenUpsert) SetExpiresAt(v time.Time) *EmailTokenUpsert {
 	u.Set(emailtoken.FieldExpiresAt, v)
@@ -361,6 +399,12 @@ func (u *EmailTokenUpsert) SetUserID(v int) *EmailTokenUpsert {
 // UpdateUserID sets the "user_id" field to the value that was provided on create.
 func (u *EmailTokenUpsert) UpdateUserID() *EmailTokenUpsert {
 	u.SetExcluded(emailtoken.FieldUserID)
+	return u
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *EmailTokenUpsert) ClearUserID() *EmailTokenUpsert {
+	u.SetNull(emailtoken.FieldUserID)
 	return u
 }
 
@@ -451,6 +495,27 @@ func (u *EmailTokenUpsertOne) UpdateType() *EmailTokenUpsertOne {
 	})
 }
 
+// SetEmail sets the "email" field.
+func (u *EmailTokenUpsertOne) SetEmail(v string) *EmailTokenUpsertOne {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *EmailTokenUpsertOne) UpdateEmail() *EmailTokenUpsertOne {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// ClearEmail clears the value of the "email" field.
+func (u *EmailTokenUpsertOne) ClearEmail() *EmailTokenUpsertOne {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.ClearEmail()
+	})
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (u *EmailTokenUpsertOne) SetExpiresAt(v time.Time) *EmailTokenUpsertOne {
 	return u.Update(func(s *EmailTokenUpsert) {
@@ -497,6 +562,13 @@ func (u *EmailTokenUpsertOne) SetUserID(v int) *EmailTokenUpsertOne {
 func (u *EmailTokenUpsertOne) UpdateUserID() *EmailTokenUpsertOne {
 	return u.Update(func(s *EmailTokenUpsert) {
 		s.UpdateUserID()
+	})
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *EmailTokenUpsertOne) ClearUserID() *EmailTokenUpsertOne {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.ClearUserID()
 	})
 }
 
@@ -753,6 +825,27 @@ func (u *EmailTokenUpsertBulk) UpdateType() *EmailTokenUpsertBulk {
 	})
 }
 
+// SetEmail sets the "email" field.
+func (u *EmailTokenUpsertBulk) SetEmail(v string) *EmailTokenUpsertBulk {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *EmailTokenUpsertBulk) UpdateEmail() *EmailTokenUpsertBulk {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// ClearEmail clears the value of the "email" field.
+func (u *EmailTokenUpsertBulk) ClearEmail() *EmailTokenUpsertBulk {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.ClearEmail()
+	})
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (u *EmailTokenUpsertBulk) SetExpiresAt(v time.Time) *EmailTokenUpsertBulk {
 	return u.Update(func(s *EmailTokenUpsert) {
@@ -799,6 +892,13 @@ func (u *EmailTokenUpsertBulk) SetUserID(v int) *EmailTokenUpsertBulk {
 func (u *EmailTokenUpsertBulk) UpdateUserID() *EmailTokenUpsertBulk {
 	return u.Update(func(s *EmailTokenUpsert) {
 		s.UpdateUserID()
+	})
+}
+
+// ClearUserID clears the value of the "user_id" field.
+func (u *EmailTokenUpsertBulk) ClearUserID() *EmailTokenUpsertBulk {
+	return u.Update(func(s *EmailTokenUpsert) {
+		s.ClearUserID()
 	})
 }
 

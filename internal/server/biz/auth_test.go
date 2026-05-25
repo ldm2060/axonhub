@@ -642,3 +642,28 @@ func TestAuthService_CacheExpiration(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, apiKey.ID, authenticatedAPIKey2.ID)
 }
+
+func TestAuthService_AuthenticateUser_NormalizesEmailLookup(t *testing.T) {
+	cacheConfig := xcache.Config{Mode: xcache.ModeMemory}
+	authService, client, cleanup := setupTestAuthService(t, cacheConfig)
+	defer cleanup()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	ctx = authz.WithTestBypass(ctx)
+
+	password := "test-password"
+	hashedPassword, err := HashPassword(password)
+	require.NoError(t, err)
+
+	createdUser, err := client.User.Create().
+		SetEmail("user@example.com").
+		SetPassword(hashedPassword).
+		SetStatus(user.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+
+	authenticatedUser, err := authService.AuthenticateUser(ctx, "User@Example.COM", password)
+	require.NoError(t, err)
+	require.Equal(t, createdUser.ID, authenticatedUser.ID)
+}

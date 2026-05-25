@@ -13,12 +13,12 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
@@ -27,7 +27,6 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
-	"github.com/ldm2060/axonhub/internal/scopes"
 	"github.com/samber/lo"
 )
 
@@ -97,7 +96,7 @@ func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, er
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	stats := &DashboardOverview{
 		TotalRequests:       0,
@@ -163,7 +162,7 @@ func (r *queryResolver) MyRequestStats(ctx context.Context, timeWindow *string) 
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	stats := &RequestStats{}
 	loc := r.systemService.TimeLocation(ctx)
@@ -199,7 +198,7 @@ func (r *queryResolver) MyRequestStatsByChannel(ctx context.Context, timeWindow 
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type channelStats struct {
@@ -246,7 +245,7 @@ func (r *queryResolver) MyRequestStatsByModel(ctx context.Context, timeWindow *s
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type modelStats struct {
@@ -289,7 +288,7 @@ func (r *queryResolver) MyRequestStatsByAPIKey(ctx context.Context, timeWindow *
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type apiKeyStats struct {
@@ -348,7 +347,7 @@ func (r *queryResolver) MyTokenStatsByAPIKey(ctx context.Context, timeWindow *st
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type tokenStats struct {
@@ -416,7 +415,7 @@ func (r *queryResolver) MyDailyRequestStats(ctx context.Context) ([]*DailyReques
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	daysCount := 30
 	loc := r.systemService.TimeLocation(ctx)
@@ -493,7 +492,7 @@ func (r *queryResolver) MyTokenStats(ctx context.Context) (*TokenStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	stats := &TokenStats{}
 	loc := r.systemService.TimeLocation(ctx)
@@ -571,7 +570,7 @@ func (r *queryResolver) MyChannelSuccessRates(ctx context.Context, timeWindow *s
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	if timeWindow == nil || *timeWindow == "" {
 		defaultWindow := "day"
@@ -663,7 +662,7 @@ func (r *queryResolver) MyFastestChannels(ctx context.Context, input FastestChan
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	if input.Limit == nil || *input.Limit <= 0 {
 		input.Limit = new(int)
@@ -769,7 +768,7 @@ func (r *queryResolver) MyFastestModels(ctx context.Context, input FastestChanne
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	if input.Limit == nil || *input.Limit <= 0 {
 		input.Limit = new(int)
@@ -876,7 +875,7 @@ func (r *queryResolver) MyModelPerformanceStats(ctx context.Context) ([]*ModelPe
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
@@ -994,7 +993,7 @@ func (r *queryResolver) MyChannelPerformanceStats(ctx context.Context) ([]*Chann
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	daysCount := 30
 	loc := r.systemService.TimeLocation(ctx)
@@ -1013,7 +1012,7 @@ func (r *queryResolver) MyTokenStatsByChannel(ctx context.Context, timeWindow *s
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type channelTokenStats struct {
@@ -1075,7 +1074,7 @@ func (r *queryResolver) MyTokenStatsByModel(ctx context.Context, timeWindow *str
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type modelTokenStats struct {
@@ -1128,7 +1127,7 @@ func (r *queryResolver) MyCostStatsByChannel(ctx context.Context, timeWindow *st
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type channelCostStats struct {
@@ -1173,7 +1172,7 @@ func (r *queryResolver) MyCostStatsByModel(ctx context.Context, timeWindow *stri
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type modelCostStats struct {
@@ -1212,7 +1211,7 @@ func (r *queryResolver) MyCostStatsByAPIKey(ctx context.Context, timeWindow *str
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 	since, applyFilter := r.parseTimeWindow(ctx, timeWindow)
 
 	type apiKeyCostStats struct {
@@ -1269,7 +1268,7 @@ func (r *queryResolver) MyTopRequestsProjects(ctx context.Context) ([]*TopReques
 	if err != nil {
 		return nil, err
 	}
-	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	type projectRequestCount struct {
 		ProjectID    int `json:"project_id"`

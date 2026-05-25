@@ -76,7 +76,7 @@ func (_q *EmailTokenQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(emailtoken.Table, emailtoken.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, emailtoken.UserTable, emailtoken.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, emailtoken.UserTable, emailtoken.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -416,7 +416,10 @@ func (_q *EmailTokenQuery) loadUser(ctx context.Context, query *UserQuery, nodes
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*EmailToken)
 	for i := range nodes {
-		fk := nodes[i].UserID
+		if nodes[i].UserID == nil {
+			continue
+		}
+		fk := *nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}

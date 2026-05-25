@@ -1473,3 +1473,44 @@ func TestUpdateProjectUser_UpdateIsOwner_PermissionDenied(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, userProject.IsOwner)
 }
+
+func TestUserService_GetByEmail_NormalizesEmailLookup(t *testing.T) {
+	userService, client := setupTestUserService(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	ctx = authz.WithTestBypass(ctx)
+
+	createdUser, err := client.User.Create().
+		SetEmail("user@example.com").
+		SetPassword("hashedpassword").
+		SetStatus(user.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+
+	foundUser, err := userService.GetByEmail(ctx, "User@Example.COM")
+	require.NoError(t, err)
+	require.Equal(t, createdUser.ID, foundUser.ID)
+}
+
+func TestUserService_GetByEmail_PublicContext(t *testing.T) {
+	userService, client := setupTestUserService(t)
+	defer client.Close()
+
+	setupCtx := context.Background()
+	setupCtx = ent.NewContext(setupCtx, client)
+	setupCtx = authz.WithTestBypass(setupCtx)
+
+	createdUser, err := client.User.Create().
+		SetEmail("User@Example.COM").
+		SetPassword("hashedpassword").
+		SetStatus(user.StatusActivated).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	publicCtx := ent.NewContext(context.Background(), client)
+	foundUser, err := userService.GetByEmail(publicCtx, "user@example.com")
+	require.NoError(t, err)
+	require.Equal(t, createdUser.ID, foundUser.ID)
+}

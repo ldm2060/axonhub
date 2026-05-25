@@ -9,6 +9,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
@@ -724,9 +725,11 @@ func (s *UserService) ActivateUser(ctx context.Context, userID int) error {
 
 // GetByEmail finds a user by their email address.
 func (s *UserService) GetByEmail(ctx context.Context, email string) (*ent.User, error) {
-	return s.entFromContext(ctx).User.Query().
-		Where(user.EmailEQ(email)).
-		Only(ctx)
+	return authz.RunWithSystemBypass(ctx, "user-email-lookup", func(bypassCtx context.Context) (*ent.User, error) {
+		return s.entFromContext(bypassCtx).User.Query().
+			Where(user.EmailEqualFold(normalizeEmail(email))).
+			Only(bypassCtx)
+	})
 }
 
 // ResetPassword updates a user's password to a new hashed value.

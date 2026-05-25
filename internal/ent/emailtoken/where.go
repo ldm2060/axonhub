@@ -70,6 +70,11 @@ func Token(v string) predicate.EmailToken {
 	return predicate.EmailToken(sql.FieldEQ(FieldToken, v))
 }
 
+// Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
+func Email(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldEQ(FieldEmail, v))
+}
+
 // ExpiresAt applies equality check predicate on the "expires_at" field. It's identical to ExpiresAtEQ.
 func ExpiresAt(v time.Time) predicate.EmailToken {
 	return predicate.EmailToken(sql.FieldEQ(FieldExpiresAt, v))
@@ -250,6 +255,81 @@ func TypeNotIn(vs ...Type) predicate.EmailToken {
 	return predicate.EmailToken(sql.FieldNotIn(FieldType, vs...))
 }
 
+// EmailEQ applies the EQ predicate on the "email" field.
+func EmailEQ(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldEQ(FieldEmail, v))
+}
+
+// EmailNEQ applies the NEQ predicate on the "email" field.
+func EmailNEQ(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldNEQ(FieldEmail, v))
+}
+
+// EmailIn applies the In predicate on the "email" field.
+func EmailIn(vs ...string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldIn(FieldEmail, vs...))
+}
+
+// EmailNotIn applies the NotIn predicate on the "email" field.
+func EmailNotIn(vs ...string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldNotIn(FieldEmail, vs...))
+}
+
+// EmailGT applies the GT predicate on the "email" field.
+func EmailGT(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldGT(FieldEmail, v))
+}
+
+// EmailGTE applies the GTE predicate on the "email" field.
+func EmailGTE(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldGTE(FieldEmail, v))
+}
+
+// EmailLT applies the LT predicate on the "email" field.
+func EmailLT(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldLT(FieldEmail, v))
+}
+
+// EmailLTE applies the LTE predicate on the "email" field.
+func EmailLTE(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldLTE(FieldEmail, v))
+}
+
+// EmailContains applies the Contains predicate on the "email" field.
+func EmailContains(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldContains(FieldEmail, v))
+}
+
+// EmailHasPrefix applies the HasPrefix predicate on the "email" field.
+func EmailHasPrefix(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldHasPrefix(FieldEmail, v))
+}
+
+// EmailHasSuffix applies the HasSuffix predicate on the "email" field.
+func EmailHasSuffix(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldHasSuffix(FieldEmail, v))
+}
+
+// EmailIsNil applies the IsNil predicate on the "email" field.
+func EmailIsNil() predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldIsNull(FieldEmail))
+}
+
+// EmailNotNil applies the NotNil predicate on the "email" field.
+func EmailNotNil() predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldNotNull(FieldEmail))
+}
+
+// EmailEqualFold applies the EqualFold predicate on the "email" field.
+func EmailEqualFold(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldEqualFold(FieldEmail, v))
+}
+
+// EmailContainsFold applies the ContainsFold predicate on the "email" field.
+func EmailContainsFold(v string) predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldContainsFold(FieldEmail, v))
+}
+
 // ExpiresAtEQ applies the EQ predicate on the "expires_at" field.
 func ExpiresAtEQ(v time.Time) predicate.EmailToken {
 	return predicate.EmailToken(sql.FieldEQ(FieldExpiresAt, v))
@@ -360,12 +440,22 @@ func UserIDNotIn(vs ...int) predicate.EmailToken {
 	return predicate.EmailToken(sql.FieldNotIn(FieldUserID, vs...))
 }
 
+// UserIDIsNil applies the IsNil predicate on the "user_id" field.
+func UserIDIsNil() predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldIsNull(FieldUserID))
+}
+
+// UserIDNotNil applies the NotNil predicate on the "user_id" field.
+func UserIDNotNil() predicate.EmailToken {
+	return predicate.EmailToken(sql.FieldNotNull(FieldUserID))
+}
+
 // HasUser applies the HasEdge predicate on the "user" edge.
 func HasUser() predicate.EmailToken {
 	return predicate.EmailToken(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

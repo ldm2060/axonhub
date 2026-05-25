@@ -306,9 +306,10 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "token", Type: field.TypeString, Unique: true},
 		{Name: "type", Type: field.TypeEnum, Enums: []string{"verify_email", "reset_password"}},
+		{Name: "email", Type: field.TypeString, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime},
 		{Name: "consumed_at", Type: field.TypeTime, Nullable: true},
-		{Name: "user_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
 	// EmailTokensTable holds the schema information for the "email_tokens" table.
 	EmailTokensTable = &schema.Table{
@@ -317,10 +318,10 @@ var (
 		PrimaryKey: []*schema.Column{EmailTokensColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "email_tokens_users_email_tokens",
-				Columns:    []*schema.Column{EmailTokensColumns[7]},
+				Symbol:     "email_tokens_users_user",
+				Columns:    []*schema.Column{EmailTokensColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -332,7 +333,17 @@ var (
 			{
 				Name:    "emailtoken_type_expires_at",
 				Unique:  false,
+				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[6]},
+			},
+			{
+				Name:    "emailtoken_type_email",
+				Unique:  true,
 				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[5]},
+			},
+			{
+				Name:    "emailtoken_type_email_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{EmailTokensColumns[4], EmailTokensColumns[5], EmailTokensColumns[6]},
 			},
 		},
 	}

@@ -3687,6 +3687,23 @@ type EmailTokenWhereInput struct {
 	TypeIn    []emailtoken.Type `json:"typeIn,omitempty"`
 	TypeNotIn []emailtoken.Type `json:"typeNotIn,omitempty"`
 
+	// "email" field predicates.
+	Email             *string  `json:"email,omitempty"`
+	EmailNEQ          *string  `json:"emailNEQ,omitempty"`
+	EmailIn           []string `json:"emailIn,omitempty"`
+	EmailNotIn        []string `json:"emailNotIn,omitempty"`
+	EmailGT           *string  `json:"emailGT,omitempty"`
+	EmailGTE          *string  `json:"emailGTE,omitempty"`
+	EmailLT           *string  `json:"emailLT,omitempty"`
+	EmailLTE          *string  `json:"emailLTE,omitempty"`
+	EmailContains     *string  `json:"emailContains,omitempty"`
+	EmailHasPrefix    *string  `json:"emailHasPrefix,omitempty"`
+	EmailHasSuffix    *string  `json:"emailHasSuffix,omitempty"`
+	EmailIsNil        bool     `json:"emailIsNil,omitempty"`
+	EmailNotNil       bool     `json:"emailNotNil,omitempty"`
+	EmailEqualFold    *string  `json:"emailEqualFold,omitempty"`
+	EmailContainsFold *string  `json:"emailContainsFold,omitempty"`
+
 	// "expires_at" field predicates.
 	ExpiresAt      *time.Time  `json:"expiresAt,omitempty"`
 	ExpiresAtNEQ   *time.Time  `json:"expiresAtNEQ,omitempty"`
@@ -3710,10 +3727,12 @@ type EmailTokenWhereInput struct {
 	ConsumedAtNotNil bool        `json:"consumedAtNotNil,omitempty"`
 
 	// "user_id" field predicates.
-	UserID      *int  `json:"userID,omitempty"`
-	UserIDNEQ   *int  `json:"userIDNEQ,omitempty"`
-	UserIDIn    []int `json:"userIDIn,omitempty"`
-	UserIDNotIn []int `json:"userIDNotIn,omitempty"`
+	UserID       *int  `json:"userID,omitempty"`
+	UserIDNEQ    *int  `json:"userIDNEQ,omitempty"`
+	UserIDIn     []int `json:"userIDIn,omitempty"`
+	UserIDNotIn  []int `json:"userIDNotIn,omitempty"`
+	UserIDIsNil  bool  `json:"userIDIsNil,omitempty"`
+	UserIDNotNil bool  `json:"userIDNotNil,omitempty"`
 
 	// "user" edge predicates.
 	HasUser     *bool             `json:"hasUser,omitempty"`
@@ -3914,6 +3933,51 @@ func (i *EmailTokenWhereInput) P() (predicate.EmailToken, error) {
 	if len(i.TypeNotIn) > 0 {
 		predicates = append(predicates, emailtoken.TypeNotIn(i.TypeNotIn...))
 	}
+	if i.Email != nil {
+		predicates = append(predicates, emailtoken.EmailEQ(*i.Email))
+	}
+	if i.EmailNEQ != nil {
+		predicates = append(predicates, emailtoken.EmailNEQ(*i.EmailNEQ))
+	}
+	if len(i.EmailIn) > 0 {
+		predicates = append(predicates, emailtoken.EmailIn(i.EmailIn...))
+	}
+	if len(i.EmailNotIn) > 0 {
+		predicates = append(predicates, emailtoken.EmailNotIn(i.EmailNotIn...))
+	}
+	if i.EmailGT != nil {
+		predicates = append(predicates, emailtoken.EmailGT(*i.EmailGT))
+	}
+	if i.EmailGTE != nil {
+		predicates = append(predicates, emailtoken.EmailGTE(*i.EmailGTE))
+	}
+	if i.EmailLT != nil {
+		predicates = append(predicates, emailtoken.EmailLT(*i.EmailLT))
+	}
+	if i.EmailLTE != nil {
+		predicates = append(predicates, emailtoken.EmailLTE(*i.EmailLTE))
+	}
+	if i.EmailContains != nil {
+		predicates = append(predicates, emailtoken.EmailContains(*i.EmailContains))
+	}
+	if i.EmailHasPrefix != nil {
+		predicates = append(predicates, emailtoken.EmailHasPrefix(*i.EmailHasPrefix))
+	}
+	if i.EmailHasSuffix != nil {
+		predicates = append(predicates, emailtoken.EmailHasSuffix(*i.EmailHasSuffix))
+	}
+	if i.EmailIsNil {
+		predicates = append(predicates, emailtoken.EmailIsNil())
+	}
+	if i.EmailNotNil {
+		predicates = append(predicates, emailtoken.EmailNotNil())
+	}
+	if i.EmailEqualFold != nil {
+		predicates = append(predicates, emailtoken.EmailEqualFold(*i.EmailEqualFold))
+	}
+	if i.EmailContainsFold != nil {
+		predicates = append(predicates, emailtoken.EmailContainsFold(*i.EmailContainsFold))
+	}
 	if i.ExpiresAt != nil {
 		predicates = append(predicates, emailtoken.ExpiresAtEQ(*i.ExpiresAt))
 	}
@@ -3979,6 +4043,12 @@ func (i *EmailTokenWhereInput) P() (predicate.EmailToken, error) {
 	}
 	if len(i.UserIDNotIn) > 0 {
 		predicates = append(predicates, emailtoken.UserIDNotIn(i.UserIDNotIn...))
+	}
+	if i.UserIDIsNil {
+		predicates = append(predicates, emailtoken.UserIDIsNil())
+	}
+	if i.UserIDNotNil {
+		predicates = append(predicates, emailtoken.UserIDNotNil())
 	}
 
 	if i.HasUser != nil {

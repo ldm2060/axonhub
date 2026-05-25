@@ -335,7 +335,7 @@ func (_q *UserQuery) QueryEmailTokens() *EmailTokenQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(emailtoken.Table, emailtoken.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EmailTokensTable, user.EmailTokensColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.EmailTokensTable, user.EmailTokensColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -1485,9 +1485,12 @@ func (_q *UserQuery) loadEmailTokens(ctx context.Context, query *EmailTokenQuery
 	}
 	for _, n := range neighbors {
 		fk := n.UserID
-		node, ok := nodeids[fk]
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

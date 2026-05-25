@@ -1906,7 +1906,7 @@ func (c *EmailTokenClient) QueryUser(_m *EmailToken) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(emailtoken.Table, emailtoken.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, emailtoken.UserTable, emailtoken.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, emailtoken.UserTable, emailtoken.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -4691,7 +4691,7 @@ func (c *UserClient) QueryEmailTokens(_m *User) *EmailTokenQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(emailtoken.Table, emailtoken.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EmailTokensTable, user.EmailTokensColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.EmailTokensTable, user.EmailTokensColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

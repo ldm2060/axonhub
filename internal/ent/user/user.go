@@ -601,7 +601,7 @@ func newEmailTokensStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EmailTokensInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, EmailTokensTable, EmailTokensColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, EmailTokensTable, EmailTokensColumn),
 	)
 }
 func newUserUsageStatsStep() *sqlgraph.Step {
