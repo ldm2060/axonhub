@@ -88,22 +88,24 @@ function matchesTimeWindow(hhmm: string, start: string, end: string): boolean {
 // Status Switch Cell Component to handle status toggle with confirmation dialog
 const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
+  const { channelPermissions } = usePermissions();
   const channel = row.original;
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isEnabled = channel.status === 'enabled';
   const isArchived = channel.status === 'archived';
   const isTimeUnavailable = !isChannelCurrentlyAvailable(channel.policies);
+  const canToggle = channelPermissions.canWrite || channelPermissions.canManageOwn;
 
   const handleSwitchClick = useCallback(() => {
-    if (!isArchived) {
+    if (canToggle && !isArchived) {
       setDialogOpen(true);
     }
-  }, [isArchived]);
+  }, [canToggle, isArchived]);
 
   return (
     <div className='flex items-center justify-center'>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={isArchived} data-testid='channel-status-switch' />
+      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={!canToggle || isArchived} data-testid='channel-status-switch' />
       {isTimeUnavailable && (
         <Badge variant='outline' className='ml-1 text-xs'>
           {t('channels.columns.timeUnavailable')}

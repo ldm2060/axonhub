@@ -4,6 +4,7 @@ import { Row } from '@tanstack/react-table';
 import { IconEdit, IconArchive, IconArchiveOff, IconTrash, IconNote } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -23,11 +24,16 @@ interface DataTableRowActionsProps {
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { t } = useTranslation();
   const { setOpen, setCurrentRow } = useModels();
-  const { channelPermissions } = usePermissions();
+  const { modelPermissions } = usePermissions();
+  const { user: authUser } = useAuthStore((state) => state.auth);
   const model = row.original;
   const [menuOpen, setMenuOpen] = useState(false);
 
-  if (!channelPermissions.canWrite) {
+  const isOwner = model.ownerID === authUser?.id;
+  const canEdit = modelPermissions.canWrite || (modelPermissions.canManageOwn && isOwner);
+  const canDelete = modelPermissions.canWrite || (modelPermissions.canManageOwn && isOwner);
+
+  if (!canEdit) {
     return null;
   }
 
@@ -59,21 +65,20 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
-          <PermissionGuard requiredScope='write_channels'>
+          <DropdownMenuItem onClick={() => openRowDialog('edit')}>
+            <IconEdit size={16} className='mr-2' />
+            {t('common.actions.edit')}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => openRowDialog('association')}>
+            <IconNote size={16} className='mr-2' />
+            {t('models.actions.manageAssociation')}
+          </DropdownMenuItem>
+
+          {modelPermissions.canRead && <DropdownMenuSeparator />}
+
+          {canDelete && (
             <>
-              <DropdownMenuItem onClick={() => openRowDialog('edit')}>
-                <IconEdit size={16} className='mr-2' />
-                {t('common.actions.edit')}
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => openRowDialog('association')}>
-                <IconNote size={16} className='mr-2' />
-                {t('models.actions.manageAssociation')}
-              </DropdownMenuItem>
-
-
-              {channelPermissions.canRead && <DropdownMenuSeparator />}
-
               {model.status !== 'archived' ? (
                 <DropdownMenuItem onClick={() => openRowDialog('archive')} className='text-orange-500!'>
                   <IconArchive size={16} className='mr-2' />
@@ -94,7 +99,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 {t('common.buttons.delete')}
               </DropdownMenuItem>
             </>
-          </PermissionGuard>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

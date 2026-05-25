@@ -1255,7 +1255,9 @@ func (s *SystemService) TimeLocation(ctx context.Context) *time.Location {
 }
 
 // GeneralSettings retrieves the general settings configuration.
+// Uses system bypass since these are basic display settings needed by all authenticated users.
 func (s *SystemService) GeneralSettings(ctx context.Context) (*SystemGeneralSettings, error) {
+	ctx = authz.WithSystemBypass(ctx, "system-general-settings")
 	value, err := s.getSystemValue(ctx, SystemKeyGeneralSettings)
 	if err != nil {
 		if ent.IsNotFound(err) {

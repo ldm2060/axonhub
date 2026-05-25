@@ -33,7 +33,43 @@ export default defineConfig({
   server: {
     port: process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 5173,
     proxy: {
-      '/admin': {
+      '/admin/graphql': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/system': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/auth': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/playground': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/requests': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/codex': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/claudecode': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/antigravity': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/copilot': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/oidc': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
       },

@@ -1092,11 +1092,12 @@ export function useGeneralSettings() {
         const data = await graphqlRequest<{ systemGeneralSettings: SystemGeneralSettings }>(SYSTEM_GENERAL_SETTINGS_QUERY);
         return data.systemGeneralSettings;
       } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
+        handleError(error, { showToast: false });
         throw error;
       }
     },
     placeholderData: (previousData) => previousData,
+    retry: false,
   });
 }
 
@@ -1641,10 +1642,11 @@ export function useQuotaEnforcementSettings() {
         const data = await graphqlRequest<{ quotaEnforcementSettings: QuotaEnforcementSettings }>(QUOTA_ENFORCEMENT_SETTINGS_QUERY);
         return data.quotaEnforcementSettings;
       } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
+        handleError(error, { showToast: false });
         throw error;
       }
     },
+    retry: false,
   });
 }
 

@@ -114,14 +114,14 @@ func (APIKey) Annotations() []schema.Annotation {
 func (APIKey) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadAPIKeys),   // User 主体：需要 API Keys 读取权限
-			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys), // API key 主体：用于 OpenAPI 走 service account 读 APIKey
-			scopes.OwnerRule(), // owner 用户可以访问所有 API Keys
+			scopes.OwnerRule(),
+			scopes.UserProjectScopeReadRule(scopes.ScopeReadAPIKeys),
+			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys),
 		},
 		Mutation: scopes.MutationPolicy{
-			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteAPIKeys),   // 需要 API Keys 写入权限
-			scopes.APIKeyProjectScopeWriteRule(scopes.ScopeWriteAPIKeys), // API key scope + project 校验
-			scopes.OwnerRule(), // owner 用户可以修改所有 API Keys
+			scopes.OwnerRule(),
+			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteAPIKeys),
+			scopes.APIKeyProjectScopeWriteRule(scopes.ScopeWriteAPIKeys),
 		},
 	}
 }

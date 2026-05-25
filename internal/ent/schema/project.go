@@ -118,8 +118,8 @@ func (Project) Annotations() []schema.Annotation {
 func (Project) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadProjects),
 			scopes.OwnerRule(),
+			scopes.UserProjectScopeReadRule(scopes.ScopeReadProjects),
 			scopes.UserReadScopeRule(scopes.ScopeReadProjects),
 		},
 		Mutation: scopes.MutationPolicy{

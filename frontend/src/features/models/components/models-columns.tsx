@@ -5,6 +5,7 @@ import { IconCheck, IconX, IconLink, IconChevronDown, IconChevronRight } from '@
 import * as Icons from '@lobehub/icons';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuthStore } from '@/stores/authStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,20 +21,24 @@ import { useDeveloperLabel } from './models-table';
 // Status Switch Cell Component to handle status toggle with confirmation dialog
 function StatusSwitchCell({ row }: { row: Row<Model> }) {
   const model = row.original;
+  const { modelPermissions } = usePermissions();
+  const { user: authUser } = useAuthStore((state) => state.auth);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isEnabled = model.status === 'enabled';
   const isArchived = model.status === 'archived';
+  const isOwner = model.ownerID === authUser?.id;
+  const canToggle = modelPermissions.canWrite || (modelPermissions.canManageOwn && isOwner);
 
   const handleSwitchClick = useCallback(() => {
-    if (!isArchived) {
+    if (canToggle && !isArchived) {
       setDialogOpen(true);
     }
-  }, [isArchived]);
+  }, [canToggle, isArchived]);
 
   return (
     <>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={isArchived} data-testid='model-status-switch' />
+      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={!canToggle || isArchived} data-testid='model-status-switch' />
       {dialogOpen && <ModelsStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={model} />}
     </>
   );

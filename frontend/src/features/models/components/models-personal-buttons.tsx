@@ -10,7 +10,7 @@ export function ModelsPersonalButtons() {
 
   return (
     <div className='flex gap-2 overflow-x-auto md:overflow-x-visible'>
-      <PermissionGuard requiredScope='write_channels'>
+      <PermissionGuard requiredScopes={['write_channels', 'manage_own_models']}>
         <Button className='shrink-0' onClick={() => setOpen('create')}>
           <IconPlus className='mr-2 h-4 w-4' />
           {t('models.actions.create')}

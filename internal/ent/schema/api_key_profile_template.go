@@ -78,13 +78,13 @@ func (APIKeyProfileTemplate) Annotations() []schema.Annotation {
 func (APIKeyProfileTemplate) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadAPIKeys),
-			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys), // OpenAPI service account 加载模板
 			scopes.OwnerRule(),
+			scopes.UserProjectScopeReadRule(scopes.ScopeReadAPIKeys),
+			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys),
 		},
 		Mutation: scopes.MutationPolicy{
-			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteAPIKeys),
 			scopes.OwnerRule(),
+			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteAPIKeys),
 		},
 	}
 }

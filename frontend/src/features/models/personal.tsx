@@ -48,11 +48,8 @@ function PersonalModelsContent() {
     if (debouncedNameFilter) {
       where.or = [{ nameContainsFold: debouncedNameFilter }, { modelIDContainsFold: debouncedNameFilter }];
     }
-    if (currentUser?.id) {
-      where.ownerID = currentUser.id;
-    }
     return Object.keys(where).length > 0 ? where : undefined;
-  }, [debouncedNameFilter, currentUser?.id]);
+  }, [debouncedNameFilter]);
 
   const { data, isLoading } = useQueryAllModels({
     where: whereClause,

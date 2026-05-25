@@ -84,16 +84,15 @@ func (Trace) Annotations() []schema.Annotation {
 func (Trace) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
-			// The API key can query traces if it has write requests scope.
+			scopes.OwnerRule(),
 			scopes.APIKeyScopeQueryRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeReadRule(scopes.ScopeReadRequests),
-			scopes.OwnerRule(),
 			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
 		},
 		Mutation: scopes.MutationPolicy{
+			scopes.OwnerRule(),
 			scopes.APIKeyScopeMutationRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteRequests),
-			scopes.OwnerRule(),
 			scopes.UserWriteScopeRule(scopes.ScopeWriteRequests),
 		},
 	}
