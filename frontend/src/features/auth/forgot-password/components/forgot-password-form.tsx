@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { authApi } from '@/lib/api-client';
-import { toast } from 'sonner';
 
 type ForgotPasswordFormProps = HTMLAttributes<HTMLFormElement>;
 
@@ -22,7 +21,7 @@ const createFormSchema = (t: (key: string) => string) =>
 export function ForgotPasswordForm({ className, ...props }: ForgotPasswordFormProps) {
   const { t } = useTranslation();
   const [success, setSuccess] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [_submittedEmail, setSubmittedEmail] = useState('');
 
   const formSchema = createFormSchema(t);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -37,7 +36,7 @@ export function ForgotPasswordForm({ className, ...props }: ForgotPasswordFormPr
       await authApi.forgotPassword(data.email);
       setSubmittedEmail(data.email);
       setSuccess(true);
-    } catch (error: any) {
+    } catch (_error: any) {
       // Even on error, show success message to prevent email enumeration
       setSubmittedEmail(data.email);
       setSuccess(true);

@@ -27,7 +27,6 @@ function OIDCCallback() {
     hasAttemptedRef.current = true;
 
     if (error) {
-      console.error('OIDC Error:', error, error_description);
       toast.error(error_description || error || 'Authentication failed');
       navigate({ to: '/sign-in' });
       return;

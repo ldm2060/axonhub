@@ -45,7 +45,7 @@ interface AuthState {
 export const getTokenFromStorage = (): string => {
   try {
     return localStorage.getItem(ACCESS_TOKEN) || '';
-    } catch (error) {
+    } catch (_error) {
       return '';
     }
   };
@@ -53,14 +53,16 @@ export const getTokenFromStorage = (): string => {
 export const setTokenToStorage = (token: string): void => {
   try {
     localStorage.setItem(ACCESS_TOKEN, token);
-  } catch (error) {
+  } catch (_error) {
+    // intentionally ignored
   }
 };
 
 export const removeTokenFromStorage = (): void => {
   try {
     localStorage.removeItem(ACCESS_TOKEN);
-  } catch (error) {
+  } catch (_error) {
+    // intentionally ignored
   }
 };
 
@@ -68,7 +70,7 @@ const getUserFromStorage = (): AuthUser | null => {
   try {
     const userStr = localStorage.getItem(USER_INFO);
     return userStr ? JSON.parse(userStr) : null;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 };
@@ -80,14 +82,16 @@ const setUserToStorage = (user: AuthUser | null): void => {
     } else {
       localStorage.removeItem(USER_INFO);
     }
-  } catch (error) {
+  } catch (_error) {
+    // intentionally ignored
   }
 };
 
 const removeUserFromStorage = (): void => {
   try {
     localStorage.removeItem(USER_INFO);
-  } catch (error) {
+  } catch (_error) {
+    // intentionally ignored
   }
 };
 

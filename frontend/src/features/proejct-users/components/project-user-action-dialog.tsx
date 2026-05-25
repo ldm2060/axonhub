@@ -124,7 +124,7 @@ export function ProjectUserActionDialog({ currentRow, open, onOpenChange }: Prop
         const canEditTarget = canEditUserPermissions(currentUser, targetScopes, currentRow.isOwner || false, selectedProjectId);
         setCanEdit(canEditTarget);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('common.errors.loadFailed'));
     } finally {
       setLoading(false);

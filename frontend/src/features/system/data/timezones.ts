@@ -16,7 +16,7 @@ const utcTimezone = {
 };
 
 const ALL_VALID_TIMEZONES = tzGetTimeZones();
-// @ts-ignore
+// @ts-expect-error -- readonly array push mutation
 ALL_VALID_TIMEZONES.push(utcTimezone);
 
 export const getTimeZones = () => {

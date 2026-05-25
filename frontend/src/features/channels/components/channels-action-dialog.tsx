@@ -209,15 +209,6 @@ function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string } }):
   }
 }
 
-function isCodexAuthJSONChannel(channel: { credentials?: { apiKey?: string } }): boolean {
-  try {
-    const apiKey = channel.credentials?.apiKey || '';
-    const json = JSON.parse(apiKey);
-    return !!(json.tokens?.access_token && json.tokens?.refresh_token);
-  } catch {
-    return false;
-  }
-}
 
 function isOfficialClaudeCodeChannel(channel: { credentials?: { apiKey?: string }; baseURL: string }): boolean {
   const apiKey = channel.credentials?.apiKey || '';
@@ -275,17 +266,14 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const [selectedKeysToRemove, setSelectedKeysToRemove] = useState<Set<string>>(new Set());
   const [confirmRemoveSelectedOpen, setConfirmRemoveSelectedOpen] = useState(false);
   const [confirmRemoveKey, setConfirmRemoveKey] = useState<string | null>(null);
-  const [showGcpJsonData, setShowGcpJsonData] = useState(false);
   const [authMode, setAuthMode] = useState<'official' | 'auth-json' | 'third-party'>('official');
   const [codexAuthJSONText, setCodexAuthJSONText] = useState('');
   const [patternError, setPatternError] = useState<string | null>(null);
-  const dialogContentRef = useRef<HTMLDivElement>(null);
 
   // Debounced search values for better performance
   const debouncedFetchedModelsSearch = useDebounce(fetchedModelsSearch, 300);
   const debouncedSupportedModelsSearch = useDebounce(supportedModelsSearch, 300);
-  const debouncedApiKeysSearch = useDebounce(apiKeysSearch, 300);
-
+  
   // Refs for virtual scrolling
   const fetchedModelsParentRef = useRef<HTMLDivElement>(null);
   const supportedModelsParentRef = useRef<HTMLDivElement>(null);
@@ -869,7 +857,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       antigravity: 'antigravity',
     };
 
-    let channelTypeForURL: ChannelType | undefined = providerToChannelType[selectedProvider];
+    const channelTypeForURL: ChannelType | undefined = providerToChannelType[selectedProvider];
 
     if (channelTypeForURL) {
       const baseURL = getDefaultBaseURL(channelTypeForURL);

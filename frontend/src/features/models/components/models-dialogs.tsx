@@ -10,7 +10,7 @@ import { ModelSettingsDialog } from './models-settings-dialog';
 import { ModelsUnassociatedDialog } from './models-unassociated-dialog';
 
 export function ModelsDialogs() {
-  const { open, currentRow, setOpen, setCurrentRow } = useModels();
+  const { open, _currentRow, _setOpen, _setCurrentRow } = useModels();
 
   return (
     <>

@@ -78,12 +78,12 @@ export function ModelsBatchCreateDialog() {
   const iconOptions = useMemo(() => {
     return (
       Object.entries(toc)
-        // @ts-ignore
+        // @ts-expect-error -- ent gqlgen generated type mismatch
         .filter(([_, value]) => value.group == 'provider' || value.group == 'model')
         .map(([_, value]) => ({
-          // @ts-ignore
+          // @ts-expect-error -- ent gqlgen generated type mismatch
           value: value.id,
-          // @ts-ignore
+          // @ts-expect-error -- ent gqlgen generated type mismatch
           label: value.id,
         }))
     );

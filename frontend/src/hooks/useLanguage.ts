@@ -24,7 +24,7 @@ export function useLanguage() {
       })) as { updateMe: any };
       return response.updateMe;
     },
-    onSuccess: (updatedUser, language) => {
+    onSuccess: (updatedUser, _language) => {
       // Update the auth store with new language preference
       if (auth.user) {
         auth.setUser({

@@ -20,7 +20,7 @@ export function InitializationGuard({ children }: InitializationGuardProps) {
       const currentPath = window.location.pathname;
       if (currentPath !== '/initialization') {
         setIsNavigating(true);
-        //@ts-ignore
+        //@ts-expect-error -- tanstack router navigate type mismatch
         router.navigate({ to: '/initialization' }).finally(() => {
           setIsNavigating(false);
         });

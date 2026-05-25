@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useAutoResolveProject } from '@/stores/projectStore';
 import { useMyProjects } from '@/features/projects/data/projects';
 

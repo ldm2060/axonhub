@@ -56,7 +56,8 @@ export function ApiKeysEditDialog() {
       });
 
       closeDialog('edit');
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     } finally {
       setIsSubmitting(false);
     }

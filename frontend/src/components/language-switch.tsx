@@ -13,7 +13,7 @@ export function LanguageSwitch() {
   const { currentLanguage, changeLanguage, isUpdating } = useLanguage();
   const { t } = useTranslation();
 
-  const currentLanguageInfo = languages.find((lang) => lang.code === currentLanguage) || languages[0];
+  const _currentLanguageInfo = languages.find((lang) => lang.code === currentLanguage) || languages[0];
 
   return (
     <DropdownMenu>

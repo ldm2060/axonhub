@@ -29,7 +29,8 @@ export function ChannelsBulkDeleteDialog() {
       resetRowSelection();
       setSelectedChannels([]);
       setOpen(null);
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     }
   };
 

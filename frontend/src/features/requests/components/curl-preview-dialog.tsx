@@ -22,8 +22,8 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
       await navigator.clipboard.writeText(curlCommand);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch (_err) {
+      // intentionally ignored
     }
   }, [curlCommand]);
 
@@ -40,8 +40,8 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
       await navigator.clipboard.writeText(modified);
       setNonStreamCopied(true);
       setTimeout(() => setNonStreamCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy non-stream curl:', err);
+    } catch (_err) {
+      // intentionally ignored
     }
   }, [curlCommand]);
 

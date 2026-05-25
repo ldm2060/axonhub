@@ -28,7 +28,8 @@ export function ChannelsDeleteDialog({ open, onOpenChange, currentRow }: Props) 
       await deleteChannel.mutateAsync(currentRow.id);
       onOpenChange(false);
       setValue('');
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     }
   };
 

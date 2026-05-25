@@ -38,8 +38,8 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
       await navigator.clipboard.writeText(JSON.stringify(chunks, null, 2));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch (_err) {
+      // intentionally ignored
     }
   };
 
@@ -54,8 +54,8 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Failed to download:', err);
+    } catch (_err) {
+      // intentionally ignored
     }
   };
 

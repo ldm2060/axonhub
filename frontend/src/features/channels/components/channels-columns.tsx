@@ -11,7 +11,6 @@ import {
   IconArchive,
   IconTrash,
   IconCheck,
-  IconWeight,
   IconTransform,
   IconNetwork,
   IconAdjustments,
@@ -136,7 +135,9 @@ const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
         channelID: channel.id,
         modelID: channel.defaultTestModel || undefined,
       });
-    } catch (_error) {}
+    } catch (_error) {
+      // intentionally ignored
+    }
   };
 
   const handleOpenTestDialog = useCallback(() => {

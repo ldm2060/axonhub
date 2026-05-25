@@ -35,7 +35,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
 
   const [showResponseChunks, setShowResponseChunks] = useState(false);
   const [showExecutionChunks, setShowExecutionChunks] = useState(false);
-  const [selectedResponseChunks, setSelectedResponseChunks] = useState<any[]>([]);
+  const [_selectedResponseChunks, setSelectedResponseChunks] = useState<any[]>([]);
   const [selectedExecutionChunks, setSelectedExecutionChunks] = useState<any[]>([]);
   const [showCurlPreview, setShowCurlPreview] = useState(false);
   const [curlCommand, setCurlCommand] = useState('');
@@ -147,7 +147,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
       }
 
       const contentDisposition = resp.headers.get('Content-Disposition') || '';
-      const filenameMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i);
+      const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
       const filename = filenameMatch?.[1] || `video-${requestIdNumber}.mp4`;
 
       const blob = await resp.blob();

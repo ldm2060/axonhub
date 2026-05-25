@@ -3,7 +3,7 @@ import { ColumnDef, Table, Row } from '@tanstack/react-table';
 import { Copy, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { cn, extractNumberID } from '@/lib/utils';
+import { extractNumberID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';

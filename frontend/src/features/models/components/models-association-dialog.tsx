@@ -639,11 +639,9 @@ export function ModelsAssociationDialog() {
         } else {
           setConnections([]);
         }
-      } catch (error) {
-        toast.error(t('common.errors.loadFailed'));
-        setConnections([]);
+      } catch (_error) {
+        // intentionally ignored
       }
-    };
 
     fetchConnections();
   }, [channelOptions, currentRow?.modelID, debouncedAssociationsString, inheritedAssociations, isOpen, isDeveloperMode, queryConnections]);

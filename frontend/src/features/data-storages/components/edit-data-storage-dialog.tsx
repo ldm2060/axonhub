@@ -154,17 +154,13 @@ export function EditDataStorageDialog() {
       settings,
     };
 
-    try {
-      await updateMutation.mutateAsync({
-        id: editingDataStorage.id,
-        input,
-      });
-      setIsEditDialogOpen(false);
-      setEditingDataStorage(null);
-      reset();
-    } catch (error) {
-      throw error;
-    }
+    await updateMutation.mutateAsync({
+      id: editingDataStorage.id,
+      input,
+    });
+    setIsEditDialogOpen(false);
+    setEditingDataStorage(null);
+    reset();
   };
 
   return (

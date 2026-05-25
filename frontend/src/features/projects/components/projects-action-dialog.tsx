@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { IconAlertTriangle } from '@tabler/icons-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -39,7 +38,7 @@ export function CreateProjectDialog() {
       await createProject.mutateAsync(values);
       setIsCreateDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -140,7 +139,7 @@ export function EditProjectDialog() {
     try {
       await updateProject.mutateAsync({ id: editingProject.id, input: values });
       setEditingProject(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -226,7 +225,7 @@ export function ArchiveProjectDialog() {
     try {
       await archiveProject.mutateAsync(archivingProject.id);
       setArchivingProject(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -258,7 +257,7 @@ export function ActivateProjectDialog() {
     try {
       await activateProject.mutateAsync(activatingProject.id);
       setActivatingProject(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -291,7 +290,7 @@ export function DeleteProjectDialog() {
       await deleteProject.mutateAsync(deletingProject.id);
       setDeletingProject(null);
       setValue('');
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };

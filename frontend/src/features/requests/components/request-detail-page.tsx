@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, FileText } from 'lucide-react';
@@ -78,7 +78,7 @@ async function readPreviewStream(
   const flushBuffer = async (final = false) => {
     const normalizedBuffer = buffer.replace(/\r\n/g, '\n');
     const separator = '\n\n';
-    let separatorIndex = normalizedBuffer.indexOf(separator);
+    const separatorIndex = normalizedBuffer.indexOf(separator);
 
     while (separatorIndex !== -1) {
       const rawEvent = normalizedBuffer.slice(0, separatorIndex);
@@ -308,7 +308,7 @@ export default function RequestDetailPage() {
 
           scheduleReconnect();
         }
-      } catch (error) {
+      } catch (_error) {
         if (controller.signal.aborted || isDisposed) {
           return;
         }

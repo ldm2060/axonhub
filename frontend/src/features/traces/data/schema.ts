@@ -237,7 +237,7 @@ export function parseRawRootSegment(rawRootSegment: any | null | undefined): Seg
     try {
       const parsed = JSON.parse(rawRootSegment);
       return segmentSchema.parse(parsed);
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

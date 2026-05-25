@@ -36,7 +36,8 @@ export function ChannelsStatusDialog({ open, onOpenChange, currentRow }: Props) 
       });
       onOpenChange(false);
       setTestResult(null);
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     }
   };
 

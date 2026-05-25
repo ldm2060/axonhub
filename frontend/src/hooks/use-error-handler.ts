@@ -32,7 +32,7 @@ export function useErrorHandler() {
         ? { context: options } 
         : options || {};
       
-      const { context, onDuplicate, onErrorCode, showToast = true } = opts;
+      const { context: _context, onDuplicate, onErrorCode, showToast = true } = opts;
 
       // Handle Zod validation errors
       if (error instanceof ZodError) {

@@ -617,7 +617,7 @@ export const PromptInput = ({
             controller.textInput.clear();
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Don't clear on error - user may want to retry
       }
     });
@@ -922,7 +922,7 @@ export const PromptInputSpeechButton = ({ className, textareaRef, onTranscriptio
         }
       };
 
-      speechRecognition.onerror = (event) => {
+      speechRecognition.onerror = (_event) => {
         setIsListening(false);
       };
 

@@ -42,7 +42,7 @@ export function ApiKeysCreateDialog() {
       // Open view dialog with the created API key
       setSelectedApiKey(result.createAPIKey);
       openDialog('view', result.createAPIKey);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     } finally {
       setIsSubmitting(false);

@@ -86,7 +86,7 @@ export function ApiKeysProfileTemplatesDialog({ open, onOpenChange }: ApiKeysPro
   const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ApiKeyProfileTemplate | null>(null);
-  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editingTemplateId, _setEditingTemplateId] = useState<string | null>(null);
 
   const { data: templates, isLoading: isLoadingTemplates } = useApiKeyProfileTemplates(selectedProjectId);
   const deleteTemplate = useDeleteApiKeyProfileTemplate();

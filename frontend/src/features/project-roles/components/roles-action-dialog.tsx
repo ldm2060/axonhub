@@ -45,7 +45,7 @@ export function CreateRoleDialog() {
       await createRole.mutateAsync(values);
       setIsCreateDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -143,7 +143,7 @@ export function EditRoleDialog() {
     try {
       await updateRole.mutateAsync({ id: editingRole.id, input: values });
       setEditingRole(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };
@@ -225,7 +225,7 @@ export function DeleteRoleDialog() {
     try {
       await deleteRole.mutateAsync(deletingRole.id);
       setDeletingRole(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled by the mutation
     }
   };

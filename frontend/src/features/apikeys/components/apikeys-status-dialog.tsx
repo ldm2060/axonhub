@@ -23,7 +23,8 @@ export function ApiKeysStatusDialog() {
       });
       closeDialog('status');
       resetRowSelection(); // 清空选中的行
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     }
   };
 

@@ -27,7 +27,8 @@ export function ModelsDeleteDialog() {
         await deleteModel.mutateAsync(model.id);
       }
       setOpen(null);
-    } catch (error) {
+    } catch (_error) {
+      // intentionally ignored
     }
   };
 

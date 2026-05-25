@@ -1,5 +1,4 @@
 import { Outlet } from '@tanstack/react-router';
-import { IconBrowserCheck, IconNotification, IconPalette } from '@tabler/icons-react';
 import { Main } from '@/components/layout/main';
 
 export default function Settings() {
@@ -27,21 +26,3 @@ export default function Settings() {
     </>
   );
 }
-
-const sidebarNavItems = [
-  {
-    title: 'settings.nav.appearance',
-    icon: <IconPalette size={18} />,
-    href: '/settings/appearance',
-  },
-  {
-    title: 'settings.nav.notifications',
-    icon: <IconNotification size={18} />,
-    href: '/settings/notifications',
-  },
-  {
-    title: 'settings.nav.display',
-    icon: <IconBrowserCheck size={18} />,
-    href: '/settings/display',
-  },
-];

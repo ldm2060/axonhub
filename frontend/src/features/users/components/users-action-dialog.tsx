@@ -137,7 +137,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
         const canEditTarget = canEditUserPermissions(currentUser, targetScopes, currentRow.isOwner || false);
         setCanEdit(canEditTarget);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('common.errors.userLoadFailed'));
     } finally {
       setLoading(false);
@@ -199,7 +199,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('common.errors.userSaveFailed'));
     }
   };

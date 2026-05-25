@@ -128,7 +128,7 @@ export function mergeOverrideParameters(existing: string, template: string): str
 
     // Use compact format to match backend
     return JSON.stringify(merged);
-  } catch (error) {
+  } catch (_error) {
     // If parsing fails, return template
     return template;
   }

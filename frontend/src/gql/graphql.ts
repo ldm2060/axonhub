@@ -75,7 +75,7 @@ export async function graphqlRequest<T>(
         operationName, // Add operation name for tracing
       }),
     });
-  } catch (error) {
+  } catch (_error) {
     throw new GraphQLRequestError('Network error', { status: undefined, isAuthError: false });
   }
 
@@ -99,7 +99,7 @@ export async function graphqlRequest<T>(
   let result;
   try {
     result = await response.json();
-  } catch (error) {
+  } catch (_error) {
     throw new GraphQLRequestError('Failed to parse server response as JSON', {
       status: response.status,
     });

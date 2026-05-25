@@ -146,13 +146,9 @@ export function CreateDataStorageDialog() {
       },
     };
 
-    try {
-      await createMutation.mutateAsync(input);
-      setIsCreateDialogOpen(false);
-      reset();
-    } catch (error) {
-      throw error;
-    }
+    await createMutation.mutateAsync(input);
+    setIsCreateDialogOpen(false);
+    reset();
   };
 
   return (

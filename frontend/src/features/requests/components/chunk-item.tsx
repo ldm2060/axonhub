@@ -12,7 +12,7 @@ interface ChunkItemProps {
 
 export function ChunkItem({ chunk, index }: ChunkItemProps) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const [_copied, setCopied] = useState(false);
 
   const formatJson = (data: any) => {
     if (!data) return '';

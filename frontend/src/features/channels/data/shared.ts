@@ -2,11 +2,6 @@ import { useMemo } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useMe } from '@/features/auth/data/auth';
 import { useQueryChannels } from './channels';
-import { channelSchema } from './schema';
-
-import type { z } from 'zod';
-
-type Channel = z.infer<typeof channelSchema>;
 
 export function useMySharedChannels() {
   const { user: authUser } = useAuthStore((state) => state.auth);

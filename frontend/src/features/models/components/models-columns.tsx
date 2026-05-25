@@ -127,7 +127,7 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
         return (
           <div className='flex items-center justify-center'>
             {IconComponent ? (
-              //@ts-ignore
+              //@ts-expect-error -- ent gqlgen generated type mismatch
               <IconComponent className='h-5 w-5' />
             ) : (
               <span className='text-muted-foreground text-xs'>-</span>

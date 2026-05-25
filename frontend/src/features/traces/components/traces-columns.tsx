@@ -1,6 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
 import { format } from 'date-fns';
 import { ColumnDef } from '@tanstack/react-table';
 import { zhCN, enUS } from 'date-fns/locale';
@@ -23,12 +22,12 @@ export function useTracesColumns(): ColumnDef<Trace>[] {
       accessorKey: 'id',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.id')} />,
       cell: ({ row }) => {
-        const handleClick = useCallback(() => {
+        const handleClick = () => {
           navigateWithSearch({
             to: '/project/traces/$traceId',
             params: { traceId: row.original.id },
           });
-        }, [row.original.id, navigateWithSearch]);
+        };
 
         return (
           <button onClick={handleClick} className='text-primary cursor-pointer font-mono text-xs hover:underline'>

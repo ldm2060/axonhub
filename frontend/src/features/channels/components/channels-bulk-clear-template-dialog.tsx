@@ -20,7 +20,7 @@ export function ChannelsBulkClearTemplateDialog() {
       resetRowSelection();
       setSelectedChannels([]);
       setOpen(null);
-    } catch (error) {
+    } catch (_error) {
       // Error already handled by mutation
     }
   };

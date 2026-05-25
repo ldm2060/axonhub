@@ -81,12 +81,12 @@ export function ModelsActionDialog() {
   const iconOptions = useMemo(() => {
     return (
       Object.entries(toc)
-        // @ts-ignore
+        // @ts-expect-error -- ent gqlgen generated type mismatch
         .filter(([_, value]) => value.group == 'provider' || value.group == 'model')
         .map(([_, value]) => ({
-          // @ts-ignore
+          // @ts-expect-error -- ent gqlgen generated type mismatch
           value: value.id,
-          // @ts-ignore
+          // @ts-expect-error -- ent gqlgen generated type mismatch
           label: value.id,
         }))
     );
@@ -267,7 +267,7 @@ export function ModelsActionDialog() {
                   <FormField
                     control={form.control}
                     name='developer'
-                    render={({ field }) => (
+                    render={({ field: _field }) => (
                       <FormItem>
                         <FormLabel>{t('models.fields.developer')}</FormLabel>
                         <FormControl>
@@ -290,7 +290,7 @@ export function ModelsActionDialog() {
                   <FormField
                     control={form.control}
                     name='modelID'
-                    render={({ field }) => (
+                    render={({ field: _field }) => (
                       <FormItem>
                         <FormLabel>{t('models.fields.modelId')}</FormLabel>
                         <FormControl>

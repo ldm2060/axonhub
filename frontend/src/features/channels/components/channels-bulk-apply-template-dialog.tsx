@@ -48,7 +48,7 @@ export function ChannelsBulkApplyTemplateDialog({ open, onOpenChange, selectedCh
       onOpenChange(false);
       setSelectedTemplateId(null);
       setMode('MERGE');
-    } catch (error) {
+    } catch (_error) {
       // Error already handled by mutation
     }
   };

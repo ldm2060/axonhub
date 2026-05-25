@@ -77,7 +77,7 @@ export function useRoles(
   } = {}
 ) {
   const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   // Always filter for system-level roles only (not project-specific)
   const queryVariables = {
@@ -105,7 +105,7 @@ export function useRoles(
 
 export function useRole(id: string) {
   const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   return useQuery({
     queryKey: ['role', id],

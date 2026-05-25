@@ -13,7 +13,7 @@ interface ProjectState {
 export const getProjectIdFromStorage = (): string | null => {
   try {
     return localStorage.getItem(PROJECT_STORAGE_KEY);
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 };
@@ -21,13 +21,17 @@ export const getProjectIdFromStorage = (): string | null => {
 const setProjectIdToStorage = (projectId: string): void => {
   try {
     localStorage.setItem(PROJECT_STORAGE_KEY, projectId);
-  } catch (error) {}
+  } catch (_error) {
+    // intentionally ignored
+  }
 };
 
 const removeProjectIdFromStorage = (): void => {
   try {
     localStorage.removeItem(PROJECT_STORAGE_KEY);
-  } catch (error) {}
+  } catch (_error) {
+    // intentionally ignored
+  }
 };
 
 export const useProjectStore = create<ProjectState>()((set) => {
@@ -62,7 +66,6 @@ export const useSelectedProjectId = () => useProjectStore((state) => state.selec
 export function useAutoResolveProject(projects: { id: string }[] | undefined) {
   const { selectedProjectId, setSelectedProjectId } = useProjectStore();
 
-  // eslint-disable-next-line consistent-return
   React.useEffect(() => {
     // If projects are still loading, do nothing
     if (!projects) {

@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import LongText from '@/components/long-text';
 import { useUpdateChannel, useTestChannel } from '../data/channels';
 import { Channel } from '../data/schema';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
