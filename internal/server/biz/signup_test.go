@@ -93,6 +93,17 @@ func enableTestSignUp(t *testing.T, svc *SignUpService, client *ent.Client, appr
 	return ctx
 }
 
+func TestAllowSignUp_NoAuthContextReadsRegistrationSettings(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	enableTestSignUp(t, svc, client, false)
+
+	plainCtx := ent.NewContext(context.Background(), client)
+
+	require.True(t, svc.AllowSignUp(plainCtx))
+}
+
 // TestSignUp_CheckExistingUser_NoAuthContext verifies that the email-existence
 // check inside SignUp works without an authenticated user in context.
 // This is a regression test for: "ent: check existence: no user in context: ent/privacy: deny rule".
@@ -167,6 +178,26 @@ func TestSignUp_WithVerificationCode_RejectsInvalidCode(t *testing.T) {
 	require.Zero(t, count)
 }
 
+func TestSignUp_WithVerificationCode_RejectsMissingCode(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := enableTestSignUp(t, svc, client, false)
+	plainCtx := ent.NewContext(context.Background(), client)
+
+	createdUser, _, err := svc.SignUp(plainCtx, SignUpInput{
+		Email:            "nocode@example.com",
+		Password:         "password123",
+		VerificationCode: "",
+	})
+	require.Nil(t, createdUser)
+	require.EqualError(t, err, "验证码无效或已过期，请重新获取")
+
+	count, err := client.User.Query().Where(user.EmailEQ("nocode@example.com")).Count(setupCtx)
+	require.NoError(t, err)
+	require.Zero(t, count)
+}
+
 func TestSignUp_WithVerificationCode_ActivatesUserWhenApprovalNotRequired(t *testing.T) {
 	svc, client := setupTestSignUpService(t)
 	defer client.Close()
@@ -215,7 +246,7 @@ func TestSignUp_WithVerificationCode_ActivatesUserWhenApprovalNotRequired(t *tes
 	require.NotNil(t, token.ConsumedAt)
 }
 
-func TestSignUp_WithVerificationCode_CreatesPendingUserWhenApprovalRequired(t *testing.T) {
+func TestSignUp_WithVerificationCode_PendingWhenApprovalRequired(t *testing.T) {
 	svc, client := setupTestSignUpService(t)
 	defer client.Close()
 

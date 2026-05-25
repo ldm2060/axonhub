@@ -89,7 +89,9 @@ func NewSignUpService(params SignUpServiceParams) *SignUpService {
 // AllowSignUp checks if self-registration is enabled.
 // Reads from the consolidated RegistrationSettings (with migration from the legacy key).
 func (s *SignUpService) AllowSignUp(ctx context.Context) bool {
-	rs, err := s.systemService.RegistrationSettings(ctx)
+	rs, err := authz.RunWithSystemBypass(ctx, "signup-allowed", func(bypassCtx context.Context) (*RegistrationSettings, error) {
+		return s.systemService.RegistrationSettings(bypassCtx)
+	})
 	if err != nil {
 		return false
 	}
