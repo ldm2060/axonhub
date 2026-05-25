@@ -2,19 +2,26 @@ package biz
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
+	"time"
 
 	"go.uber.org/fx"
 
 	"github.com/ldm2060/axonhub/internal/authz"
-	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/user"
-	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/scopes"
 )
+
+const (
+	verificationCodeTTL            = 5 * time.Minute
+	invalidVerificationCodeMessage = "验证码无效或已过期，请重新获取"
+)
+
+var errInvalidVerificationCode = errors.New(invalidVerificationCodeMessage)
 
 // DefaultUserScopes are assigned to self-registered users.
 var DefaultUserScopes = []string{
@@ -33,21 +40,26 @@ var DefaultUserScopes = []string{
 
 // SignUpInput is the input for user self-registration.
 type SignUpInput struct {
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=8"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required,min=8"`
+	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+}
+
+type verificationEmailSender interface {
+	SendVerificationEmail(ctx context.Context, userEmail, userName, actionURL string) error
 }
 
 // SignUpService handles user self-registration.
 type SignUpService struct {
 	*AbstractService
 
-	userService      *UserService
-	authService      *AuthService
-	systemService    *SystemService
+	userService       *UserService
+	authService       *AuthService
+	systemService     *SystemService
 	emailTokenService *EmailTokenService
-	emailService     *EmailService
+	emailService      verificationEmailSender
 }
 
 // SignUpServiceParams holds the dependencies for SignUpService.
@@ -84,26 +96,73 @@ func (s *SignUpService) AllowSignUp(ctx context.Context) bool {
 	return rs.AllowSignUp
 }
 
-// SignUp registers a new user and sends a verification email.
-func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
-	ctx = authz.WithSystemBypass(ctx, "signup")
-
-	if !s.AllowSignUp(ctx) {
-		return nil, "", fmt.Errorf("sign-up is not allowed")
+func (s *SignUpService) signUpDefaultScopes(rs *RegistrationSettings) []string {
+	if rs != nil && rs.DefaultUserScopes != nil {
+		return rs.DefaultUserScopes
 	}
 
-	// Validate email against allow/deny patterns.
+	return DefaultUserScopes
+}
+
+func (s *SignUpService) validateRegistrationEmail(ctx context.Context, email string) (*RegistrationSettings, error) {
 	rs, err := s.systemService.RegistrationSettings(ctx)
-	if err == nil {
-		if err := validateEmailPatterns(input.Email, rs.EmailAllowPatterns, rs.EmailDenyPatterns); err != nil {
-			return nil, "", err
-		}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get registration settings: %w", err)
+	}
+	if !rs.AllowSignUp {
+		return nil, fmt.Errorf("sign-up is not allowed")
+	}
+	if err := validateEmailPatterns(email, rs.EmailAllowPatterns, rs.EmailDenyPatterns); err != nil {
+		return nil, err
+	}
+
+	return rs, nil
+}
+
+// SendVerificationCode creates and emails a registration verification code.
+func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) error {
+	ctx = authz.WithSystemBypass(ctx, "signup")
+
+	if _, err := s.validateRegistrationEmail(ctx, email); err != nil {
+		return err
 	}
 
 	client := s.entFromContext(ctx)
-
 	exists, err := client.User.Query().
-		Where(user.EmailEQ(input.Email)).Exist(ctx)
+		Where(user.EmailEQ(email)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check existing user: %w", err)
+	}
+	if exists {
+		return fmt.Errorf("email already registered")
+	}
+
+	code, err := s.emailTokenService.CreateEmailCode(ctx, email, emailtoken.TypeVerifyEmail, verificationCodeTTL)
+	if err != nil {
+		return fmt.Errorf("failed to create verification code: %w", err)
+	}
+
+	if err := s.emailService.SendVerificationEmail(ctx, email, email, code); err != nil {
+		return fmt.Errorf("failed to send verification email: %w", err)
+	}
+
+	return nil
+}
+
+// SignUp registers a new user after verifying the email code.
+func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
+	ctx = authz.WithSystemBypass(ctx, "signup")
+
+	rs, err := s.validateRegistrationEmail(ctx, input.Email)
+	if err != nil {
+		return nil, "", err
+	}
+
+	client := s.entFromContext(ctx)
+	exists, err := client.User.Query().
+		Where(user.EmailEQ(input.Email)).
+		Exist(ctx)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to check existing user: %w", err)
 	}
@@ -111,42 +170,51 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 		return nil, "", fmt.Errorf("email already registered")
 	}
 
-	status := user.StatusPending
+	if _, err := s.emailTokenService.ValidateEmailCode(ctx, input.Email, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
+		return nil, "", errInvalidVerificationCode
+	}
 
-	newUser, err := s.userService.CreateUser(ctx, ent.CreateUserInput{
-		Email:     input.Email,
-		Password:  input.Password,
-		FirstName: &input.FirstName,
-		LastName:  &input.LastName,
-		Status:    &status,
-		Scopes:    DefaultUserScopes,
+	defaultScopes := s.signUpDefaultScopes(rs)
+	targetStatus := user.StatusPending
+	if !rs.ApprovalRequired {
+		targetStatus = user.StatusActivated
+	}
+
+	var createdUser *ent.User
+	err = s.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.emailTokenService.ConsumeEmailCode(txCtx, input.Email, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
+			return errInvalidVerificationCode
+		}
+
+		createdUser, err = s.userService.CreateUser(txCtx, ent.CreateUserInput{
+			Email:     input.Email,
+			Password:  input.Password,
+			FirstName: &input.FirstName,
+			LastName:  &input.LastName,
+			Scopes:    defaultScopes,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+
+		createdUser, err = s.entFromContext(txCtx).User.UpdateOneID(createdUser.ID).
+			SetStatus(targetStatus).
+			SetScopes(defaultScopes).
+			SetEmailVerifiedAt(time.Now()).
+			Save(txCtx)
+		if err != nil {
+			return fmt.Errorf("failed to finalize user sign-up: %w", err)
+		}
+
+		s.userService.invalidateUserCache(txCtx, createdUser.ID)
+
+		return nil
 	})
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create user: %w", err)
+		return nil, "", err
 	}
 
-	// Create email verification token
-	token, err := s.emailTokenService.CreateToken(ctx, newUser.ID, emailtoken.TypeVerifyEmail)
-	if err != nil {
-		log.Error(ctx, "Failed to create email verification token", log.Cause(err), log.Int("user_id", newUser.ID))
-		return nil, "", fmt.Errorf("failed to create verification token: %w", err)
-	}
-
-	// Build verification URL using the token
-	baseURL, _ := contexts.GetBaseURL(ctx)
-	verifyURL := s.emailService.BuildURLWithBase(ctx, fmt.Sprintf("/auth/verify-email?token=%s", token), baseURL)
-
-	// Send verification email
-	userName := newUser.FirstName
-	if userName == "" {
-		userName = newUser.Email
-	}
-	if err := s.emailService.SendVerificationEmail(ctx, newUser.Email, userName, verifyURL); err != nil {
-		log.Error(ctx, "Failed to send verification email", log.Cause(err), log.Int("user_id", newUser.ID))
-		return nil, "", fmt.Errorf("failed to send verification email: %w", err)
-	}
-
-	return newUser, "", nil
+	return createdUser, "", nil
 }
 
 // validateEmailPatterns checks the email against allow and deny regex lists.
