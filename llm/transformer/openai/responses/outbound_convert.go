@@ -510,8 +510,13 @@ func convertReasoning(req *llm.Request) *Reasoning {
 		return nil
 	}
 
+	reasoningEffort := req.ReasoningEffort
+	if reasoningEffort == "max" {
+		reasoningEffort = "xhigh"
+	}
+
 	reasoning := &Reasoning{
-		Effort:    req.ReasoningEffort,
+		Effort:    reasoningEffort,
 		MaxTokens: req.ReasoningBudget,
 	}
 

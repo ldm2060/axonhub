@@ -12,6 +12,11 @@ func RequestFromLLM(r *llm.Request, reasoningField ReasoningField) *Request {
 		return nil
 	}
 
+	reasoningEffort := r.ReasoningEffort
+	if reasoningEffort == "max" {
+		reasoningEffort = "xhigh"
+	}
+
 	req := &Request{
 		Model:               r.Model,
 		FrequencyPenalty:    r.FrequencyPenalty,
@@ -30,7 +35,7 @@ func RequestFromLLM(r *llm.Request, reasoningField ReasoningField) *Request {
 		LogitBias:           r.LogitBias,
 		Metadata:            r.Metadata,
 		Modalities:          r.Modalities,
-		ReasoningEffort:     r.ReasoningEffort,
+		ReasoningEffort:     reasoningEffort,
 		ServiceTier:         r.ServiceTier,
 		Stream:              r.Stream,
 		ParallelToolCalls:   r.ParallelToolCalls,

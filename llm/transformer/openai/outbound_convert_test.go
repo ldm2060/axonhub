@@ -65,6 +65,23 @@ func TestRequestFromLLM(t *testing.T) {
 				// OpenAI Request doesn't have MessageIndex or RawAPIFormat fields
 			},
 		},
+		{
+			name: "max reasoning effort maps to xhigh",
+			llmReq: &llm.Request{
+				Model:           "gpt-5",
+				ReasoningEffort: "max",
+				Messages: []llm.Message{
+					{
+						Role:    "user",
+						Content: llm.MessageContent{Content: lo.ToPtr("think deeply")},
+					},
+				},
+			},
+			validate: func(t *testing.T, req *Request) {
+				require.NotNil(t, req)
+				require.Equal(t, "xhigh", req.ReasoningEffort)
+			},
+		},
 	}
 
 	for _, tt := range tests {

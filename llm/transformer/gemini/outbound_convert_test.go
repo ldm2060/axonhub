@@ -331,6 +331,28 @@ func TestConvertLLMToGeminiRequest_Basic(t *testing.T) {
 			},
 		},
 		{
+			name: "request with reasoning effort max maps to high ThinkingLevel",
+			input: &llm.Request{
+				ReasoningEffort: "max",
+				Messages: []llm.Message{
+					{
+						Role: "user",
+						Content: llm.MessageContent{
+							Content: lo.ToPtr("Very complex problem"),
+						},
+					},
+				},
+			},
+			validate: func(t *testing.T, result *GenerateContentRequest) {
+				t.Helper()
+				require.NotNil(t, result.GenerationConfig)
+				require.NotNil(t, result.GenerationConfig.ThinkingConfig)
+				require.True(t, result.GenerationConfig.ThinkingConfig.IncludeThoughts)
+				require.Equal(t, "high", result.GenerationConfig.ThinkingConfig.ThinkingLevel)
+				require.Nil(t, result.GenerationConfig.ThinkingConfig.ThinkingBudget)
+			},
+		},
+		{
 			name: "request with reasoning effort and budget preservation",
 			input: &llm.Request{
 				ReasoningEffort: "medium",

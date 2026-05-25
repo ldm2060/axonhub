@@ -737,6 +737,17 @@ func TestConvertReasoning(t *testing.T) {
 			},
 		},
 		{
+			name: "max effort maps to xhigh",
+			req: &llm.Request{
+				ReasoningEffort: "max",
+				ReasoningBudget: nil,
+			},
+			expected: &Reasoning{
+				Effort:    "xhigh",
+				MaxTokens: nil,
+			},
+		},
+		{
 			name: "only budget specified",
 			req: &llm.Request{
 				ReasoningEffort: "",

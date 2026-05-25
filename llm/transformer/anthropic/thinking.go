@@ -24,7 +24,7 @@ func supportsOutputConfig(config *Config) bool {
 
 	//nolint:exhaustive // Checked.
 	switch config.Type {
-	case PlatformDirect, PlatformClaudeCode, PlatformBedrock, PlatformVertex, PlatformDeepSeek:
+	case PlatformDirect, PlatformClaudeCode, PlatformBedrock, PlatformVertex, PlatformDeepSeek, PlatformDoubao, PlatformMoonshot, PlatformZhipu, PlatformZai, PlatformLongCat:
 		return true
 	default:
 		return false
