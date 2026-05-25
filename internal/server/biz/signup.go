@@ -124,14 +124,15 @@ func (s *SignUpService) validateRegistrationEmail(ctx context.Context, email str
 // SendVerificationCode creates and emails a registration verification code.
 func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) error {
 	ctx = authz.WithSystemBypass(ctx, "signup")
+	normalizedEmail := normalizeEmail(email)
 
-	if _, err := s.validateRegistrationEmail(ctx, email); err != nil {
+	if _, err := s.validateRegistrationEmail(ctx, normalizedEmail); err != nil {
 		return err
 	}
 
 	client := s.entFromContext(ctx)
 	exists, err := client.User.Query().
-		Where(user.EmailEQ(email)).
+		Where(user.EmailEqualFold(normalizedEmail)).
 		Exist(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to check existing user: %w", err)
@@ -140,12 +141,12 @@ func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) 
 		return fmt.Errorf("email already registered")
 	}
 
-	code, err := s.emailTokenService.CreateEmailCode(ctx, email, emailtoken.TypeVerifyEmail, verificationCodeTTL)
+	code, err := s.emailTokenService.CreateEmailCode(ctx, normalizedEmail, emailtoken.TypeVerifyEmail, verificationCodeTTL)
 	if err != nil {
 		return fmt.Errorf("failed to create verification code: %w", err)
 	}
 
-	if err := s.emailService.SendVerificationEmail(ctx, email, email, code); err != nil {
+	if err := s.emailService.SendVerificationEmail(ctx, normalizedEmail, normalizedEmail, code); err != nil {
 		return fmt.Errorf("failed to send verification email: %w", err)
 	}
 
@@ -155,15 +156,16 @@ func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) 
 // SignUp registers a new user after verifying the email code.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
 	ctx = authz.WithSystemBypass(ctx, "signup")
+	normalizedEmail := normalizeEmail(input.Email)
 
-	rs, err := s.validateRegistrationEmail(ctx, input.Email)
+	rs, err := s.validateRegistrationEmail(ctx, normalizedEmail)
 	if err != nil {
 		return nil, "", err
 	}
 
 	client := s.entFromContext(ctx)
 	exists, err := client.User.Query().
-		Where(user.EmailEQ(input.Email)).
+		Where(user.EmailEqualFold(normalizedEmail)).
 		Exist(ctx)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to check existing user: %w", err)
@@ -172,7 +174,7 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 		return nil, "", fmt.Errorf("email already registered")
 	}
 
-	if _, err := s.emailTokenService.ValidateEmailCode(ctx, input.Email, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
+	if _, err := s.emailTokenService.ValidateEmailCode(ctx, normalizedEmail, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
 		return nil, "", errInvalidVerificationCode
 	}
 
@@ -184,7 +186,7 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 
 	var createdUser *ent.User
 	err = s.RunInTransaction(ctx, func(txCtx context.Context) error {
-		if err := s.emailTokenService.ConsumeEmailCode(txCtx, input.Email, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
+		if err := s.emailTokenService.ConsumeEmailCode(txCtx, normalizedEmail, input.VerificationCode, emailtoken.TypeVerifyEmail); err != nil {
 			return errInvalidVerificationCode
 		}
 

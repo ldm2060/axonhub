@@ -293,3 +293,33 @@ func TestSignUp_WithVerificationCode_PendingWhenApprovalRequired(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, token.ConsumedAt)
 }
+func TestSignUp_WithVerificationCode_RejectsCaseVariantDuplicateEmail(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := enableTestSignUp(t, svc, client, false)
+
+	_, err := client.User.Create().
+		SetEmail("User@Example.com").
+		SetPassword("hashedpassword").
+		SetStatus(user.StatusActivated).
+		Save(setupCtx)
+	require.NoError(t, err)
+
+	code, err := svc.emailTokenService.CreateEmailCode(setupCtx, "user@example.com", emailtoken.TypeVerifyEmail, verificationCodeTTL)
+	require.NoError(t, err)
+
+	plainCtx := ent.NewContext(context.Background(), client)
+	createdUser, _, err := svc.SignUp(plainCtx, SignUpInput{
+		Email:            "user@example.com",
+		Password:         "password123",
+		VerificationCode: code,
+	})
+	require.Nil(t, createdUser)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "email already registered")
+
+	count, err := client.User.Query().Count(setupCtx)
+	require.NoError(t, err)
+	require.Equal(t, 1, count)
+}
