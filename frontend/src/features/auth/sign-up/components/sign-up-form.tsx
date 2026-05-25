@@ -1,21 +1,22 @@
-import { HTMLAttributes, useState, useCallback } from 'react';
+import { HTMLAttributes, useState, useCallback, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Mail, Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
-import { useSignUp } from '@/features/auth/data/auth';
-import { authApi } from '@/lib/api-client';
+import { useSignUp, useSendVerificationCode } from '@/features/auth/data/auth';
 import { toast } from 'sonner';
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
+
+const CODE_COUNTDOWN_SECONDS = 60;
 
 const createFormSchema = (t: (key: string) => string) =>
   z
@@ -23,6 +24,7 @@ const createFormSchema = (t: (key: string) => string) =>
       firstName: z.string().min(1, { message: t('auth.signUp.validation.firstNameRequired') }),
       lastName: z.string().min(1, { message: t('auth.signUp.validation.lastNameRequired') }),
       email: z.string().min(1, { message: t('auth.signUp.validation.emailRequired') }).email({ message: t('auth.signUp.validation.emailInvalid') }),
+      verificationCode: z.string().min(1, { message: t('auth.signUp.validation.verificationCodeRequired') }).regex(/^\d{6}$/, { message: t('auth.signUp.validation.verificationCodeInvalid') }),
       password: passwordSchema(t),
       confirmPassword: z.string(),
     })
@@ -34,8 +36,10 @@ const createFormSchema = (t: (key: string) => string) =>
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const { t } = useTranslation();
   const signUpMutation = useSignUp();
-  const [successState, setSuccessState] = useState<{ email: string; pending: boolean } | null>(null);
-  const [resendLoading, setResendLoading] = useState(false);
+  const sendCodeMutation = useSendVerificationCode();
+  const [successState, setSuccessState] = useState<{ pending: boolean } | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const formSchema = createFormSchema(t);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,79 +48,87 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       firstName: '',
       lastName: '',
       email: '',
+      verificationCode: '',
       password: '',
       confirmPassword: '',
     },
   });
 
+  const emailValue = form.watch('email');
+  const emailValid = !form.formState.errors.email && emailValue && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const startCountdown = useCallback(() => {
+    setCountdown(CODE_COUNTDOWN_SECONDS);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const handleSendCode = useCallback(async () => {
+    if (!emailValid || countdown > 0) return;
+    try {
+      await sendCodeMutation.mutateAsync(emailValue);
+      toast.success(t('auth.signUp.form.verificationCode.sentSuccess'));
+      startCountdown();
+    } catch {
+      // Error handled by mutation onError
+    }
+  }, [emailValid, emailValue, countdown, sendCodeMutation, t, startCountdown]);
+
   const onSubmit = useCallback((data: z.infer<typeof formSchema>) => {
-    const email = data.email;
     signUpMutation.mutate(
       {
         email: data.email,
         password: data.password,
         first_name: data.firstName,
         last_name: data.lastName,
+        verification_code: data.verificationCode,
       },
       {
         onSuccess: (responseData: any) => {
           const pending = responseData?.pending === true;
-          setSuccessState({ email, pending });
+          setSuccessState({ pending });
         },
       }
     );
   }, [signUpMutation]);
 
-  const handleResendVerification = useCallback(async () => {
-    if (!successState) return;
-    setResendLoading(true);
-    try {
-      await authApi.resendVerification(successState.email);
-      toast.success(t('auth.signUp.resendSuccess'));
-    } catch (error: any) {
-      toast.error(error.message || t('auth.signUp.resendFailed'));
-    } finally {
-      setResendLoading(false);
-    }
-  }, [successState, t]);
-
   if (successState) {
     return (
       <div className='flex flex-col items-center gap-4 text-center'>
-        <div className='flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100'>
-          <Mail className='h-6 w-6 text-emerald-600' />
-        </div>
+        {successState.pending ? (
+          <div className='flex h-12 w-12 items-center justify-center rounded-full bg-amber-100'>
+            <Clock className='h-6 w-6 text-amber-600' />
+          </div>
+        ) : (
+          <div className='flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100'>
+            <CheckCircle className='h-6 w-6 text-emerald-600' />
+          </div>
+        )}
         <h3 className='text-lg font-medium text-slate-800'>
-          {successState.pending ? t('auth.signUp.successPendingTitle') : t('auth.signUp.successTitle')}
+          {successState.pending ? t('auth.signUp.successPendingTitle') : t('auth.signUp.successActivatedTitle')}
         </h3>
         <p className='text-sm text-slate-600'>
-          {successState.pending
-            ? t('auth.signUp.successPendingMessage')
-            : t('auth.signUp.successMessage', { email: successState.email })}
+          {successState.pending ? t('auth.signUp.successPendingMessage') : t('auth.signUp.successActivatedMessage')}
         </p>
-        {!successState.pending && (
-          <p className='text-sm text-slate-600'>
-            {t('auth.signUp.successEmailSent', { email: successState.email })}
-          </p>
-        )}
-        <div className='flex flex-col gap-2'>
-          {!successState.pending && (
-            <Button
-              variant='outline'
-              onClick={handleResendVerification}
-              disabled={resendLoading}
-              className='border-slate-300 text-slate-700'
-            >
-              {resendLoading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : null}
-              {t('auth.signUp.resendVerification')}
-            </Button>
-          )}
-          <Link to='/sign-in'>
-            <Button className='w-full bg-slate-800 text-white hover:bg-slate-700'>
-              {t('auth.signUp.backToSignIn')}
-            </Button>
-          </Link>
-        </div>
+        <Link to='/sign-in'>
+          <Button className='w-full bg-slate-800 text-white hover:bg-slate-700'>
+            {t('auth.signUp.backToSignIn')}
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -169,13 +181,55 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className='text-sm font-medium text-slate-700'>{t('auth.signUp.form.email.label')}</FormLabel>
+              <div className='flex gap-2'>
+                <FormControl>
+                  <Input
+                    type='email'
+                    placeholder={t('auth.signUp.form.email.placeholder')}
+                    className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white focus:ring-2 focus:ring-slate-200'
+                    data-testid='sign-up-email'
+                    {...field}
+                  />
+                </FormControl>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleSendCode}
+                  disabled={!emailValid || countdown > 0 || sendCodeMutation.isPending}
+                  className='shrink-0 border-slate-300 text-slate-700 whitespace-nowrap'
+                  data-testid='sign-up-send-code'
+                >
+                  {sendCodeMutation.isPending ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : countdown > 0 ? (
+                    t('auth.signUp.form.verificationCode.resendIn', { seconds: countdown })
+                  ) : (
+                    t('auth.signUp.form.verificationCode.send')
+                  )}
+                </Button>
+              </div>
+              <FormMessage className='text-red-600' />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name='verificationCode'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-sm font-medium text-slate-700'>{t('auth.signUp.form.verificationCode.label')}</FormLabel>
               <FormControl>
                 <Input
-                  type='email'
-                  placeholder={t('auth.signUp.form.email.placeholder')}
+                  placeholder={t('auth.signUp.form.verificationCode.placeholder')}
+                  maxLength={6}
                   className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white focus:ring-2 focus:ring-slate-200'
-                  data-testid='sign-up-email'
+                  data-testid='sign-up-verification-code'
                   {...field}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    field.onChange(value);
+                  }}
                 />
               </FormControl>
               <FormMessage className='text-red-600' />

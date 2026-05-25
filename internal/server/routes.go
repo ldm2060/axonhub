@@ -85,6 +85,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		{
 			authGroup.POST("/signin", handlers.Auth.SignIn)
 			authGroup.POST("/signup", handlers.SignUp.SignUp)
+			authGroup.POST("/signup/verification-code", handlers.SignUp.SendVerificationCode)
 			authGroup.GET("/signup/allowed", handlers.SignUp.AllowSignUp)
 			authGroup.GET("/verify-email", handlers.EmailToken.VerifyEmail)
 			authGroup.POST("/resend-verification", handlers.EmailToken.ResendVerification)
@@ -100,6 +101,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			// Legacy auth routes (backward compatibility)
 			unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
 			unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
+			unSecureAdminGroup.POST("/auth/signup/verification-code", handlers.SignUp.SendVerificationCode)
 			unSecureAdminGroup.GET("/auth/signup/allowed", handlers.SignUp.AllowSignUp)
 			unSecureAdminGroup.GET("/auth/verify-email", handlers.EmailToken.VerifyEmail)
 			unSecureAdminGroup.POST("/auth/resend-verification", handlers.EmailToken.ResendVerification)

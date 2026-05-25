@@ -135,29 +135,32 @@ func (s *UserService) EnsurePrivateProject(ctx context.Context, u *ent.User) (in
 
 // UpdateSelf updates the current user's own profile fields (firstName, lastName, preferLanguage, avatar).
 // No permission check is needed since a user always has permission to update their own profile.
+// Bypasses Ent privacy layer since this is a validated self-service operation on safe fields only.
 func (s *UserService) UpdateSelf(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {
-	client := s.entFromContext(ctx)
+	return authz.RunWithSystemBypass(ctx, "update-self-profile", func(bypassCtx context.Context) (*ent.User, error) {
+		client := s.entFromContext(bypassCtx)
 
-	mut := client.User.UpdateOneID(id).
-		SetNillableFirstName(input.FirstName).
-		SetNillableLastName(input.LastName).
-		SetNillablePreferLanguage(input.PreferLanguage)
+		mut := client.User.UpdateOneID(id).
+			SetNillableFirstName(input.FirstName).
+			SetNillableLastName(input.LastName).
+			SetNillablePreferLanguage(input.PreferLanguage)
 
-	if input.ClearAvatar {
-		mut.ClearAvatar()
-	} else {
-		mut.SetNillableAvatar(input.Avatar)
-	}
+		if input.ClearAvatar {
+			mut.ClearAvatar()
+		} else {
+			mut.SetNillableAvatar(input.Avatar)
+		}
 
-	user, err := mut.Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update profile: %w", err)
-	}
+		user, err := mut.Save(bypassCtx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update profile: %w", err)
+		}
 
-	// Invalidate cache
-	s.invalidateUserCache(ctx, id)
+		// Invalidate cache
+		s.invalidateUserCache(ctx, id)
 
-	return user, nil
+		return user, nil
+	})
 }
 
 // UpdateUser updates an existing user (admin operation).

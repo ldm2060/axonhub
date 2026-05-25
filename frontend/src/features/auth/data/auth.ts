@@ -109,6 +109,7 @@ export interface SignUpInput {
   password: string;
   first_name: string;
   last_name: string;
+  verification_code: string;
 }
 
 export function useSignUpAllowed() {
@@ -120,6 +121,17 @@ export function useSignUpAllowed() {
     },
     staleTime: 30 * 1000,
     retry: 1,
+  });
+}
+
+export function useSendVerificationCode() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      return await authApi.sendVerificationCode(email);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to send verification code');
+    },
   });
 }
 

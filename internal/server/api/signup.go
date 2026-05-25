@@ -30,11 +30,31 @@ type SignUpHandlers struct {
 	SystemService *biz.SystemService
 }
 
+type SendVerificationCodeRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 type SignUpRequest struct {
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=8"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required,min=8"`
+	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+	FirstName        string `json:"first_name"`
+	LastName         string `json:"last_name"`
+}
+
+func (h *SignUpHandlers) SendVerificationCode(c *gin.Context) {
+	var req SendVerificationCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.SignUpService.SendVerificationCode(c.Request.Context(), req.Email); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Verification code sent"})
 }
 
 func (h *SignUpHandlers) SignUp(c *gin.Context) {
@@ -53,10 +73,11 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 	ctx := contexts.WithBaseURL(c.Request.Context(), baseURL)
 
 	_, _, err := h.SignUpService.SignUp(ctx, biz.SignUpInput{
-		Email:     req.Email,
-		Password:  req.Password,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
+		Email:            req.Email,
+		Password:         req.Password,
+		VerificationCode: req.VerificationCode,
+		FirstName:        req.FirstName,
+		LastName:         req.LastName,
 	})
 	if err != nil {
 		status := http.StatusBadRequest

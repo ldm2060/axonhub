@@ -150,6 +150,7 @@ export const authApi = {
     password: string;
     first_name: string;
     last_name: string;
+    verification_code: string;
   }): Promise<{
     message: string;
     pending: boolean;
@@ -157,6 +158,12 @@ export const authApi = {
     apiRequest('/auth/signup', {
       method: 'POST',
       body: data,
+    }),
+
+  sendVerificationCode: (email: string): Promise<{ message: string }> =>
+    apiRequest('/auth/signup/verification-code', {
+      method: 'POST',
+      body: { email },
     }),
 
   isSignUpAllowed: (): Promise<{ allowed: boolean }> => apiRequest('/auth/signup/allowed'),
