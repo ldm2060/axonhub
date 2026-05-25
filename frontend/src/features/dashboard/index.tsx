@@ -155,9 +155,9 @@ function DashboardContent({
   setApiKeyTimePeriod,
   apiKeyTokensTimePeriod,
   setApiKeyTokensTimePeriod,
-  _modelTotalRequests,
+  modelTotalRequests: _modelTotalRequests,
   setModelTotalRequests,
-  _channelTotalRequests,
+  channelTotalRequests: _channelTotalRequests,
   setChannelTotalRequests,
 }: DashboardContentProps) {
   const { t } = useTranslation();

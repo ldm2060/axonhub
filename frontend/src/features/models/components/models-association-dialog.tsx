@@ -640,7 +640,8 @@ export function ModelsAssociationDialog() {
           setConnections([]);
         }
       } catch (_error) {
-        // intentionally ignored
+        toast.error(t('common.errors.loadFailed'));
+        setConnections([]);
       }
 
     fetchConnections();

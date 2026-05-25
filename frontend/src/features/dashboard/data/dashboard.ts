@@ -523,7 +523,7 @@ const MY_TOKEN_STATS_AGGR_QUERY = `
 export function useDashboardStats(mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['dashboardStats', mode],
+    queryKey: ['dashboardStats', isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_DASHBOARD_STATS_QUERY : DASHBOARD_STATS_QUERY;
       const fieldName = isPersonal ? 'myDashboard' : 'dashboardOverview';
@@ -537,7 +537,7 @@ export function useDashboardStats(mode: DashboardMode = 'project') {
 export function useRequestsByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByChannel', timeWindow, mode],
+    queryKey: ['requestStatsByChannel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_REQUESTS_BY_CHANNEL_QUERY : REQUESTS_BY_CHANNEL_QUERY;
       const fieldName = isPersonal ? 'myRequestStatsByChannel' : 'requestStatsByChannel';
@@ -552,7 +552,7 @@ export function useRequestsByChannel(timeWindow?: string, mode: DashboardMode = 
 export function useRequestsByModel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByModel', timeWindow, mode],
+    queryKey: ['requestStatsByModel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_REQUESTS_BY_MODEL_QUERY : REQUESTS_BY_MODEL_QUERY;
       const fieldName = isPersonal ? 'myRequestStatsByModel' : 'requestStatsByModel';
@@ -567,7 +567,7 @@ export function useRequestsByModel(timeWindow?: string, mode: DashboardMode = 'p
 export function useRequestsByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['requestStatsByAPIKey', timeWindow, mode],
+    queryKey: ['requestStatsByAPIKey', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_REQUESTS_BY_API_KEY_QUERY : REQUESTS_BY_API_KEY_QUERY;
       const fieldName = isPersonal ? 'myRequestStatsByAPIKey' : 'requestStatsByAPIKey';
@@ -582,7 +582,7 @@ export function useRequestsByAPIKey(timeWindow?: string, mode: DashboardMode = '
 export function useTokensByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByAPIKey', timeWindow, mode],
+    queryKey: ['tokenStatsByAPIKey', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_TOKENS_BY_API_KEY_QUERY : TOKENS_BY_API_KEY_QUERY;
       const fieldName = isPersonal ? 'myTokenStatsByAPIKey' : 'tokenStatsByAPIKey';
@@ -597,7 +597,7 @@ export function useTokensByAPIKey(timeWindow?: string, mode: DashboardMode = 'pr
 export function useTokensByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByChannel', timeWindow, mode],
+    queryKey: ['tokenStatsByChannel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_TOKENS_BY_CHANNEL_QUERY : TOKENS_BY_CHANNEL_QUERY;
       const fieldName = isPersonal ? 'myTokenStatsByChannel' : 'tokenStatsByChannel';
@@ -612,7 +612,7 @@ export function useTokensByChannel(timeWindow?: string, mode: DashboardMode = 'p
 export function useTokensByModel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStatsByModel', timeWindow, mode],
+    queryKey: ['tokenStatsByModel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_TOKENS_BY_MODEL_QUERY : TOKENS_BY_MODEL_QUERY;
       const fieldName = isPersonal ? 'myTokenStatsByModel' : 'tokenStatsByModel';
@@ -627,7 +627,7 @@ export function useTokensByModel(timeWindow?: string, mode: DashboardMode = 'pro
 export function useCostByChannel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByChannel', timeWindow, mode],
+    queryKey: ['costStatsByChannel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_COST_BY_CHANNEL_QUERY : COST_BY_CHANNEL_QUERY;
       const fieldName = isPersonal ? 'myCostStatsByChannel' : 'costStatsByChannel';
@@ -642,7 +642,7 @@ export function useCostByChannel(timeWindow?: string, mode: DashboardMode = 'pro
 export function useCostByModel(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByModel', timeWindow, mode],
+    queryKey: ['costStatsByModel', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_COST_BY_MODEL_QUERY : COST_BY_MODEL_QUERY;
       const fieldName = isPersonal ? 'myCostStatsByModel' : 'costStatsByModel';
@@ -657,7 +657,7 @@ export function useCostByModel(timeWindow?: string, mode: DashboardMode = 'proje
 export function useCostByAPIKey(timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['costStatsByAPIKey', timeWindow, mode],
+    queryKey: ['costStatsByAPIKey', timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_COST_BY_API_KEY_QUERY : COST_BY_API_KEY_QUERY;
       const fieldName = isPersonal ? 'myCostStatsByAPIKey' : 'costStatsByAPIKey';
@@ -672,7 +672,7 @@ export function useCostByAPIKey(timeWindow?: string, mode: DashboardMode = 'proj
 export function useDailyRequestStats(mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['dailyRequestStats', mode],
+    queryKey: ['dailyRequestStats', isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_DAILY_REQUEST_STATS_QUERY : DAILY_REQUEST_STATS_QUERY;
       const fieldName = isPersonal ? 'myDailyRequestStats' : 'dailyRequestStats';
@@ -686,7 +686,7 @@ export function useDailyRequestStats(mode: DashboardMode = 'project') {
 export function useTokenStats(mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['tokenStats', mode],
+    queryKey: ['tokenStats', isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_TOKEN_STATS_AGGR_QUERY : TOKEN_STATS_AGGR_QUERY;
       const fieldName = isPersonal ? 'myTokenStats' : 'tokenStats';
@@ -700,7 +700,7 @@ export function useTokenStats(mode: DashboardMode = 'project') {
 export function useChannelSuccessRates(limit?: number, timeWindow?: string, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['channelSuccessRates', limit, timeWindow, mode],
+    queryKey: ['channelSuccessRates', limit, timeWindow, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_CHANNEL_SUCCESS_RATES_QUERY : CHANNEL_SUCCESS_RATES_QUERY;
       const fieldName = isPersonal ? 'myChannelSuccessRates' : 'channelSuccessRates';
@@ -718,7 +718,7 @@ export function useChannelSuccessRates(limit?: number, timeWindow?: string, mode
 export function useModelPerformanceStats(mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['modelPerformanceStats', mode],
+    queryKey: ['modelPerformanceStats', isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_MODEL_PERFORMANCE_STATS_QUERY : MODEL_PERFORMANCE_STATS_QUERY;
       const fieldName = isPersonal ? 'myModelPerformanceStats' : 'modelPerformanceStats';
@@ -732,7 +732,7 @@ export function useModelPerformanceStats(mode: DashboardMode = 'project') {
 export function useChannelPerformanceStats(mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['channelPerformanceStats', mode],
+    queryKey: ['channelPerformanceStats', isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_CHANNEL_PERFORMANCE_STATS_QUERY : CHANNEL_PERFORMANCE_STATS_QUERY;
       const fieldName = isPersonal ? 'myChannelPerformanceStats' : 'channelPerformanceStats';

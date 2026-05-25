@@ -92,7 +92,7 @@ const MY_FASTEST_MODELS_QUERY = `
 export function useFastestChannels(timeWindow: string = 'day', limit: number = 5, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['fastestChannels', timeWindow, limit, mode],
+    queryKey: ['fastestChannels', timeWindow, limit, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_FASTEST_CHANNELS_QUERY : FASTEST_CHANNELS_QUERY;
       const fieldName = isPersonal ? 'myFastestChannels' : 'fastestChannels';
@@ -110,7 +110,7 @@ export function useFastestChannels(timeWindow: string = 'day', limit: number = 5
 export function useFastestModels(timeWindow: string = 'day', limit: number = 5, mode: DashboardMode = 'project') {
   const isPersonal = mode === 'personal';
   return useQuery({
-    queryKey: ['fastestModels', timeWindow, limit, mode],
+    queryKey: ['fastestModels', timeWindow, limit, isPersonal],
     queryFn: async () => {
       const query = isPersonal ? MY_FASTEST_MODELS_QUERY : FASTEST_MODELS_QUERY;
       const fieldName = isPersonal ? 'myFastestModels' : 'fastestModels';
