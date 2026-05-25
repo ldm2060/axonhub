@@ -113,23 +113,24 @@ func (s *RoleService) CreateRole(ctx context.Context, input ent.CreateRoleInput)
 
 // UpdateRole updates an existing role.
 func (s *RoleService) UpdateRole(ctx context.Context, id int, input ent.UpdateRoleInput) (*ent.Role, error) {
-	// First check if user can edit this role
-	if err := s.permissionValidator.CanEditRole(ctx, id, nil); err != nil {
+	// Get the role to determine its level for permission checking
+	role, err := s.entFromContext(ctx).Role.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role: %w", err)
+	}
+
+	var projectID *int
+	if !role.IsSystemRole() {
+		projectID = role.ProjectID
+	}
+
+	// Check if user can edit this role
+	if err := s.permissionValidator.CanEditRole(ctx, id, projectID); err != nil {
 		return nil, fmt.Errorf("permission denied: %w", err)
 	}
 
 	// Validate new scopes if being updated
 	if input.Scopes != nil {
-		role, err := s.entFromContext(ctx).Role.Get(ctx, id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get role: %w", err)
-		}
-
-		var projectID *int
-		if !role.IsSystemRole() {
-			projectID = role.ProjectID
-		}
-
 		if err := s.permissionValidator.CanGrantScopes(ctx, input.Scopes, projectID); err != nil {
 			return nil, fmt.Errorf("permission denied: %w", err)
 		}
@@ -164,7 +165,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, input ent.UpdateRo
 		mut.SetScopes(input.Scopes)
 	}
 
-	role, err := mut.Save(ctx)
+	role, err = mut.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update role: %w", err)
 	}
