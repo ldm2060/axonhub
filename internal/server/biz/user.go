@@ -132,7 +132,35 @@ func (s *UserService) EnsurePrivateProject(ctx context.Context, u *ent.User) (in
 	return projectID, nil
 }
 
-// UpdateUser updates an existing user.
+// UpdateSelf updates the current user's own profile fields (firstName, lastName, preferLanguage, avatar).
+// No permission check is needed since a user always has permission to update their own profile.
+func (s *UserService) UpdateSelf(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {
+	client := s.entFromContext(ctx)
+
+	mut := client.User.UpdateOneID(id).
+		SetNillableFirstName(input.FirstName).
+		SetNillableLastName(input.LastName).
+		SetNillablePreferLanguage(input.PreferLanguage)
+
+	if input.ClearAvatar {
+		mut.ClearAvatar()
+	} else {
+		mut.SetNillableAvatar(input.Avatar)
+	}
+
+	user, err := mut.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update profile: %w", err)
+	}
+
+	// Invalidate cache
+	s.invalidateUserCache(ctx, id)
+
+	return user, nil
+}
+
+// UpdateUser updates an existing user (admin operation).
+// Validates permissions before updating scopes, roles, and other sensitive fields.
 func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {
 	// Validate permissions before updating
 	if err := s.permissionValidator.CanEditUserPermissions(ctx, id, nil); err != nil {

@@ -27,7 +27,7 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input UpdateMeInput) (*
 		return nil, fmt.Errorf("user not found in context")
 	}
 
-	return r.userService.UpdateUser(ctx, user.ID, ent.UpdateUserInput{
+	return r.userService.UpdateSelf(ctx, user.ID, ent.UpdateUserInput{
 		FirstName:      input.FirstName,
 		LastName:       input.LastName,
 		PreferLanguage: input.PreferLanguage,
