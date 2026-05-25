@@ -353,7 +353,7 @@
   "channels.dialogs.fields.transformOptions.replaceDeveloperRoleWithSystem.label": "Replace developer role with system",
   "channels.dialogs.fields.transformOptions.replaceDeveloperRoleWithSystem.description": "Replace developer role with system before sending requests for channels that do not support the developer role",
   "channels.dialogs.fields.availability.label": "Availability Schedule",
-  "channels.dialogs.fields.availability.description": "Control when this channel is available for routing requests.",
+  "channels.dialogs.fields.availability.description": "Control when this channel is available for routing requests. Evaluated using the system timezone.",
   "channels.dialogs.fields.availability.enable": "Enable availability schedule",
   "channels.dialogs.fields.availability.rule.type.label": "Type",
   "channels.dialogs.fields.availability.rule.type.available": "Available",

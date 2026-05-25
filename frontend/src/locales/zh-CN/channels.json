@@ -350,7 +350,7 @@
   "channels.dialogs.fields.transformOptions.replaceDeveloperRoleWithSystem.label": "将 developer 角色替换为 system",
   "channels.dialogs.fields.transformOptions.replaceDeveloperRoleWithSystem.description": "用于不支持 developer 角色的渠道，发送请求前将 developer 角色替换为 system",
   "channels.dialogs.fields.availability.label": "可用性计划",
-  "channels.dialogs.fields.availability.description": "控制该渠道何时可参与请求路由。",
+  "channels.dialogs.fields.availability.description": "控制该渠道何时可参与请求路由。按系统设置中的时区生效。",
   "channels.dialogs.fields.availability.enable": "启用可用性计划",
   "channels.dialogs.fields.availability.rule.type.label": "类型",
   "channels.dialogs.fields.availability.rule.type.available": "可用",

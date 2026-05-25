@@ -14,10 +14,15 @@ import (
 	"github.com/ldm2060/axonhub/llm/pipeline"
 )
 
+type selectorSystemService interface {
+	QuotaEnforcementSettingsProvider
+	timeLocationProvider
+}
+
 // selectCandidates creates a middleware that selects available channel model candidates for the model.
 // This is the second step in the inbound pipeline, moved from outbound transformer.
 // If no valid candidates are found, it returns ErrInvalidModel to fail fast.
-func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider ProviderQuotaStatusProvider, systemService QuotaEnforcementSettingsProvider) pipeline.Middleware {
+func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider ProviderQuotaStatusProvider, systemService selectorSystemService) pipeline.Middleware {
 	return pipeline.OnLlmRequest("select-candidates", func(ctx context.Context, llmRequest *llm.Request) (*llm.Request, error) {
 		// Only select candidates once
 		if len(inbound.state.ChannelModelsCandidates) > 0 {
@@ -63,7 +68,7 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 		}
 
 		selector = WithStreamPolicySelector(selector)
-		selector = WithAvailabilitySelector(selector)
+		selector = WithAvailabilitySelector(selector, systemService)
 
 		quotaSelector := WithProviderQuotaSelector(selector, quotaProvider, systemService)
 		selector = quotaSelector

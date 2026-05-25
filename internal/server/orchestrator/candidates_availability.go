@@ -10,12 +10,22 @@ import (
 	"github.com/ldm2060/axonhub/llm"
 )
 
-type AvailabilitySelector struct {
-	wrapped CandidateSelector
+type timeLocationProvider interface {
+	TimeLocation(context.Context) *time.Location
 }
 
-func WithAvailabilitySelector(wrapped CandidateSelector) *AvailabilitySelector {
-	return &AvailabilitySelector{wrapped: wrapped}
+type AvailabilitySelector struct {
+	wrapped      CandidateSelector
+	timeLocation timeLocationProvider
+	now          func() time.Time
+}
+
+func WithAvailabilitySelector(wrapped CandidateSelector, timeLocation timeLocationProvider) *AvailabilitySelector {
+	return &AvailabilitySelector{
+		wrapped:      wrapped,
+		timeLocation: timeLocation,
+		now:          time.Now,
+	}
 }
 
 func (s *AvailabilitySelector) Select(ctx context.Context, req *llm.Request) ([]*ChannelModelsCandidate, error) {
@@ -24,7 +34,12 @@ func (s *AvailabilitySelector) Select(ctx context.Context, req *llm.Request) ([]
 		return nil, err
 	}
 
-	now := time.Now()
+	loc := time.UTC
+	if s.timeLocation != nil {
+		loc = s.timeLocation.TimeLocation(ctx)
+	}
+
+	now := s.now().In(loc)
 	return lo.Filter(candidates, func(c *ChannelModelsCandidate, _ int) bool {
 		return objects.IsChannelAvailable(c.Channel.Policies, now)
 	}), nil
