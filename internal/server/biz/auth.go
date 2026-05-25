@@ -127,7 +127,7 @@ func (s *AuthService) AuthenticateUser(
 		client := s.entFromContext(bypassCtx)
 
 		return client.User.Query().
-			Where(user.EmailEQ(normalizeEmail(email))).
+			Where(user.EmailEqualFold(normalizeEmail(email))).
 			Where(user.StatusEQ(user.StatusActivated)).
 			WithRoles().
 			Only(bypassCtx)
