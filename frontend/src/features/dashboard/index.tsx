@@ -24,7 +24,6 @@ import { FastestModelsCard } from './components/fastest-models-card';
 import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { CollapsibleSection } from './components/collapsible-section';
-import { ReviewQueue } from './components/review-queue';
 import { UserUsageStatsSection } from './components/user-usage-stats-section';
 import { useDashboardStats, type DashboardMode } from './data/dashboard';
 
@@ -111,8 +110,6 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
         setChannelTotalRequests={setChannelTotalRequests}
       />
 
-      {/* Review Queue - always visible */}
-      <ReviewQueue />
     </div>
   );
 }
