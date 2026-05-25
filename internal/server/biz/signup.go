@@ -191,7 +191,7 @@ func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.Use
 		}
 
 		createdUser, err = s.userService.CreateUser(txCtx, ent.CreateUserInput{
-			Email:     input.Email,
+			Email:     normalizedEmail,
 			Password:  input.Password,
 			FirstName: &input.FirstName,
 			LastName:  &input.LastName,

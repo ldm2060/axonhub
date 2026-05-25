@@ -323,3 +323,26 @@ func TestSignUp_WithVerificationCode_RejectsCaseVariantDuplicateEmail(t *testing
 	require.NoError(t, err)
 	require.Equal(t, 1, count)
 }
+
+func TestSignUp_WithVerificationCode_NormalizesStoredEmail(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := enableTestSignUp(t, svc, client, false)
+	code, err := svc.emailTokenService.CreateEmailCode(setupCtx, "user@example.com", emailtoken.TypeVerifyEmail, verificationCodeTTL)
+	require.NoError(t, err)
+
+	plainCtx := ent.NewContext(context.Background(), client)
+	createdUser, _, err := svc.SignUp(plainCtx, SignUpInput{
+		Email:            "User@Example.COM",
+		Password:         "password123",
+		VerificationCode: code,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, createdUser)
+	require.Equal(t, "user@example.com", createdUser.Email)
+
+	storedUser, err := client.User.Query().Only(setupCtx)
+	require.NoError(t, err)
+	require.Equal(t, "user@example.com", storedUser.Email)
+}
