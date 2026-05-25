@@ -643,6 +643,7 @@ export function ModelsAssociationDialog() {
         toast.error(t('common.errors.loadFailed'));
         setConnections([]);
       }
+    };
 
     fetchConnections();
   }, [channelOptions, currentRow?.modelID, debouncedAssociationsString, inheritedAssociations, isOpen, isDeveloperMode, queryConnections]);
