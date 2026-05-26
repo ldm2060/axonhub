@@ -15,6 +15,11 @@ type UserOwnedFilter interface {
 	WhereUserID(entql.IntP)
 }
 
+// UserSelfFilter interface for filtering User queries by their own ID.
+type UserSelfFilter interface {
+	WhereID(entql.IntP)
+}
+
 // UserOwnedQueryRule checks if user owns the resource (for user-owned resources like API Keys).
 func UserOwnedQueryRule() privacy.QueryRule {
 	return privacy.FilterFunc(userOwnedQueryFilter)
@@ -27,6 +32,9 @@ func userOwnedQueryFilter(ctx context.Context, q privacy.Filter) error {
 	}
 
 	switch q := q.(type) {
+	case UserSelfFilter:
+		q.WhereID(entql.IntEQ(user.ID))
+		return privacy.Allowf("User %d can query their own data", user.ID)
 	case UserOwnedFilter:
 		q.WhereUserID(entql.IntEQ(user.ID))
 		return privacy.Allowf("User %d can query their own data", user.ID)
