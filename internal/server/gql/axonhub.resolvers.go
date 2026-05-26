@@ -429,6 +429,11 @@ func (r *mutationResolver) BulkArchiveAPIKeys(ctx context.Context, ids []*object
 	return true, nil
 }
 
+// DeleteAPIKey is the resolver for the deleteAPIKey field.
+func (r *mutationResolver) DeleteAPIKey(ctx context.Context, id objects.GUID) (*ent.APIKey, error) {
+	return r.apiKeyService.DeleteAPIKey(ctx, id.ID)
+}
+
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
 	return r.userService.CreateUser(ctx, input)
