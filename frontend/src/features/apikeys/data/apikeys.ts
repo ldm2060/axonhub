@@ -225,6 +225,15 @@ const BULK_ARCHIVE_APIKEYS_MUTATION = `
   }
 `;
 
+const DELETE_APIKEY_MUTATION = `
+  mutation DeleteAPIKey($id: ID!) {
+    deleteAPIKey(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
 const ROTATE_APIKEY_MUTATION = `
   mutation RotateAPIKey($id: ID!) {
     rotateAPIKey(id: $id) {
@@ -598,6 +607,27 @@ export function useUpdateApiKeyStatus() {
             ? t('apikeys.status.disabled')
             : t('apikeys.status.archived');
       toast.success(t('apikeys.messages.statusUpdateSuccess', { status: statusText }));
+    },
+    onError: () => {
+      toast.error(t('common.errors.internalServerError'));
+    },
+  });
+}
+
+export function useDeleteApiKey() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const selectedProjectId = useSelectedProjectId();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ deleteAPIKey: ApiKey }>(DELETE_APIKEY_MUTATION, { id }, headers);
+      return data.deleteAPIKey;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      toast.success(t('apikeys.messages.deleteSuccess'));
     },
     onError: () => {
       toast.error(t('common.errors.internalServerError'));

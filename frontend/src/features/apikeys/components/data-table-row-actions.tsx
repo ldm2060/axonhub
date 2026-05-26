@@ -1,7 +1,7 @@
 import React from 'react';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
-import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconRefresh } from '@tabler/icons-react';
+import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconRefresh, IconTrash } from '@tabler/icons-react';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -112,6 +112,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 <DropdownMenuItem onClick={() => handleArchive(apiKey)} className='text-orange-600'>
                   <IconArchive className='mr-2 h-4 w-4' />
                   {t('common.buttons.archive')}
+                </DropdownMenuItem>
+              )}
+              {(apiKey.status === 'disabled' || apiKey.status === 'archived') && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setOpen(false);
+                    setTimeout(() => openDialog('delete', apiKey), 0);
+                  }}
+                  className='text-destructive'
+                >
+                  <IconTrash className='mr-2 h-4 w-4' />
+                  {t('apikeys.actions.delete')}
                 </DropdownMenuItem>
               )}
               {canRotateApiKey && (

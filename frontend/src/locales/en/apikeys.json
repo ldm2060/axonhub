@@ -192,5 +192,9 @@
   "apikeys.profileTemplates.editTitle": "Edit Profile Template",
   "apikeys.profileTemplates.editDescription": "Update this profile template's settings.",
   "apikeys.profileTemplates.editSuccess": "Template updated successfully",
-  "apikeys.profileTemplates.editError": "Failed to update template"
+  "apikeys.profileTemplates.editError": "Failed to update template",
+  "apikeys.dialogs.delete.title": "Delete API Key",
+  "apikeys.dialogs.delete.description": "Are you sure you want to delete this API key? This action cannot be undone. All associated request history will be permanently deleted.",
+  "apikeys.actions.delete": "Delete",
+  "apikeys.messages.deleteSuccess": "API Key deleted successfully"
 }

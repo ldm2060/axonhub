@@ -192,5 +192,9 @@
   "apikeys.profileTemplates.editTitle": "编辑配置模板",
   "apikeys.profileTemplates.editDescription": "更新此配置模板的设置。",
   "apikeys.profileTemplates.editSuccess": "模板更新成功",
-  "apikeys.profileTemplates.editError": "更新模板失败"
+  "apikeys.profileTemplates.editError": "更新模板失败",
+  "apikeys.dialogs.delete.title": "删除 API Key",
+  "apikeys.dialogs.delete.description": "确定要删除此 API Key 吗？此操作不可撤销，所有关联的请求记录将被永久删除。",
+  "apikeys.actions.delete": "删除",
+  "apikeys.messages.deleteSuccess": "API Key 已删除"
 }

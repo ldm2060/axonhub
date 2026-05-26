@@ -27,6 +27,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuthStore } from '@/stores/authStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -89,13 +90,15 @@ function matchesTimeWindow(hhmm: string, start: string, end: string): boolean {
 const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
   const { channelPermissions } = usePermissions();
+  const { user: authUser } = useAuthStore((state) => state.auth);
   const channel = row.original;
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isEnabled = channel.status === 'enabled';
   const isArchived = channel.status === 'archived';
   const isTimeUnavailable = !isChannelCurrentlyAvailable(channel.policies);
-  const canToggle = channelPermissions.canWrite || channelPermissions.canManageOwn;
+  const isOwner = channel.ownerID === authUser?.id;
+  const canToggle = channelPermissions.canWrite || (channelPermissions.canManageOwn && isOwner);
 
   const handleSwitchClick = useCallback(() => {
     if (canToggle && !isArchived) {
