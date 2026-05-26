@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/log"
@@ -670,6 +671,36 @@ func (s *APIKeyService) RotateAPIKey(ctx context.Context, id int) (*ent.APIKey, 
 	s.invalidateAPIKeyCaches(ctx, oldKey, newKey)
 
 	return rotated, nil
+}
+
+// DeleteAPIKey permanently deletes an API key and its associated requests.
+// Enabled API keys must be disabled or archived first.
+func (s *APIKeyService) DeleteAPIKey(ctx context.Context, id int) (*ent.APIKey, error) {
+	client := s.entFromContext(ctx)
+
+	apiKey, err := client.APIKey.Get(ctx, id)
+	if err != nil {
+		return nil, xerrors.NotFoundError("API key")
+	}
+	if apiKey.Status == apikey.StatusEnabled {
+		return nil, xerrors.ValidationError(ErrAPIKeyDeleteEnabled.Error())
+	}
+
+	// Cascade delete associated requests
+	_, err = client.Request.Delete().Where(request.HasAPIKeyWith(apikey.ID(id))).Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete associated requests: %w", err)
+	}
+
+	// Hard delete the API key, bypassing SoftDeleteMixin
+	ctx = schematype.SkipSoftDelete(ctx)
+	err = client.APIKey.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete API key: %w", err)
+	}
+
+	s.invalidateAPIKeyCaches(ctx, apiKey.Key)
+	return apiKey, nil
 }
 
 func (s *APIKeyService) EnsureNoAuthAPIKey(ctx context.Context) (*ent.APIKey, error) {

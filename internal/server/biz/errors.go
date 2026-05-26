@@ -20,4 +20,5 @@ var (
 	ErrSystemNotInitialized   = errors.New("system not initialized")
 	ErrOIDCLoginRequired      = errors.New("OIDC user without password, please login via OIDC or set a password")
 	ErrProjectNotFound        = errors.New("project not found")
+	ErrAPIKeyDeleteEnabled    = errors.New("cannot delete an enabled API key, disable or archive it first")
 )

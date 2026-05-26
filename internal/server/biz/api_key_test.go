@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
 	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
@@ -1266,5 +1267,109 @@ func TestAPIKeyService_RotateAPIKey(t *testing.T) {
 		_, err = apiKeyService.RotateAPIKey(anotherUserCtx, apiKeyInProjectA.ID)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to get API key")
+	})
+}
+
+func TestAPIKeyService_DeleteAPIKey(t *testing.T) {
+	apiKeyService, client := setupTestAPIKeyService(t, xcache.Config{Mode: xcache.ModeMemory})
+	defer apiKeyService.Stop()
+	defer client.Close()
+
+	ctx := context.Background()
+	ctx = ent.NewContext(ctx, client)
+	ctx = authz.WithTestBypass(ctx)
+
+	hashedPassword, err := HashPassword("test-password")
+	require.NoError(t, err)
+
+	testUser, err := client.User.Create().
+		SetEmail(fmt.Sprintf("test-%d@example.com", time.Now().UnixNano())).
+		SetPassword(hashedPassword).
+		SetFirstName("Test").
+		SetLastName("User").
+		SetStatus(user.StatusActivated).
+		Save(ctx)
+	require.NoError(t, err)
+
+	projectName := uuid.NewString()
+	testProject, err := client.Project.Create().
+		SetName(projectName).
+		SetDescription(projectName).
+		SetStatus(project.StatusActive).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.UserProject.Create().
+		SetUserID(testUser.ID).
+		SetProjectID(testProject.ID).
+		SetIsOwner(true).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ctxWithUser := contexts.WithUser(ctx, testUser)
+
+	t.Run("Delete disabled key succeeds", func(t *testing.T) {
+		apiKey, err := apiKeyService.CreateAPIKey(ctxWithUser, ent.CreateAPIKeyInput{
+			Name:      "Disabled Key to Delete",
+			ProjectID: testProject.ID,
+		})
+		require.NoError(t, err)
+
+		// Disable the key first
+		_, err = apiKeyService.UpdateAPIKeyStatus(ctx, apiKey.ID, apikey.StatusDisabled)
+		require.NoError(t, err)
+
+		// Now delete should succeed
+		deleted, err := apiKeyService.DeleteAPIKey(ctx, apiKey.ID)
+		require.NoError(t, err)
+		require.Equal(t, apiKey.ID, deleted.ID)
+
+		// Verify the key is truly gone (hard delete)
+		hardDeleteCtx := schematype.SkipSoftDelete(ctx)
+		_, err = client.APIKey.Get(hardDeleteCtx, apiKey.ID)
+		require.Error(t, err)
+		require.True(t, ent.IsNotFound(err))
+	})
+
+	t.Run("Reject delete of enabled key", func(t *testing.T) {
+		apiKey, err := apiKeyService.CreateAPIKey(ctxWithUser, ent.CreateAPIKeyInput{
+			Name:      "Enabled Key to Reject",
+			ProjectID: testProject.ID,
+		})
+		require.NoError(t, err)
+
+		// Enabled key (default status) should be rejected
+		_, err = apiKeyService.DeleteAPIKey(ctx, apiKey.ID)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ErrAPIKeyDeleteEnabled.Error())
+	})
+
+	t.Run("Delete archived key succeeds", func(t *testing.T) {
+		apiKey, err := apiKeyService.CreateAPIKey(ctxWithUser, ent.CreateAPIKeyInput{
+			Name:      "Archived Key to Delete",
+			ProjectID: testProject.ID,
+		})
+		require.NoError(t, err)
+
+		// Archive the key first
+		_, err = apiKeyService.UpdateAPIKeyStatus(ctx, apiKey.ID, apikey.StatusArchived)
+		require.NoError(t, err)
+
+		// Now delete should succeed
+		deleted, err := apiKeyService.DeleteAPIKey(ctx, apiKey.ID)
+		require.NoError(t, err)
+		require.Equal(t, apiKey.ID, deleted.ID)
+
+		// Verify the key is truly gone (hard delete)
+		hardDeleteCtx := schematype.SkipSoftDelete(ctx)
+		_, err = client.APIKey.Get(hardDeleteCtx, apiKey.ID)
+		require.Error(t, err)
+		require.True(t, ent.IsNotFound(err))
+	})
+
+	t.Run("Delete non-existent key returns error", func(t *testing.T) {
+		_, err := apiKeyService.DeleteAPIKey(ctx, 999999)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "API key not found")
 	})
 }
