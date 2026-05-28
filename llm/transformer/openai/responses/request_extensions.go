@@ -235,7 +235,7 @@ func mergeRawOnlyInputItems(structuredRaw json.RawMessage, requestExt *llm.OpenA
 		rawByIndex[fragment.OriginalIndex] = cloneRaw(fragment.Raw)
 	}
 
-	for i := 0; i < total; i++ {
+	for i := range total {
 		if raw, ok := rawByIndex[i]; ok {
 			items = append(items, raw)
 			continue
@@ -280,7 +280,7 @@ func mergeRawOnlyTools(structuredRaw json.RawMessage, requestExt *llm.OpenAIResp
 		rawByIndex[fragment.OriginalIndex] = cloneRaw(fragment.Raw)
 	}
 
-	for i := 0; i < total; i++ {
+	for i := range total {
 		if raw, ok := rawByIndex[i]; ok {
 			tools = append(tools, raw)
 			continue

@@ -511,6 +511,7 @@ type Item struct {
 func (item *Item) UnmarshalJSON(data []byte) error {
 	type itemAlias Item
 	raw := struct {
+
 		itemAlias
 		Arguments json.RawMessage `json:"arguments"`
 	}{}

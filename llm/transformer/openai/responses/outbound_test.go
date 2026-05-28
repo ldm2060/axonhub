@@ -78,7 +78,7 @@ func TestOutboundTransformer_TransformResponse_CanceledFinishReason(t *testing.T
 	require.NoError(t, err)
 	require.Len(t, result.Choices, 1)
 	require.NotNil(t, result.Choices[0].FinishReason)
-	require.Equal(t, "cancelled", *result.Choices[0].FinishReason)
+	require.Equal(t, "cancelled", *result.Choices[0].FinishReason) //nolint:misspell // OpenAI API protocol value
 }
 
 func TestOutboundTransformer_buildFullRequestURL(t *testing.T) {

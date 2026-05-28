@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -70,7 +71,7 @@ func TestOutboundCustomizeExecutorUsesCurrentExecutor(t *testing.T) {
 func TestWebSocketExecutorDoStreamSendsResponseCreate(t *testing.T) {
 	upgrader := websocket.Upgrader{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, WebSocketBetaHeaderValue, r.Header.Get("OpenAI-Beta"))
+		require.Equal(t, WebSocketBetaHeaderValue, r.Header.Get(http.CanonicalHeaderKey("OpenAI-Beta")))
 		require.Equal(t, "Bearer test-key", r.Header.Get("Authorization"))
 
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -311,10 +312,10 @@ func TestWebSocketExecutorDoAggregatesCancelledAndIncompleteResponseEvents(t *te
 		assertBody func(*testing.T, Response)
 	}{
 		{
-			name:       "cancelled",
-			eventType:  "response.cancelled",
+			name:       "cancelled",          //nolint:misspell // OpenAI API protocol value
+			eventType:  "response.cancelled", //nolint:misspell // OpenAI API protocol value
 			status:     "canceled",
-			responseID: "resp_cancelled",
+			responseID: "resp_cancelled", //nolint:misspell // OpenAI API protocol value
 			response:   map[string]any{},
 		},
 		{
@@ -351,9 +352,7 @@ func TestWebSocketExecutorDoAggregatesCancelledAndIncompleteResponseEvents(t *te
 					"status":     tt.status,
 					"output":     []any{},
 				}
-				for key, value := range tt.response {
-					response[key] = value
-				}
+				maps.Copy(response, tt.response)
 				require.NoError(t, conn.WriteJSON(map[string]any{
 					"type":     tt.eventType,
 					"response": response,
@@ -394,7 +393,7 @@ func TestWebSocketExecutorReusesConnectionForSameSession(t *testing.T) {
 		require.NoError(t, err)
 		defer conn.Close()
 
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			var payload map[string]any
 			require.NoError(t, conn.ReadJSON(&payload))
 			require.Equal(t, "response.create", payload["type"])
@@ -416,7 +415,7 @@ func TestWebSocketExecutorReusesConnectionForSameSession(t *testing.T) {
 	defer server.Close()
 
 	executor := NewWebSocketExecutor(nil)
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
 			Method: http.MethodPost,
 			URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
@@ -424,7 +423,7 @@ func TestWebSocketExecutorReusesConnectionForSameSession(t *testing.T) {
 				webSocketSessionHeader: []string{"session-1"},
 			},
 			Auth: &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: "test-key"},
-			Body: []byte(fmt.Sprintf(`{"model":"gpt-5","instructions":"turn-%d"}`, i+1)),
+			Body: fmt.Appendf(nil, `{"model":"gpt-5","instructions":"turn-%d"}`, i+1),
 		})
 		require.NoError(t, err)
 		require.True(t, stream.Next())
@@ -464,7 +463,7 @@ func TestWebSocketExecutorDoesNotPoolWithoutSession(t *testing.T) {
 	defer server.Close()
 
 	executor := NewWebSocketExecutor(nil)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
 			Method: http.MethodPost,
 			URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
@@ -806,7 +805,7 @@ func TestWebSocketExecutorSeparatesPoolByOrganizationHeaders(t *testing.T) {
 }
 
 func TestWebSocketExecutorEvictsPooledConnectionOnFailedOrCancelled(t *testing.T) {
-	for _, terminalType := range []string{"response.failed", "response.cancelled", "response.incomplete"} {
+	for _, terminalType := range []string{"response.failed", "response.cancelled", "response.incomplete"} { //nolint:misspell // OpenAI API protocol value
 		t.Run(terminalType, func(t *testing.T) {
 			upgrader := websocket.Upgrader{}
 			var upgrades atomic.Int32
@@ -848,7 +847,7 @@ func TestWebSocketExecutorEvictsPooledConnectionOnFailedOrCancelled(t *testing.T
 
 			executor := NewWebSocketExecutor(nil)
 			body := []byte(`{"model":"gpt-5","input":[{"id":"first","type":"message"}]}`)
-			for i := 0; i < 2; i++ {
+			for i := range 2 {
 				stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
 					Method: http.MethodPost,
 					URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
@@ -961,7 +960,7 @@ func TestWebSocketExecutorKeepsConnectionWhenInputExceedsRetainedLimit(t *testin
 		require.NoError(t, err)
 		defer conn.Close()
 
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			var payload map[string]any
 			if err := conn.ReadJSON(&payload); err != nil {
 				return
@@ -990,7 +989,7 @@ func TestWebSocketExecutorKeepsConnectionWhenInputExceedsRetainedLimit(t *testin
 	executor.maxRetainedInput = 1
 	body := []byte(`{"model":"gpt-5","input":[{"id":"large","type":"message","role":"user","content":[{"type":"input_text","text":"larger than retained limit"}]}]}`)
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
 			Method: http.MethodPost,
 			URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",

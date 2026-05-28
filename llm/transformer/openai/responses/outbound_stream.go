@@ -538,9 +538,9 @@ func (s *responsesOutboundStream) transformStreamChunk(event *httpclient.StreamE
 		}
 
 	case StreamEventTypeResponseCancelled:
-		// Response cancelled
+		// Response was canceled by the API
 		s.responseCompleted = true
-		finishReason := "cancelled"
+		finishReason := "cancelled" //nolint:misspell // OpenAI API protocol value
 		resp.Choices = []llm.Choice{
 			{
 				Index:        0,

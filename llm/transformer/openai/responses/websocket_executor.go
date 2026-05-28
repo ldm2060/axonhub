@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -190,7 +191,7 @@ func (e *WebSocketExecutor) DoStream(ctx context.Context, request *httpclient.Re
 			return nil, err
 		}
 	}
-	headers.Set("OpenAI-Beta", WebSocketBetaHeaderValue)
+	headers.Set("Openai-Beta", WebSocketBetaHeaderValue)
 
 	lease, err := e.acquirePreparedLease(ctx, request, wsURL, headers, payload)
 	if err != nil {
@@ -323,9 +324,7 @@ func clonePayloadMap(payload map[string]any) map[string]any {
 		return nil
 	}
 	clone := make(map[string]any, len(payload))
-	for key, value := range payload {
-		clone[key] = value
-	}
+	maps.Copy(clone, payload)
 	return clone
 }
 
@@ -333,9 +332,7 @@ func restorePayloadMap(payload, original map[string]any) {
 	for key := range payload {
 		delete(payload, key)
 	}
-	for key, value := range original {
-		payload[key] = value
-	}
+	maps.Copy(payload, original)
 }
 
 func (e *WebSocketExecutor) acquire(ctx context.Context, request *httpclient.Request, wsURL string, headers http.Header) (*webSocketLease, error) {
@@ -431,7 +428,13 @@ func (e *WebSocketExecutor) dial(ctx context.Context, request *httpclient.Reques
 
 	conn, resp, err := dialer.DialContext(ctx, wsURL, headers)
 	if err != nil {
+		if resp != nil {
+			_ = resp.Body.Close()
+		}
 		return nil, newWebSocketDialError(request, resp, err)
+	}
+	if resp != nil {
+		_ = resp.Body.Close()
 	}
 	return conn, nil
 }
@@ -459,9 +462,9 @@ func (e *WebSocketExecutor) poolKey(ctx context.Context, request *httpclient.Req
 		AccountID:  strings.TrimSpace(headers.Get(webSocketAccountIDHeader)),
 		Originator: strings.TrimSpace(headers.Get(webSocketOriginatorHeader)),
 		UserAgent:  strings.TrimSpace(headers.Get(webSocketUserAgentHeader)),
-		Org:        strings.TrimSpace(headers.Get(webSocketOrgHeader)),
-		Project:    strings.TrimSpace(headers.Get(webSocketProjectHeader)),
-		BetaHeader: strings.TrimSpace(headers.Get("OpenAI-Beta")),
+		Org:        strings.TrimSpace(headers.Get("Openai-Organization")),
+		Project:    strings.TrimSpace(headers.Get("Openai-Project")),
+		BetaHeader: strings.TrimSpace(headers.Get("Openai-Beta")),
 		Headers:    headerPoolIdentity(headers),
 	}, true
 }
@@ -915,7 +918,7 @@ func payloadInputItems(payload map[string]any) ([]json.RawMessage, bool, error) 
 
 	var items []json.RawMessage
 	if err := json.Unmarshal(inputRaw, &items); err != nil {
-		return nil, false, nil
+		return nil, false, err
 	}
 
 	return items, true, nil
