@@ -1,7 +1,7 @@
 import React from 'react';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
-import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconRefresh, IconTrash } from '@tabler/icons-react';
+import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconCheck, IconRefresh, IconTrash } from '@tabler/icons-react';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -36,7 +36,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
 
   const handleStatusChange = (apiKey: ApiKey) => {
     if (apiKey.status === 'archived') {
-      // Archived API keys cannot be enabled/disabled
+      // Archived API keys cannot be enabled/disabled, use archive dialog for restore
       return;
     }
     setOpen(false);
@@ -108,12 +108,10 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                   )}
                 </DropdownMenuItem>
               )}
-              {apiKey.status !== 'archived' && (
-                <DropdownMenuItem onClick={() => handleArchive(apiKey)} className='text-orange-600'>
-                  <IconArchive className='mr-2 h-4 w-4' />
-                  {t('common.buttons.archive')}
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => handleArchive(apiKey)} className={apiKey.status === 'archived' ? 'text-green-600' : 'text-orange-600'}>
+                {apiKey.status === 'archived' ? <IconCheck className='mr-2 h-4 w-4' /> : <IconArchive className='mr-2 h-4 w-4' />}
+                {apiKey.status === 'archived' ? t('common.buttons.restore') : t('common.buttons.archive')}
+              </DropdownMenuItem>
               {(apiKey.status === 'disabled' || apiKey.status === 'archived') && (
                 <DropdownMenuItem
                   onClick={() => {
