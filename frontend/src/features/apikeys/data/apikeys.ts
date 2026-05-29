@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
-import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import type {
   ApiKey,
   ApiKeyConnection,
@@ -23,16 +22,7 @@ import { apiKeyConnectionSchema, apiKeyProfileQuotaUsageSchema, apiKeyProfileTem
 const NOAUTH_API_KEY_TYPE = 'noauth';
 
 // Dynamic GraphQL query builders
-function buildApiKeysQuery(permissions: { canViewUsers: boolean }) {
-  const userFields = permissions.canViewUsers
-    ? `
-          user {
-            id
-            firstName
-            lastName
-          }`
-    : '';
-
+function buildApiKeysQuery() {
   return `
     query GetApiKeys($first: Int, $after: Cursor, $orderBy: APIKeyOrder, $where: APIKeyWhereInput) {
       apiKeys(first: $first, after: $after, orderBy: $orderBy, where: $where) {
@@ -40,7 +30,12 @@ function buildApiKeysQuery(permissions: { canViewUsers: boolean }) {
           node {
             id
             createdAt
-            updatedAt${userFields}
+            updatedAt
+            user {
+              id
+              firstName
+              lastName
+            }
             key
             name
             type
@@ -61,23 +56,19 @@ function buildApiKeysQuery(permissions: { canViewUsers: boolean }) {
   `;
 }
 
-function buildApiKeyQuery(permissions: { canViewUsers: boolean }) {
-  const userFields = permissions.canViewUsers
-    ? `
-      user {
-        id
-        firstName
-        lastName
-      }`
-    : '';
-
+function buildApiKeyQuery() {
   return `
     query GetApiKey($id: ID!) {
       node(id: $id) {
         ... on APIKey {
         id
         createdAt
-        updatedAt${userFields}
+        updatedAt
+        user {
+          id
+          firstName
+          lastName
+        }
         key
         name
         type
@@ -111,22 +102,18 @@ function buildApiKeyQuery(permissions: { canViewUsers: boolean }) {
   `;
 }
 
-function buildCreateApiKeyMutation(permissions: { canViewUsers: boolean }) {
-  const userFields = permissions.canViewUsers
-    ? `
-      user {
-        id
-        firstName
-        lastName
-      }`
-    : '';
-
+function buildCreateApiKeyMutation() {
   return `
     mutation CreateAPIKey($input: CreateAPIKeyInput!) {
       createAPIKey(input: $input) {
         id
         createdAt
-        updatedAt${userFields}
+        updatedAt
+        user {
+          id
+          firstName
+          lastName
+        }
         key
         name
         type
@@ -137,22 +124,18 @@ function buildCreateApiKeyMutation(permissions: { canViewUsers: boolean }) {
   `;
 }
 
-function buildUpdateApiKeyMutation(permissions: { canViewUsers: boolean }) {
-  const userFields = permissions.canViewUsers
-    ? `
-      user {
-        id
-        firstName
-        lastName
-      }`
-    : '';
-
+function buildUpdateApiKeyMutation() {
   return `
     mutation UpdateAPIKey($id: ID!, $input: UpdateAPIKeyInput!) {
       updateAPIKey(id: $id, input: $input) {
         id
         createdAt
-        updatedAt${userFields}
+        updatedAt
+        user {
+          id
+          firstName
+          lastName
+        }
         key
         name
         type
@@ -417,14 +400,13 @@ export function useApiKeys(
 ) {
   const { t } = useTranslation();
   const { handleError } = useErrorHandler();
-  const permissions = useRequestPermissions();
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
-    queryKey: ['apiKeys', variables, permissions, selectedProjectId],
+    queryKey: ['apiKeys', variables, selectedProjectId],
     queryFn: async () => {
       try {
-        const query = buildApiKeysQuery(permissions);
+        const query = buildApiKeysQuery();
         const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
         const mergedVariables = {
           ...variables,
@@ -447,14 +429,13 @@ export function useApiKeys(
 export function useApiKey(id: string) {
   const { t } = useTranslation();
   const { handleError } = useErrorHandler();
-  const permissions = useRequestPermissions();
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
-    queryKey: ['apiKey', id, permissions, selectedProjectId],
+    queryKey: ['apiKey', id, selectedProjectId],
     queryFn: async () => {
       try {
-        const query = buildApiKeyQuery(permissions);
+        const query = buildApiKeyQuery();
         const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
         const data = await graphqlRequest<{ node: ApiKey }>(query, { id }, headers);
         return apiKeySchema.parse(data.node);
@@ -538,13 +519,12 @@ export function useApiKeyTokenUsageStats(
 export function useCreateApiKey() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const permissions = useRequestPermissions();
   const selectedProjectId = useSelectedProjectId();
   const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: (input: CreateApiKeyInput) => {
-      const mutation = buildCreateApiKeyMutation(permissions);
+      const mutation = buildCreateApiKeyMutation();
       // Automatically add projectID if not provided and a project is selected
       const inputWithProject = {
         ...input,
@@ -566,13 +546,12 @@ export function useCreateApiKey() {
 export function useUpdateApiKey() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const permissions = useRequestPermissions();
   const selectedProjectId = useSelectedProjectId();
   const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateApiKeyInput }) => {
-      const mutation = buildUpdateApiKeyMutation(permissions);
+      const mutation = buildUpdateApiKeyMutation();
       const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
       return graphqlRequest<{ updateAPIKey: ApiKey }>(mutation, { id, input }, headers);
     },
