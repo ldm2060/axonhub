@@ -14,20 +14,28 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
+type ZhipuAPIResponse[T any] struct {
+	Code    int    `json:"code"`
+	Msg     string `json:"msg"`
+	Data    T      `json:"data"`
+	Success bool   `json:"success"`
+}
+
 type ZhipuQuotaLimitItem struct {
 	Type         string  `json:"type"`
+	Unit         int     `json:"unit"`
+	Number       int     `json:"number"`
+	Usage        int     `json:"usage"`
+	CurrentValue int     `json:"currentValue"`
+	Remaining    int     `json:"remaining"`
 	Percentage   float64 `json:"percentage"`
-	CurrentValue any     `json:"currentValue,omitempty"`
-	Usage        any     `json:"usage,omitempty"`
+	NextResetTime int64  `json:"nextResetTime"`
 	UsageDetails any     `json:"usageDetails,omitempty"`
 }
 
-type ZhipuQuotaLimitResponse struct {
+type ZhipuQuotaLimitData struct {
 	Limits []ZhipuQuotaLimitItem `json:"limits"`
-}
-
-type ZhipuUsageResponse struct {
-	Data any `json:"data"`
+	Level  string                `json:"level"`
 }
 
 type ZhipuQuotaChecker struct {
@@ -71,8 +79,20 @@ func (c *ZhipuQuotaChecker) CheckQuota(ctx context.Context, ch *ent.Channel) (Qu
 
 	quotaResp, err := hc.Do(ctx, quotaReq)
 	if err == nil && quotaResp.StatusCode == http.StatusOK {
-		limits, normalizedStatus = c.parseQuotaLimitResponse(quotaResp.Body)
-		rawData["quotaLimits"] = limits
+		var apiResp ZhipuAPIResponse[ZhipuQuotaLimitData]
+		if json.Unmarshal(quotaResp.Body, &apiResp) == nil && apiResp.Code == 200 {
+			limits, normalizedStatus = c.parseQuotaLimitResponse(apiResp.Data)
+			// Re-serialize through JSON to ensure rawData contains only
+			// plain map[string]any values (no Go structs that break Ent's
+			// Map scalar serialization).
+			var raw map[string]any
+			if rejson, _ := json.Marshal(apiResp.Data); rejson != nil {
+				_ = json.Unmarshal(rejson, &raw)
+			}
+			if raw != nil {
+				rawData["quotaLimits"] = raw
+			}
+		}
 	}
 
 	// 2. Query model usage
@@ -88,8 +108,8 @@ func (c *ZhipuQuotaChecker) CheckQuota(ctx context.Context, ch *ent.Channel) (Qu
 
 	modelResp, err := hc.Do(ctx, modelReq)
 	if err == nil && modelResp.StatusCode == http.StatusOK {
-		var usageResp ZhipuUsageResponse
-		if json.Unmarshal(modelResp.Body, &usageResp) == nil {
+		var usageResp ZhipuAPIResponse[json.RawMessage]
+		if json.Unmarshal(modelResp.Body, &usageResp) == nil && usageResp.Code == 200 {
 			rawData["modelUsage"] = usageResp.Data
 		}
 	}
@@ -106,8 +126,8 @@ func (c *ZhipuQuotaChecker) CheckQuota(ctx context.Context, ch *ent.Channel) (Qu
 
 	toolResp, err := hc.Do(ctx, toolReq)
 	if err == nil && toolResp.StatusCode == http.StatusOK {
-		var usageResp ZhipuUsageResponse
-		if json.Unmarshal(toolResp.Body, &usageResp) == nil {
+		var usageResp ZhipuAPIResponse[json.RawMessage]
+		if json.Unmarshal(toolResp.Body, &usageResp) == nil && usageResp.Code == 200 {
 			rawData["toolUsage"] = usageResp.Data
 		}
 	}
@@ -133,20 +153,15 @@ func (c *ZhipuQuotaChecker) SupportsChannel(ch *ent.Channel) bool {
 	}
 }
 
-func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitStatus, string) {
-	var response ZhipuQuotaLimitResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, "unknown"
-	}
-
-	if len(response.Limits) == 0 {
+func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(data ZhipuQuotaLimitData) ([]QuotaLimitStatus, string) {
+	if len(data.Limits) == 0 {
 		return nil, "unknown"
 	}
 
 	var limits []QuotaLimitStatus
 	worstStatus := "available"
 
-	for _, item := range response.Limits {
+	for _, item := range data.Limits {
 		var limitType QuotaLimitType
 		switch item.Type {
 		case "TOKENS_LIMIT":
@@ -158,7 +173,7 @@ func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitSt
 		}
 
 		status := "available"
-		usageRatio := item.Percentage
+		usageRatio := item.Percentage / 100.0
 
 		if usageRatio >= 1.0 {
 			status = "exhausted"
@@ -166,11 +181,18 @@ func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitSt
 			status = "warning"
 		}
 
+		var nextResetAt *time.Time
+		if item.NextResetTime > 0 {
+			t := time.UnixMilli(item.NextResetTime)
+			nextResetAt = &t
+		}
+
 		limits = append(limits, QuotaLimitStatus{
 			Type:       limitType,
 			Status:     status,
 			UsageRatio: usageRatio,
 			Ready:      IsReadyStatus(status),
+			NextResetAt: nextResetAt,
 		})
 
 		if status == "exhausted" {
