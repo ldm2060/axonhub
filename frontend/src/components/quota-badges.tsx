@@ -11,6 +11,7 @@ import {
   ProviderWaferQuotaData,
   ProviderSyntheticQuotaData,
   ProviderNeuralWattQuotaData,
+  ProviderZhipuQuotaData,
 } from '@/features/system/data/quotas';
 import { useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 
@@ -114,6 +115,20 @@ function getChannelPercentage(channel: ProviderQuotaChannel): number {
     const kwhUsed = qd?.subscription?.kwh_used ?? 0;
     if (kwhIncluded > 0) {
       percentage = (kwhUsed / kwhIncluded) * 100;
+    }
+  } else if (
+    channel.type === 'zhipu' ||
+    channel.type === 'zhipu_anthropic' ||
+    channel.type === 'zai' ||
+    channel.type === 'zai_anthropic' ||
+    ((channel.type === 'openai' || channel.type === 'openai_responses') && channel.providerType === 'zhipu')
+  ) {
+    const qd = channel.quotaStatus?.quotaData as ProviderZhipuQuotaData | undefined;
+    if (qd?.quotaLimits) {
+      percentage = Math.max(
+        ...qd.quotaLimits.map((l) => l.usageRatio * 100),
+        0,
+      );
     }
   }
   return percentage;
@@ -865,6 +880,47 @@ function QuotaRow({ channel, enforcementMode }: { channel: ProviderQuotaChannel;
           })()}
         </div>
       )}
+
+      {(() => {
+        const isZhipuChannel =
+          channel.type === 'zhipu' ||
+          channel.type === 'zhipu_anthropic' ||
+          channel.type === 'zai' ||
+          channel.type === 'zai_anthropic' ||
+          ((channel.type === 'openai' || channel.type === 'openai_responses') && channel.providerType === 'zhipu');
+
+        if (!isZhipuChannel) return null;
+        const qd = channel.quotaStatus?.quotaData as ProviderZhipuQuotaData | undefined;
+        if (!qd) return null;
+
+        const items: React.ReactNode[] = [];
+
+        if (qd.quotaLimits) {
+          qd.quotaLimits.forEach((limit, idx) => {
+            const pct = limit.usageRatio * 100;
+            const labelKey =
+              limit.type === 'token'
+                ? 'quota.label.zhipu_token_usage'
+                : limit.type === 'time'
+                  ? 'quota.label.zhipu_mcp_usage'
+                  : limit.type;
+
+            items.push(
+              <div key={limit.type} className={idx > 0 ? 'border-border/60 space-y-2.5 border-t border-dashed pt-3' : 'space-y-2.5'}>
+                <div className='space-y-1'>
+                  <div className='flex items-center justify-between text-xs'>
+                    <span className='text-muted-foreground font-medium'>{t(labelKey)}</span>
+                    <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
+                  </div>
+                  <ProgressBar percentage={pct} />
+                </div>
+              </div>
+            );
+          });
+        }
+
+        return <div className='mt-3 space-y-3'>{items}</div>;
+      })()}
     </div>
   );
 }
