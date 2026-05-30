@@ -284,6 +284,7 @@ func NewProviderQuotaService(params ProviderQuotaServiceParams) *ProviderQuotaSe
 	svc.registerWaferSupport()
 	svc.registerSyntheticSupport()
 	svc.registerNeuralWattSupport()
+	svc.registerZhipuSupport()
 
 	go svc.loadQuotaCache(context.Background())
 
@@ -326,6 +327,10 @@ func (svc *ProviderQuotaService) registerSyntheticSupport() {
 
 func (svc *ProviderQuotaService) registerNeuralWattSupport() {
 	svc.checkers["neuralwatt"] = provider_quota.NewNeuralWattQuotaChecker(svc.httpClient)
+}
+
+func (svc *ProviderQuotaService) registerZhipuSupport() {
+	svc.checkers["zhipu"] = provider_quota.NewZhipuQuotaChecker(svc.httpClient)
 }
 
 func (svc *ProviderQuotaService) intervalToCronExpr(interval time.Duration) string {
@@ -453,7 +458,7 @@ func (svc *ProviderQuotaService) runQuotaCheck(ctx context.Context, force bool) 
 	q := svc.db.Channel.Query().
 		Where(
 			channel.StatusEQ(channel.StatusEnabled),
-			channel.TypeIn(channel.TypeClaudecode, channel.TypeCodex, channel.TypeGithubCopilot, channel.TypeNanogpt, channel.TypeNanogptResponses, channel.TypeOpenai, channel.TypeOpenaiResponses),
+			channel.TypeIn(channel.TypeClaudecode, channel.TypeCodex, channel.TypeGithubCopilot, channel.TypeNanogpt, channel.TypeNanogptResponses, channel.TypeOpenai, channel.TypeOpenaiResponses, channel.TypeZhipu, channel.TypeZhipuAnthropic, channel.TypeZai, channel.TypeZaiAnthropic),
 		)
 
 	if !force {
@@ -654,6 +659,8 @@ func (svc *ProviderQuotaService) getProviderType(ch *ent.Channel) string {
 		return "nanogpt"
 	case channel.TypeOpenai, channel.TypeOpenaiResponses:
 		return provider_quota.DetectProviderFromURL(ch.BaseURL)
+	case channel.TypeZhipu, channel.TypeZhipuAnthropic, channel.TypeZai, channel.TypeZaiAnthropic:
+		return "zhipu"
 	default:
 		return ""
 	}
