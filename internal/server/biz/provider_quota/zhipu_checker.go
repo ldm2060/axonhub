@@ -134,10 +134,16 @@ func (c *ZhipuQuotaChecker) SupportsChannel(ch *ent.Channel) bool {
 }
 
 func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitStatus, string) {
-	var response ZhipuQuotaLimitResponse
-	if err := json.Unmarshal(body, &response); err != nil {
+	// API wraps response in {"code":200,"data":{...}}
+	var wrapper struct {
+		Code int                     `json:"code"`
+		Data ZhipuQuotaLimitResponse `json:"data"`
+	}
+	if err := json.Unmarshal(body, &wrapper); err != nil || wrapper.Code != 200 {
 		return nil, "unknown"
 	}
+
+	response := wrapper.Data
 
 	if len(response.Limits) == 0 {
 		return nil, "unknown"
@@ -158,7 +164,7 @@ func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitSt
 		}
 
 		status := "available"
-		usageRatio := item.Percentage
+		usageRatio := item.Percentage / 100.0
 
 		if usageRatio >= 1.0 {
 			status = "exhausted"
