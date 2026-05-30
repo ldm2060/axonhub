@@ -142,6 +142,25 @@ export type ProviderNeuralWattQuotaData = ProviderQuotaDataCommon & {
   subscription?: { kwh_included?: number | null; kwh_used?: number | null; kwh_remaining?: number | null; in_overage?: boolean | null; status?: string | null; plan?: string | null } | null;
 }
 
+export type ZhipuQuotaLimit = {
+  type: string;
+  percentage: number;
+  currentValue?: any;
+  usage?: any;
+  usageDetails?: any;
+}
+
+export type ProviderZhipuQuotaData = ProviderQuotaDataCommon & {
+  quotaLimits?: {
+    type: string;
+    status: string;
+    usageRatio: number;
+    ready: boolean;
+  }[];
+  modelUsage?: any;
+  toolUsage?: any;
+}
+
 export type ProviderQuotaChannel = {
   id: string;
   name: string;
@@ -200,6 +219,44 @@ export type ProviderQuotaChannel = {
       providerType: 'neuralwatt'
       quotaStatus?: {
         quotaData: ProviderNeuralWattQuotaData
+      }
+    }
+    | {
+      type: 'zhipu'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
+      }
+    }
+    | {
+      type: 'zhipu_anthropic'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
+      }
+    }
+    | {
+      type: 'zai'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
+      }
+    }
+    | {
+      type: 'zai_anthropic'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
+      }
+    }
+    | {
+      type: 'openai'
+      providerType: 'zhipu'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
+      }
+    }
+    | {
+      type: 'openai_responses'
+      providerType: 'zhipu'
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData
       }
     }
     | {
