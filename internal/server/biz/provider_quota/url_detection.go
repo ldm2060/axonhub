@@ -15,6 +15,8 @@ var urlProviderMap = []urlProviderEntry{
 	{hostPattern: "wafer.ai", providerType: "wafer"},
 	{hostPattern: "api.synthetic.new", providerType: "synthetic"},
 	{hostPattern: "api.neuralwatt.com", providerType: "neuralwatt"},
+	{hostPattern: "open.bigmodel.cn", providerType: "zhipu"},
+	{hostPattern: "api.z.ai", providerType: "zhipu"},
 }
 
 func URLDetectedProviders() map[string]struct{} {
