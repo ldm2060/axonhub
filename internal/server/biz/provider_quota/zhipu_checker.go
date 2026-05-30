@@ -72,7 +72,7 @@ func (c *ZhipuQuotaChecker) CheckQuota(ctx context.Context, ch *ent.Channel) (Qu
 	quotaResp, err := hc.Do(ctx, quotaReq)
 	if err == nil && quotaResp.StatusCode == http.StatusOK {
 		limits, normalizedStatus = c.parseQuotaLimitResponse(quotaResp.Body)
-		rawData["quotaLimits"] = limits
+		rawData["quotaLimits"] = limitsToMap(limits)
 	}
 
 	// 2. Query model usage
@@ -134,10 +134,16 @@ func (c *ZhipuQuotaChecker) SupportsChannel(ch *ent.Channel) bool {
 }
 
 func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitStatus, string) {
-	var response ZhipuQuotaLimitResponse
-	if err := json.Unmarshal(body, &response); err != nil {
+	// API wraps response in {"code":200,"data":{...}}
+	var wrapper struct {
+		Code int                     `json:"code"`
+		Data ZhipuQuotaLimitResponse `json:"data"`
+	}
+	if err := json.Unmarshal(body, &wrapper); err != nil || wrapper.Code != 200 {
 		return nil, "unknown"
 	}
+
+	response := wrapper.Data
 
 	if len(response.Limits) == 0 {
 		return nil, "unknown"
@@ -158,7 +164,7 @@ func (c *ZhipuQuotaChecker) parseQuotaLimitResponse(body []byte) ([]QuotaLimitSt
 		}
 
 		status := "available"
-		usageRatio := item.Percentage
+		usageRatio := item.Percentage / 100.0
 
 		if usageRatio >= 1.0 {
 			status = "exhausted"
@@ -208,4 +214,21 @@ func zhipuTimeWindow() (string, string) {
 	end := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 59, 59, 999000000, now.Location())
 	format := "2006-01-02 15:04:05"
 	return start.Format(format), end.Format(format)
+}
+
+func limitsToMap(limits []QuotaLimitStatus) []map[string]any {
+	result := make([]map[string]any, 0, len(limits))
+	for _, l := range limits {
+		m := map[string]any{
+			"type":       string(l.Type),
+			"status":     l.Status,
+			"usageRatio": l.UsageRatio,
+			"ready":      l.Ready,
+		}
+		if l.NextResetAt != nil {
+			m["nextResetAt"] = l.NextResetAt.Format(time.RFC3339)
+		}
+		result = append(result, m)
+	}
+	return result
 }
