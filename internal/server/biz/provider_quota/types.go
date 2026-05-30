@@ -20,6 +20,7 @@ type QuotaLimitType string
 const (
 	QuotaLimitTypeImage QuotaLimitType = "image"
 	QuotaLimitTypeToken QuotaLimitType = "token"
+	QuotaLimitTypeTime  QuotaLimitType = "time"
 )
 
 type QuotaLimitStatus struct {
