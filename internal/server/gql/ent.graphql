@@ -7417,9 +7417,13 @@ type UsageMonitorChannel implements Node {
   """
   name: String!
   """
-  builtin: linked to existing Channel; custom: fully manual
+  builtin: linked to existing Channel; custom: fully manual; template: from provider template
   """
   source: UsageMonitorChannelSource!
+  """
+  Provider type for quota template (required when source=template)
+  """
+  providerType: UsageMonitorChannelProviderType
   """
   FK to Channel table (required when source=builtin)
   """
@@ -7495,11 +7499,25 @@ enum UsageMonitorChannelOrderField {
   UPDATED_AT
 }
 """
+UsageMonitorChannelProviderType is enum for the field provider_type
+"""
+enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel.ProviderType") {
+  claudecode
+  codex
+  github_copilot
+  nanogpt
+  wafer
+  synthetic
+  neuralwatt
+  zhipu
+}
+"""
 UsageMonitorChannelSource is enum for the field source
 """
 enum UsageMonitorChannelSource @goModel(model: "github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel.Source") {
   builtin
   custom
+  template
 }
 """
 UsageMonitorChannelStatus is enum for the field status
@@ -7573,6 +7591,15 @@ input UsageMonitorChannelWhereInput {
   sourceNEQ: UsageMonitorChannelSource
   sourceIn: [UsageMonitorChannelSource!]
   sourceNotIn: [UsageMonitorChannelSource!]
+  """
+  provider_type field predicates
+  """
+  providerType: UsageMonitorChannelProviderType
+  providerTypeNEQ: UsageMonitorChannelProviderType
+  providerTypeIn: [UsageMonitorChannelProviderType!]
+  providerTypeNotIn: [UsageMonitorChannelProviderType!]
+  providerTypeIsNil: Boolean
+  providerTypeNotNil: Boolean
   """
   channel_id field predicates
   """

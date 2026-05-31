@@ -90,6 +90,11 @@ func APIBody(v string) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAPIBody, v))
 }
 
+// APIKey applies equality check predicate on the "api_key" field. It's identical to APIKeyEQ.
+func APIKey(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAPIKey, v))
+}
+
 // PollInterval applies equality check predicate on the "poll_interval" field. It's identical to PollIntervalEQ.
 func PollInterval(v int) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldPollInterval, v))
@@ -310,6 +315,36 @@ func SourceNotIn(vs ...Source) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldSource, vs...))
 }
 
+// ProviderTypeEQ applies the EQ predicate on the "provider_type" field.
+func ProviderTypeEQ(v ProviderType) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldProviderType, v))
+}
+
+// ProviderTypeNEQ applies the NEQ predicate on the "provider_type" field.
+func ProviderTypeNEQ(v ProviderType) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldProviderType, v))
+}
+
+// ProviderTypeIn applies the In predicate on the "provider_type" field.
+func ProviderTypeIn(vs ...ProviderType) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldProviderType, vs...))
+}
+
+// ProviderTypeNotIn applies the NotIn predicate on the "provider_type" field.
+func ProviderTypeNotIn(vs ...ProviderType) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldProviderType, vs...))
+}
+
+// ProviderTypeIsNil applies the IsNil predicate on the "provider_type" field.
+func ProviderTypeIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldProviderType))
+}
+
+// ProviderTypeNotNil applies the NotNil predicate on the "provider_type" field.
+func ProviderTypeNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldProviderType))
+}
+
 // ChannelIDEQ applies the EQ predicate on the "channel_id" field.
 func ChannelIDEQ(v int) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldChannelID, v))
@@ -498,6 +533,81 @@ func APIBodyEqualFold(v string) predicate.UsageMonitorChannel {
 // APIBodyContainsFold applies the ContainsFold predicate on the "api_body" field.
 func APIBodyContainsFold(v string) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldContainsFold(FieldAPIBody, v))
+}
+
+// APIKeyEQ applies the EQ predicate on the "api_key" field.
+func APIKeyEQ(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAPIKey, v))
+}
+
+// APIKeyNEQ applies the NEQ predicate on the "api_key" field.
+func APIKeyNEQ(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldAPIKey, v))
+}
+
+// APIKeyIn applies the In predicate on the "api_key" field.
+func APIKeyIn(vs ...string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldAPIKey, vs...))
+}
+
+// APIKeyNotIn applies the NotIn predicate on the "api_key" field.
+func APIKeyNotIn(vs ...string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldAPIKey, vs...))
+}
+
+// APIKeyGT applies the GT predicate on the "api_key" field.
+func APIKeyGT(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGT(FieldAPIKey, v))
+}
+
+// APIKeyGTE applies the GTE predicate on the "api_key" field.
+func APIKeyGTE(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGTE(FieldAPIKey, v))
+}
+
+// APIKeyLT applies the LT predicate on the "api_key" field.
+func APIKeyLT(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLT(FieldAPIKey, v))
+}
+
+// APIKeyLTE applies the LTE predicate on the "api_key" field.
+func APIKeyLTE(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLTE(FieldAPIKey, v))
+}
+
+// APIKeyContains applies the Contains predicate on the "api_key" field.
+func APIKeyContains(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldContains(FieldAPIKey, v))
+}
+
+// APIKeyHasPrefix applies the HasPrefix predicate on the "api_key" field.
+func APIKeyHasPrefix(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldHasPrefix(FieldAPIKey, v))
+}
+
+// APIKeyHasSuffix applies the HasSuffix predicate on the "api_key" field.
+func APIKeyHasSuffix(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldHasSuffix(FieldAPIKey, v))
+}
+
+// APIKeyIsNil applies the IsNil predicate on the "api_key" field.
+func APIKeyIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldAPIKey))
+}
+
+// APIKeyNotNil applies the NotNil predicate on the "api_key" field.
+func APIKeyNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldAPIKey))
+}
+
+// APIKeyEqualFold applies the EqualFold predicate on the "api_key" field.
+func APIKeyEqualFold(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEqualFold(FieldAPIKey, v))
+}
+
+// APIKeyContainsFold applies the ContainsFold predicate on the "api_key" field.
+func APIKeyContainsFold(v string) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldContainsFold(FieldAPIKey, v))
 }
 
 // PollIntervalEQ applies the EQ predicate on the "poll_interval" field.

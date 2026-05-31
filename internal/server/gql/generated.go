@@ -2008,6 +2008,7 @@ type ComplexityRoot struct {
 		Owner            func(childComplexity int) int
 		ParsedData       func(childComplexity int) int
 		PollInterval     func(childComplexity int) int
+		ProviderType     func(childComplexity int) int
 		Source           func(childComplexity int) int
 		Status           func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
@@ -11300,6 +11301,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.PollInterval(childComplexity), true
+	case "UsageMonitorChannel.providerType":
+		if e.complexity.UsageMonitorChannel.ProviderType == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.ProviderType(childComplexity), true
 	case "UsageMonitorChannel.source":
 		if e.complexity.UsageMonitorChannel.Source == nil {
 			break
@@ -20775,6 +20782,8 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -39036,6 +39045,8 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -39119,6 +39130,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -39294,6 +39307,8 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -49575,6 +49590,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -49647,6 +49664,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -61408,6 +61427,35 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_source(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageMonitorChannel_providerType(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_providerType,
+		func(ctx context.Context) (any, error) {
+			return obj.ProviderType, nil
+		},
+		nil,
+		ec.marshalOUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_providerType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UsageMonitorChannelProviderType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UsageMonitorChannel_channelID(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -63096,6 +63144,8 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
 			case "source":
 				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
 			case "channelID":
 				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
 			case "apiURL":
@@ -93888,7 +93938,7 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94235,6 +94285,48 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 				return it, err
 			}
 			it.SourceNotIn = data
+		case "providerType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerType"))
+			data, err := ec.unmarshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderType = data
+		case "providerTypeNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerTypeNEQ"))
+			data, err := ec.unmarshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderTypeNEQ = data
+		case "providerTypeIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerTypeIn"))
+			data, err := ec.unmarshalOUsageMonitorChannelProviderType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderTypeIn = data
+		case "providerTypeNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerTypeNotIn"))
+			data, err := ec.unmarshalOUsageMonitorChannelProviderType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderTypeNotIn = data
+		case "providerTypeIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerTypeIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderTypeIsNil = data
+		case "providerTypeNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerTypeNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderTypeNotNil = data
 		case "channelID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
 			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
@@ -116560,6 +116652,8 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "providerType":
+			out.Values[i] = ec._UsageMonitorChannel_providerType(ctx, field, obj)
 		case "channelID":
 			field := field
 
@@ -125120,6 +125214,16 @@ func (ec *executionContext) marshalNUsageMonitorChannelOrderField2ᚖgithubᚗco
 	return v
 }
 
+func (ec *executionContext) unmarshalNUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, v any) (usagemonitorchannel.ProviderType, error) {
+	var res usagemonitorchannel.ProviderType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, sel ast.SelectionSet, v usagemonitorchannel.ProviderType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNUsageMonitorChannelSource2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐSource(ctx context.Context, v any) (usagemonitorchannel.Source, error) {
 	var res usagemonitorchannel.Source
 	err := res.UnmarshalGQL(v)
@@ -132619,6 +132723,97 @@ func (ec *executionContext) unmarshalOUsageMonitorChannelAPIMethod2ᚖgithubᚗc
 }
 
 func (ec *executionContext) marshalOUsageMonitorChannelAPIMethod2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐAPIMethod(ctx context.Context, sel ast.SelectionSet, v *usagemonitorchannel.APIMethod) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, v any) (usagemonitorchannel.ProviderType, error) {
+	var res usagemonitorchannel.ProviderType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, sel ast.SelectionSet, v usagemonitorchannel.ProviderType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelProviderType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderTypeᚄ(ctx context.Context, v any) ([]usagemonitorchannel.ProviderType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]usagemonitorchannel.ProviderType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelProviderType2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []usagemonitorchannel.ProviderType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUsageMonitorChannelProviderType2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, v any) (*usagemonitorchannel.ProviderType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(usagemonitorchannel.ProviderType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, sel ast.SelectionSet, v *usagemonitorchannel.ProviderType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

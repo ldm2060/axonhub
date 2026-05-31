@@ -28,6 +28,8 @@ const (
 	FieldName = "name"
 	// FieldSource holds the string denoting the source field in the database.
 	FieldSource = "source"
+	// FieldProviderType holds the string denoting the provider_type field in the database.
+	FieldProviderType = "provider_type"
 	// FieldChannelID holds the string denoting the channel_id field in the database.
 	FieldChannelID = "channel_id"
 	// FieldAPIURL holds the string denoting the api_url field in the database.
@@ -38,6 +40,8 @@ const (
 	FieldAPIHeaders = "api_headers"
 	// FieldAPIBody holds the string denoting the api_body field in the database.
 	FieldAPIBody = "api_body"
+	// FieldAPIKey holds the string denoting the api_key field in the database.
+	FieldAPIKey = "api_key"
 	// FieldPollInterval holds the string denoting the poll_interval field in the database.
 	FieldPollInterval = "poll_interval"
 	// FieldFields holds the string denoting the fields field in the database.
@@ -80,11 +84,13 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldName,
 	FieldSource,
+	FieldProviderType,
 	FieldChannelID,
 	FieldAPIURL,
 	FieldAPIMethod,
 	FieldAPIHeaders,
 	FieldAPIBody,
+	FieldAPIKey,
 	FieldPollInterval,
 	FieldFields,
 	FieldLastPollAt,
@@ -143,8 +149,9 @@ type Source string
 
 // Source values.
 const (
-	SourceBuiltin Source = "builtin"
-	SourceCustom  Source = "custom"
+	SourceBuiltin  Source = "builtin"
+	SourceCustom   Source = "custom"
+	SourceTemplate Source = "template"
 )
 
 func (s Source) String() string {
@@ -154,10 +161,39 @@ func (s Source) String() string {
 // SourceValidator is a validator for the "source" field enum values. It is called by the builders before save.
 func SourceValidator(s Source) error {
 	switch s {
-	case SourceBuiltin, SourceCustom:
+	case SourceBuiltin, SourceCustom, SourceTemplate:
 		return nil
 	default:
 		return fmt.Errorf("usagemonitorchannel: invalid enum value for source field: %q", s)
+	}
+}
+
+// ProviderType defines the type for the "provider_type" enum field.
+type ProviderType string
+
+// ProviderType values.
+const (
+	ProviderTypeClaudecode    ProviderType = "claudecode"
+	ProviderTypeCodex         ProviderType = "codex"
+	ProviderTypeGithubCopilot ProviderType = "github_copilot"
+	ProviderTypeNanogpt       ProviderType = "nanogpt"
+	ProviderTypeWafer         ProviderType = "wafer"
+	ProviderTypeSynthetic     ProviderType = "synthetic"
+	ProviderTypeNeuralwatt    ProviderType = "neuralwatt"
+	ProviderTypeZhipu         ProviderType = "zhipu"
+)
+
+func (pt ProviderType) String() string {
+	return string(pt)
+}
+
+// ProviderTypeValidator is a validator for the "provider_type" field enum values. It is called by the builders before save.
+func ProviderTypeValidator(pt ProviderType) error {
+	switch pt {
+	case ProviderTypeClaudecode, ProviderTypeCodex, ProviderTypeGithubCopilot, ProviderTypeNanogpt, ProviderTypeWafer, ProviderTypeSynthetic, ProviderTypeNeuralwatt, ProviderTypeZhipu:
+		return nil
+	default:
+		return fmt.Errorf("usagemonitorchannel: invalid enum value for provider_type field: %q", pt)
 	}
 }
 
@@ -247,6 +283,11 @@ func BySource(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSource, opts...).ToFunc()
 }
 
+// ByProviderType orders the results by the provider_type field.
+func ByProviderType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProviderType, opts...).ToFunc()
+}
+
 // ByChannelID orders the results by the channel_id field.
 func ByChannelID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChannelID, opts...).ToFunc()
@@ -265,6 +306,11 @@ func ByAPIMethod(opts ...sql.OrderTermOption) OrderOption {
 // ByAPIBody orders the results by the api_body field.
 func ByAPIBody(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAPIBody, opts...).ToFunc()
+}
+
+// ByAPIKey orders the results by the api_key field.
+func ByAPIKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAPIKey, opts...).ToFunc()
 }
 
 // ByPollInterval orders the results by the poll_interval field.
@@ -329,6 +375,24 @@ func (e *Source) UnmarshalGQL(val interface{}) error {
 	*e = Source(str)
 	if err := SourceValidator(*e); err != nil {
 		return fmt.Errorf("%s is not a valid Source", str)
+	}
+	return nil
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (e ProviderType) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(e.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (e *ProviderType) UnmarshalGQL(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("enum %T must be a string", val)
+	}
+	*e = ProviderType(str)
+	if err := ProviderTypeValidator(*e); err != nil {
+		return fmt.Errorf("%s is not a valid ProviderType", str)
 	}
 	return nil
 }

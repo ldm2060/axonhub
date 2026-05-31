@@ -11872,6 +11872,14 @@ type UsageMonitorChannelWhereInput struct {
 	SourceIn    []usagemonitorchannel.Source `json:"sourceIn,omitempty"`
 	SourceNotIn []usagemonitorchannel.Source `json:"sourceNotIn,omitempty"`
 
+	// "provider_type" field predicates.
+	ProviderType       *usagemonitorchannel.ProviderType  `json:"providerType,omitempty"`
+	ProviderTypeNEQ    *usagemonitorchannel.ProviderType  `json:"providerTypeNEQ,omitempty"`
+	ProviderTypeIn     []usagemonitorchannel.ProviderType `json:"providerTypeIn,omitempty"`
+	ProviderTypeNotIn  []usagemonitorchannel.ProviderType `json:"providerTypeNotIn,omitempty"`
+	ProviderTypeIsNil  bool                               `json:"providerTypeIsNil,omitempty"`
+	ProviderTypeNotNil bool                               `json:"providerTypeNotNil,omitempty"`
+
 	// "channel_id" field predicates.
 	ChannelID       *int  `json:"channelID,omitempty"`
 	ChannelIDNEQ    *int  `json:"channelIDNEQ,omitempty"`
@@ -11917,6 +11925,23 @@ type UsageMonitorChannelWhereInput struct {
 	APIBodyNotNil       bool     `json:"apiBodyNotNil,omitempty"`
 	APIBodyEqualFold    *string  `json:"apiBodyEqualFold,omitempty"`
 	APIBodyContainsFold *string  `json:"apiBodyContainsFold,omitempty"`
+
+	// "api_key" field predicates.
+	APIKey             *string  `json:"apiKey,omitempty"`
+	APIKeyNEQ          *string  `json:"apiKeyNEQ,omitempty"`
+	APIKeyIn           []string `json:"apiKeyIn,omitempty"`
+	APIKeyNotIn        []string `json:"apiKeyNotIn,omitempty"`
+	APIKeyGT           *string  `json:"apiKeyGT,omitempty"`
+	APIKeyGTE          *string  `json:"apiKeyGTE,omitempty"`
+	APIKeyLT           *string  `json:"apiKeyLT,omitempty"`
+	APIKeyLTE          *string  `json:"apiKeyLTE,omitempty"`
+	APIKeyContains     *string  `json:"apiKeyContains,omitempty"`
+	APIKeyHasPrefix    *string  `json:"apiKeyHasPrefix,omitempty"`
+	APIKeyHasSuffix    *string  `json:"apiKeyHasSuffix,omitempty"`
+	APIKeyIsNil        bool     `json:"apiKeyIsNil,omitempty"`
+	APIKeyNotNil       bool     `json:"apiKeyNotNil,omitempty"`
+	APIKeyEqualFold    *string  `json:"apiKeyEqualFold,omitempty"`
+	APIKeyContainsFold *string  `json:"apiKeyContainsFold,omitempty"`
 
 	// "poll_interval" field predicates.
 	PollInterval      *int  `json:"pollInterval,omitempty"`
@@ -12166,6 +12191,24 @@ func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, erro
 	if len(i.SourceNotIn) > 0 {
 		predicates = append(predicates, usagemonitorchannel.SourceNotIn(i.SourceNotIn...))
 	}
+	if i.ProviderType != nil {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeEQ(*i.ProviderType))
+	}
+	if i.ProviderTypeNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeNEQ(*i.ProviderTypeNEQ))
+	}
+	if len(i.ProviderTypeIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeIn(i.ProviderTypeIn...))
+	}
+	if len(i.ProviderTypeNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeNotIn(i.ProviderTypeNotIn...))
+	}
+	if i.ProviderTypeIsNil {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeIsNil())
+	}
+	if i.ProviderTypeNotNil {
+		predicates = append(predicates, usagemonitorchannel.ProviderTypeNotNil())
+	}
 	if i.ChannelID != nil {
 		predicates = append(predicates, usagemonitorchannel.ChannelIDEQ(*i.ChannelID))
 	}
@@ -12279,6 +12322,51 @@ func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, erro
 	}
 	if i.APIBodyContainsFold != nil {
 		predicates = append(predicates, usagemonitorchannel.APIBodyContainsFold(*i.APIBodyContainsFold))
+	}
+	if i.APIKey != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyEQ(*i.APIKey))
+	}
+	if i.APIKeyNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyNEQ(*i.APIKeyNEQ))
+	}
+	if len(i.APIKeyIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIKeyIn(i.APIKeyIn...))
+	}
+	if len(i.APIKeyNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIKeyNotIn(i.APIKeyNotIn...))
+	}
+	if i.APIKeyGT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyGT(*i.APIKeyGT))
+	}
+	if i.APIKeyGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyGTE(*i.APIKeyGTE))
+	}
+	if i.APIKeyLT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyLT(*i.APIKeyLT))
+	}
+	if i.APIKeyLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyLTE(*i.APIKeyLTE))
+	}
+	if i.APIKeyContains != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyContains(*i.APIKeyContains))
+	}
+	if i.APIKeyHasPrefix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyHasPrefix(*i.APIKeyHasPrefix))
+	}
+	if i.APIKeyHasSuffix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyHasSuffix(*i.APIKeyHasSuffix))
+	}
+	if i.APIKeyIsNil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyIsNil())
+	}
+	if i.APIKeyNotNil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyNotNil())
+	}
+	if i.APIKeyEqualFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyEqualFold(*i.APIKeyEqualFold))
+	}
+	if i.APIKeyContainsFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIKeyContainsFold(*i.APIKeyContainsFold))
 	}
 	if i.PollInterval != nil {
 		predicates = append(predicates, usagemonitorchannel.PollIntervalEQ(*i.PollInterval))

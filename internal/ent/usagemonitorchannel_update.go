@@ -87,6 +87,26 @@ func (_u *UsageMonitorChannelUpdate) SetNillableSource(v *usagemonitorchannel.So
 	return _u
 }
 
+// SetProviderType sets the "provider_type" field.
+func (_u *UsageMonitorChannelUpdate) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelUpdate {
+	_u.mutation.SetProviderType(v)
+	return _u
+}
+
+// SetNillableProviderType sets the "provider_type" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableProviderType(v *usagemonitorchannel.ProviderType) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetProviderType(*v)
+	}
+	return _u
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (_u *UsageMonitorChannelUpdate) ClearProviderType() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearProviderType()
+	return _u
+}
+
 // SetChannelID sets the "channel_id" field.
 func (_u *UsageMonitorChannelUpdate) SetChannelID(v int) *UsageMonitorChannelUpdate {
 	_u.mutation.SetChannelID(v)
@@ -158,6 +178,26 @@ func (_u *UsageMonitorChannelUpdate) SetNillableAPIBody(v *string) *UsageMonitor
 // ClearAPIBody clears the value of the "api_body" field.
 func (_u *UsageMonitorChannelUpdate) ClearAPIBody() *UsageMonitorChannelUpdate {
 	_u.mutation.ClearAPIBody()
+	return _u
+}
+
+// SetAPIKey sets the "api_key" field.
+func (_u *UsageMonitorChannelUpdate) SetAPIKey(v string) *UsageMonitorChannelUpdate {
+	_u.mutation.SetAPIKey(v)
+	return _u
+}
+
+// SetNillableAPIKey sets the "api_key" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableAPIKey(v *string) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetAPIKey(*v)
+	}
+	return _u
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (_u *UsageMonitorChannelUpdate) ClearAPIKey() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearAPIKey()
 	return _u
 }
 
@@ -347,6 +387,11 @@ func (_u *UsageMonitorChannelUpdate) check() error {
 			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.source": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ProviderType(); ok {
+		if err := usagemonitorchannel.ProviderTypeValidator(v); err != nil {
+			return &ValidationError{Name: "provider_type", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.provider_type": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.APIURL(); ok {
 		if err := usagemonitorchannel.APIURLValidator(v); err != nil {
 			return &ValidationError{Name: "api_url", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.api_url": %w`, err)}
@@ -401,6 +446,12 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(usagemonitorchannel.FieldSource, field.TypeEnum, value)
 	}
+	if value, ok := _u.mutation.ProviderType(); ok {
+		_spec.SetField(usagemonitorchannel.FieldProviderType, field.TypeEnum, value)
+	}
+	if _u.mutation.ProviderTypeCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldProviderType, field.TypeEnum)
+	}
 	if value, ok := _u.mutation.APIURL(); ok {
 		_spec.SetField(usagemonitorchannel.FieldAPIURL, field.TypeString, value)
 	}
@@ -415,6 +466,12 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 	}
 	if _u.mutation.APIBodyCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldAPIBody, field.TypeString)
+	}
+	if value, ok := _u.mutation.APIKey(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.APIKeyCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAPIKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.PollInterval(); ok {
 		_spec.SetField(usagemonitorchannel.FieldPollInterval, field.TypeInt, value)
@@ -586,6 +643,26 @@ func (_u *UsageMonitorChannelUpdateOne) SetNillableSource(v *usagemonitorchannel
 	return _u
 }
 
+// SetProviderType sets the "provider_type" field.
+func (_u *UsageMonitorChannelUpdateOne) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetProviderType(v)
+	return _u
+}
+
+// SetNillableProviderType sets the "provider_type" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableProviderType(v *usagemonitorchannel.ProviderType) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetProviderType(*v)
+	}
+	return _u
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearProviderType() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearProviderType()
+	return _u
+}
+
 // SetChannelID sets the "channel_id" field.
 func (_u *UsageMonitorChannelUpdateOne) SetChannelID(v int) *UsageMonitorChannelUpdateOne {
 	_u.mutation.SetChannelID(v)
@@ -657,6 +734,26 @@ func (_u *UsageMonitorChannelUpdateOne) SetNillableAPIBody(v *string) *UsageMoni
 // ClearAPIBody clears the value of the "api_body" field.
 func (_u *UsageMonitorChannelUpdateOne) ClearAPIBody() *UsageMonitorChannelUpdateOne {
 	_u.mutation.ClearAPIBody()
+	return _u
+}
+
+// SetAPIKey sets the "api_key" field.
+func (_u *UsageMonitorChannelUpdateOne) SetAPIKey(v string) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetAPIKey(v)
+	return _u
+}
+
+// SetNillableAPIKey sets the "api_key" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableAPIKey(v *string) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetAPIKey(*v)
+	}
+	return _u
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearAPIKey() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearAPIKey()
 	return _u
 }
 
@@ -859,6 +956,11 @@ func (_u *UsageMonitorChannelUpdateOne) check() error {
 			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.source": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ProviderType(); ok {
+		if err := usagemonitorchannel.ProviderTypeValidator(v); err != nil {
+			return &ValidationError{Name: "provider_type", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.provider_type": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.APIURL(); ok {
 		if err := usagemonitorchannel.APIURLValidator(v); err != nil {
 			return &ValidationError{Name: "api_url", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.api_url": %w`, err)}
@@ -930,6 +1032,12 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(usagemonitorchannel.FieldSource, field.TypeEnum, value)
 	}
+	if value, ok := _u.mutation.ProviderType(); ok {
+		_spec.SetField(usagemonitorchannel.FieldProviderType, field.TypeEnum, value)
+	}
+	if _u.mutation.ProviderTypeCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldProviderType, field.TypeEnum)
+	}
 	if value, ok := _u.mutation.APIURL(); ok {
 		_spec.SetField(usagemonitorchannel.FieldAPIURL, field.TypeString, value)
 	}
@@ -944,6 +1052,12 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 	}
 	if _u.mutation.APIBodyCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldAPIBody, field.TypeString)
+	}
+	if value, ok := _u.mutation.APIKey(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.APIKeyCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAPIKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.PollInterval(); ok {
 		_spec.SetField(usagemonitorchannel.FieldPollInterval, field.TypeInt, value)

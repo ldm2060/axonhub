@@ -2827,7 +2827,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageMonitorChannel",
-		Fields: make([]*Field, 15),
+		Fields: make([]*Field, 17),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -2863,10 +2863,18 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 		Name:  "source",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+	if buf, err = json.Marshal(_m.ProviderType); err != nil {
 		return nil, err
 	}
 	node.Fields[4] = &Field{
+		Type:  "usagemonitorchannel.ProviderType",
+		Name:  "provider_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
 		Type:  "int",
 		Name:  "channel_id",
 		Value: string(buf),
@@ -2874,7 +2882,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.APIURL); err != nil {
 		return nil, err
 	}
-	node.Fields[5] = &Field{
+	node.Fields[6] = &Field{
 		Type:  "string",
 		Name:  "api_url",
 		Value: string(buf),
@@ -2882,7 +2890,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.APIMethod); err != nil {
 		return nil, err
 	}
-	node.Fields[6] = &Field{
+	node.Fields[7] = &Field{
 		Type:  "usagemonitorchannel.APIMethod",
 		Name:  "api_method",
 		Value: string(buf),
@@ -2890,7 +2898,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.APIHeaders); err != nil {
 		return nil, err
 	}
-	node.Fields[7] = &Field{
+	node.Fields[8] = &Field{
 		Type:  "map[string]interface {}",
 		Name:  "api_headers",
 		Value: string(buf),
@@ -2898,15 +2906,23 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.APIBody); err != nil {
 		return nil, err
 	}
-	node.Fields[8] = &Field{
+	node.Fields[9] = &Field{
 		Type:  "string",
 		Name:  "api_body",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIKey); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "string",
+		Name:  "api_key",
 		Value: string(buf),
 	}
 	if buf, err = json.Marshal(_m.PollInterval); err != nil {
 		return nil, err
 	}
-	node.Fields[9] = &Field{
+	node.Fields[11] = &Field{
 		Type:  "int",
 		Name:  "poll_interval",
 		Value: string(buf),
@@ -2914,7 +2930,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.Fields); err != nil {
 		return nil, err
 	}
-	node.Fields[10] = &Field{
+	node.Fields[12] = &Field{
 		Type:  "[]map[string]interface {}",
 		Name:  "fields",
 		Value: string(buf),
@@ -2922,7 +2938,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.LastPollAt); err != nil {
 		return nil, err
 	}
-	node.Fields[11] = &Field{
+	node.Fields[13] = &Field{
 		Type:  "time.Time",
 		Name:  "last_poll_at",
 		Value: string(buf),
@@ -2930,7 +2946,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.LastPollData); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[14] = &Field{
 		Type:  "map[string]interface {}",
 		Name:  "last_poll_data",
 		Value: string(buf),
@@ -2938,7 +2954,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.LastPollError); err != nil {
 		return nil, err
 	}
-	node.Fields[13] = &Field{
+	node.Fields[15] = &Field{
 		Type:  "string",
 		Name:  "last_poll_error",
 		Value: string(buf),
@@ -2946,7 +2962,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.Status); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[16] = &Field{
 		Type:  "usagemonitorchannel.Status",
 		Name:  "status",
 		Value: string(buf),

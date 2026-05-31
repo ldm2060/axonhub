@@ -993,11 +993,13 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
 		{Name: "name", Type: field.TypeString},
-		{Name: "source", Type: field.TypeEnum, Enums: []string{"builtin", "custom"}},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"builtin", "custom", "template"}},
+		{Name: "provider_type", Type: field.TypeEnum, Nullable: true, Enums: []string{"claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu"}},
 		{Name: "api_url", Type: field.TypeString},
 		{Name: "api_method", Type: field.TypeEnum, Enums: []string{"GET", "POST"}, Default: "GET"},
 		{Name: "api_headers", Type: field.TypeJSON},
 		{Name: "api_body", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "api_key", Type: field.TypeString, Nullable: true},
 		{Name: "poll_interval", Type: field.TypeInt, Default: 300},
 		{Name: "fields", Type: field.TypeJSON},
 		{Name: "last_poll_at", Type: field.TypeTime, Nullable: true},
@@ -1015,13 +1017,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "usage_monitor_channels_channels_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[16]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[18]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "usage_monitor_channels_users_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[17]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[19]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1030,12 +1032,12 @@ var (
 			{
 				Name:    "usagemonitorchannel_channel_id",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[16]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[18]},
 			},
 			{
 				Name:    "usagemonitorchannel_status",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[15]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[17]},
 			},
 		},
 	}

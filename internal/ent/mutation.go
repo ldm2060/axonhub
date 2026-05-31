@@ -27559,10 +27559,12 @@ type UsageMonitorChannelMutation struct {
 	adddeleted_at    *int
 	name             *string
 	source           *usagemonitorchannel.Source
+	provider_type    *usagemonitorchannel.ProviderType
 	api_url          *string
 	api_method       *usagemonitorchannel.APIMethod
 	api_headers      *map[string]interface{}
 	api_body         *string
+	api_key          *string
 	poll_interval    *int
 	addpoll_interval *int
 	fields           *[]map[string]interface{}
@@ -27879,6 +27881,55 @@ func (m *UsageMonitorChannelMutation) ResetSource() {
 	m.source = nil
 }
 
+// SetProviderType sets the "provider_type" field.
+func (m *UsageMonitorChannelMutation) SetProviderType(ut usagemonitorchannel.ProviderType) {
+	m.provider_type = &ut
+}
+
+// ProviderType returns the value of the "provider_type" field in the mutation.
+func (m *UsageMonitorChannelMutation) ProviderType() (r usagemonitorchannel.ProviderType, exists bool) {
+	v := m.provider_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProviderType returns the old "provider_type" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldProviderType(ctx context.Context) (v usagemonitorchannel.ProviderType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProviderType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProviderType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProviderType: %w", err)
+	}
+	return oldValue.ProviderType, nil
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (m *UsageMonitorChannelMutation) ClearProviderType() {
+	m.provider_type = nil
+	m.clearedFields[usagemonitorchannel.FieldProviderType] = struct{}{}
+}
+
+// ProviderTypeCleared returns if the "provider_type" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) ProviderTypeCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldProviderType]
+	return ok
+}
+
+// ResetProviderType resets all changes to the "provider_type" field.
+func (m *UsageMonitorChannelMutation) ResetProviderType() {
+	m.provider_type = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldProviderType)
+}
+
 // SetChannelID sets the "channel_id" field.
 func (m *UsageMonitorChannelMutation) SetChannelID(i int) {
 	m.channel = &i
@@ -28083,6 +28134,55 @@ func (m *UsageMonitorChannelMutation) APIBodyCleared() bool {
 func (m *UsageMonitorChannelMutation) ResetAPIBody() {
 	m.api_body = nil
 	delete(m.clearedFields, usagemonitorchannel.FieldAPIBody)
+}
+
+// SetAPIKey sets the "api_key" field.
+func (m *UsageMonitorChannelMutation) SetAPIKey(s string) {
+	m.api_key = &s
+}
+
+// APIKey returns the value of the "api_key" field in the mutation.
+func (m *UsageMonitorChannelMutation) APIKey() (r string, exists bool) {
+	v := m.api_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIKey returns the old "api_key" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAPIKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIKey: %w", err)
+	}
+	return oldValue.APIKey, nil
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (m *UsageMonitorChannelMutation) ClearAPIKey() {
+	m.api_key = nil
+	m.clearedFields[usagemonitorchannel.FieldAPIKey] = struct{}{}
+}
+
+// APIKeyCleared returns if the "api_key" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) APIKeyCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldAPIKey]
+	return ok
+}
+
+// ResetAPIKey resets all changes to the "api_key" field.
+func (m *UsageMonitorChannelMutation) ResetAPIKey() {
+	m.api_key = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldAPIKey)
 }
 
 // SetPollInterval sets the "poll_interval" field.
@@ -28475,7 +28575,7 @@ func (m *UsageMonitorChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageMonitorChannelMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 18)
 	if m.created_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
 	}
@@ -28491,6 +28591,9 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	if m.source != nil {
 		fields = append(fields, usagemonitorchannel.FieldSource)
 	}
+	if m.provider_type != nil {
+		fields = append(fields, usagemonitorchannel.FieldProviderType)
+	}
 	if m.channel != nil {
 		fields = append(fields, usagemonitorchannel.FieldChannelID)
 	}
@@ -28505,6 +28608,9 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	}
 	if m.api_body != nil {
 		fields = append(fields, usagemonitorchannel.FieldAPIBody)
+	}
+	if m.api_key != nil {
+		fields = append(fields, usagemonitorchannel.FieldAPIKey)
 	}
 	if m.poll_interval != nil {
 		fields = append(fields, usagemonitorchannel.FieldPollInterval)
@@ -28542,6 +28648,8 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case usagemonitorchannel.FieldSource:
 		return m.Source()
+	case usagemonitorchannel.FieldProviderType:
+		return m.ProviderType()
 	case usagemonitorchannel.FieldChannelID:
 		return m.ChannelID()
 	case usagemonitorchannel.FieldAPIURL:
@@ -28552,6 +28660,8 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.APIHeaders()
 	case usagemonitorchannel.FieldAPIBody:
 		return m.APIBody()
+	case usagemonitorchannel.FieldAPIKey:
+		return m.APIKey()
 	case usagemonitorchannel.FieldPollInterval:
 		return m.PollInterval()
 	case usagemonitorchannel.FieldFields:
@@ -28583,6 +28693,8 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldName(ctx)
 	case usagemonitorchannel.FieldSource:
 		return m.OldSource(ctx)
+	case usagemonitorchannel.FieldProviderType:
+		return m.OldProviderType(ctx)
 	case usagemonitorchannel.FieldChannelID:
 		return m.OldChannelID(ctx)
 	case usagemonitorchannel.FieldAPIURL:
@@ -28593,6 +28705,8 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldAPIHeaders(ctx)
 	case usagemonitorchannel.FieldAPIBody:
 		return m.OldAPIBody(ctx)
+	case usagemonitorchannel.FieldAPIKey:
+		return m.OldAPIKey(ctx)
 	case usagemonitorchannel.FieldPollInterval:
 		return m.OldPollInterval(ctx)
 	case usagemonitorchannel.FieldFields:
@@ -28649,6 +28763,13 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 		}
 		m.SetSource(v)
 		return nil
+	case usagemonitorchannel.FieldProviderType:
+		v, ok := value.(usagemonitorchannel.ProviderType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProviderType(v)
+		return nil
 	case usagemonitorchannel.FieldChannelID:
 		v, ok := value.(int)
 		if !ok {
@@ -28683,6 +28804,13 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAPIBody(v)
+		return nil
+	case usagemonitorchannel.FieldAPIKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIKey(v)
 		return nil
 	case usagemonitorchannel.FieldPollInterval:
 		v, ok := value.(int)
@@ -28783,11 +28911,17 @@ func (m *UsageMonitorChannelMutation) AddField(name string, value ent.Value) err
 // mutation.
 func (m *UsageMonitorChannelMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(usagemonitorchannel.FieldProviderType) {
+		fields = append(fields, usagemonitorchannel.FieldProviderType)
+	}
 	if m.FieldCleared(usagemonitorchannel.FieldChannelID) {
 		fields = append(fields, usagemonitorchannel.FieldChannelID)
 	}
 	if m.FieldCleared(usagemonitorchannel.FieldAPIBody) {
 		fields = append(fields, usagemonitorchannel.FieldAPIBody)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldAPIKey) {
+		fields = append(fields, usagemonitorchannel.FieldAPIKey)
 	}
 	if m.FieldCleared(usagemonitorchannel.FieldLastPollAt) {
 		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
@@ -28812,11 +28946,17 @@ func (m *UsageMonitorChannelMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *UsageMonitorChannelMutation) ClearField(name string) error {
 	switch name {
+	case usagemonitorchannel.FieldProviderType:
+		m.ClearProviderType()
+		return nil
 	case usagemonitorchannel.FieldChannelID:
 		m.ClearChannelID()
 		return nil
 	case usagemonitorchannel.FieldAPIBody:
 		m.ClearAPIBody()
+		return nil
+	case usagemonitorchannel.FieldAPIKey:
+		m.ClearAPIKey()
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		m.ClearLastPollAt()
@@ -28850,6 +28990,9 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 	case usagemonitorchannel.FieldSource:
 		m.ResetSource()
 		return nil
+	case usagemonitorchannel.FieldProviderType:
+		m.ResetProviderType()
+		return nil
 	case usagemonitorchannel.FieldChannelID:
 		m.ResetChannelID()
 		return nil
@@ -28864,6 +29007,9 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldAPIBody:
 		m.ResetAPIBody()
+		return nil
+	case usagemonitorchannel.FieldAPIKey:
+		m.ResetAPIKey()
 		return nil
 	case usagemonitorchannel.FieldPollInterval:
 		m.ResetPollInterval()

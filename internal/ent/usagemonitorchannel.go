@@ -28,8 +28,10 @@ type UsageMonitorChannel struct {
 	DeletedAt int `json:"deleted_at,omitempty"`
 	// Display name for this monitoring channel
 	Name string `json:"name,omitempty"`
-	// builtin: linked to existing Channel; custom: fully manual
+	// builtin: linked to existing Channel; custom: fully manual; template: from provider template
 	Source usagemonitorchannel.Source `json:"source,omitempty"`
+	// Provider type for quota template (required when source=template)
+	ProviderType usagemonitorchannel.ProviderType `json:"provider_type,omitempty"`
 	// FK to Channel table (required when source=builtin)
 	ChannelID *int `json:"channel_id,omitempty"`
 	// API endpoint for quota query
@@ -40,6 +42,8 @@ type UsageMonitorChannel struct {
 	APIHeaders map[string]interface{} `json:"api_headers,omitempty"`
 	// Request body template for POST
 	APIBody string `json:"api_body,omitempty"`
+	// API key for authenticating with the provider (sensitive, hidden from GraphQL)
+	APIKey string `json:"-"`
 	// Polling interval in seconds
 	PollInterval int `json:"poll_interval,omitempty"`
 	// Array of field configurations
@@ -103,7 +107,7 @@ func (*UsageMonitorChannel) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case usagemonitorchannel.FieldID, usagemonitorchannel.FieldDeletedAt, usagemonitorchannel.FieldChannelID, usagemonitorchannel.FieldPollInterval:
 			values[i] = new(sql.NullInt64)
-		case usagemonitorchannel.FieldName, usagemonitorchannel.FieldSource, usagemonitorchannel.FieldAPIURL, usagemonitorchannel.FieldAPIMethod, usagemonitorchannel.FieldAPIBody, usagemonitorchannel.FieldLastPollError, usagemonitorchannel.FieldStatus:
+		case usagemonitorchannel.FieldName, usagemonitorchannel.FieldSource, usagemonitorchannel.FieldProviderType, usagemonitorchannel.FieldAPIURL, usagemonitorchannel.FieldAPIMethod, usagemonitorchannel.FieldAPIBody, usagemonitorchannel.FieldAPIKey, usagemonitorchannel.FieldLastPollError, usagemonitorchannel.FieldStatus:
 			values[i] = new(sql.NullString)
 		case usagemonitorchannel.FieldCreatedAt, usagemonitorchannel.FieldUpdatedAt, usagemonitorchannel.FieldLastPollAt:
 			values[i] = new(sql.NullTime)
@@ -160,6 +164,12 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 			} else if value.Valid {
 				_m.Source = usagemonitorchannel.Source(value.String)
 			}
+		case usagemonitorchannel.FieldProviderType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field provider_type", values[i])
+			} else if value.Valid {
+				_m.ProviderType = usagemonitorchannel.ProviderType(value.String)
+			}
 		case usagemonitorchannel.FieldChannelID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field channel_id", values[i])
@@ -192,6 +202,12 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 				return fmt.Errorf("unexpected type %T for field api_body", values[i])
 			} else if value.Valid {
 				_m.APIBody = value.String
+			}
+		case usagemonitorchannel.FieldAPIKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field api_key", values[i])
+			} else if value.Valid {
+				_m.APIKey = value.String
 			}
 		case usagemonitorchannel.FieldPollInterval:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -303,6 +319,9 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString("source=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Source))
 	builder.WriteString(", ")
+	builder.WriteString("provider_type=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ProviderType))
+	builder.WriteString(", ")
 	if v := _m.ChannelID; v != nil {
 		builder.WriteString("channel_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
@@ -319,6 +338,8 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("api_body=")
 	builder.WriteString(_m.APIBody)
+	builder.WriteString(", ")
+	builder.WriteString("api_key=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("poll_interval=")
 	builder.WriteString(fmt.Sprintf("%v", _m.PollInterval))

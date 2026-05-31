@@ -33,8 +33,12 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 		field.String("name").NotEmpty().
 			Comment("Display name for this monitoring channel"),
 		field.Enum("source").
-			Values("builtin", "custom").
-			Comment("builtin: linked to existing Channel; custom: fully manual"),
+			Values("builtin", "custom", "template").
+			Comment("builtin: linked to existing Channel; custom: fully manual; template: from provider template"),
+		field.Enum("provider_type").
+			Values("claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu").
+			Optional().
+			Comment("Provider type for quota template (required when source=template)"),
 		field.Int("channel_id").Optional().Nillable().
 			Comment("FK to Channel table (required when source=builtin)"),
 		field.String("api_url").NotEmpty().
@@ -47,6 +51,8 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Comment("HTTP request headers as JSON"),
 		field.Text("api_body").Optional().
 			Comment("Request body template for POST"),
+		field.String("api_key").Optional().Sensitive().
+			Comment("API key for authenticating with the provider (sensitive, hidden from GraphQL)"),
 		field.Int("poll_interval").Default(300).
 			Comment("Polling interval in seconds"),
 		field.JSON("fields", []map[string]any{}).

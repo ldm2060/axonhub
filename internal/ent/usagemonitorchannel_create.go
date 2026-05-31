@@ -78,6 +78,20 @@ func (_c *UsageMonitorChannelCreate) SetSource(v usagemonitorchannel.Source) *Us
 	return _c
 }
 
+// SetProviderType sets the "provider_type" field.
+func (_c *UsageMonitorChannelCreate) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelCreate {
+	_c.mutation.SetProviderType(v)
+	return _c
+}
+
+// SetNillableProviderType sets the "provider_type" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableProviderType(v *usagemonitorchannel.ProviderType) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetProviderType(*v)
+	}
+	return _c
+}
+
 // SetChannelID sets the "channel_id" field.
 func (_c *UsageMonitorChannelCreate) SetChannelID(v int) *UsageMonitorChannelCreate {
 	_c.mutation.SetChannelID(v)
@@ -128,6 +142,20 @@ func (_c *UsageMonitorChannelCreate) SetAPIBody(v string) *UsageMonitorChannelCr
 func (_c *UsageMonitorChannelCreate) SetNillableAPIBody(v *string) *UsageMonitorChannelCreate {
 	if v != nil {
 		_c.SetAPIBody(*v)
+	}
+	return _c
+}
+
+// SetAPIKey sets the "api_key" field.
+func (_c *UsageMonitorChannelCreate) SetAPIKey(v string) *UsageMonitorChannelCreate {
+	_c.mutation.SetAPIKey(v)
+	return _c
+}
+
+// SetNillableAPIKey sets the "api_key" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableAPIKey(v *string) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetAPIKey(*v)
 	}
 	return _c
 }
@@ -307,6 +335,11 @@ func (_c *UsageMonitorChannelCreate) check() error {
 			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.source": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.ProviderType(); ok {
+		if err := usagemonitorchannel.ProviderTypeValidator(v); err != nil {
+			return &ValidationError{Name: "provider_type", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.provider_type": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.APIURL(); !ok {
 		return &ValidationError{Name: "api_url", err: errors.New(`ent: missing required field "UsageMonitorChannel.api_url"`)}
 	}
@@ -390,6 +423,10 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 		_spec.SetField(usagemonitorchannel.FieldSource, field.TypeEnum, value)
 		_node.Source = value
 	}
+	if value, ok := _c.mutation.ProviderType(); ok {
+		_spec.SetField(usagemonitorchannel.FieldProviderType, field.TypeEnum, value)
+		_node.ProviderType = value
+	}
 	if value, ok := _c.mutation.APIURL(); ok {
 		_spec.SetField(usagemonitorchannel.FieldAPIURL, field.TypeString, value)
 		_node.APIURL = value
@@ -405,6 +442,10 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 	if value, ok := _c.mutation.APIBody(); ok {
 		_spec.SetField(usagemonitorchannel.FieldAPIBody, field.TypeString, value)
 		_node.APIBody = value
+	}
+	if value, ok := _c.mutation.APIKey(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAPIKey, field.TypeString, value)
+		_node.APIKey = value
 	}
 	if value, ok := _c.mutation.PollInterval(); ok {
 		_spec.SetField(usagemonitorchannel.FieldPollInterval, field.TypeInt, value)
@@ -570,6 +611,24 @@ func (u *UsageMonitorChannelUpsert) UpdateSource() *UsageMonitorChannelUpsert {
 	return u
 }
 
+// SetProviderType sets the "provider_type" field.
+func (u *UsageMonitorChannelUpsert) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldProviderType, v)
+	return u
+}
+
+// UpdateProviderType sets the "provider_type" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateProviderType() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldProviderType)
+	return u
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (u *UsageMonitorChannelUpsert) ClearProviderType() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldProviderType)
+	return u
+}
+
 // SetChannelID sets the "channel_id" field.
 func (u *UsageMonitorChannelUpsert) SetChannelID(v int) *UsageMonitorChannelUpsert {
 	u.Set(usagemonitorchannel.FieldChannelID, v)
@@ -639,6 +698,24 @@ func (u *UsageMonitorChannelUpsert) UpdateAPIBody() *UsageMonitorChannelUpsert {
 // ClearAPIBody clears the value of the "api_body" field.
 func (u *UsageMonitorChannelUpsert) ClearAPIBody() *UsageMonitorChannelUpsert {
 	u.SetNull(usagemonitorchannel.FieldAPIBody)
+	return u
+}
+
+// SetAPIKey sets the "api_key" field.
+func (u *UsageMonitorChannelUpsert) SetAPIKey(v string) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldAPIKey, v)
+	return u
+}
+
+// UpdateAPIKey sets the "api_key" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateAPIKey() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldAPIKey)
+	return u
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (u *UsageMonitorChannelUpsert) ClearAPIKey() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldAPIKey)
 	return u
 }
 
@@ -846,6 +923,27 @@ func (u *UsageMonitorChannelUpsertOne) UpdateSource() *UsageMonitorChannelUpsert
 	})
 }
 
+// SetProviderType sets the "provider_type" field.
+func (u *UsageMonitorChannelUpsertOne) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetProviderType(v)
+	})
+}
+
+// UpdateProviderType sets the "provider_type" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateProviderType() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateProviderType()
+	})
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (u *UsageMonitorChannelUpsertOne) ClearProviderType() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearProviderType()
+	})
+}
+
 // SetChannelID sets the "channel_id" field.
 func (u *UsageMonitorChannelUpsertOne) SetChannelID(v int) *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
@@ -927,6 +1025,27 @@ func (u *UsageMonitorChannelUpsertOne) UpdateAPIBody() *UsageMonitorChannelUpser
 func (u *UsageMonitorChannelUpsertOne) ClearAPIBody() *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearAPIBody()
+	})
+}
+
+// SetAPIKey sets the "api_key" field.
+func (u *UsageMonitorChannelUpsertOne) SetAPIKey(v string) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAPIKey(v)
+	})
+}
+
+// UpdateAPIKey sets the "api_key" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateAPIKey() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAPIKey()
+	})
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (u *UsageMonitorChannelUpsertOne) ClearAPIKey() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAPIKey()
 	})
 }
 
@@ -1316,6 +1435,27 @@ func (u *UsageMonitorChannelUpsertBulk) UpdateSource() *UsageMonitorChannelUpser
 	})
 }
 
+// SetProviderType sets the "provider_type" field.
+func (u *UsageMonitorChannelUpsertBulk) SetProviderType(v usagemonitorchannel.ProviderType) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetProviderType(v)
+	})
+}
+
+// UpdateProviderType sets the "provider_type" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateProviderType() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateProviderType()
+	})
+}
+
+// ClearProviderType clears the value of the "provider_type" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearProviderType() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearProviderType()
+	})
+}
+
 // SetChannelID sets the "channel_id" field.
 func (u *UsageMonitorChannelUpsertBulk) SetChannelID(v int) *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
@@ -1397,6 +1537,27 @@ func (u *UsageMonitorChannelUpsertBulk) UpdateAPIBody() *UsageMonitorChannelUpse
 func (u *UsageMonitorChannelUpsertBulk) ClearAPIBody() *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearAPIBody()
+	})
+}
+
+// SetAPIKey sets the "api_key" field.
+func (u *UsageMonitorChannelUpsertBulk) SetAPIKey(v string) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAPIKey(v)
+	})
+}
+
+// UpdateAPIKey sets the "api_key" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateAPIKey() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAPIKey()
+	})
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearAPIKey() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAPIKey()
 	})
 }
 

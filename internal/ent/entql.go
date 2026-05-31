@@ -612,11 +612,13 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagemonitorchannel.FieldDeletedAt:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldDeletedAt},
 			usagemonitorchannel.FieldName:          {Type: field.TypeString, Column: usagemonitorchannel.FieldName},
 			usagemonitorchannel.FieldSource:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldSource},
+			usagemonitorchannel.FieldProviderType:  {Type: field.TypeEnum, Column: usagemonitorchannel.FieldProviderType},
 			usagemonitorchannel.FieldChannelID:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldChannelID},
 			usagemonitorchannel.FieldAPIURL:        {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIURL},
 			usagemonitorchannel.FieldAPIMethod:     {Type: field.TypeEnum, Column: usagemonitorchannel.FieldAPIMethod},
 			usagemonitorchannel.FieldAPIHeaders:    {Type: field.TypeJSON, Column: usagemonitorchannel.FieldAPIHeaders},
 			usagemonitorchannel.FieldAPIBody:       {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIBody},
+			usagemonitorchannel.FieldAPIKey:        {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIKey},
 			usagemonitorchannel.FieldPollInterval:  {Type: field.TypeInt, Column: usagemonitorchannel.FieldPollInterval},
 			usagemonitorchannel.FieldFields:        {Type: field.TypeJSON, Column: usagemonitorchannel.FieldFields},
 			usagemonitorchannel.FieldLastPollAt:    {Type: field.TypeTime, Column: usagemonitorchannel.FieldLastPollAt},
@@ -4726,6 +4728,11 @@ func (f *UsageMonitorChannelFilter) WhereSource(p entql.StringP) {
 	f.Where(p.Field(usagemonitorchannel.FieldSource))
 }
 
+// WhereProviderType applies the entql string predicate on the provider_type field.
+func (f *UsageMonitorChannelFilter) WhereProviderType(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldProviderType))
+}
+
 // WhereChannelID applies the entql int predicate on the channel_id field.
 func (f *UsageMonitorChannelFilter) WhereChannelID(p entql.IntP) {
 	f.Where(p.Field(usagemonitorchannel.FieldChannelID))
@@ -4749,6 +4756,11 @@ func (f *UsageMonitorChannelFilter) WhereAPIHeaders(p entql.BytesP) {
 // WhereAPIBody applies the entql string predicate on the api_body field.
 func (f *UsageMonitorChannelFilter) WhereAPIBody(p entql.StringP) {
 	f.Where(p.Field(usagemonitorchannel.FieldAPIBody))
+}
+
+// WhereAPIKey applies the entql string predicate on the api_key field.
+func (f *UsageMonitorChannelFilter) WhereAPIKey(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAPIKey))
 }
 
 // WherePollInterval applies the entql int predicate on the poll_interval field.

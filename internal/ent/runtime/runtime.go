@@ -951,11 +951,11 @@ func init() {
 	// usagemonitorchannel.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	usagemonitorchannel.NameValidator = usagemonitorchannelDescName.Validators[0].(func(string) error)
 	// usagemonitorchannelDescAPIURL is the schema descriptor for api_url field.
-	usagemonitorchannelDescAPIURL := usagemonitorchannelFields[3].Descriptor()
+	usagemonitorchannelDescAPIURL := usagemonitorchannelFields[4].Descriptor()
 	// usagemonitorchannel.APIURLValidator is a validator for the "api_url" field. It is called by the builders before save.
 	usagemonitorchannel.APIURLValidator = usagemonitorchannelDescAPIURL.Validators[0].(func(string) error)
 	// usagemonitorchannelDescPollInterval is the schema descriptor for poll_interval field.
-	usagemonitorchannelDescPollInterval := usagemonitorchannelFields[7].Descriptor()
+	usagemonitorchannelDescPollInterval := usagemonitorchannelFields[9].Descriptor()
 	// usagemonitorchannel.DefaultPollInterval holds the default value on creation for the poll_interval field.
 	usagemonitorchannel.DefaultPollInterval = usagemonitorchannelDescPollInterval.Default.(int)
 	userMixin := schema.User{}.Mixin()

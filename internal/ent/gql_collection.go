@@ -5768,6 +5768,11 @@ func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bo
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldSource)
 				fieldSeen[usagemonitorchannel.FieldSource] = struct{}{}
 			}
+		case "providerType":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldProviderType]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldProviderType)
+				fieldSeen[usagemonitorchannel.FieldProviderType] = struct{}{}
+			}
 		case "channelID":
 			if _, ok := fieldSeen[usagemonitorchannel.FieldChannelID]; !ok {
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldChannelID)
