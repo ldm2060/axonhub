@@ -13,6 +13,7 @@ import {
   IconSend,
   IconUsers,
   IconUsersGroup,
+  IconChartBar,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -73,6 +74,11 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.channels'),
           url: '/admin/channels',
           icon: IconAi,
+        } as NavLink,
+        {
+          title: t('sidebar.items.usageMonitor'),
+          url: '/admin/usage-monitor',
+          icon: IconChartBar,
         } as NavLink,
         {
           title: t('sidebar.items.models'),

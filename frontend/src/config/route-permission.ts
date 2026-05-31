@@ -32,6 +32,11 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/usage-monitor',
+        requiredScopes: ['read_channels'],
+        mode: 'hidden',
+      },
+      {
         path: '/admin/models',
         requiredScopes: ['read_channels'],
         mode: 'hidden',
