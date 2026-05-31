@@ -11,12 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQueryChannels } from '@/features/channels/data/channels';
 import { useCreateUsageMonitorChannel } from '../data/usage-monitor';
+import { useQuotaMonitorTemplates, type QuotaMonitorTemplate } from '../data/templates';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { FieldConfig } from '../data/schema';
 import { FieldConfigForm } from './field-config-form';
 import { TestConnection } from './test-connection';
+import { Eye, EyeOff } from 'lucide-react';
 
-type SourceType = 'builtin' | 'custom';
+type SourceType = 'builtin' | 'custom' | 'template';
 
 export function AddChannelDialog() {
   const { t } = useTranslation();
@@ -36,6 +38,11 @@ export function AddChannelDialog() {
   const [pollIntervalMin, setPollIntervalMin] = useState(5);
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [headersError, setHeadersError] = useState('');
+
+  const templates = useQuotaMonitorTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState<QuotaMonitorTemplate | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Auto-fill from selected channel
   useEffect(() => {
@@ -74,6 +81,17 @@ export function AddChannelDialog() {
     }
   }
 
+  function handleTemplateChange(providerType: string) {
+    const tmpl = templates.find((t) => t.providerType === providerType);
+    setSelectedTemplate(tmpl ?? null);
+    if (tmpl) {
+      setApiUrl(tmpl.apiUrl);
+      setApiMethod(tmpl.apiMethod);
+      if (tmpl.apiBody) setApiBody(tmpl.apiBody);
+      if (!name) setName(tmpl.name);
+    }
+  }
+
   function resetForm() {
     setSource('custom');
     setChannelId('');
@@ -85,6 +103,9 @@ export function AddChannelDialog() {
     setPollIntervalMin(5);
     setFields([]);
     setHeadersError('');
+    setSelectedTemplate(null);
+    setApiKey('');
+    setShowApiKey(false);
   }
 
   async function handleSubmit() {
@@ -93,12 +114,14 @@ export function AddChannelDialog() {
         name,
         source,
         channelId: source === 'builtin' ? channelId : undefined,
+        providerType: source === 'template' ? selectedTemplate?.providerType : undefined,
+        apiKey: source === 'template' ? apiKey : undefined,
         apiUrl,
         apiMethod,
-        apiHeaders,
+        apiHeaders: source === 'template' ? '' : apiHeaders,
         apiBody: apiBody || undefined,
         pollInterval: pollIntervalMin * 60,
-        fields,
+        fields: source === 'template' ? (selectedTemplate?.fields ?? []) : fields,
       });
       setOpen(null);
       resetForm();
@@ -107,7 +130,7 @@ export function AddChannelDialog() {
     }
   }
 
-  const canSubmit = name.trim() && apiUrl.trim() && !headersError;
+  const canSubmit = name.trim() && apiUrl.trim() && !headersError && (source === 'template' ? (selectedTemplate !== null && apiKey.trim() !== '') : true);
 
   return (
     <Dialog
@@ -130,7 +153,7 @@ export function AddChannelDialog() {
             {/* Source Selection */}
             <div className="space-y-2">
               <Label>{t('usageMonitor.source.builtin')}</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setSource('builtin')}
@@ -153,6 +176,17 @@ export function AddChannelDialog() {
                 >
                   {t('usageMonitor.source.custom')}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setSource('template'); setSelectedTemplate(null); }}
+                  className={`rounded-lg border-2 p-3 text-center text-sm font-medium transition-colors ${
+                    source === 'template'
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-muted hover:border-muted-foreground/30'
+                  }`}
+                >
+                  {t('usageMonitor.source.template')}
+                </button>
               </div>
             </div>
 
@@ -172,6 +206,70 @@ export function AddChannelDialog() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {/* Template Config */}
+            {source === 'template' && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>{t('usageMonitor.selectTemplate')}</Label>
+                  <Select value={selectedTemplate?.providerType ?? ''} onValueChange={handleTemplateChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('usageMonitor.selectTemplate')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((tmpl) => (
+                        <SelectItem key={tmpl.providerType} value={tmpl.providerType}>
+                          {tmpl.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedTemplate && (
+                  <>
+                    {selectedTemplate.description && (
+                      <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
+                    )}
+
+                    <div className="space-y-1.5">
+                      <Label>{t('usageMonitor.apiKey')}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder={t('usageMonitor.apiKeyPlaceholder')}
+                          className="pr-10 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedTemplate.fields.length > 0 && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">{t('usageMonitor.templateFields')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('usageMonitor.templateFieldsHint')}</p>
+                        <div className="space-y-1 rounded-md border p-2">
+                          {selectedTemplate.fields.map((f) => (
+                            <div key={f.key} className="flex items-center gap-2 text-xs">
+                              <span className="font-medium">{f.label}</span>
+                              <span className="text-muted-foreground">({f.format})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
