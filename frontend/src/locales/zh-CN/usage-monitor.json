@@ -43,5 +43,9 @@
   "usageMonitor.selectChannel": "选择渠道",
   "usageMonitor.preview": "预览",
   "usageMonitor.totalPath": "总量路径",
-  "usageMonitor.groupIndex": "捕获组索引"
+  "usageMonitor.groupIndex": "捕获组索引",
+  "usageMonitor.messages.createSuccess": "监控渠道创建成功",
+  "usageMonitor.messages.updateSuccess": "监控渠道更新成功",
+  "usageMonitor.messages.deleteSuccess": "监控渠道删除成功",
+  "usageMonitor.messages.refreshSuccess": "监控渠道刷新成功"
 }

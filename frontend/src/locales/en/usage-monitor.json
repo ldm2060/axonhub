@@ -43,5 +43,9 @@
   "usageMonitor.selectChannel": "Select Channel",
   "usageMonitor.preview": "Preview",
   "usageMonitor.totalPath": "Total Path",
-  "usageMonitor.groupIndex": "Group Index"
+  "usageMonitor.groupIndex": "Group Index",
+  "usageMonitor.messages.createSuccess": "Monitor channel created successfully",
+  "usageMonitor.messages.updateSuccess": "Monitor channel updated successfully",
+  "usageMonitor.messages.deleteSuccess": "Monitor channel deleted successfully",
+  "usageMonitor.messages.refreshSuccess": "Monitor channel refreshed successfully"
 }
