@@ -57,6 +57,7 @@ type Resolver struct {
 	videoWorker                    *video_storage.Worker
 	memorySampler                  *biz.MemorySampler
 	userUsageStatsService          *biz.UserUsageStatsService
+	usageMonitorService            *biz.UsageMonitorService
 }
 
 // NewSchema creates a graphql executable schema.
@@ -94,6 +95,7 @@ func NewSchema(
 	videoWorker *video_storage.Worker,
 	memorySampler *biz.MemorySampler,
 	userUsageStatsService *biz.UserUsageStatsService,
+	usageMonitorService *biz.UsageMonitorService,
 ) graphql.ExecutableSchema {
 	modelFetcher := biz.NewModelFetcher(httpClient, channelService)
 
@@ -132,6 +134,7 @@ func NewSchema(
 			videoWorker:                    videoWorker,
 			memorySampler:                  memorySampler,
 			userUsageStatsService:          userUsageStatsService,
+			usageMonitorService:            usageMonitorService,
 		},
 	})
 }

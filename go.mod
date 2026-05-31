@@ -47,6 +47,7 @@ require (
 	github.com/kaptinlin/jsonrepair v0.2.4
 	github.com/ldm2060/afero-s3 v0.1.0
 	github.com/ldm2060/afero-webdav v0.0.0-20260128073818-3f60e732e991
+	github.com/oliveagle/jsonpath v0.1.4
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/samber/lo v1.52.0
@@ -81,7 +82,6 @@ require (
 require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/oliveagle/jsonpath v0.1.4 // indirect
 	github.com/tmaxmax/go-sse v0.11.0 // indirect
 )
 

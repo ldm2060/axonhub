@@ -1,0 +1,105 @@
+# Usage Monitor Channel schema
+# Extends the Ent-generated types with custom fields and operations
+
+# Custom types for field configuration and parsed data
+type FieldConfig {
+    key: String!
+    label: String!
+    path: String!
+    type: String!
+    format: String!
+    totalPath: String
+    unit: String
+    groupIndex: [Int!]
+    displayOrder: Int!
+}
+
+type ParsedFieldValue {
+    key: String!
+    label: String!
+    value: String
+    total: String
+    percent: Float
+    unit: String
+    format: String!
+    error: String
+}
+
+# Extend the Ent-generated UsageMonitorChannel with computed fields
+extend type UsageMonitorChannel {
+    "API headers as JSON string for frontend editing"
+    apiHeadersString: String!
+    "Parsed field values from last poll data"
+    parsedData: [ParsedFieldValue!]
+}
+
+# Input types for create/update operations
+input FieldConfigInput {
+    key: String!
+    label: String!
+    path: String!
+    type: String!
+    format: String!
+    totalPath: String
+    unit: String
+    groupIndex: [Int!]
+    displayOrder: Int!
+}
+
+input CreateUsageMonitorChannelInput {
+    name: String!
+    source: UsageMonitorChannelSource!
+    channelId: ID
+    apiUrl: String!
+    apiMethod: UsageMonitorChannelAPIMethod!
+    apiHeaders: String!
+    apiBody: String
+    pollInterval: Int!
+    fields: [FieldConfigInput!]!
+}
+
+input UpdateUsageMonitorChannelInput {
+    name: String
+    apiUrl: String
+    apiMethod: UsageMonitorChannelAPIMethod
+    apiHeaders: String
+    apiBody: String
+    pollInterval: Int
+    fields: [FieldConfigInput!]
+    status: UsageMonitorChannelStatus
+}
+
+input TestUsageMonitorChannelInput {
+    apiUrl: String!
+    apiMethod: UsageMonitorChannelAPIMethod!
+    apiHeaders: String!
+    apiBody: String
+    fields: [FieldConfigInput!]!
+}
+
+type TestResult {
+    success: Boolean!
+    rawResponse: String
+    parsedFields: [ParsedFieldValue!]
+    error: String
+}
+
+extend type Query {
+    "List all usage monitor channels"
+    usageMonitorChannelsList: [UsageMonitorChannel!]!
+    "Get a single usage monitor channel by ID"
+    usageMonitorChannelById(id: ID!): UsageMonitorChannel
+}
+
+extend type Mutation {
+    "Create a new usage monitor channel"
+    createUsageMonitorChannel(input: CreateUsageMonitorChannelInput!): UsageMonitorChannel!
+    "Update an existing usage monitor channel"
+    updateUsageMonitorChannel(id: ID!, input: UpdateUsageMonitorChannelInput!): UsageMonitorChannel!
+    "Soft delete a usage monitor channel"
+    deleteUsageMonitorChannel(id: ID!): Boolean!
+    "Test connection to the API without saving"
+    testUsageMonitorChannel(input: TestUsageMonitorChannelInput!): TestResult!
+    "Force refresh a single channel"
+    refreshUsageMonitorChannel(id: ID!): UsageMonitorChannel!
+}

@@ -17,6 +17,7 @@ schema:
   - price.graphql
   - cost.graphql
   - publish_request.graphql
+  - usage_monitor.graphql
 
 omit_gqlgen_version_in_file_notice: true
 
@@ -712,3 +713,24 @@ models:
   EmailSettings:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.EmailSettings
+  FieldConfig:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.FieldConfig
+  FieldConfigInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.FieldConfig
+  ParsedFieldValue:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.ParsedField
+  TestResult:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.TestResult
+  CreateUsageMonitorChannelInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.CreateUsageMonitorChannelInput
+  UpdateUsageMonitorChannelInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.UpdateUsageMonitorChannelInput
+  TestUsageMonitorChannelInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.TestUsageMonitorChannelInput
