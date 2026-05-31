@@ -2,6 +2,7 @@ package usage_monitor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -71,10 +72,30 @@ func (c *GenericQuotaChecker) Poll(
 		return nil, fmt.Errorf("HTTP request returned non-2xx status: %d", resp.StatusCode)
 	}
 
+	// Enrich response body with HTTP headers for JSONPath parsing
+	enrichedBody := resp.Body
+	var rawData interface{}
+	if err := json.Unmarshal(resp.Body, &rawData); err == nil {
+		// Include response headers in raw data for JSONPath parsing
+		headerMap := make(map[string]string, len(resp.Headers))
+		for k, v := range resp.Headers {
+			if len(v) > 0 {
+				headerMap[strings.ToLower(k)] = v[0]
+			}
+		}
+		// Merge headers into raw data under "headers" key
+		if rawMap, ok := rawData.(map[string]any); ok {
+			rawMap["headers"] = headerMap
+			if enriched, err := json.Marshal(rawMap); err == nil {
+				enrichedBody = enriched
+			}
+		}
+	}
+
 	// Parse each field using ParseField()
 	parsedFields := make([]ParsedField, len(fields))
 	for i, field := range fields {
-		parsedFields[i] = ParseField(resp.Body, field)
+		parsedFields[i] = ParseField(enrichedBody, field)
 	}
 
 	// Return PollData with raw response, parsed fields, and timestamp
