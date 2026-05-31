@@ -20,6 +20,17 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
+func assembleHeadersFromAPIKey(apiKey string, headerFormat string) map[string]any {
+	switch headerFormat {
+	case "bearer":
+		return map[string]any{"Authorization": "Bearer " + apiKey}
+	case "x-api-key":
+		return map[string]any{"x-api-key": apiKey}
+	default:
+		return map[string]any{"Authorization": "Bearer " + apiKey}
+	}
+}
+
 type UsageMonitorServiceParams struct {
 	fx.In
 
@@ -168,6 +179,54 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		fields = append(fields, fieldMap)
 	}
 
+	// Handle source=template: auto-fill from template registry
+	if input.Source == "template" {
+		if input.ProviderType == nil || *input.ProviderType == "" {
+			return nil, fmt.Errorf("providerType is required when source=template")
+		}
+		if input.ApiKey == nil || *input.ApiKey == "" {
+			return nil, fmt.Errorf("apiKey is required when source=template")
+		}
+		tmpl := usage_monitor.GetQuotaMonitorTemplate(*input.ProviderType)
+		if tmpl == nil {
+			return nil, fmt.Errorf("unknown provider template: %s", *input.ProviderType)
+		}
+		input.ApiURL = tmpl.ApiURL
+		input.ApiMethod = tmpl.ApiMethod
+		if tmpl.ApiBody != "" {
+			input.ApiBody = &tmpl.ApiBody
+		}
+		input.Fields = tmpl.Fields
+
+		// Assemble headers from apiKey
+		apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+		headersBytes, _ := json.Marshal(apiHeaders)
+		input.ApiHeaders = string(headersBytes)
+
+		// Re-convert template fields to []map[string]any
+		fields = make([]map[string]any, 0, len(input.Fields))
+		for _, f := range input.Fields {
+			fieldMap := map[string]any{
+				"key":          f.Key,
+				"label":        f.Label,
+				"path":         f.Path,
+				"type":         f.Type,
+				"format":       f.Format,
+				"displayOrder": f.DisplayOrder,
+			}
+			if f.TotalPath != "" {
+				fieldMap["totalPath"] = f.TotalPath
+			}
+			if f.Unit != "" {
+				fieldMap["unit"] = f.Unit
+			}
+			if len(f.GroupIndex) > 0 {
+				fieldMap["groupIndex"] = f.GroupIndex
+			}
+			fields = append(fields, fieldMap)
+		}
+	}
+
 	create := client.UsageMonitorChannel.Create().
 		SetName(input.Name).
 		SetSource(usagemonitorchannel.Source(input.Source)).
@@ -192,6 +251,13 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 
 	if apiHeaders == nil {
 		create.SetAPIHeaders(map[string]any{})
+	}
+
+	if input.ProviderType != nil {
+		create.SetProviderType(usagemonitorchannel.ProviderType(*input.ProviderType))
+	}
+	if input.ApiKey != nil {
+		create.SetAPIKey(*input.ApiKey)
 	}
 
 	// Set owner from context
@@ -239,6 +305,19 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 			apiHeaders = map[string]any{}
 		}
 		update.SetAPIHeaders(apiHeaders)
+	}
+
+	if input.ApiKey != nil {
+		update.SetAPIKey(*input.ApiKey)
+		// Re-assemble headers if this is a template channel
+		existing, err := svc.GetChannel(ctx, id)
+		if err == nil && existing.Source == usagemonitorchannel.SourceTemplate {
+			tmpl := usage_monitor.GetQuotaMonitorTemplate(string(existing.ProviderType))
+			if tmpl != nil {
+				apiHeaders := assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+				update.SetAPIHeaders(apiHeaders)
+			}
+		}
 	}
 
 	if input.ApiBody != nil {

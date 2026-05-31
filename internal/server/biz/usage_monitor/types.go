@@ -59,6 +59,8 @@ type CreateUsageMonitorChannelInput struct {
 	Name         string        `json:"name"`
 	Source       string        `json:"source"`
 	ChannelID    *string       `json:"channelId,omitempty"`
+	ProviderType *string       `json:"providerType,omitempty"` // required when source=template
+	ApiKey       *string       `json:"apiKey,omitempty"`       // required when source=template
 	ApiURL       string        `json:"apiUrl"`
 	ApiMethod    string        `json:"apiMethod"`
 	ApiHeaders   string        `json:"apiHeaders"`
@@ -72,6 +74,7 @@ type UpdateUsageMonitorChannelInput struct {
 	ApiURL       *string        `json:"apiUrl,omitempty"`
 	ApiMethod    *string        `json:"apiMethod,omitempty"`
 	ApiHeaders   *string        `json:"apiHeaders,omitempty"`
+	ApiKey       *string        `json:"apiKey,omitempty"` // allow key rotation for template channels
 	ApiBody      *string        `json:"apiBody,omitempty"`
 	PollInterval *int           `json:"pollInterval,omitempty"`
 	Fields       *[]FieldConfig `json:"fields,omitempty"`
