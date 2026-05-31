@@ -51,5 +51,11 @@
   "usageMonitor.messages.refreshSuccess": "监控渠道刷新成功",
   "usageMonitor.relativeTime.justNow": "刚刚",
   "usageMonitor.relativeTime.untilReset": "后重置",
-  "usageMonitor.relativeTime.ago": "前"
+  "usageMonitor.relativeTime.ago": "前",
+  "usageMonitor.source.template": "从模板",
+  "usageMonitor.apiKey": "API 密钥",
+  "usageMonitor.apiKeyPlaceholder": "输入你的 API 密钥",
+  "usageMonitor.templateFields": "解析字段",
+  "usageMonitor.templateFieldsHint": "这些字段由模板预配置",
+  "usageMonitor.selectTemplate": "选择提供商模板"
 }

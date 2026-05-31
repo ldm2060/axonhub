@@ -51,5 +51,11 @@
   "usageMonitor.messages.refreshSuccess": "Monitor channel refreshed successfully",
   "usageMonitor.relativeTime.justNow": "just now",
   "usageMonitor.relativeTime.untilReset": "until reset",
-  "usageMonitor.relativeTime.ago": "ago"
+  "usageMonitor.relativeTime.ago": "ago",
+  "usageMonitor.source.template": "From Template",
+  "usageMonitor.apiKey": "API Key",
+  "usageMonitor.apiKeyPlaceholder": "Enter your API key",
+  "usageMonitor.templateFields": "Parsed Fields",
+  "usageMonitor.templateFieldsHint": "These fields are pre-configured by the template",
+  "usageMonitor.selectTemplate": "Select Provider Template"
 }
