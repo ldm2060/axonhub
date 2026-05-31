@@ -44,6 +44,7 @@ autobind:
   - github.com/ldm2060/axonhub/internal/ent/request
   - github.com/ldm2060/axonhub/internal/ent/requestexecution
   - github.com/ldm2060/axonhub/internal/ent/channel
+  - github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel
   - github.com/ldm2060/axonhub/internal/server/biz
 
 converters:
@@ -734,3 +735,6 @@ models:
   TestUsageMonitorChannelInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.TestUsageMonitorChannelInput
+  QuotaMonitorTemplate:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.QuotaMonitorTemplate

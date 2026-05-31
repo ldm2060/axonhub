@@ -89,6 +89,7 @@ type ResolverRoot interface {
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
 	PublishRequest() PublishRequestResolver
 	Query() QueryResolver
+	QuotaMonitorTemplate() QuotaMonitorTemplateResolver
 	Request() RequestResolver
 	RequestExecution() RequestExecutionResolver
 	Role() RoleResolver
@@ -1403,6 +1404,7 @@ type ComplexityRoot struct {
 		QueryModels                  func(childComplexity int, input QueryModelsInput) int
 		QueryUnassociatedChannels    func(childComplexity int) int
 		QuotaEnforcementSettings     func(childComplexity int) int
+		QuotaMonitorTemplates        func(childComplexity int) int
 		RegistrationSettings         func(childComplexity int) int
 		RequestStats                 func(childComplexity int) int
 		RequestStatsByAPIKey         func(childComplexity int, timeWindow *string) int
@@ -1438,6 +1440,17 @@ type ComplexityRoot struct {
 	QuotaEnforcementSettings struct {
 		Enabled func(childComplexity int) int
 		Mode    func(childComplexity int) int
+	}
+
+	QuotaMonitorTemplate struct {
+		APIMethod    func(childComplexity int) int
+		ApiBody      func(childComplexity int) int
+		ApiURL       func(childComplexity int) int
+		Description  func(childComplexity int) int
+		Fields       func(childComplexity int) int
+		HeaderFormat func(childComplexity int) int
+		Name         func(childComplexity int) int
+		ProviderType func(childComplexity int) int
 	}
 
 	RegexAssociation struct {
@@ -1994,6 +2007,7 @@ type ComplexityRoot struct {
 		APIBody          func(childComplexity int) int
 		APIHeaders       func(childComplexity int) int
 		APIHeadersString func(childComplexity int) int
+		APIKey           func(childComplexity int) int
 		APIMethod        func(childComplexity int) int
 		APIURL           func(childComplexity int) int
 		Channel          func(childComplexity int) int
@@ -2518,6 +2532,10 @@ type QueryResolver interface {
 	MyTopRequestsProjects(ctx context.Context) ([]*TopRequestsProjects, error)
 	UsageMonitorChannelsList(ctx context.Context) ([]*ent.UsageMonitorChannel, error)
 	UsageMonitorChannelByID(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
+	QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.QuotaMonitorTemplate, error)
+}
+type QuotaMonitorTemplateResolver interface {
+	APIMethod(ctx context.Context, obj *usage_monitor.QuotaMonitorTemplate) (usagemonitorchannel.APIMethod, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -2601,6 +2619,7 @@ type UsageMonitorChannelResolver interface {
 
 	APIHeadersString(ctx context.Context, obj *ent.UsageMonitorChannel) (string, error)
 	ParsedData(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*usage_monitor.ParsedField, error)
+	APIKey(ctx context.Context, obj *ent.UsageMonitorChannel) (*string, error)
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *ent.User) (*objects.GUID, error)
@@ -2635,6 +2654,7 @@ type UserUsageStatsResolver interface {
 type CreateUsageMonitorChannelInputResolver interface {
 	Source(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.Source) error
 	ChannelID(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *objects.GUID) error
+	ProviderType(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *usagemonitorchannel.ProviderType) error
 
 	APIMethod(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error
 }
@@ -8795,6 +8815,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.QuotaEnforcementSettings(childComplexity), true
+	case "Query.quotaMonitorTemplates":
+		if e.complexity.Query.QuotaMonitorTemplates == nil {
+			break
+		}
+
+		return e.complexity.Query.QuotaMonitorTemplates(childComplexity), true
 	case "Query.registrationSettings":
 		if e.complexity.Query.RegistrationSettings == nil {
 			break
@@ -9063,6 +9089,55 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaEnforcementSettings.Mode(childComplexity), true
+
+	case "QuotaMonitorTemplate.apiMethod":
+		if e.complexity.QuotaMonitorTemplate.APIMethod == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.APIMethod(childComplexity), true
+	case "QuotaMonitorTemplate.apiBody":
+		if e.complexity.QuotaMonitorTemplate.ApiBody == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.ApiBody(childComplexity), true
+	case "QuotaMonitorTemplate.apiUrl":
+		if e.complexity.QuotaMonitorTemplate.ApiURL == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.ApiURL(childComplexity), true
+	case "QuotaMonitorTemplate.description":
+		if e.complexity.QuotaMonitorTemplate.Description == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.Description(childComplexity), true
+	case "QuotaMonitorTemplate.fields":
+		if e.complexity.QuotaMonitorTemplate.Fields == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.Fields(childComplexity), true
+	case "QuotaMonitorTemplate.headerFormat":
+		if e.complexity.QuotaMonitorTemplate.HeaderFormat == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.HeaderFormat(childComplexity), true
+	case "QuotaMonitorTemplate.name":
+		if e.complexity.QuotaMonitorTemplate.Name == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.Name(childComplexity), true
+	case "QuotaMonitorTemplate.providerType":
+		if e.complexity.QuotaMonitorTemplate.ProviderType == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.ProviderType(childComplexity), true
 
 	case "RegexAssociation.exclude":
 		if e.complexity.RegexAssociation.Exclude == nil {
@@ -11217,6 +11292,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.APIHeadersString(childComplexity), true
+	case "UsageMonitorChannel.apiKey":
+		if e.complexity.UsageMonitorChannel.APIKey == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.APIKey(childComplexity), true
 	case "UsageMonitorChannel.apiMethod":
 		if e.complexity.UsageMonitorChannel.APIMethod == nil {
 			break
@@ -20814,6 +20895,8 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -39077,6 +39160,8 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -39162,6 +39247,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -39339,6 +39426,8 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -49622,6 +49711,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -49696,6 +49787,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -49710,6 +49803,53 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 	if fc.Args, err = ec.field_Query_usageMonitorChannelById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_quotaMonitorTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_quotaMonitorTemplates,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().QuotaMonitorTemplates(ctx)
+		},
+		nil,
+		ec.marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplateᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_quotaMonitorTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "providerType":
+				return ec.fieldContext_QuotaMonitorTemplate_providerType(ctx, field)
+			case "name":
+				return ec.fieldContext_QuotaMonitorTemplate_name(ctx, field)
+			case "description":
+				return ec.fieldContext_QuotaMonitorTemplate_description(ctx, field)
+			case "apiUrl":
+				return ec.fieldContext_QuotaMonitorTemplate_apiUrl(ctx, field)
+			case "apiMethod":
+				return ec.fieldContext_QuotaMonitorTemplate_apiMethod(ctx, field)
+			case "headerFormat":
+				return ec.fieldContext_QuotaMonitorTemplate_headerFormat(ctx, field)
+			case "apiBody":
+				return ec.fieldContext_QuotaMonitorTemplate_apiBody(ctx, field)
+			case "fields":
+				return ec.fieldContext_QuotaMonitorTemplate_fields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorTemplate", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -49875,6 +50015,258 @@ func (ec *executionContext) fieldContext_QuotaEnforcementSettings_mode(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type QuotaEnforcementMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_providerType(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_providerType,
+		func(ctx context.Context) (any, error) {
+			return obj.ProviderType, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_providerType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_name(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_name,
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_description(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_description,
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_apiUrl(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_apiUrl,
+		func(ctx context.Context) (any, error) {
+			return obj.ApiURL, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_apiMethod(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_apiMethod,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.QuotaMonitorTemplate().APIMethod(ctx, obj)
+		},
+		nil,
+		ec.marshalNUsageMonitorChannelAPIMethod2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐAPIMethod,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiMethod(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UsageMonitorChannelAPIMethod does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_headerFormat(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_headerFormat,
+		func(ctx context.Context) (any, error) {
+			return obj.HeaderFormat, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_headerFormat(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_apiBody(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_apiBody,
+		func(ctx context.Context) (any, error) {
+			return obj.ApiBody, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiBody(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_fields(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_fields,
+		func(ctx context.Context) (any, error) {
+			return obj.Fields, nil
+		},
+		nil,
+		ec.marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_fields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_FieldConfig_key(ctx, field)
+			case "label":
+				return ec.fieldContext_FieldConfig_label(ctx, field)
+			case "path":
+				return ec.fieldContext_FieldConfig_path(ctx, field)
+			case "type":
+				return ec.fieldContext_FieldConfig_type(ctx, field)
+			case "format":
+				return ec.fieldContext_FieldConfig_format(ctx, field)
+			case "totalPath":
+				return ec.fieldContext_FieldConfig_totalPath(ctx, field)
+			case "unit":
+				return ec.fieldContext_FieldConfig_unit(ctx, field)
+			case "groupIndex":
+				return ec.fieldContext_FieldConfig_groupIndex(ctx, field)
+			case "displayOrder":
+				return ec.fieldContext_FieldConfig_displayOrder(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FieldConfig", field.Name)
 		},
 	}
 	return fc, nil
@@ -62039,6 +62431,35 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_parsedData(_ contex
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageMonitorChannel_apiKey(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_apiKey,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorChannel().APIKey(ctx, obj)
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_apiKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -63176,6 +63597,8 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -75306,7 +75729,7 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "source", "channelId", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields"}
+	fieldsInOrder := [...]string{"name", "source", "channelId", "providerType", "apiKey", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -75338,6 +75761,22 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 			if err = ec.resolvers.CreateUsageMonitorChannelInput().ChannelID(ctx, &it, data); err != nil {
 				return it, err
 			}
+		case "providerType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerType"))
+			data, err := ec.unmarshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CreateUsageMonitorChannelInput().ProviderType(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "apiKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ApiKey = data
 		case "apiUrl":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiUrl"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -91728,7 +92167,7 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "status"}
+	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "status", "apiKey"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91795,6 +92234,13 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 			if err = ec.resolvers.UpdateUsageMonitorChannelInput().Status(ctx, &it, data); err != nil {
 				return it, err
 			}
+		case "apiKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ApiKey = data
 		}
 	}
 
@@ -110983,6 +111429,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "quotaMonitorTemplates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_quotaMonitorTemplates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -111034,6 +111502,105 @@ func (ec *executionContext) _QuotaEnforcementSettings(ctx context.Context, sel a
 			out.Values[i] = ec._QuotaEnforcementSettings_mode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var quotaMonitorTemplateImplementors = []string{"QuotaMonitorTemplate"}
+
+func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.SelectionSet, obj *usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, quotaMonitorTemplateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QuotaMonitorTemplate")
+		case "providerType":
+			out.Values[i] = ec._QuotaMonitorTemplate_providerType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._QuotaMonitorTemplate_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._QuotaMonitorTemplate_description(ctx, field, obj)
+		case "apiUrl":
+			out.Values[i] = ec._QuotaMonitorTemplate_apiUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "apiMethod":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QuotaMonitorTemplate_apiMethod(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "headerFormat":
+			out.Values[i] = ec._QuotaMonitorTemplate_headerFormat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "apiBody":
+			out.Values[i] = ec._QuotaMonitorTemplate_apiBody(ctx, field, obj)
+		case "fields":
+			out.Values[i] = ec._QuotaMonitorTemplate_fields(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -116894,6 +117461,39 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "apiKey":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorChannel_apiKey(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -121696,6 +122296,54 @@ func (ec *executionContext) marshalNFetchModelsPayload2ᚖgithubᚗcomᚋldm2060
 	return ec._FetchModelsPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFieldConfig2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx context.Context, sel ast.SelectionSet, v usage_monitor.FieldConfig) graphql.Marshaler {
+	return ec._FieldConfig(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx context.Context, sel ast.SelectionSet, v []usage_monitor.FieldConfig) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFieldConfig2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNFieldConfigInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx context.Context, v any) (usage_monitor.FieldConfig, error) {
 	res, err := ec.unmarshalInputFieldConfigInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -123645,6 +124293,60 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 		return graphql.Null
 	}
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplate(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplate(ctx context.Context, sel ast.SelectionSet, v *usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QuotaMonitorTemplate(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNRegistrationSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐRegistrationSettings(ctx context.Context, sel ast.SelectionSet, v biz.RegistrationSettings) graphql.Marshaler {

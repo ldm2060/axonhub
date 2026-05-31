@@ -50,6 +50,8 @@ input CreateUsageMonitorChannelInput {
     name: String!
     source: UsageMonitorChannelSource!
     channelId: ID
+    providerType: UsageMonitorChannelProviderType
+    apiKey: String
     apiUrl: String!
     apiMethod: UsageMonitorChannelAPIMethod!
     apiHeaders: String!
@@ -67,6 +69,7 @@ input UpdateUsageMonitorChannelInput {
     pollInterval: Int
     fields: [FieldConfigInput!]
     status: UsageMonitorChannelStatus
+    apiKey: String
 }
 
 input TestUsageMonitorChannelInput {
@@ -89,6 +92,27 @@ extend type Query {
     usageMonitorChannelsList: [UsageMonitorChannel!]!
     "Get a single usage monitor channel by ID"
     usageMonitorChannelById(id: ID!): UsageMonitorChannel
+}
+
+# Quota Monitor Template - pre-configured provider templates
+type QuotaMonitorTemplate {
+  providerType: String!
+  name: String!
+  description: String
+  apiUrl: String!
+  apiMethod: UsageMonitorChannelAPIMethod!
+  headerFormat: String!
+  apiBody: String
+  fields: [FieldConfig!]!
+}
+
+extend type UsageMonitorChannel {
+  apiKey: String @goField(forceResolver: true)
+}
+
+extend type Query {
+  "List all available quota monitor templates"
+  quotaMonitorTemplates: [QuotaMonitorTemplate!]!
 }
 
 extend type Mutation {

@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
+	"github.com/samber/lo"
 )
 
 // CreateUsageMonitorChannel is the resolver for the createUsageMonitorChannel field.
@@ -72,6 +73,21 @@ func (r *queryResolver) UsageMonitorChannelByID(ctx context.Context, id objects.
 	return r.usageMonitorService.GetChannel(ctx, id.ID)
 }
 
+// QuotaMonitorTemplates is the resolver for the quotaMonitorTemplates field.
+func (r *queryResolver) QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.QuotaMonitorTemplate, error) {
+	templates := usage_monitor.GetQuotaMonitorTemplates()
+	result := make([]*usage_monitor.QuotaMonitorTemplate, len(templates))
+	for i := range templates {
+		result[i] = &templates[i]
+	}
+	return result, nil
+}
+
+// APIMethod is the resolver for the apiMethod field.
+func (r *quotaMonitorTemplateResolver) APIMethod(ctx context.Context, obj *usage_monitor.QuotaMonitorTemplate) (usagemonitorchannel.APIMethod, error) {
+	return usagemonitorchannel.APIMethod(obj.ApiMethod), nil
+}
+
 // APIHeadersString is the resolver for the apiHeadersString field.
 func (r *usageMonitorChannelResolver) APIHeadersString(ctx context.Context, obj *ent.UsageMonitorChannel) (string, error) {
 	if obj.APIHeaders == nil {
@@ -110,6 +126,15 @@ func (r *usageMonitorChannelResolver) ParsedData(ctx context.Context, obj *ent.U
 	return fields, nil
 }
 
+// APIKey is the resolver for the apiKey field.
+func (r *usageMonitorChannelResolver) APIKey(ctx context.Context, obj *ent.UsageMonitorChannel) (*string, error) {
+	if obj.APIKey == "" {
+		return nil, nil
+	}
+	masked := "••••••••"
+	return &masked, nil
+}
+
 // Source is the resolver for the source field.
 func (r *createUsageMonitorChannelInputResolver) Source(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.Source) error {
 	obj.Source = string(data)
@@ -121,6 +146,14 @@ func (r *createUsageMonitorChannelInputResolver) ChannelID(ctx context.Context, 
 	if data != nil {
 		str := fmt.Sprintf("%d", data.ID)
 		obj.ChannelID = &str
+	}
+	return nil
+}
+
+// ProviderType is the resolver for the providerType field.
+func (r *createUsageMonitorChannelInputResolver) ProviderType(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *usagemonitorchannel.ProviderType) error {
+	if data != nil {
+		obj.ProviderType = lo.ToPtr(string(*data))
 	}
 	return nil
 }
@@ -158,6 +191,11 @@ func (r *updateUsageMonitorChannelInputResolver) Status(ctx context.Context, obj
 // ParsedFieldValue returns ParsedFieldValueResolver implementation.
 func (r *Resolver) ParsedFieldValue() ParsedFieldValueResolver { return &parsedFieldValueResolver{r} }
 
+// QuotaMonitorTemplate returns QuotaMonitorTemplateResolver implementation.
+func (r *Resolver) QuotaMonitorTemplate() QuotaMonitorTemplateResolver {
+	return &quotaMonitorTemplateResolver{r}
+}
+
 // CreateUsageMonitorChannelInput returns CreateUsageMonitorChannelInputResolver implementation.
 func (r *Resolver) CreateUsageMonitorChannelInput() CreateUsageMonitorChannelInputResolver {
 	return &createUsageMonitorChannelInputResolver{r}
@@ -174,6 +212,7 @@ func (r *Resolver) UpdateUsageMonitorChannelInput() UpdateUsageMonitorChannelInp
 }
 
 type parsedFieldValueResolver struct{ *Resolver }
+type quotaMonitorTemplateResolver struct{ *Resolver }
 type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
