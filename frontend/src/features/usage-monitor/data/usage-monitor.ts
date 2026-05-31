@@ -22,6 +22,8 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
       id
       name
       source
+      providerType
+      apiKey
       channelID
       apiURL
       apiMethod
@@ -200,6 +202,8 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     id: raw.id,
     name: raw.name,
     source: raw.source,
+    providerType: raw.providerType ?? null,
+    apiKey: raw.apiKey ?? null,
     channel: raw.channel ?? null,
     apiUrl: raw.apiURL ?? raw.apiUrl,
     apiMethod: raw.apiMethod,
@@ -285,6 +289,7 @@ export type UpdateUsageMonitorChannelInput = {
   pollInterval?: number;
   fields?: FieldConfig[];
   status?: 'active' | 'paused' | 'error';
+  apiKey?: string;
 };
 
 export function useUpdateUsageMonitorChannel() {

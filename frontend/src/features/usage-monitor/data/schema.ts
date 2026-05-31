@@ -26,7 +26,9 @@ export const parsedFieldSchema = z.object({
 export const usageMonitorChannelSchema = z.object({
   id: z.string(),
   name: z.string(),
-  source: z.enum(['builtin', 'custom']),
+  source: z.enum(['builtin', 'custom', 'template']),
+  providerType: z.string().nullable().optional(),
+  apiKey: z.string().nullable().optional(),
   channel: z
     .object({
       id: z.string(),

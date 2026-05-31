@@ -9,11 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Eye, EyeOff } from 'lucide-react';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { FieldConfig } from '../data/schema';
 import { FieldConfigForm } from './field-config-form';
 import { TestConnection } from './test-connection';
+
+const MASKED_API_KEY = '••••••••';
 
 export function EditChannelDialog() {
   const { t } = useTranslation();
@@ -21,6 +24,8 @@ export function EditChannelDialog() {
   const updateMutation = useUpdateUsageMonitorChannel();
 
   const isOpen = open === 'edit';
+
+  const isTemplate = currentChannel?.source === 'template';
 
   const [name, setName] = useState('');
   const [apiUrl, setApiUrl] = useState('');
@@ -30,6 +35,10 @@ export function EditChannelDialog() {
   const [pollIntervalMin, setPollIntervalMin] = useState(5);
   const [fields, setFields] = useState<FieldConfig[]>([]);
   const [headersError, setHeadersError] = useState('');
+
+  // API key state for template channels
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Populate form when channel changes
   useEffect(() => {
@@ -42,6 +51,9 @@ export function EditChannelDialog() {
     setPollIntervalMin(Math.round((currentChannel.pollInterval || 300) / 60));
     setFields(currentChannel.fields ?? []);
     setHeadersError('');
+    // For template channels, pre-fill with masked API key
+    setApiKey(currentChannel.apiKey ?? MASKED_API_KEY);
+    setShowApiKey(false);
   }, [isOpen, currentChannel]);
 
   function validateHeaders(value: string) {
@@ -61,25 +73,40 @@ export function EditChannelDialog() {
   async function handleSubmit() {
     if (!currentChannel) return;
     try {
-      await updateMutation.mutateAsync({
-        id: currentChannel.id,
-        input: {
-          name,
-          apiUrl,
-          apiMethod,
-          apiHeaders,
-          apiBody: apiBody || undefined,
-          pollInterval: pollIntervalMin * 60,
-          fields,
-        },
-      });
+      if (isTemplate) {
+        // Template channels: only send name, apiKey (if changed), and pollInterval
+        await updateMutation.mutateAsync({
+          id: currentChannel.id,
+          input: {
+            name,
+            pollInterval: pollIntervalMin * 60,
+            ...(apiKey.trim() && apiKey !== MASKED_API_KEY ? { apiKey } : {}),
+          },
+        });
+      } else {
+        // Non-template channels: send everything as before
+        await updateMutation.mutateAsync({
+          id: currentChannel.id,
+          input: {
+            name,
+            apiUrl,
+            apiMethod,
+            apiHeaders,
+            apiBody: apiBody || undefined,
+            pollInterval: pollIntervalMin * 60,
+            fields,
+          },
+        });
+      }
       setOpen(null);
     } catch {
       // error handled by mutation
     }
   }
 
-  const canSubmit = name.trim() && apiUrl.trim() && !headersError;
+  const canSubmit = isTemplate
+    ? name.trim()
+    : name.trim() && apiUrl.trim() && !headersError;
 
   return (
     <Dialog
@@ -96,47 +123,81 @@ export function EditChannelDialog() {
 
         <ScrollArea className="min-h-0 flex-1 pr-2">
           <div className="space-y-5 pb-4">
-            {/* API URL */}
-            <div className="space-y-1.5">
-              <Label>{t('usageMonitor.apiUrl')}</Label>
-              <Input
-                value={apiUrl}
-                onChange={(e) => setApiUrl(e.target.value)}
-                placeholder="https://api.example.com/v1/usage"
-                className="font-mono"
-              />
-            </div>
+            {/* Template channel: API Key for rotation */}
+            {isTemplate && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>{t('usageMonitor.apiKey')}</Label>
+                  <div className="relative">
+                    <Input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder={t('usageMonitor.apiKeyPlaceholder')}
+                      className="pr-10 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {apiKey === MASKED_API_KEY ? 'Leave unchanged to keep current key' : ''}
+                  </p>
+                </div>
+              </div>
+            )}
 
-            {/* API Method */}
-            <div className="space-y-1.5">
-              <Label>{t('usageMonitor.apiMethod')}</Label>
-              <Select value={apiMethod} onValueChange={(v) => setApiMethod(v as 'GET' | 'POST')}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Non-template: API URL */}
+            {!isTemplate && (
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiUrl')}</Label>
+                <Input
+                  value={apiUrl}
+                  onChange={(e) => setApiUrl(e.target.value)}
+                  placeholder="https://api.example.com/v1/usage"
+                  className="font-mono"
+                />
+              </div>
+            )}
 
-            {/* API Headers */}
-            <div className="space-y-1.5">
-              <Label>{t('usageMonitor.apiHeaders')}</Label>
-              <Textarea
-                value={apiHeaders}
-                onChange={(e) => validateHeaders(e.target.value)}
-                placeholder='{"Authorization": "Bearer sk-..."}'
-                className="font-mono min-h-20"
-              />
-              {headersError && (
-                <p className="text-xs text-destructive">{headersError}</p>
-              )}
-            </div>
+            {/* Non-template: API Method */}
+            {!isTemplate && (
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiMethod')}</Label>
+                <Select value={apiMethod} onValueChange={(v) => setApiMethod(v as 'GET' | 'POST')}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-            {/* API Body */}
-            {apiMethod === 'POST' && (
+            {/* Non-template: API Headers */}
+            {!isTemplate && (
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiHeaders')}</Label>
+                <Textarea
+                  value={apiHeaders}
+                  onChange={(e) => validateHeaders(e.target.value)}
+                  placeholder='{"Authorization": "Bearer sk-..."}'
+                  className="font-mono min-h-20"
+                />
+                {headersError && (
+                  <p className="text-xs text-destructive">{headersError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Non-template: API Body */}
+            {!isTemplate && apiMethod === 'POST' && (
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.apiBody')}</Label>
                 <Textarea
@@ -170,17 +231,21 @@ export function EditChannelDialog() {
               <p className="text-xs text-muted-foreground">minutes</p>
             </div>
 
-            {/* Field Configs */}
-            <FieldConfigForm fields={fields} onChange={setFields} />
+            {/* Non-template: Field Configs */}
+            {!isTemplate && (
+              <FieldConfigForm fields={fields} onChange={setFields} />
+            )}
 
-            {/* Test Connection */}
-            <TestConnection
-              apiUrl={apiUrl}
-              apiMethod={apiMethod}
-              apiHeaders={apiHeaders}
-              apiBody={apiBody}
-              fields={fields}
-            />
+            {/* Non-template: Test Connection */}
+            {!isTemplate && (
+              <TestConnection
+                apiUrl={apiUrl}
+                apiMethod={apiMethod}
+                apiHeaders={apiHeaders}
+                apiBody={apiBody}
+                fields={fields}
+              />
+            )}
           </div>
         </ScrollArea>
 
