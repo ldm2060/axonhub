@@ -349,16 +349,20 @@ export function AddChannelDialog() {
             </div>
 
             {/* Field Configs */}
-            <FieldConfigForm fields={fields} onChange={setFields} />
+            {source !== 'template' && (
+              <FieldConfigForm fields={fields} onChange={setFields} />
+            )}
 
             {/* Test Connection */}
-            <TestConnection
-              apiUrl={apiUrl}
-              apiMethod={apiMethod}
-              apiHeaders={apiHeaders}
-              apiBody={apiBody}
-              fields={fields}
-            />
+            {source !== 'template' && (
+              <TestConnection
+                apiUrl={apiUrl}
+                apiMethod={apiMethod}
+                apiHeaders={apiHeaders}
+                apiBody={apiBody}
+                fields={fields}
+              />
+            )}
           </div>
         </ScrollArea>
 
