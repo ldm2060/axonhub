@@ -1,5 +1,6 @@
 {
-  "usageMonitor.title": "用量监控",
+  "usageMonitor.title": "配额监控",
+  "usageMonitor.description": "监控外部 API 配额使用情况",
   "usageMonitor.addChannel": "新增渠道",
   "usageMonitor.refreshAll": "刷新全部",
   "usageMonitor.source.builtin": "从现有渠道",

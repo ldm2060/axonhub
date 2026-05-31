@@ -21,7 +21,7 @@
   "sidebar.items.myChannels": "我的渠道",
   "sidebar.items.myModels": "我的模型",
   "sidebar.items.publishRequests": "发布请求",
-  "sidebar.items.usageMonitor": "用量监控",
+  "sidebar.items.usageMonitor": "配额监控",
   "sidebar.team.name": "AxonHub",
   "sidebar.team.plan": "AI + 统一",
   "sidebar.userMenu.account": "账户",

@@ -1,5 +1,6 @@
 {
-  "usageMonitor.title": "Usage Monitor",
+  "usageMonitor.title": "Quota Monitor",
+  "usageMonitor.description": "Monitor external API quota usage",
   "usageMonitor.addChannel": "Add Channel",
   "usageMonitor.refreshAll": "Refresh All",
   "usageMonitor.source.builtin": "From Existing Channel",
