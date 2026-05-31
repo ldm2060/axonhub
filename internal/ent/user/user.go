@@ -70,6 +70,8 @@ const (
 	EdgeEmailTokens = "email_tokens"
 	// EdgeUserUsageStats holds the string denoting the user_usage_stats edge name in mutations.
 	EdgeUserUsageStats = "user_usage_stats"
+	// EdgeUsageMonitorChannels holds the string denoting the usage_monitor_channels edge name in mutations.
+	EdgeUsageMonitorChannels = "usage_monitor_channels"
 	// EdgeProjectUsers holds the string denoting the project_users edge name in mutations.
 	EdgeProjectUsers = "project_users"
 	// EdgeUserRoles holds the string denoting the user_roles edge name in mutations.
@@ -156,6 +158,13 @@ const (
 	UserUsageStatsInverseTable = "user_usage_stats"
 	// UserUsageStatsColumn is the table column denoting the user_usage_stats relation/edge.
 	UserUsageStatsColumn = "user_id"
+	// UsageMonitorChannelsTable is the table that holds the usage_monitor_channels relation/edge.
+	UsageMonitorChannelsTable = "usage_monitor_channels"
+	// UsageMonitorChannelsInverseTable is the table name for the UsageMonitorChannel entity.
+	// It exists in this package in order to avoid circular dependency with the "usagemonitorchannel" package.
+	UsageMonitorChannelsInverseTable = "usage_monitor_channels"
+	// UsageMonitorChannelsColumn is the table column denoting the usage_monitor_channels relation/edge.
+	UsageMonitorChannelsColumn = "user_usage_monitor_channels"
 	// ProjectUsersTable is the table that holds the project_users relation/edge.
 	ProjectUsersTable = "user_projects"
 	// ProjectUsersInverseTable is the table name for the UserProject entity.
@@ -500,6 +509,20 @@ func ByUserUsageStats(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByUsageMonitorChannelsCount orders the results by usage_monitor_channels count.
+func ByUsageMonitorChannelsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsageMonitorChannelsStep(), opts...)
+	}
+}
+
+// ByUsageMonitorChannels orders the results by usage_monitor_channels terms.
+func ByUsageMonitorChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsageMonitorChannelsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByProjectUsersCount orders the results by project_users count.
 func ByProjectUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -609,6 +632,13 @@ func newUserUsageStatsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserUsageStatsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UserUsageStatsTable, UserUsageStatsColumn),
+	)
+}
+func newUsageMonitorChannelsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsageMonitorChannelsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsageMonitorChannelsTable, UsageMonitorChannelsColumn),
 	)
 }
 func newProjectUsersStep() *sqlgraph.Step {

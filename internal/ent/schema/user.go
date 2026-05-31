@@ -95,6 +95,7 @@ func (User) Edges() []ent.Edge {
 			),
 		edge.From("email_tokens", EmailToken.Type).Ref("user"),
 		edge.To("user_usage_stats", UserUsageStats.Type),
+			edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
 	}
 }
 

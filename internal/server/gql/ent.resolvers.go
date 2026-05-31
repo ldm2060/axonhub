@@ -993,6 +993,21 @@ func (r *usageLogResolver) Channel(ctx context.Context, obj *ent.UsageLog) (*ent
 }
 
 // ID is the resolver for the id field.
+func (r *usageMonitorChannelResolver) ID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *usageMonitorChannelResolver) ChannelID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error) {
+	panic(fmt.Errorf("not implemented: ChannelID - channelID"))
+}
+
+// Fields is the resolver for the fields field.
+func (r *usageMonitorChannelResolver) Fields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
+	panic(fmt.Errorf("not implemented: Fields - fields"))
+}
+
+// ID is the resolver for the id field.
 func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeUser,
@@ -1168,6 +1183,11 @@ func (r *Resolver) Trace() TraceResolver { return &traceResolver{r} }
 // UsageLog returns UsageLogResolver implementation.
 func (r *Resolver) UsageLog() UsageLogResolver { return &usageLogResolver{r} }
 
+// UsageMonitorChannel returns UsageMonitorChannelResolver implementation.
+func (r *Resolver) UsageMonitorChannel() UsageMonitorChannelResolver {
+	return &usageMonitorChannelResolver{r}
+}
+
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
@@ -1204,6 +1224,7 @@ type systemResolver struct{ *Resolver }
 type threadResolver struct{ *Resolver }
 type traceResolver struct{ *Resolver }
 type usageLogResolver struct{ *Resolver }
+type usageMonitorChannelResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
 type userProjectResolver struct{ *Resolver }
 type userRoleResolver struct{ *Resolver }

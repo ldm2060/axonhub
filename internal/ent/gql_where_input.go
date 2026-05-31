@@ -31,6 +31,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -1025,6 +1026,10 @@ type ChannelWhereInput struct {
 	// "provider_quota_status" edge predicates.
 	HasProviderQuotaStatus     *bool                            `json:"hasProviderQuotaStatus,omitempty"`
 	HasProviderQuotaStatusWith []*ProviderQuotaStatusWhereInput `json:"hasProviderQuotaStatusWith,omitempty"`
+
+	// "usage_monitor_channels" edge predicates.
+	HasUsageMonitorChannels     *bool                            `json:"hasUsageMonitorChannels,omitempty"`
+	HasUsageMonitorChannelsWith []*UsageMonitorChannelWhereInput `json:"hasUsageMonitorChannelsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -1638,6 +1643,24 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, channel.HasProviderQuotaStatusWith(with...))
+	}
+	if i.HasUsageMonitorChannels != nil {
+		p := channel.HasUsageMonitorChannels()
+		if !*i.HasUsageMonitorChannels {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageMonitorChannelsWith) > 0 {
+		with := make([]predicate.UsageMonitorChannel, 0, len(i.HasUsageMonitorChannelsWith))
+		for _, w := range i.HasUsageMonitorChannelsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageMonitorChannelsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasUsageMonitorChannelsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -11791,6 +11814,630 @@ func (i *UsageLogWhereInput) P() (predicate.UsageLog, error) {
 	}
 }
 
+// UsageMonitorChannelWhereInput represents a where input for filtering UsageMonitorChannel queries.
+type UsageMonitorChannelWhereInput struct {
+	Predicates []predicate.UsageMonitorChannel  `json:"-"`
+	Not        *UsageMonitorChannelWhereInput   `json:"not,omitempty"`
+	Or         []*UsageMonitorChannelWhereInput `json:"or,omitempty"`
+	And        []*UsageMonitorChannelWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "name" field predicates.
+	Name             *string  `json:"name,omitempty"`
+	NameNEQ          *string  `json:"nameNEQ,omitempty"`
+	NameIn           []string `json:"nameIn,omitempty"`
+	NameNotIn        []string `json:"nameNotIn,omitempty"`
+	NameGT           *string  `json:"nameGT,omitempty"`
+	NameGTE          *string  `json:"nameGTE,omitempty"`
+	NameLT           *string  `json:"nameLT,omitempty"`
+	NameLTE          *string  `json:"nameLTE,omitempty"`
+	NameContains     *string  `json:"nameContains,omitempty"`
+	NameHasPrefix    *string  `json:"nameHasPrefix,omitempty"`
+	NameHasSuffix    *string  `json:"nameHasSuffix,omitempty"`
+	NameEqualFold    *string  `json:"nameEqualFold,omitempty"`
+	NameContainsFold *string  `json:"nameContainsFold,omitempty"`
+
+	// "source" field predicates.
+	Source      *usagemonitorchannel.Source  `json:"source,omitempty"`
+	SourceNEQ   *usagemonitorchannel.Source  `json:"sourceNEQ,omitempty"`
+	SourceIn    []usagemonitorchannel.Source `json:"sourceIn,omitempty"`
+	SourceNotIn []usagemonitorchannel.Source `json:"sourceNotIn,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID       *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ    *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn     []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn  []int `json:"channelIDNotIn,omitempty"`
+	ChannelIDIsNil  bool  `json:"channelIDIsNil,omitempty"`
+	ChannelIDNotNil bool  `json:"channelIDNotNil,omitempty"`
+
+	// "api_url" field predicates.
+	APIURL             *string  `json:"apiURL,omitempty"`
+	APIURLNEQ          *string  `json:"apiURLNEQ,omitempty"`
+	APIURLIn           []string `json:"apiURLIn,omitempty"`
+	APIURLNotIn        []string `json:"apiURLNotIn,omitempty"`
+	APIURLGT           *string  `json:"apiURLGT,omitempty"`
+	APIURLGTE          *string  `json:"apiURLGTE,omitempty"`
+	APIURLLT           *string  `json:"apiURLLT,omitempty"`
+	APIURLLTE          *string  `json:"apiURLLTE,omitempty"`
+	APIURLContains     *string  `json:"apiURLContains,omitempty"`
+	APIURLHasPrefix    *string  `json:"apiURLHasPrefix,omitempty"`
+	APIURLHasSuffix    *string  `json:"apiURLHasSuffix,omitempty"`
+	APIURLEqualFold    *string  `json:"apiURLEqualFold,omitempty"`
+	APIURLContainsFold *string  `json:"apiURLContainsFold,omitempty"`
+
+	// "api_method" field predicates.
+	APIMethod      *usagemonitorchannel.APIMethod  `json:"apiMethod,omitempty"`
+	APIMethodNEQ   *usagemonitorchannel.APIMethod  `json:"apiMethodNEQ,omitempty"`
+	APIMethodIn    []usagemonitorchannel.APIMethod `json:"apiMethodIn,omitempty"`
+	APIMethodNotIn []usagemonitorchannel.APIMethod `json:"apiMethodNotIn,omitempty"`
+
+	// "api_body" field predicates.
+	APIBody             *string  `json:"apiBody,omitempty"`
+	APIBodyNEQ          *string  `json:"apiBodyNEQ,omitempty"`
+	APIBodyIn           []string `json:"apiBodyIn,omitempty"`
+	APIBodyNotIn        []string `json:"apiBodyNotIn,omitempty"`
+	APIBodyGT           *string  `json:"apiBodyGT,omitempty"`
+	APIBodyGTE          *string  `json:"apiBodyGTE,omitempty"`
+	APIBodyLT           *string  `json:"apiBodyLT,omitempty"`
+	APIBodyLTE          *string  `json:"apiBodyLTE,omitempty"`
+	APIBodyContains     *string  `json:"apiBodyContains,omitempty"`
+	APIBodyHasPrefix    *string  `json:"apiBodyHasPrefix,omitempty"`
+	APIBodyHasSuffix    *string  `json:"apiBodyHasSuffix,omitempty"`
+	APIBodyIsNil        bool     `json:"apiBodyIsNil,omitempty"`
+	APIBodyNotNil       bool     `json:"apiBodyNotNil,omitempty"`
+	APIBodyEqualFold    *string  `json:"apiBodyEqualFold,omitempty"`
+	APIBodyContainsFold *string  `json:"apiBodyContainsFold,omitempty"`
+
+	// "poll_interval" field predicates.
+	PollInterval      *int  `json:"pollInterval,omitempty"`
+	PollIntervalNEQ   *int  `json:"pollIntervalNEQ,omitempty"`
+	PollIntervalIn    []int `json:"pollIntervalIn,omitempty"`
+	PollIntervalNotIn []int `json:"pollIntervalNotIn,omitempty"`
+	PollIntervalGT    *int  `json:"pollIntervalGT,omitempty"`
+	PollIntervalGTE   *int  `json:"pollIntervalGTE,omitempty"`
+	PollIntervalLT    *int  `json:"pollIntervalLT,omitempty"`
+	PollIntervalLTE   *int  `json:"pollIntervalLTE,omitempty"`
+
+	// "last_poll_at" field predicates.
+	LastPollAt       *time.Time  `json:"lastPollAt,omitempty"`
+	LastPollAtNEQ    *time.Time  `json:"lastPollAtNEQ,omitempty"`
+	LastPollAtIn     []time.Time `json:"lastPollAtIn,omitempty"`
+	LastPollAtNotIn  []time.Time `json:"lastPollAtNotIn,omitempty"`
+	LastPollAtGT     *time.Time  `json:"lastPollAtGT,omitempty"`
+	LastPollAtGTE    *time.Time  `json:"lastPollAtGTE,omitempty"`
+	LastPollAtLT     *time.Time  `json:"lastPollAtLT,omitempty"`
+	LastPollAtLTE    *time.Time  `json:"lastPollAtLTE,omitempty"`
+	LastPollAtIsNil  bool        `json:"lastPollAtIsNil,omitempty"`
+	LastPollAtNotNil bool        `json:"lastPollAtNotNil,omitempty"`
+
+	// "last_poll_error" field predicates.
+	LastPollError             *string  `json:"lastPollError,omitempty"`
+	LastPollErrorNEQ          *string  `json:"lastPollErrorNEQ,omitempty"`
+	LastPollErrorIn           []string `json:"lastPollErrorIn,omitempty"`
+	LastPollErrorNotIn        []string `json:"lastPollErrorNotIn,omitempty"`
+	LastPollErrorGT           *string  `json:"lastPollErrorGT,omitempty"`
+	LastPollErrorGTE          *string  `json:"lastPollErrorGTE,omitempty"`
+	LastPollErrorLT           *string  `json:"lastPollErrorLT,omitempty"`
+	LastPollErrorLTE          *string  `json:"lastPollErrorLTE,omitempty"`
+	LastPollErrorContains     *string  `json:"lastPollErrorContains,omitempty"`
+	LastPollErrorHasPrefix    *string  `json:"lastPollErrorHasPrefix,omitempty"`
+	LastPollErrorHasSuffix    *string  `json:"lastPollErrorHasSuffix,omitempty"`
+	LastPollErrorIsNil        bool     `json:"lastPollErrorIsNil,omitempty"`
+	LastPollErrorNotNil       bool     `json:"lastPollErrorNotNil,omitempty"`
+	LastPollErrorEqualFold    *string  `json:"lastPollErrorEqualFold,omitempty"`
+	LastPollErrorContainsFold *string  `json:"lastPollErrorContainsFold,omitempty"`
+
+	// "status" field predicates.
+	Status      *usagemonitorchannel.Status  `json:"status,omitempty"`
+	StatusNEQ   *usagemonitorchannel.Status  `json:"statusNEQ,omitempty"`
+	StatusIn    []usagemonitorchannel.Status `json:"statusIn,omitempty"`
+	StatusNotIn []usagemonitorchannel.Status `json:"statusNotIn,omitempty"`
+
+	// "channel" edge predicates.
+	HasChannel     *bool                `json:"hasChannel,omitempty"`
+	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "owner" edge predicates.
+	HasOwner     *bool             `json:"hasOwner,omitempty"`
+	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UsageMonitorChannelWhereInput) AddPredicates(predicates ...predicate.UsageMonitorChannel) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UsageMonitorChannelWhereInput filter on the UsageMonitorChannelQuery builder.
+func (i *UsageMonitorChannelWhereInput) Filter(q *UsageMonitorChannelQuery) (*UsageMonitorChannelQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUsageMonitorChannelWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUsageMonitorChannelWhereInput is returned in case the UsageMonitorChannelWhereInput is empty.
+var ErrEmptyUsageMonitorChannelWhereInput = errors.New("ent: empty predicate UsageMonitorChannelWhereInput")
+
+// P returns a predicate for filtering usagemonitorchannels.
+// An error is returned if the input is empty or invalid.
+func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, error) {
+	var predicates []predicate.UsageMonitorChannel
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, usagemonitorchannel.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.UsageMonitorChannel, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, usagemonitorchannel.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.UsageMonitorChannel, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, usagemonitorchannel.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, usagemonitorchannel.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, usagemonitorchannel.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, usagemonitorchannel.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.Name != nil {
+		predicates = append(predicates, usagemonitorchannel.NameEQ(*i.Name))
+	}
+	if i.NameNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.NameNEQ(*i.NameNEQ))
+	}
+	if len(i.NameIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.NameIn(i.NameIn...))
+	}
+	if len(i.NameNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.NameNotIn(i.NameNotIn...))
+	}
+	if i.NameGT != nil {
+		predicates = append(predicates, usagemonitorchannel.NameGT(*i.NameGT))
+	}
+	if i.NameGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.NameGTE(*i.NameGTE))
+	}
+	if i.NameLT != nil {
+		predicates = append(predicates, usagemonitorchannel.NameLT(*i.NameLT))
+	}
+	if i.NameLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.NameLTE(*i.NameLTE))
+	}
+	if i.NameContains != nil {
+		predicates = append(predicates, usagemonitorchannel.NameContains(*i.NameContains))
+	}
+	if i.NameHasPrefix != nil {
+		predicates = append(predicates, usagemonitorchannel.NameHasPrefix(*i.NameHasPrefix))
+	}
+	if i.NameHasSuffix != nil {
+		predicates = append(predicates, usagemonitorchannel.NameHasSuffix(*i.NameHasSuffix))
+	}
+	if i.NameEqualFold != nil {
+		predicates = append(predicates, usagemonitorchannel.NameEqualFold(*i.NameEqualFold))
+	}
+	if i.NameContainsFold != nil {
+		predicates = append(predicates, usagemonitorchannel.NameContainsFold(*i.NameContainsFold))
+	}
+	if i.Source != nil {
+		predicates = append(predicates, usagemonitorchannel.SourceEQ(*i.Source))
+	}
+	if i.SourceNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.SourceNEQ(*i.SourceNEQ))
+	}
+	if len(i.SourceIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.SourceIn(i.SourceIn...))
+	}
+	if len(i.SourceNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.SourceNotIn(i.SourceNotIn...))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.ChannelIDIsNil {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDIsNil())
+	}
+	if i.ChannelIDNotNil {
+		predicates = append(predicates, usagemonitorchannel.ChannelIDNotNil())
+	}
+	if i.APIURL != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLEQ(*i.APIURL))
+	}
+	if i.APIURLNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLNEQ(*i.APIURLNEQ))
+	}
+	if len(i.APIURLIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIURLIn(i.APIURLIn...))
+	}
+	if len(i.APIURLNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIURLNotIn(i.APIURLNotIn...))
+	}
+	if i.APIURLGT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLGT(*i.APIURLGT))
+	}
+	if i.APIURLGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLGTE(*i.APIURLGTE))
+	}
+	if i.APIURLLT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLLT(*i.APIURLLT))
+	}
+	if i.APIURLLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLLTE(*i.APIURLLTE))
+	}
+	if i.APIURLContains != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLContains(*i.APIURLContains))
+	}
+	if i.APIURLHasPrefix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLHasPrefix(*i.APIURLHasPrefix))
+	}
+	if i.APIURLHasSuffix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLHasSuffix(*i.APIURLHasSuffix))
+	}
+	if i.APIURLEqualFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLEqualFold(*i.APIURLEqualFold))
+	}
+	if i.APIURLContainsFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIURLContainsFold(*i.APIURLContainsFold))
+	}
+	if i.APIMethod != nil {
+		predicates = append(predicates, usagemonitorchannel.APIMethodEQ(*i.APIMethod))
+	}
+	if i.APIMethodNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.APIMethodNEQ(*i.APIMethodNEQ))
+	}
+	if len(i.APIMethodIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIMethodIn(i.APIMethodIn...))
+	}
+	if len(i.APIMethodNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIMethodNotIn(i.APIMethodNotIn...))
+	}
+	if i.APIBody != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyEQ(*i.APIBody))
+	}
+	if i.APIBodyNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyNEQ(*i.APIBodyNEQ))
+	}
+	if len(i.APIBodyIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIBodyIn(i.APIBodyIn...))
+	}
+	if len(i.APIBodyNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.APIBodyNotIn(i.APIBodyNotIn...))
+	}
+	if i.APIBodyGT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyGT(*i.APIBodyGT))
+	}
+	if i.APIBodyGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyGTE(*i.APIBodyGTE))
+	}
+	if i.APIBodyLT != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyLT(*i.APIBodyLT))
+	}
+	if i.APIBodyLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyLTE(*i.APIBodyLTE))
+	}
+	if i.APIBodyContains != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyContains(*i.APIBodyContains))
+	}
+	if i.APIBodyHasPrefix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyHasPrefix(*i.APIBodyHasPrefix))
+	}
+	if i.APIBodyHasSuffix != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyHasSuffix(*i.APIBodyHasSuffix))
+	}
+	if i.APIBodyIsNil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyIsNil())
+	}
+	if i.APIBodyNotNil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyNotNil())
+	}
+	if i.APIBodyEqualFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyEqualFold(*i.APIBodyEqualFold))
+	}
+	if i.APIBodyContainsFold != nil {
+		predicates = append(predicates, usagemonitorchannel.APIBodyContainsFold(*i.APIBodyContainsFold))
+	}
+	if i.PollInterval != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalEQ(*i.PollInterval))
+	}
+	if i.PollIntervalNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalNEQ(*i.PollIntervalNEQ))
+	}
+	if len(i.PollIntervalIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalIn(i.PollIntervalIn...))
+	}
+	if len(i.PollIntervalNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalNotIn(i.PollIntervalNotIn...))
+	}
+	if i.PollIntervalGT != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalGT(*i.PollIntervalGT))
+	}
+	if i.PollIntervalGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalGTE(*i.PollIntervalGTE))
+	}
+	if i.PollIntervalLT != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalLT(*i.PollIntervalLT))
+	}
+	if i.PollIntervalLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.PollIntervalLTE(*i.PollIntervalLTE))
+	}
+	if i.LastPollAt != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtEQ(*i.LastPollAt))
+	}
+	if i.LastPollAtNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtNEQ(*i.LastPollAtNEQ))
+	}
+	if len(i.LastPollAtIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtIn(i.LastPollAtIn...))
+	}
+	if len(i.LastPollAtNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtNotIn(i.LastPollAtNotIn...))
+	}
+	if i.LastPollAtGT != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtGT(*i.LastPollAtGT))
+	}
+	if i.LastPollAtGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtGTE(*i.LastPollAtGTE))
+	}
+	if i.LastPollAtLT != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtLT(*i.LastPollAtLT))
+	}
+	if i.LastPollAtLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtLTE(*i.LastPollAtLTE))
+	}
+	if i.LastPollAtIsNil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtIsNil())
+	}
+	if i.LastPollAtNotNil {
+		predicates = append(predicates, usagemonitorchannel.LastPollAtNotNil())
+	}
+	if i.LastPollError != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorEQ(*i.LastPollError))
+	}
+	if i.LastPollErrorNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorNEQ(*i.LastPollErrorNEQ))
+	}
+	if len(i.LastPollErrorIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorIn(i.LastPollErrorIn...))
+	}
+	if len(i.LastPollErrorNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorNotIn(i.LastPollErrorNotIn...))
+	}
+	if i.LastPollErrorGT != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorGT(*i.LastPollErrorGT))
+	}
+	if i.LastPollErrorGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorGTE(*i.LastPollErrorGTE))
+	}
+	if i.LastPollErrorLT != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorLT(*i.LastPollErrorLT))
+	}
+	if i.LastPollErrorLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorLTE(*i.LastPollErrorLTE))
+	}
+	if i.LastPollErrorContains != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorContains(*i.LastPollErrorContains))
+	}
+	if i.LastPollErrorHasPrefix != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorHasPrefix(*i.LastPollErrorHasPrefix))
+	}
+	if i.LastPollErrorHasSuffix != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorHasSuffix(*i.LastPollErrorHasSuffix))
+	}
+	if i.LastPollErrorIsNil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorIsNil())
+	}
+	if i.LastPollErrorNotNil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorNotNil())
+	}
+	if i.LastPollErrorEqualFold != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorEqualFold(*i.LastPollErrorEqualFold))
+	}
+	if i.LastPollErrorContainsFold != nil {
+		predicates = append(predicates, usagemonitorchannel.LastPollErrorContainsFold(*i.LastPollErrorContainsFold))
+	}
+	if i.Status != nil {
+		predicates = append(predicates, usagemonitorchannel.StatusEQ(*i.Status))
+	}
+	if i.StatusNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.StatusNEQ(*i.StatusNEQ))
+	}
+	if len(i.StatusIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.StatusIn(i.StatusIn...))
+	}
+	if len(i.StatusNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.StatusNotIn(i.StatusNotIn...))
+	}
+
+	if i.HasChannel != nil {
+		p := usagemonitorchannel.HasChannel()
+		if !*i.HasChannel {
+			p = usagemonitorchannel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasChannelWith))
+		for _, w := range i.HasChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagemonitorchannel.HasChannelWith(with...))
+	}
+	if i.HasOwner != nil {
+		p := usagemonitorchannel.HasOwner()
+		if !*i.HasOwner {
+			p = usagemonitorchannel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasOwnerWith) > 0 {
+		with := make([]predicate.User, 0, len(i.HasOwnerWith))
+		for _, w := range i.HasOwnerWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasOwnerWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagemonitorchannel.HasOwnerWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUsageMonitorChannelWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return usagemonitorchannel.And(predicates...), nil
+	}
+}
+
 // UserWhereInput represents a where input for filtering User queries.
 type UserWhereInput struct {
 	Predicates []predicate.User  `json:"-"`
@@ -11997,6 +12644,10 @@ type UserWhereInput struct {
 	// "user_usage_stats" edge predicates.
 	HasUserUsageStats     *bool                       `json:"hasUserUsageStats,omitempty"`
 	HasUserUsageStatsWith []*UserUsageStatsWhereInput `json:"hasUserUsageStatsWith,omitempty"`
+
+	// "usage_monitor_channels" edge predicates.
+	HasUsageMonitorChannels     *bool                            `json:"hasUsageMonitorChannels,omitempty"`
+	HasUsageMonitorChannelsWith []*UsageMonitorChannelWhereInput `json:"hasUsageMonitorChannelsWith,omitempty"`
 
 	// "project_users" edge predicates.
 	HasProjectUsers     *bool                    `json:"hasProjectUsers,omitempty"`
@@ -12672,6 +13323,24 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, user.HasUserUsageStatsWith(with...))
+	}
+	if i.HasUsageMonitorChannels != nil {
+		p := user.HasUsageMonitorChannels()
+		if !*i.HasUsageMonitorChannels {
+			p = user.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageMonitorChannelsWith) > 0 {
+		with := make([]predicate.UsageMonitorChannel, 0, len(i.HasUsageMonitorChannelsWith))
+		for _, w := range i.HasUsageMonitorChannelsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageMonitorChannelsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, user.HasUsageMonitorChannelsWith(with...))
 	}
 	if i.HasProjectUsers != nil {
 		p := user.HasProjectUsers()

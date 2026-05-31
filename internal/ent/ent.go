@@ -35,6 +35,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -122,6 +123,7 @@ func checkColumn(t, c string) error {
 			thread.Table:                   thread.ValidColumn,
 			trace.Table:                    trace.ValidColumn,
 			usagelog.Table:                 usagelog.ValidColumn,
+			usagemonitorchannel.Table:      usagemonitorchannel.ValidColumn,
 			user.Table:                     user.ValidColumn,
 			userproject.Table:              userproject.ValidColumn,
 			userrole.Table:                 userrole.ValidColumn,

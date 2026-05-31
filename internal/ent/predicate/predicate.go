@@ -75,6 +75,9 @@ type Trace func(*sql.Selector)
 // UsageLog is the predicate function for usagelog builders.
 type UsageLog func(*sql.Selector)
 
+// UsageMonitorChannel is the predicate function for usagemonitorchannel builders.
+type UsageMonitorChannel func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

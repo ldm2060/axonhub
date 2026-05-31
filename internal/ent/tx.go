@@ -58,6 +58,8 @@ type Tx struct {
 	Trace *TraceClient
 	// UsageLog is the client for interacting with the UsageLog builders.
 	UsageLog *UsageLogClient
+	// UsageMonitorChannel is the client for interacting with the UsageMonitorChannel builders.
+	UsageMonitorChannel *UsageMonitorChannelClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserProject is the client for interacting with the UserProject builders.
@@ -220,6 +222,7 @@ func (tx *Tx) init() {
 	tx.Thread = NewThreadClient(tx.config)
 	tx.Trace = NewTraceClient(tx.config)
 	tx.UsageLog = NewUsageLogClient(tx.config)
+	tx.UsageMonitorChannel = NewUsageMonitorChannelClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProject = NewUserProjectClient(tx.config)
 	tx.UserRole = NewUserRoleClient(tx.config)

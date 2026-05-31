@@ -37,6 +37,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -164,6 +165,11 @@ var usagelogImplementors = []string{"UsageLog", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*UsageLog) IsNode() {}
+
+var usagemonitorchannelImplementors = []string{"UsageMonitorChannel", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*UsageMonitorChannel) IsNode() {}
 
 var userImplementors = []string{"User", "Node"}
 
@@ -446,6 +452,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(usagelog.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagelogImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case usagemonitorchannel.Table:
+		query := c.UsageMonitorChannel.Query().
+			Where(usagemonitorchannel.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, usagemonitorchannelImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -915,6 +930,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.UsageLog.Query().
 			Where(usagelog.IDIn(ids...))
 		query, err := query.CollectFields(ctx, usagelogImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case usagemonitorchannel.Table:
+		query := c.UsageMonitorChannel.Query().
+			Where(usagemonitorchannel.IDIn(ids...))
+		query, err := query.CollectFields(ctx, usagemonitorchannelImplementors...)
 		if err != nil {
 			return nil, err
 		}

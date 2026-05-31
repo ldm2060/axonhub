@@ -156,6 +156,18 @@ func (_m *Channel) ProviderQuotaStatus(ctx context.Context) (*ProviderQuotaStatu
 	return result, MaskNotFound(err)
 }
 
+func (_m *Channel) UsageMonitorChannels(ctx context.Context) (result []*UsageMonitorChannel, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedUsageMonitorChannels(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.UsageMonitorChannelsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageMonitorChannels().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *ChannelModelPrice) Channel(ctx context.Context) (*Channel, error) {
 	result, err := _m.Edges.ChannelOrErr()
 	if IsNotLoaded(err) {
@@ -767,6 +779,22 @@ func (_m *UsageLog) Channel(ctx context.Context) (*Channel, error) {
 	return result, MaskNotFound(err)
 }
 
+func (_m *UsageMonitorChannel) Channel(ctx context.Context) (*Channel, error) {
+	result, err := _m.Edges.ChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, MaskNotFound(err)
+}
+
+func (_m *UsageMonitorChannel) Owner(ctx context.Context) (*User, error) {
+	result, err := _m.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryOwner().Only(ctx)
+	}
+	return result, err
+}
+
 func (_m *User) Projects(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *ProjectOrder, where *ProjectWhereInput,
 ) (*ProjectConnection, error) {
@@ -952,6 +980,18 @@ func (_m *User) UserUsageStats(ctx context.Context) (result []*UserUsageStats, e
 	return result, err
 }
 
+func (_m *User) UsageMonitorChannels(ctx context.Context) (result []*UsageMonitorChannel, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedUsageMonitorChannels(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.UsageMonitorChannelsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageMonitorChannels().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *User) ProjectUsers(
 	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *UserProjectOrder, where *UserProjectWhereInput,
 ) (*UserProjectConnection, error) {
@@ -960,7 +1000,7 @@ func (_m *User) ProjectUsers(
 		WithUserProjectFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[12][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[13][alias]
 	if nodes, err := _m.NamedProjectUsers(alias); err == nil || hasTotalCount {
 		pager, err := newUserProjectPager(opts, last != nil)
 		if err != nil {
@@ -981,7 +1021,7 @@ func (_m *User) UserRoles(
 		WithUserRoleFilter(where.Filter),
 	}
 	alias := graphql.GetFieldContext(ctx).Field.Alias
-	totalCount, hasTotalCount := _m.Edges.totalCount[13][alias]
+	totalCount, hasTotalCount := _m.Edges.totalCount[14][alias]
 	if nodes, err := _m.NamedUserRoles(alias); err == nil || hasTotalCount {
 		pager, err := newUserRolePager(opts, last != nil)
 		if err != nil {

@@ -79,15 +79,17 @@ type UserEdges struct {
 	EmailTokens []*EmailToken `json:"email_tokens,omitempty"`
 	// UserUsageStats holds the value of the user_usage_stats edge.
 	UserUsageStats []*UserUsageStats `json:"user_usage_stats,omitempty"`
+	// UsageMonitorChannels holds the value of the usage_monitor_channels edge.
+	UsageMonitorChannels []*UsageMonitorChannel `json:"usage_monitor_channels,omitempty"`
 	// ProjectUsers holds the value of the project_users edge.
 	ProjectUsers []*UserProject `json:"project_users,omitempty"`
 	// UserRoles holds the value of the user_roles edge.
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [14]bool
+	loadedTypes [15]bool
 	// totalCount holds the count of the edges above.
-	totalCount [14]map[string]int
+	totalCount [15]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedOwnedChannels            map[string][]*Channel
@@ -100,6 +102,7 @@ type UserEdges struct {
 	namedOidcIdentities           map[string][]*OIDCIdentity
 	namedEmailTokens              map[string][]*EmailToken
 	namedUserUsageStats           map[string][]*UserUsageStats
+	namedUsageMonitorChannels     map[string][]*UsageMonitorChannel
 	namedProjectUsers             map[string][]*UserProject
 	namedUserRoles                map[string][]*UserRole
 }
@@ -214,10 +217,19 @@ func (e UserEdges) UserUsageStatsOrErr() ([]*UserUsageStats, error) {
 	return nil, &NotLoadedError{edge: "user_usage_stats"}
 }
 
+// UsageMonitorChannelsOrErr returns the UsageMonitorChannels value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UsageMonitorChannelsOrErr() ([]*UsageMonitorChannel, error) {
+	if e.loadedTypes[12] {
+		return e.UsageMonitorChannels, nil
+	}
+	return nil, &NotLoadedError{edge: "usage_monitor_channels"}
+}
+
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[13] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -226,7 +238,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[13] {
+	if e.loadedTypes[14] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -427,6 +439,11 @@ func (_m *User) QueryEmailTokens() *EmailTokenQuery {
 // QueryUserUsageStats queries the "user_usage_stats" edge of the User entity.
 func (_m *User) QueryUserUsageStats() *UserUsageStatsQuery {
 	return NewUserClient(_m.config).QueryUserUsageStats(_m)
+}
+
+// QueryUsageMonitorChannels queries the "usage_monitor_channels" edge of the User entity.
+func (_m *User) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
+	return NewUserClient(_m.config).QueryUsageMonitorChannels(_m)
 }
 
 // QueryProjectUsers queries the "project_users" edge of the User entity.
@@ -771,6 +788,30 @@ func (_m *User) appendNamedUserUsageStats(name string, edges ...*UserUsageStats)
 		_m.Edges.namedUserUsageStats[name] = []*UserUsageStats{}
 	} else {
 		_m.Edges.namedUserUsageStats[name] = append(_m.Edges.namedUserUsageStats[name], edges...)
+	}
+}
+
+// NamedUsageMonitorChannels returns the UsageMonitorChannels named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedUsageMonitorChannels(name string) ([]*UsageMonitorChannel, error) {
+	if _m.Edges.namedUsageMonitorChannels == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsageMonitorChannels[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedUsageMonitorChannels(name string, edges ...*UsageMonitorChannel) {
+	if _m.Edges.namedUsageMonitorChannels == nil {
+		_m.Edges.namedUsageMonitorChannels = make(map[string][]*UsageMonitorChannel)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsageMonitorChannels[name] = []*UsageMonitorChannel{}
+	} else {
+		_m.Edges.namedUsageMonitorChannels[name] = append(_m.Edges.namedUsageMonitorChannels[name], edges...)
 	}
 }
 

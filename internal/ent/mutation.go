@@ -35,6 +35,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -74,6 +75,7 @@ const (
 	TypeThread                   = "Thread"
 	TypeTrace                    = "Trace"
 	TypeUsageLog                 = "UsageLog"
+	TypeUsageMonitorChannel      = "UsageMonitorChannel"
 	TypeUser                     = "User"
 	TypeUserProject              = "UserProject"
 	TypeUserRole                 = "UserRole"
@@ -2009,63 +2011,66 @@ func (m *APIKeyProfileTemplateMutation) ResetEdge(name string) error {
 // ChannelMutation represents an operation that mutates the Channel nodes in the graph.
 type ChannelMutation struct {
 	config
-	op                           Op
-	typ                          string
-	id                           *int
-	created_at                   *time.Time
-	updated_at                   *time.Time
-	deleted_at                   *int
-	adddeleted_at                *int
-	_type                        *channel.Type
-	base_url                     *string
-	name                         *string
-	status                       *channel.Status
-	credentials                  *objects.ChannelCredentials
-	disabled_api_keys            *[]objects.DisabledAPIKey
-	appenddisabled_api_keys      []objects.DisabledAPIKey
-	supported_models             *[]string
-	appendsupported_models       []string
-	manual_models                *[]string
-	appendmanual_models          []string
-	auto_sync_supported_models   *bool
-	auto_sync_model_pattern      *string
-	tags                         *[]string
-	appendtags                   []string
-	default_test_model           *string
-	policies                     *objects.ChannelPolicies
-	settings                     **objects.ChannelSettings
-	ordering_weight              *int
-	addordering_weight           *int
-	error_message                *string
-	remark                       *string
-	endpoints                    *[]objects.ChannelEndpoint
-	appendendpoints              []objects.ChannelEndpoint
-	visibility                   *channel.Visibility
-	shared_with                  *[]int
-	appendshared_with            []int
-	clearedFields                map[string]struct{}
-	owner                        *int
-	clearedowner                 bool
-	requests                     map[int]struct{}
-	removedrequests              map[int]struct{}
-	clearedrequests              bool
-	executions                   map[int]struct{}
-	removedexecutions            map[int]struct{}
-	clearedexecutions            bool
-	usage_logs                   map[int]struct{}
-	removedusage_logs            map[int]struct{}
-	clearedusage_logs            bool
-	channel_probes               map[int]struct{}
-	removedchannel_probes        map[int]struct{}
-	clearedchannel_probes        bool
-	channel_model_prices         map[int]struct{}
-	removedchannel_model_prices  map[int]struct{}
-	clearedchannel_model_prices  bool
-	provider_quota_status        *int
-	clearedprovider_quota_status bool
-	done                         bool
-	oldValue                     func(context.Context) (*Channel, error)
-	predicates                   []predicate.Channel
+	op                            Op
+	typ                           string
+	id                            *int
+	created_at                    *time.Time
+	updated_at                    *time.Time
+	deleted_at                    *int
+	adddeleted_at                 *int
+	_type                         *channel.Type
+	base_url                      *string
+	name                          *string
+	status                        *channel.Status
+	credentials                   *objects.ChannelCredentials
+	disabled_api_keys             *[]objects.DisabledAPIKey
+	appenddisabled_api_keys       []objects.DisabledAPIKey
+	supported_models              *[]string
+	appendsupported_models        []string
+	manual_models                 *[]string
+	appendmanual_models           []string
+	auto_sync_supported_models    *bool
+	auto_sync_model_pattern       *string
+	tags                          *[]string
+	appendtags                    []string
+	default_test_model            *string
+	policies                      *objects.ChannelPolicies
+	settings                      **objects.ChannelSettings
+	ordering_weight               *int
+	addordering_weight            *int
+	error_message                 *string
+	remark                        *string
+	endpoints                     *[]objects.ChannelEndpoint
+	appendendpoints               []objects.ChannelEndpoint
+	visibility                    *channel.Visibility
+	shared_with                   *[]int
+	appendshared_with             []int
+	clearedFields                 map[string]struct{}
+	owner                         *int
+	clearedowner                  bool
+	requests                      map[int]struct{}
+	removedrequests               map[int]struct{}
+	clearedrequests               bool
+	executions                    map[int]struct{}
+	removedexecutions             map[int]struct{}
+	clearedexecutions             bool
+	usage_logs                    map[int]struct{}
+	removedusage_logs             map[int]struct{}
+	clearedusage_logs             bool
+	channel_probes                map[int]struct{}
+	removedchannel_probes         map[int]struct{}
+	clearedchannel_probes         bool
+	channel_model_prices          map[int]struct{}
+	removedchannel_model_prices   map[int]struct{}
+	clearedchannel_model_prices   bool
+	provider_quota_status         *int
+	clearedprovider_quota_status  bool
+	usage_monitor_channels        map[int]struct{}
+	removedusage_monitor_channels map[int]struct{}
+	clearedusage_monitor_channels bool
+	done                          bool
+	oldValue                      func(context.Context) (*Channel, error)
+	predicates                    []predicate.Channel
 }
 
 var _ ent.Mutation = (*ChannelMutation)(nil)
@@ -3657,6 +3662,60 @@ func (m *ChannelMutation) ResetProviderQuotaStatus() {
 	m.clearedprovider_quota_status = false
 }
 
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by ids.
+func (m *ChannelMutation) AddUsageMonitorChannelIDs(ids ...int) {
+	if m.usage_monitor_channels == nil {
+		m.usage_monitor_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.usage_monitor_channels[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsageMonitorChannels clears the "usage_monitor_channels" edge to the UsageMonitorChannel entity.
+func (m *ChannelMutation) ClearUsageMonitorChannels() {
+	m.clearedusage_monitor_channels = true
+}
+
+// UsageMonitorChannelsCleared reports if the "usage_monitor_channels" edge to the UsageMonitorChannel entity was cleared.
+func (m *ChannelMutation) UsageMonitorChannelsCleared() bool {
+	return m.clearedusage_monitor_channels
+}
+
+// RemoveUsageMonitorChannelIDs removes the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (m *ChannelMutation) RemoveUsageMonitorChannelIDs(ids ...int) {
+	if m.removedusage_monitor_channels == nil {
+		m.removedusage_monitor_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.usage_monitor_channels, ids[i])
+		m.removedusage_monitor_channels[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsageMonitorChannels returns the removed IDs of the "usage_monitor_channels" edge to the UsageMonitorChannel entity.
+func (m *ChannelMutation) RemovedUsageMonitorChannelsIDs() (ids []int) {
+	for id := range m.removedusage_monitor_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsageMonitorChannelsIDs returns the "usage_monitor_channels" edge IDs in the mutation.
+func (m *ChannelMutation) UsageMonitorChannelsIDs() (ids []int) {
+	for id := range m.usage_monitor_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsageMonitorChannels resets all changes to the "usage_monitor_channels" edge.
+func (m *ChannelMutation) ResetUsageMonitorChannels() {
+	m.usage_monitor_channels = nil
+	m.clearedusage_monitor_channels = false
+	m.removedusage_monitor_channels = nil
+}
+
 // Where appends a list predicates to the ChannelMutation builder.
 func (m *ChannelMutation) Where(ps ...predicate.Channel) {
 	m.predicates = append(m.predicates, ps...)
@@ -4283,7 +4342,7 @@ func (m *ChannelMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChannelMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.owner != nil {
 		edges = append(edges, channel.EdgeOwner)
 	}
@@ -4304,6 +4363,9 @@ func (m *ChannelMutation) AddedEdges() []string {
 	}
 	if m.provider_quota_status != nil {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
+	}
+	if m.usage_monitor_channels != nil {
+		edges = append(edges, channel.EdgeUsageMonitorChannels)
 	}
 	return edges
 }
@@ -4350,13 +4412,19 @@ func (m *ChannelMutation) AddedIDs(name string) []ent.Value {
 		if id := m.provider_quota_status; id != nil {
 			return []ent.Value{*id}
 		}
+	case channel.EdgeUsageMonitorChannels:
+		ids := make([]ent.Value, 0, len(m.usage_monitor_channels))
+		for id := range m.usage_monitor_channels {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChannelMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.removedrequests != nil {
 		edges = append(edges, channel.EdgeRequests)
 	}
@@ -4371,6 +4439,9 @@ func (m *ChannelMutation) RemovedEdges() []string {
 	}
 	if m.removedchannel_model_prices != nil {
 		edges = append(edges, channel.EdgeChannelModelPrices)
+	}
+	if m.removedusage_monitor_channels != nil {
+		edges = append(edges, channel.EdgeUsageMonitorChannels)
 	}
 	return edges
 }
@@ -4409,13 +4480,19 @@ func (m *ChannelMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case channel.EdgeUsageMonitorChannels:
+		ids := make([]ent.Value, 0, len(m.removedusage_monitor_channels))
+		for id := range m.removedusage_monitor_channels {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChannelMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 8)
 	if m.clearedowner {
 		edges = append(edges, channel.EdgeOwner)
 	}
@@ -4436,6 +4513,9 @@ func (m *ChannelMutation) ClearedEdges() []string {
 	}
 	if m.clearedprovider_quota_status {
 		edges = append(edges, channel.EdgeProviderQuotaStatus)
+	}
+	if m.clearedusage_monitor_channels {
+		edges = append(edges, channel.EdgeUsageMonitorChannels)
 	}
 	return edges
 }
@@ -4458,6 +4538,8 @@ func (m *ChannelMutation) EdgeCleared(name string) bool {
 		return m.clearedchannel_model_prices
 	case channel.EdgeProviderQuotaStatus:
 		return m.clearedprovider_quota_status
+	case channel.EdgeUsageMonitorChannels:
+		return m.clearedusage_monitor_channels
 	}
 	return false
 }
@@ -4500,6 +4582,9 @@ func (m *ChannelMutation) ResetEdge(name string) error {
 		return nil
 	case channel.EdgeProviderQuotaStatus:
 		m.ResetProviderQuotaStatus()
+		return nil
+	case channel.EdgeUsageMonitorChannels:
+		m.ResetUsageMonitorChannels()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel edge %s", name)
@@ -27462,6 +27547,1438 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown UsageLog edge %s", name)
 }
 
+// UsageMonitorChannelMutation represents an operation that mutates the UsageMonitorChannel nodes in the graph.
+type UsageMonitorChannelMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *int
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *int
+	adddeleted_at    *int
+	name             *string
+	source           *usagemonitorchannel.Source
+	api_url          *string
+	api_method       *usagemonitorchannel.APIMethod
+	api_headers      *map[string]interface{}
+	api_body         *string
+	poll_interval    *int
+	addpoll_interval *int
+	fields           *[]map[string]interface{}
+	appendfields     []map[string]interface{}
+	last_poll_at     *time.Time
+	last_poll_data   *map[string]interface{}
+	last_poll_error  *string
+	status           *usagemonitorchannel.Status
+	clearedFields    map[string]struct{}
+	channel          *int
+	clearedchannel   bool
+	owner            *int
+	clearedowner     bool
+	done             bool
+	oldValue         func(context.Context) (*UsageMonitorChannel, error)
+	predicates       []predicate.UsageMonitorChannel
+}
+
+var _ ent.Mutation = (*UsageMonitorChannelMutation)(nil)
+
+// usagemonitorchannelOption allows management of the mutation configuration using functional options.
+type usagemonitorchannelOption func(*UsageMonitorChannelMutation)
+
+// newUsageMonitorChannelMutation creates new mutation for the UsageMonitorChannel entity.
+func newUsageMonitorChannelMutation(c config, op Op, opts ...usagemonitorchannelOption) *UsageMonitorChannelMutation {
+	m := &UsageMonitorChannelMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUsageMonitorChannel,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUsageMonitorChannelID sets the ID field of the mutation.
+func withUsageMonitorChannelID(id int) usagemonitorchannelOption {
+	return func(m *UsageMonitorChannelMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UsageMonitorChannel
+		)
+		m.oldValue = func(ctx context.Context) (*UsageMonitorChannel, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UsageMonitorChannel.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUsageMonitorChannel sets the old UsageMonitorChannel of the mutation.
+func withUsageMonitorChannel(node *UsageMonitorChannel) usagemonitorchannelOption {
+	return func(m *UsageMonitorChannelMutation) {
+		m.oldValue = func(context.Context) (*UsageMonitorChannel, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UsageMonitorChannelMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UsageMonitorChannelMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UsageMonitorChannelMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UsageMonitorChannelMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UsageMonitorChannel.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UsageMonitorChannelMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UsageMonitorChannelMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UsageMonitorChannelMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *UsageMonitorChannelMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *UsageMonitorChannelMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *UsageMonitorChannelMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UsageMonitorChannelMutation) SetDeletedAt(i int) {
+	m.deleted_at = &i
+	m.adddeleted_at = nil
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UsageMonitorChannelMutation) DeletedAt() (r int, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldDeletedAt(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// AddDeletedAt adds i to the "deleted_at" field.
+func (m *UsageMonitorChannelMutation) AddDeletedAt(i int) {
+	if m.adddeleted_at != nil {
+		*m.adddeleted_at += i
+	} else {
+		m.adddeleted_at = &i
+	}
+}
+
+// AddedDeletedAt returns the value that was added to the "deleted_at" field in this mutation.
+func (m *UsageMonitorChannelMutation) AddedDeletedAt() (r int, exists bool) {
+	v := m.adddeleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UsageMonitorChannelMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	m.adddeleted_at = nil
+}
+
+// SetName sets the "name" field.
+func (m *UsageMonitorChannelMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *UsageMonitorChannelMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *UsageMonitorChannelMutation) ResetName() {
+	m.name = nil
+}
+
+// SetSource sets the "source" field.
+func (m *UsageMonitorChannelMutation) SetSource(u usagemonitorchannel.Source) {
+	m.source = &u
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *UsageMonitorChannelMutation) Source() (r usagemonitorchannel.Source, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldSource(ctx context.Context) (v usagemonitorchannel.Source, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *UsageMonitorChannelMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetChannelID sets the "channel_id" field.
+func (m *UsageMonitorChannelMutation) SetChannelID(i int) {
+	m.channel = &i
+}
+
+// ChannelID returns the value of the "channel_id" field in the mutation.
+func (m *UsageMonitorChannelMutation) ChannelID() (r int, exists bool) {
+	v := m.channel
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChannelID returns the old "channel_id" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldChannelID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChannelID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChannelID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChannelID: %w", err)
+	}
+	return oldValue.ChannelID, nil
+}
+
+// ClearChannelID clears the value of the "channel_id" field.
+func (m *UsageMonitorChannelMutation) ClearChannelID() {
+	m.channel = nil
+	m.clearedFields[usagemonitorchannel.FieldChannelID] = struct{}{}
+}
+
+// ChannelIDCleared returns if the "channel_id" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) ChannelIDCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldChannelID]
+	return ok
+}
+
+// ResetChannelID resets all changes to the "channel_id" field.
+func (m *UsageMonitorChannelMutation) ResetChannelID() {
+	m.channel = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldChannelID)
+}
+
+// SetAPIURL sets the "api_url" field.
+func (m *UsageMonitorChannelMutation) SetAPIURL(s string) {
+	m.api_url = &s
+}
+
+// APIURL returns the value of the "api_url" field in the mutation.
+func (m *UsageMonitorChannelMutation) APIURL() (r string, exists bool) {
+	v := m.api_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIURL returns the old "api_url" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAPIURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIURL: %w", err)
+	}
+	return oldValue.APIURL, nil
+}
+
+// ResetAPIURL resets all changes to the "api_url" field.
+func (m *UsageMonitorChannelMutation) ResetAPIURL() {
+	m.api_url = nil
+}
+
+// SetAPIMethod sets the "api_method" field.
+func (m *UsageMonitorChannelMutation) SetAPIMethod(um usagemonitorchannel.APIMethod) {
+	m.api_method = &um
+}
+
+// APIMethod returns the value of the "api_method" field in the mutation.
+func (m *UsageMonitorChannelMutation) APIMethod() (r usagemonitorchannel.APIMethod, exists bool) {
+	v := m.api_method
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIMethod returns the old "api_method" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAPIMethod(ctx context.Context) (v usagemonitorchannel.APIMethod, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIMethod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIMethod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIMethod: %w", err)
+	}
+	return oldValue.APIMethod, nil
+}
+
+// ResetAPIMethod resets all changes to the "api_method" field.
+func (m *UsageMonitorChannelMutation) ResetAPIMethod() {
+	m.api_method = nil
+}
+
+// SetAPIHeaders sets the "api_headers" field.
+func (m *UsageMonitorChannelMutation) SetAPIHeaders(value map[string]interface{}) {
+	m.api_headers = &value
+}
+
+// APIHeaders returns the value of the "api_headers" field in the mutation.
+func (m *UsageMonitorChannelMutation) APIHeaders() (r map[string]interface{}, exists bool) {
+	v := m.api_headers
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIHeaders returns the old "api_headers" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAPIHeaders(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIHeaders is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIHeaders requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIHeaders: %w", err)
+	}
+	return oldValue.APIHeaders, nil
+}
+
+// ResetAPIHeaders resets all changes to the "api_headers" field.
+func (m *UsageMonitorChannelMutation) ResetAPIHeaders() {
+	m.api_headers = nil
+}
+
+// SetAPIBody sets the "api_body" field.
+func (m *UsageMonitorChannelMutation) SetAPIBody(s string) {
+	m.api_body = &s
+}
+
+// APIBody returns the value of the "api_body" field in the mutation.
+func (m *UsageMonitorChannelMutation) APIBody() (r string, exists bool) {
+	v := m.api_body
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAPIBody returns the old "api_body" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAPIBody(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAPIBody is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAPIBody requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAPIBody: %w", err)
+	}
+	return oldValue.APIBody, nil
+}
+
+// ClearAPIBody clears the value of the "api_body" field.
+func (m *UsageMonitorChannelMutation) ClearAPIBody() {
+	m.api_body = nil
+	m.clearedFields[usagemonitorchannel.FieldAPIBody] = struct{}{}
+}
+
+// APIBodyCleared returns if the "api_body" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) APIBodyCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldAPIBody]
+	return ok
+}
+
+// ResetAPIBody resets all changes to the "api_body" field.
+func (m *UsageMonitorChannelMutation) ResetAPIBody() {
+	m.api_body = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldAPIBody)
+}
+
+// SetPollInterval sets the "poll_interval" field.
+func (m *UsageMonitorChannelMutation) SetPollInterval(i int) {
+	m.poll_interval = &i
+	m.addpoll_interval = nil
+}
+
+// PollInterval returns the value of the "poll_interval" field in the mutation.
+func (m *UsageMonitorChannelMutation) PollInterval() (r int, exists bool) {
+	v := m.poll_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPollInterval returns the old "poll_interval" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldPollInterval(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPollInterval is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPollInterval requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPollInterval: %w", err)
+	}
+	return oldValue.PollInterval, nil
+}
+
+// AddPollInterval adds i to the "poll_interval" field.
+func (m *UsageMonitorChannelMutation) AddPollInterval(i int) {
+	if m.addpoll_interval != nil {
+		*m.addpoll_interval += i
+	} else {
+		m.addpoll_interval = &i
+	}
+}
+
+// AddedPollInterval returns the value that was added to the "poll_interval" field in this mutation.
+func (m *UsageMonitorChannelMutation) AddedPollInterval() (r int, exists bool) {
+	v := m.addpoll_interval
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPollInterval resets all changes to the "poll_interval" field.
+func (m *UsageMonitorChannelMutation) ResetPollInterval() {
+	m.poll_interval = nil
+	m.addpoll_interval = nil
+}
+
+// SetFields sets the "fields" field.
+func (m *UsageMonitorChannelMutation) SetFields(value []map[string]interface{}) {
+	m.fields = &value
+	m.appendfields = nil
+}
+
+// GetFields returns the value of the "fields" field in the mutation.
+func (m *UsageMonitorChannelMutation) GetFields() (r []map[string]interface{}, exists bool) {
+	v := m.fields
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFields returns the old "fields" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldFields(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFields is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFields requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFields: %w", err)
+	}
+	return oldValue.Fields, nil
+}
+
+// AppendFields adds value to the "fields" field.
+func (m *UsageMonitorChannelMutation) AppendFields(value []map[string]interface{}) {
+	m.appendfields = append(m.appendfields, value...)
+}
+
+// AppendedFields returns the list of values that were appended to the "fields" field in this mutation.
+func (m *UsageMonitorChannelMutation) AppendedFields() ([]map[string]interface{}, bool) {
+	if len(m.appendfields) == 0 {
+		return nil, false
+	}
+	return m.appendfields, true
+}
+
+// ResetFields resets all changes to the "fields" field.
+func (m *UsageMonitorChannelMutation) ResetFields() {
+	m.fields = nil
+	m.appendfields = nil
+}
+
+// SetLastPollAt sets the "last_poll_at" field.
+func (m *UsageMonitorChannelMutation) SetLastPollAt(t time.Time) {
+	m.last_poll_at = &t
+}
+
+// LastPollAt returns the value of the "last_poll_at" field in the mutation.
+func (m *UsageMonitorChannelMutation) LastPollAt() (r time.Time, exists bool) {
+	v := m.last_poll_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastPollAt returns the old "last_poll_at" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldLastPollAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastPollAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastPollAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastPollAt: %w", err)
+	}
+	return oldValue.LastPollAt, nil
+}
+
+// ClearLastPollAt clears the value of the "last_poll_at" field.
+func (m *UsageMonitorChannelMutation) ClearLastPollAt() {
+	m.last_poll_at = nil
+	m.clearedFields[usagemonitorchannel.FieldLastPollAt] = struct{}{}
+}
+
+// LastPollAtCleared returns if the "last_poll_at" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) LastPollAtCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldLastPollAt]
+	return ok
+}
+
+// ResetLastPollAt resets all changes to the "last_poll_at" field.
+func (m *UsageMonitorChannelMutation) ResetLastPollAt() {
+	m.last_poll_at = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldLastPollAt)
+}
+
+// SetLastPollData sets the "last_poll_data" field.
+func (m *UsageMonitorChannelMutation) SetLastPollData(value map[string]interface{}) {
+	m.last_poll_data = &value
+}
+
+// LastPollData returns the value of the "last_poll_data" field in the mutation.
+func (m *UsageMonitorChannelMutation) LastPollData() (r map[string]interface{}, exists bool) {
+	v := m.last_poll_data
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastPollData returns the old "last_poll_data" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldLastPollData(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastPollData is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastPollData requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastPollData: %w", err)
+	}
+	return oldValue.LastPollData, nil
+}
+
+// ClearLastPollData clears the value of the "last_poll_data" field.
+func (m *UsageMonitorChannelMutation) ClearLastPollData() {
+	m.last_poll_data = nil
+	m.clearedFields[usagemonitorchannel.FieldLastPollData] = struct{}{}
+}
+
+// LastPollDataCleared returns if the "last_poll_data" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) LastPollDataCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldLastPollData]
+	return ok
+}
+
+// ResetLastPollData resets all changes to the "last_poll_data" field.
+func (m *UsageMonitorChannelMutation) ResetLastPollData() {
+	m.last_poll_data = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldLastPollData)
+}
+
+// SetLastPollError sets the "last_poll_error" field.
+func (m *UsageMonitorChannelMutation) SetLastPollError(s string) {
+	m.last_poll_error = &s
+}
+
+// LastPollError returns the value of the "last_poll_error" field in the mutation.
+func (m *UsageMonitorChannelMutation) LastPollError() (r string, exists bool) {
+	v := m.last_poll_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastPollError returns the old "last_poll_error" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldLastPollError(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastPollError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastPollError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastPollError: %w", err)
+	}
+	return oldValue.LastPollError, nil
+}
+
+// ClearLastPollError clears the value of the "last_poll_error" field.
+func (m *UsageMonitorChannelMutation) ClearLastPollError() {
+	m.last_poll_error = nil
+	m.clearedFields[usagemonitorchannel.FieldLastPollError] = struct{}{}
+}
+
+// LastPollErrorCleared returns if the "last_poll_error" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) LastPollErrorCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldLastPollError]
+	return ok
+}
+
+// ResetLastPollError resets all changes to the "last_poll_error" field.
+func (m *UsageMonitorChannelMutation) ResetLastPollError() {
+	m.last_poll_error = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldLastPollError)
+}
+
+// SetStatus sets the "status" field.
+func (m *UsageMonitorChannelMutation) SetStatus(u usagemonitorchannel.Status) {
+	m.status = &u
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *UsageMonitorChannelMutation) Status() (r usagemonitorchannel.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldStatus(ctx context.Context) (v usagemonitorchannel.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *UsageMonitorChannelMutation) ResetStatus() {
+	m.status = nil
+}
+
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (m *UsageMonitorChannelMutation) ClearChannel() {
+	m.clearedchannel = true
+	m.clearedFields[usagemonitorchannel.FieldChannelID] = struct{}{}
+}
+
+// ChannelCleared reports if the "channel" edge to the Channel entity was cleared.
+func (m *UsageMonitorChannelMutation) ChannelCleared() bool {
+	return m.ChannelIDCleared() || m.clearedchannel
+}
+
+// ChannelIDs returns the "channel" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChannelID instead. It exists only for internal usage by the builders.
+func (m *UsageMonitorChannelMutation) ChannelIDs() (ids []int) {
+	if id := m.channel; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChannel resets all changes to the "channel" edge.
+func (m *UsageMonitorChannelMutation) ResetChannel() {
+	m.channel = nil
+	m.clearedchannel = false
+}
+
+// SetOwnerID sets the "owner" edge to the User entity by id.
+func (m *UsageMonitorChannelMutation) SetOwnerID(id int) {
+	m.owner = &id
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *UsageMonitorChannelMutation) ClearOwner() {
+	m.clearedowner = true
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *UsageMonitorChannelMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerID returns the "owner" edge ID in the mutation.
+func (m *UsageMonitorChannelMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
+	}
+	return
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *UsageMonitorChannelMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *UsageMonitorChannelMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// Where appends a list predicates to the UsageMonitorChannelMutation builder.
+func (m *UsageMonitorChannelMutation) Where(ps ...predicate.UsageMonitorChannel) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UsageMonitorChannelMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UsageMonitorChannelMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UsageMonitorChannel, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UsageMonitorChannelMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UsageMonitorChannelMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UsageMonitorChannel).
+func (m *UsageMonitorChannelMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UsageMonitorChannelMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.created_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldDeletedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, usagemonitorchannel.FieldName)
+	}
+	if m.source != nil {
+		fields = append(fields, usagemonitorchannel.FieldSource)
+	}
+	if m.channel != nil {
+		fields = append(fields, usagemonitorchannel.FieldChannelID)
+	}
+	if m.api_url != nil {
+		fields = append(fields, usagemonitorchannel.FieldAPIURL)
+	}
+	if m.api_method != nil {
+		fields = append(fields, usagemonitorchannel.FieldAPIMethod)
+	}
+	if m.api_headers != nil {
+		fields = append(fields, usagemonitorchannel.FieldAPIHeaders)
+	}
+	if m.api_body != nil {
+		fields = append(fields, usagemonitorchannel.FieldAPIBody)
+	}
+	if m.poll_interval != nil {
+		fields = append(fields, usagemonitorchannel.FieldPollInterval)
+	}
+	if m.fields != nil {
+		fields = append(fields, usagemonitorchannel.FieldFields)
+	}
+	if m.last_poll_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
+	}
+	if m.last_poll_data != nil {
+		fields = append(fields, usagemonitorchannel.FieldLastPollData)
+	}
+	if m.last_poll_error != nil {
+		fields = append(fields, usagemonitorchannel.FieldLastPollError)
+	}
+	if m.status != nil {
+		fields = append(fields, usagemonitorchannel.FieldStatus)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usagemonitorchannel.FieldCreatedAt:
+		return m.CreatedAt()
+	case usagemonitorchannel.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case usagemonitorchannel.FieldDeletedAt:
+		return m.DeletedAt()
+	case usagemonitorchannel.FieldName:
+		return m.Name()
+	case usagemonitorchannel.FieldSource:
+		return m.Source()
+	case usagemonitorchannel.FieldChannelID:
+		return m.ChannelID()
+	case usagemonitorchannel.FieldAPIURL:
+		return m.APIURL()
+	case usagemonitorchannel.FieldAPIMethod:
+		return m.APIMethod()
+	case usagemonitorchannel.FieldAPIHeaders:
+		return m.APIHeaders()
+	case usagemonitorchannel.FieldAPIBody:
+		return m.APIBody()
+	case usagemonitorchannel.FieldPollInterval:
+		return m.PollInterval()
+	case usagemonitorchannel.FieldFields:
+		return m.GetFields()
+	case usagemonitorchannel.FieldLastPollAt:
+		return m.LastPollAt()
+	case usagemonitorchannel.FieldLastPollData:
+		return m.LastPollData()
+	case usagemonitorchannel.FieldLastPollError:
+		return m.LastPollError()
+	case usagemonitorchannel.FieldStatus:
+		return m.Status()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case usagemonitorchannel.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case usagemonitorchannel.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case usagemonitorchannel.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case usagemonitorchannel.FieldName:
+		return m.OldName(ctx)
+	case usagemonitorchannel.FieldSource:
+		return m.OldSource(ctx)
+	case usagemonitorchannel.FieldChannelID:
+		return m.OldChannelID(ctx)
+	case usagemonitorchannel.FieldAPIURL:
+		return m.OldAPIURL(ctx)
+	case usagemonitorchannel.FieldAPIMethod:
+		return m.OldAPIMethod(ctx)
+	case usagemonitorchannel.FieldAPIHeaders:
+		return m.OldAPIHeaders(ctx)
+	case usagemonitorchannel.FieldAPIBody:
+		return m.OldAPIBody(ctx)
+	case usagemonitorchannel.FieldPollInterval:
+		return m.OldPollInterval(ctx)
+	case usagemonitorchannel.FieldFields:
+		return m.OldFields(ctx)
+	case usagemonitorchannel.FieldLastPollAt:
+		return m.OldLastPollAt(ctx)
+	case usagemonitorchannel.FieldLastPollData:
+		return m.OldLastPollData(ctx)
+	case usagemonitorchannel.FieldLastPollError:
+		return m.OldLastPollError(ctx)
+	case usagemonitorchannel.FieldStatus:
+		return m.OldStatus(ctx)
+	}
+	return nil, fmt.Errorf("unknown UsageMonitorChannel field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usagemonitorchannel.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case usagemonitorchannel.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case usagemonitorchannel.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case usagemonitorchannel.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case usagemonitorchannel.FieldSource:
+		v, ok := value.(usagemonitorchannel.Source)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case usagemonitorchannel.FieldChannelID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChannelID(v)
+		return nil
+	case usagemonitorchannel.FieldAPIURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIURL(v)
+		return nil
+	case usagemonitorchannel.FieldAPIMethod:
+		v, ok := value.(usagemonitorchannel.APIMethod)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIMethod(v)
+		return nil
+	case usagemonitorchannel.FieldAPIHeaders:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIHeaders(v)
+		return nil
+	case usagemonitorchannel.FieldAPIBody:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAPIBody(v)
+		return nil
+	case usagemonitorchannel.FieldPollInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPollInterval(v)
+		return nil
+	case usagemonitorchannel.FieldFields:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFields(v)
+		return nil
+	case usagemonitorchannel.FieldLastPollAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastPollAt(v)
+		return nil
+	case usagemonitorchannel.FieldLastPollData:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastPollData(v)
+		return nil
+	case usagemonitorchannel.FieldLastPollError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastPollError(v)
+		return nil
+	case usagemonitorchannel.FieldStatus:
+		v, ok := value.(usagemonitorchannel.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UsageMonitorChannelMutation) AddedFields() []string {
+	var fields []string
+	if m.adddeleted_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldDeletedAt)
+	}
+	if m.addpoll_interval != nil {
+		fields = append(fields, usagemonitorchannel.FieldPollInterval)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UsageMonitorChannelMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case usagemonitorchannel.FieldDeletedAt:
+		return m.AddedDeletedAt()
+	case usagemonitorchannel.FieldPollInterval:
+		return m.AddedPollInterval()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UsageMonitorChannelMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case usagemonitorchannel.FieldDeletedAt:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDeletedAt(v)
+		return nil
+	case usagemonitorchannel.FieldPollInterval:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPollInterval(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UsageMonitorChannelMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(usagemonitorchannel.FieldChannelID) {
+		fields = append(fields, usagemonitorchannel.FieldChannelID)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldAPIBody) {
+		fields = append(fields, usagemonitorchannel.FieldAPIBody)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldLastPollAt) {
+		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldLastPollData) {
+		fields = append(fields, usagemonitorchannel.FieldLastPollData)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldLastPollError) {
+		fields = append(fields, usagemonitorchannel.FieldLastPollError)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UsageMonitorChannelMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UsageMonitorChannelMutation) ClearField(name string) error {
+	switch name {
+	case usagemonitorchannel.FieldChannelID:
+		m.ClearChannelID()
+		return nil
+	case usagemonitorchannel.FieldAPIBody:
+		m.ClearAPIBody()
+		return nil
+	case usagemonitorchannel.FieldLastPollAt:
+		m.ClearLastPollAt()
+		return nil
+	case usagemonitorchannel.FieldLastPollData:
+		m.ClearLastPollData()
+		return nil
+	case usagemonitorchannel.FieldLastPollError:
+		m.ClearLastPollError()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UsageMonitorChannelMutation) ResetField(name string) error {
+	switch name {
+	case usagemonitorchannel.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case usagemonitorchannel.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case usagemonitorchannel.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case usagemonitorchannel.FieldName:
+		m.ResetName()
+		return nil
+	case usagemonitorchannel.FieldSource:
+		m.ResetSource()
+		return nil
+	case usagemonitorchannel.FieldChannelID:
+		m.ResetChannelID()
+		return nil
+	case usagemonitorchannel.FieldAPIURL:
+		m.ResetAPIURL()
+		return nil
+	case usagemonitorchannel.FieldAPIMethod:
+		m.ResetAPIMethod()
+		return nil
+	case usagemonitorchannel.FieldAPIHeaders:
+		m.ResetAPIHeaders()
+		return nil
+	case usagemonitorchannel.FieldAPIBody:
+		m.ResetAPIBody()
+		return nil
+	case usagemonitorchannel.FieldPollInterval:
+		m.ResetPollInterval()
+		return nil
+	case usagemonitorchannel.FieldFields:
+		m.ResetFields()
+		return nil
+	case usagemonitorchannel.FieldLastPollAt:
+		m.ResetLastPollAt()
+		return nil
+	case usagemonitorchannel.FieldLastPollData:
+		m.ResetLastPollData()
+		return nil
+	case usagemonitorchannel.FieldLastPollError:
+		m.ResetLastPollError()
+		return nil
+	case usagemonitorchannel.FieldStatus:
+		m.ResetStatus()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UsageMonitorChannelMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.channel != nil {
+		edges = append(edges, usagemonitorchannel.EdgeChannel)
+	}
+	if m.owner != nil {
+		edges = append(edges, usagemonitorchannel.EdgeOwner)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UsageMonitorChannelMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case usagemonitorchannel.EdgeChannel:
+		if id := m.channel; id != nil {
+			return []ent.Value{*id}
+		}
+	case usagemonitorchannel.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UsageMonitorChannelMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UsageMonitorChannelMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UsageMonitorChannelMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedchannel {
+		edges = append(edges, usagemonitorchannel.EdgeChannel)
+	}
+	if m.clearedowner {
+		edges = append(edges, usagemonitorchannel.EdgeOwner)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) EdgeCleared(name string) bool {
+	switch name {
+	case usagemonitorchannel.EdgeChannel:
+		return m.clearedchannel
+	case usagemonitorchannel.EdgeOwner:
+		return m.clearedowner
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UsageMonitorChannelMutation) ClearEdge(name string) error {
+	switch name {
+	case usagemonitorchannel.EdgeChannel:
+		m.ClearChannel()
+		return nil
+	case usagemonitorchannel.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UsageMonitorChannelMutation) ResetEdge(name string) error {
+	switch name {
+	case usagemonitorchannel.EdgeChannel:
+		m.ResetChannel()
+		return nil
+	case usagemonitorchannel.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	}
+	return fmt.Errorf("unknown UsageMonitorChannel edge %s", name)
+}
+
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
@@ -27519,6 +29036,9 @@ type UserMutation struct {
 	user_usage_stats                  map[int]struct{}
 	removeduser_usage_stats           map[int]struct{}
 	cleareduser_usage_stats           bool
+	usage_monitor_channels            map[int]struct{}
+	removedusage_monitor_channels     map[int]struct{}
+	clearedusage_monitor_channels     bool
 	project_users                     map[int]struct{}
 	removedproject_users              map[int]struct{}
 	clearedproject_users              bool
@@ -28841,6 +30361,60 @@ func (m *UserMutation) ResetUserUsageStats() {
 	m.removeduser_usage_stats = nil
 }
 
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by ids.
+func (m *UserMutation) AddUsageMonitorChannelIDs(ids ...int) {
+	if m.usage_monitor_channels == nil {
+		m.usage_monitor_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.usage_monitor_channels[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsageMonitorChannels clears the "usage_monitor_channels" edge to the UsageMonitorChannel entity.
+func (m *UserMutation) ClearUsageMonitorChannels() {
+	m.clearedusage_monitor_channels = true
+}
+
+// UsageMonitorChannelsCleared reports if the "usage_monitor_channels" edge to the UsageMonitorChannel entity was cleared.
+func (m *UserMutation) UsageMonitorChannelsCleared() bool {
+	return m.clearedusage_monitor_channels
+}
+
+// RemoveUsageMonitorChannelIDs removes the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (m *UserMutation) RemoveUsageMonitorChannelIDs(ids ...int) {
+	if m.removedusage_monitor_channels == nil {
+		m.removedusage_monitor_channels = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.usage_monitor_channels, ids[i])
+		m.removedusage_monitor_channels[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsageMonitorChannels returns the removed IDs of the "usage_monitor_channels" edge to the UsageMonitorChannel entity.
+func (m *UserMutation) RemovedUsageMonitorChannelsIDs() (ids []int) {
+	for id := range m.removedusage_monitor_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsageMonitorChannelsIDs returns the "usage_monitor_channels" edge IDs in the mutation.
+func (m *UserMutation) UsageMonitorChannelsIDs() (ids []int) {
+	for id := range m.usage_monitor_channels {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsageMonitorChannels resets all changes to the "usage_monitor_channels" edge.
+func (m *UserMutation) ResetUsageMonitorChannels() {
+	m.usage_monitor_channels = nil
+	m.clearedusage_monitor_channels = false
+	m.removedusage_monitor_channels = nil
+}
+
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by ids.
 func (m *UserMutation) AddProjectUserIDs(ids ...int) {
 	if m.project_users == nil {
@@ -29345,7 +30919,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 14)
+	edges := make([]string, 0, 15)
 	if m.projects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -29381,6 +30955,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.user_usage_stats != nil {
 		edges = append(edges, user.EdgeUserUsageStats)
+	}
+	if m.usage_monitor_channels != nil {
+		edges = append(edges, user.EdgeUsageMonitorChannels)
 	}
 	if m.project_users != nil {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -29465,6 +31042,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeUsageMonitorChannels:
+		ids := make([]ent.Value, 0, len(m.usage_monitor_channels))
+		for id := range m.usage_monitor_channels {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeProjectUsers:
 		ids := make([]ent.Value, 0, len(m.project_users))
 		for id := range m.project_users {
@@ -29483,7 +31066,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 14)
+	edges := make([]string, 0, 15)
 	if m.removedprojects != nil {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -29516,6 +31099,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removeduser_usage_stats != nil {
 		edges = append(edges, user.EdgeUserUsageStats)
+	}
+	if m.removedusage_monitor_channels != nil {
+		edges = append(edges, user.EdgeUsageMonitorChannels)
 	}
 	if m.removedproject_users != nil {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -29596,6 +31182,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeUsageMonitorChannels:
+		ids := make([]ent.Value, 0, len(m.removedusage_monitor_channels))
+		for id := range m.removedusage_monitor_channels {
+			ids = append(ids, id)
+		}
+		return ids
 	case user.EdgeProjectUsers:
 		ids := make([]ent.Value, 0, len(m.removedproject_users))
 		for id := range m.removedproject_users {
@@ -29614,7 +31206,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 14)
+	edges := make([]string, 0, 15)
 	if m.clearedprojects {
 		edges = append(edges, user.EdgeProjects)
 	}
@@ -29650,6 +31242,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.cleareduser_usage_stats {
 		edges = append(edges, user.EdgeUserUsageStats)
+	}
+	if m.clearedusage_monitor_channels {
+		edges = append(edges, user.EdgeUsageMonitorChannels)
 	}
 	if m.clearedproject_users {
 		edges = append(edges, user.EdgeProjectUsers)
@@ -29688,6 +31283,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedemail_tokens
 	case user.EdgeUserUsageStats:
 		return m.cleareduser_usage_stats
+	case user.EdgeUsageMonitorChannels:
+		return m.clearedusage_monitor_channels
 	case user.EdgeProjectUsers:
 		return m.clearedproject_users
 	case user.EdgeUserRoles:
@@ -29746,6 +31343,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeUserUsageStats:
 		m.ResetUserUsageStats()
+		return nil
+	case user.EdgeUsageMonitorChannels:
+		m.ResetUsageMonitorChannels()
 		return nil
 	case user.EdgeProjectUsers:
 		m.ResetProjectUsers()

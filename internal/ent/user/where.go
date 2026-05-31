@@ -1031,6 +1031,29 @@ func HasUserUsageStatsWith(preds ...predicate.UserUsageStats) predicate.User {
 	})
 }
 
+// HasUsageMonitorChannels applies the HasEdge predicate on the "usage_monitor_channels" edge.
+func HasUsageMonitorChannels() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsageMonitorChannelsTable, UsageMonitorChannelsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsageMonitorChannelsWith applies the HasEdge predicate on the "usage_monitor_channels" edge with a given conditions (other predicates).
+func HasUsageMonitorChannelsWith(preds ...predicate.UsageMonitorChannel) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUsageMonitorChannelsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasProjectUsers applies the HasEdge predicate on the "project_users" edge.
 func HasProjectUsers() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

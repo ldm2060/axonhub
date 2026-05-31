@@ -29,6 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -920,6 +921,43 @@ func init() {
 	usagelogDescCostItems := usagelogFields[20].Descriptor()
 	// usagelog.DefaultCostItems holds the default value on creation for the cost_items field.
 	usagelog.DefaultCostItems = usagelogDescCostItems.Default.([]objects.CostItem)
+	usagemonitorchannelMixin := schema.UsageMonitorChannel{}.Mixin()
+	usagemonitorchannelMixinHooks1 := usagemonitorchannelMixin[1].Hooks()
+	usagemonitorchannel.Hooks[0] = usagemonitorchannelMixinHooks1[0]
+	usagemonitorchannelMixinInters1 := usagemonitorchannelMixin[1].Interceptors()
+	usagemonitorchannel.Interceptors[0] = usagemonitorchannelMixinInters1[0]
+	usagemonitorchannelMixinFields0 := usagemonitorchannelMixin[0].Fields()
+	_ = usagemonitorchannelMixinFields0
+	usagemonitorchannelMixinFields1 := usagemonitorchannelMixin[1].Fields()
+	_ = usagemonitorchannelMixinFields1
+	usagemonitorchannelFields := schema.UsageMonitorChannel{}.Fields()
+	_ = usagemonitorchannelFields
+	// usagemonitorchannelDescCreatedAt is the schema descriptor for created_at field.
+	usagemonitorchannelDescCreatedAt := usagemonitorchannelMixinFields0[0].Descriptor()
+	// usagemonitorchannel.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usagemonitorchannel.DefaultCreatedAt = usagemonitorchannelDescCreatedAt.Default.(func() time.Time)
+	// usagemonitorchannelDescUpdatedAt is the schema descriptor for updated_at field.
+	usagemonitorchannelDescUpdatedAt := usagemonitorchannelMixinFields0[1].Descriptor()
+	// usagemonitorchannel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usagemonitorchannel.DefaultUpdatedAt = usagemonitorchannelDescUpdatedAt.Default.(func() time.Time)
+	// usagemonitorchannel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	usagemonitorchannel.UpdateDefaultUpdatedAt = usagemonitorchannelDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// usagemonitorchannelDescDeletedAt is the schema descriptor for deleted_at field.
+	usagemonitorchannelDescDeletedAt := usagemonitorchannelMixinFields1[0].Descriptor()
+	// usagemonitorchannel.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	usagemonitorchannel.DefaultDeletedAt = usagemonitorchannelDescDeletedAt.Default.(int)
+	// usagemonitorchannelDescName is the schema descriptor for name field.
+	usagemonitorchannelDescName := usagemonitorchannelFields[0].Descriptor()
+	// usagemonitorchannel.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	usagemonitorchannel.NameValidator = usagemonitorchannelDescName.Validators[0].(func(string) error)
+	// usagemonitorchannelDescAPIURL is the schema descriptor for api_url field.
+	usagemonitorchannelDescAPIURL := usagemonitorchannelFields[3].Descriptor()
+	// usagemonitorchannel.APIURLValidator is a validator for the "api_url" field. It is called by the builders before save.
+	usagemonitorchannel.APIURLValidator = usagemonitorchannelDescAPIURL.Validators[0].(func(string) error)
+	// usagemonitorchannelDescPollInterval is the schema descriptor for poll_interval field.
+	usagemonitorchannelDescPollInterval := usagemonitorchannelFields[7].Descriptor()
+	// usagemonitorchannel.DefaultPollInterval holds the default value on creation for the poll_interval field.
+	usagemonitorchannel.DefaultPollInterval = usagemonitorchannelDescPollInterval.Default.(int)
 	userMixin := schema.User{}.Mixin()
 	user.Policy = privacy.NewPolicies(schema.User{})
 	user.Hooks[0] = func(next ent.Mutator) ent.Mutator {

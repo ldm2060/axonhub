@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -374,6 +375,21 @@ func (_c *UserCreate) AddUserUsageStats(v ...*UserUsageStats) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddUserUsageStatIDs(ids...)
+}
+
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (_c *UserCreate) AddUsageMonitorChannelIDs(ids ...int) *UserCreate {
+	_c.mutation.AddUsageMonitorChannelIDs(ids...)
+	return _c
+}
+
+// AddUsageMonitorChannels adds the "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_c *UserCreate) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUsageMonitorChannelIDs(ids...)
 }
 
 // AddProjectUserIDs adds the "project_users" edge to the UserProject entity by IDs.
@@ -792,6 +808,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userusagestats.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsageMonitorChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UsageMonitorChannelsTable,
+			Columns: []string{user.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

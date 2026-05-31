@@ -285,6 +285,18 @@ func (f UsageLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageLogMutation", m)
 }
 
+// The UsageMonitorChannelFunc type is an adapter to allow the use of ordinary
+// function as UsageMonitorChannel mutator.
+type UsageMonitorChannelFunc func(context.Context, *ent.UsageMonitorChannelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UsageMonitorChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UsageMonitorChannelMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UsageMonitorChannelMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

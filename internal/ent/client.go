@@ -38,6 +38,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -95,6 +96,8 @@ type Client struct {
 	Trace *TraceClient
 	// UsageLog is the client for interacting with the UsageLog builders.
 	UsageLog *UsageLogClient
+	// UsageMonitorChannel is the client for interacting with the UsageMonitorChannel builders.
+	UsageMonitorChannel *UsageMonitorChannelClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserProject is the client for interacting with the UserProject builders.
@@ -139,6 +142,7 @@ func (c *Client) init() {
 	c.Thread = NewThreadClient(c.config)
 	c.Trace = NewTraceClient(c.config)
 	c.UsageLog = NewUsageLogClient(c.config)
+	c.UsageMonitorChannel = NewUsageMonitorChannelClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserProject = NewUserProjectClient(c.config)
 	c.UserRole = NewUserRoleClient(c.config)
@@ -258,6 +262,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Thread:                   NewThreadClient(cfg),
 		Trace:                    NewTraceClient(cfg),
 		UsageLog:                 NewUsageLogClient(cfg),
+		UsageMonitorChannel:      NewUsageMonitorChannelClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserProject:              NewUserProjectClient(cfg),
 		UserRole:                 NewUserRoleClient(cfg),
@@ -304,6 +309,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Thread:                   NewThreadClient(cfg),
 		Trace:                    NewTraceClient(cfg),
 		UsageLog:                 NewUsageLogClient(cfg),
+		UsageMonitorChannel:      NewUsageMonitorChannelClient(cfg),
 		User:                     NewUserClient(cfg),
 		UserProject:              NewUserProjectClient(cfg),
 		UserRole:                 NewUserRoleClient(cfg),
@@ -341,8 +347,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
 		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserUsageStats,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog,
+		c.UsageMonitorChannel, c.User, c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Use(hooks...)
 	}
@@ -356,8 +362,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
 		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
 		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog, c.User,
-		c.UserProject, c.UserRole, c.UserUsageStats,
+		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog,
+		c.UsageMonitorChannel, c.User, c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -412,6 +418,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Trace.mutate(ctx, m)
 	case *UsageLogMutation:
 		return c.UsageLog.mutate(ctx, m)
+	case *UsageMonitorChannelMutation:
+		return c.UsageMonitorChannel.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserProjectMutation:
@@ -972,6 +980,22 @@ func (c *ChannelClient) QueryProviderQuotaStatus(_m *Channel) *ProviderQuotaStat
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(providerquotastatus.Table, providerquotastatus.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, channel.ProviderQuotaStatusTable, channel.ProviderQuotaStatusColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageMonitorChannels queries the usage_monitor_channels edge of a Channel.
+func (c *ChannelClient) QueryUsageMonitorChannels(_m *Channel) *UsageMonitorChannelQuery {
+	query := (&UsageMonitorChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UsageMonitorChannelsTable, channel.UsageMonitorChannelsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -4415,6 +4439,173 @@ func (c *UsageLogClient) mutate(ctx context.Context, m *UsageLogMutation) (Value
 	}
 }
 
+// UsageMonitorChannelClient is a client for the UsageMonitorChannel schema.
+type UsageMonitorChannelClient struct {
+	config
+}
+
+// NewUsageMonitorChannelClient returns a client for the UsageMonitorChannel from the given config.
+func NewUsageMonitorChannelClient(c config) *UsageMonitorChannelClient {
+	return &UsageMonitorChannelClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usagemonitorchannel.Hooks(f(g(h())))`.
+func (c *UsageMonitorChannelClient) Use(hooks ...Hook) {
+	c.hooks.UsageMonitorChannel = append(c.hooks.UsageMonitorChannel, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usagemonitorchannel.Intercept(f(g(h())))`.
+func (c *UsageMonitorChannelClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UsageMonitorChannel = append(c.inters.UsageMonitorChannel, interceptors...)
+}
+
+// Create returns a builder for creating a UsageMonitorChannel entity.
+func (c *UsageMonitorChannelClient) Create() *UsageMonitorChannelCreate {
+	mutation := newUsageMonitorChannelMutation(c.config, OpCreate)
+	return &UsageMonitorChannelCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UsageMonitorChannel entities.
+func (c *UsageMonitorChannelClient) CreateBulk(builders ...*UsageMonitorChannelCreate) *UsageMonitorChannelCreateBulk {
+	return &UsageMonitorChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UsageMonitorChannelClient) MapCreateBulk(slice any, setFunc func(*UsageMonitorChannelCreate, int)) *UsageMonitorChannelCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UsageMonitorChannelCreateBulk{err: fmt.Errorf("calling to UsageMonitorChannelClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UsageMonitorChannelCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UsageMonitorChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) Update() *UsageMonitorChannelUpdate {
+	mutation := newUsageMonitorChannelMutation(c.config, OpUpdate)
+	return &UsageMonitorChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UsageMonitorChannelClient) UpdateOne(_m *UsageMonitorChannel) *UsageMonitorChannelUpdateOne {
+	mutation := newUsageMonitorChannelMutation(c.config, OpUpdateOne, withUsageMonitorChannel(_m))
+	return &UsageMonitorChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UsageMonitorChannelClient) UpdateOneID(id int) *UsageMonitorChannelUpdateOne {
+	mutation := newUsageMonitorChannelMutation(c.config, OpUpdateOne, withUsageMonitorChannelID(id))
+	return &UsageMonitorChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) Delete() *UsageMonitorChannelDelete {
+	mutation := newUsageMonitorChannelMutation(c.config, OpDelete)
+	return &UsageMonitorChannelDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UsageMonitorChannelClient) DeleteOne(_m *UsageMonitorChannel) *UsageMonitorChannelDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UsageMonitorChannelClient) DeleteOneID(id int) *UsageMonitorChannelDeleteOne {
+	builder := c.Delete().Where(usagemonitorchannel.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UsageMonitorChannelDeleteOne{builder}
+}
+
+// Query returns a query builder for UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) Query() *UsageMonitorChannelQuery {
+	return &UsageMonitorChannelQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUsageMonitorChannel},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UsageMonitorChannel entity by its id.
+func (c *UsageMonitorChannelClient) Get(ctx context.Context, id int) (*UsageMonitorChannel, error) {
+	return c.Query().Where(usagemonitorchannel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UsageMonitorChannelClient) GetX(ctx context.Context, id int) *UsageMonitorChannel {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChannel queries the channel edge of a UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) QueryChannel(_m *UsageMonitorChannel) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagemonitorchannel.Table, usagemonitorchannel.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagemonitorchannel.ChannelTable, usagemonitorchannel.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOwner queries the owner edge of a UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) QueryOwner(_m *UsageMonitorChannel) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagemonitorchannel.Table, usagemonitorchannel.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usagemonitorchannel.OwnerTable, usagemonitorchannel.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UsageMonitorChannelClient) Hooks() []Hook {
+	hooks := c.hooks.UsageMonitorChannel
+	return append(hooks[:len(hooks):len(hooks)], usagemonitorchannel.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UsageMonitorChannelClient) Interceptors() []Interceptor {
+	inters := c.inters.UsageMonitorChannel
+	return append(inters[:len(inters):len(inters)], usagemonitorchannel.Interceptors[:]...)
+}
+
+func (c *UsageMonitorChannelClient) mutate(ctx context.Context, m *UsageMonitorChannelMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UsageMonitorChannelCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UsageMonitorChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UsageMonitorChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UsageMonitorChannelDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UsageMonitorChannel mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -4708,6 +4899,22 @@ func (c *UserClient) QueryUserUsageStats(_m *User) *UserUsageStatsQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(userusagestats.Table, userusagestats.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.UserUsageStatsTable, user.UserUsageStatsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageMonitorChannels queries the usage_monitor_channels edge of a User.
+func (c *UserClient) QueryUsageMonitorChannels(_m *User) *UsageMonitorChannelQuery {
+	query := (&UsageMonitorChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UsageMonitorChannelsTable, user.UsageMonitorChannelsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -5261,14 +5468,15 @@ type (
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, User, UserProject, UserRole, UserUsageStats []ent.Hook
+		Thread, Trace, UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
+		UserUsageStats []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
 		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
 		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, User, UserProject, UserRole,
+		Thread, Trace, UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
 		UserUsageStats []ent.Interceptor
 	}
 )

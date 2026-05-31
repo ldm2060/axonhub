@@ -27,6 +27,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -253,7 +254,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "Channel",
 		Fields: make([]*Field, 23),
-		Edges:  make([]*Edge, 7),
+		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -507,6 +508,16 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryProviderQuotaStatus().
 		Select(providerquotastatus.FieldID).
 		Scan(ctx, &node.Edges[6].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[7] = &Edge{
+		Type: "UsageMonitorChannel",
+		Name: "usage_monitor_channels",
+	}
+	err = _m.QueryUsageMonitorChannels().
+		Select(usagemonitorchannel.FieldID).
+		Scan(ctx, &node.Edges[7].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -2812,12 +2823,164 @@ func (_m *UsageLog) Node(ctx context.Context) (node *Node, err error) {
 }
 
 // Node implements Noder interface
+func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "UsageMonitorChannel",
+		Fields: make([]*Field, 15),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Source); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "usagemonitorchannel.Source",
+		Name:  "source",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIURL); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "string",
+		Name:  "api_url",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIMethod); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "usagemonitorchannel.APIMethod",
+		Name:  "api_method",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIHeaders); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "map[string]interface {}",
+		Name:  "api_headers",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.APIBody); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "api_body",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.PollInterval); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "int",
+		Name:  "poll_interval",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Fields); err != nil {
+		return nil, err
+	}
+	node.Fields[10] = &Field{
+		Type:  "[]map[string]interface {}",
+		Name:  "fields",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastPollAt); err != nil {
+		return nil, err
+	}
+	node.Fields[11] = &Field{
+		Type:  "time.Time",
+		Name:  "last_poll_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastPollData); err != nil {
+		return nil, err
+	}
+	node.Fields[12] = &Field{
+		Type:  "map[string]interface {}",
+		Name:  "last_poll_data",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastPollError); err != nil {
+		return nil, err
+	}
+	node.Fields[13] = &Field{
+		Type:  "string",
+		Name:  "last_poll_error",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "usagemonitorchannel.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Channel",
+		Name: "channel",
+	}
+	err = _m.QueryChannel().
+		Select(channel.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "User",
+		Name: "owner",
+	}
+	err = _m.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
 func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "User",
 		Fields: make([]*Field, 13),
-		Edges:  make([]*Edge, 14),
+		Edges:  make([]*Edge, 15),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -3045,22 +3208,32 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[12] = &Edge{
-		Type: "UserProject",
-		Name: "project_users",
+		Type: "UsageMonitorChannel",
+		Name: "usage_monitor_channels",
 	}
-	err = _m.QueryProjectUsers().
-		Select(userproject.FieldID).
+	err = _m.QueryUsageMonitorChannels().
+		Select(usagemonitorchannel.FieldID).
 		Scan(ctx, &node.Edges[12].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[13] = &Edge{
+		Type: "UserProject",
+		Name: "project_users",
+	}
+	err = _m.QueryProjectUsers().
+		Select(userproject.FieldID).
+		Scan(ctx, &node.Edges[13].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[14] = &Edge{
 		Type: "UserRole",
 		Name: "user_roles",
 	}
 	err = _m.QueryUserRoles().
 		Select(userrole.FieldID).
-		Scan(ctx, &node.Edges[13].IDs)
+		Scan(ctx, &node.Edges[14].IDs)
 	if err != nil {
 		return nil, err
 	}

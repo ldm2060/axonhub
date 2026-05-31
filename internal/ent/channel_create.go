@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
@@ -375,6 +376,21 @@ func (_c *ChannelCreate) SetNillableProviderQuotaStatusID(id *int) *ChannelCreat
 // SetProviderQuotaStatus sets the "provider_quota_status" edge to the ProviderQuotaStatus entity.
 func (_c *ChannelCreate) SetProviderQuotaStatus(v *ProviderQuotaStatus) *ChannelCreate {
 	return _c.SetProviderQuotaStatusID(v.ID)
+}
+
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (_c *ChannelCreate) AddUsageMonitorChannelIDs(ids ...int) *ChannelCreate {
+	_c.mutation.AddUsageMonitorChannelIDs(ids...)
+	return _c
+}
+
+// AddUsageMonitorChannels adds the "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_c *ChannelCreate) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *ChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUsageMonitorChannelIDs(ids...)
 }
 
 // Mutation returns the ChannelMutation object of the builder.
@@ -751,6 +767,22 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(providerquotastatus.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UsageMonitorChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

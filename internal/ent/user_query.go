@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -48,6 +49,7 @@ type UserQuery struct {
 	withOidcIdentities                *OIDCIdentityQuery
 	withEmailTokens                   *EmailTokenQuery
 	withUserUsageStats                *UserUsageStatsQuery
+	withUsageMonitorChannels          *UsageMonitorChannelQuery
 	withProjectUsers                  *UserProjectQuery
 	withUserRoles                     *UserRoleQuery
 	loadTotal                         []func(context.Context, []*User) error
@@ -63,6 +65,7 @@ type UserQuery struct {
 	withNamedOidcIdentities           map[string]*OIDCIdentityQuery
 	withNamedEmailTokens              map[string]*EmailTokenQuery
 	withNamedUserUsageStats           map[string]*UserUsageStatsQuery
+	withNamedUsageMonitorChannels     map[string]*UsageMonitorChannelQuery
 	withNamedProjectUsers             map[string]*UserProjectQuery
 	withNamedUserRoles                map[string]*UserRoleQuery
 	// intermediate query (i.e. traversal path).
@@ -365,6 +368,28 @@ func (_q *UserQuery) QueryUserUsageStats() *UserUsageStatsQuery {
 	return query
 }
 
+// QueryUsageMonitorChannels chains the current query on the "usage_monitor_channels" edge.
+func (_q *UserQuery) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UsageMonitorChannelsTable, user.UsageMonitorChannelsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProjectUsers chains the current query on the "project_users" edge.
 func (_q *UserQuery) QueryProjectUsers() *UserProjectQuery {
 	query := (&UserProjectClient{config: _q.config}).Query()
@@ -613,6 +638,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withOidcIdentities:           _q.withOidcIdentities.Clone(),
 		withEmailTokens:              _q.withEmailTokens.Clone(),
 		withUserUsageStats:           _q.withUserUsageStats.Clone(),
+		withUsageMonitorChannels:     _q.withUsageMonitorChannels.Clone(),
 		withProjectUsers:             _q.withProjectUsers.Clone(),
 		withUserRoles:                _q.withUserRoles.Clone(),
 		// clone intermediate query.
@@ -754,6 +780,17 @@ func (_q *UserQuery) WithUserUsageStats(opts ...func(*UserUsageStatsQuery)) *Use
 	return _q
 }
 
+// WithUsageMonitorChannels tells the query-builder to eager-load the nodes that are connected to
+// the "usage_monitor_channels" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUsageMonitorChannels(opts ...func(*UsageMonitorChannelQuery)) *UserQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUsageMonitorChannels = query
+	return _q
+}
+
 // WithProjectUsers tells the query-builder to eager-load the nodes that are connected to
 // the "project_users" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithProjectUsers(opts ...func(*UserProjectQuery)) *UserQuery {
@@ -860,7 +897,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [14]bool{
+		loadedTypes = [15]bool{
 			_q.withProjects != nil,
 			_q.withOwnedChannels != nil,
 			_q.withOwnedModels != nil,
@@ -873,6 +910,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withOidcIdentities != nil,
 			_q.withEmailTokens != nil,
 			_q.withUserUsageStats != nil,
+			_q.withUsageMonitorChannels != nil,
 			_q.withProjectUsers != nil,
 			_q.withUserRoles != nil,
 		}
@@ -983,6 +1021,15 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withUsageMonitorChannels; query != nil {
+		if err := _q.loadUsageMonitorChannels(ctx, query, nodes,
+			func(n *User) { n.Edges.UsageMonitorChannels = []*UsageMonitorChannel{} },
+			func(n *User, e *UsageMonitorChannel) {
+				n.Edges.UsageMonitorChannels = append(n.Edges.UsageMonitorChannels, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProjectUsers; query != nil {
 		if err := _q.loadProjectUsers(ctx, query, nodes,
 			func(n *User) { n.Edges.ProjectUsers = []*UserProject{} },
@@ -1071,6 +1118,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadUserUsageStats(ctx, query, nodes,
 			func(n *User) { n.appendNamedUserUsageStats(name) },
 			func(n *User, e *UserUsageStats) { n.appendNamedUserUsageStats(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUsageMonitorChannels {
+		if err := _q.loadUsageMonitorChannels(ctx, query, nodes,
+			func(n *User) { n.appendNamedUsageMonitorChannels(name) },
+			func(n *User, e *UsageMonitorChannel) { n.appendNamedUsageMonitorChannels(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1526,6 +1580,37 @@ func (_q *UserQuery) loadUserUsageStats(ctx context.Context, query *UserUsageSta
 	}
 	return nil
 }
+func (_q *UserQuery) loadUsageMonitorChannels(ctx context.Context, query *UsageMonitorChannelQuery, nodes []*User, init func(*User), assign func(*User, *UsageMonitorChannel)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.UsageMonitorChannel(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UsageMonitorChannelsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_usage_monitor_channels
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_usage_monitor_channels" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_usage_monitor_channels" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadProjectUsers(ctx context.Context, query *UserProjectQuery, nodes []*User, init func(*User), assign func(*User, *UserProject)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1834,6 +1919,20 @@ func (_q *UserQuery) WithNamedUserUsageStats(name string, opts ...func(*UserUsag
 		_q.withNamedUserUsageStats = make(map[string]*UserUsageStatsQuery)
 	}
 	_q.withNamedUserUsageStats[name] = query
+	return _q
+}
+
+// WithNamedUsageMonitorChannels tells the query-builder to eager-load the nodes that are connected to the "usage_monitor_channels"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedUsageMonitorChannels(name string, opts ...func(*UsageMonitorChannelQuery)) *UserQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUsageMonitorChannels == nil {
+		_q.withNamedUsageMonitorChannels = make(map[string]*UsageMonitorChannelQuery)
+	}
+	_q.withNamedUsageMonitorChannels[name] = query
 	return _q
 }
 

@@ -91,17 +91,20 @@ type ChannelEdges struct {
 	ChannelModelPrices []*ChannelModelPrice `json:"channel_model_prices,omitempty"`
 	// ProviderQuotaStatus holds the value of the provider_quota_status edge.
 	ProviderQuotaStatus *ProviderQuotaStatus `json:"provider_quota_status,omitempty"`
+	// UsageMonitorChannels holds the value of the usage_monitor_channels edge.
+	UsageMonitorChannels []*UsageMonitorChannel `json:"usage_monitor_channels,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 	// totalCount holds the count of the edges above.
-	totalCount [7]map[string]int
+	totalCount [8]map[string]int
 
-	namedRequests           map[string][]*Request
-	namedExecutions         map[string][]*RequestExecution
-	namedUsageLogs          map[string][]*UsageLog
-	namedChannelProbes      map[string][]*ChannelProbe
-	namedChannelModelPrices map[string][]*ChannelModelPrice
+	namedRequests             map[string][]*Request
+	namedExecutions           map[string][]*RequestExecution
+	namedUsageLogs            map[string][]*UsageLog
+	namedChannelProbes        map[string][]*ChannelProbe
+	namedChannelModelPrices   map[string][]*ChannelModelPrice
+	namedUsageMonitorChannels map[string][]*UsageMonitorChannel
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -169,6 +172,15 @@ func (e ChannelEdges) ProviderQuotaStatusOrErr() (*ProviderQuotaStatus, error) {
 		return nil, &NotFoundError{label: providerquotastatus.Label}
 	}
 	return nil, &NotLoadedError{edge: "provider_quota_status"}
+}
+
+// UsageMonitorChannelsOrErr returns the UsageMonitorChannels value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) UsageMonitorChannelsOrErr() ([]*UsageMonitorChannel, error) {
+	if e.loadedTypes[7] {
+		return e.UsageMonitorChannels, nil
+	}
+	return nil, &NotLoadedError{edge: "usage_monitor_channels"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -419,6 +431,11 @@ func (_m *Channel) QueryProviderQuotaStatus() *ProviderQuotaStatusQuery {
 	return NewChannelClient(_m.config).QueryProviderQuotaStatus(_m)
 }
 
+// QueryUsageMonitorChannels queries the "usage_monitor_channels" edge of the Channel entity.
+func (_m *Channel) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
+	return NewChannelClient(_m.config).QueryUsageMonitorChannels(_m)
+}
+
 // Update returns a builder for updating this Channel.
 // Note that you need to call Channel.Unwrap() before calling this method if this Channel
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -636,6 +653,30 @@ func (_m *Channel) appendNamedChannelModelPrices(name string, edges ...*ChannelM
 		_m.Edges.namedChannelModelPrices[name] = []*ChannelModelPrice{}
 	} else {
 		_m.Edges.namedChannelModelPrices[name] = append(_m.Edges.namedChannelModelPrices[name], edges...)
+	}
+}
+
+// NamedUsageMonitorChannels returns the UsageMonitorChannels named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Channel) NamedUsageMonitorChannels(name string) ([]*UsageMonitorChannel, error) {
+	if _m.Edges.namedUsageMonitorChannels == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedUsageMonitorChannels[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Channel) appendNamedUsageMonitorChannels(name string, edges ...*UsageMonitorChannel) {
+	if _m.Edges.namedUsageMonitorChannels == nil {
+		_m.Edges.namedUsageMonitorChannels = make(map[string][]*UsageMonitorChannel)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedUsageMonitorChannels[name] = []*UsageMonitorChannel{}
+	} else {
+		_m.Edges.namedUsageMonitorChannels[name] = append(_m.Edges.namedUsageMonitorChannels[name], edges...)
 	}
 }
 

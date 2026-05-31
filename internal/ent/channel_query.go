@@ -21,30 +21,33 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 )
 
 // ChannelQuery is the builder for querying Channel entities.
 type ChannelQuery struct {
 	config
-	ctx                         *QueryContext
-	order                       []channel.OrderOption
-	inters                      []Interceptor
-	predicates                  []predicate.Channel
-	withOwner                   *UserQuery
-	withRequests                *RequestQuery
-	withExecutions              *RequestExecutionQuery
-	withUsageLogs               *UsageLogQuery
-	withChannelProbes           *ChannelProbeQuery
-	withChannelModelPrices      *ChannelModelPriceQuery
-	withProviderQuotaStatus     *ProviderQuotaStatusQuery
-	loadTotal                   []func(context.Context, []*Channel) error
-	modifiers                   []func(*sql.Selector)
-	withNamedRequests           map[string]*RequestQuery
-	withNamedExecutions         map[string]*RequestExecutionQuery
-	withNamedUsageLogs          map[string]*UsageLogQuery
-	withNamedChannelProbes      map[string]*ChannelProbeQuery
-	withNamedChannelModelPrices map[string]*ChannelModelPriceQuery
+	ctx                           *QueryContext
+	order                         []channel.OrderOption
+	inters                        []Interceptor
+	predicates                    []predicate.Channel
+	withOwner                     *UserQuery
+	withRequests                  *RequestQuery
+	withExecutions                *RequestExecutionQuery
+	withUsageLogs                 *UsageLogQuery
+	withChannelProbes             *ChannelProbeQuery
+	withChannelModelPrices        *ChannelModelPriceQuery
+	withProviderQuotaStatus       *ProviderQuotaStatusQuery
+	withUsageMonitorChannels      *UsageMonitorChannelQuery
+	loadTotal                     []func(context.Context, []*Channel) error
+	modifiers                     []func(*sql.Selector)
+	withNamedRequests             map[string]*RequestQuery
+	withNamedExecutions           map[string]*RequestExecutionQuery
+	withNamedUsageLogs            map[string]*UsageLogQuery
+	withNamedChannelProbes        map[string]*ChannelProbeQuery
+	withNamedChannelModelPrices   map[string]*ChannelModelPriceQuery
+	withNamedUsageMonitorChannels map[string]*UsageMonitorChannelQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -228,6 +231,28 @@ func (_q *ChannelQuery) QueryProviderQuotaStatus() *ProviderQuotaStatusQuery {
 			sqlgraph.From(channel.Table, channel.FieldID, selector),
 			sqlgraph.To(providerquotastatus.Table, providerquotastatus.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, channel.ProviderQuotaStatusTable, channel.ProviderQuotaStatusColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUsageMonitorChannels chains the current query on the "usage_monitor_channels" edge.
+func (_q *ChannelQuery) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.UsageMonitorChannelsTable, channel.UsageMonitorChannelsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -422,18 +447,19 @@ func (_q *ChannelQuery) Clone() *ChannelQuery {
 		return nil
 	}
 	return &ChannelQuery{
-		config:                  _q.config,
-		ctx:                     _q.ctx.Clone(),
-		order:                   append([]channel.OrderOption{}, _q.order...),
-		inters:                  append([]Interceptor{}, _q.inters...),
-		predicates:              append([]predicate.Channel{}, _q.predicates...),
-		withOwner:               _q.withOwner.Clone(),
-		withRequests:            _q.withRequests.Clone(),
-		withExecutions:          _q.withExecutions.Clone(),
-		withUsageLogs:           _q.withUsageLogs.Clone(),
-		withChannelProbes:       _q.withChannelProbes.Clone(),
-		withChannelModelPrices:  _q.withChannelModelPrices.Clone(),
-		withProviderQuotaStatus: _q.withProviderQuotaStatus.Clone(),
+		config:                   _q.config,
+		ctx:                      _q.ctx.Clone(),
+		order:                    append([]channel.OrderOption{}, _q.order...),
+		inters:                   append([]Interceptor{}, _q.inters...),
+		predicates:               append([]predicate.Channel{}, _q.predicates...),
+		withOwner:                _q.withOwner.Clone(),
+		withRequests:             _q.withRequests.Clone(),
+		withExecutions:           _q.withExecutions.Clone(),
+		withUsageLogs:            _q.withUsageLogs.Clone(),
+		withChannelProbes:        _q.withChannelProbes.Clone(),
+		withChannelModelPrices:   _q.withChannelModelPrices.Clone(),
+		withProviderQuotaStatus:  _q.withProviderQuotaStatus.Clone(),
+		withUsageMonitorChannels: _q.withUsageMonitorChannels.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -515,6 +541,17 @@ func (_q *ChannelQuery) WithProviderQuotaStatus(opts ...func(*ProviderQuotaStatu
 		opt(query)
 	}
 	_q.withProviderQuotaStatus = query
+	return _q
+}
+
+// WithUsageMonitorChannels tells the query-builder to eager-load the nodes that are connected to
+// the "usage_monitor_channels" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithUsageMonitorChannels(opts ...func(*UsageMonitorChannelQuery)) *ChannelQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUsageMonitorChannels = query
 	return _q
 }
 
@@ -602,7 +639,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 	var (
 		nodes       = []*Channel{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [8]bool{
 			_q.withOwner != nil,
 			_q.withRequests != nil,
 			_q.withExecutions != nil,
@@ -610,6 +647,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			_q.withChannelProbes != nil,
 			_q.withChannelModelPrices != nil,
 			_q.withProviderQuotaStatus != nil,
+			_q.withUsageMonitorChannels != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -682,6 +720,15 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			return nil, err
 		}
 	}
+	if query := _q.withUsageMonitorChannels; query != nil {
+		if err := _q.loadUsageMonitorChannels(ctx, query, nodes,
+			func(n *Channel) { n.Edges.UsageMonitorChannels = []*UsageMonitorChannel{} },
+			func(n *Channel, e *UsageMonitorChannel) {
+				n.Edges.UsageMonitorChannels = append(n.Edges.UsageMonitorChannels, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedRequests {
 		if err := _q.loadRequests(ctx, query, nodes,
 			func(n *Channel) { n.appendNamedRequests(name) },
@@ -714,6 +761,13 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 		if err := _q.loadChannelModelPrices(ctx, query, nodes,
 			func(n *Channel) { n.appendNamedChannelModelPrices(name) },
 			func(n *Channel, e *ChannelModelPrice) { n.appendNamedChannelModelPrices(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedUsageMonitorChannels {
+		if err := _q.loadUsageMonitorChannels(ctx, query, nodes,
+			func(n *Channel) { n.appendNamedUsageMonitorChannels(name) },
+			func(n *Channel, e *UsageMonitorChannel) { n.appendNamedUsageMonitorChannels(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -931,6 +985,40 @@ func (_q *ChannelQuery) loadProviderQuotaStatus(ctx context.Context, query *Prov
 	}
 	return nil
 }
+func (_q *ChannelQuery) loadUsageMonitorChannels(ctx context.Context, query *UsageMonitorChannelQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *UsageMonitorChannel)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Channel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usagemonitorchannel.FieldChannelID)
+	}
+	query.Where(predicate.UsageMonitorChannel(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(channel.UsageMonitorChannelsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ChannelID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "channel_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_id" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *ChannelQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1095,6 +1183,20 @@ func (_q *ChannelQuery) WithNamedChannelModelPrices(name string, opts ...func(*C
 		_q.withNamedChannelModelPrices = make(map[string]*ChannelModelPriceQuery)
 	}
 	_q.withNamedChannelModelPrices[name] = query
+	return _q
+}
+
+// WithNamedUsageMonitorChannels tells the query-builder to eager-load the nodes that are connected to the "usage_monitor_channels"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithNamedUsageMonitorChannels(name string, opts ...func(*UsageMonitorChannelQuery)) *ChannelQuery {
+	query := (&UsageMonitorChannelClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedUsageMonitorChannels == nil {
+		_q.withNamedUsageMonitorChannels = make(map[string]*UsageMonitorChannelQuery)
+	}
+	_q.withNamedUsageMonitorChannels[name] = query
 	return _q
 }
 

@@ -33,6 +33,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -761,6 +762,19 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				return err
 			}
 			_q.withProviderQuotaStatus = query
+
+		case "usageMonitorChannels":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageMonitorChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, usagemonitorchannelImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedUsageMonitorChannels(alias, func(wq *UsageMonitorChannelQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[channel.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, channel.FieldCreatedAt)
@@ -5688,6 +5702,191 @@ func newUsageLogPaginateArgs(rv map[string]any) *usagelogPaginateArgs {
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *UsageMonitorChannelQuery) CollectFields(ctx context.Context, satisfies ...string) (*UsageMonitorChannelQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(usagemonitorchannel.Columns))
+		selectedFields = []string{usagemonitorchannel.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "channel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, channelImplementors)...); err != nil {
+				return err
+			}
+			_q.withChannel = query
+			if _, ok := fieldSeen[usagemonitorchannel.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldChannelID)
+				fieldSeen[usagemonitorchannel.FieldChannelID] = struct{}{}
+			}
+
+		case "owner":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			_q.withOwner = query
+		case "createdAt":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldCreatedAt)
+				fieldSeen[usagemonitorchannel.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldUpdatedAt)
+				fieldSeen[usagemonitorchannel.FieldUpdatedAt] = struct{}{}
+			}
+		case "name":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldName]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldName)
+				fieldSeen[usagemonitorchannel.FieldName] = struct{}{}
+			}
+		case "source":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldSource]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldSource)
+				fieldSeen[usagemonitorchannel.FieldSource] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldChannelID)
+				fieldSeen[usagemonitorchannel.FieldChannelID] = struct{}{}
+			}
+		case "apiURL":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAPIURL]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAPIURL)
+				fieldSeen[usagemonitorchannel.FieldAPIURL] = struct{}{}
+			}
+		case "apiMethod":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAPIMethod]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAPIMethod)
+				fieldSeen[usagemonitorchannel.FieldAPIMethod] = struct{}{}
+			}
+		case "apiHeaders":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAPIHeaders]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAPIHeaders)
+				fieldSeen[usagemonitorchannel.FieldAPIHeaders] = struct{}{}
+			}
+		case "apiBody":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAPIBody]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAPIBody)
+				fieldSeen[usagemonitorchannel.FieldAPIBody] = struct{}{}
+			}
+		case "pollInterval":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldPollInterval]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldPollInterval)
+				fieldSeen[usagemonitorchannel.FieldPollInterval] = struct{}{}
+			}
+		case "fields":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldFields]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldFields)
+				fieldSeen[usagemonitorchannel.FieldFields] = struct{}{}
+			}
+		case "lastPollAt":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldLastPollAt]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldLastPollAt)
+				fieldSeen[usagemonitorchannel.FieldLastPollAt] = struct{}{}
+			}
+		case "lastPollData":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldLastPollData]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldLastPollData)
+				fieldSeen[usagemonitorchannel.FieldLastPollData] = struct{}{}
+			}
+		case "lastPollError":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldLastPollError]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldLastPollError)
+				fieldSeen[usagemonitorchannel.FieldLastPollError] = struct{}{}
+			}
+		case "status":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldStatus]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldStatus)
+				fieldSeen[usagemonitorchannel.FieldStatus] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type usagemonitorchannelPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []UsageMonitorChannelPaginateOption
+}
+
+func newUsageMonitorChannelPaginateArgs(rv map[string]any) *usagemonitorchannelPaginateArgs {
+	args := &usagemonitorchannelPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &UsageMonitorChannelOrder{Field: &UsageMonitorChannelOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithUsageMonitorChannelOrder(order))
+			}
+		case *UsageMonitorChannelOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithUsageMonitorChannelOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*UsageMonitorChannelWhereInput); ok {
+		args.opts = append(args.opts, WithUsageMonitorChannelFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (_q *UserQuery) CollectFields(ctx context.Context, satisfies ...string) (*UserQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -6255,6 +6454,19 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				*wq = *query
 			})
 
+		case "usageMonitorChannels":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageMonitorChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, usagemonitorchannelImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedUsageMonitorChannels(alias, func(wq *UsageMonitorChannelQuery) {
+				*wq = *query
+			})
+
 		case "projectUsers":
 			var (
 				alias = field.Alias
@@ -6298,10 +6510,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[12] == nil {
-								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[12][alias] = n
+							nodes[i].Edges.totalCount[13][alias] = n
 						}
 						return nil
 					})
@@ -6309,10 +6521,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.ProjectUsers)
-							if nodes[i].Edges.totalCount[12] == nil {
-								nodes[i].Edges.totalCount[12] = make(map[string]int)
+							if nodes[i].Edges.totalCount[13] == nil {
+								nodes[i].Edges.totalCount[13] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[12][alias] = n
+							nodes[i].Edges.totalCount[13][alias] = n
 						}
 						return nil
 					})
@@ -6387,10 +6599,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 						}
 						for i := range nodes {
 							n := m[nodes[i].ID]
-							if nodes[i].Edges.totalCount[13] == nil {
-								nodes[i].Edges.totalCount[13] = make(map[string]int)
+							if nodes[i].Edges.totalCount[14] == nil {
+								nodes[i].Edges.totalCount[14] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[13][alias] = n
+							nodes[i].Edges.totalCount[14][alias] = n
 						}
 						return nil
 					})
@@ -6398,10 +6610,10 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 					_q.loadTotal = append(_q.loadTotal, func(_ context.Context, nodes []*User) error {
 						for i := range nodes {
 							n := len(nodes[i].Edges.UserRoles)
-							if nodes[i].Edges.totalCount[13] == nil {
-								nodes[i].Edges.totalCount[13] = make(map[string]int)
+							if nodes[i].Edges.totalCount[14] == nil {
+								nodes[i].Edges.totalCount[14] = make(map[string]int)
 							}
-							nodes[i].Edges.totalCount[13][alias] = n
+							nodes[i].Edges.totalCount[14][alias] = n
 						}
 						return nil
 					})

@@ -986,6 +986,59 @@ var (
 			},
 		},
 	}
+	// UsageMonitorChannelsColumns holds the columns for the "usage_monitor_channels" table.
+	UsageMonitorChannelsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
+		{Name: "name", Type: field.TypeString},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"builtin", "custom"}},
+		{Name: "api_url", Type: field.TypeString},
+		{Name: "api_method", Type: field.TypeEnum, Enums: []string{"GET", "POST"}, Default: "GET"},
+		{Name: "api_headers", Type: field.TypeJSON},
+		{Name: "api_body", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "poll_interval", Type: field.TypeInt, Default: 300},
+		{Name: "fields", Type: field.TypeJSON},
+		{Name: "last_poll_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_poll_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "last_poll_error", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "paused", "error"}, Default: "active"},
+		{Name: "channel_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_usage_monitor_channels", Type: field.TypeInt},
+	}
+	// UsageMonitorChannelsTable holds the schema information for the "usage_monitor_channels" table.
+	UsageMonitorChannelsTable = &schema.Table{
+		Name:       "usage_monitor_channels",
+		Columns:    UsageMonitorChannelsColumns,
+		PrimaryKey: []*schema.Column{UsageMonitorChannelsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "usage_monitor_channels_channels_usage_monitor_channels",
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[16]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "usage_monitor_channels_users_usage_monitor_channels",
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usagemonitorchannel_channel_id",
+				Unique:  false,
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[16]},
+			},
+			{
+				Name:    "usagemonitorchannel_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[15]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1192,6 +1245,7 @@ var (
 		ThreadsTable,
 		TracesTable,
 		UsageLogsTable,
+		UsageMonitorChannelsTable,
 		UsersTable,
 		UserProjectsTable,
 		UserRolesTable,
@@ -1230,6 +1284,8 @@ func init() {
 	UsageLogsTable.ForeignKeys[0].RefTable = ChannelsTable
 	UsageLogsTable.ForeignKeys[1].RefTable = ProjectsTable
 	UsageLogsTable.ForeignKeys[2].RefTable = RequestsTable
+	UsageMonitorChannelsTable.ForeignKeys[0].RefTable = ChannelsTable
+	UsageMonitorChannelsTable.ForeignKeys[1].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = ProjectsTable
 	UserProjectsTable.ForeignKeys[0].RefTable = UsersTable
 	UserProjectsTable.ForeignKeys[1].RefTable = ProjectsTable

@@ -191,6 +191,7 @@ func (Channel) Edges() []ent.Edge {
 				entgql.Directives(forceResolver()),
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 			),
+		edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
 	}
 }
 

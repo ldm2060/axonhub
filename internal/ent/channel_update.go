@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -491,6 +492,21 @@ func (_u *ChannelUpdate) SetProviderQuotaStatus(v *ProviderQuotaStatus) *Channel
 	return _u.SetProviderQuotaStatusID(v.ID)
 }
 
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (_u *ChannelUpdate) AddUsageMonitorChannelIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.AddUsageMonitorChannelIDs(ids...)
+	return _u
+}
+
+// AddUsageMonitorChannels adds the "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_u *ChannelUpdate) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageMonitorChannelIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdate) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -605,6 +621,27 @@ func (_u *ChannelUpdate) RemoveChannelModelPrices(v ...*ChannelModelPrice) *Chan
 func (_u *ChannelUpdate) ClearProviderQuotaStatus() *ChannelUpdate {
 	_u.mutation.ClearProviderQuotaStatus()
 	return _u
+}
+
+// ClearUsageMonitorChannels clears all "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_u *ChannelUpdate) ClearUsageMonitorChannels() *ChannelUpdate {
+	_u.mutation.ClearUsageMonitorChannels()
+	return _u
+}
+
+// RemoveUsageMonitorChannelIDs removes the "usage_monitor_channels" edge to UsageMonitorChannel entities by IDs.
+func (_u *ChannelUpdate) RemoveUsageMonitorChannelIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.RemoveUsageMonitorChannelIDs(ids...)
+	return _u
+}
+
+// RemoveUsageMonitorChannels removes "usage_monitor_channels" edges to UsageMonitorChannel entities.
+func (_u *ChannelUpdate) RemoveUsageMonitorChannels(v ...*UsageMonitorChannel) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageMonitorChannelIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1069,6 +1106,51 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(providerquotastatus.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UsageMonitorChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageMonitorChannelsIDs(); len(nodes) > 0 && !_u.mutation.UsageMonitorChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageMonitorChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1552,6 +1634,21 @@ func (_u *ChannelUpdateOne) SetProviderQuotaStatus(v *ProviderQuotaStatus) *Chan
 	return _u.SetProviderQuotaStatusID(v.ID)
 }
 
+// AddUsageMonitorChannelIDs adds the "usage_monitor_channels" edge to the UsageMonitorChannel entity by IDs.
+func (_u *ChannelUpdateOne) AddUsageMonitorChannelIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.AddUsageMonitorChannelIDs(ids...)
+	return _u
+}
+
+// AddUsageMonitorChannels adds the "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_u *ChannelUpdateOne) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUsageMonitorChannelIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdateOne) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -1666,6 +1763,27 @@ func (_u *ChannelUpdateOne) RemoveChannelModelPrices(v ...*ChannelModelPrice) *C
 func (_u *ChannelUpdateOne) ClearProviderQuotaStatus() *ChannelUpdateOne {
 	_u.mutation.ClearProviderQuotaStatus()
 	return _u
+}
+
+// ClearUsageMonitorChannels clears all "usage_monitor_channels" edges to the UsageMonitorChannel entity.
+func (_u *ChannelUpdateOne) ClearUsageMonitorChannels() *ChannelUpdateOne {
+	_u.mutation.ClearUsageMonitorChannels()
+	return _u
+}
+
+// RemoveUsageMonitorChannelIDs removes the "usage_monitor_channels" edge to UsageMonitorChannel entities by IDs.
+func (_u *ChannelUpdateOne) RemoveUsageMonitorChannelIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.RemoveUsageMonitorChannelIDs(ids...)
+	return _u
+}
+
+// RemoveUsageMonitorChannels removes "usage_monitor_channels" edges to UsageMonitorChannel entities.
+func (_u *ChannelUpdateOne) RemoveUsageMonitorChannels(v ...*UsageMonitorChannel) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUsageMonitorChannelIDs(ids...)
 }
 
 // Where appends a list predicates to the ChannelUpdate builder.
@@ -2160,6 +2278,51 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(providerquotastatus.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UsageMonitorChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUsageMonitorChannelsIDs(); len(nodes) > 0 && !_u.mutation.UsageMonitorChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UsageMonitorChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

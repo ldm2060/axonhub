@@ -27,6 +27,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/thread"
 	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
@@ -40,7 +41,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 27)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 28)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   apikey.Table,
@@ -597,6 +598,35 @@ var schemaGraph = func() *sqlgraph.Schema {
 	}
 	graph.Nodes[23] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
+			Table:   usagemonitorchannel.Table,
+			Columns: usagemonitorchannel.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: usagemonitorchannel.FieldID,
+			},
+		},
+		Type: "UsageMonitorChannel",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			usagemonitorchannel.FieldCreatedAt:     {Type: field.TypeTime, Column: usagemonitorchannel.FieldCreatedAt},
+			usagemonitorchannel.FieldUpdatedAt:     {Type: field.TypeTime, Column: usagemonitorchannel.FieldUpdatedAt},
+			usagemonitorchannel.FieldDeletedAt:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldDeletedAt},
+			usagemonitorchannel.FieldName:          {Type: field.TypeString, Column: usagemonitorchannel.FieldName},
+			usagemonitorchannel.FieldSource:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldSource},
+			usagemonitorchannel.FieldChannelID:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldChannelID},
+			usagemonitorchannel.FieldAPIURL:        {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIURL},
+			usagemonitorchannel.FieldAPIMethod:     {Type: field.TypeEnum, Column: usagemonitorchannel.FieldAPIMethod},
+			usagemonitorchannel.FieldAPIHeaders:    {Type: field.TypeJSON, Column: usagemonitorchannel.FieldAPIHeaders},
+			usagemonitorchannel.FieldAPIBody:       {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIBody},
+			usagemonitorchannel.FieldPollInterval:  {Type: field.TypeInt, Column: usagemonitorchannel.FieldPollInterval},
+			usagemonitorchannel.FieldFields:        {Type: field.TypeJSON, Column: usagemonitorchannel.FieldFields},
+			usagemonitorchannel.FieldLastPollAt:    {Type: field.TypeTime, Column: usagemonitorchannel.FieldLastPollAt},
+			usagemonitorchannel.FieldLastPollData:  {Type: field.TypeJSON, Column: usagemonitorchannel.FieldLastPollData},
+			usagemonitorchannel.FieldLastPollError: {Type: field.TypeString, Column: usagemonitorchannel.FieldLastPollError},
+			usagemonitorchannel.FieldStatus:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldStatus},
+		},
+	}
+	graph.Nodes[24] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
 			ID: &sqlgraph.FieldSpec{
@@ -622,7 +652,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldPrivateProjectID: {Type: field.TypeInt, Column: user.FieldPrivateProjectID},
 		},
 	}
-	graph.Nodes[24] = &sqlgraph.Node{
+	graph.Nodes[25] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userproject.Table,
 			Columns: userproject.Columns,
@@ -641,7 +671,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userproject.FieldScopes:    {Type: field.TypeJSON, Column: userproject.FieldScopes},
 		},
 	}
-	graph.Nodes[25] = &sqlgraph.Node{
+	graph.Nodes[26] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userrole.Table,
 			Columns: userrole.Columns,
@@ -658,7 +688,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			userrole.FieldUpdatedAt: {Type: field.TypeTime, Column: userrole.FieldUpdatedAt},
 		},
 	}
-	graph.Nodes[26] = &sqlgraph.Node{
+	graph.Nodes[27] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   userusagestats.Table,
 			Columns: userusagestats.Columns,
@@ -812,6 +842,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"Channel",
 		"ProviderQuotaStatus",
+	)
+	graph.MustAddE(
+		"usage_monitor_channels",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.UsageMonitorChannelsTable,
+			Columns: []string{channel.UsageMonitorChannelsColumn},
+			Bidi:    false,
+		},
+		"Channel",
+		"UsageMonitorChannel",
 	)
 	graph.MustAddE(
 		"channel",
@@ -1354,6 +1396,30 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"Channel",
 	)
 	graph.MustAddE(
+		"channel",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagemonitorchannel.ChannelTable,
+			Columns: []string{usagemonitorchannel.ChannelColumn},
+			Bidi:    false,
+		},
+		"UsageMonitorChannel",
+		"Channel",
+	)
+	graph.MustAddE(
+		"owner",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   usagemonitorchannel.OwnerTable,
+			Columns: []string{usagemonitorchannel.OwnerColumn},
+			Bidi:    false,
+		},
+		"UsageMonitorChannel",
+		"User",
+	)
+	graph.MustAddE(
 		"projects",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -1496,6 +1562,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"User",
 		"UserUsageStats",
+	)
+	graph.MustAddE(
+		"usage_monitor_channels",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UsageMonitorChannelsTable,
+			Columns: []string{user.UsageMonitorChannelsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"UsageMonitorChannel",
 	)
 	graph.MustAddE(
 		"project_users",
@@ -2068,6 +2146,20 @@ func (f *ChannelFilter) WhereHasProviderQuotaStatus() {
 // WhereHasProviderQuotaStatusWith applies a predicate to check if query has an edge provider_quota_status with a given conditions (other predicates).
 func (f *ChannelFilter) WhereHasProviderQuotaStatusWith(preds ...predicate.ProviderQuotaStatus) {
 	f.Where(entql.HasEdgeWith("provider_quota_status", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasUsageMonitorChannels applies a predicate to check if query has an edge usage_monitor_channels.
+func (f *ChannelFilter) WhereHasUsageMonitorChannels() {
+	f.Where(entql.HasEdge("usage_monitor_channels"))
+}
+
+// WhereHasUsageMonitorChannelsWith applies a predicate to check if query has an edge usage_monitor_channels with a given conditions (other predicates).
+func (f *ChannelFilter) WhereHasUsageMonitorChannelsWith(preds ...predicate.UsageMonitorChannel) {
+	f.Where(entql.HasEdgeWith("usage_monitor_channels", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}
@@ -4570,6 +4662,154 @@ func (f *UsageLogFilter) WhereHasChannelWith(preds ...predicate.Channel) {
 }
 
 // addPredicate implements the predicateAdder interface.
+func (_q *UsageMonitorChannelQuery) addPredicate(pred func(s *sql.Selector)) {
+	_q.predicates = append(_q.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the UsageMonitorChannelQuery builder.
+func (_q *UsageMonitorChannelQuery) Filter() *UsageMonitorChannelFilter {
+	return &UsageMonitorChannelFilter{config: _q.config, predicateAdder: _q}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *UsageMonitorChannelMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the UsageMonitorChannelMutation builder.
+func (m *UsageMonitorChannelMutation) Filter() *UsageMonitorChannelFilter {
+	return &UsageMonitorChannelFilter{config: m.config, predicateAdder: m}
+}
+
+// UsageMonitorChannelFilter provides a generic filtering capability at runtime for UsageMonitorChannelQuery.
+type UsageMonitorChannelFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *UsageMonitorChannelFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *UsageMonitorChannelFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(usagemonitorchannel.FieldID))
+}
+
+// WhereCreatedAt applies the entql time.Time predicate on the created_at field.
+func (f *UsageMonitorChannelFilter) WhereCreatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagemonitorchannel.FieldCreatedAt))
+}
+
+// WhereUpdatedAt applies the entql time.Time predicate on the updated_at field.
+func (f *UsageMonitorChannelFilter) WhereUpdatedAt(p entql.TimeP) {
+	f.Where(p.Field(usagemonitorchannel.FieldUpdatedAt))
+}
+
+// WhereDeletedAt applies the entql int predicate on the deleted_at field.
+func (f *UsageMonitorChannelFilter) WhereDeletedAt(p entql.IntP) {
+	f.Where(p.Field(usagemonitorchannel.FieldDeletedAt))
+}
+
+// WhereName applies the entql string predicate on the name field.
+func (f *UsageMonitorChannelFilter) WhereName(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldName))
+}
+
+// WhereSource applies the entql string predicate on the source field.
+func (f *UsageMonitorChannelFilter) WhereSource(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldSource))
+}
+
+// WhereChannelID applies the entql int predicate on the channel_id field.
+func (f *UsageMonitorChannelFilter) WhereChannelID(p entql.IntP) {
+	f.Where(p.Field(usagemonitorchannel.FieldChannelID))
+}
+
+// WhereAPIURL applies the entql string predicate on the api_url field.
+func (f *UsageMonitorChannelFilter) WhereAPIURL(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAPIURL))
+}
+
+// WhereAPIMethod applies the entql string predicate on the api_method field.
+func (f *UsageMonitorChannelFilter) WhereAPIMethod(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAPIMethod))
+}
+
+// WhereAPIHeaders applies the entql json.RawMessage predicate on the api_headers field.
+func (f *UsageMonitorChannelFilter) WhereAPIHeaders(p entql.BytesP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAPIHeaders))
+}
+
+// WhereAPIBody applies the entql string predicate on the api_body field.
+func (f *UsageMonitorChannelFilter) WhereAPIBody(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAPIBody))
+}
+
+// WherePollInterval applies the entql int predicate on the poll_interval field.
+func (f *UsageMonitorChannelFilter) WherePollInterval(p entql.IntP) {
+	f.Where(p.Field(usagemonitorchannel.FieldPollInterval))
+}
+
+// WhereFields applies the entql json.RawMessage predicate on the fields field.
+func (f *UsageMonitorChannelFilter) WhereFields(p entql.BytesP) {
+	f.Where(p.Field(usagemonitorchannel.FieldFields))
+}
+
+// WhereLastPollAt applies the entql time.Time predicate on the last_poll_at field.
+func (f *UsageMonitorChannelFilter) WhereLastPollAt(p entql.TimeP) {
+	f.Where(p.Field(usagemonitorchannel.FieldLastPollAt))
+}
+
+// WhereLastPollData applies the entql json.RawMessage predicate on the last_poll_data field.
+func (f *UsageMonitorChannelFilter) WhereLastPollData(p entql.BytesP) {
+	f.Where(p.Field(usagemonitorchannel.FieldLastPollData))
+}
+
+// WhereLastPollError applies the entql string predicate on the last_poll_error field.
+func (f *UsageMonitorChannelFilter) WhereLastPollError(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldLastPollError))
+}
+
+// WhereStatus applies the entql string predicate on the status field.
+func (f *UsageMonitorChannelFilter) WhereStatus(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldStatus))
+}
+
+// WhereHasChannel applies a predicate to check if query has an edge channel.
+func (f *UsageMonitorChannelFilter) WhereHasChannel() {
+	f.Where(entql.HasEdge("channel"))
+}
+
+// WhereHasChannelWith applies a predicate to check if query has an edge channel with a given conditions (other predicates).
+func (f *UsageMonitorChannelFilter) WhereHasChannelWith(preds ...predicate.Channel) {
+	f.Where(entql.HasEdgeWith("channel", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasOwner applies a predicate to check if query has an edge owner.
+func (f *UsageMonitorChannelFilter) WhereHasOwner() {
+	f.Where(entql.HasEdge("owner"))
+}
+
+// WhereHasOwnerWith applies a predicate to check if query has an edge owner with a given conditions (other predicates).
+func (f *UsageMonitorChannelFilter) WhereHasOwnerWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("owner", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (_q *UserQuery) addPredicate(pred func(s *sql.Selector)) {
 	_q.predicates = append(_q.predicates, pred)
 }
@@ -4598,7 +4838,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[23].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -4847,6 +5087,20 @@ func (f *UserFilter) WhereHasUserUsageStatsWith(preds ...predicate.UserUsageStat
 	})))
 }
 
+// WhereHasUsageMonitorChannels applies a predicate to check if query has an edge usage_monitor_channels.
+func (f *UserFilter) WhereHasUsageMonitorChannels() {
+	f.Where(entql.HasEdge("usage_monitor_channels"))
+}
+
+// WhereHasUsageMonitorChannelsWith applies a predicate to check if query has an edge usage_monitor_channels with a given conditions (other predicates).
+func (f *UserFilter) WhereHasUsageMonitorChannelsWith(preds ...predicate.UsageMonitorChannel) {
+	f.Where(entql.HasEdgeWith("usage_monitor_channels", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
 // WhereHasProjectUsers applies a predicate to check if query has an edge project_users.
 func (f *UserFilter) WhereHasProjectUsers() {
 	f.Where(entql.HasEdge("project_users"))
@@ -4904,7 +5158,7 @@ type UserProjectFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserProjectFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[24].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5002,7 +5256,7 @@ type UserRoleFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserRoleFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[25].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -5090,7 +5344,7 @@ type UserUsageStatsFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserUsageStatsFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[26].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[27].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})

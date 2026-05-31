@@ -150,6 +150,7 @@ type CreateChannelInput struct {
 	Remark                  *string
 	Endpoints               []objects.ChannelEndpoint
 	Visibility              *channel.Visibility
+	UsageMonitorChannelIDs  []int
 }
 
 // Mutate applies the CreateChannelInput on the ChannelMutation builder.
@@ -194,6 +195,9 @@ func (i *CreateChannelInput) Mutate(m *ChannelMutation) {
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)
 	}
+	if v := i.UsageMonitorChannelIDs; len(v) > 0 {
+		m.AddUsageMonitorChannelIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the CreateChannelInput on the ChannelCreate builder.
@@ -204,37 +208,40 @@ func (c *ChannelCreate) SetInput(i CreateChannelInput) *ChannelCreate {
 
 // UpdateChannelInput represents a mutation input for updating channels.
 type UpdateChannelInput struct {
-	Type                      *channel.Type
-	ClearBaseURL              bool
-	BaseURL                   *string
-	Name                      *string
-	Status                    *channel.Status
-	Credentials               *objects.ChannelCredentials
-	SupportedModels           []string
-	AppendSupportedModels     []string
-	ClearManualModels         bool
-	ManualModels              []string
-	AppendManualModels        []string
-	AutoSyncSupportedModels   *bool
-	ClearAutoSyncModelPattern bool
-	AutoSyncModelPattern      *string
-	ClearTags                 bool
-	Tags                      []string
-	AppendTags                []string
-	DefaultTestModel          *string
-	ClearPolicies             bool
-	Policies                  *objects.ChannelPolicies
-	ClearSettings             bool
-	Settings                  *objects.ChannelSettings
-	OrderingWeight            *int
-	ClearErrorMessage         bool
-	ErrorMessage              *string
-	ClearRemark               bool
-	Remark                    *string
-	ClearEndpoints            bool
-	Endpoints                 []objects.ChannelEndpoint
-	AppendEndpoints           []objects.ChannelEndpoint
-	Visibility                *channel.Visibility
+	Type                         *channel.Type
+	ClearBaseURL                 bool
+	BaseURL                      *string
+	Name                         *string
+	Status                       *channel.Status
+	Credentials                  *objects.ChannelCredentials
+	SupportedModels              []string
+	AppendSupportedModels        []string
+	ClearManualModels            bool
+	ManualModels                 []string
+	AppendManualModels           []string
+	AutoSyncSupportedModels      *bool
+	ClearAutoSyncModelPattern    bool
+	AutoSyncModelPattern         *string
+	ClearTags                    bool
+	Tags                         []string
+	AppendTags                   []string
+	DefaultTestModel             *string
+	ClearPolicies                bool
+	Policies                     *objects.ChannelPolicies
+	ClearSettings                bool
+	Settings                     *objects.ChannelSettings
+	OrderingWeight               *int
+	ClearErrorMessage            bool
+	ErrorMessage                 *string
+	ClearRemark                  bool
+	Remark                       *string
+	ClearEndpoints               bool
+	Endpoints                    []objects.ChannelEndpoint
+	AppendEndpoints              []objects.ChannelEndpoint
+	Visibility                   *channel.Visibility
+	ClearUsageMonitorChannels    bool
+	AddUsageMonitorChannelIDs    []int
+	RemoveUsageMonitorChannelIDs []int
 }
 
 // Mutate applies the UpdateChannelInput on the ChannelMutation builder.
@@ -331,6 +338,15 @@ func (i *UpdateChannelInput) Mutate(m *ChannelMutation) {
 	}
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)
+	}
+	if i.ClearUsageMonitorChannels {
+		m.ClearUsageMonitorChannels()
+	}
+	if v := i.AddUsageMonitorChannelIDs; len(v) > 0 {
+		m.AddUsageMonitorChannelIDs(v...)
+	}
+	if v := i.RemoveUsageMonitorChannelIDs; len(v) > 0 {
+		m.RemoveUsageMonitorChannelIDs(v...)
 	}
 }
 
@@ -1674,20 +1690,21 @@ func (c *UsageLogUpdateOne) SetInput(i UpdateUsageLogInput) *UsageLogUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	Email            string
-	Status           *user.Status
-	PreferLanguage   *string
-	Password         string
-	FirstName        *string
-	LastName         *string
-	Avatar           *string
-	IsOwner          *bool
-	Scopes           []string
-	EmailVerifiedAt  *time.Time
-	ProjectIDs       []int
-	RoleIDs          []int
-	EmailTokenIDs    []int
-	UserUsageStatIDs []int
+	Email                  string
+	Status                 *user.Status
+	PreferLanguage         *string
+	Password               string
+	FirstName              *string
+	LastName               *string
+	Avatar                 *string
+	IsOwner                *bool
+	Scopes                 []string
+	EmailVerifiedAt        *time.Time
+	ProjectIDs             []int
+	RoleIDs                []int
+	EmailTokenIDs          []int
+	UserUsageStatIDs       []int
+	UsageMonitorChannelIDs []int
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.
@@ -1730,6 +1747,9 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	if v := i.UserUsageStatIDs; len(v) > 0 {
 		m.AddUserUsageStatIDs(v...)
 	}
+	if v := i.UsageMonitorChannelIDs; len(v) > 0 {
+		m.AddUsageMonitorChannelIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the CreateUserInput on the UserCreate builder.
@@ -1740,32 +1760,35 @@ func (c *UserCreate) SetInput(i CreateUserInput) *UserCreate {
 
 // UpdateUserInput represents a mutation input for updating users.
 type UpdateUserInput struct {
-	Email                  *string
-	Status                 *user.Status
-	PreferLanguage         *string
-	Password               *string
-	FirstName              *string
-	LastName               *string
-	ClearAvatar            bool
-	Avatar                 *string
-	IsOwner                *bool
-	ClearScopes            bool
-	Scopes                 []string
-	AppendScopes           []string
-	ClearEmailVerifiedAt   bool
-	EmailVerifiedAt        *time.Time
-	ClearProjects          bool
-	AddProjectIDs          []int
-	RemoveProjectIDs       []int
-	ClearRoles             bool
-	AddRoleIDs             []int
-	RemoveRoleIDs          []int
-	ClearEmailTokens       bool
-	AddEmailTokenIDs       []int
-	RemoveEmailTokenIDs    []int
-	ClearUserUsageStats    bool
-	AddUserUsageStatIDs    []int
-	RemoveUserUsageStatIDs []int
+	Email                        *string
+	Status                       *user.Status
+	PreferLanguage               *string
+	Password                     *string
+	FirstName                    *string
+	LastName                     *string
+	ClearAvatar                  bool
+	Avatar                       *string
+	IsOwner                      *bool
+	ClearScopes                  bool
+	Scopes                       []string
+	AppendScopes                 []string
+	ClearEmailVerifiedAt         bool
+	EmailVerifiedAt              *time.Time
+	ClearProjects                bool
+	AddProjectIDs                []int
+	RemoveProjectIDs             []int
+	ClearRoles                   bool
+	AddRoleIDs                   []int
+	RemoveRoleIDs                []int
+	ClearEmailTokens             bool
+	AddEmailTokenIDs             []int
+	RemoveEmailTokenIDs          []int
+	ClearUserUsageStats          bool
+	AddUserUsageStatIDs          []int
+	RemoveUserUsageStatIDs       []int
+	ClearUsageMonitorChannels    bool
+	AddUsageMonitorChannelIDs    []int
+	RemoveUsageMonitorChannelIDs []int
 }
 
 // Mutate applies the UpdateUserInput on the UserMutation builder.
@@ -1847,6 +1870,15 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.RemoveUserUsageStatIDs; len(v) > 0 {
 		m.RemoveUserUsageStatIDs(v...)
+	}
+	if i.ClearUsageMonitorChannels {
+		m.ClearUsageMonitorChannels()
+	}
+	if v := i.AddUsageMonitorChannelIDs; len(v) > 0 {
+		m.AddUsageMonitorChannelIDs(v...)
+	}
+	if v := i.RemoveUsageMonitorChannelIDs; len(v) > 0 {
+		m.RemoveUsageMonitorChannelIDs(v...)
 	}
 }
 
