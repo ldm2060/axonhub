@@ -90,6 +90,11 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
         <Badge variant="outline" className="text-xs">
           {t(`usageMonitor.source.${channel.source}`)}
         </Badge>
+        {channel.source === 'template' && channel.providerType && (
+          <Badge variant="outline" className="text-xs capitalize">
+            {channel.providerType.replace(/_/g, ' ')}
+          </Badge>
+        )}
         <span className="text-xs text-muted-foreground">
           {t('usageMonitor.pollInterval')}: {pollIntervalText}
         </span>
