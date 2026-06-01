@@ -89,6 +89,11 @@ func parseJSONPath(rawData []byte, config FieldConfig, result *ParsedField) {
 		total = unwrapSlice(total)
 		result.Total = total
 		result.Percent = computePercent(value, total)
+	} else if config.Format == "percentage" {
+		// The value itself is the percentage (e.g. Zhipu returns "percentage": 41)
+		if n, err := toFloat(value); err == nil {
+			result.Percent = n
+		}
 	}
 }
 

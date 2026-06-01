@@ -38,7 +38,7 @@ function UsageMonitorContent() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
@@ -62,7 +62,7 @@ function UsageMonitorContent() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {channels.map((channel) => (
         <MonitorErrorBoundary key={channel.id} channelName={channel.name}>
           <MonitorCard channel={channel} />
