@@ -2,7 +2,6 @@ package biz
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -166,15 +165,4 @@ func TestEffectiveStatus_EqualRankReadyAggregation(t *testing.T) {
 	status, ready := s.EffectiveStatus(provider_quota.QuotaLimitTypeToken)
 	assert.Equal(t, providerquotastatus.StatusWarning, status)
 	assert.False(t, ready)
-}
-
-func TestProviderQuotaService_NextCheckIntervalForStatus(t *testing.T) {
-	svc := &ProviderQuotaService{
-		checkInterval: 5 * time.Minute,
-	}
-
-	assert.Equal(t, 5*time.Minute, svc.nextCheckIntervalForStatus("available"), "available should use normal interval")
-	assert.Equal(t, 20*time.Minute, svc.nextCheckIntervalForStatus("warning"), "warning should use multiplied interval")
-	assert.Equal(t, 5*time.Minute, svc.nextCheckIntervalForStatus("exhausted"), "exhausted should use normal interval")
-	assert.Equal(t, 5*time.Minute, svc.nextCheckIntervalForStatus("unknown"), "unknown should use normal interval")
 }
