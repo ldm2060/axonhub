@@ -994,17 +994,26 @@ func (r *usageLogResolver) Channel(ctx context.Context, obj *ent.UsageLog) (*ent
 
 // ID is the resolver for the id field.
 func (r *usageMonitorChannelResolver) ID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{
+		Type: ent.TypeUsageMonitorChannel,
+		ID:   obj.ID,
+	}, nil
 }
 
 // ChannelID is the resolver for the channelID field.
 func (r *usageMonitorChannelResolver) ChannelID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ChannelID - channelID"))
+	if obj.ChannelID == nil {
+		return nil, nil
+	}
+	return &objects.GUID{
+		Type: ent.TypeChannel,
+		ID:   *obj.ChannelID,
+	}, nil
 }
 
 // Fields is the resolver for the fields field.
 func (r *usageMonitorChannelResolver) Fields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
-	panic(fmt.Errorf("not implemented: Fields - fields"))
+	return map[string]any{"items": obj.Fields}, nil
 }
 
 // ID is the resolver for the id field.

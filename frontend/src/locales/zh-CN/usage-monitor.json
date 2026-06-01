@@ -10,6 +10,8 @@
   "usageMonitor.field.path": "解析路径",
   "usageMonitor.field.format": "显示格式",
   "usageMonitor.field.unit": "单位",
+  "usageMonitor.field.expression": "表达式",
+  "usageMonitor.field.expressionHint": "用 ${field_key} 引用其他字段的值，支持 +、-、*、/、()。示例：${used}/${total}*100",
   "usageMonitor.field.jsonpath": "JSONPath",
   "usageMonitor.field.regex": "正则表达式",
   "usageMonitor.format.percentage": "百分比",

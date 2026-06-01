@@ -112,8 +112,13 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
 		Fields: []FieldConfig{
-			{Key: "token_pct", Label: "Token Usage %", Path: "$.data.limits[?(@.type=='TOKENS_LIMIT')].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "time_pct", Label: "MCP Time Usage %", Path: "$.data.limits[?(@.type=='TIME_LIMIT')].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 1},
+			{Key: "level", Label: "Account Level", Path: "$.data.level", Type: "jsonpath", Format: "text", DisplayOrder: 0},
+			// ZhiPu API returns limits in order: [0]=TIME_LIMIT, [1]=TOKENS_LIMIT
+			{Key: "token_pct", Label: "Token Usage %", Path: "$.data.limits[1].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 1},
+			{Key: "token_reset", Label: "Token Reset At", Path: "$.data.limits[1].nextResetTime", Type: "jsonpath", Format: "datetime", DisplayOrder: 2},
+			{Key: "time_pct", Label: "MCP Time Usage %", Path: "$.data.limits[0].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 3},
+			{Key: "time_remaining", Label: "MCP Remaining", Path: "$.data.limits[0].remaining", Type: "jsonpath", Format: "number", Unit: "units", DisplayOrder: 4},
+			{Key: "time_reset", Label: "MCP Reset At", Path: "$.data.limits[0].nextResetTime", Type: "jsonpath", Format: "datetime", DisplayOrder: 5},
 		},
 	},
 }

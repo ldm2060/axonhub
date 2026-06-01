@@ -268,3 +268,118 @@ func TestParseField_Regex_Number_GroupIndexOutOfRange(t *testing.T) {
 	assert.Empty(t, result.Error)
 	assert.Equal(t, "", result.Value)
 }
+
+func TestParseField_JSONPath_ArrayIndex(t *testing.T) {
+	rawData := []byte(`{"data": {"limits": [{"type": "TIME_LIMIT", "percentage": 4, "nextResetTime": 1782648382987}, {"type": "TOKENS_LIMIT", "percentage": 1, "nextResetTime": 1780316398388}]}}`)
+	config := FieldConfig{
+		Key:    "token_pct",
+		Label:  "Token Usage %",
+		Path:   "$.data.limits[1].percentage",
+		Type:   "jsonpath",
+		Format: "percentage",
+	}
+	result := ParseField(rawData, config)
+
+	assert.Empty(t, result.Error)
+	assert.Equal(t, float64(1), result.Value)
+}
+
+func TestParseField_JSONPath_ArrayIndex_Datetime(t *testing.T) {
+	rawData := []byte(`{"data": {"limits": [{"type": "TIME_LIMIT", "nextResetTime": 1782648382987}, {"type": "TOKENS_LIMIT", "nextResetTime": 1780316398388}]}}`)
+	config := FieldConfig{
+		Key:    "token_reset",
+		Label:  "Token Reset",
+		Path:   "$.data.limits[1].nextResetTime",
+		Type:   "jsonpath",
+		Format: "datetime",
+	}
+	result := ParseField(rawData, config)
+
+	assert.Empty(t, result.Error)
+	assert.Equal(t, float64(1780316398388), result.Value)
+}
+
+func TestParseField_JSONPath_UnwrapSlice(t *testing.T) {
+	// JSONPath expressions that return single-element arrays should be unwrapped
+	rawData := []byte(`{"items": [42]}`)
+	config := FieldConfig{
+		Key:    "val",
+		Label:  "Val",
+		Path:   "$.items[0]",
+		Type:   "jsonpath",
+		Format: "number",
+	}
+	result := ParseField(rawData, config)
+
+	assert.Empty(t, result.Error)
+	assert.Equal(t, float64(42), result.Value)
+}
+
+func TestParseFields_Expression(t *testing.T) {
+	rawData := []byte(`{"used": 250, "total": 1000}`)
+	configs := []FieldConfig{
+		{Key: "used", Label: "Used", Path: "$.used", Type: "jsonpath", Format: "number"},
+		{Key: "total", Label: "Total", Path: "$.total", Type: "jsonpath", Format: "number"},
+		{Key: "pct", Label: "Percentage", Format: "percentage", Expression: "${used}/${total}*100"},
+	}
+	results := ParseFields(rawData, configs)
+
+	assert.Empty(t, results[0].Error)
+	assert.Equal(t, float64(250), results[0].Value)
+	assert.Empty(t, results[1].Error)
+	assert.Equal(t, float64(1000), results[1].Value)
+	assert.Empty(t, results[2].Error)
+	assert.InDelta(t, 25.0, results[2].Value.(float64), 0.01)
+	assert.InDelta(t, 25.0, results[2].Percent, 0.01)
+}
+
+func TestParseFields_ExpressionSubtraction(t *testing.T) {
+	rawData := []byte(`{"total": 1000, "used": 250}`)
+	configs := []FieldConfig{
+		{Key: "total", Label: "Total", Path: "$.total", Type: "jsonpath", Format: "number"},
+		{Key: "used", Label: "Used", Path: "$.used", Type: "jsonpath", Format: "number"},
+		{Key: "remaining", Label: "Remaining", Format: "number", Expression: "${total}-${used}"},
+	}
+	results := ParseFields(rawData, configs)
+
+	assert.Empty(t, results[2].Error)
+	assert.InDelta(t, 750.0, results[2].Value.(float64), 0.01)
+}
+
+func TestParseFields_ExpressionUnresolvedRef(t *testing.T) {
+	rawData := []byte(`{"used": 250}`)
+	configs := []FieldConfig{
+		{Key: "used", Label: "Used", Path: "$.used", Type: "jsonpath", Format: "number"},
+		{Key: "pct", Label: "Pct", Format: "percentage", Expression: "${used}/${missing}*100"},
+	}
+	results := ParseFields(rawData, configs)
+
+	assert.NotEmpty(t, results[1].Error)
+	assert.Contains(t, results[1].Error, "unresolved reference")
+}
+
+func TestEvalArithmetic(t *testing.T) {
+	tests := []struct {
+		expr     string
+		expected float64
+	}{
+		{"4+3", 7},
+		{"10-3", 7},
+		{"4*3", 12},
+		{"12/4", 3},
+		{"2+3*4", 14},
+		{"(2+3)*4", 20},
+		{"100/0", 0}, // div by zero
+		{"-5+3", -2}, // unary minus
+		{"10/(2+3)", 2},
+	}
+	for _, tt := range tests {
+		result, err := evalArithmetic(tt.expr)
+		if tt.expected == 0 && tt.expr == "100/0" {
+			assert.Error(t, err)
+			continue
+		}
+		assert.NoError(t, err, "expr: %s", tt.expr)
+		assert.InDelta(t, tt.expected, result, 0.01, "expr: %s", tt.expr)
+	}
+}

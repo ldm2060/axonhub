@@ -162,6 +162,18 @@ export function FieldConfigForm({ fields, onChange }: Props) {
                 placeholder="%"
               />
             </div>
+
+            {/* Expression - computed from other fields */}
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>{t('usageMonitor.field.expression')}</Label>
+              <Input
+                value={field.expression ?? ''}
+                onChange={(e) => updateField(index, { expression: e.target.value || undefined })}
+                placeholder="${used}/${total}*100"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">{t('usageMonitor.field.expressionHint')}</p>
+            </div>
           </div>
         </div>
       ))}

@@ -733,6 +733,7 @@ type ComplexityRoot struct {
 
 	FieldConfig struct {
 		DisplayOrder func(childComplexity int) int
+		Expression   func(childComplexity int) int
 		Format       func(childComplexity int) int
 		GroupIndex   func(childComplexity int) int
 		Key          func(childComplexity int) int
@@ -5036,6 +5037,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.FieldConfig.DisplayOrder(childComplexity), true
+	case "FieldConfig.expression":
+		if e.complexity.FieldConfig.Expression == nil {
+			break
+		}
+
+		return e.complexity.FieldConfig.Expression(childComplexity), true
 	case "FieldConfig.format":
 		if e.complexity.FieldConfig.Format == nil {
 			break
@@ -28811,9 +28818,9 @@ func (ec *executionContext) _FieldConfig_path(ctx context.Context, field graphql
 			return obj.Path, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2string,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -28840,9 +28847,9 @@ func (ec *executionContext) _FieldConfig_type(ctx context.Context, field graphql
 			return obj.Type, nil
 		},
 		nil,
-		ec.marshalNString2string,
+		ec.marshalOString2string,
 		true,
-		true,
+		false,
 	)
 }
 
@@ -28999,6 +29006,35 @@ func (ec *executionContext) fieldContext_FieldConfig_displayOrder(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FieldConfig_expression(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.FieldConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FieldConfig_expression,
+		func(ctx context.Context) (any, error) {
+			return obj.Expression, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_FieldConfig_expression(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FieldConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -50265,6 +50301,8 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_fields(_ context.C
 				return ec.fieldContext_FieldConfig_groupIndex(ctx, field)
 			case "displayOrder":
 				return ec.fieldContext_FieldConfig_displayOrder(ctx, field)
+			case "expression":
+				return ec.fieldContext_FieldConfig_expression(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldConfig", field.Name)
 		},
@@ -77459,7 +77497,7 @@ func (ec *executionContext) unmarshalInputFieldConfigInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"key", "label", "path", "type", "format", "totalPath", "unit", "groupIndex", "displayOrder"}
+	fieldsInOrder := [...]string{"key", "label", "path", "type", "format", "totalPath", "unit", "groupIndex", "displayOrder", "expression"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -77482,14 +77520,14 @@ func (ec *executionContext) unmarshalInputFieldConfigInput(ctx context.Context, 
 			it.Label = data
 		case "path":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Path = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -77529,6 +77567,13 @@ func (ec *executionContext) unmarshalInputFieldConfigInput(ctx context.Context, 
 				return it, err
 			}
 			it.DisplayOrder = data
+		case "expression":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expression"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Expression = data
 		}
 	}
 
@@ -104066,14 +104111,8 @@ func (ec *executionContext) _FieldConfig(ctx context.Context, sel ast.SelectionS
 			}
 		case "path":
 			out.Values[i] = ec._FieldConfig_path(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "type":
 			out.Values[i] = ec._FieldConfig_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "format":
 			out.Values[i] = ec._FieldConfig_format(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -104090,6 +104129,8 @@ func (ec *executionContext) _FieldConfig(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "expression":
+			out.Values[i] = ec._FieldConfig_expression(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

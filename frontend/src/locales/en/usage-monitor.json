@@ -10,6 +10,8 @@
   "usageMonitor.field.path": "Parse Path",
   "usageMonitor.field.format": "Display Format",
   "usageMonitor.field.unit": "Unit",
+  "usageMonitor.field.expression": "Expression",
+  "usageMonitor.field.expressionHint": "Use ${field_key} to reference other fields. Supports +, -, *, /, (). Example: ${used}/${total}*100",
   "usageMonitor.field.jsonpath": "JSONPath",
   "usageMonitor.field.regex": "Regex",
   "usageMonitor.format.percentage": "Percentage",

@@ -210,7 +210,7 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     apiHeaders: raw.apiHeadersString ?? raw.apiHeaders,
     apiBody: raw.apiBody ?? null,
     pollInterval: raw.pollInterval,
-    fields: raw.fields ?? [],
+    fields: Array.isArray(raw.fields) ? raw.fields : (raw.fields?.items ?? []),
     status: raw.status,
     lastPollAt: raw.lastPollAt ?? null,
     parsedData: raw.parsedData ?? null,
@@ -248,8 +248,10 @@ export function useUsageMonitorChannels() {
 
 export type CreateUsageMonitorChannelInput = {
   name: string;
-  source: 'builtin' | 'custom';
+  source: 'builtin' | 'custom' | 'template';
   channelId?: string;
+  providerType?: string;
+  apiKey?: string;
   apiUrl: string;
   apiMethod: 'GET' | 'POST';
   apiHeaders: string;

@@ -223,6 +223,9 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 			if len(f.GroupIndex) > 0 {
 				fieldMap["groupIndex"] = f.GroupIndex
 			}
+			if f.Expression != "" {
+				fieldMap["expression"] = f.Expression
+			}
 			fields = append(fields, fieldMap)
 		}
 	}
@@ -347,6 +350,9 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 			}
 			if len(f.GroupIndex) > 0 {
 				fieldMap["groupIndex"] = f.GroupIndex
+			}
+			if f.Expression != "" {
+				fieldMap["expression"] = f.Expression
 			}
 			fields = append(fields, fieldMap)
 		}
@@ -486,6 +492,9 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 				}
 			} else if arr, ok := v.([]int); ok {
 				fc.GroupIndex = arr
+			}
+			if v, ok := f["expression"].(string); ok {
+				fc.Expression = v
 			}
 		}
 		fieldConfigs = append(fieldConfigs, fc)

@@ -92,11 +92,8 @@ func (c *GenericQuotaChecker) Poll(
 		}
 	}
 
-	// Parse each field using ParseField()
-	parsedFields := make([]ParsedField, len(fields))
-	for i, field := range fields {
-		parsedFields[i] = ParseField(enrichedBody, field)
-	}
+	// Parse all fields using two-pass ParseFields (supports expression fields)
+	parsedFields := ParseFields(enrichedBody, fields)
 
 	// Return PollData with raw response, parsed fields, and timestamp
 	return &PollData{

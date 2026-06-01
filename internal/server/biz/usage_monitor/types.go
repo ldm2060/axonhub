@@ -29,6 +29,7 @@ type FieldConfig struct {
 	Unit         string `json:"unit,omitempty"`
 	GroupIndex   []int  `json:"groupIndex,omitempty"`
 	DisplayOrder int    `json:"displayOrder"`
+	Expression   string `json:"expression,omitempty"`
 }
 
 type ParsedField struct {

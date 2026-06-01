@@ -5,13 +5,14 @@
 type FieldConfig {
     key: String!
     label: String!
-    path: String!
-    type: String!
+    path: String
+    type: String
     format: String!
     totalPath: String
     unit: String
     groupIndex: [Int!]
     displayOrder: Int!
+    expression: String
 }
 
 type ParsedFieldValue {
@@ -37,13 +38,14 @@ extend type UsageMonitorChannel {
 input FieldConfigInput {
     key: String!
     label: String!
-    path: String!
-    type: String!
+    path: String
+    type: String
     format: String!
     totalPath: String
     unit: String
     groupIndex: [Int!]
     displayOrder: Int!
+    expression: String
 }
 
 input CreateUsageMonitorChannelInput {

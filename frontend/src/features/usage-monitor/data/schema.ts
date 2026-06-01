@@ -10,6 +10,7 @@ export const fieldConfigSchema = z.object({
   unit: z.string().optional(),
   groupIndex: z.array(z.number()).optional(),
   displayOrder: z.number(),
+  expression: z.string().optional(),
 });
 
 export const parsedFieldSchema = z.object({
