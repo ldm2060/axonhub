@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/watcher"
@@ -23,6 +25,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xcache/live"
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 	"github.com/ldm2060/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
+	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
@@ -83,11 +87,12 @@ type Channel struct {
 type ChannelServiceParams struct {
 	fx.In
 
-	CacheConfig     xcache.Config
-	Ent             *ent.Client
-	SystemService   *SystemService
-	WebhookNotifier *WebhookNotifier
-	HttpClient      *httpclient.HttpClient
+	CacheConfig       xcache.Config
+	Ent               *ent.Client
+	SystemService     *SystemService
+	WebhookNotifier   *WebhookNotifier
+	HttpClient        *httpclient.HttpClient
+	UsageMonitor      *UsageMonitorService
 }
 
 func NewChannelService(params ChannelServiceParams) *ChannelService {
@@ -98,6 +103,7 @@ func NewChannelService(params ChannelServiceParams) *ChannelService {
 		SystemService:      params.SystemService,
 		WebhookNotifier:    params.WebhookNotifier,
 		httpClient:         params.HttpClient,
+		usageMonitor:       params.UsageMonitor,
 		channelPerfMetrics: make(map[int]*channelMetrics),
 		channelErrorCounts: make(map[int]map[int]int),
 		apiKeyErrorCounts:  make(map[int]map[string]map[int]int),
@@ -153,7 +159,8 @@ type ChannelService struct {
 	SystemService   *SystemService
 	WebhookNotifier *WebhookNotifier
 
-	httpClient *httpclient.HttpClient
+	httpClient    *httpclient.HttpClient
+	usageMonitor  *UsageMonitorService
 
 	enabledChannelsCache *live.Cache[[]*Channel]
 	channelNotifier      watcher.Notifier[live.CacheEvent[struct{}]]
@@ -557,6 +564,9 @@ func (svc *ChannelService) CreateChannel(ctx context.Context, input ent.CreateCh
 
 	svc.asyncReloadChannels()
 
+	// Auto-create usage_monitor_channel if the channel's provider type has a quota monitor template
+	svc.autoCreateUsageMonitorChannel(ctx, channel, input)
+
 	return channel, nil
 }
 
@@ -729,6 +739,9 @@ func (svc *ChannelService) DeleteChannel(ctx context.Context, id int) error {
 		return fmt.Errorf("failed to delete channel: %w", err)
 	}
 
+	// Soft-delete corresponding usage_monitor_channels
+	svc.autoDeleteUsageMonitorChannels(ctx, id)
+
 	svc.forgetLimiter(id)
 	svc.PurgeChannelMetrics(id)
 	svc.asyncReloadChannels()
@@ -824,4 +837,115 @@ func (svc *ChannelService) ListSharedWithUser(ctx context.Context, userID int) (
 	return lo.Filter(channels, func(ch *ent.Channel, _ int) bool {
 		return scopes.IsSharedWithUser(ch.SharedWith, userID)
 	}), nil
+}
+
+// providerTypeFromChannel maps a channel type to a usage-monitor provider type.
+func providerTypeFromChannel(chType channel.Type, baseURL string) string {
+	switch chType {
+	case channel.TypeClaudecode:
+		return "claudecode"
+	case channel.TypeCodex:
+		return "codex"
+	case channel.TypeGithubCopilot:
+		return "github_copilot"
+	case channel.TypeNanogpt, channel.TypeNanogptResponses:
+		return "nanogpt"
+	case channel.TypeZhipu, channel.TypeZhipuAnthropic, channel.TypeZai, channel.TypeZaiAnthropic:
+		return "zhipu"
+	case channel.TypeOpenai, channel.TypeOpenaiResponses:
+		return provider_quota.DetectProviderFromURL(baseURL)
+	default:
+		return ""
+	}
+}
+
+// apiKeyFromCredentials extracts the first usable API key from channel credentials.
+func apiKeyFromCredentials(creds objects.ChannelCredentials) string {
+	if creds.APIKey != "" {
+		return creds.APIKey
+	}
+	if len(creds.APIKeys) > 0 {
+		return creds.APIKeys[0]
+	}
+	if creds.OAuth != nil && creds.OAuth.AccessToken != "" {
+		return creds.OAuth.AccessToken
+	}
+	return ""
+}
+
+// autoCreateUsageMonitorChannel creates a usage_monitor_channel for the given channel
+// if the channel's provider type has a quota monitor template.
+// Errors are logged but do not fail the channel creation.
+func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch *ent.Channel, input ent.CreateChannelInput) {
+	if svc.usageMonitor == nil {
+		return
+	}
+
+	providerType := providerTypeFromChannel(ch.Type, ch.BaseURL)
+	if providerType == "" {
+		return
+	}
+
+	tmpl := usage_monitor.GetQuotaMonitorTemplate(providerType)
+	if tmpl == nil {
+		return
+	}
+
+	apiKey := apiKeyFromCredentials(input.Credentials)
+	if apiKey == "" {
+		return
+	}
+
+	channelIDStr := strconv.Itoa(ch.ID)
+	providerTypeStr := providerType
+	monitorInput := usage_monitor.CreateUsageMonitorChannelInput{
+		Name:         ch.Name + " (Quota)",
+		Source:       "template",
+		ChannelID:    &channelIDStr,
+		ProviderType: &providerTypeStr,
+		ApiKey:       &apiKey,
+		PollInterval: 300,
+	}
+
+	if _, err := svc.usageMonitor.CreateChannel(ctx, monitorInput); err != nil {
+		log.Warn(ctx, "failed to auto-create usage monitor channel",
+			log.Int("channel_id", ch.ID),
+			log.String("channel_name", ch.Name),
+			log.String("provider_type", providerType),
+			log.Cause(err),
+		)
+	}
+}
+
+// autoDeleteUsageMonitorChannels soft-deletes all usage_monitor_channels linked to the given channel ID.
+// Errors are logged but do not fail the channel deletion.
+func (svc *ChannelService) autoDeleteUsageMonitorChannels(ctx context.Context, channelID int) {
+	if svc.usageMonitor == nil {
+		return
+	}
+
+	client := svc.entFromContext(ctx)
+	monitors, err := client.UsageMonitorChannel.Query().
+		Where(
+			usagemonitorchannel.ChannelIDEQ(channelID),
+			usagemonitorchannel.DeletedAtEQ(0),
+		).
+		All(ctx)
+	if err != nil {
+		log.Warn(ctx, "failed to query usage monitor channels for auto-delete",
+			log.Int("channel_id", channelID),
+			log.Cause(err),
+		)
+		return
+	}
+
+	for _, m := range monitors {
+		if err := svc.usageMonitor.DeleteChannel(ctx, m.ID); err != nil {
+			log.Warn(ctx, "failed to auto-delete usage monitor channel",
+				log.Int("monitor_id", m.ID),
+				log.Int("channel_id", channelID),
+				log.Cause(err),
+			)
+		}
+	}
 }
