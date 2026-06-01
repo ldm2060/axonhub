@@ -100,60 +100,49 @@ function formatRelativeTime(dateStr: string | null, t: (key: string, params?: Re
   return t('quota.label.resets_in_time', { time: `${diffMins}${m}` });
 }
 
-/** Renders a single parsed field generically. */
-function ParsedFieldRow({ field, index }: { field: ParsedField; index: number }) {
+/** Groups percentage fields with their matching datetime reset fields.
+ *  Matches by key prefix: "token_pct" pairs with "token_reset", "time_pct" with "time_reset", etc.
+ */
+function groupFields(fields: ParsedField[]) {
+  const groups: { pct: ParsedField; reset?: ParsedField }[] = [];
+  const pctFields = fields.filter(f => f.format === 'percentage' || f.format === 'fraction');
+  const datetimeFields = fields.filter(f => f.format === 'datetime');
+  const usedDt = new Set<number>();
+
+  for (const pct of pctFields) {
+    const group: { pct: ParsedField; reset?: ParsedField } = { pct };
+    // Derive the reset key: "token_pct" → look for "token_reset"
+    const prefix = pct.key.replace(/_pct$|_percent$|_usage$/, '');
+    const resetKey = `${prefix}_reset`;
+    const dtIdx = datetimeFields.findIndex((f, i) => !usedDt.has(i) && (f.key === resetKey || f.key.startsWith(prefix)));
+    if (dtIdx >= 0) {
+      group.reset = datetimeFields[dtIdx];
+      usedDt.add(dtIdx);
+    }
+    groups.push(group);
+  }
+
+  return groups;
+}
+
+function QuotaFieldGroup({ group, index }: { group: { pct: ParsedField; reset?: ParsedField }; index: number }) {
   const { t } = useTranslation();
+  const pct = group.pct.percent ?? 0;
 
-  if (field.format === 'percentage' || field.format === 'fraction') {
-    const pct = field.percent ?? 0;
-    return (
-      <div className={index > 0 ? 'border-border/60 space-y-2.5 border-t border-dashed pt-3' : 'space-y-2.5'}>
-        <div className='space-y-1'>
-          <div className='flex items-center justify-between text-xs'>
-            <span className='text-muted-foreground font-medium'>
-              {field.label}
-              {field.value != null && field.total != null && (
-                <span className='font-normal opacity-70'> ({field.value}/{field.total})</span>
-              )}
-              {field.value != null && field.total == null && (
-                <span className='font-normal opacity-70'> ({field.value})</span>
-              )}
-            </span>
-            <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
-          </div>
-          <ProgressBar percentage={pct} />
-        </div>
-      </div>
-    );
-  }
-
-  if (field.format === 'datetime') {
-    const relativeTime = formatRelativeTime(field.value, t);
-    return (
-      <div className='text-muted-foreground text-right text-[11px]'>
-        {field.label}: {relativeTime}
-      </div>
-    );
-  }
-
-  if (field.format === 'number') {
-    const displayValue = field.value ?? '0';
-    const unitStr = field.unit ? ` ${field.unit}` : '';
-    return (
-      <div className='flex items-center justify-between text-xs'>
-        <span className='text-muted-foreground font-medium'>{field.label}</span>
-        <span className='text-foreground font-medium'>
-          {displayValue}{unitStr}
-        </span>
-      </div>
-    );
-  }
-
-  // text format or fallback
   return (
-    <div className='flex items-center justify-between text-xs'>
-      <span className='text-muted-foreground font-medium'>{field.label}</span>
-      <span className='text-foreground font-medium'>{field.value ?? '-'}</span>
+    <div className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-2.5' : 'space-y-1.5'}>
+      <div className='space-y-1'>
+        <div className='flex items-center justify-between text-xs'>
+          <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
+          <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
+        </div>
+        <ProgressBar percentage={pct} />
+      </div>
+      {group.reset && (
+        <div className='text-muted-foreground text-right text-[11px]'>
+          {formatRelativeTime(group.reset.value, t)}
+        </div>
+      )}
     </div>
   );
 }
@@ -177,6 +166,10 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
 
   const displayName = channel.channelName ?? channel.name;
 
+  // Extract text fields for inline display (e.g. "Account Level: lite")
+  const textFields = channel.parsedData.filter(f => f.format === 'text');
+  const fieldGroups = groupFields(channel.parsedData);
+
   return (
     <div className='space-y-3 border-b py-3 first:pt-1 last:border-0 last:pb-1'>
       <div className='flex items-center justify-between'>
@@ -185,6 +178,9 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
             className={`h-4 w-4 ${status === 'exhausted' ? 'text-red-500' : status === 'warning' ? 'text-yellow-500' : 'text-muted-foreground'}`}
           />
           <span className='text-foreground font-medium'>{displayName}</span>
+          {textFields.map(f => (
+            <span key={f.key} className='text-muted-foreground text-xs'>{String(f.value)}</span>
+          ))}
         </div>
         <div className='flex items-center gap-1.5'>
           <Badge
@@ -209,17 +205,11 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
         </div>
       )}
 
-      {channel.parsedData.length > 0 && (
-        <div className='mt-3 space-y-3'>
-          {channel.parsedData.map((field, idx) => (
-            <ParsedFieldRow key={field.key} field={field} index={idx} />
+      {fieldGroups.length > 0 && (
+        <div className='mt-1 space-y-2'>
+          {fieldGroups.map((group, idx) => (
+            <QuotaFieldGroup key={group.pct.key} group={group} index={idx} />
           ))}
-        </div>
-      )}
-
-      {channel.nextResetAt && (
-        <div className='text-muted-foreground text-right text-[11px]'>
-          {formatRelativeTime(channel.nextResetAt, t)}
         </div>
       )}
     </div>
