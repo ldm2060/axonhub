@@ -15,6 +15,10 @@ This file provides guidance to AI coding assistants when working with code in th
    
    If any command fails, fix the issues before committing. Do NOT commit code that doesn't compile or fails tests.
 4. After making code changes, run lint check locally (if tools are available), then commit immediately — do not wait for the user to ask.
+5. **After modifying backend Go code, you MUST rebuild the binary, restart the local server, and verify the changes work in the browser before telling the user "OK" or committing.** Steps:
+   - `go build -o axonhub.exe ./cmd/axonhub/`
+   - Stop the running `axonhub.exe` process, then start the new one
+   - Verify the fix in the browser (check the affected page, look for errors)
 
 ## Configuration
 
