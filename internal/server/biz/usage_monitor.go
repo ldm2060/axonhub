@@ -39,12 +39,15 @@ type UsageMonitorServiceParams struct {
 	Scheduler  *scheduler.Scheduler
 }
 
+type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limits []map[string]any)
+
 type UsageMonitorService struct {
 	*AbstractService
 
-	cache          *live.IndexedCache[int, *ent.UsageMonitorChannel]
-	genericChecker *usage_monitor.GenericQuotaChecker
-	mu             sync.Mutex
+	cache              *live.IndexedCache[int, *ent.UsageMonitorChannel]
+	genericChecker     *usage_monitor.GenericQuotaChecker
+	mu                 sync.Mutex
+	quotaCacheCallback QuotaCacheCallback
 }
 
 func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorService {
@@ -83,6 +86,10 @@ func (svc *UsageMonitorService) RegisterScheduledTasks(ctx context.Context, s *s
 		CronExpr:    "*/1 * * * *",
 		Timezone:    "UTC",
 	}, svc.runPollAllScheduled)
+}
+
+func (svc *UsageMonitorService) SetQuotaCacheCallback(cb QuotaCacheCallback) {
+	svc.quotaCacheCallback = cb
 }
 
 func (svc *UsageMonitorService) loadOne(ctx context.Context, id int) (*ent.UsageMonitorChannel, error) {
@@ -137,6 +144,17 @@ func (svc *UsageMonitorService) ListChannels(ctx context.Context) ([]*ent.UsageM
 		result = append(result, ch)
 	}
 	return result, nil
+}
+
+// ListChannelsFromCache returns all usage monitor channels from the in-memory cache.
+// Used by ProviderQuotaService to populate its routing cache on startup.
+func (svc *UsageMonitorService) ListChannelsFromCache() []*ent.UsageMonitorChannel {
+	all := svc.cache.GetAll()
+	result := make([]*ent.UsageMonitorChannel, 0, len(all))
+	for _, ch := range all {
+		result = append(result, ch)
+	}
+	return result
 }
 
 // GetChannel returns a single monitor channel by ID from cache.
@@ -435,6 +453,12 @@ func (svc *UsageMonitorService) RefreshChannel(ctx context.Context, id int) (*en
 	return updated, nil
 }
 
+// RunPollAll forces an immediate poll of all usage monitor channels.
+// Used by ProviderQuotaService.ManualCheck() to trigger a manual refresh.
+func (svc *UsageMonitorService) RunPollAll(ctx context.Context) {
+	svc.runPollAll(ctx)
+}
+
 func (svc *UsageMonitorService) runPollAll(ctx context.Context) {
 	all := svc.cache.GetAll()
 	if len(all) == 0 {
@@ -549,14 +573,57 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 
 	now := pollData.PolledAt
 
+	// Derive quota status from parsed fields
+	var quotaStatus string
+	var quotaReady *bool
+	var quotaLimits []map[string]any
+	var nextResetAt *time.Time
+
+	if ch.ProviderType != "" && ch.ChannelID != nil {
+		derived := usage_monitor.DeriveQuotaStatus(string(ch.ProviderType), pollData.Fields)
+		quotaStatus = derived.Status
+		quotaReady = &derived.Ready
+		nextResetAt = derived.NextResetAt
+		for _, l := range derived.Limits {
+			m := map[string]any{
+				"type":       string(l.Type),
+				"status":     l.Status,
+				"usageRatio": l.UsageRatio,
+				"ready":      l.Ready,
+			}
+			if l.NextResetAt != nil {
+				m["nextResetAt"] = l.NextResetAt.Format(time.RFC3339)
+			}
+			quotaLimits = append(quotaLimits, m)
+		}
+	}
+
 	// Update DB with success
 	client := svc.entFromContext(ctx)
-	updated, updateErr := client.UsageMonitorChannel.UpdateOneID(ch.ID).
+	update := client.UsageMonitorChannel.UpdateOneID(ch.ID).
 		SetLastPollData(pollDataMap).
 		SetLastPollAt(now).
 		SetStatus(usagemonitorchannel.StatusActive).
-		ClearLastPollError().
-		Save(ctx)
+		ClearLastPollError()
+
+	if quotaStatus != "" {
+		update.SetQuotaStatus(usagemonitorchannel.QuotaStatus(quotaStatus))
+	}
+	if quotaReady != nil {
+		update.SetQuotaReady(*quotaReady)
+	}
+	if len(quotaLimits) > 0 {
+		update.SetQuotaLimits(quotaLimits)
+	} else {
+		update.ClearQuotaLimits()
+	}
+	if nextResetAt != nil {
+		update.SetNextResetAt(*nextResetAt)
+	} else {
+		update.ClearNextResetAt()
+	}
+
+	updated, updateErr := update.Save(ctx)
 	if updateErr != nil {
 		log.Error(ctx, "Failed to update poll data for usage monitor channel",
 			log.Int("channel_id", ch.ID),
@@ -564,6 +631,11 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	} else {
 		// Update cache with the new state
 		svc.cache.Set(updated.ID, updated)
+
+		// Notify quota cache for orchestrator routing
+		if svc.quotaCacheCallback != nil && updated.ChannelID != nil && quotaStatus != "" {
+			svc.quotaCacheCallback(*updated.ChannelID, quotaStatus, quotaReady != nil && *quotaReady, quotaLimits)
+		}
 	}
 
 	log.Debug(ctx, "Polled usage monitor channel",

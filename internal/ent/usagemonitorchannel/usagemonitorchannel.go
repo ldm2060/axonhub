@@ -54,6 +54,14 @@ const (
 	FieldLastPollError = "last_poll_error"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldQuotaStatus holds the string denoting the quota_status field in the database.
+	FieldQuotaStatus = "quota_status"
+	// FieldQuotaReady holds the string denoting the quota_ready field in the database.
+	FieldQuotaReady = "quota_ready"
+	// FieldQuotaLimits holds the string denoting the quota_limits field in the database.
+	FieldQuotaLimits = "quota_limits"
+	// FieldNextResetAt holds the string denoting the next_reset_at field in the database.
+	FieldNextResetAt = "next_reset_at"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -97,6 +105,10 @@ var Columns = []string{
 	FieldLastPollData,
 	FieldLastPollError,
 	FieldStatus,
+	FieldQuotaStatus,
+	FieldQuotaReady,
+	FieldQuotaLimits,
+	FieldNextResetAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "usage_monitor_channels"
@@ -142,6 +154,8 @@ var (
 	APIURLValidator func(string) error
 	// DefaultPollInterval holds the default value on creation for the "poll_interval" field.
 	DefaultPollInterval int
+	// DefaultQuotaReady holds the default value on creation for the "quota_ready" field.
+	DefaultQuotaReady bool
 )
 
 // Source defines the type for the "source" enum field.
@@ -250,6 +264,31 @@ func StatusValidator(s Status) error {
 	}
 }
 
+// QuotaStatus defines the type for the "quota_status" enum field.
+type QuotaStatus string
+
+// QuotaStatus values.
+const (
+	QuotaStatusAvailable QuotaStatus = "available"
+	QuotaStatusWarning   QuotaStatus = "warning"
+	QuotaStatusExhausted QuotaStatus = "exhausted"
+	QuotaStatusUnknown   QuotaStatus = "unknown"
+)
+
+func (qs QuotaStatus) String() string {
+	return string(qs)
+}
+
+// QuotaStatusValidator is a validator for the "quota_status" field enum values. It is called by the builders before save.
+func QuotaStatusValidator(qs QuotaStatus) error {
+	switch qs {
+	case QuotaStatusAvailable, QuotaStatusWarning, QuotaStatusExhausted, QuotaStatusUnknown:
+		return nil
+	default:
+		return fmt.Errorf("usagemonitorchannel: invalid enum value for quota_status field: %q", qs)
+	}
+}
+
 // OrderOption defines the ordering options for the UsageMonitorChannel queries.
 type OrderOption func(*sql.Selector)
 
@@ -331,6 +370,21 @@ func ByLastPollError(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByQuotaStatus orders the results by the quota_status field.
+func ByQuotaStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuotaStatus, opts...).ToFunc()
+}
+
+// ByQuotaReady orders the results by the quota_ready field.
+func ByQuotaReady(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuotaReady, opts...).ToFunc()
+}
+
+// ByNextResetAt orders the results by the next_reset_at field.
+func ByNextResetAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNextResetAt, opts...).ToFunc()
 }
 
 // ByChannelField orders the results by channel field.
@@ -429,6 +483,24 @@ func (e *Status) UnmarshalGQL(val interface{}) error {
 	*e = Status(str)
 	if err := StatusValidator(*e); err != nil {
 		return fmt.Errorf("%s is not a valid Status", str)
+	}
+	return nil
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (e QuotaStatus) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(e.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (e *QuotaStatus) UnmarshalGQL(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("enum %T must be a string", val)
+	}
+	*e = QuotaStatus(str)
+	if err := QuotaStatusValidator(*e); err != nil {
+		return fmt.Errorf("%s is not a valid QuotaStatus", str)
 	}
 	return nil
 }

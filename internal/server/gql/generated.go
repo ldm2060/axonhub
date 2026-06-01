@@ -2020,10 +2020,14 @@ type ComplexityRoot struct {
 		LastPollData     func(childComplexity int) int
 		LastPollError    func(childComplexity int) int
 		Name             func(childComplexity int) int
+		NextResetAt      func(childComplexity int) int
 		Owner            func(childComplexity int) int
 		ParsedData       func(childComplexity int) int
 		PollInterval     func(childComplexity int) int
 		ProviderType     func(childComplexity int) int
+		QuotaLimits      func(childComplexity int) int
+		QuotaReady       func(childComplexity int) int
+		QuotaStatus      func(childComplexity int) int
 		Source           func(childComplexity int) int
 		Status           func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
@@ -2617,6 +2621,8 @@ type UsageMonitorChannelResolver interface {
 	ChannelID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error)
 
 	Fields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
+
+	QuotaLimits(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
 
 	APIHeadersString(ctx context.Context, obj *ent.UsageMonitorChannel) (string, error)
 	ParsedData(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*usage_monitor.ParsedField, error)
@@ -11371,6 +11377,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.Name(childComplexity), true
+	case "UsageMonitorChannel.nextResetAt":
+		if e.complexity.UsageMonitorChannel.NextResetAt == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.NextResetAt(childComplexity), true
 	case "UsageMonitorChannel.owner":
 		if e.complexity.UsageMonitorChannel.Owner == nil {
 			break
@@ -11395,6 +11407,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.ProviderType(childComplexity), true
+	case "UsageMonitorChannel.quotaLimits":
+		if e.complexity.UsageMonitorChannel.QuotaLimits == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.QuotaLimits(childComplexity), true
+	case "UsageMonitorChannel.quotaReady":
+		if e.complexity.UsageMonitorChannel.QuotaReady == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.QuotaReady(childComplexity), true
+	case "UsageMonitorChannel.quotaStatus":
+		if e.complexity.UsageMonitorChannel.QuotaStatus == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.QuotaStatus(childComplexity), true
 	case "UsageMonitorChannel.source":
 		if e.complexity.UsageMonitorChannel.Source == nil {
 			break
@@ -20894,6 +20924,14 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -39188,6 +39226,14 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -39275,6 +39321,14 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -39454,6 +39508,14 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -49739,6 +49801,14 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -49815,6 +49885,14 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -62205,6 +62283,122 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_status(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageMonitorChannel_quotaStatus(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_quotaStatus,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaStatus, nil
+		},
+		nil,
+		ec.marshalOUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_quotaStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UsageMonitorChannelQuotaStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_quotaReady(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_quotaReady,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaReady, nil
+		},
+		nil,
+		ec.marshalOBoolean2ᚖbool,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_quotaReady(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_quotaLimits(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_quotaLimits,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorChannel().QuotaLimits(ctx, obj)
+		},
+		nil,
+		ec.marshalOMap2map,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_quotaLimits(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Map does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_nextResetAt(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_nextResetAt,
+		func(ctx context.Context) (any, error) {
+			return obj.NextResetAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_nextResetAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UsageMonitorChannel_channel(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -63627,6 +63821,14 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
 			case "status":
 				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -94429,7 +94631,7 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "quotaStatus", "quotaStatusNEQ", "quotaStatusIn", "quotaStatusNotIn", "quotaStatusIsNil", "quotaStatusNotNil", "quotaReady", "quotaReadyNEQ", "quotaReadyIsNil", "quotaReadyNotNil", "nextResetAt", "nextResetAtNEQ", "nextResetAtIn", "nextResetAtNotIn", "nextResetAtGT", "nextResetAtGTE", "nextResetAtLT", "nextResetAtLTE", "nextResetAtIsNil", "nextResetAtNotNil", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95359,6 +95561,146 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 				return it, err
 			}
 			it.StatusNotIn = data
+		case "quotaStatus":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatus"))
+			data, err := ec.unmarshalOUsageMonitorChannelQuotaStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatus = data
+		case "quotaStatusNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatusNEQ"))
+			data, err := ec.unmarshalOUsageMonitorChannelQuotaStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatusNEQ = data
+		case "quotaStatusIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatusIn"))
+			data, err := ec.unmarshalOUsageMonitorChannelQuotaStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatusIn = data
+		case "quotaStatusNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatusNotIn"))
+			data, err := ec.unmarshalOUsageMonitorChannelQuotaStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatusNotIn = data
+		case "quotaStatusIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatusIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatusIsNil = data
+		case "quotaStatusNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaStatusNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaStatusNotNil = data
+		case "quotaReady":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaReady"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaReady = data
+		case "quotaReadyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaReadyNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaReadyNEQ = data
+		case "quotaReadyIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaReadyIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaReadyIsNil = data
+		case "quotaReadyNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaReadyNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaReadyNotNil = data
+		case "nextResetAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAt = data
+		case "nextResetAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtNEQ = data
+		case "nextResetAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtIn = data
+		case "nextResetAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtNotIn = data
+		case "nextResetAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtGT = data
+		case "nextResetAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtGTE = data
+		case "nextResetAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtLT = data
+		case "nextResetAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtLTE = data
+		case "nextResetAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtIsNil = data
+		case "nextResetAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextResetAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextResetAtNotNil = data
 		case "hasChannel":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannel"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -117364,6 +117706,45 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "quotaStatus":
+			out.Values[i] = ec._UsageMonitorChannel_quotaStatus(ctx, field, obj)
+		case "quotaReady":
+			out.Values[i] = ec._UsageMonitorChannel_quotaReady(ctx, field, obj)
+		case "quotaLimits":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorChannel_quotaLimits(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "nextResetAt":
+			out.Values[i] = ec._UsageMonitorChannel_nextResetAt(ctx, field, obj)
 		case "channel":
 			field := field
 
@@ -125967,6 +126348,16 @@ func (ec *executionContext) marshalNUsageMonitorChannelProviderType2githubᚗcom
 	return v
 }
 
+func (ec *executionContext) unmarshalNUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, v any) (usagemonitorchannel.QuotaStatus, error) {
+	var res usagemonitorchannel.QuotaStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, sel ast.SelectionSet, v usagemonitorchannel.QuotaStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNUsageMonitorChannelSource2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐSource(ctx context.Context, v any) (usagemonitorchannel.Source, error) {
 	var res usagemonitorchannel.Source
 	err := res.UnmarshalGQL(v)
@@ -133557,6 +133948,97 @@ func (ec *executionContext) unmarshalOUsageMonitorChannelProviderType2ᚖgithub�
 }
 
 func (ec *executionContext) marshalOUsageMonitorChannelProviderType2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐProviderType(ctx context.Context, sel ast.SelectionSet, v *usagemonitorchannel.ProviderType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, v any) (usagemonitorchannel.QuotaStatus, error) {
+	var res usagemonitorchannel.QuotaStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, sel ast.SelectionSet, v usagemonitorchannel.QuotaStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelQuotaStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatusᚄ(ctx context.Context, v any) ([]usagemonitorchannel.QuotaStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]usagemonitorchannel.QuotaStatus, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelQuotaStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []usagemonitorchannel.QuotaStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUsageMonitorChannelQuotaStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOUsageMonitorChannelQuotaStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, v any) (*usagemonitorchannel.QuotaStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(usagemonitorchannel.QuotaStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUsageMonitorChannelQuotaStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐQuotaStatus(ctx context.Context, sel ast.SelectionSet, v *usagemonitorchannel.QuotaStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

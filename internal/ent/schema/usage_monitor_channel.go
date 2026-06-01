@@ -25,6 +25,7 @@ func (UsageMonitorChannel) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("channel_id"),
 		index.Fields("status"),
+		index.Fields("quota_status"),
 	}
 }
 
@@ -68,6 +69,17 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Values("active", "paused", "error").
 			Default("active").
 			Comment("Current status of this monitor channel"),
+		field.Enum("quota_status").
+			Values("available", "warning", "exhausted", "unknown").
+			Optional().
+			Comment("Derived quota status for orchestrator routing"),
+		field.Bool("quota_ready").Optional().Nillable().Default(true).
+			Comment("Whether channel is ready for routing based on quota status"),
+		field.JSON("quota_limits", []map[string]any{}).Optional().
+			Comment("Per-limit-type quota status for orchestrator routing (token/time/image)").
+			Annotations(entgql.Type("Map")),
+		field.Time("next_reset_at").Optional().Nillable().
+			Comment("Earliest quota reset time across all limits"),
 	}
 }
 

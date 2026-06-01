@@ -228,6 +228,54 @@ func (_c *UsageMonitorChannelCreate) SetNillableStatus(v *usagemonitorchannel.St
 	return _c
 }
 
+// SetQuotaStatus sets the "quota_status" field.
+func (_c *UsageMonitorChannelCreate) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelCreate {
+	_c.mutation.SetQuotaStatus(v)
+	return _c
+}
+
+// SetNillableQuotaStatus sets the "quota_status" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableQuotaStatus(v *usagemonitorchannel.QuotaStatus) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetQuotaStatus(*v)
+	}
+	return _c
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (_c *UsageMonitorChannelCreate) SetQuotaReady(v bool) *UsageMonitorChannelCreate {
+	_c.mutation.SetQuotaReady(v)
+	return _c
+}
+
+// SetNillableQuotaReady sets the "quota_ready" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableQuotaReady(v *bool) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetQuotaReady(*v)
+	}
+	return _c
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (_c *UsageMonitorChannelCreate) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelCreate {
+	_c.mutation.SetQuotaLimits(v)
+	return _c
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (_c *UsageMonitorChannelCreate) SetNextResetAt(v time.Time) *UsageMonitorChannelCreate {
+	_c.mutation.SetNextResetAt(v)
+	return _c
+}
+
+// SetNillableNextResetAt sets the "next_reset_at" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableNextResetAt(v *time.Time) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetNextResetAt(*v)
+	}
+	return _c
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_c *UsageMonitorChannelCreate) SetChannel(v *Channel) *UsageMonitorChannelCreate {
 	return _c.SetChannelID(v.ID)
@@ -311,6 +359,10 @@ func (_c *UsageMonitorChannelCreate) defaults() error {
 		v := usagemonitorchannel.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.QuotaReady(); !ok {
+		v := usagemonitorchannel.DefaultQuotaReady
+		_c.mutation.SetQuotaReady(v)
+	}
 	return nil
 }
 
@@ -371,6 +423,11 @@ func (_c *UsageMonitorChannelCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := usagemonitorchannel.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.status": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.QuotaStatus(); ok {
+		if err := usagemonitorchannel.QuotaStatusValidator(v); err != nil {
+			return &ValidationError{Name: "quota_status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.quota_status": %w`, err)}
 		}
 	}
 	if len(_c.mutation.OwnerIDs()) == 0 {
@@ -470,6 +527,22 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(usagemonitorchannel.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.QuotaStatus(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaStatus, field.TypeEnum, value)
+		_node.QuotaStatus = value
+	}
+	if value, ok := _c.mutation.QuotaReady(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaReady, field.TypeBool, value)
+		_node.QuotaReady = &value
+	}
+	if value, ok := _c.mutation.QuotaLimits(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaLimits, field.TypeJSON, value)
+		_node.QuotaLimits = value
+	}
+	if value, ok := _c.mutation.NextResetAt(); ok {
+		_spec.SetField(usagemonitorchannel.FieldNextResetAt, field.TypeTime, value)
+		_node.NextResetAt = &value
 	}
 	if nodes := _c.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -812,6 +885,78 @@ func (u *UsageMonitorChannelUpsert) SetStatus(v usagemonitorchannel.Status) *Usa
 // UpdateStatus sets the "status" field to the value that was provided on create.
 func (u *UsageMonitorChannelUpsert) UpdateStatus() *UsageMonitorChannelUpsert {
 	u.SetExcluded(usagemonitorchannel.FieldStatus)
+	return u
+}
+
+// SetQuotaStatus sets the "quota_status" field.
+func (u *UsageMonitorChannelUpsert) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldQuotaStatus, v)
+	return u
+}
+
+// UpdateQuotaStatus sets the "quota_status" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateQuotaStatus() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldQuotaStatus)
+	return u
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (u *UsageMonitorChannelUpsert) ClearQuotaStatus() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldQuotaStatus)
+	return u
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (u *UsageMonitorChannelUpsert) SetQuotaReady(v bool) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldQuotaReady, v)
+	return u
+}
+
+// UpdateQuotaReady sets the "quota_ready" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateQuotaReady() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldQuotaReady)
+	return u
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (u *UsageMonitorChannelUpsert) ClearQuotaReady() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldQuotaReady)
+	return u
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (u *UsageMonitorChannelUpsert) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldQuotaLimits, v)
+	return u
+}
+
+// UpdateQuotaLimits sets the "quota_limits" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateQuotaLimits() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldQuotaLimits)
+	return u
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (u *UsageMonitorChannelUpsert) ClearQuotaLimits() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldQuotaLimits)
+	return u
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsert) SetNextResetAt(v time.Time) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldNextResetAt, v)
+	return u
+}
+
+// UpdateNextResetAt sets the "next_reset_at" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateNextResetAt() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldNextResetAt)
+	return u
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsert) ClearNextResetAt() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldNextResetAt)
 	return u
 }
 
@@ -1158,6 +1303,90 @@ func (u *UsageMonitorChannelUpsertOne) SetStatus(v usagemonitorchannel.Status) *
 func (u *UsageMonitorChannelUpsertOne) UpdateStatus() *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetQuotaStatus sets the "quota_status" field.
+func (u *UsageMonitorChannelUpsertOne) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaStatus(v)
+	})
+}
+
+// UpdateQuotaStatus sets the "quota_status" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateQuotaStatus() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaStatus()
+	})
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (u *UsageMonitorChannelUpsertOne) ClearQuotaStatus() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaStatus()
+	})
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (u *UsageMonitorChannelUpsertOne) SetQuotaReady(v bool) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaReady(v)
+	})
+}
+
+// UpdateQuotaReady sets the "quota_ready" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateQuotaReady() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaReady()
+	})
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (u *UsageMonitorChannelUpsertOne) ClearQuotaReady() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaReady()
+	})
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (u *UsageMonitorChannelUpsertOne) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaLimits(v)
+	})
+}
+
+// UpdateQuotaLimits sets the "quota_limits" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateQuotaLimits() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaLimits()
+	})
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (u *UsageMonitorChannelUpsertOne) ClearQuotaLimits() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaLimits()
+	})
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsertOne) SetNextResetAt(v time.Time) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetNextResetAt(v)
+	})
+}
+
+// UpdateNextResetAt sets the "next_reset_at" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateNextResetAt() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateNextResetAt()
+	})
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsertOne) ClearNextResetAt() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearNextResetAt()
 	})
 }
 
@@ -1670,6 +1899,90 @@ func (u *UsageMonitorChannelUpsertBulk) SetStatus(v usagemonitorchannel.Status) 
 func (u *UsageMonitorChannelUpsertBulk) UpdateStatus() *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.UpdateStatus()
+	})
+}
+
+// SetQuotaStatus sets the "quota_status" field.
+func (u *UsageMonitorChannelUpsertBulk) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaStatus(v)
+	})
+}
+
+// UpdateQuotaStatus sets the "quota_status" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateQuotaStatus() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaStatus()
+	})
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearQuotaStatus() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaStatus()
+	})
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (u *UsageMonitorChannelUpsertBulk) SetQuotaReady(v bool) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaReady(v)
+	})
+}
+
+// UpdateQuotaReady sets the "quota_ready" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateQuotaReady() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaReady()
+	})
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearQuotaReady() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaReady()
+	})
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (u *UsageMonitorChannelUpsertBulk) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetQuotaLimits(v)
+	})
+}
+
+// UpdateQuotaLimits sets the "quota_limits" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateQuotaLimits() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateQuotaLimits()
+	})
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearQuotaLimits() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearQuotaLimits()
+	})
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsertBulk) SetNextResetAt(v time.Time) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetNextResetAt(v)
+	})
+}
+
+// UpdateNextResetAt sets the "next_reset_at" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateNextResetAt() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateNextResetAt()
+	})
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearNextResetAt() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearNextResetAt()
 	})
 }
 

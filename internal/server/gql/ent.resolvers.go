@@ -1016,6 +1016,11 @@ func (r *usageMonitorChannelResolver) Fields(ctx context.Context, obj *ent.Usage
 	return map[string]any{"items": obj.Fields}, nil
 }
 
+// QuotaLimits is the resolver for the quotaLimits field.
+func (r *usageMonitorChannelResolver) QuotaLimits(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
+	panic(fmt.Errorf("not implemented: QuotaLimits - quotaLimits"))
+}
+
 // ID is the resolver for the id field.
 func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*objects.GUID, error) {
 	return &objects.GUID{

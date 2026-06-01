@@ -56,6 +56,14 @@ type UsageMonitorChannel struct {
 	LastPollError *string `json:"last_poll_error,omitempty"`
 	// Current status of this monitor channel
 	Status usagemonitorchannel.Status `json:"status,omitempty"`
+	// Derived quota status for orchestrator routing
+	QuotaStatus usagemonitorchannel.QuotaStatus `json:"quota_status,omitempty"`
+	// Whether channel is ready for routing based on quota status
+	QuotaReady *bool `json:"quota_ready,omitempty"`
+	// Per-limit-type quota status for orchestrator routing (token/time/image)
+	QuotaLimits []map[string]interface{} `json:"quota_limits,omitempty"`
+	// Earliest quota reset time across all limits
+	NextResetAt *time.Time `json:"next_reset_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UsageMonitorChannelQuery when eager-loading is set.
 	Edges                       UsageMonitorChannelEdges `json:"edges"`
@@ -103,13 +111,15 @@ func (*UsageMonitorChannel) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldLastPollData:
+		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
 			values[i] = new([]byte)
+		case usagemonitorchannel.FieldQuotaReady:
+			values[i] = new(sql.NullBool)
 		case usagemonitorchannel.FieldID, usagemonitorchannel.FieldDeletedAt, usagemonitorchannel.FieldChannelID, usagemonitorchannel.FieldPollInterval:
 			values[i] = new(sql.NullInt64)
-		case usagemonitorchannel.FieldName, usagemonitorchannel.FieldSource, usagemonitorchannel.FieldProviderType, usagemonitorchannel.FieldAPIURL, usagemonitorchannel.FieldAPIMethod, usagemonitorchannel.FieldAPIBody, usagemonitorchannel.FieldAPIKey, usagemonitorchannel.FieldLastPollError, usagemonitorchannel.FieldStatus:
+		case usagemonitorchannel.FieldName, usagemonitorchannel.FieldSource, usagemonitorchannel.FieldProviderType, usagemonitorchannel.FieldAPIURL, usagemonitorchannel.FieldAPIMethod, usagemonitorchannel.FieldAPIBody, usagemonitorchannel.FieldAPIKey, usagemonitorchannel.FieldLastPollError, usagemonitorchannel.FieldStatus, usagemonitorchannel.FieldQuotaStatus:
 			values[i] = new(sql.NullString)
-		case usagemonitorchannel.FieldCreatedAt, usagemonitorchannel.FieldUpdatedAt, usagemonitorchannel.FieldLastPollAt:
+		case usagemonitorchannel.FieldCreatedAt, usagemonitorchannel.FieldUpdatedAt, usagemonitorchannel.FieldLastPollAt, usagemonitorchannel.FieldNextResetAt:
 			values[i] = new(sql.NullTime)
 		case usagemonitorchannel.ForeignKeys[0]: // user_usage_monitor_channels
 			values[i] = new(sql.NullInt64)
@@ -251,6 +261,34 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 			} else if value.Valid {
 				_m.Status = usagemonitorchannel.Status(value.String)
 			}
+		case usagemonitorchannel.FieldQuotaStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field quota_status", values[i])
+			} else if value.Valid {
+				_m.QuotaStatus = usagemonitorchannel.QuotaStatus(value.String)
+			}
+		case usagemonitorchannel.FieldQuotaReady:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field quota_ready", values[i])
+			} else if value.Valid {
+				_m.QuotaReady = new(bool)
+				*_m.QuotaReady = value.Bool
+			}
+		case usagemonitorchannel.FieldQuotaLimits:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field quota_limits", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.QuotaLimits); err != nil {
+					return fmt.Errorf("unmarshal field quota_limits: %w", err)
+				}
+			}
+		case usagemonitorchannel.FieldNextResetAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field next_reset_at", values[i])
+			} else if value.Valid {
+				_m.NextResetAt = new(time.Time)
+				*_m.NextResetAt = value.Time
+			}
 		case usagemonitorchannel.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field user_usage_monitor_channels", value)
@@ -362,6 +400,22 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("quota_status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.QuotaStatus))
+	builder.WriteString(", ")
+	if v := _m.QuotaReady; v != nil {
+		builder.WriteString("quota_ready=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("quota_limits=")
+	builder.WriteString(fmt.Sprintf("%v", _m.QuotaLimits))
+	builder.WriteString(", ")
+	if v := _m.NextResetAt; v != nil {
+		builder.WriteString("next_reset_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

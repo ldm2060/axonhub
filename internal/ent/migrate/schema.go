@@ -1006,6 +1006,10 @@ var (
 		{Name: "last_poll_data", Type: field.TypeJSON, Nullable: true},
 		{Name: "last_poll_error", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "paused", "error"}, Default: "active"},
+		{Name: "quota_status", Type: field.TypeEnum, Nullable: true, Enums: []string{"available", "warning", "exhausted", "unknown"}},
+		{Name: "quota_ready", Type: field.TypeBool, Nullable: true, Default: true},
+		{Name: "quota_limits", Type: field.TypeJSON, Nullable: true},
+		{Name: "next_reset_at", Type: field.TypeTime, Nullable: true},
 		{Name: "channel_id", Type: field.TypeInt, Nullable: true},
 		{Name: "user_usage_monitor_channels", Type: field.TypeInt},
 	}
@@ -1017,13 +1021,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "usage_monitor_channels_channels_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[18]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[22]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "usage_monitor_channels_users_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[19]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[23]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1032,12 +1036,17 @@ var (
 			{
 				Name:    "usagemonitorchannel_channel_id",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[18]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[22]},
 			},
 			{
 				Name:    "usagemonitorchannel_status",
 				Unique:  false,
 				Columns: []*schema.Column{UsageMonitorChannelsColumns[17]},
+			},
+			{
+				Name:    "usagemonitorchannel_quota_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[18]},
 			},
 		},
 	}

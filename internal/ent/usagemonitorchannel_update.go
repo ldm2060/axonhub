@@ -300,6 +300,84 @@ func (_u *UsageMonitorChannelUpdate) SetNillableStatus(v *usagemonitorchannel.St
 	return _u
 }
 
+// SetQuotaStatus sets the "quota_status" field.
+func (_u *UsageMonitorChannelUpdate) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpdate {
+	_u.mutation.SetQuotaStatus(v)
+	return _u
+}
+
+// SetNillableQuotaStatus sets the "quota_status" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableQuotaStatus(v *usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetQuotaStatus(*v)
+	}
+	return _u
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (_u *UsageMonitorChannelUpdate) ClearQuotaStatus() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearQuotaStatus()
+	return _u
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (_u *UsageMonitorChannelUpdate) SetQuotaReady(v bool) *UsageMonitorChannelUpdate {
+	_u.mutation.SetQuotaReady(v)
+	return _u
+}
+
+// SetNillableQuotaReady sets the "quota_ready" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableQuotaReady(v *bool) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetQuotaReady(*v)
+	}
+	return _u
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (_u *UsageMonitorChannelUpdate) ClearQuotaReady() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearQuotaReady()
+	return _u
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdate) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.SetQuotaLimits(v)
+	return _u
+}
+
+// AppendQuotaLimits appends value to the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdate) AppendQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.AppendQuotaLimits(v)
+	return _u
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdate) ClearQuotaLimits() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearQuotaLimits()
+	return _u
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (_u *UsageMonitorChannelUpdate) SetNextResetAt(v time.Time) *UsageMonitorChannelUpdate {
+	_u.mutation.SetNextResetAt(v)
+	return _u
+}
+
+// SetNillableNextResetAt sets the "next_reset_at" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableNextResetAt(v *time.Time) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetNextResetAt(*v)
+	}
+	return _u
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (_u *UsageMonitorChannelUpdate) ClearNextResetAt() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearNextResetAt()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *UsageMonitorChannelUpdate) SetChannel(v *Channel) *UsageMonitorChannelUpdate {
 	return _u.SetChannelID(v.ID)
@@ -407,6 +485,11 @@ func (_u *UsageMonitorChannelUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.QuotaStatus(); ok {
+		if err := usagemonitorchannel.QuotaStatusValidator(v); err != nil {
+			return &ValidationError{Name: "quota_status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.quota_status": %w`, err)}
+		}
+	}
 	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UsageMonitorChannel.owner"`)
 	}
@@ -507,6 +590,35 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(usagemonitorchannel.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.QuotaStatus(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaStatus, field.TypeEnum, value)
+	}
+	if _u.mutation.QuotaStatusCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaStatus, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.QuotaReady(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaReady, field.TypeBool, value)
+	}
+	if _u.mutation.QuotaReadyCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaReady, field.TypeBool)
+	}
+	if value, ok := _u.mutation.QuotaLimits(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaLimits, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedQuotaLimits(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldQuotaLimits, value)
+		})
+	}
+	if _u.mutation.QuotaLimitsCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaLimits, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.NextResetAt(); ok {
+		_spec.SetField(usagemonitorchannel.FieldNextResetAt, field.TypeTime, value)
+	}
+	if _u.mutation.NextResetAtCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldNextResetAt, field.TypeTime)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -856,6 +968,84 @@ func (_u *UsageMonitorChannelUpdateOne) SetNillableStatus(v *usagemonitorchannel
 	return _u
 }
 
+// SetQuotaStatus sets the "quota_status" field.
+func (_u *UsageMonitorChannelUpdateOne) SetQuotaStatus(v usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetQuotaStatus(v)
+	return _u
+}
+
+// SetNillableQuotaStatus sets the "quota_status" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableQuotaStatus(v *usagemonitorchannel.QuotaStatus) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetQuotaStatus(*v)
+	}
+	return _u
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearQuotaStatus() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearQuotaStatus()
+	return _u
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (_u *UsageMonitorChannelUpdateOne) SetQuotaReady(v bool) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetQuotaReady(v)
+	return _u
+}
+
+// SetNillableQuotaReady sets the "quota_ready" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableQuotaReady(v *bool) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetQuotaReady(*v)
+	}
+	return _u
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearQuotaReady() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearQuotaReady()
+	return _u
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdateOne) SetQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetQuotaLimits(v)
+	return _u
+}
+
+// AppendQuotaLimits appends value to the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdateOne) AppendQuotaLimits(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AppendQuotaLimits(v)
+	return _u
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearQuotaLimits() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearQuotaLimits()
+	return _u
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (_u *UsageMonitorChannelUpdateOne) SetNextResetAt(v time.Time) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetNextResetAt(v)
+	return _u
+}
+
+// SetNillableNextResetAt sets the "next_reset_at" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableNextResetAt(v *time.Time) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetNextResetAt(*v)
+	}
+	return _u
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearNextResetAt() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearNextResetAt()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *UsageMonitorChannelUpdateOne) SetChannel(v *Channel) *UsageMonitorChannelUpdateOne {
 	return _u.SetChannelID(v.ID)
@@ -976,6 +1166,11 @@ func (_u *UsageMonitorChannelUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.QuotaStatus(); ok {
+		if err := usagemonitorchannel.QuotaStatusValidator(v); err != nil {
+			return &ValidationError{Name: "quota_status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.quota_status": %w`, err)}
+		}
+	}
 	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UsageMonitorChannel.owner"`)
 	}
@@ -1093,6 +1288,35 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(usagemonitorchannel.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.QuotaStatus(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaStatus, field.TypeEnum, value)
+	}
+	if _u.mutation.QuotaStatusCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaStatus, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.QuotaReady(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaReady, field.TypeBool, value)
+	}
+	if _u.mutation.QuotaReadyCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaReady, field.TypeBool)
+	}
+	if value, ok := _u.mutation.QuotaLimits(); ok {
+		_spec.SetField(usagemonitorchannel.FieldQuotaLimits, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedQuotaLimits(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldQuotaLimits, value)
+		})
+	}
+	if _u.mutation.QuotaLimitsCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldQuotaLimits, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.NextResetAt(); ok {
+		_spec.SetField(usagemonitorchannel.FieldNextResetAt, field.TypeTime, value)
+	}
+	if _u.mutation.NextResetAtCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldNextResetAt, field.TypeTime)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{

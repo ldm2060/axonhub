@@ -2827,7 +2827,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageMonitorChannel",
-		Fields: make([]*Field, 17),
+		Fields: make([]*Field, 21),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -2965,6 +2965,38 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node.Fields[16] = &Field{
 		Type:  "usagemonitorchannel.Status",
 		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaStatus); err != nil {
+		return nil, err
+	}
+	node.Fields[17] = &Field{
+		Type:  "usagemonitorchannel.QuotaStatus",
+		Name:  "quota_status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaReady); err != nil {
+		return nil, err
+	}
+	node.Fields[18] = &Field{
+		Type:  "bool",
+		Name:  "quota_ready",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaLimits); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
+		Type:  "[]map[string]interface {}",
+		Name:  "quota_limits",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.NextResetAt); err != nil {
+		return nil, err
+	}
+	node.Fields[20] = &Field{
+		Type:  "time.Time",
+		Name:  "next_reset_at",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{

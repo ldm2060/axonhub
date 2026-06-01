@@ -11988,6 +11988,32 @@ type UsageMonitorChannelWhereInput struct {
 	StatusIn    []usagemonitorchannel.Status `json:"statusIn,omitempty"`
 	StatusNotIn []usagemonitorchannel.Status `json:"statusNotIn,omitempty"`
 
+	// "quota_status" field predicates.
+	QuotaStatus       *usagemonitorchannel.QuotaStatus  `json:"quotaStatus,omitempty"`
+	QuotaStatusNEQ    *usagemonitorchannel.QuotaStatus  `json:"quotaStatusNEQ,omitempty"`
+	QuotaStatusIn     []usagemonitorchannel.QuotaStatus `json:"quotaStatusIn,omitempty"`
+	QuotaStatusNotIn  []usagemonitorchannel.QuotaStatus `json:"quotaStatusNotIn,omitempty"`
+	QuotaStatusIsNil  bool                              `json:"quotaStatusIsNil,omitempty"`
+	QuotaStatusNotNil bool                              `json:"quotaStatusNotNil,omitempty"`
+
+	// "quota_ready" field predicates.
+	QuotaReady       *bool `json:"quotaReady,omitempty"`
+	QuotaReadyNEQ    *bool `json:"quotaReadyNEQ,omitempty"`
+	QuotaReadyIsNil  bool  `json:"quotaReadyIsNil,omitempty"`
+	QuotaReadyNotNil bool  `json:"quotaReadyNotNil,omitempty"`
+
+	// "next_reset_at" field predicates.
+	NextResetAt       *time.Time  `json:"nextResetAt,omitempty"`
+	NextResetAtNEQ    *time.Time  `json:"nextResetAtNEQ,omitempty"`
+	NextResetAtIn     []time.Time `json:"nextResetAtIn,omitempty"`
+	NextResetAtNotIn  []time.Time `json:"nextResetAtNotIn,omitempty"`
+	NextResetAtGT     *time.Time  `json:"nextResetAtGT,omitempty"`
+	NextResetAtGTE    *time.Time  `json:"nextResetAtGTE,omitempty"`
+	NextResetAtLT     *time.Time  `json:"nextResetAtLT,omitempty"`
+	NextResetAtLTE    *time.Time  `json:"nextResetAtLTE,omitempty"`
+	NextResetAtIsNil  bool        `json:"nextResetAtIsNil,omitempty"`
+	NextResetAtNotNil bool        `json:"nextResetAtNotNil,omitempty"`
+
 	// "channel" edge predicates.
 	HasChannel     *bool                `json:"hasChannel,omitempty"`
 	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
@@ -12478,6 +12504,66 @@ func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, erro
 	}
 	if len(i.StatusNotIn) > 0 {
 		predicates = append(predicates, usagemonitorchannel.StatusNotIn(i.StatusNotIn...))
+	}
+	if i.QuotaStatus != nil {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusEQ(*i.QuotaStatus))
+	}
+	if i.QuotaStatusNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusNEQ(*i.QuotaStatusNEQ))
+	}
+	if len(i.QuotaStatusIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusIn(i.QuotaStatusIn...))
+	}
+	if len(i.QuotaStatusNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusNotIn(i.QuotaStatusNotIn...))
+	}
+	if i.QuotaStatusIsNil {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusIsNil())
+	}
+	if i.QuotaStatusNotNil {
+		predicates = append(predicates, usagemonitorchannel.QuotaStatusNotNil())
+	}
+	if i.QuotaReady != nil {
+		predicates = append(predicates, usagemonitorchannel.QuotaReadyEQ(*i.QuotaReady))
+	}
+	if i.QuotaReadyNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.QuotaReadyNEQ(*i.QuotaReadyNEQ))
+	}
+	if i.QuotaReadyIsNil {
+		predicates = append(predicates, usagemonitorchannel.QuotaReadyIsNil())
+	}
+	if i.QuotaReadyNotNil {
+		predicates = append(predicates, usagemonitorchannel.QuotaReadyNotNil())
+	}
+	if i.NextResetAt != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtEQ(*i.NextResetAt))
+	}
+	if i.NextResetAtNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtNEQ(*i.NextResetAtNEQ))
+	}
+	if len(i.NextResetAtIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtIn(i.NextResetAtIn...))
+	}
+	if len(i.NextResetAtNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtNotIn(i.NextResetAtNotIn...))
+	}
+	if i.NextResetAtGT != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtGT(*i.NextResetAtGT))
+	}
+	if i.NextResetAtGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtGTE(*i.NextResetAtGTE))
+	}
+	if i.NextResetAtLT != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtLT(*i.NextResetAtLT))
+	}
+	if i.NextResetAtLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtLTE(*i.NextResetAtLTE))
+	}
+	if i.NextResetAtIsNil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtIsNil())
+	}
+	if i.NextResetAtNotNil {
+		predicates = append(predicates, usagemonitorchannel.NextResetAtNotNil())
 	}
 
 	if i.HasChannel != nil {

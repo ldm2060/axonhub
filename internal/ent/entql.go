@@ -625,6 +625,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagemonitorchannel.FieldLastPollData:  {Type: field.TypeJSON, Column: usagemonitorchannel.FieldLastPollData},
 			usagemonitorchannel.FieldLastPollError: {Type: field.TypeString, Column: usagemonitorchannel.FieldLastPollError},
 			usagemonitorchannel.FieldStatus:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldStatus},
+			usagemonitorchannel.FieldQuotaStatus:   {Type: field.TypeEnum, Column: usagemonitorchannel.FieldQuotaStatus},
+			usagemonitorchannel.FieldQuotaReady:    {Type: field.TypeBool, Column: usagemonitorchannel.FieldQuotaReady},
+			usagemonitorchannel.FieldQuotaLimits:   {Type: field.TypeJSON, Column: usagemonitorchannel.FieldQuotaLimits},
+			usagemonitorchannel.FieldNextResetAt:   {Type: field.TypeTime, Column: usagemonitorchannel.FieldNextResetAt},
 		},
 	}
 	graph.Nodes[24] = &sqlgraph.Node{
@@ -4791,6 +4795,26 @@ func (f *UsageMonitorChannelFilter) WhereLastPollError(p entql.StringP) {
 // WhereStatus applies the entql string predicate on the status field.
 func (f *UsageMonitorChannelFilter) WhereStatus(p entql.StringP) {
 	f.Where(p.Field(usagemonitorchannel.FieldStatus))
+}
+
+// WhereQuotaStatus applies the entql string predicate on the quota_status field.
+func (f *UsageMonitorChannelFilter) WhereQuotaStatus(p entql.StringP) {
+	f.Where(p.Field(usagemonitorchannel.FieldQuotaStatus))
+}
+
+// WhereQuotaReady applies the entql bool predicate on the quota_ready field.
+func (f *UsageMonitorChannelFilter) WhereQuotaReady(p entql.BoolP) {
+	f.Where(p.Field(usagemonitorchannel.FieldQuotaReady))
+}
+
+// WhereQuotaLimits applies the entql json.RawMessage predicate on the quota_limits field.
+func (f *UsageMonitorChannelFilter) WhereQuotaLimits(p entql.BytesP) {
+	f.Where(p.Field(usagemonitorchannel.FieldQuotaLimits))
+}
+
+// WhereNextResetAt applies the entql time.Time predicate on the next_reset_at field.
+func (f *UsageMonitorChannelFilter) WhereNextResetAt(p entql.TimeP) {
+	f.Where(p.Field(usagemonitorchannel.FieldNextResetAt))
 }
 
 // WhereHasChannel applies a predicate to check if query has an edge channel.

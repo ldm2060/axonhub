@@ -27550,37 +27550,42 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 // UsageMonitorChannelMutation represents an operation that mutates the UsageMonitorChannel nodes in the graph.
 type UsageMonitorChannelMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	created_at       *time.Time
-	updated_at       *time.Time
-	deleted_at       *int
-	adddeleted_at    *int
-	name             *string
-	source           *usagemonitorchannel.Source
-	provider_type    *usagemonitorchannel.ProviderType
-	api_url          *string
-	api_method       *usagemonitorchannel.APIMethod
-	api_headers      *map[string]interface{}
-	api_body         *string
-	api_key          *string
-	poll_interval    *int
-	addpoll_interval *int
-	fields           *[]map[string]interface{}
-	appendfields     []map[string]interface{}
-	last_poll_at     *time.Time
-	last_poll_data   *map[string]interface{}
-	last_poll_error  *string
-	status           *usagemonitorchannel.Status
-	clearedFields    map[string]struct{}
-	channel          *int
-	clearedchannel   bool
-	owner            *int
-	clearedowner     bool
-	done             bool
-	oldValue         func(context.Context) (*UsageMonitorChannel, error)
-	predicates       []predicate.UsageMonitorChannel
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	deleted_at         *int
+	adddeleted_at      *int
+	name               *string
+	source             *usagemonitorchannel.Source
+	provider_type      *usagemonitorchannel.ProviderType
+	api_url            *string
+	api_method         *usagemonitorchannel.APIMethod
+	api_headers        *map[string]interface{}
+	api_body           *string
+	api_key            *string
+	poll_interval      *int
+	addpoll_interval   *int
+	fields             *[]map[string]interface{}
+	appendfields       []map[string]interface{}
+	last_poll_at       *time.Time
+	last_poll_data     *map[string]interface{}
+	last_poll_error    *string
+	status             *usagemonitorchannel.Status
+	quota_status       *usagemonitorchannel.QuotaStatus
+	quota_ready        *bool
+	quota_limits       *[]map[string]interface{}
+	appendquota_limits []map[string]interface{}
+	next_reset_at      *time.Time
+	clearedFields      map[string]struct{}
+	channel            *int
+	clearedchannel     bool
+	owner              *int
+	clearedowner       bool
+	done               bool
+	oldValue           func(context.Context) (*UsageMonitorChannel, error)
+	predicates         []predicate.UsageMonitorChannel
 }
 
 var _ ent.Mutation = (*UsageMonitorChannelMutation)(nil)
@@ -28475,6 +28480,218 @@ func (m *UsageMonitorChannelMutation) ResetStatus() {
 	m.status = nil
 }
 
+// SetQuotaStatus sets the "quota_status" field.
+func (m *UsageMonitorChannelMutation) SetQuotaStatus(us usagemonitorchannel.QuotaStatus) {
+	m.quota_status = &us
+}
+
+// QuotaStatus returns the value of the "quota_status" field in the mutation.
+func (m *UsageMonitorChannelMutation) QuotaStatus() (r usagemonitorchannel.QuotaStatus, exists bool) {
+	v := m.quota_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaStatus returns the old "quota_status" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldQuotaStatus(ctx context.Context) (v usagemonitorchannel.QuotaStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaStatus: %w", err)
+	}
+	return oldValue.QuotaStatus, nil
+}
+
+// ClearQuotaStatus clears the value of the "quota_status" field.
+func (m *UsageMonitorChannelMutation) ClearQuotaStatus() {
+	m.quota_status = nil
+	m.clearedFields[usagemonitorchannel.FieldQuotaStatus] = struct{}{}
+}
+
+// QuotaStatusCleared returns if the "quota_status" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) QuotaStatusCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldQuotaStatus]
+	return ok
+}
+
+// ResetQuotaStatus resets all changes to the "quota_status" field.
+func (m *UsageMonitorChannelMutation) ResetQuotaStatus() {
+	m.quota_status = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldQuotaStatus)
+}
+
+// SetQuotaReady sets the "quota_ready" field.
+func (m *UsageMonitorChannelMutation) SetQuotaReady(b bool) {
+	m.quota_ready = &b
+}
+
+// QuotaReady returns the value of the "quota_ready" field in the mutation.
+func (m *UsageMonitorChannelMutation) QuotaReady() (r bool, exists bool) {
+	v := m.quota_ready
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaReady returns the old "quota_ready" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldQuotaReady(ctx context.Context) (v *bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaReady is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaReady requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaReady: %w", err)
+	}
+	return oldValue.QuotaReady, nil
+}
+
+// ClearQuotaReady clears the value of the "quota_ready" field.
+func (m *UsageMonitorChannelMutation) ClearQuotaReady() {
+	m.quota_ready = nil
+	m.clearedFields[usagemonitorchannel.FieldQuotaReady] = struct{}{}
+}
+
+// QuotaReadyCleared returns if the "quota_ready" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) QuotaReadyCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldQuotaReady]
+	return ok
+}
+
+// ResetQuotaReady resets all changes to the "quota_ready" field.
+func (m *UsageMonitorChannelMutation) ResetQuotaReady() {
+	m.quota_ready = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldQuotaReady)
+}
+
+// SetQuotaLimits sets the "quota_limits" field.
+func (m *UsageMonitorChannelMutation) SetQuotaLimits(value []map[string]interface{}) {
+	m.quota_limits = &value
+	m.appendquota_limits = nil
+}
+
+// QuotaLimits returns the value of the "quota_limits" field in the mutation.
+func (m *UsageMonitorChannelMutation) QuotaLimits() (r []map[string]interface{}, exists bool) {
+	v := m.quota_limits
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaLimits returns the old "quota_limits" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldQuotaLimits(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaLimits is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaLimits requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaLimits: %w", err)
+	}
+	return oldValue.QuotaLimits, nil
+}
+
+// AppendQuotaLimits adds value to the "quota_limits" field.
+func (m *UsageMonitorChannelMutation) AppendQuotaLimits(value []map[string]interface{}) {
+	m.appendquota_limits = append(m.appendquota_limits, value...)
+}
+
+// AppendedQuotaLimits returns the list of values that were appended to the "quota_limits" field in this mutation.
+func (m *UsageMonitorChannelMutation) AppendedQuotaLimits() ([]map[string]interface{}, bool) {
+	if len(m.appendquota_limits) == 0 {
+		return nil, false
+	}
+	return m.appendquota_limits, true
+}
+
+// ClearQuotaLimits clears the value of the "quota_limits" field.
+func (m *UsageMonitorChannelMutation) ClearQuotaLimits() {
+	m.quota_limits = nil
+	m.appendquota_limits = nil
+	m.clearedFields[usagemonitorchannel.FieldQuotaLimits] = struct{}{}
+}
+
+// QuotaLimitsCleared returns if the "quota_limits" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) QuotaLimitsCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldQuotaLimits]
+	return ok
+}
+
+// ResetQuotaLimits resets all changes to the "quota_limits" field.
+func (m *UsageMonitorChannelMutation) ResetQuotaLimits() {
+	m.quota_limits = nil
+	m.appendquota_limits = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldQuotaLimits)
+}
+
+// SetNextResetAt sets the "next_reset_at" field.
+func (m *UsageMonitorChannelMutation) SetNextResetAt(t time.Time) {
+	m.next_reset_at = &t
+}
+
+// NextResetAt returns the value of the "next_reset_at" field in the mutation.
+func (m *UsageMonitorChannelMutation) NextResetAt() (r time.Time, exists bool) {
+	v := m.next_reset_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextResetAt returns the old "next_reset_at" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldNextResetAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextResetAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextResetAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextResetAt: %w", err)
+	}
+	return oldValue.NextResetAt, nil
+}
+
+// ClearNextResetAt clears the value of the "next_reset_at" field.
+func (m *UsageMonitorChannelMutation) ClearNextResetAt() {
+	m.next_reset_at = nil
+	m.clearedFields[usagemonitorchannel.FieldNextResetAt] = struct{}{}
+}
+
+// NextResetAtCleared returns if the "next_reset_at" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) NextResetAtCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldNextResetAt]
+	return ok
+}
+
+// ResetNextResetAt resets all changes to the "next_reset_at" field.
+func (m *UsageMonitorChannelMutation) ResetNextResetAt() {
+	m.next_reset_at = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldNextResetAt)
+}
+
 // ClearChannel clears the "channel" edge to the Channel entity.
 func (m *UsageMonitorChannelMutation) ClearChannel() {
 	m.clearedchannel = true
@@ -28575,7 +28792,7 @@ func (m *UsageMonitorChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageMonitorChannelMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 22)
 	if m.created_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
 	}
@@ -28630,6 +28847,18 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, usagemonitorchannel.FieldStatus)
 	}
+	if m.quota_status != nil {
+		fields = append(fields, usagemonitorchannel.FieldQuotaStatus)
+	}
+	if m.quota_ready != nil {
+		fields = append(fields, usagemonitorchannel.FieldQuotaReady)
+	}
+	if m.quota_limits != nil {
+		fields = append(fields, usagemonitorchannel.FieldQuotaLimits)
+	}
+	if m.next_reset_at != nil {
+		fields = append(fields, usagemonitorchannel.FieldNextResetAt)
+	}
 	return fields
 }
 
@@ -28674,6 +28903,14 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.LastPollError()
 	case usagemonitorchannel.FieldStatus:
 		return m.Status()
+	case usagemonitorchannel.FieldQuotaStatus:
+		return m.QuotaStatus()
+	case usagemonitorchannel.FieldQuotaReady:
+		return m.QuotaReady()
+	case usagemonitorchannel.FieldQuotaLimits:
+		return m.QuotaLimits()
+	case usagemonitorchannel.FieldNextResetAt:
+		return m.NextResetAt()
 	}
 	return nil, false
 }
@@ -28719,6 +28956,14 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldLastPollError(ctx)
 	case usagemonitorchannel.FieldStatus:
 		return m.OldStatus(ctx)
+	case usagemonitorchannel.FieldQuotaStatus:
+		return m.OldQuotaStatus(ctx)
+	case usagemonitorchannel.FieldQuotaReady:
+		return m.OldQuotaReady(ctx)
+	case usagemonitorchannel.FieldQuotaLimits:
+		return m.OldQuotaLimits(ctx)
+	case usagemonitorchannel.FieldNextResetAt:
+		return m.OldNextResetAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown UsageMonitorChannel field %s", name)
 }
@@ -28854,6 +29099,34 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 		}
 		m.SetStatus(v)
 		return nil
+	case usagemonitorchannel.FieldQuotaStatus:
+		v, ok := value.(usagemonitorchannel.QuotaStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaStatus(v)
+		return nil
+	case usagemonitorchannel.FieldQuotaReady:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaReady(v)
+		return nil
+	case usagemonitorchannel.FieldQuotaLimits:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaLimits(v)
+		return nil
+	case usagemonitorchannel.FieldNextResetAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextResetAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)
 }
@@ -28932,6 +29205,18 @@ func (m *UsageMonitorChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(usagemonitorchannel.FieldLastPollError) {
 		fields = append(fields, usagemonitorchannel.FieldLastPollError)
 	}
+	if m.FieldCleared(usagemonitorchannel.FieldQuotaStatus) {
+		fields = append(fields, usagemonitorchannel.FieldQuotaStatus)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldQuotaReady) {
+		fields = append(fields, usagemonitorchannel.FieldQuotaReady)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldQuotaLimits) {
+		fields = append(fields, usagemonitorchannel.FieldQuotaLimits)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldNextResetAt) {
+		fields = append(fields, usagemonitorchannel.FieldNextResetAt)
+	}
 	return fields
 }
 
@@ -28966,6 +29251,18 @@ func (m *UsageMonitorChannelMutation) ClearField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldLastPollError:
 		m.ClearLastPollError()
+		return nil
+	case usagemonitorchannel.FieldQuotaStatus:
+		m.ClearQuotaStatus()
+		return nil
+	case usagemonitorchannel.FieldQuotaReady:
+		m.ClearQuotaReady()
+		return nil
+	case usagemonitorchannel.FieldQuotaLimits:
+		m.ClearQuotaLimits()
+		return nil
+	case usagemonitorchannel.FieldNextResetAt:
+		m.ClearNextResetAt()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel nullable field %s", name)
@@ -29028,6 +29325,18 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case usagemonitorchannel.FieldQuotaStatus:
+		m.ResetQuotaStatus()
+		return nil
+	case usagemonitorchannel.FieldQuotaReady:
+		m.ResetQuotaReady()
+		return nil
+	case usagemonitorchannel.FieldQuotaLimits:
+		m.ResetQuotaLimits()
+		return nil
+	case usagemonitorchannel.FieldNextResetAt:
+		m.ResetNextResetAt()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)

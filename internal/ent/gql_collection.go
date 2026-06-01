@@ -5828,6 +5828,26 @@ func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bo
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldStatus)
 				fieldSeen[usagemonitorchannel.FieldStatus] = struct{}{}
 			}
+		case "quotaStatus":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldQuotaStatus]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldQuotaStatus)
+				fieldSeen[usagemonitorchannel.FieldQuotaStatus] = struct{}{}
+			}
+		case "quotaReady":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldQuotaReady]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldQuotaReady)
+				fieldSeen[usagemonitorchannel.FieldQuotaReady] = struct{}{}
+			}
+		case "quotaLimits":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldQuotaLimits]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldQuotaLimits)
+				fieldSeen[usagemonitorchannel.FieldQuotaLimits] = struct{}{}
+			}
+		case "nextResetAt":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldNextResetAt]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldNextResetAt)
+				fieldSeen[usagemonitorchannel.FieldNextResetAt] = struct{}{}
+			}
 		case "id":
 		case "__typename":
 		default:

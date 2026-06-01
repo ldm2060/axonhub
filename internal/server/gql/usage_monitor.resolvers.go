@@ -50,7 +50,7 @@ func (r *parsedFieldValueResolver) Value(ctx context.Context, obj *usage_monitor
 	if obj.Value == nil {
 		return nil, nil
 	}
-	str := fmt.Sprintf("%v", obj.Value)
+	str := usage_monitor.FormatFieldValue(obj.Value, obj.Format)
 	return &str, nil
 }
 
@@ -59,7 +59,7 @@ func (r *parsedFieldValueResolver) Total(ctx context.Context, obj *usage_monitor
 	if obj.Total == nil {
 		return nil, nil
 	}
-	str := fmt.Sprintf("%v", obj.Total)
+	str := usage_monitor.FormatFieldValue(obj.Total, obj.Format)
 	return &str, nil
 }
 

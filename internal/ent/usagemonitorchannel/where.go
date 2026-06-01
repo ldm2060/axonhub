@@ -110,6 +110,16 @@ func LastPollError(v string) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldLastPollError, v))
 }
 
+// QuotaReady applies equality check predicate on the "quota_ready" field. It's identical to QuotaReadyEQ.
+func QuotaReady(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldQuotaReady, v))
+}
+
+// NextResetAt applies equality check predicate on the "next_reset_at" field. It's identical to NextResetAtEQ.
+func NextResetAt(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldNextResetAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldCreatedAt, v))
@@ -803,6 +813,116 @@ func StatusIn(vs ...Status) predicate.UsageMonitorChannel {
 // StatusNotIn applies the NotIn predicate on the "status" field.
 func StatusNotIn(vs ...Status) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// QuotaStatusEQ applies the EQ predicate on the "quota_status" field.
+func QuotaStatusEQ(v QuotaStatus) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldQuotaStatus, v))
+}
+
+// QuotaStatusNEQ applies the NEQ predicate on the "quota_status" field.
+func QuotaStatusNEQ(v QuotaStatus) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldQuotaStatus, v))
+}
+
+// QuotaStatusIn applies the In predicate on the "quota_status" field.
+func QuotaStatusIn(vs ...QuotaStatus) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldQuotaStatus, vs...))
+}
+
+// QuotaStatusNotIn applies the NotIn predicate on the "quota_status" field.
+func QuotaStatusNotIn(vs ...QuotaStatus) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldQuotaStatus, vs...))
+}
+
+// QuotaStatusIsNil applies the IsNil predicate on the "quota_status" field.
+func QuotaStatusIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldQuotaStatus))
+}
+
+// QuotaStatusNotNil applies the NotNil predicate on the "quota_status" field.
+func QuotaStatusNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldQuotaStatus))
+}
+
+// QuotaReadyEQ applies the EQ predicate on the "quota_ready" field.
+func QuotaReadyEQ(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldQuotaReady, v))
+}
+
+// QuotaReadyNEQ applies the NEQ predicate on the "quota_ready" field.
+func QuotaReadyNEQ(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldQuotaReady, v))
+}
+
+// QuotaReadyIsNil applies the IsNil predicate on the "quota_ready" field.
+func QuotaReadyIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldQuotaReady))
+}
+
+// QuotaReadyNotNil applies the NotNil predicate on the "quota_ready" field.
+func QuotaReadyNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldQuotaReady))
+}
+
+// QuotaLimitsIsNil applies the IsNil predicate on the "quota_limits" field.
+func QuotaLimitsIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldQuotaLimits))
+}
+
+// QuotaLimitsNotNil applies the NotNil predicate on the "quota_limits" field.
+func QuotaLimitsNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldQuotaLimits))
+}
+
+// NextResetAtEQ applies the EQ predicate on the "next_reset_at" field.
+func NextResetAtEQ(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldNextResetAt, v))
+}
+
+// NextResetAtNEQ applies the NEQ predicate on the "next_reset_at" field.
+func NextResetAtNEQ(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldNextResetAt, v))
+}
+
+// NextResetAtIn applies the In predicate on the "next_reset_at" field.
+func NextResetAtIn(vs ...time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldNextResetAt, vs...))
+}
+
+// NextResetAtNotIn applies the NotIn predicate on the "next_reset_at" field.
+func NextResetAtNotIn(vs ...time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldNextResetAt, vs...))
+}
+
+// NextResetAtGT applies the GT predicate on the "next_reset_at" field.
+func NextResetAtGT(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGT(FieldNextResetAt, v))
+}
+
+// NextResetAtGTE applies the GTE predicate on the "next_reset_at" field.
+func NextResetAtGTE(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGTE(FieldNextResetAt, v))
+}
+
+// NextResetAtLT applies the LT predicate on the "next_reset_at" field.
+func NextResetAtLT(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLT(FieldNextResetAt, v))
+}
+
+// NextResetAtLTE applies the LTE predicate on the "next_reset_at" field.
+func NextResetAtLTE(v time.Time) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLTE(FieldNextResetAt, v))
+}
+
+// NextResetAtIsNil applies the IsNil predicate on the "next_reset_at" field.
+func NextResetAtIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldNextResetAt))
+}
+
+// NextResetAtNotNil applies the NotNil predicate on the "next_reset_at" field.
+func NextResetAtNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldNextResetAt))
 }
 
 // HasChannel applies the HasEdge predicate on the "channel" edge.

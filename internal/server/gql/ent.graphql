@@ -7468,6 +7468,22 @@ type UsageMonitorChannel implements Node {
   Current status of this monitor channel
   """
   status: UsageMonitorChannelStatus!
+  """
+  Derived quota status for orchestrator routing
+  """
+  quotaStatus: UsageMonitorChannelQuotaStatus
+  """
+  Whether channel is ready for routing based on quota status
+  """
+  quotaReady: Boolean
+  """
+  Per-limit-type quota status for orchestrator routing (token/time/image)
+  """
+  quotaLimits: Map
+  """
+  Earliest quota reset time across all limits
+  """
+  nextResetAt: Time
   channel: Channel
   owner: User!
 }
@@ -7510,6 +7526,15 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   synthetic
   neuralwatt
   zhipu
+}
+"""
+UsageMonitorChannelQuotaStatus is enum for the field quota_status
+"""
+enum UsageMonitorChannelQuotaStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel.QuotaStatus") {
+  available
+  warning
+  exhausted
+  unknown
 }
 """
 UsageMonitorChannelSource is enum for the field source
@@ -7699,6 +7724,35 @@ input UsageMonitorChannelWhereInput {
   statusNEQ: UsageMonitorChannelStatus
   statusIn: [UsageMonitorChannelStatus!]
   statusNotIn: [UsageMonitorChannelStatus!]
+  """
+  quota_status field predicates
+  """
+  quotaStatus: UsageMonitorChannelQuotaStatus
+  quotaStatusNEQ: UsageMonitorChannelQuotaStatus
+  quotaStatusIn: [UsageMonitorChannelQuotaStatus!]
+  quotaStatusNotIn: [UsageMonitorChannelQuotaStatus!]
+  quotaStatusIsNil: Boolean
+  quotaStatusNotNil: Boolean
+  """
+  quota_ready field predicates
+  """
+  quotaReady: Boolean
+  quotaReadyNEQ: Boolean
+  quotaReadyIsNil: Boolean
+  quotaReadyNotNil: Boolean
+  """
+  next_reset_at field predicates
+  """
+  nextResetAt: Time
+  nextResetAtNEQ: Time
+  nextResetAtIn: [Time!]
+  nextResetAtNotIn: [Time!]
+  nextResetAtGT: Time
+  nextResetAtGTE: Time
+  nextResetAtLT: Time
+  nextResetAtLTE: Time
+  nextResetAtIsNil: Boolean
+  nextResetAtNotNil: Boolean
   """
   channel edge predicates
   """

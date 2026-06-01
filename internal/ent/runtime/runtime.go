@@ -958,6 +958,10 @@ func init() {
 	usagemonitorchannelDescPollInterval := usagemonitorchannelFields[9].Descriptor()
 	// usagemonitorchannel.DefaultPollInterval holds the default value on creation for the poll_interval field.
 	usagemonitorchannel.DefaultPollInterval = usagemonitorchannelDescPollInterval.Default.(int)
+	// usagemonitorchannelDescQuotaReady is the schema descriptor for quota_ready field.
+	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[16].Descriptor()
+	// usagemonitorchannel.DefaultQuotaReady holds the default value on creation for the quota_ready field.
+	usagemonitorchannel.DefaultQuotaReady = usagemonitorchannelDescQuotaReady.Default.(bool)
 	userMixin := schema.User{}.Mixin()
 	user.Policy = privacy.NewPolicies(schema.User{})
 	user.Hooks[0] = func(next ent.Mutator) ent.Mutator {
