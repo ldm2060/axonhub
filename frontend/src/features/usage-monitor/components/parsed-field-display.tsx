@@ -17,9 +17,15 @@ function getProgressColor(percent: number): string {
 function PercentageDisplay({ field }: { field: ParsedField }) {
   const pct = field.percent ?? 0;
   const clamped = Math.min(Math.max(pct, 0), 100);
-  const valueStr = field.value != null ? formatCompactNumber(Number(field.value)) : '?';
-  const totalStr = field.total != null ? formatCompactNumber(Number(field.total)) : '?';
+  const valueStr = field.value != null ? formatCompactNumber(Number(field.value)) : null;
+  const totalStr = field.total != null ? formatCompactNumber(Number(field.total)) : null;
   const unit = field.unit ?? '';
+
+  const detailLine = valueStr != null && totalStr != null
+    ? `${valueStr} / ${totalStr} ${unit}`
+    : valueStr != null
+      ? `${valueStr} ${unit}`
+      : `${Math.round(clamped)}% ${unit}`;
 
   return (
     <div className="space-y-1">
@@ -30,20 +36,24 @@ function PercentageDisplay({ field }: { field: ParsedField }) {
         />
       </div>
       <div className="text-xs text-muted-foreground">
-        {Math.round(clamped)}% · {valueStr} / {totalStr} {unit}
+        {detailLine}
       </div>
     </div>
   );
 }
 
 function FractionDisplay({ field }: { field: ParsedField }) {
-  const valueStr = field.value != null ? Number(field.value).toLocaleString() : '?';
-  const totalStr = field.total != null ? Number(field.total).toLocaleString() : '?';
+  const valueStr = field.value != null ? Number(field.value).toLocaleString() : '--';
+  const totalStr = field.total != null ? Number(field.total).toLocaleString() : null;
   const unit = field.unit ?? '';
+
+  const detailLine = totalStr != null
+    ? `${valueStr} / ${totalStr} ${unit}`
+    : `${valueStr} ${unit}`;
 
   return (
     <div className="text-sm">
-      {valueStr} / {totalStr} {unit}
+      {detailLine}
     </div>
   );
 }

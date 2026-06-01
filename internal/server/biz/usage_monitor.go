@@ -579,7 +579,7 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var quotaLimits []map[string]any
 	var nextResetAt *time.Time
 
-	if ch.ProviderType != "" && ch.ChannelID != nil {
+	if ch.ProviderType != "" {
 		derived := usage_monitor.DeriveQuotaStatus(string(ch.ProviderType), pollData.Fields)
 		quotaStatus = derived.Status
 		quotaReady = &derived.Ready

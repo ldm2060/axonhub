@@ -115,6 +115,9 @@ function ParsedFieldRow({ field, index }: { field: ParsedField; index: number })
               {field.value != null && field.total != null && (
                 <span className='font-normal opacity-70'> ({field.value}/{field.total})</span>
               )}
+              {field.value != null && field.total == null && (
+                <span className='font-normal opacity-70'> ({field.value})</span>
+              )}
             </span>
             <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
           </div>
