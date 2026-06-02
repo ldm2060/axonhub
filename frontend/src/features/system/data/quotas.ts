@@ -23,6 +23,19 @@ export type ParsedField = {
   error: string | null | undefined;
 };
 
+/** Display field metadata for badge rendering. */
+export type DisplayField = {
+  key: string;
+  label: string;
+  valueRef: string;
+  format: string;
+  unit?: string;
+  totalRef?: string;
+  displayOrder: number;
+  badge?: string;
+  badgePresets?: string;
+};
+
 /** Simplified quota channel shape for badge rendering. */
 export type QuotaChannel = {
   id: string;
@@ -34,6 +47,7 @@ export type QuotaChannel = {
   quotaReady: boolean | null;
   nextResetAt: string | null;
   parsedData: ParsedField[];
+  displayFields: DisplayField[];
   lastPollError: string | null;
 };
 
@@ -64,6 +78,17 @@ const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
         unit
         format
         error
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
       }
     }
   }
@@ -98,6 +123,7 @@ export function useQuotaChannels(): QuotaChannel[] {
         quotaReady: ch.quotaReady ?? null,
         nextResetAt: ch.nextResetAt ?? null,
         parsedData: (ch.parsedData ?? []) as ParsedField[],
+        displayFields: (ch.displayFields ?? []) as DisplayField[],
         lastPollError: ch.lastPollError ?? null,
       }),
     );

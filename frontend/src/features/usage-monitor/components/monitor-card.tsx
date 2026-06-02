@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useUpdateUsageMonitorChannel, useRefreshUsageMonitorChannel } from '../data/usage-monitor';
 import type { UsageMonitorChannel } from '../data/schema';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
-import { MonitorCardField } from './monitor-card-field';
+import { SharedFieldRenderer } from './shared-field-renderer';
 
 function StatusBadge({ status }: { status: UsageMonitorChannel['status'] }) {
   const { t } = useTranslation();
@@ -102,11 +102,11 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
 
       {/* Parsed fields */}
       {channel.parsedData && channel.parsedData.length > 0 && (
-        <div className="space-y-2">
-          {channel.parsedData.map((field) => (
-            <MonitorCardField key={field.key} field={field} displayFields={channel.displayFields ?? undefined} />
-          ))}
-        </div>
+        <SharedFieldRenderer
+          fields={channel.parsedData}
+          displayFields={channel.displayFields ?? undefined}
+          variant="card"
+        />
       )}
 
       {/* Footer */}

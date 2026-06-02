@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuotaChannels, type QuotaChannel, type ParsedField } from '@/features/system/data/quotas';
 import { useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
+import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
 
 const BADGE_COLOR_CLASSES: Record<string, string> = {
   green: 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20',
@@ -55,98 +56,6 @@ function getOverallPercentage(parsedData: ParsedField[]): number {
   return max;
 }
 
-function ProgressBar({ percentage }: { percentage: number }) {
-  const clamped = Math.min(Math.max(percentage || 0, 0), 100);
-
-  const u = clamped / 100;
-  let h: number, s: number, l: number;
-  if (u < 0.5) {
-    const n = u * 2;
-    h = 142 - n * (142 - 45);
-    s = 71 + n * (93 - 71);
-    l = 45 + n * (47 - 45);
-  } else {
-    const n = (u - 0.5) * 2;
-    h = 45 - n * 45;
-    s = 93 - n * (93 - 84);
-    l = 47 + n * (60 - 47);
-  }
-  const bgStyle = { backgroundColor: `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)` };
-
-  return (
-    <div className='bg-muted/60 h-1.5 w-full overflow-hidden rounded-full'>
-      <div className='h-full transition-all duration-500' style={{ width: `${clamped}%`, ...bgStyle }} />
-    </div>
-  );
-}
-
-function formatRelativeTime(dateStr: string | null, t: (key: string, params?: Record<string, unknown>) => string): string {
-  if (!dateStr) return '';
-  const resetTimeMs = new Date(dateStr).getTime();
-  const diffMs = resetTimeMs - Date.now();
-
-  if (diffMs < 0) return t('quota.label.reset_now');
-
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  const d = t('quota.label.d');
-  const h = t('quota.label.h');
-  const m = t('quota.label.m');
-
-  if (diffDays > 0) return t('quota.label.resets_in_time', { time: `${diffDays}${d} ${diffHours % 24}${h}` });
-  if (diffHours > 0) return t('quota.label.resets_in_time', { time: `${diffHours}${h} ${diffMins % 60}${m}` });
-  return t('quota.label.resets_in_time', { time: `${diffMins}${m}` });
-}
-
-/** Groups percentage fields with their matching datetime reset fields.
- *  Matches by key prefix: "token_pct" pairs with "token_reset", "time_pct" with "time_reset", etc.
- */
-function groupFields(fields: ParsedField[]) {
-  const groups: { pct: ParsedField; reset?: ParsedField }[] = [];
-  const pctFields = fields.filter(f => f.format === 'percentage' || f.format === 'fraction');
-  const datetimeFields = fields.filter(f => f.format === 'datetime');
-  const usedDt = new Set<number>();
-
-  for (const pct of pctFields) {
-    const group: { pct: ParsedField; reset?: ParsedField } = { pct };
-    // Derive the reset key: "token_pct" → look for "token_reset"
-    const prefix = pct.key.replace(/_pct$|_percent$|_usage$/, '');
-    const resetKey = `${prefix}_reset`;
-    const dtIdx = datetimeFields.findIndex((f, i) => !usedDt.has(i) && (f.key === resetKey || f.key.startsWith(prefix)));
-    if (dtIdx >= 0) {
-      group.reset = datetimeFields[dtIdx];
-      usedDt.add(dtIdx);
-    }
-    groups.push(group);
-  }
-
-  return groups;
-}
-
-function QuotaFieldGroup({ group, index }: { group: { pct: ParsedField; reset?: ParsedField }; index: number }) {
-  const { t } = useTranslation();
-  const pct = group.pct.percent ?? 0;
-
-  return (
-    <div className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-2.5' : 'space-y-1.5'}>
-      <div className='space-y-1'>
-        <div className='flex items-center justify-between text-xs'>
-          <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
-          <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
-        </div>
-        <ProgressBar percentage={pct} />
-      </div>
-      {group.reset && (
-        <div className='text-muted-foreground text-right text-[11px]'>
-          {formatRelativeTime(group.reset.value, t)}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforcementMode?: QuotaEnforcementMode | null }) {
   const { t } = useTranslation();
 
@@ -166,10 +75,6 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
 
   const displayName = channel.channelName ?? channel.name;
 
-  // Extract text fields for inline display (e.g. "Account Level: lite")
-  const textFields = channel.parsedData.filter(f => f.format === 'text');
-  const fieldGroups = groupFields(channel.parsedData);
-
   return (
     <div className='space-y-3 border-b py-3 first:pt-1 last:border-0 last:pb-1'>
       <div className='flex items-center justify-between'>
@@ -178,9 +83,6 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
             className={`h-4 w-4 ${status === 'exhausted' ? 'text-red-500' : status === 'warning' ? 'text-yellow-500' : 'text-muted-foreground'}`}
           />
           <span className='text-foreground font-medium'>{displayName}</span>
-          {textFields.map(f => (
-            <span key={f.key} className='text-muted-foreground text-xs'>{String(f.value)}</span>
-          ))}
         </div>
         <div className='flex items-center gap-1.5'>
           <Badge
@@ -205,12 +107,12 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
         </div>
       )}
 
-      {fieldGroups.length > 0 && (
-        <div className='mt-1 space-y-2'>
-          {fieldGroups.map((group, idx) => (
-            <QuotaFieldGroup key={group.pct.key} group={group} index={idx} />
-          ))}
-        </div>
+      {channel.parsedData && channel.parsedData.length > 0 && (
+        <SharedFieldRenderer
+          fields={channel.parsedData}
+          displayFields={channel.displayFields}
+          variant="popup"
+        />
       )}
     </div>
   );
