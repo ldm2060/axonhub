@@ -141,7 +141,8 @@ func TestGenericQuotaChecker_TestConnection_FieldParseFailure(t *testing.T) {
 
 	// Second field has error captured in ParsedField.Error
 	assert.NotEmpty(t, result.ParsedFields[1].Error)
-	assert.Contains(t, result.ParsedFields[1].Error, "JSONPath")
+	// With two-step parsing, a failed extraction means the variable is missing
+	assert.Contains(t, result.ParsedFields[1].Error, "not found")
 }
 
 func TestGenericQuotaChecker_TestConnection_WithHeaders(t *testing.T) {

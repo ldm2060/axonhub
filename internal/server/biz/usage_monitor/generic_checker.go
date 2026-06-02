@@ -103,6 +103,83 @@ func (c *GenericQuotaChecker) Poll(
 	}, nil
 }
 
+// PollV2 executes an HTTP request and uses the two-step parsing pipeline:
+// ExtractVariables then RenderDisplayFields.
+func (c *GenericQuotaChecker) PollV2(
+	ctx context.Context,
+	apiURL string,
+	apiMethod string,
+	apiHeaders map[string]any,
+	apiBody string,
+	variables []Variable,
+	displayFields []DisplayField,
+) (*PollData, error) {
+	// Build the HTTP request
+	builder := httpclient.NewRequestBuilder().
+		WithMethod(apiMethod).
+		WithURL(apiURL)
+
+	// Set headers from apiHeaders map
+	for key, value := range apiHeaders {
+		switch v := value.(type) {
+		case string:
+			builder.WithHeader(key, v)
+		default:
+			builder.WithHeader(key, fmt.Sprintf("%v", v))
+		}
+	}
+
+	// Add body for POST requests
+	method := strings.ToUpper(apiMethod)
+	if method == http.MethodPost && apiBody != "" {
+		builder.WithBody(apiBody)
+		if builder.Build().Headers.Get("Content-Type") == "" {
+			builder.WithHeader("Content-Type", "application/json")
+		}
+	}
+
+	request := builder.Build()
+
+	// Execute the request
+	resp, err := c.httpClient.Do(ctx, request)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+
+	// Check status code (2xx = success)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("HTTP request returned non-2xx status: %d", resp.StatusCode)
+	}
+
+	// Enrich response body with HTTP headers for JSONPath parsing
+	enrichedBody := resp.Body
+	var rawData interface{}
+	if err := json.Unmarshal(resp.Body, &rawData); err == nil {
+		headerMap := make(map[string]string, len(resp.Headers))
+		for k, v := range resp.Headers {
+			if len(v) > 0 {
+				headerMap[strings.ToLower(k)] = v[0]
+			}
+		}
+		if rawMap, ok := rawData.(map[string]any); ok {
+			rawMap["headers"] = headerMap
+			if enriched, err := json.Marshal(rawMap); err == nil {
+				enrichedBody = enriched
+			}
+		}
+	}
+
+	// Two-step parsing: extract variables, then render display fields
+	vars := ExtractVariables(enrichedBody, variables)
+	parsedFields := RenderDisplayFields(vars, displayFields)
+
+	return &PollData{
+		Raw:      string(resp.Body),
+		Fields:   parsedFields,
+		PolledAt: time.Now(),
+	}, nil
+}
+
 // TestConnection tests the connection to the specified API and returns a TestResult.
 // It calls Poll and wraps the result into TestResult.
 // On Poll error, it returns TestResult with Success: false and the error message.

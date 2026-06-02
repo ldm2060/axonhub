@@ -55,18 +55,26 @@ type DisplayField struct {
 }
 
 // VariablesFromFieldConfigs converts deprecated FieldConfigs to Variables.
+// It also creates variables for TotalPath fields (with key "<key>_total").
 func VariablesFromFieldConfigs(fcs []FieldConfig) []Variable {
-	vars := make([]Variable, 0, len(fcs))
+	vars := make([]Variable, 0, len(fcs)*2)
 	for _, fc := range fcs {
-		if fc.Path == "" {
-			continue
+		if fc.Path != "" {
+			vars = append(vars, Variable{
+				Key:        fc.Key,
+				Path:       fc.Path,
+				Type:       fc.Type,
+				GroupIndex: fc.GroupIndex,
+			})
 		}
-		vars = append(vars, Variable{
-			Key:        fc.Key,
-			Path:       fc.Path,
-			Type:       fc.Type,
-			GroupIndex: fc.GroupIndex,
-		})
+		// Extract TotalPath as a separate variable for fraction/percentage display
+		if fc.TotalPath != "" {
+			vars = append(vars, Variable{
+				Key:  fc.Key + "_total",
+				Path: fc.TotalPath,
+				Type: "jsonpath",
+			})
+		}
 	}
 	return vars
 }
@@ -79,13 +87,17 @@ func DisplayFieldsFromFieldConfigs(fcs []FieldConfig) []DisplayField {
 		if fc.Expression != "" {
 			valueRef = fc.Expression
 		}
+		totalRef := ""
+		if fc.TotalPath != "" {
+			totalRef = fc.Key + "_total"
+		}
 		dfs = append(dfs, DisplayField{
 			Key:          fc.Key,
 			Label:        fc.Label,
 			ValueRef:     valueRef,
 			Format:       fc.Format,
 			Unit:         fc.Unit,
-			TotalRef:     fc.TotalPath,
+			TotalRef:     totalRef,
 			DisplayOrder: fc.DisplayOrder,
 		})
 	}

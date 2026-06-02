@@ -10,39 +10,125 @@ import (
 	"github.com/oliveagle/jsonpath"
 )
 
-// ParseFields parses all field configs in two passes: first non-computed fields,
-// then expression fields that reference values from the first pass.
+// ExtractVariables extracts raw values from API response using variable definitions.
+func ExtractVariables(body []byte, variables []Variable) map[string]any {
+	result := make(map[string]any, len(variables))
+	for _, v := range variables {
+		switch v.Type {
+		case "jsonpath":
+			if val, err := extractJSONPathValue(body, v.Path); err == nil {
+				result[v.Key] = val
+			}
+		case "regex":
+			if val, err := extractRegexValue(body, v.Path, v.GroupIndex); err == nil {
+				result[v.Key] = val
+			}
+		}
+	}
+	return result
+}
+
+// RenderDisplayFields produces ParsedFields from variable map and display field definitions.
+func RenderDisplayFields(vars map[string]any, fields []DisplayField) []ParsedField {
+	result := make([]ParsedField, 0, len(fields))
+	for _, df := range fields {
+		pf := ParsedField{
+			Key:    df.Key,
+			Label:  df.Label,
+			Format: df.Format,
+			Unit:   df.Unit,
+		}
+
+		value, err := resolveValueRef(vars, df.ValueRef)
+		if err != nil {
+			pf.Error = err.Error()
+			result = append(result, pf)
+			continue
+		}
+		pf.Value = value
+
+		// Handle TotalRef for fraction/percentage
+		if df.TotalRef != "" {
+			if total, ok := vars[df.TotalRef]; ok {
+				pf.Total = total
+				pf.Percent = computePercent(value, total)
+			}
+		}
+
+		// Handle percentage format where value IS the percent directly
+		if df.Format == "percentage" && pf.Percent == 0 && pf.Total == nil {
+			if p, err := toFloat(value); err == nil {
+				pf.Percent = p
+			}
+		}
+
+		result = append(result, pf)
+	}
+	return result
+}
+
+// resolveValueRef resolves a valueRef: plain variable key or expression with ${var} syntax.
+func resolveValueRef(vars map[string]any, valueRef string) (any, error) {
+	// Plain variable reference
+	if !strings.Contains(valueRef, "${") {
+		if val, ok := vars[valueRef]; ok {
+			return val, nil
+		}
+		return nil, fmt.Errorf("variable %q not found", valueRef)
+	}
+	// Expression: build float map and evaluate
+	floatVals := make(map[string]float64)
+	for k, v := range vars {
+		if f, err := toFloat(v); err == nil {
+			floatVals[k] = f
+		}
+	}
+	result, err := evalExpression(valueRef, floatVals)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// extractJSONPathValue extracts a single JSONPath value from raw data.
+func extractJSONPathValue(body []byte, path string) (any, error) {
+	var data interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %v", err)
+	}
+	val, err := jsonpath.JsonPathLookup(data, path)
+	if err != nil {
+		return nil, fmt.Errorf("JSONPath %q failed: %v", path, err)
+	}
+	return unwrapSlice(val), nil
+}
+
+// extractRegexValue extracts a value using regex pattern.
+func extractRegexValue(body []byte, pattern string, groupIndex []int) (any, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regex: %v", err)
+	}
+	matches := re.FindStringSubmatch(string(body))
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("regex matched 0 groups")
+	}
+	// If groupIndex is specified, use it
+	if len(groupIndex) >= 1 {
+		return extractGroup(matches, groupIndex[0]), nil
+	}
+	// Return first capture group or full match
+	if len(matches) >= 2 {
+		return matches[1], nil
+	}
+	return matches[0], nil
+}
+
+// ParseFields is deprecated. Use ExtractVariables + RenderDisplayFields.
+// It delegates to the new two-step parsing for backward compatibility.
 func ParseFields(rawData []byte, configs []FieldConfig) []ParsedField {
-	fieldValues := make(map[string]float64)
-	results := make([]ParsedField, len(configs))
-
-	// Pass 1: parse non-computed fields
-	for i, cfg := range configs {
-		if cfg.Expression != "" {
-			continue
-		}
-		results[i] = ParseField(rawData, cfg)
-		if results[i].Error == "" && results[i].Value != nil {
-			if v, err := toFloat(results[i].Value); err == nil {
-				fieldValues[cfg.Key] = v
-			}
-			if results[i].Total != nil {
-				if v, err := toFloat(results[i].Total); err == nil {
-					fieldValues[cfg.Key+"_total"] = v
-				}
-			}
-		}
-	}
-
-	// Pass 2: evaluate expression fields
-	for i, cfg := range configs {
-		if cfg.Expression == "" {
-			continue
-		}
-		results[i] = evalExpressionField(cfg, fieldValues)
-	}
-
-	return results
+	vars := ExtractVariables(rawData, VariablesFromFieldConfigs(configs))
+	return RenderDisplayFields(vars, DisplayFieldsFromFieldConfigs(configs))
 }
 
 func ParseField(rawData []byte, config FieldConfig) ParsedField {

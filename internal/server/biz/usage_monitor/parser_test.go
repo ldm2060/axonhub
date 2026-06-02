@@ -383,3 +383,103 @@ func TestEvalArithmetic(t *testing.T) {
 		assert.InDelta(t, tt.expected, result, 0.01, "expr: %s", tt.expr)
 	}
 }
+
+func TestExtractVariables(t *testing.T) {
+	body := []byte(`{"data": {"used": 100, "total": 500}, "level": "normal"}`)
+	vars := []Variable{
+		{Key: "used", Path: "$.data.used", Type: "jsonpath"},
+		{Key: "total", Path: "$.data.total", Type: "jsonpath"},
+		{Key: "level", Path: "$.level", Type: "jsonpath"},
+	}
+	result := ExtractVariables(body, vars)
+	assert.Equal(t, float64(100), result["used"])
+	assert.Equal(t, float64(500), result["total"])
+	assert.Equal(t, "normal", result["level"])
+}
+
+func TestExtractVariables_Regex(t *testing.T) {
+	body := []byte(`Used: 250 of 1000 tokens`)
+	vars := []Variable{
+		{Key: "used", Path: `Used: (\d+) of (\d+)`, Type: "regex", GroupIndex: []int{1}},
+		{Key: "total", Path: `Used: (\d+) of (\d+)`, Type: "regex", GroupIndex: []int{2}},
+	}
+	result := ExtractVariables(body, vars)
+	assert.Equal(t, "250", result["used"])
+	assert.Equal(t, "1000", result["total"])
+}
+
+func TestExtractVariables_MissingPath(t *testing.T) {
+	body := []byte(`{"data": {"used": 100}}`)
+	vars := []Variable{
+		{Key: "used", Path: "$.data.used", Type: "jsonpath"},
+		{Key: "missing", Path: "$.data.nonexistent", Type: "jsonpath"},
+	}
+	result := ExtractVariables(body, vars)
+	assert.Equal(t, float64(100), result["used"])
+	_, ok := result["missing"]
+	assert.False(t, ok, "missing variable should not be in result")
+}
+
+func TestRenderDisplayFields_SimpleRef(t *testing.T) {
+	vars := map[string]any{"used": float64(100), "total": float64(500)}
+	fields := []DisplayField{
+		{Key: "usage", Label: "Usage", ValueRef: "used", Format: "number", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.Equal(t, float64(100), result[0].Value)
+	assert.Equal(t, "usage", result[0].Key)
+	assert.Equal(t, "Usage", result[0].Label)
+}
+
+func TestRenderDisplayFields_Expression(t *testing.T) {
+	vars := map[string]any{"used": float64(100), "total": float64(500)}
+	fields := []DisplayField{
+		{Key: "pct", Label: "Percent", ValueRef: "${used}/${total}*100", Format: "percentage", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.InDelta(t, 20.0, result[0].Value, 0.01)
+}
+
+func TestRenderDisplayFields_PercentageDirect(t *testing.T) {
+	vars := map[string]any{"pct": float64(85.5)}
+	fields := []DisplayField{
+		{Key: "pct", Label: "Pct", ValueRef: "pct", Format: "percentage", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.InDelta(t, 85.5, result[0].Percent, 0.01)
+}
+
+func TestRenderDisplayFields_MissingVariable(t *testing.T) {
+	vars := map[string]any{"used": float64(100)}
+	fields := []DisplayField{
+		{Key: "pct", Label: "Pct", ValueRef: "missing", Format: "text", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.NotEmpty(t, result[0].Error)
+}
+
+func TestRenderDisplayFields_TotalRef(t *testing.T) {
+	vars := map[string]any{"used": float64(250), "used_total": float64(1000)}
+	fields := []DisplayField{
+		{Key: "usage", Label: "Usage", ValueRef: "used", TotalRef: "used_total", Format: "fraction", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.Equal(t, float64(250), result[0].Value)
+	assert.Equal(t, float64(1000), result[0].Total)
+	assert.InDelta(t, 25.0, result[0].Percent, 0.01)
+}
+
+func TestRenderDisplayFields_ExpressionSubtraction(t *testing.T) {
+	vars := map[string]any{"total": float64(1000), "used": float64(250)}
+	fields := []DisplayField{
+		{Key: "remaining", Label: "Remaining", ValueRef: "${total}-${used}", Format: "number", DisplayOrder: 0},
+	}
+	result := RenderDisplayFields(vars, fields)
+	assert.Len(t, result, 1)
+	assert.InDelta(t, 750.0, result[0].Value, 0.01)
+}
