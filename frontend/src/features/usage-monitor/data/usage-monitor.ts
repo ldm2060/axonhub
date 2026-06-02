@@ -427,7 +427,8 @@ export type TestUsageMonitorChannelInput = {
   apiMethod: 'GET' | 'POST';
   apiHeaders: string;
   apiBody?: string;
-  fields: FieldConfig[];
+  variables?: VariableInput[];
+  displayFields?: DisplayFieldInput[];
 };
 
 export function useTestUsageMonitorChannel() {

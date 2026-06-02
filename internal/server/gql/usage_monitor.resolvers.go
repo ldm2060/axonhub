@@ -297,6 +297,45 @@ func (r *testUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, ob
 	return nil
 }
 
+// Variables is the resolver for the variables field.
+func (r *testUsageMonitorChannelInputResolver) Variables(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data []*VariableInput) error {
+	if data != nil {
+		vars := make([]usage_monitor.Variable, len(data))
+		for i, v := range data {
+			vars[i] = usage_monitor.Variable{
+				Key:        v.Key,
+				Path:       v.Path,
+				Type:       v.Type,
+				GroupIndex: v.GroupIndex,
+			}
+		}
+		obj.Variables = vars
+	}
+	return nil
+}
+
+// DisplayFields is the resolver for the displayFields field.
+func (r *testUsageMonitorChannelInputResolver) DisplayFields(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data []*DisplayFieldInput) error {
+	if data != nil {
+		dfs := make([]usage_monitor.DisplayField, len(data))
+		for i, v := range data {
+			dfs[i] = usage_monitor.DisplayField{
+				Key:          v.Key,
+				Label:        v.Label,
+				ValueRef:     v.ValueRef,
+				Format:       v.Format,
+				Unit:         lo.FromPtr(v.Unit),
+				TotalRef:     lo.FromPtr(v.TotalRef),
+				DisplayOrder: v.DisplayOrder,
+				Badge:        lo.FromPtr(v.Badge),
+				BadgePresets: lo.FromPtr(v.BadgePresets),
+			}
+		}
+		obj.DisplayFields = dfs
+	}
+	return nil
+}
+
 // APIMethod is the resolver for the apiMethod field.
 func (r *updateUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *usagemonitorchannel.APIMethod) error {
 	if data != nil {
@@ -383,34 +422,3 @@ type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
 
-func structSliceToMapSlice[T any](in []T) []map[string]any {
-	out := make([]map[string]any, len(in))
-	for i, v := range in {
-		raw, err := json.Marshal(v)
-		if err != nil {
-			continue
-		}
-		var m map[string]any
-		if err := json.Unmarshal(raw, &m); err != nil {
-			continue
-		}
-		out[i] = m
-	}
-	return out
-}
-
-func mapSliceToStructSlice[T any](in []map[string]any) []*T {
-	out := make([]*T, len(in))
-	for i, m := range in {
-		raw, err := json.Marshal(m)
-		if err != nil {
-			continue
-		}
-		var v T
-		if err := json.Unmarshal(raw, &v); err != nil {
-			continue
-		}
-		out[i] = &v
-	}
-	return out
-}

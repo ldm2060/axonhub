@@ -205,3 +205,29 @@ func (c *GenericQuotaChecker) TestConnection(
 		ParsedFields: pollData.Fields,
 	}
 }
+
+// TestConnectionV2 tests the connection using the two-step parsing pipeline.
+// It calls PollV2 and wraps the result into TestResult.
+func (c *GenericQuotaChecker) TestConnectionV2(
+	ctx context.Context,
+	apiURL string,
+	apiMethod string,
+	apiHeaders map[string]any,
+	apiBody string,
+	variables []Variable,
+	displayFields []DisplayField,
+) *TestResult {
+	pollData, err := c.PollV2(ctx, apiURL, apiMethod, apiHeaders, apiBody, variables, displayFields)
+	if err != nil {
+		return &TestResult{
+			Success: false,
+			Error:   err.Error(),
+		}
+	}
+
+	return &TestResult{
+		Success:      true,
+		RawResponse:  pollData.Raw,
+		ParsedFields: pollData.Fields,
+	}
+}

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
-import type { Variable, DisplayField, VariableInput, DisplayFieldInput, FieldConfig } from '../data/schema';
+import type { Variable, DisplayField, VariableInput, DisplayFieldInput } from '../data/schema';
 import { VariableForm } from './variable-form';
 import { DisplayFieldForm } from './display-field-form';
 import { TestConnection } from './test-connection';
@@ -173,17 +173,6 @@ export function EditChannelDialog() {
       ? name.trim()
       : name.trim() && apiUrl.trim() && !headersError;
 
-  // Build fields for TestConnection (legacy format from variables)
-  const testFields: FieldConfig[] = variables.map((v, i) => ({
-    key: v.key,
-    label: v.key,
-    path: v.path,
-    type: v.type,
-    format: 'text',
-    groupIndex: v.groupIndex,
-    displayOrder: i,
-  }));
-
   return (
     <Dialog
       open={isOpen}
@@ -342,7 +331,8 @@ export function EditChannelDialog() {
               apiMethod={apiMethod}
               apiHeaders={apiHeaders}
               apiBody={apiBody}
-              fields={testFields}
+              variables={variables}
+              displayFields={displayFields}
             />
           </div>
         </div>

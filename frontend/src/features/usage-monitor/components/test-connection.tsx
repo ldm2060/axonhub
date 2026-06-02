@@ -5,17 +5,19 @@ import { IconPlayerPlay } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useTestUsageMonitorChannel } from '../data/usage-monitor';
-import type { FieldConfig, TestResult } from '../data/schema';
+import type { Variable, DisplayField, VariableInput, DisplayFieldInput, TestResult } from '../data/schema';
+import { ParsedFieldDisplay } from './parsed-field-display';
 
 interface Props {
   apiUrl: string;
   apiMethod: string;
   apiHeaders: string;
   apiBody: string;
-  fields: FieldConfig[];
+  variables: Variable[];
+  displayFields: DisplayField[];
 }
 
-export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, fields }: Props) {
+export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variables, displayFields }: Props) {
   const { t } = useTranslation();
   const testMutation = useTestUsageMonitorChannel();
   const [result, setResult] = useState<TestResult | null>(null);
@@ -23,12 +25,31 @@ export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, fields 
   async function handleTest() {
     setResult(null);
     try {
+      const variableInputs: VariableInput[] = variables.map((v) => ({
+        key: v.key,
+        path: v.path,
+        type: v.type,
+        groupIndex: v.groupIndex,
+      }));
+      const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
+        key: df.key,
+        label: df.label,
+        valueRef: df.valueRef,
+        format: df.format,
+        unit: df.unit,
+        totalRef: df.totalRef,
+        displayOrder: df.displayOrder,
+        badge: df.badge,
+        badgePresets: df.badgePresets,
+      }));
+
       const res = await testMutation.mutateAsync({
         apiUrl,
         apiMethod: apiMethod as 'GET' | 'POST',
         apiHeaders,
         apiBody: apiBody || undefined,
-        fields,
+        variables: variableInputs,
+        displayFields: displayFieldInputs,
       });
       setResult(res);
     } catch {
@@ -55,18 +76,19 @@ export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, fields 
               <div className="text-sm font-medium text-green-800 dark:text-green-200">
                 {t('usageMonitor.testSuccess')}
               </div>
+
+              {/* Extracted Variables */}
               {result.parsedFields && result.parsedFields.length > 0 && (
-                <div className="mt-2 space-y-1">
+                <div className="mt-3 space-y-1.5">
                   {result.parsedFields.map((f) => (
-                    <div key={f.key} className="text-xs text-green-700 dark:text-green-300">
-                      <span className="font-medium">{f.label}:</span>{' '}
+                    <div key={f.key}>
                       {f.error ? (
-                        <span className="text-red-600">{f.error}</span>
+                        <div className="text-xs">
+                          <span className="font-medium text-green-700 dark:text-green-300">{f.label}:</span>{' '}
+                          <span className="text-red-600">{f.error}</span>
+                        </div>
                       ) : (
-                        <span>
-                          {f.value !== null ? String(f.value) : '-'}
-                          {f.unit ? ` ${f.unit}` : ''}
-                        </span>
+                        <ParsedFieldDisplay field={f} displayFields={displayFields} />
                       )}
                     </div>
                   ))}

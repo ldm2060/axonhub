@@ -2699,6 +2699,9 @@ type CreateUsageMonitorChannelInputResolver interface {
 }
 type TestUsageMonitorChannelInputResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error
+
+	Variables(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data []*VariableInput) error
+	DisplayFields(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data []*DisplayFieldInput) error
 }
 type UpdateUsageMonitorChannelInputResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *usagemonitorchannel.APIMethod) error
@@ -89624,7 +89627,7 @@ func (ec *executionContext) unmarshalInputTestUsageMonitorChannelInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"apiUrl", "apiMethod", "apiHeaders", "apiBody", "fields"}
+	fieldsInOrder := [...]string{"apiUrl", "apiMethod", "apiHeaders", "apiBody", "fields", "variables", "displayFields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -89663,11 +89666,29 @@ func (ec *executionContext) unmarshalInputTestUsageMonitorChannelInput(ctx conte
 			it.ApiBody = data
 		case "fields":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fields"))
-			data, err := ec.unmarshalNFieldConfigInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx, v)
+			data, err := ec.unmarshalOFieldConfigInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Fields = data
+		case "variables":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("variables"))
+			data, err := ec.unmarshalOVariableInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.TestUsageMonitorChannelInput().Variables(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "displayFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayFields"))
+			data, err := ec.unmarshalODisplayFieldInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.TestUsageMonitorChannelInput().DisplayFields(ctx, &it, data); err != nil {
+				return it, err
+			}
 		}
 	}
 

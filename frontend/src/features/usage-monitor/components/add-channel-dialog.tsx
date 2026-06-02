@@ -173,17 +173,6 @@ export function AddChannelDialog() {
 
   const canSubmit = name.trim() && apiUrl.trim() && !headersError && (source === 'template' ? (selectedTemplate !== null && apiKey.trim() !== '') : true);
 
-  // Build fields for TestConnection (legacy format from variables for display purposes)
-  const testFields: FieldConfig[] = variables.map((v, i) => ({
-    key: v.key,
-    label: v.key,
-    path: v.path,
-    type: v.type,
-    format: 'text',
-    groupIndex: v.groupIndex,
-    displayOrder: i,
-  }));
-
   return (
     <Dialog
       open={isOpen}
@@ -271,7 +260,8 @@ export function AddChannelDialog() {
                 apiMethod={apiMethod}
                 apiHeaders={apiHeaders}
                 apiBody={apiBody}
-                fields={testFields}
+                variables={variables}
+                displayFields={displayFields}
               />
             </TabsContent>
 
@@ -373,7 +363,8 @@ export function AddChannelDialog() {
                 apiMethod={apiMethod}
                 apiHeaders={apiHeaders}
                 apiBody={apiBody}
-                fields={testFields}
+                variables={variables}
+                displayFields={displayFields}
               />
             </TabsContent>
 
@@ -470,7 +461,8 @@ export function AddChannelDialog() {
                     apiMethod={apiMethod}
                     apiHeaders={''}
                     apiBody={apiBody}
-                    fields={selectedTemplate?.fields ?? []}
+                    variables={variables}
+                    displayFields={displayFields}
                   />
                 </>
               )}

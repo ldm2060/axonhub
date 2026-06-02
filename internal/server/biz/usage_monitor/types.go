@@ -159,9 +159,11 @@ type UpdateUsageMonitorChannelInput struct {
 }
 
 type TestUsageMonitorChannelInput struct {
-	ApiURL     string        `json:"apiUrl"`
-	ApiMethod  string        `json:"apiMethod"`
-	ApiHeaders string        `json:"apiHeaders"`
-	ApiBody    *string       `json:"apiBody,omitempty"`
-	Fields     []FieldConfig `json:"fields"`
+	ApiURL       string         `json:"apiUrl"`
+	ApiMethod    string         `json:"apiMethod"`
+	ApiHeaders   string         `json:"apiHeaders"`
+	ApiBody      *string        `json:"apiBody,omitempty"`
+	Fields       []FieldConfig  `json:"fields,omitempty"`        // deprecated, kept for backward compat
+	Variables    []Variable     `json:"variables,omitempty"`     // new: variable extraction config
+	DisplayFields []DisplayField `json:"displayFields,omitempty"` // new: display field config
 }

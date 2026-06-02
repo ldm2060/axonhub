@@ -676,7 +676,12 @@ func (svc *UsageMonitorService) TestConnection(ctx context.Context, input usage_
 		apiBody = *input.ApiBody
 	}
 
-	// Convert []FieldConfig for the checker
+	// Use V2 pipeline when variables/displayFields are provided
+	if len(input.Variables) > 0 || len(input.DisplayFields) > 0 {
+		return svc.genericChecker.TestConnectionV2(ctx, input.ApiURL, input.ApiMethod, apiHeaders, apiBody, input.Variables, input.DisplayFields)
+	}
+
+	// Fallback to legacy fields-based pipeline
 	fields := make([]usage_monitor.FieldConfig, len(input.Fields))
 	copy(fields, input.Fields)
 
