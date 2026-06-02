@@ -72,5 +72,13 @@
   "usageMonitor.displayField.badgeKey": "Badge Key",
   "usageMonitor.displayField.badgePresets": "Badge Presets",
   "usageMonitor.addDisplayField": "Add Display Field",
-  "usageMonitor.deleteDisplayField": "Delete Display Field"
+  "usageMonitor.deleteDisplayField": "Delete Display Field",
+  "usageMonitor.tabs.builtin": "From Channel",
+  "usageMonitor.tabs.custom": "Custom",
+  "usageMonitor.tabs.template": "Template",
+  "usageMonitor.variableSection": "Variables",
+  "usageMonitor.displayFieldSection": "Display Fields",
+  "usageMonitor.pollIntervalUnit": "minutes",
+  "usageMonitor.templateVariablesHint": "Variables are pre-configured by the template and cannot be modified",
+  "usageMonitor.templateDisplayFieldsHint": "Display fields can be customized to change how data is shown"
 }

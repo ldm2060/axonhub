@@ -72,5 +72,13 @@
   "usageMonitor.displayField.badgeKey": "铭牌键",
   "usageMonitor.displayField.badgePresets": "铭牌预设",
   "usageMonitor.addDisplayField": "添加展示字段",
-  "usageMonitor.deleteDisplayField": "删除展示字段"
+  "usageMonitor.deleteDisplayField": "删除展示字段",
+  "usageMonitor.tabs.builtin": "从渠道",
+  "usageMonitor.tabs.custom": "自定义",
+  "usageMonitor.tabs.template": "模板",
+  "usageMonitor.variableSection": "变量",
+  "usageMonitor.displayFieldSection": "展示字段",
+  "usageMonitor.pollIntervalUnit": "分钟",
+  "usageMonitor.templateVariablesHint": "变量由模板预配置，不可修改",
+  "usageMonitor.templateDisplayFieldsHint": "展示字段可自定义，调整数据显示方式"
 }
