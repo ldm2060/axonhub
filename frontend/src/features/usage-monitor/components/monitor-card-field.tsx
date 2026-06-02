@@ -1,8 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import type { ParsedField } from '../data/schema';
+import type { ParsedField, DisplayField } from '../data/schema';
 import { ParsedFieldDisplay } from './parsed-field-display';
 
-export function MonitorCardField({ field }: { field: ParsedField }) {
+interface MonitorCardFieldProps {
+  field: ParsedField;
+  displayFields?: DisplayField[];
+}
+
+export function MonitorCardField({ field, displayFields }: MonitorCardFieldProps) {
   const { t } = useTranslation();
 
   if (field.error) {
@@ -19,7 +24,7 @@ export function MonitorCardField({ field }: { field: ParsedField }) {
   return (
     <div className="space-y-0.5">
       <div className="text-sm text-muted-foreground">{field.label}</div>
-      <ParsedFieldDisplay field={field} />
+      <ParsedFieldDisplay field={field} displayFields={displayFields} />
     </div>
   );
 }

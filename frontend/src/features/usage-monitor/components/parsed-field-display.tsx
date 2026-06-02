@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import type { ParsedField } from '../data/schema';
+import type { ParsedField, DisplayField } from '../data/schema';
+import { BadgeDisplay } from './badge-display';
 
 function formatCompactNumber(value: number): string {
   if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`;
@@ -14,7 +15,11 @@ function getProgressColor(percent: number): string {
   return 'bg-green-500';
 }
 
-function PercentageDisplay({ field }: { field: ParsedField }) {
+function findDisplayField(displayFields: DisplayField[] | undefined, key: string): DisplayField | undefined {
+  return displayFields?.find((df) => df.key === key);
+}
+
+function PercentageDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const pct = field.percent ?? 0;
   const clamped = Math.min(Math.max(pct, 0), 100);
   const valueStr = field.value != null ? formatCompactNumber(Number(field.value)) : null;
@@ -42,7 +47,7 @@ function PercentageDisplay({ field }: { field: ParsedField }) {
   );
 }
 
-function FractionDisplay({ field }: { field: ParsedField }) {
+function FractionDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const valueStr = field.value != null ? Number(field.value).toLocaleString() : '--';
   const totalStr = field.total != null ? Number(field.total).toLocaleString() : null;
   const unit = field.unit ?? '';
@@ -58,7 +63,7 @@ function FractionDisplay({ field }: { field: ParsedField }) {
   );
 }
 
-function NumberDisplay({ field }: { field: ParsedField }) {
+function NumberDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const valueStr = field.value != null ? Number(field.value).toLocaleString() : '?';
   const unit = field.unit ?? '';
 
@@ -69,7 +74,7 @@ function NumberDisplay({ field }: { field: ParsedField }) {
   );
 }
 
-function DatetimeDisplay({ field }: { field: ParsedField }) {
+function DatetimeDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const { t } = useTranslation();
 
   if (field.value == null) {
@@ -125,22 +130,39 @@ function DatetimeDisplay({ field }: { field: ParsedField }) {
   return <div className="text-sm">{date.toLocaleDateString()}</div>;
 }
 
-function TextDisplay({ field }: { field: ParsedField }) {
-  return <div className="text-sm">{String(field.value ?? '--')}</div>;
+function TextDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
+  const textValue = String(field.value ?? '--');
+
+  if (badgeMeta?.badge) {
+    return (
+      <div className="text-sm">
+        <BadgeDisplay value={textValue} badge={badgeMeta.badge} badgePresets={badgeMeta.badgePresets} />
+      </div>
+    );
+  }
+
+  return <div className="text-sm">{textValue}</div>;
 }
 
-export function ParsedFieldDisplay({ field }: { field: ParsedField }) {
+interface ParsedFieldDisplayProps {
+  field: ParsedField;
+  displayFields?: DisplayField[];
+}
+
+export function ParsedFieldDisplay({ field, displayFields }: ParsedFieldDisplayProps) {
+  const badgeMeta = findDisplayField(displayFields, field.key);
+
   switch (field.format) {
     case 'percentage':
-      return <PercentageDisplay field={field} />;
+      return <PercentageDisplay field={field} badgeMeta={badgeMeta} />;
     case 'fraction':
-      return <FractionDisplay field={field} />;
+      return <FractionDisplay field={field} badgeMeta={badgeMeta} />;
     case 'number':
-      return <NumberDisplay field={field} />;
+      return <NumberDisplay field={field} badgeMeta={badgeMeta} />;
     case 'datetime':
-      return <DatetimeDisplay field={field} />;
+      return <DatetimeDisplay field={field} badgeMeta={badgeMeta} />;
     case 'text':
     default:
-      return <TextDisplay field={field} />;
+      return <TextDisplay field={field} badgeMeta={badgeMeta} />;
   }
 }

@@ -104,7 +104,7 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
       {channel.parsedData && channel.parsedData.length > 0 && (
         <div className="space-y-2">
           {channel.parsedData.map((field) => (
-            <MonitorCardField key={field.key} field={field} />
+            <MonitorCardField key={field.key} field={field} displayFields={channel.displayFields ?? undefined} />
           ))}
         </div>
       )}
