@@ -233,6 +233,58 @@ export function AddChannelDialog() {
                 </Select>
               </div>
 
+              {/* API URL */}
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiUrl')}</Label>
+                <Input
+                  value={apiUrl}
+                  onChange={(e) => setApiUrl(e.target.value)}
+                  placeholder="https://api.example.com/v1/usage"
+                  className="font-mono"
+                />
+              </div>
+
+              {/* Method */}
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiMethod')}</Label>
+                <Select value={apiMethod} onValueChange={(v) => setApiMethod(v as 'GET' | 'POST')}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GET">GET</SelectItem>
+                    <SelectItem value="POST">POST</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Headers */}
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiHeaders')}</Label>
+                <Textarea
+                  value={apiHeaders}
+                  onChange={(e) => validateHeaders(e.target.value)}
+                  placeholder='{"Authorization": "Bearer sk-..."}'
+                  className="font-mono min-h-20"
+                />
+                {headersError && (
+                  <p className="text-xs text-destructive">{headersError}</p>
+                )}
+              </div>
+
+              {/* Body (POST only) */}
+              {apiMethod === 'POST' && (
+                <div className="space-y-1.5">
+                  <Label>{t('usageMonitor.apiBody')}</Label>
+                  <Textarea
+                    value={apiBody}
+                    onChange={(e) => setApiBody(e.target.value)}
+                    placeholder='{"key": "value"}'
+                    className="font-mono min-h-20"
+                  />
+                </div>
+              )}
+
               {/* Channel Name */}
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.channelName')}</Label>

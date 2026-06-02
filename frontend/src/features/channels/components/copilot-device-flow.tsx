@@ -5,7 +5,7 @@ import { Copy, ExternalLink, Loader2, CheckCircle2, AlertCircle, RefreshCw } fro
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { FormLabel } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { useDeviceFlow } from '../hooks/use-device-flow';
 
 interface CopilotDeviceFlowProps {
@@ -127,9 +127,9 @@ export function CopilotDeviceFlow({ onSuccess, onError, existingCredentials }: C
           </div>
 
           <div className='mt-3 space-y-2'>
-            <FormLabel className='text-sm font-medium'>
+            <Label className='text-sm font-medium'>
               {t('channels.dialogs.github_copilot.labels.userCode')}
-            </FormLabel>
+            </Label>
             <div className='flex items-center gap-2'>
               <div className='flex-1 bg-muted p-3 rounded-md text-center'>
                 <span className='text-2xl font-mono font-bold tracking-wider'>

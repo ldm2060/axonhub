@@ -277,43 +277,35 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     providerType: raw.providerType || null,
     apiKey: raw.apiKey ?? null,
     channel: raw.channel ?? null,
-    apiUrl: raw.apiURL ?? raw.apiUrl,
-    apiMethod: raw.apiMethod,
-    apiHeaders: raw.apiHeadersString ?? raw.apiHeaders,
+    apiUrl: raw.apiURL ?? raw.apiUrl ?? '',
+    apiMethod: raw.apiMethod ?? null,
+    apiHeaders: raw.apiHeadersString ?? raw.apiHeaders ?? '{}',
     apiBody: raw.apiBody || null,
-    pollInterval: raw.pollInterval,
+    pollInterval: raw.pollInterval ?? 300,
     fields: Array.isArray(raw.fields) ? raw.fields : (raw.fields?.items ?? []),
     variables: raw.variables ?? [],
     displayFields: raw.displayFields ?? [],
-    status: raw.status,
+    status: raw.status ?? 'active',
     lastPollAt: raw.lastPollAt ?? null,
     parsedData: raw.parsedData ?? null,
     lastPollError: raw.lastPollError ?? null,
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
+    createdAt: raw.createdAt ?? '',
+    updatedAt: raw.updatedAt ?? '',
   });
 }
 
 // Hooks
 
 export function useUsageMonitorChannels() {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: [USAGE_MONITOR_CHANNELS_KEY],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{
-          usageMonitorChannelsList: unknown[];
-        }>(USAGE_MONITOR_CHANNELS_QUERY);
-        return (data.usageMonitorChannelsList ?? []).map((raw: any) =>
-          normalizeChannel(raw),
-        );
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{
+        usageMonitorChannelsList: unknown[];
+      }>(USAGE_MONITOR_CHANNELS_QUERY);
+      return (data.usageMonitorChannelsList ?? []).map((raw: any) =>
+        normalizeChannel(raw),
+      );
     },
     refetchInterval: 60_000,
     refetchIntervalInBackground: true,
