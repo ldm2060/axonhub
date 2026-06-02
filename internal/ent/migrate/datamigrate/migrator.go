@@ -28,6 +28,7 @@ type Migrator struct {
 // NewMigrator creates a new Migrator instance with all registered migrations.
 func NewMigrator(client *ent.Client) *Migrator {
 	migrator := NewMigratorWithoutRegistrations(client)
+	migrator.Register(NewV0_1_10())
 	migrator.Register(NewV0_3_0())
 	migrator.Register(NewV0_4_0())
 	migrator.Register(NewV0_5_0())
