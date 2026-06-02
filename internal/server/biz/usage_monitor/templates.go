@@ -2,39 +2,45 @@ package usage_monitor
 
 // ChannelTemplate defines a pre-configured provider template for usage monitoring.
 type ChannelTemplate struct {
-	ProviderType  string
-	Name          string
-	Description   string
-	ApiURL        string
-	ApiMethod     string
-	HeaderFormat  string // "bearer" | "x-api-key"
-	ApiBody       string
-	Variables     []Variable
-	DisplayFields []DisplayField
+	ProviderType          string
+	Name                  string
+	Description           string
+	ApiURL                string
+	ApiMethod             string
+	HeaderFormat          string // "bearer" | "x-api-key"
+	ApiBody               string
+	CredentialLabel       string // label for the credential input, e.g. "API Key", "Session Token"
+	CredentialPlaceholder string // placeholder for the credential input
+	Variables             []Variable
+	DisplayFields         []DisplayField
 }
 
 // QuotaMonitorTemplate is deprecated. Use ChannelTemplate instead.
 // Kept for backward compatibility with the GraphQL resolver until regenerated.
 type QuotaMonitorTemplate struct {
-	ProviderType string        `json:"providerType"`
-	Name         string        `json:"name"`
-	Description  string        `json:"description,omitempty"`
-	ApiURL       string        `json:"apiUrl"`
-	ApiMethod    string        `json:"apiMethod"`
-	HeaderFormat string        `json:"headerFormat"` // "bearer" or "x-api-key"
-	ApiBody      string        `json:"apiBody,omitempty"`
-	Fields       []FieldConfig `json:"fields"`
+	ProviderType          string        `json:"providerType"`
+	Name                  string        `json:"name"`
+	Description           string        `json:"description,omitempty"`
+	ApiURL                string        `json:"apiUrl"`
+	ApiMethod             string        `json:"apiMethod"`
+	HeaderFormat          string        `json:"headerFormat"` // "bearer" or "x-api-key"
+	ApiBody               string        `json:"apiBody,omitempty"`
+	CredentialLabel       string        `json:"credentialLabel,omitempty"`
+	CredentialPlaceholder string        `json:"credentialPlaceholder,omitempty"`
+	Fields                []FieldConfig `json:"fields"`
 }
 
 var channelTemplates = []ChannelTemplate{
 	{
-		ProviderType: "claudecode",
-		Name:         "Claude Code",
-		Description:  "Monitor Claude Code rate limits and usage windows",
-		ApiURL:       "https://api.anthropic.com/v1/messages",
-		ApiMethod:    "POST",
-		HeaderFormat: "bearer",
-		ApiBody:      `{"model":"claude-haiku-4-5","messages":[{"role":"user","content":"limit"}],"max_tokens":1}`,
+		ProviderType:          "claudecode",
+		Name:                  "Claude Code",
+		Description:           "Monitor Claude Code rate limits and usage windows",
+		ApiURL:                "https://api.anthropic.com/v1/messages",
+		ApiMethod:             "POST",
+		HeaderFormat:          "bearer",
+		ApiBody:               `{"model":"claude-haiku-4-5","messages":[{"role":"user","content":"limit"}],"max_tokens":1}`,
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "sk-ant-api03-...",
 		Variables: []Variable{
 			{Key: "5h_utilization", Path: "$.headers.anthropic-ratelimit-unified-5h-utilization", Type: "jsonpath"},
 			{Key: "7d_utilization", Path: "$.headers.anthropic-ratelimit-unified-7d-utilization", Type: "jsonpath"},
@@ -47,12 +53,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "codex",
-		Name:         "Codex / ChatGPT",
-		Description:  "Monitor ChatGPT usage limits and rate windows",
-		ApiURL:       "https://chatgpt.com/backend-api/wham/usage",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "codex",
+		Name:                  "Codex / ChatGPT",
+		Description:           "Monitor ChatGPT usage limits and rate windows",
+		ApiURL:                "https://chatgpt.com/backend-api/wham/usage",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "Session Token",
+		CredentialPlaceholder: "eyJhbGciOi...",
 		Variables: []Variable{
 			{Key: "primary_used_pct", Path: "$.rate_limit.primary_window.used_percent", Type: "jsonpath"},
 			{Key: "primary_reset", Path: "$.rate_limit.primary_window.reset_at", Type: "jsonpath"},
@@ -65,12 +73,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "github_copilot",
-		Name:         "GitHub Copilot",
-		Description:  "Monitor GitHub Copilot quota limits and remaining usage",
-		ApiURL:       "https://api.github.com/copilot_internal/user",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "github_copilot",
+		Name:                  "GitHub Copilot",
+		Description:           "Monitor GitHub Copilot quota limits and remaining usage",
+		ApiURL:                "https://api.github.com/copilot_internal/user",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "GitHub Token",
+		CredentialPlaceholder: "ghu_...",
 		Variables: []Variable{
 			{Key: "plan", Path: "$.copilot_plan", Type: "jsonpath"},
 			{Key: "access_type", Path: "$.access_type_sku", Type: "jsonpath"},
@@ -81,12 +91,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "nanogpt",
-		Name:         "NanoGPT",
-		Description:  "Monitor NanoGPT subscription usage and token/image limits",
-		ApiURL:       "https://nano-gpt.com/api/subscription/v1/usage",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "nanogpt",
+		Name:                  "NanoGPT",
+		Description:           "Monitor NanoGPT subscription usage and token/image limits",
+		ApiURL:                "https://nano-gpt.com/api/subscription/v1/usage",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "sk-...",
 		Variables: []Variable{
 			{Key: "weekly_tokens_pct", Path: "$.weeklyInputTokens.percentUsed", Type: "jsonpath"},
 			{Key: "daily_tokens_pct", Path: "$.dailyInputTokens.percentUsed", Type: "jsonpath"},
@@ -101,12 +113,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "wafer",
-		Name:         "Wafer",
-		Description:  "Monitor Wafer.ai inference quota and request limits",
-		ApiURL:       "https://pass.wafer.ai/v1/inference/quota",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "wafer",
+		Name:                  "Wafer",
+		Description:           "Monitor Wafer.ai inference quota and request limits",
+		ApiURL:                "https://pass.wafer.ai/v1/inference/quota",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "wf-...",
 		Variables: []Variable{
 			{Key: "used_pct", Path: "$.current_period_used_percent", Type: "jsonpath"},
 			{Key: "remaining", Path: "$.remaining_included_requests", Type: "jsonpath"},
@@ -119,12 +133,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "synthetic",
-		Name:         "Synthetic",
-		Description:  "Monitor Synthetic.new weekly token and 5h rolling limits",
-		ApiURL:       "https://api.synthetic.new/v2/quotas",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "synthetic",
+		Name:                  "Synthetic",
+		Description:           "Monitor Synthetic.new weekly token and 5h rolling limits",
+		ApiURL:                "https://api.synthetic.new/v2/quotas",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "sk-...",
 		Variables: []Variable{
 			{Key: "weekly_remaining_pct", Path: "$.weeklyTokenLimit.percentRemaining", Type: "jsonpath"},
 			{Key: "5h_remaining", Path: "$.rollingFiveHourLimit.remaining", Type: "jsonpath"},
@@ -137,12 +153,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "neuralwatt",
-		Name:         "NeuralWatt",
-		Description:  "Monitor NeuralWatt kWh subscription usage and credits",
-		ApiURL:       "https://api.neuralwatt.com/v1/quota",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "neuralwatt",
+		Name:                  "NeuralWatt",
+		Description:           "Monitor NeuralWatt kWh subscription usage and credits",
+		ApiURL:                "https://api.neuralwatt.com/v1/quota",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "nw-...",
 		Variables: []Variable{
 			{Key: "kwh_used", Path: "$.subscription.kwh_used", Type: "jsonpath"},
 			{Key: "kwh_included", Path: "$.subscription.kwh_included", Type: "jsonpath"},
@@ -155,12 +173,14 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
-		ProviderType: "zhipu",
-		Name:         "Zhipu / Z.ai",
-		Description:  "Monitor Zhipu AI quota limits for tokens and MCP usage",
-		ApiURL:       "https://open.bigmodel.cn/api/monitor/usage/quota/limit",
-		ApiMethod:    "GET",
-		HeaderFormat: "bearer",
+		ProviderType:          "zhipu",
+		Name:                  "Zhipu / Z.ai",
+		Description:           "Monitor Zhipu AI quota limits for tokens and MCP usage",
+		ApiURL:                "https://open.bigmodel.cn/api/monitor/usage/quota/limit",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		CredentialLabel:       "JWT Token",
+		CredentialPlaceholder: "xxx.xxx...",
 		Variables: []Variable{
 			{Key: "level", Path: "$.data.level", Type: "jsonpath"},
 			// ZhiPu API returns limits in order: [0]=TIME_LIMIT, [1]=TOKENS_LIMIT
@@ -208,14 +228,16 @@ func (t *ChannelTemplate) ToLegacy() QuotaMonitorTemplate {
 		})
 	}
 	return QuotaMonitorTemplate{
-		ProviderType: t.ProviderType,
-		Name:         t.Name,
-		Description:  t.Description,
-		ApiURL:       t.ApiURL,
-		ApiMethod:    t.ApiMethod,
-		HeaderFormat: t.HeaderFormat,
-		ApiBody:      t.ApiBody,
-		Fields:       fields,
+		ProviderType:          t.ProviderType,
+		Name:                  t.Name,
+		Description:           t.Description,
+		ApiURL:                t.ApiURL,
+		ApiMethod:             t.ApiMethod,
+		HeaderFormat:          t.HeaderFormat,
+		ApiBody:               t.ApiBody,
+		CredentialLabel:       t.CredentialLabel,
+		CredentialPlaceholder: t.CredentialPlaceholder,
+		Fields:                fields,
 	}
 }
 

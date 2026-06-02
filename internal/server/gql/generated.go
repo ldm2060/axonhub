@@ -1456,16 +1456,18 @@ type ComplexityRoot struct {
 	}
 
 	QuotaMonitorTemplate struct {
-		APIMethod     func(childComplexity int) int
-		ApiBody       func(childComplexity int) int
-		ApiURL        func(childComplexity int) int
-		Description   func(childComplexity int) int
-		DisplayFields func(childComplexity int) int
-		Fields        func(childComplexity int) int
-		HeaderFormat  func(childComplexity int) int
-		Name          func(childComplexity int) int
-		ProviderType  func(childComplexity int) int
-		Variables     func(childComplexity int) int
+		APIMethod             func(childComplexity int) int
+		ApiBody               func(childComplexity int) int
+		ApiURL                func(childComplexity int) int
+		CredentialLabel       func(childComplexity int) int
+		CredentialPlaceholder func(childComplexity int) int
+		Description           func(childComplexity int) int
+		DisplayFields         func(childComplexity int) int
+		Fields                func(childComplexity int) int
+		HeaderFormat          func(childComplexity int) int
+		Name                  func(childComplexity int) int
+		ProviderType          func(childComplexity int) int
+		Variables             func(childComplexity int) int
 	}
 
 	RegexAssociation struct {
@@ -9213,6 +9215,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaMonitorTemplate.ApiURL(childComplexity), true
+	case "QuotaMonitorTemplate.credentialLabel":
+		if e.complexity.QuotaMonitorTemplate.CredentialLabel == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.CredentialLabel(childComplexity), true
+	case "QuotaMonitorTemplate.credentialPlaceholder":
+		if e.complexity.QuotaMonitorTemplate.CredentialPlaceholder == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.CredentialPlaceholder(childComplexity), true
 	case "QuotaMonitorTemplate.description":
 		if e.complexity.QuotaMonitorTemplate.Description == nil {
 			break
@@ -50387,6 +50401,10 @@ func (ec *executionContext) fieldContext_Query_quotaMonitorTemplates(_ context.C
 				return ec.fieldContext_QuotaMonitorTemplate_headerFormat(ctx, field)
 			case "apiBody":
 				return ec.fieldContext_QuotaMonitorTemplate_apiBody(ctx, field)
+			case "credentialLabel":
+				return ec.fieldContext_QuotaMonitorTemplate_credentialLabel(ctx, field)
+			case "credentialPlaceholder":
+				return ec.fieldContext_QuotaMonitorTemplate_credentialPlaceholder(ctx, field)
 			case "fields":
 				return ec.fieldContext_QuotaMonitorTemplate_fields(ctx, field)
 			case "variables":
@@ -50757,6 +50775,64 @@ func (ec *executionContext) _QuotaMonitorTemplate_apiBody(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiBody(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_credentialLabel(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_credentialLabel,
+		func(ctx context.Context) (any, error) {
+			return obj.CredentialLabel, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_credentialLabel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_credentialPlaceholder(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_credentialPlaceholder,
+		func(ctx context.Context) (any, error) {
+			return obj.CredentialPlaceholder, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_credentialPlaceholder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "QuotaMonitorTemplate",
 		Field:      field,
@@ -112960,6 +113036,10 @@ func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.S
 			}
 		case "apiBody":
 			out.Values[i] = ec._QuotaMonitorTemplate_apiBody(ctx, field, obj)
+		case "credentialLabel":
+			out.Values[i] = ec._QuotaMonitorTemplate_credentialLabel(ctx, field, obj)
+		case "credentialPlaceholder":
+			out.Values[i] = ec._QuotaMonitorTemplate_credentialPlaceholder(ctx, field, obj)
 		case "fields":
 			field := field
 

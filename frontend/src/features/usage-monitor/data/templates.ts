@@ -12,6 +12,8 @@ const QUOTA_MONITOR_TEMPLATES_QUERY = `
       apiMethod
       headerFormat
       apiBody
+      credentialLabel
+      credentialPlaceholder
       fields {
         key
         label
@@ -52,6 +54,8 @@ export type QuotaMonitorTemplate = {
   apiMethod: 'GET' | 'POST';
   headerFormat: string;
   apiBody?: string;
+  credentialLabel?: string;
+  credentialPlaceholder?: string;
   fields: FieldConfig[];
   variables: Variable[];
   displayFields: DisplayField[];

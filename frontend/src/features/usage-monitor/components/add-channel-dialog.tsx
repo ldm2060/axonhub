@@ -393,15 +393,15 @@ export function AddChannelDialog() {
                     <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
                   )}
 
-                  {/* API Key */}
+                  {/* Credential (API Key / Token) */}
                   <div className="space-y-1.5">
-                    <Label>{t('usageMonitor.apiKey')}</Label>
+                    <Label>{selectedTemplate.credentialLabel || t('usageMonitor.apiKey')}</Label>
                     <div className="relative">
                       <Input
                         type={showApiKey ? 'text' : 'password'}
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
-                        placeholder={t('usageMonitor.apiKeyPlaceholder')}
+                        placeholder={selectedTemplate.credentialPlaceholder || t('usageMonitor.apiKeyPlaceholder')}
                         className="pr-10 font-mono"
                       />
                       <button

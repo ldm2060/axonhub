@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
+import { useQuotaMonitorTemplates } from '../data/templates';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { Variable, DisplayField, VariableInput, DisplayFieldInput } from '../data/schema';
 import { VariableForm } from './variable-form';
@@ -28,6 +29,11 @@ export function EditChannelDialog() {
 
   const isTemplate = source === 'template';
   const isBuiltin = source === 'builtin';
+
+  const templates = useQuotaMonitorTemplates();
+  const templateForChannel = isTemplate && currentChannel?.providerType
+    ? templates.find(t => t.providerType === currentChannel.providerType)
+    : undefined;
 
   const [name, setName] = useState('');
   const [apiUrl, setApiUrl] = useState('');
@@ -188,16 +194,16 @@ export function EditChannelDialog() {
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
           <div className="space-y-5 pb-4">
-            {/* Template channel: API Key */}
+            {/* Template channel: Credential */}
             {isTemplate && (
               <div className="space-y-1.5">
-                <Label>{t('usageMonitor.apiKey')}</Label>
+                <Label>{templateForChannel?.credentialLabel || t('usageMonitor.apiKey')}</Label>
                 <div className="relative">
                   <Input
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={t('usageMonitor.apiKeyPlaceholder')}
+                    placeholder={templateForChannel?.credentialPlaceholder || t('usageMonitor.apiKeyPlaceholder')}
                     className="pr-10 font-mono"
                   />
                   <button

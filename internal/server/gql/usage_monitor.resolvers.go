@@ -218,6 +218,21 @@ func (r *usageMonitorChannelResolver) DisplayFields(ctx context.Context, obj *en
 	raw, _ := json.Marshal(obj.Fields)
 	_ = json.Unmarshal(raw, &fcs)
 	dfs := usage_monitor.DisplayFieldsFromFieldConfigs(fcs)
+	// For template channels, enrich with badge config from the template
+	if obj.Source == usagemonitorchannel.SourceTemplate && obj.ProviderType != "" {
+		if tmpl := usage_monitor.GetChannelTemplate(string(obj.ProviderType)); tmpl != nil {
+			tmplDFMap := make(map[string]usage_monitor.DisplayField, len(tmpl.DisplayFields))
+			for _, df := range tmpl.DisplayFields {
+				tmplDFMap[df.Key] = df
+			}
+			for i := range dfs {
+				if tdf, ok := tmplDFMap[dfs[i].Key]; ok {
+					dfs[i].Badge = tdf.Badge
+					dfs[i].BadgePresets = tdf.BadgePresets
+				}
+			}
+		}
+	}
 	return mapSliceToStructSlice[DisplayField](structSliceToMapSlice(dfs)), nil
 }
 
@@ -421,4 +436,3 @@ type quotaMonitorTemplateResolver struct{ *Resolver }
 type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
-
