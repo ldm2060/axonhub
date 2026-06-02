@@ -9,6 +9,7 @@ type ChannelTemplate struct {
 	ApiMethod             string
 	HeaderFormat          string // "bearer" | "x-api-key"
 	ApiBody               string
+	AuthType              string // "api_key" | "oauth" | "device_flow" — matches channel dialog auth flow
 	CredentialLabel       string // label for the credential input, e.g. "API Key", "Session Token"
 	CredentialPlaceholder string // placeholder for the credential input
 	Variables             []Variable
@@ -25,6 +26,7 @@ type QuotaMonitorTemplate struct {
 	ApiMethod             string        `json:"apiMethod"`
 	HeaderFormat          string        `json:"headerFormat"` // "bearer" or "x-api-key"
 	ApiBody               string        `json:"apiBody,omitempty"`
+	AuthType              string        `json:"authType,omitempty"` // "api_key" | "oauth" | "device_flow"
 	CredentialLabel       string        `json:"credentialLabel,omitempty"`
 	CredentialPlaceholder string        `json:"credentialPlaceholder,omitempty"`
 	Fields                []FieldConfig `json:"fields"`
@@ -37,8 +39,9 @@ var channelTemplates = []ChannelTemplate{
 		Description:           "Monitor Claude Code rate limits and usage windows",
 		ApiURL:                "https://api.anthropic.com/v1/messages",
 		ApiMethod:             "POST",
-		HeaderFormat:          "bearer",
+		HeaderFormat:          "x-api-key",
 		ApiBody:               `{"model":"claude-haiku-4-5","messages":[{"role":"user","content":"limit"}],"max_tokens":1}`,
+		AuthType:              "oauth",
 		CredentialLabel:       "API Key",
 		CredentialPlaceholder: "sk-ant-api03-...",
 		Variables: []Variable{
@@ -59,6 +62,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://chatgpt.com/backend-api/wham/usage",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "oauth",
 		CredentialLabel:       "Session Token",
 		CredentialPlaceholder: "eyJhbGciOi...",
 		Variables: []Variable{
@@ -79,6 +83,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://api.github.com/copilot_internal/user",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "device_flow",
 		CredentialLabel:       "GitHub Token",
 		CredentialPlaceholder: "ghu_...",
 		Variables: []Variable{
@@ -97,6 +102,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://nano-gpt.com/api/subscription/v1/usage",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
 		CredentialLabel:       "API Key",
 		CredentialPlaceholder: "sk-...",
 		Variables: []Variable{
@@ -119,6 +125,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://pass.wafer.ai/v1/inference/quota",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
 		CredentialLabel:       "API Key",
 		CredentialPlaceholder: "wf-...",
 		Variables: []Variable{
@@ -139,6 +146,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://api.synthetic.new/v2/quotas",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
 		CredentialLabel:       "API Key",
 		CredentialPlaceholder: "sk-...",
 		Variables: []Variable{
@@ -159,6 +167,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://api.neuralwatt.com/v1/quota",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
 		CredentialLabel:       "API Key",
 		CredentialPlaceholder: "nw-...",
 		Variables: []Variable{
@@ -179,6 +188,7 @@ var channelTemplates = []ChannelTemplate{
 		ApiURL:                "https://open.bigmodel.cn/api/monitor/usage/quota/limit",
 		ApiMethod:             "GET",
 		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
 		CredentialLabel:       "JWT Token",
 		CredentialPlaceholder: "xxx.xxx...",
 		Variables: []Variable{
@@ -235,6 +245,7 @@ func (t *ChannelTemplate) ToLegacy() QuotaMonitorTemplate {
 		ApiMethod:             t.ApiMethod,
 		HeaderFormat:          t.HeaderFormat,
 		ApiBody:               t.ApiBody,
+		AuthType:              t.AuthType,
 		CredentialLabel:       t.CredentialLabel,
 		CredentialPlaceholder: t.CredentialPlaceholder,
 		Fields:                fields,

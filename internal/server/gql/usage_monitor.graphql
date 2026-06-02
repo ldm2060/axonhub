@@ -149,6 +149,7 @@ type QuotaMonitorTemplate {
   apiMethod: UsageMonitorChannelAPIMethod!
   headerFormat: String!
   apiBody: String
+  authType: String
   credentialLabel: String
   credentialPlaceholder: String
   fields: [FieldConfig!]! @deprecated(reason: "Use variables and displayFields instead")

@@ -21,6 +21,14 @@ import (
 )
 
 func assembleHeadersFromAPIKey(apiKey string, headerFormat string) map[string]any {
+	// Check if apiKey is OAuth JSON (contains access_token field)
+	var oauth struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.Unmarshal([]byte(apiKey), &oauth); err == nil && oauth.AccessToken != "" {
+		return map[string]any{"Authorization": "Bearer " + oauth.AccessToken}
+	}
+
 	switch headerFormat {
 	case "bearer":
 		return map[string]any{"Authorization": "Bearer " + apiKey}

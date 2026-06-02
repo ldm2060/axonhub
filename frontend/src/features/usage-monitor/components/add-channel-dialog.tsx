@@ -10,6 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQueryChannels } from '@/features/channels/data/channels';
+import { claudecodeOAuthExchange, claudecodeOAuthStart } from '@/features/channels/data/claudecode';
+import { codexOAuthExchange, codexOAuthStart } from '@/features/channels/data/codex';
+import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
+import { CopilotDeviceFlow } from '@/features/channels/components/copilot-device-flow';
 import { useCreateUsageMonitorChannel } from '../data/usage-monitor';
 import { useQuotaMonitorTemplates, type QuotaMonitorTemplate } from '../data/templates';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
@@ -45,6 +49,20 @@ export function AddChannelDialog() {
   const [selectedTemplate, setSelectedTemplate] = useState<QuotaMonitorTemplate | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+
+  // OAuth flows for template channels
+  const claudecodeOAuth = useOAuthFlow({
+    startFn: claudecodeOAuthStart,
+    exchangeFn: claudecodeOAuthExchange,
+    onSuccess: (credentials) => setApiKey(credentials),
+  });
+  const codexOAuth = useOAuthFlow({
+    startFn: codexOAuthStart,
+    exchangeFn: codexOAuthExchange,
+    onSuccess: (credentials) => setApiKey(credentials),
+  });
+
+  const authType = selectedTemplate?.authType || 'api_key';
 
   // Reset form fields when switching tabs
   const resetForSource = useCallback((newSource: SourceType) => {
@@ -172,7 +190,6 @@ export function AddChannelDialog() {
   }
 
   const canSubmit = name.trim() && apiUrl.trim() && !headersError && (source === 'template' ? (selectedTemplate !== null && apiKey.trim() !== '') : true);
-
   return (
     <Dialog
       open={isOpen}
@@ -393,26 +410,89 @@ export function AddChannelDialog() {
                     <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
                   )}
 
-                  {/* Credential (API Key / Token) */}
-                  <div className="space-y-1.5">
-                    <Label>{selectedTemplate.credentialLabel || t('usageMonitor.apiKey')}</Label>
-                    <div className="relative">
-                      <Input
-                        type={showApiKey ? 'text' : 'password'}
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                        placeholder={selectedTemplate.credentialPlaceholder || t('usageMonitor.apiKeyPlaceholder')}
-                        className="pr-10 font-mono"
+                  {/* Credential section — matches channel auth flow */}
+                  {authType === 'device_flow' && selectedTemplate.providerType === 'github_copilot' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usageMonitor.apiKey')}</Label>
+                      <CopilotDeviceFlow
+                        onSuccess={(credentials) => setApiKey(credentials)}
+                        existingCredentials={apiKey}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
                     </div>
-                  </div>
+                  )}
+                  {authType === 'oauth' && selectedTemplate.providerType === 'claudecode' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usageMonitor.apiKey')}</Label>
+                      {claudecodeOAuth.authUrl && (
+                        <div className="space-y-2">
+                          <Button type="button" variant="ghost" onClick={() => window.open(claudecodeOAuth.authUrl || '', '_blank', 'noopener,noreferrer')}>
+                            {t('channels.dialogs.oauth.buttons.openOAuthLink')}
+                          </Button>
+                          <Input
+                            value={claudecodeOAuth.callbackUrl}
+                            onChange={(e) => claudecodeOAuth.setCallbackUrl(e.target.value)}
+                            placeholder={t('channels.dialogs.oauth.placeholders.callbackUrl')}
+                            className="font-mono text-xs"
+                          />
+                          <Button type="button" variant="secondary" onClick={claudecodeOAuth.exchange} disabled={claudecodeOAuth.isExchanging}>
+                            {claudecodeOAuth.isExchanging ? t('channels.dialogs.oauth.buttons.starting') : t('channels.dialogs.oauth.buttons.startOAuth')}
+                          </Button>
+                        </div>
+                      )}
+                      {!claudecodeOAuth.authUrl && (
+                        <Button type="button" variant="secondary" onClick={claudecodeOAuth.start} disabled={claudecodeOAuth.isStarting}>
+                          {claudecodeOAuth.isStarting ? t('channels.dialogs.oauth.buttons.starting') : t('channels.dialogs.oauth.buttons.startOAuth')}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {authType === 'oauth' && selectedTemplate.providerType === 'codex' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usageMonitor.apiKey')}</Label>
+                      {codexOAuth.authUrl && (
+                        <div className="space-y-2">
+                          <Button type="button" variant="ghost" onClick={() => window.open(codexOAuth.authUrl || '', '_blank', 'noopener,noreferrer')}>
+                            {t('channels.dialogs.oauth.buttons.openOAuthLink')}
+                          </Button>
+                          <Input
+                            value={codexOAuth.callbackUrl}
+                            onChange={(e) => codexOAuth.setCallbackUrl(e.target.value)}
+                            placeholder={t('channels.dialogs.oauth.placeholders.callbackUrl')}
+                            className="font-mono text-xs"
+                          />
+                          <Button type="button" variant="secondary" onClick={codexOAuth.exchange} disabled={codexOAuth.isExchanging}>
+                            {codexOAuth.isExchanging ? t('channels.dialogs.oauth.buttons.starting') : t('channels.dialogs.oauth.buttons.startOAuth')}
+                          </Button>
+                        </div>
+                      )}
+                      {!codexOAuth.authUrl && (
+                        <Button type="button" variant="secondary" onClick={codexOAuth.start} disabled={codexOAuth.isStarting}>
+                          {codexOAuth.isStarting ? t('channels.dialogs.oauth.buttons.starting') : t('channels.dialogs.oauth.buttons.startOAuth')}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {authType === 'api_key' && (
+                    <div className="space-y-1.5">
+                      <Label>{selectedTemplate.credentialLabel || t('usageMonitor.apiKey')}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder={selectedTemplate.credentialPlaceholder || t('usageMonitor.apiKeyPlaceholder')}
+                          className="pr-10 font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Channel Name */}
                   <div className="space-y-1.5">
