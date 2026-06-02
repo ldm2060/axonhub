@@ -26,6 +26,25 @@ type ParsedFieldValue {
     error: String
 }
 
+type Variable {
+    key: String!
+    path: String!
+    type: String!
+    groupIndex: [Int!]
+}
+
+type DisplayField {
+    key: String!
+    label: String!
+    valueRef: String!
+    format: String!
+    unit: String
+    totalRef: String
+    displayOrder: Int!
+    badge: String
+    badgePresets: String
+}
+
 # Extend the Ent-generated UsageMonitorChannel with computed fields
 extend type UsageMonitorChannel {
     "API headers as JSON string for frontend editing"
@@ -48,18 +67,39 @@ input FieldConfigInput {
     expression: String
 }
 
+input VariableInput {
+    key: String!
+    path: String!
+    type: String!
+    groupIndex: [Int!]
+}
+
+input DisplayFieldInput {
+    key: String!
+    label: String!
+    valueRef: String!
+    format: String!
+    unit: String
+    totalRef: String
+    displayOrder: Int!
+    badge: String
+    badgePresets: String
+}
+
 input CreateUsageMonitorChannelInput {
     name: String!
     source: UsageMonitorChannelSource!
     channelId: ID
     providerType: UsageMonitorChannelProviderType
     apiKey: String
-    apiUrl: String!
-    apiMethod: UsageMonitorChannelAPIMethod!
-    apiHeaders: String!
+    apiUrl: String
+    apiMethod: UsageMonitorChannelAPIMethod
+    apiHeaders: String
     apiBody: String
     pollInterval: Int!
     fields: [FieldConfigInput!]!
+    variables: [VariableInput!]
+    displayFields: [DisplayFieldInput!]
 }
 
 input UpdateUsageMonitorChannelInput {
@@ -70,6 +110,8 @@ input UpdateUsageMonitorChannelInput {
     apiBody: String
     pollInterval: Int
     fields: [FieldConfigInput!]
+    variables: [VariableInput!]
+    displayFields: [DisplayFieldInput!]
     status: UsageMonitorChannelStatus
     apiKey: String
 }
@@ -110,6 +152,11 @@ type QuotaMonitorTemplate {
 
 extend type UsageMonitorChannel {
   apiKey: String @goField(forceResolver: true)
+}
+
+extend type UsageMonitorChannel {
+  variables: [Variable!]! @goField(forceResolver: true)
+  displayFields: [DisplayField!]! @goField(forceResolver: true)
 }
 
 extend type Query {

@@ -1016,16 +1016,6 @@ func (r *usageMonitorChannelResolver) Fields(ctx context.Context, obj *ent.Usage
 	return map[string]any{"items": obj.Fields}, nil
 }
 
-// Variables is the resolver for the variables field.
-func (r *usageMonitorChannelResolver) Variables(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
-	panic(fmt.Errorf("not implemented: Variables - variables"))
-}
-
-// DisplayFields is the resolver for the displayFields field.
-func (r *usageMonitorChannelResolver) DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
-	panic(fmt.Errorf("not implemented: DisplayFields - displayFields"))
-}
-
 // QuotaLimits is the resolver for the quotaLimits field.
 func (r *usageMonitorChannelResolver) QuotaLimits(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error) {
 	panic(fmt.Errorf("not implemented: QuotaLimits - quotaLimits"))

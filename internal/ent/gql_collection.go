@@ -5808,16 +5808,6 @@ func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bo
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldFields)
 				fieldSeen[usagemonitorchannel.FieldFields] = struct{}{}
 			}
-		case "variables":
-			if _, ok := fieldSeen[usagemonitorchannel.FieldVariables]; !ok {
-				selectedFields = append(selectedFields, usagemonitorchannel.FieldVariables)
-				fieldSeen[usagemonitorchannel.FieldVariables] = struct{}{}
-			}
-		case "displayFields":
-			if _, ok := fieldSeen[usagemonitorchannel.FieldDisplayFields]; !ok {
-				selectedFields = append(selectedFields, usagemonitorchannel.FieldDisplayFields)
-				fieldSeen[usagemonitorchannel.FieldDisplayFields] = struct{}{}
-			}
 		case "lastPollAt":
 			if _, ok := fieldSeen[usagemonitorchannel.FieldLastPollAt]; !ok {
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldLastPollAt)

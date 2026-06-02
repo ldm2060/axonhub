@@ -7453,14 +7453,6 @@ type UsageMonitorChannel implements Node {
   """
   fields: Map!
   """
-  Variable extraction rules
-  """
-  variables: Map
-  """
-  Display field definitions with optional badge styling
-  """
-  displayFields: Map
-  """
   Last successful poll timestamp
   """
   lastPollAt: Time

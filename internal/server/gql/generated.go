@@ -673,6 +673,18 @@ type ComplexityRoot struct {
 		Reason     func(childComplexity int) int
 	}
 
+	DisplayField struct {
+		Badge        func(childComplexity int) int
+		BadgePresets func(childComplexity int) int
+		DisplayOrder func(childComplexity int) int
+		Format       func(childComplexity int) int
+		Key          func(childComplexity int) int
+		Label        func(childComplexity int) int
+		TotalRef     func(childComplexity int) int
+		Unit         func(childComplexity int) int
+		ValueRef     func(childComplexity int) int
+	}
+
 	EmailSettings struct {
 		Connected     func(childComplexity int) int
 		Encryption    func(childComplexity int) int
@@ -2161,6 +2173,13 @@ type ComplexityRoot struct {
 		TotalUsers     func(childComplexity int) int
 	}
 
+	Variable struct {
+		GroupIndex func(childComplexity int) int
+		Key        func(childComplexity int) int
+		Path       func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
 	VersionCheck struct {
 		CurrentVersion func(childComplexity int) int
 		HasUpdate      func(childComplexity int) int
@@ -2623,14 +2642,14 @@ type UsageMonitorChannelResolver interface {
 	ChannelID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error)
 
 	Fields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
-	Variables(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
-	DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
 
 	QuotaLimits(ctx context.Context, obj *ent.UsageMonitorChannel) (map[string]any, error)
 
 	APIHeadersString(ctx context.Context, obj *ent.UsageMonitorChannel) (string, error)
 	ParsedData(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*usage_monitor.ParsedField, error)
 	APIKey(ctx context.Context, obj *ent.UsageMonitorChannel) (*string, error)
+	Variables(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*Variable, error)
+	DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*DisplayField, error)
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *ent.User) (*objects.GUID, error)
@@ -2667,7 +2686,10 @@ type CreateUsageMonitorChannelInputResolver interface {
 	ChannelID(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *objects.GUID) error
 	ProviderType(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *usagemonitorchannel.ProviderType) error
 
-	APIMethod(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error
+	APIMethod(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *usagemonitorchannel.APIMethod) error
+
+	Variables(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*VariableInput) error
+	DisplayFields(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*DisplayFieldInput) error
 }
 type TestUsageMonitorChannelInputResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error
@@ -2675,6 +2697,8 @@ type TestUsageMonitorChannelInputResolver interface {
 type UpdateUsageMonitorChannelInputResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *usagemonitorchannel.APIMethod) error
 
+	Variables(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*VariableInput) error
+	DisplayFields(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*DisplayFieldInput) error
 	Status(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *usagemonitorchannel.Status) error
 }
 
@@ -4794,6 +4818,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DisabledAPIKey.Reason(childComplexity), true
+
+	case "DisplayField.badge":
+		if e.complexity.DisplayField.Badge == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Badge(childComplexity), true
+	case "DisplayField.badgePresets":
+		if e.complexity.DisplayField.BadgePresets == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.BadgePresets(childComplexity), true
+	case "DisplayField.displayOrder":
+		if e.complexity.DisplayField.DisplayOrder == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.DisplayOrder(childComplexity), true
+	case "DisplayField.format":
+		if e.complexity.DisplayField.Format == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Format(childComplexity), true
+	case "DisplayField.key":
+		if e.complexity.DisplayField.Key == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Key(childComplexity), true
+	case "DisplayField.label":
+		if e.complexity.DisplayField.Label == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Label(childComplexity), true
+	case "DisplayField.totalRef":
+		if e.complexity.DisplayField.TotalRef == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.TotalRef(childComplexity), true
+	case "DisplayField.unit":
+		if e.complexity.DisplayField.Unit == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Unit(childComplexity), true
+	case "DisplayField.valueRef":
+		if e.complexity.DisplayField.ValueRef == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.ValueRef(childComplexity), true
 
 	case "EmailSettings.connected":
 		if e.complexity.EmailSettings.Connected == nil {
@@ -12054,6 +12133,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UserUsageStatsPayload.TotalUsers(childComplexity), true
 
+	case "Variable.groupIndex":
+		if e.complexity.Variable.GroupIndex == nil {
+			break
+		}
+
+		return e.complexity.Variable.GroupIndex(childComplexity), true
+	case "Variable.key":
+		if e.complexity.Variable.Key == nil {
+			break
+		}
+
+		return e.complexity.Variable.Key(childComplexity), true
+	case "Variable.path":
+		if e.complexity.Variable.Path == nil {
+			break
+		}
+
+		return e.complexity.Variable.Path(childComplexity), true
+	case "Variable.type":
+		if e.complexity.Variable.Type == nil {
+			break
+		}
+
+		return e.complexity.Variable.Type(childComplexity), true
+
 	case "VersionCheck.currentVersion":
 		if e.complexity.VersionCheck.CurrentVersion == nil {
 			break
@@ -12283,6 +12387,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputDataStorageSettingsInput,
 		ec.unmarshalInputDataStorageWhereInput,
 		ec.unmarshalInputDeveloperModelSettingsInput,
+		ec.unmarshalInputDisplayFieldInput,
 		ec.unmarshalInputEmailTokenOrder,
 		ec.unmarshalInputEmailTokenWhereInput,
 		ec.unmarshalInputExcludeAssociationInput,
@@ -12418,6 +12523,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUserUsageStatsOrder,
 		ec.unmarshalInputUserUsageStatsWhereInput,
 		ec.unmarshalInputUserWhereInput,
+		ec.unmarshalInputVariableInput,
 		ec.unmarshalInputWebDAVInput,
 		ec.unmarshalInputWebhookNotifierConfigInput,
 		ec.unmarshalInputWebhookSubscriptionInput,
@@ -20932,10 +21038,6 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -20962,6 +21064,10 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -27576,6 +27682,267 @@ func (ec *executionContext) _DisabledAPIKey_reason(ctx context.Context, field gr
 func (ec *executionContext) fieldContext_DisabledAPIKey_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DisabledAPIKey",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_key(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_key,
+		func(ctx context.Context) (any, error) {
+			return obj.Key, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_label(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_label,
+		func(ctx context.Context) (any, error) {
+			return obj.Label, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_valueRef(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_valueRef,
+		func(ctx context.Context) (any, error) {
+			return obj.ValueRef, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_valueRef(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_format(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_format,
+		func(ctx context.Context) (any, error) {
+			return obj.Format, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_format(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_unit(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_unit,
+		func(ctx context.Context) (any, error) {
+			return obj.Unit, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_unit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_totalRef(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_totalRef,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalRef, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_totalRef(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_displayOrder(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_displayOrder,
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayOrder, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_displayOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_badge(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_badge,
+		func(ctx context.Context) (any, error) {
+			return obj.Badge, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_badge(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_badgePresets(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_badgePresets,
+		func(ctx context.Context) (any, error) {
+			return obj.BadgePresets, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_badgePresets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -39238,10 +39605,6 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -39268,6 +39631,10 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -39337,10 +39704,6 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -39367,6 +39730,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -39528,10 +39895,6 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -39558,6 +39921,10 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -49825,10 +50192,6 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -49855,6 +50218,10 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -49913,10 +50280,6 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -49943,6 +50306,10 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -62207,64 +62574,6 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_fields(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _UsageMonitorChannel_variables(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_UsageMonitorChannel_variables,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UsageMonitorChannel().Variables(ctx, obj)
-		},
-		nil,
-		ec.marshalOMap2map,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_UsageMonitorChannel_variables(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UsageMonitorChannel",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Map does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UsageMonitorChannel_displayFields(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_UsageMonitorChannel_displayFields,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UsageMonitorChannel().DisplayFields(ctx, obj)
-		},
-		nil,
-		ec.marshalOMap2map,
-		true,
-		false,
-	)
-}
-
-func (ec *executionContext) fieldContext_UsageMonitorChannel_displayFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UsageMonitorChannel",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Map does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _UsageMonitorChannel_lastPollAt(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -62785,6 +63094,94 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_apiKey(_ context.Co
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_variables(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_variables,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorChannel().Variables(ctx, obj)
+		},
+		nil,
+		ec.marshalNVariable2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_variables(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_Variable_key(ctx, field)
+			case "path":
+				return ec.fieldContext_Variable_path(ctx, field)
+			case "type":
+				return ec.fieldContext_Variable_type(ctx, field)
+			case "groupIndex":
+				return ec.fieldContext_Variable_groupIndex(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Variable", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_displayFields(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_displayFields,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorChannel().DisplayFields(ctx, obj)
+		},
+		nil,
+		ec.marshalNDisplayField2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_displayFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_DisplayField_key(ctx, field)
+			case "label":
+				return ec.fieldContext_DisplayField_label(ctx, field)
+			case "valueRef":
+				return ec.fieldContext_DisplayField_valueRef(ctx, field)
+			case "format":
+				return ec.fieldContext_DisplayField_format(ctx, field)
+			case "unit":
+				return ec.fieldContext_DisplayField_unit(ctx, field)
+			case "totalRef":
+				return ec.fieldContext_DisplayField_totalRef(ctx, field)
+			case "displayOrder":
+				return ec.fieldContext_DisplayField_displayOrder(ctx, field)
+			case "badge":
+				return ec.fieldContext_DisplayField_badge(ctx, field)
+			case "badgePresets":
+				return ec.fieldContext_DisplayField_badgePresets(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DisplayField", field.Name)
 		},
 	}
 	return fc, nil
@@ -63911,10 +64308,6 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
 			case "fields":
 				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
-			case "variables":
-				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
-			case "displayFields":
-				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			case "lastPollAt":
 				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
 			case "lastPollData":
@@ -63941,6 +64334,10 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
 		},
@@ -66277,6 +66674,122 @@ func (ec *executionContext) _UserUsageStatsPayload_activeUsers30d(ctx context.Co
 func (ec *executionContext) fieldContext_UserUsageStatsPayload_activeUsers30d(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserUsageStatsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Variable_key(ctx context.Context, field graphql.CollectedField, obj *Variable) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Variable_key,
+		func(ctx context.Context) (any, error) {
+			return obj.Key, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Variable_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variable",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Variable_path(ctx context.Context, field graphql.CollectedField, obj *Variable) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Variable_path,
+		func(ctx context.Context) (any, error) {
+			return obj.Path, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Variable_path(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variable",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Variable_type(ctx context.Context, field graphql.CollectedField, obj *Variable) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Variable_type,
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Variable_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variable",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Variable_groupIndex(ctx context.Context, field graphql.CollectedField, obj *Variable) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Variable_groupIndex,
+		func(ctx context.Context) (any, error) {
+			return obj.GroupIndex, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Variable_groupIndex(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variable",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -76071,7 +76584,7 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "source", "channelId", "providerType", "apiKey", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields"}
+	fieldsInOrder := [...]string{"name", "source", "channelId", "providerType", "apiKey", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -76121,14 +76634,14 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 			it.ApiKey = data
 		case "apiUrl":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiUrl"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.ApiURL = data
 		case "apiMethod":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiMethod"))
-			data, err := ec.unmarshalNUsageMonitorChannelAPIMethod2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐAPIMethod(ctx, v)
+			data, err := ec.unmarshalOUsageMonitorChannelAPIMethod2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐAPIMethod(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -76137,7 +76650,7 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 			}
 		case "apiHeaders":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiHeaders"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -76163,6 +76676,24 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 				return it, err
 			}
 			it.Fields = data
+		case "variables":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("variables"))
+			data, err := ec.unmarshalOVariableInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CreateUsageMonitorChannelInput().Variables(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "displayFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayFields"))
+			data, err := ec.unmarshalODisplayFieldInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CreateUsageMonitorChannelInput().DisplayFields(ctx, &it, data); err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -76956,6 +77487,89 @@ func (ec *executionContext) unmarshalInputDeveloperModelSettingsInput(ctx contex
 				return it, err
 			}
 			it.Associations = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDisplayFieldInput(ctx context.Context, obj any) (DisplayFieldInput, error) {
+	var it DisplayFieldInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "label", "valueRef", "format", "unit", "totalRef", "displayOrder", "badge", "badgePresets"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "label":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Label = data
+		case "valueRef":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueRef"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ValueRef = data
+		case "format":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("format"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Format = data
+		case "unit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("unit"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Unit = data
+		case "totalRef":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("totalRef"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TotalRef = data
+		case "displayOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayOrder"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DisplayOrder = data
+		case "badge":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("badge"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Badge = data
+		case "badgePresets":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("badgePresets"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BadgePresets = data
 		}
 	}
 
@@ -92516,7 +93130,7 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "status", "apiKey"}
+	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields", "status", "apiKey"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92574,6 +93188,24 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 				return it, err
 			}
 			it.Fields = data
+		case "variables":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("variables"))
+			data, err := ec.unmarshalOVariableInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.UpdateUsageMonitorChannelInput().Variables(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "displayFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayFields"))
+			data, err := ec.unmarshalODisplayFieldInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.UpdateUsageMonitorChannelInput().DisplayFields(ctx, &it, data); err != nil {
+				return it, err
+			}
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOUsageMonitorChannelStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋusagemonitorchannelᚐStatus(ctx, v)
@@ -98308,6 +98940,54 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputVariableInput(ctx context.Context, obj any) (VariableInput, error) {
+	var it VariableInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "path", "type", "groupIndex"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "path":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Path = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "groupIndex":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupIndex"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GroupIndex = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputWebDAVInput(ctx context.Context, obj any) (objects.WebDAV, error) {
 	var it objects.WebDAV
 	asMap := map[string]any{}
@@ -104005,6 +104685,73 @@ func (ec *executionContext) _DisabledAPIKey(ctx context.Context, sel ast.Selecti
 			}
 		case "reason":
 			out.Values[i] = ec._DisabledAPIKey_reason(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var displayFieldImplementors = []string{"DisplayField"}
+
+func (ec *executionContext) _DisplayField(ctx context.Context, sel ast.SelectionSet, obj *DisplayField) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, displayFieldImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DisplayField")
+		case "key":
+			out.Values[i] = ec._DisplayField_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "label":
+			out.Values[i] = ec._DisplayField_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "valueRef":
+			out.Values[i] = ec._DisplayField_valueRef(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "format":
+			out.Values[i] = ec._DisplayField_format(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unit":
+			out.Values[i] = ec._DisplayField_unit(ctx, field, obj)
+		case "totalRef":
+			out.Values[i] = ec._DisplayField_totalRef(ctx, field, obj)
+		case "displayOrder":
+			out.Values[i] = ec._DisplayField_displayOrder(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "badge":
+			out.Values[i] = ec._DisplayField_badge(ctx, field, obj)
+		case "badgePresets":
+			out.Values[i] = ec._DisplayField_badgePresets(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -117797,72 +118544,6 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "variables":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._UsageMonitorChannel_variables(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "displayFields":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._UsageMonitorChannel_displayFields(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "lastPollAt":
 			out.Values[i] = ec._UsageMonitorChannel_lastPollAt(ctx, field, obj)
 		case "lastPollData":
@@ -118061,6 +118742,78 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 					}
 				}()
 				res = ec._UsageMonitorChannel_apiKey(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "variables":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorChannel_variables(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "displayFields":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorChannel_displayFields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -119818,6 +120571,57 @@ func (ec *executionContext) _UserUsageStatsPayload(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var variableImplementors = []string{"Variable"}
+
+func (ec *executionContext) _Variable(ctx context.Context, sel ast.SelectionSet, obj *Variable) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, variableImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Variable")
+		case "key":
+			out.Values[i] = ec._Variable_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "path":
+			out.Values[i] = ec._Variable_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Variable_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "groupIndex":
+			out.Values[i] = ec._Variable_groupIndex(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -122682,6 +123486,65 @@ func (ec *executionContext) marshalNDisabledAPIKey2ᚖgithubᚗcomᚋldm2060ᚋa
 		return graphql.Null
 	}
 	return ec._DisabledAPIKey(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDisplayField2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*DisplayField) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDisplayField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayField(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDisplayField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayField(ctx context.Context, sel ast.SelectionSet, v *DisplayField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DisplayField(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDisplayFieldInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInput(ctx context.Context, v any) (*DisplayFieldInput, error) {
+	res, err := ec.unmarshalInputDisplayFieldInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNEmailSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐEmailSettings(ctx context.Context, sel ast.SelectionSet, v biz.EmailSettings) graphql.Marshaler {
@@ -126861,6 +127724,65 @@ func (ec *executionContext) unmarshalNUserWhereInput2ᚖgithubᚗcomᚋldm2060�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNVariable2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableᚄ(ctx context.Context, sel ast.SelectionSet, v []*Variable) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNVariable2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariable(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNVariable2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariable(ctx context.Context, sel ast.SelectionSet, v *Variable) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Variable(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNVariableInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInput(ctx context.Context, v any) (*VariableInput, error) {
+	res, err := ec.unmarshalInputVariableInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNVersionCheck2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVersionCheck(ctx context.Context, sel ast.SelectionSet, v VersionCheck) graphql.Marshaler {
 	return ec._VersionCheck(ctx, sel, &v)
 }
@@ -129479,6 +130401,24 @@ func (ec *executionContext) marshalODisabledAPIKey2ᚕᚖgithubᚗcomᚋldm2060�
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalODisplayFieldInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInputᚄ(ctx context.Context, v any) ([]*DisplayFieldInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*DisplayFieldInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNDisplayFieldInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOEmailToken2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐEmailTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.EmailToken) graphql.Marshaler {
@@ -134788,6 +135728,24 @@ func (ec *executionContext) unmarshalOUserWhereInput2ᚖgithubᚗcomᚋldm2060�
 	}
 	res, err := ec.unmarshalInputUserWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOVariableInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInputᚄ(ctx context.Context, v any) ([]*VariableInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*VariableInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNVariableInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOWebDAV2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐWebDAV(ctx context.Context, sel ast.SelectionSet, v *objects.WebDAV) graphql.Marshaler {

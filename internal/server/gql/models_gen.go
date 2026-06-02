@@ -221,6 +221,30 @@ type DashboardOverview struct {
 	AverageResponseTime *float64      `json:"averageResponseTime,omitempty"`
 }
 
+type DisplayField struct {
+	Key          string  `json:"key"`
+	Label        string  `json:"label"`
+	ValueRef     string  `json:"valueRef"`
+	Format       string  `json:"format"`
+	Unit         *string `json:"unit,omitempty"`
+	TotalRef     *string `json:"totalRef,omitempty"`
+	DisplayOrder int     `json:"displayOrder"`
+	Badge        *string `json:"badge,omitempty"`
+	BadgePresets *string `json:"badgePresets,omitempty"`
+}
+
+type DisplayFieldInput struct {
+	Key          string  `json:"key"`
+	Label        string  `json:"label"`
+	ValueRef     string  `json:"valueRef"`
+	Format       string  `json:"format"`
+	Unit         *string `json:"unit,omitempty"`
+	TotalRef     *string `json:"totalRef,omitempty"`
+	DisplayOrder int     `json:"displayOrder"`
+	Badge        *string `json:"badge,omitempty"`
+	BadgePresets *string `json:"badgePresets,omitempty"`
+}
+
 type FastestChannel struct {
 	ChannelID       objects.GUID `json:"channelId"`
 	ChannelName     string       `json:"channelName"`
@@ -580,6 +604,20 @@ type UserUsageStatsPayload struct {
 	TotalUsers     int              `json:"totalUsers"`
 	ActiveUsers7d  int              `json:"activeUsers7d"`
 	ActiveUsers30d int              `json:"activeUsers30d"`
+}
+
+type Variable struct {
+	Key        string `json:"key"`
+	Path       string `json:"path"`
+	Type       string `json:"type"`
+	GroupIndex []int  `json:"groupIndex,omitempty"`
+}
+
+type VariableInput struct {
+	Key        string `json:"key"`
+	Path       string `json:"path"`
+	Type       string `json:"type"`
+	GroupIndex []int  `json:"groupIndex,omitempty"`
 }
 
 type VersionCheck struct {

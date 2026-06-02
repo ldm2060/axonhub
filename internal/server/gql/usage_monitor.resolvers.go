@@ -135,6 +135,32 @@ func (r *usageMonitorChannelResolver) APIKey(ctx context.Context, obj *ent.Usage
 	return &masked, nil
 }
 
+// Variables is the resolver for the variables field.
+func (r *usageMonitorChannelResolver) Variables(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*Variable, error) {
+	if len(obj.Variables) > 0 {
+		return mapSliceToStructSlice[Variable](obj.Variables), nil
+	}
+	// Fallback: convert from legacy fields
+	var fcs []usage_monitor.FieldConfig
+	raw, _ := json.Marshal(obj.Fields)
+	_ = json.Unmarshal(raw, &fcs)
+	vars := usage_monitor.VariablesFromFieldConfigs(fcs)
+	return mapSliceToStructSlice[Variable](structSliceToMapSlice(vars)), nil
+}
+
+// DisplayFields is the resolver for the displayFields field.
+func (r *usageMonitorChannelResolver) DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*DisplayField, error) {
+	if len(obj.DisplayFields) > 0 {
+		return mapSliceToStructSlice[DisplayField](obj.DisplayFields), nil
+	}
+	// Fallback: convert from legacy fields
+	var fcs []usage_monitor.FieldConfig
+	raw, _ := json.Marshal(obj.Fields)
+	_ = json.Unmarshal(raw, &fcs)
+	dfs := usage_monitor.DisplayFieldsFromFieldConfigs(fcs)
+	return mapSliceToStructSlice[DisplayField](structSliceToMapSlice(dfs)), nil
+}
+
 // Source is the resolver for the source field.
 func (r *createUsageMonitorChannelInputResolver) Source(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.Source) error {
 	obj.Source = string(data)
@@ -159,8 +185,49 @@ func (r *createUsageMonitorChannelInputResolver) ProviderType(ctx context.Contex
 }
 
 // APIMethod is the resolver for the apiMethod field.
-func (r *createUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error {
-	obj.ApiMethod = string(data)
+func (r *createUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *usagemonitorchannel.APIMethod) error {
+	if data != nil {
+		obj.ApiMethod = string(*data)
+	}
+	return nil
+}
+
+// Variables is the resolver for the variables field.
+func (r *createUsageMonitorChannelInputResolver) Variables(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*VariableInput) error {
+	if data != nil {
+		vars := make([]usage_monitor.Variable, len(data))
+		for i, v := range data {
+			vars[i] = usage_monitor.Variable{
+				Key:        v.Key,
+				Path:       v.Path,
+				Type:       v.Type,
+				GroupIndex: v.GroupIndex,
+			}
+		}
+		obj.Variables = vars
+	}
+	return nil
+}
+
+// DisplayFields is the resolver for the displayFields field.
+func (r *createUsageMonitorChannelInputResolver) DisplayFields(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*DisplayFieldInput) error {
+	if data != nil {
+		dfs := make([]usage_monitor.DisplayField, len(data))
+		for i, v := range data {
+			dfs[i] = usage_monitor.DisplayField{
+				Key:          v.Key,
+				Label:        v.Label,
+				ValueRef:     v.ValueRef,
+				Format:       v.Format,
+				Unit:         lo.FromPtr(v.Unit),
+				TotalRef:     lo.FromPtr(v.TotalRef),
+				DisplayOrder: v.DisplayOrder,
+				Badge:        lo.FromPtr(v.Badge),
+				BadgePresets: lo.FromPtr(v.BadgePresets),
+			}
+		}
+		obj.DisplayFields = dfs
+	}
 	return nil
 }
 
@@ -175,6 +242,45 @@ func (r *updateUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, 
 	if data != nil {
 		str := string(*data)
 		obj.ApiMethod = &str
+	}
+	return nil
+}
+
+// Variables is the resolver for the variables field.
+func (r *updateUsageMonitorChannelInputResolver) Variables(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*VariableInput) error {
+	if data != nil {
+		vars := make([]usage_monitor.Variable, len(data))
+		for i, v := range data {
+			vars[i] = usage_monitor.Variable{
+				Key:        v.Key,
+				Path:       v.Path,
+				Type:       v.Type,
+				GroupIndex: v.GroupIndex,
+			}
+		}
+		obj.Variables = &vars
+	}
+	return nil
+}
+
+// DisplayFields is the resolver for the displayFields field.
+func (r *updateUsageMonitorChannelInputResolver) DisplayFields(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*DisplayFieldInput) error {
+	if data != nil {
+		dfs := make([]usage_monitor.DisplayField, len(data))
+		for i, v := range data {
+			dfs[i] = usage_monitor.DisplayField{
+				Key:          v.Key,
+				Label:        v.Label,
+				ValueRef:     v.ValueRef,
+				Format:       v.Format,
+				Unit:         lo.FromPtr(v.Unit),
+				TotalRef:     lo.FromPtr(v.TotalRef),
+				DisplayOrder: v.DisplayOrder,
+				Badge:        lo.FromPtr(v.Badge),
+				BadgePresets: lo.FromPtr(v.BadgePresets),
+			}
+		}
+		obj.DisplayFields = &dfs
 	}
 	return nil
 }
@@ -216,3 +322,37 @@ type quotaMonitorTemplateResolver struct{ *Resolver }
 type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
+
+// structSliceToMapSlice converts a slice of structs to []map[string]any via JSON marshal/unmarshal.
+func structSliceToMapSlice[T any](in []T) []map[string]any {
+	out := make([]map[string]any, len(in))
+	for i, v := range in {
+		raw, err := json.Marshal(v)
+		if err != nil {
+			continue
+		}
+		var m map[string]any
+		if err := json.Unmarshal(raw, &m); err != nil {
+			continue
+		}
+		out[i] = m
+	}
+	return out
+}
+
+// mapSliceToStructSlice converts []map[string]any to a slice of typed pointers via JSON marshal/unmarshal.
+func mapSliceToStructSlice[T any](in []map[string]any) []*T {
+	out := make([]*T, len(in))
+	for i, m := range in {
+		raw, err := json.Marshal(m)
+		if err != nil {
+			continue
+		}
+		var v T
+		if err := json.Unmarshal(raw, &v); err != nil {
+			continue
+		}
+		out[i] = &v
+	}
+	return out
+}

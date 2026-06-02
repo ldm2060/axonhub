@@ -45,13 +45,13 @@ type Variable struct {
 type DisplayField struct {
 	Key          string `json:"key"`
 	Label        string `json:"label"`
-	ValueRef     string `json:"valueRef"`               // variable key or expression like "${used}/${total}*100"
-	Format       string `json:"format"`                  // "percentage" | "fraction" | "number" | "datetime" | "text"
+	ValueRef     string `json:"valueRef"` // variable key or expression like "${used}/${total}*100"
+	Format       string `json:"format"`   // "percentage" | "fraction" | "number" | "datetime" | "text"
 	Unit         string `json:"unit,omitempty"`
-	TotalRef     string `json:"totalRef,omitempty"`      // variable key for denominator
+	TotalRef     string `json:"totalRef,omitempty"` // variable key for denominator
 	DisplayOrder int    `json:"displayOrder"`
-	Badge        string `json:"badge,omitempty"`         // badge style key, e.g. "level", "plan"
-	BadgePresets string `json:"badgePresets,omitempty"`  // JSON map of value->gradient, e.g. '{"lite":"sapphire","pro":"rosegold"}'
+	Badge        string `json:"badge,omitempty"`        // badge style key, e.g. "level", "plan"
+	BadgePresets string `json:"badgePresets,omitempty"` // JSON map of value->gradient, e.g. '{"lite":"sapphire","pro":"rosegold"}'
 }
 
 // VariablesFromFieldConfigs converts deprecated FieldConfigs to Variables.
@@ -117,29 +117,33 @@ type TestResult struct {
 }
 
 type CreateUsageMonitorChannelInput struct {
-	Name         string        `json:"name"`
-	Source       string        `json:"source"`
-	ChannelID    *string       `json:"channelId,omitempty"`
-	ProviderType *string       `json:"providerType,omitempty"` // required when source=template
-	ApiKey       *string       `json:"apiKey,omitempty"`       // required when source=template
-	ApiURL       string        `json:"apiUrl"`
-	ApiMethod    string        `json:"apiMethod"`
-	ApiHeaders   string        `json:"apiHeaders"`
-	ApiBody      *string       `json:"apiBody,omitempty"`
-	PollInterval int           `json:"pollInterval"`
-	Fields       []FieldConfig `json:"fields"`
+	Name          string         `json:"name"`
+	Source        string         `json:"source"`
+	ChannelID     *string        `json:"channelId,omitempty"`
+	ProviderType  *string        `json:"providerType,omitempty"` // required when source=template
+	ApiKey        *string        `json:"apiKey,omitempty"`       // required when source=template
+	ApiURL        string         `json:"apiUrl"`
+	ApiMethod     string         `json:"apiMethod"`
+	ApiHeaders    string         `json:"apiHeaders"`
+	ApiBody       *string        `json:"apiBody,omitempty"`
+	PollInterval  int            `json:"pollInterval"`
+	Fields        []FieldConfig  `json:"fields"`
+	Variables     []Variable     `json:"variables,omitempty"`
+	DisplayFields []DisplayField `json:"displayFields,omitempty"`
 }
 
 type UpdateUsageMonitorChannelInput struct {
-	Name         *string        `json:"name,omitempty"`
-	ApiURL       *string        `json:"apiUrl,omitempty"`
-	ApiMethod    *string        `json:"apiMethod,omitempty"`
-	ApiHeaders   *string        `json:"apiHeaders,omitempty"`
-	ApiKey       *string        `json:"apiKey,omitempty"` // allow key rotation for template channels
-	ApiBody      *string        `json:"apiBody,omitempty"`
-	PollInterval *int           `json:"pollInterval,omitempty"`
-	Fields       *[]FieldConfig `json:"fields,omitempty"`
-	Status       *string        `json:"status,omitempty"`
+	Name          *string         `json:"name,omitempty"`
+	ApiURL        *string         `json:"apiUrl,omitempty"`
+	ApiMethod     *string         `json:"apiMethod,omitempty"`
+	ApiHeaders    *string         `json:"apiHeaders,omitempty"`
+	ApiKey        *string         `json:"apiKey,omitempty"` // allow key rotation for template channels
+	ApiBody       *string         `json:"apiBody,omitempty"`
+	PollInterval  *int            `json:"pollInterval,omitempty"`
+	Fields        *[]FieldConfig  `json:"fields,omitempty"`
+	Variables     *[]Variable     `json:"variables,omitempty"`
+	DisplayFields *[]DisplayField `json:"displayFields,omitempty"`
+	Status        *string         `json:"status,omitempty"`
 }
 
 type TestUsageMonitorChannelInput struct {

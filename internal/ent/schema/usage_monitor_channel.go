@@ -60,12 +60,12 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Comment("Array of field configurations").
 			Annotations(entgql.Type("Map")),
 		field.JSON("variables", []map[string]any{}).
-			Annotations(entgql.Type("Map")).
+			Annotations(entgql.Type("Map"), entgql.Skip(entgql.SkipAll)).
 			Optional().
 			Default([]map[string]any{}).
 			Comment("Variable extraction rules"),
 		field.JSON("display_fields", []map[string]any{}).
-			Annotations(entgql.Type("Map")).
+			Annotations(entgql.Type("Map"), entgql.Skip(entgql.SkipAll)).
 			Optional().
 			Default([]map[string]any{}).
 			Comment("Display field definitions with optional badge styling"),
