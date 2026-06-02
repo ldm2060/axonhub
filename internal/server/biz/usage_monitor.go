@@ -34,6 +34,9 @@ func assembleHeadersFromAPIKey(apiKey string, headerFormat string) map[string]an
 		return map[string]any{"Authorization": "Bearer " + apiKey}
 	case "x-api-key":
 		return map[string]any{"x-api-key": apiKey}
+	case "url_key":
+		// API key is appended to URL as ?key= parameter, no auth headers needed
+		return map[string]any{}
 	default:
 		return map[string]any{"Authorization": "Bearer " + apiKey}
 	}
@@ -454,6 +457,10 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		}
 		// Assemble headers from apiKey + template headerFormat
 		apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+		// For url_key format, append API key as query parameter to the URL
+		if tmpl.HeaderFormat == "url_key" && input.ApiKey != nil {
+			input.ApiURL = tmpl.ApiURL + "?key=" + *input.ApiKey
+		}
 
 	case "custom":
 		if input.ApiURL == "" {
@@ -579,6 +586,10 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 		if existing.Source == usagemonitorchannel.SourceTemplate {
 			tmpl := usage_monitor.GetChannelTemplate(string(existing.ProviderType))
 			if tmpl != nil {
+				// For url_key format, update URL with new API key
+				if tmpl.HeaderFormat == "url_key" {
+					update.SetAPIURL(tmpl.ApiURL + "?key=" + *input.ApiKey)
+				}
 				apiHeaders := assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
 				update.SetAPIHeaders(apiHeaders)
 			}

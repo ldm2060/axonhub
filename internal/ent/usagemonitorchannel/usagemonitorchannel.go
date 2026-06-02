@@ -205,6 +205,7 @@ const (
 	ProviderTypeSynthetic     ProviderType = "synthetic"
 	ProviderTypeNeuralwatt    ProviderType = "neuralwatt"
 	ProviderTypeZhipu         ProviderType = "zhipu"
+	ProviderTypeGemini        ProviderType = "gemini"
 )
 
 func (pt ProviderType) String() string {
@@ -214,7 +215,7 @@ func (pt ProviderType) String() string {
 // ProviderTypeValidator is a validator for the "provider_type" field enum values. It is called by the builders before save.
 func ProviderTypeValidator(pt ProviderType) error {
 	switch pt {
-	case ProviderTypeClaudecode, ProviderTypeCodex, ProviderTypeGithubCopilot, ProviderTypeNanogpt, ProviderTypeWafer, ProviderTypeSynthetic, ProviderTypeNeuralwatt, ProviderTypeZhipu:
+	case ProviderTypeClaudecode, ProviderTypeCodex, ProviderTypeGithubCopilot, ProviderTypeNanogpt, ProviderTypeWafer, ProviderTypeSynthetic, ProviderTypeNeuralwatt, ProviderTypeZhipu, ProviderTypeGemini:
 		return nil
 	default:
 		return fmt.Errorf("usagemonitorchannel: invalid enum value for provider_type field: %q", pt)

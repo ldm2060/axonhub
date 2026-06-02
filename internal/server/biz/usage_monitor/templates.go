@@ -209,6 +209,28 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "time_reset", Label: "MCP Reset At", ValueRef: "time_reset", Format: "datetime", DisplayOrder: 5},
 		},
 	},
+	{
+		ProviderType:          "gemini",
+		Name:                  "Google Gemini",
+		Description:           "Monitor Gemini API token usage via a lightweight generateContent request",
+		ApiURL:                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+		ApiMethod:             "POST",
+		HeaderFormat:          "url_key",
+		ApiBody:               "{\"contents\":[{\"parts\":[{\"text\":\"hi\"}]}],\"generationConfig\":{\"maxOutputTokens\":1}}",
+		AuthType:              "api_key",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "AIzaSy...",
+		Variables: []Variable{
+			{Key: "input_tokens", Path: "$.usageMetadata.promptTokenCount", Type: "jsonpath"},
+			{Key: "output_tokens", Path: "$.usageMetadata.candidatesTokenCount", Type: "jsonpath"},
+			{Key: "total_tokens", Path: "$.usageMetadata.totalTokenCount", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "input_tokens", Label: "Input Tokens", ValueRef: "input_tokens", Format: "number", Unit: "tokens", DisplayOrder: 0},
+			{Key: "output_tokens", Label: "Output Tokens", ValueRef: "output_tokens", Format: "number", Unit: "tokens", DisplayOrder: 1},
+			{Key: "total_tokens", Label: "Total Tokens", ValueRef: "total_tokens", Format: "number", Unit: "tokens", DisplayOrder: 2},
+		},
+	},
 }
 
 // GetChannelTemplates returns all available channel templates.

@@ -68,6 +68,7 @@
   "usageMonitor.displayField.valueRef": "值引用",
   "usageMonitor.displayField.expression": "表达式...",
   "usageMonitor.displayField.totalRef": "总量引用",
+  "usageMonitor.displayField.none": "无",
   "usageMonitor.displayField.badgeConfig": "铭牌配置",
   "usageMonitor.displayField.badgeKey": "铭牌键",
   "usageMonitor.displayField.badgePresets": "铭牌预设",

@@ -87,9 +87,32 @@ export function AddChannelDialog() {
     if (source !== 'builtin' || !channelId) return;
     const channels = channelsQuery.data?.edges ?? [];
     const selected = channels.find((e) => e.node.id === channelId);
-    if (selected) {
+    if (!selected) return;
+
+    const channelType = selected.node.type;
+
+    // Check if the channel type matches a template provider type
+    const matchingTemplate = templates.find((t) => t.providerType === channelType);
+    if (matchingTemplate) {
+      // Auto-switch to template mode with the matching template
+      setSelectedTemplate(matchingTemplate);
+      setSource('template');
+      setApiUrl(matchingTemplate.apiUrl);
+      setApiMethod(matchingTemplate.apiMethod);
+      if (matchingTemplate.apiBody) setApiBody(matchingTemplate.apiBody);
+      else setApiBody('');
+      if (!name) setName(matchingTemplate.name);
+      setVariables(matchingTemplate.variables ?? []);
+      setDisplayFields(matchingTemplate.displayFields ?? []);
+      // Extract API key from channel credentials for template
+      const creds = selected.node.credentials;
+      let key = '';
+      if (creds?.apiKey) key = creds.apiKey;
+      else if (creds?.apiKeys && creds.apiKeys.length > 0) key = creds.apiKeys[0];
+      if (key) setApiKey(key);
+    } else {
+      // No matching template — stay in builtin mode
       setApiUrl(selected.node.baseURL || '');
-      // Build headers from credentials
       const creds = selected.node.credentials;
       const headers: Record<string, string> = {};
       if (creds?.apiKey) {
@@ -102,7 +125,7 @@ export function AddChannelDialog() {
         setName(selected.node.name);
       }
     }
-  }, [source, channelId, channelsQuery.data, name]);
+  }, [source, channelId, channelsQuery.data, name, templates]);
 
   // Validate JSON headers
   function validateHeaders(value: string) {

@@ -157,7 +157,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
               <SelectValue placeholder={t('usageMonitor.displayField.valueRef')} />
             </SelectTrigger>
             <SelectContent>
-              {variables.map((v) => (
+              {variables.filter((v) => v.key).map((v) => (
                 <SelectItem key={v.key} value={v.key}>
                   {v.key}
                 </SelectItem>
@@ -198,15 +198,16 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           <div className="space-y-1.5">
             <Label>{t('usageMonitor.displayField.totalRef')}</Label>
             <Select
-              value={df.totalRef ?? ''}
-              onValueChange={(val) => onUpdate({ totalRef: val || undefined })}
+              value={df.totalRef || '__none__'}
+              onValueChange={(val) => onUpdate({ totalRef: val === '__none__' ? undefined : val })}
               disabled={readOnly}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t('usageMonitor.displayField.totalRef')} />
               </SelectTrigger>
               <SelectContent>
-                {variables.map((v) => (
+                <SelectItem value="__none__">{t('usageMonitor.displayField.none')}</SelectItem>
+                {variables.filter((v) => v.key).map((v) => (
                   <SelectItem key={v.key} value={v.key}>
                     {v.key}
                   </SelectItem>
