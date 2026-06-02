@@ -8,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
-import type { FieldConfig } from '../data/schema';
-import { FieldConfigForm } from './field-config-form';
+import type { Variable, DisplayField, VariableInput, DisplayFieldInput, FieldConfig } from '../data/schema';
+import { VariableForm } from './variable-form';
+import { DisplayFieldForm } from './display-field-form';
 import { TestConnection } from './test-connection';
 
 const MASKED_API_KEY = '••••••••';
@@ -24,8 +24,10 @@ export function EditChannelDialog() {
   const updateMutation = useUpdateUsageMonitorChannel();
 
   const isOpen = open === 'edit';
+  const source = currentChannel?.source;
 
-  const isTemplate = currentChannel?.source === 'template';
+  const isTemplate = source === 'template';
+  const isBuiltin = source === 'builtin';
 
   const [name, setName] = useState('');
   const [apiUrl, setApiUrl] = useState('');
@@ -33,7 +35,8 @@ export function EditChannelDialog() {
   const [apiHeaders, setApiHeaders] = useState('');
   const [apiBody, setApiBody] = useState('');
   const [pollIntervalMin, setPollIntervalMin] = useState(5);
-  const [fields, setFields] = useState<FieldConfig[]>([]);
+  const [variables, setVariables] = useState<Variable[]>([]);
+  const [displayFields, setDisplayFields] = useState<DisplayField[]>([]);
   const [headersError, setHeadersError] = useState('');
 
   // API key state for template channels
@@ -49,7 +52,8 @@ export function EditChannelDialog() {
     setApiHeaders(currentChannel.apiHeaders || '');
     setApiBody(currentChannel.apiBody || '');
     setPollIntervalMin(Math.round((currentChannel.pollInterval || 300) / 60));
-    setFields(currentChannel.fields ?? []);
+    setVariables(currentChannel.variables ?? []);
+    setDisplayFields(currentChannel.displayFields ?? []);
     setHeadersError('');
     // For template channels, pre-fill with masked API key
     setApiKey(currentChannel.apiKey ?? MASKED_API_KEY);
@@ -74,17 +78,75 @@ export function EditChannelDialog() {
     if (!currentChannel) return;
     try {
       if (isTemplate) {
-        // Template channels: only send name, apiKey (if changed), and pollInterval
+        // Template channels: only send name, apiKey (if changed), pollInterval, and displayFields
+        // Do NOT send variables — backend ignores them anyway
+        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
+          key: df.key,
+          label: df.label,
+          valueRef: df.valueRef,
+          format: df.format,
+          unit: df.unit,
+          totalRef: df.totalRef,
+          displayOrder: df.displayOrder,
+          badge: df.badge,
+          badgePresets: df.badgePresets,
+        }));
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {
             name,
             pollInterval: pollIntervalMin * 60,
+            displayFields: displayFieldInputs,
             ...(apiKey.trim() && apiKey !== MASKED_API_KEY ? { apiKey } : {}),
           },
         });
+      } else if (isBuiltin) {
+        // Builtin channels: name, pollInterval, variables, displayFields
+        const variableInputs: VariableInput[] = variables.map((v) => ({
+          key: v.key,
+          path: v.path,
+          type: v.type,
+          groupIndex: v.groupIndex,
+        }));
+        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
+          key: df.key,
+          label: df.label,
+          valueRef: df.valueRef,
+          format: df.format,
+          unit: df.unit,
+          totalRef: df.totalRef,
+          displayOrder: df.displayOrder,
+          badge: df.badge,
+          badgePresets: df.badgePresets,
+        }));
+        await updateMutation.mutateAsync({
+          id: currentChannel.id,
+          input: {
+            name,
+            pollInterval: pollIntervalMin * 60,
+            variables: variableInputs,
+            displayFields: displayFieldInputs,
+          },
+        });
       } else {
-        // Non-template channels: send everything as before
+        // Custom channels: send everything including variables and displayFields
+        const variableInputs: VariableInput[] = variables.map((v) => ({
+          key: v.key,
+          path: v.path,
+          type: v.type,
+          groupIndex: v.groupIndex,
+        }));
+        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
+          key: df.key,
+          label: df.label,
+          valueRef: df.valueRef,
+          format: df.format,
+          unit: df.unit,
+          totalRef: df.totalRef,
+          displayOrder: df.displayOrder,
+          badge: df.badge,
+          badgePresets: df.badgePresets,
+        }));
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {
@@ -94,7 +156,8 @@ export function EditChannelDialog() {
             apiHeaders,
             apiBody: apiBody || undefined,
             pollInterval: pollIntervalMin * 60,
-            fields,
+            variables: variableInputs,
+            displayFields: displayFieldInputs,
           },
         });
       }
@@ -106,7 +169,20 @@ export function EditChannelDialog() {
 
   const canSubmit = isTemplate
     ? name.trim()
-    : name.trim() && apiUrl.trim() && !headersError;
+    : isBuiltin
+      ? name.trim()
+      : name.trim() && apiUrl.trim() && !headersError;
+
+  // Build fields for TestConnection (legacy format from variables)
+  const testFields: FieldConfig[] = variables.map((v, i) => ({
+    key: v.key,
+    label: v.key,
+    path: v.path,
+    type: v.type,
+    format: 'text',
+    groupIndex: v.groupIndex,
+    displayOrder: i,
+  }));
 
   return (
     <Dialog
@@ -116,43 +192,41 @@ export function EditChannelDialog() {
       }}
     >
       <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{t('usageMonitor.editChannel')}</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1 pr-2">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
           <div className="space-y-5 pb-4">
-            {/* Template channel: API Key for rotation */}
+            {/* Template channel: API Key */}
             {isTemplate && (
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>{t('usageMonitor.apiKey')}</Label>
-                  <div className="relative">
-                    <Input
-                      type={showApiKey ? 'text' : 'password'}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={t('usageMonitor.apiKeyPlaceholder')}
-                      className="pr-10 font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {apiKey === MASKED_API_KEY ? 'Leave unchanged to keep current key' : ''}
-                  </p>
+              <div className="space-y-1.5">
+                <Label>{t('usageMonitor.apiKey')}</Label>
+                <div className="relative">
+                  <Input
+                    type={showApiKey ? 'text' : 'password'}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={t('usageMonitor.apiKeyPlaceholder')}
+                    className="pr-10 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {apiKey === MASKED_API_KEY ? t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key' : ''}
+                </p>
               </div>
             )}
 
-            {/* Non-template: API URL */}
-            {!isTemplate && (
+            {/* Custom: API URL */}
+            {!isTemplate && !isBuiltin && (
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.apiUrl')}</Label>
                 <Input
@@ -164,8 +238,8 @@ export function EditChannelDialog() {
               </div>
             )}
 
-            {/* Non-template: API Method */}
-            {!isTemplate && (
+            {/* Custom: API Method */}
+            {!isTemplate && !isBuiltin && (
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.apiMethod')}</Label>
                 <Select value={apiMethod} onValueChange={(v) => setApiMethod(v as 'GET' | 'POST')}>
@@ -180,8 +254,8 @@ export function EditChannelDialog() {
               </div>
             )}
 
-            {/* Non-template: API Headers */}
-            {!isTemplate && (
+            {/* Custom: API Headers */}
+            {!isTemplate && !isBuiltin && (
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.apiHeaders')}</Label>
                 <Textarea
@@ -196,8 +270,8 @@ export function EditChannelDialog() {
               </div>
             )}
 
-            {/* Non-template: API Body */}
-            {!isTemplate && apiMethod === 'POST' && (
+            {/* Custom: API Body */}
+            {!isTemplate && !isBuiltin && apiMethod === 'POST' && (
               <div className="space-y-1.5">
                 <Label>{t('usageMonitor.apiBody')}</Label>
                 <Textarea
@@ -228,28 +302,52 @@ export function EditChannelDialog() {
                 value={pollIntervalMin}
                 onChange={(e) => setPollIntervalMin(parseInt(e.target.value, 10) || 1)}
               />
-              <p className="text-xs text-muted-foreground">minutes</p>
+              <p className="text-xs text-muted-foreground">{t('usageMonitor.pollIntervalUnit')}</p>
             </div>
 
-            {/* Non-template: Field Configs */}
-            {!isTemplate && (
-              <FieldConfigForm fields={fields} onChange={setFields} />
-            )}
-
-            {/* Non-template: Test Connection */}
-            {!isTemplate && (
-              <TestConnection
-                apiUrl={apiUrl}
-                apiMethod={apiMethod}
-                apiHeaders={apiHeaders}
-                apiBody={apiBody}
-                fields={fields}
+            {/* Variable Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-semibold">{t('usageMonitor.variableSection')}</Label>
+                {isTemplate && <Lock className="size-3.5 text-muted-foreground" />}
+              </div>
+              {isTemplate && (
+                <p className="text-xs text-muted-foreground">{t('usageMonitor.templateVariablesHint')}</p>
+              )}
+              <VariableForm
+                variables={variables}
+                onChange={setVariables}
+                readOnly={isTemplate}
               />
-            )}
-          </div>
-        </ScrollArea>
+            </div>
 
-        <DialogFooter>
+            {/* Display Field Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-semibold">{t('usageMonitor.displayFieldSection')}</Label>
+              </div>
+              {isTemplate && (
+                <p className="text-xs text-muted-foreground">{t('usageMonitor.templateDisplayFieldsHint')}</p>
+              )}
+              <DisplayFieldForm
+                displayFields={displayFields}
+                variables={variables}
+                onChange={setDisplayFields}
+              />
+            </div>
+
+            {/* Test Connection */}
+            <TestConnection
+              apiUrl={apiUrl}
+              apiMethod={apiMethod}
+              apiHeaders={apiHeaders}
+              apiBody={apiBody}
+              fields={testFields}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex-shrink-0">
           <Button type="button" variant="outline" onClick={() => setOpen(null)}>
             {t('common.buttons.cancel')}
           </Button>
