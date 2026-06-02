@@ -29,6 +29,7 @@ var spaAdminPrefixes = []string{
 	"/admin/publish-requests",
 	"/admin/roles",
 	"/admin/system",
+	"/admin/usage-monitor",
 	"/admin/users",
 }
 
