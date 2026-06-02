@@ -147,7 +147,9 @@ type QuotaMonitorTemplate {
   apiMethod: UsageMonitorChannelAPIMethod!
   headerFormat: String!
   apiBody: String
-  fields: [FieldConfig!]!
+  fields: [FieldConfig!]! @deprecated(reason: "Use variables and displayFields instead")
+  variables: [Variable!]!
+  displayFields: [DisplayField!]!
 }
 
 extend type UsageMonitorChannel {

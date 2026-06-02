@@ -1,5 +1,20 @@
 package usage_monitor
 
+// ChannelTemplate defines a pre-configured provider template for usage monitoring.
+type ChannelTemplate struct {
+	ProviderType  string
+	Name          string
+	Description   string
+	ApiURL        string
+	ApiMethod     string
+	HeaderFormat  string // "bearer" | "x-api-key"
+	ApiBody       string
+	Variables     []Variable
+	DisplayFields []DisplayField
+}
+
+// QuotaMonitorTemplate is deprecated. Use ChannelTemplate instead.
+// Kept for backward compatibility with the GraphQL resolver until regenerated.
 type QuotaMonitorTemplate struct {
 	ProviderType string        `json:"providerType"`
 	Name         string        `json:"name"`
@@ -11,7 +26,7 @@ type QuotaMonitorTemplate struct {
 	Fields       []FieldConfig `json:"fields"`
 }
 
-var quotaMonitorTemplates = []QuotaMonitorTemplate{
+var channelTemplates = []ChannelTemplate{
 	{
 		ProviderType: "claudecode",
 		Name:         "Claude Code",
@@ -20,10 +35,15 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiMethod:    "POST",
 		HeaderFormat: "bearer",
 		ApiBody:      `{"model":"claude-haiku-4-5","messages":[{"role":"user","content":"limit"}],"max_tokens":1}`,
-		Fields: []FieldConfig{
-			{Key: "5h_utilization", Label: "5h Window Utilization", Path: "$.headers.anthropic-ratelimit-unified-5h-utilization", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "7d_utilization", Label: "7d Window Utilization", Path: "$.headers.anthropic-ratelimit-unified-7d-utilization", Type: "jsonpath", Format: "percentage", DisplayOrder: 1},
-			{Key: "unified_status", Label: "Unified Status", Path: "$.headers.anthropic-ratelimit-unified-status", Type: "jsonpath", Format: "text", DisplayOrder: 2},
+		Variables: []Variable{
+			{Key: "5h_utilization", Path: "$.headers.anthropic-ratelimit-unified-5h-utilization", Type: "jsonpath"},
+			{Key: "7d_utilization", Path: "$.headers.anthropic-ratelimit-unified-7d-utilization", Type: "jsonpath"},
+			{Key: "unified_status", Path: "$.headers.anthropic-ratelimit-unified-status", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "5h_utilization", Label: "5h Window Utilization", ValueRef: "5h_utilization", Format: "percentage", DisplayOrder: 0},
+			{Key: "7d_utilization", Label: "7d Window Utilization", ValueRef: "7d_utilization", Format: "percentage", DisplayOrder: 1},
+			{Key: "unified_status", Label: "Unified Status", ValueRef: "unified_status", Format: "text", DisplayOrder: 2},
 		},
 	},
 	{
@@ -33,10 +53,15 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://chatgpt.com/backend-api/wham/usage",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "primary_used_pct", Label: "Primary Window Used %", Path: "$.rate_limit.primary_window.used_percent", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "primary_reset", Label: "Primary Reset At", Path: "$.rate_limit.primary_window.reset_at", Type: "jsonpath", Format: "datetime", DisplayOrder: 1},
-			{Key: "plan_type", Label: "Plan Type", Path: "$.plan_type", Type: "jsonpath", Format: "text", DisplayOrder: 2},
+		Variables: []Variable{
+			{Key: "primary_used_pct", Path: "$.rate_limit.primary_window.used_percent", Type: "jsonpath"},
+			{Key: "primary_reset", Path: "$.rate_limit.primary_window.reset_at", Type: "jsonpath"},
+			{Key: "plan_type", Path: "$.plan_type", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "primary_used_pct", Label: "Primary Window Used %", ValueRef: "primary_used_pct", Format: "percentage", DisplayOrder: 0},
+			{Key: "primary_reset", Label: "Primary Reset At", ValueRef: "primary_reset", Format: "datetime", DisplayOrder: 1},
+			{Key: "plan_type", Label: "Plan Type", ValueRef: "plan_type", Format: "text", DisplayOrder: 2},
 		},
 	},
 	{
@@ -46,9 +71,13 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://api.github.com/copilot_internal/user",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "plan", Label: "Plan", Path: "$.copilot_plan", Type: "jsonpath", Format: "text", DisplayOrder: 0},
-			{Key: "access_type", Label: "Access Type", Path: "$.access_type_sku", Type: "jsonpath", Format: "text", DisplayOrder: 1},
+		Variables: []Variable{
+			{Key: "plan", Path: "$.copilot_plan", Type: "jsonpath"},
+			{Key: "access_type", Path: "$.access_type_sku", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "plan", Label: "Plan", ValueRef: "plan", Format: "text", DisplayOrder: 0, Badge: "plan", BadgePresets: `{"individual":"sapphire","business":"rosegold","enterprise":"champagne"}`},
+			{Key: "access_type", Label: "Access Type", ValueRef: "access_type", Format: "text", DisplayOrder: 1, Badge: "access_type", BadgePresets: `{"stable":"sapphire","beta":"rosegold"}`},
 		},
 	},
 	{
@@ -58,11 +87,17 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://nano-gpt.com/api/subscription/v1/usage",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "weekly_tokens_pct", Label: "Weekly Tokens Used %", Path: "$.weeklyInputTokens.percentUsed", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "daily_tokens_pct", Label: "Daily Tokens Used %", Path: "$.dailyInputTokens.percentUsed", Type: "jsonpath", Format: "percentage", DisplayOrder: 1},
-			{Key: "daily_images_pct", Label: "Daily Images Used %", Path: "$.dailyImages.percentUsed", Type: "jsonpath", Format: "percentage", DisplayOrder: 2},
-			{Key: "state", Label: "State", Path: "$.state", Type: "jsonpath", Format: "text", DisplayOrder: 3},
+		Variables: []Variable{
+			{Key: "weekly_tokens_pct", Path: "$.weeklyInputTokens.percentUsed", Type: "jsonpath"},
+			{Key: "daily_tokens_pct", Path: "$.dailyInputTokens.percentUsed", Type: "jsonpath"},
+			{Key: "daily_images_pct", Path: "$.dailyImages.percentUsed", Type: "jsonpath"},
+			{Key: "state", Path: "$.state", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "weekly_tokens_pct", Label: "Weekly Tokens Used %", ValueRef: "weekly_tokens_pct", Format: "percentage", DisplayOrder: 0},
+			{Key: "daily_tokens_pct", Label: "Daily Tokens Used %", ValueRef: "daily_tokens_pct", Format: "percentage", DisplayOrder: 1},
+			{Key: "daily_images_pct", Label: "Daily Images Used %", ValueRef: "daily_images_pct", Format: "percentage", DisplayOrder: 2},
+			{Key: "state", Label: "State", ValueRef: "state", Format: "text", DisplayOrder: 3},
 		},
 	},
 	{
@@ -72,10 +107,15 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://pass.wafer.ai/v1/inference/quota",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "used_pct", Label: "Period Used %", Path: "$.current_period_used_percent", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "remaining", Label: "Remaining Requests", Path: "$.remaining_included_requests", Type: "jsonpath", Format: "number", Unit: "requests", DisplayOrder: 1},
-			{Key: "total", Label: "Total Requests", Path: "$.included_request_limit", Type: "jsonpath", Format: "number", Unit: "requests", DisplayOrder: 2},
+		Variables: []Variable{
+			{Key: "used_pct", Path: "$.current_period_used_percent", Type: "jsonpath"},
+			{Key: "remaining", Path: "$.remaining_included_requests", Type: "jsonpath"},
+			{Key: "total", Path: "$.included_request_limit", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "used_pct", Label: "Period Used %", ValueRef: "used_pct", Format: "percentage", DisplayOrder: 0},
+			{Key: "remaining", Label: "Remaining Requests", ValueRef: "remaining", Format: "number", Unit: "requests", DisplayOrder: 1},
+			{Key: "total", Label: "Total Requests", ValueRef: "total", Format: "number", Unit: "requests", DisplayOrder: 2},
 		},
 	},
 	{
@@ -85,10 +125,15 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://api.synthetic.new/v2/quotas",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "weekly_remaining_pct", Label: "Weekly Tokens Remaining %", Path: "$.weeklyTokenLimit.percentRemaining", Type: "jsonpath", Format: "percentage", DisplayOrder: 0},
-			{Key: "5h_remaining", Label: "5h Rolling Remaining", Path: "$.rollingFiveHourLimit.remaining", Type: "jsonpath", Format: "number", DisplayOrder: 1},
-			{Key: "5h_max", Label: "5h Rolling Max", Path: "$.rollingFiveHourLimit.max", Type: "jsonpath", Format: "number", DisplayOrder: 2},
+		Variables: []Variable{
+			{Key: "weekly_remaining_pct", Path: "$.weeklyTokenLimit.percentRemaining", Type: "jsonpath"},
+			{Key: "5h_remaining", Path: "$.rollingFiveHourLimit.remaining", Type: "jsonpath"},
+			{Key: "5h_max", Path: "$.rollingFiveHourLimit.max", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "weekly_remaining_pct", Label: "Weekly Tokens Remaining %", ValueRef: "weekly_remaining_pct", Format: "percentage", DisplayOrder: 0},
+			{Key: "5h_remaining", Label: "5h Rolling Remaining", ValueRef: "5h_remaining", Format: "number", DisplayOrder: 1},
+			{Key: "5h_max", Label: "5h Rolling Max", ValueRef: "5h_max", Format: "number", DisplayOrder: 2},
 		},
 	},
 	{
@@ -98,10 +143,15 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://api.neuralwatt.com/v1/quota",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "kwh_used", Label: "kWh Used", Path: "$.subscription.kwh_used", Type: "jsonpath", Format: "number", Unit: "kWh", DisplayOrder: 0},
-			{Key: "kwh_included", Label: "kWh Included", Path: "$.subscription.kwh_included", Type: "jsonpath", Format: "number", Unit: "kWh", DisplayOrder: 1},
-			{Key: "credits_remaining", Label: "Credits Remaining", Path: "$.balance.credits_remaining_usd", Type: "jsonpath", Format: "number", Unit: "USD", DisplayOrder: 2},
+		Variables: []Variable{
+			{Key: "kwh_used", Path: "$.subscription.kwh_used", Type: "jsonpath"},
+			{Key: "kwh_included", Path: "$.subscription.kwh_included", Type: "jsonpath"},
+			{Key: "credits_remaining", Path: "$.balance.credits_remaining_usd", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "kwh_used", Label: "kWh Used", ValueRef: "kwh_used", Format: "number", Unit: "kWh", DisplayOrder: 0},
+			{Key: "kwh_included", Label: "kWh Included", ValueRef: "kwh_included", Format: "number", Unit: "kWh", DisplayOrder: 1},
+			{Key: "credits_remaining", Label: "Credits Remaining", ValueRef: "credits_remaining", Format: "number", Unit: "USD", DisplayOrder: 2},
 		},
 	},
 	{
@@ -111,27 +161,82 @@ var quotaMonitorTemplates = []QuotaMonitorTemplate{
 		ApiURL:       "https://open.bigmodel.cn/api/monitor/usage/quota/limit",
 		ApiMethod:    "GET",
 		HeaderFormat: "bearer",
-		Fields: []FieldConfig{
-			{Key: "level", Label: "Account Level", Path: "$.data.level", Type: "jsonpath", Format: "text", DisplayOrder: 0},
+		Variables: []Variable{
+			{Key: "level", Path: "$.data.level", Type: "jsonpath"},
 			// ZhiPu API returns limits in order: [0]=TIME_LIMIT, [1]=TOKENS_LIMIT
-			{Key: "token_pct", Label: "Token Usage %", Path: "$.data.limits[1].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 1},
-			{Key: "token_reset", Label: "Token Reset At", Path: "$.data.limits[1].nextResetTime", Type: "jsonpath", Format: "datetime", DisplayOrder: 2},
-			{Key: "time_pct", Label: "MCP Time Usage %", Path: "$.data.limits[0].percentage", Type: "jsonpath", Format: "percentage", DisplayOrder: 3},
-			{Key: "time_remaining", Label: "MCP Remaining", Path: "$.data.limits[0].remaining", Type: "jsonpath", Format: "number", Unit: "units", DisplayOrder: 4},
-			{Key: "time_reset", Label: "MCP Reset At", Path: "$.data.limits[0].nextResetTime", Type: "jsonpath", Format: "datetime", DisplayOrder: 5},
+			{Key: "token_pct", Path: "$.data.limits[1].percentage", Type: "jsonpath"},
+			{Key: "token_reset", Path: "$.data.limits[1].nextResetTime", Type: "jsonpath"},
+			{Key: "time_pct", Path: "$.data.limits[0].percentage", Type: "jsonpath"},
+			{Key: "time_remaining", Path: "$.data.limits[0].remaining", Type: "jsonpath"},
+			{Key: "time_reset", Path: "$.data.limits[0].nextResetTime", Type: "jsonpath"},
+		},
+		DisplayFields: []DisplayField{
+			{Key: "level", Label: "Account Level", ValueRef: "level", Format: "text", DisplayOrder: 0, Badge: "level", BadgePresets: `{"lite":"sapphire","pro":"rosegold","max":"champagne"}`},
+			{Key: "token_pct", Label: "Token Usage %", ValueRef: "token_pct", Format: "percentage", DisplayOrder: 1},
+			{Key: "token_reset", Label: "Token Reset At", ValueRef: "token_reset", Format: "datetime", DisplayOrder: 2},
+			{Key: "time_pct", Label: "MCP Time Usage %", ValueRef: "time_pct", Format: "percentage", DisplayOrder: 3},
+			{Key: "time_remaining", Label: "MCP Remaining", ValueRef: "time_remaining", Format: "number", Unit: "units", DisplayOrder: 4},
+			{Key: "time_reset", Label: "MCP Reset At", ValueRef: "time_reset", Format: "datetime", DisplayOrder: 5},
 		},
 	},
 }
 
-func GetQuotaMonitorTemplates() []QuotaMonitorTemplate {
-	return quotaMonitorTemplates
+// GetChannelTemplates returns all available channel templates.
+func GetChannelTemplates() []ChannelTemplate {
+	return channelTemplates
 }
 
-func GetQuotaMonitorTemplate(providerType string) *QuotaMonitorTemplate {
-	for i := range quotaMonitorTemplates {
-		if quotaMonitorTemplates[i].ProviderType == providerType {
-			return &quotaMonitorTemplates[i]
+// GetChannelTemplate returns a channel template by provider type.
+func GetChannelTemplate(providerType string) *ChannelTemplate {
+	for i := range channelTemplates {
+		if channelTemplates[i].ProviderType == providerType {
+			return &channelTemplates[i]
 		}
 	}
 	return nil
+}
+
+// ToLegacy converts a ChannelTemplate to the deprecated QuotaMonitorTemplate
+// for backward compatibility with the GraphQL resolver.
+func (t *ChannelTemplate) ToLegacy() QuotaMonitorTemplate {
+	fields := make([]FieldConfig, 0, len(t.Variables))
+	for _, v := range t.Variables {
+		fields = append(fields, FieldConfig{
+			Key:  v.Key,
+			Path: v.Path,
+			Type: v.Type,
+		})
+	}
+	return QuotaMonitorTemplate{
+		ProviderType: t.ProviderType,
+		Name:         t.Name,
+		Description:  t.Description,
+		ApiURL:       t.ApiURL,
+		ApiMethod:    t.ApiMethod,
+		HeaderFormat: t.HeaderFormat,
+		ApiBody:      t.ApiBody,
+		Fields:       fields,
+	}
+}
+
+// GetQuotaMonitorTemplates returns all templates as legacy QuotaMonitorTemplate.
+// Deprecated: Use GetChannelTemplates() instead.
+func GetQuotaMonitorTemplates() []QuotaMonitorTemplate {
+	templates := GetChannelTemplates()
+	result := make([]QuotaMonitorTemplate, len(templates))
+	for i := range templates {
+		result[i] = templates[i].ToLegacy()
+	}
+	return result
+}
+
+// GetQuotaMonitorTemplate returns a single template as legacy QuotaMonitorTemplate.
+// Deprecated: Use GetChannelTemplate() instead.
+func GetQuotaMonitorTemplate(providerType string) *QuotaMonitorTemplate {
+	tmpl := GetChannelTemplate(providerType)
+	if tmpl == nil {
+		return nil
+	}
+	legacy := tmpl.ToLegacy()
+	return &legacy
 }

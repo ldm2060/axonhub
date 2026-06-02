@@ -74,9 +74,9 @@ func (r *queryResolver) UsageMonitorChannelByID(ctx context.Context, id objects.
 }
 
 // QuotaMonitorTemplates is the resolver for the quotaMonitorTemplates field.
-func (r *queryResolver) QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.QuotaMonitorTemplate, error) {
-	templates := usage_monitor.GetQuotaMonitorTemplates()
-	result := make([]*usage_monitor.QuotaMonitorTemplate, len(templates))
+func (r *queryResolver) QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.ChannelTemplate, error) {
+	templates := usage_monitor.GetChannelTemplates()
+	result := make([]*usage_monitor.ChannelTemplate, len(templates))
 	for i := range templates {
 		result[i] = &templates[i]
 	}
@@ -84,8 +84,68 @@ func (r *queryResolver) QuotaMonitorTemplates(ctx context.Context) ([]*usage_mon
 }
 
 // APIMethod is the resolver for the apiMethod field.
-func (r *quotaMonitorTemplateResolver) APIMethod(ctx context.Context, obj *usage_monitor.QuotaMonitorTemplate) (usagemonitorchannel.APIMethod, error) {
+func (r *quotaMonitorTemplateResolver) APIMethod(ctx context.Context, obj *usage_monitor.ChannelTemplate) (usagemonitorchannel.APIMethod, error) {
 	return usagemonitorchannel.APIMethod(obj.ApiMethod), nil
+}
+
+// Fields is the resolver for the fields field (deprecated).
+func (r *quotaMonitorTemplateResolver) Fields(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*usage_monitor.FieldConfig, error) {
+	vars := obj.Variables
+	result := make([]*usage_monitor.FieldConfig, len(vars))
+	for i, v := range vars {
+		result[i] = &usage_monitor.FieldConfig{
+			Key:          v.Key,
+			Path:         v.Path,
+			Type:         v.Type,
+			GroupIndex:   v.GroupIndex,
+			Label:        obj.DisplayFields[i].Label,
+			Format:       obj.DisplayFields[i].Format,
+			DisplayOrder: obj.DisplayFields[i].DisplayOrder,
+		}
+	}
+	return result, nil
+}
+
+// Variables is the resolver for the variables field.
+func (r *quotaMonitorTemplateResolver) Variables(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*Variable, error) {
+	result := make([]*Variable, len(obj.Variables))
+	for i := range obj.Variables {
+		result[i] = &Variable{
+			Key:        obj.Variables[i].Key,
+			Path:       obj.Variables[i].Path,
+			Type:       obj.Variables[i].Type,
+			GroupIndex: obj.Variables[i].GroupIndex,
+		}
+	}
+	return result, nil
+}
+
+// DisplayFields is the resolver for the displayFields field.
+func (r *quotaMonitorTemplateResolver) DisplayFields(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*DisplayField, error) {
+	result := make([]*DisplayField, len(obj.DisplayFields))
+	for i := range obj.DisplayFields {
+		df := obj.DisplayFields[i]
+		result[i] = &DisplayField{
+			Key:          df.Key,
+			Label:        df.Label,
+			ValueRef:     df.ValueRef,
+			Format:       df.Format,
+			DisplayOrder: df.DisplayOrder,
+		}
+		if df.Unit != "" {
+			result[i].Unit = &df.Unit
+		}
+		if df.TotalRef != "" {
+			result[i].TotalRef = &df.TotalRef
+		}
+		if df.Badge != "" {
+			result[i].Badge = &df.Badge
+		}
+		if df.BadgePresets != "" {
+			result[i].BadgePresets = &df.BadgePresets
+		}
+	}
+	return result, nil
 }
 
 // APIHeadersString is the resolver for the apiHeadersString field.
@@ -323,8 +383,14 @@ type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
 
-// structSliceToMapSlice converts a slice of structs to []map[string]any via JSON marshal/unmarshal.
-func structSliceToMapSlice[T any](in []T) []map[string]any {
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func structSliceToMapSlice[T any](in []T) []map[string]any {
 	out := make([]map[string]any, len(in))
 	for i, v := range in {
 		raw, err := json.Marshal(v)
@@ -339,8 +405,6 @@ func structSliceToMapSlice[T any](in []T) []map[string]any {
 	}
 	return out
 }
-
-// mapSliceToStructSlice converts []map[string]any to a slice of typed pointers via JSON marshal/unmarshal.
 func mapSliceToStructSlice[T any](in []map[string]any) []*T {
 	out := make([]*T, len(in))
 	for i, m := range in {
@@ -356,3 +420,4 @@ func mapSliceToStructSlice[T any](in []map[string]any) []*T {
 	}
 	return out
 }
+*/

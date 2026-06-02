@@ -1456,14 +1456,16 @@ type ComplexityRoot struct {
 	}
 
 	QuotaMonitorTemplate struct {
-		APIMethod    func(childComplexity int) int
-		ApiBody      func(childComplexity int) int
-		ApiURL       func(childComplexity int) int
-		Description  func(childComplexity int) int
-		Fields       func(childComplexity int) int
-		HeaderFormat func(childComplexity int) int
-		Name         func(childComplexity int) int
-		ProviderType func(childComplexity int) int
+		APIMethod     func(childComplexity int) int
+		ApiBody       func(childComplexity int) int
+		ApiURL        func(childComplexity int) int
+		Description   func(childComplexity int) int
+		DisplayFields func(childComplexity int) int
+		Fields        func(childComplexity int) int
+		HeaderFormat  func(childComplexity int) int
+		Name          func(childComplexity int) int
+		ProviderType  func(childComplexity int) int
+		Variables     func(childComplexity int) int
 	}
 
 	RegexAssociation struct {
@@ -2558,10 +2560,14 @@ type QueryResolver interface {
 	MyTopRequestsProjects(ctx context.Context) ([]*TopRequestsProjects, error)
 	UsageMonitorChannelsList(ctx context.Context) ([]*ent.UsageMonitorChannel, error)
 	UsageMonitorChannelByID(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
-	QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.QuotaMonitorTemplate, error)
+	QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.ChannelTemplate, error)
 }
 type QuotaMonitorTemplateResolver interface {
-	APIMethod(ctx context.Context, obj *usage_monitor.QuotaMonitorTemplate) (usagemonitorchannel.APIMethod, error)
+	APIMethod(ctx context.Context, obj *usage_monitor.ChannelTemplate) (usagemonitorchannel.APIMethod, error)
+
+	Fields(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*usage_monitor.FieldConfig, error)
+	Variables(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*Variable, error)
+	DisplayFields(ctx context.Context, obj *usage_monitor.ChannelTemplate) ([]*DisplayField, error)
 }
 type RequestResolver interface {
 	ID(ctx context.Context, obj *ent.Request) (*objects.GUID, error)
@@ -9210,6 +9216,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaMonitorTemplate.Description(childComplexity), true
+	case "QuotaMonitorTemplate.displayFields":
+		if e.complexity.QuotaMonitorTemplate.DisplayFields == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.DisplayFields(childComplexity), true
 	case "QuotaMonitorTemplate.fields":
 		if e.complexity.QuotaMonitorTemplate.Fields == nil {
 			break
@@ -9234,6 +9246,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaMonitorTemplate.ProviderType(childComplexity), true
+	case "QuotaMonitorTemplate.variables":
+		if e.complexity.QuotaMonitorTemplate.Variables == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorTemplate.Variables(childComplexity), true
 
 	case "RegexAssociation.exclude":
 		if e.complexity.RegexAssociation.Exclude == nil {
@@ -50338,7 +50356,7 @@ func (ec *executionContext) _Query_quotaMonitorTemplates(ctx context.Context, fi
 			return ec.resolvers.Query().QuotaMonitorTemplates(ctx)
 		},
 		nil,
-		ec.marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplateᚄ,
+		ec.marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐChannelTemplateᚄ,
 		true,
 		true,
 	)
@@ -50368,6 +50386,10 @@ func (ec *executionContext) fieldContext_Query_quotaMonitorTemplates(_ context.C
 				return ec.fieldContext_QuotaMonitorTemplate_apiBody(ctx, field)
 			case "fields":
 				return ec.fieldContext_QuotaMonitorTemplate_fields(ctx, field)
+			case "variables":
+				return ec.fieldContext_QuotaMonitorTemplate_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_QuotaMonitorTemplate_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorTemplate", field.Name)
 		},
@@ -50541,7 +50563,7 @@ func (ec *executionContext) fieldContext_QuotaEnforcementSettings_mode(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_providerType(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_providerType(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50570,7 +50592,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_providerType(_ con
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_name(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_name(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50599,7 +50621,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_name(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_description(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_description(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50628,7 +50650,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_description(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_apiUrl(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_apiUrl(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50657,7 +50679,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiUrl(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_apiMethod(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_apiMethod(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50686,7 +50708,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiMethod(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_headerFormat(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_headerFormat(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50715,7 +50737,7 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_headerFormat(_ con
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_apiBody(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_apiBody(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -50744,17 +50766,17 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_apiBody(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaMonitorTemplate_fields(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.QuotaMonitorTemplate) (ret graphql.Marshaler) {
+func (ec *executionContext) _QuotaMonitorTemplate_fields(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		ec.fieldContext_QuotaMonitorTemplate_fields,
 		func(ctx context.Context) (any, error) {
-			return obj.Fields, nil
+			return ec.resolvers.QuotaMonitorTemplate().Fields(ctx, obj)
 		},
 		nil,
-		ec.marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ,
+		ec.marshalNFieldConfig2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ,
 		true,
 		true,
 	)
@@ -50764,8 +50786,8 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_fields(_ context.C
 	fc = &graphql.FieldContext{
 		Object:     "QuotaMonitorTemplate",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "key":
@@ -50790,6 +50812,94 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_fields(_ context.C
 				return ec.fieldContext_FieldConfig_expression(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldConfig", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_variables(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_variables,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.QuotaMonitorTemplate().Variables(ctx, obj)
+		},
+		nil,
+		ec.marshalNVariable2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐVariableᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_variables(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_Variable_key(ctx, field)
+			case "path":
+				return ec.fieldContext_Variable_path(ctx, field)
+			case "type":
+				return ec.fieldContext_Variable_type(ctx, field)
+			case "groupIndex":
+				return ec.fieldContext_Variable_groupIndex(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Variable", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorTemplate_displayFields(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ChannelTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorTemplate_displayFields,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.QuotaMonitorTemplate().DisplayFields(ctx, obj)
+		},
+		nil,
+		ec.marshalNDisplayField2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDisplayFieldᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorTemplate_displayFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorTemplate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_DisplayField_key(ctx, field)
+			case "label":
+				return ec.fieldContext_DisplayField_label(ctx, field)
+			case "valueRef":
+				return ec.fieldContext_DisplayField_valueRef(ctx, field)
+			case "format":
+				return ec.fieldContext_DisplayField_format(ctx, field)
+			case "unit":
+				return ec.fieldContext_DisplayField_unit(ctx, field)
+			case "totalRef":
+				return ec.fieldContext_DisplayField_totalRef(ctx, field)
+			case "displayOrder":
+				return ec.fieldContext_DisplayField_displayOrder(ctx, field)
+			case "badge":
+				return ec.fieldContext_DisplayField_badge(ctx, field)
+			case "badgePresets":
+				return ec.fieldContext_DisplayField_badgePresets(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DisplayField", field.Name)
 		},
 	}
 	return fc, nil
@@ -112760,7 +112870,7 @@ func (ec *executionContext) _QuotaEnforcementSettings(ctx context.Context, sel a
 
 var quotaMonitorTemplateImplementors = []string{"QuotaMonitorTemplate"}
 
-func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.SelectionSet, obj *usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.SelectionSet, obj *usage_monitor.ChannelTemplate) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, quotaMonitorTemplateImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -112830,10 +112940,113 @@ func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.S
 		case "apiBody":
 			out.Values[i] = ec._QuotaMonitorTemplate_apiBody(ctx, field, obj)
 		case "fields":
-			out.Values[i] = ec._QuotaMonitorTemplate_fields(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QuotaMonitorTemplate_fields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "variables":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QuotaMonitorTemplate_variables(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "displayFields":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QuotaMonitorTemplate_displayFields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -123749,11 +123962,7 @@ func (ec *executionContext) marshalNFetchModelsPayload2ᚖgithubᚗcomᚋldm2060
 	return ec._FetchModelsPayload(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFieldConfig2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx context.Context, sel ast.SelectionSet, v usage_monitor.FieldConfig) graphql.Marshaler {
-	return ec._FieldConfig(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx context.Context, sel ast.SelectionSet, v []usage_monitor.FieldConfig) graphql.Marshaler {
+func (ec *executionContext) marshalNFieldConfig2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx context.Context, sel ast.SelectionSet, v []*usage_monitor.FieldConfig) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -123777,7 +123986,7 @@ func (ec *executionContext) marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxon
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFieldConfig2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx, sel, v[i])
+			ret[i] = ec.marshalNFieldConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -123795,6 +124004,16 @@ func (ec *executionContext) marshalNFieldConfig2ᚕgithubᚗcomᚋldm2060ᚋaxon
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNFieldConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx context.Context, sel ast.SelectionSet, v *usage_monitor.FieldConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FieldConfig(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFieldConfigInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfig(ctx context.Context, v any) (usage_monitor.FieldConfig, error) {
@@ -125748,7 +125967,7 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐChannelTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*usage_monitor.ChannelTemplate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -125772,7 +125991,7 @@ func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋld
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplate(ctx, sel, v[i])
+			ret[i] = ec.marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐChannelTemplate(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -125792,7 +126011,7 @@ func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋld
 	return ret
 }
 
-func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐQuotaMonitorTemplate(ctx context.Context, sel ast.SelectionSet, v *usage_monitor.QuotaMonitorTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐChannelTemplate(ctx context.Context, sel ast.SelectionSet, v *usage_monitor.ChannelTemplate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")

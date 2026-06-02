@@ -737,4 +737,4 @@ models:
       - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.TestUsageMonitorChannelInput
   QuotaMonitorTemplate:
     model:
-      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.QuotaMonitorTemplate
+      - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.ChannelTemplate
