@@ -19,6 +19,7 @@ const (
 	FieldFormatText       FieldFormat = "text"
 )
 
+// FieldConfig is deprecated. Use Variable + DisplayField instead.
 type FieldConfig struct {
 	Key          string `json:"key"`
 	Label        string `json:"label"`
@@ -30,6 +31,65 @@ type FieldConfig struct {
 	GroupIndex   []int  `json:"groupIndex,omitempty"`
 	DisplayOrder int    `json:"displayOrder"`
 	Expression   string `json:"expression,omitempty"`
+}
+
+// Variable defines how to extract a value from an API response.
+type Variable struct {
+	Key        string `json:"key"`
+	Path       string `json:"path"`
+	Type       string `json:"type"` // "jsonpath" | "regex"
+	GroupIndex []int  `json:"groupIndex,omitempty"`
+}
+
+// DisplayField defines how a value is shown on a monitor card.
+type DisplayField struct {
+	Key          string `json:"key"`
+	Label        string `json:"label"`
+	ValueRef     string `json:"valueRef"`               // variable key or expression like "${used}/${total}*100"
+	Format       string `json:"format"`                  // "percentage" | "fraction" | "number" | "datetime" | "text"
+	Unit         string `json:"unit,omitempty"`
+	TotalRef     string `json:"totalRef,omitempty"`      // variable key for denominator
+	DisplayOrder int    `json:"displayOrder"`
+	Badge        string `json:"badge,omitempty"`         // badge style key, e.g. "level", "plan"
+	BadgePresets string `json:"badgePresets,omitempty"`  // JSON map of value->gradient, e.g. '{"lite":"sapphire","pro":"rosegold"}'
+}
+
+// VariablesFromFieldConfigs converts deprecated FieldConfigs to Variables.
+func VariablesFromFieldConfigs(fcs []FieldConfig) []Variable {
+	vars := make([]Variable, 0, len(fcs))
+	for _, fc := range fcs {
+		if fc.Path == "" {
+			continue
+		}
+		vars = append(vars, Variable{
+			Key:        fc.Key,
+			Path:       fc.Path,
+			Type:       fc.Type,
+			GroupIndex: fc.GroupIndex,
+		})
+	}
+	return vars
+}
+
+// DisplayFieldsFromFieldConfigs converts deprecated FieldConfigs to DisplayFields.
+func DisplayFieldsFromFieldConfigs(fcs []FieldConfig) []DisplayField {
+	dfs := make([]DisplayField, 0, len(fcs))
+	for _, fc := range fcs {
+		valueRef := fc.Key
+		if fc.Expression != "" {
+			valueRef = fc.Expression
+		}
+		dfs = append(dfs, DisplayField{
+			Key:          fc.Key,
+			Label:        fc.Label,
+			ValueRef:     valueRef,
+			Format:       fc.Format,
+			Unit:         fc.Unit,
+			TotalRef:     fc.TotalPath,
+			DisplayOrder: fc.DisplayOrder,
+		})
+	}
+	return dfs
 }
 
 type ParsedField struct {
