@@ -105,7 +105,6 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
         <SharedFieldRenderer
           fields={channel.parsedData}
           displayFields={channel.displayFields ?? undefined}
-          variant="card"
         />
       )}
 

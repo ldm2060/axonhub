@@ -2,7 +2,8 @@ import { Loader2, RefreshCw, Battery, BatteryLow, BatteryMedium, BatteryFull, Ba
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useQuotaChannels, type QuotaChannel, type ParsedField } from '@/features/system/data/quotas';
+import { useQuotaChannels, type QuotaChannel } from '@/features/system/data/quotas';
+import type { ParsedField } from '@/features/usage-monitor/data/schema';
 import { useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
 
@@ -111,7 +112,6 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
         <SharedFieldRenderer
           fields={channel.parsedData}
           displayFields={channel.displayFields}
-          variant="popup"
         />
       )}
     </div>

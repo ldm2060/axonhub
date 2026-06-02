@@ -5,7 +5,6 @@ import { BadgeDisplay } from './badge-display';
 interface SharedFieldRendererProps {
   fields: ParsedField[];
   displayFields?: DisplayField[];
-  variant: 'card' | 'popup';
 }
 
 function formatCompactNumber(value: number): string {
@@ -104,45 +103,14 @@ function ProgressBar({ percentage }: { percentage: number }) {
 function FieldGroup({
   group,
   index,
-  variant,
   t,
 }: {
   group: { pct: ParsedField; reset?: ParsedField };
   index: number;
-  variant: 'card' | 'popup';
   t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   const pct = group.pct.percent ?? 0;
-  const valueStr = group.pct.value != null ? formatCompactNumber(Number(group.pct.value)) : null;
-  const totalStr = group.pct.total != null ? formatCompactNumber(Number(group.pct.total)) : null;
-  const unit = group.pct.unit ?? '';
 
-  const detailLine = valueStr != null && totalStr != null
-    ? `${valueStr} / ${totalStr} ${unit}`
-    : valueStr != null
-      ? `${valueStr} ${unit}`
-      : `${Math.round(pct)}% ${unit}`;
-
-  if (variant === 'popup') {
-    return (
-      <div className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-2.5' : 'space-y-1.5'}>
-        <div className='space-y-1'>
-          <div className='flex items-center justify-between text-xs'>
-            <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
-            <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
-          </div>
-          <ProgressBar percentage={pct} />
-        </div>
-        {group.reset && (
-          <div className='text-muted-foreground text-right text-[11px]'>
-            {formatRelativeTime(group.reset.value, t)}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Card variant
   return (
     <div className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-2.5' : 'space-y-1.5'}>
       <div className='space-y-1'>
@@ -151,7 +119,6 @@ function FieldGroup({
           <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
         </div>
         <ProgressBar percentage={pct} />
-        <div className='text-xs text-muted-foreground'>{detailLine}</div>
       </div>
       {group.reset && (
         <div className='text-muted-foreground text-right text-[11px]'>
@@ -162,39 +129,26 @@ function FieldGroup({
   );
 }
 
-function NumberField({ field, variant }: { field: ParsedField; variant: 'card' | 'popup' }) {
+function NumberField({ field }: { field: ParsedField }) {
   const valueStr = field.value != null ? Number(field.value).toLocaleString() : '?';
   const unit = field.unit ?? '';
 
-  if (variant === 'popup') {
-    return (
-      <div className='text-xs'>
-        <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
-        <span className='text-foreground font-medium'>{valueStr} {unit}</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-0.5">
-      <div className="text-sm text-muted-foreground">{field.label}</div>
-      <div className="text-sm">{valueStr} {unit}</div>
+    <div className='text-xs'>
+      <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
+      <span className='text-foreground font-medium'>{valueStr} {unit}</span>
     </div>
   );
 }
 
-function DatetimeField({ field, variant, t }: { field: ParsedField; variant: 'card' | 'popup'; t: (key: string, params?: Record<string, unknown>) => string }) {
+function DatetimeField({ field, t }: { field: ParsedField; t: (key: string, params?: Record<string, unknown>) => string }) {
   if (field.value == null) {
-    return (
-      <div className={variant === 'popup' ? 'text-xs text-muted-foreground' : 'text-sm text-muted-foreground'}>--</div>
-    );
+    return <div className='text-xs text-muted-foreground'>--</div>;
   }
 
   const date = new Date(field.value);
   if (isNaN(date.getTime())) {
-    return (
-      <div className={variant === 'popup' ? 'text-xs' : 'text-sm'}>{String(field.value)}</div>
-    );
+    return <div className='text-xs'>{String(field.value)}</div>;
   }
 
   const now = Date.now();
@@ -221,52 +175,30 @@ function DatetimeField({ field, variant, t }: { field: ParsedField; variant: 'ca
     }
   }
 
-  if (variant === 'popup') {
-    return (
-      <div className='text-xs'>
-        <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
-        <span className='text-foreground'>{timeText}</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-0.5">
-      <div className="text-sm text-muted-foreground">{field.label}</div>
-      <div className="text-sm">{timeText}</div>
+    <div className='text-xs'>
+      <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
+      <span className='text-foreground'>{timeText}</span>
     </div>
   );
 }
 
-function TextField({ field, displayField, variant }: { field: ParsedField; displayField?: DisplayField; variant: 'card' | 'popup' }) {
+function TextField({ field, displayField }: { field: ParsedField; displayField?: DisplayField }) {
   const textValue = String(field.value ?? '--');
 
-  if (variant === 'popup') {
-    return (
-      <div className='text-xs'>
-        <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
-        {displayField?.badge ? (
-          <BadgeDisplay value={textValue} badge={displayField.badge} badgePresets={displayField.badgePresets} />
-        ) : (
-          <span className='text-foreground'>{textValue}</span>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-0.5">
-      <div className="text-sm text-muted-foreground">{field.label}</div>
+    <div className='text-xs'>
+      <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
       {displayField?.badge ? (
         <BadgeDisplay value={textValue} badge={displayField.badge} badgePresets={displayField.badgePresets} />
       ) : (
-        <div className="text-sm">{textValue}</div>
+        <span className='text-foreground'>{textValue}</span>
       )}
     </div>
   );
 }
 
-export function SharedFieldRenderer({ fields, displayFields, variant }: SharedFieldRendererProps) {
+export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRendererProps) {
   const { t } = useTranslation();
 
   if (!fields || fields.length === 0) return null;
@@ -289,7 +221,7 @@ export function SharedFieldRenderer({ fields, displayFields, variant }: SharedFi
       {fieldGroups.length > 0 && (
         <div className='space-y-2'>
           {fieldGroups.map((group, idx) => (
-            <FieldGroup key={group.pct.key} group={group} index={idx} variant={variant} t={t} />
+            <FieldGroup key={group.pct.key} group={group} index={idx} t={t} />
           ))}
         </div>
       )}
@@ -302,23 +234,20 @@ export function SharedFieldRenderer({ fields, displayFields, variant }: SharedFi
 
             if (field.error) {
               return (
-                <div key={field.key} className="space-y-0.5">
-                  <div className="text-sm text-muted-foreground">{field.label}</div>
-                  <div className="text-xs text-red-500">
-                    {'⚠'} {t('usageMonitor.parseFailed')}: {field.error}
-                  </div>
+                <div key={field.key} className="text-xs text-red-500">
+                  {'⚠'} {t('usageMonitor.parseFailed')}: {field.error}
                 </div>
               );
             }
 
             switch (field.format) {
               case 'number':
-                return <NumberField key={field.key} field={field} variant={variant} />;
+                return <NumberField key={field.key} field={field} />;
               case 'datetime':
-                return <DatetimeField key={field.key} field={field} variant={variant} t={t} />;
+                return <DatetimeField key={field.key} field={field} t={t} />;
               case 'text':
               default:
-                return <TextField key={field.key} field={field} displayField={displayField} variant={variant} />;
+                return <TextField key={field.key} field={field} displayField={displayField} />;
             }
           })}
         </div>

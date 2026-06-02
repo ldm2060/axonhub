@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
+import type { ParsedField, DisplayField } from '@/features/usage-monitor/data/schema';
 
 const CHECK_PROVIDER_QUOTAS_QUERY = `
   mutation CheckProviderQuotas {
@@ -10,31 +11,6 @@ const CHECK_PROVIDER_QUOTAS_QUERY = `
 export async function checkProviderQuotas() {
   return graphqlRequest(CHECK_PROVIDER_QUOTAS_QUERY);
 }
-
-/** A parsed field value returned from the usage monitor channel. */
-export type ParsedField = {
-  key: string;
-  label: string;
-  value: string | null;
-  total: string | null | undefined;
-  percent: number | undefined;
-  unit: string | undefined;
-  format: string;
-  error: string | null | undefined;
-};
-
-/** Display field metadata for badge rendering. */
-export type DisplayField = {
-  key: string;
-  label: string;
-  valueRef: string;
-  format: string;
-  unit?: string;
-  totalRef?: string;
-  displayOrder: number;
-  badge?: string;
-  badgePresets?: string;
-};
 
 /** Simplified quota channel shape for badge rendering. */
 export type QuotaChannel = {
