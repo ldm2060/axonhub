@@ -115,7 +115,7 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "weekly_tokens_pct", Label: "Weekly Tokens Used %", ValueRef: "weekly_tokens_pct", Format: "percentage", DisplayOrder: 0},
 			{Key: "daily_tokens_pct", Label: "Daily Tokens Used %", ValueRef: "daily_tokens_pct", Format: "percentage", DisplayOrder: 1},
 			{Key: "daily_images_pct", Label: "Daily Images Used %", ValueRef: "daily_images_pct", Format: "percentage", DisplayOrder: 2},
-			{Key: "state", Label: "State", ValueRef: "state", Format: "text", DisplayOrder: 3, Badge: "state", BadgePresets: `{"active":"sapphire","expired":"rosegold","cancelled":"rosegold"}`},
+			{Key: "state", Label: "State", ValueRef: "state", Format: "text", DisplayOrder: 3, Badge: "state", BadgePresets: `{"active":"sapphire","expired":"rosegold","canceled":"rosegold"}`},
 		},
 	},
 	{
