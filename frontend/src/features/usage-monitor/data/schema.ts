@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const fieldConfigSchema = z.object({
   key: z.string(),
   label: z.string(),
-  path: z.string(),
-  type: z.enum(['jsonpath', 'regex']),
+  path: z.string().optional(),
+  type: z.enum(['jsonpath', 'regex']).optional(),
   format: z.enum(['percentage', 'fraction', 'number', 'datetime', 'text']),
   totalPath: z.string().optional().nullable(),
   unit: z.string().optional().nullable(),
