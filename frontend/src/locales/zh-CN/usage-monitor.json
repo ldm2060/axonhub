@@ -59,5 +59,9 @@
   "usageMonitor.apiKeyPlaceholder": "输入你的 API 密钥",
   "usageMonitor.templateFields": "解析字段",
   "usageMonitor.templateFieldsHint": "这些字段由模板预配置",
-  "usageMonitor.selectTemplate": "选择提供商模板"
+  "usageMonitor.selectTemplate": "选择提供商模板",
+  "usageMonitor.variable.label": "变量",
+  "usageMonitor.variable.key": "键名",
+  "usageMonitor.addVariable": "添加变量",
+  "usageMonitor.deleteVariable": "删除变量"
 }

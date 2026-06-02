@@ -59,5 +59,9 @@
   "usageMonitor.apiKeyPlaceholder": "Enter your API key",
   "usageMonitor.templateFields": "Parsed Fields",
   "usageMonitor.templateFieldsHint": "These fields are pre-configured by the template",
-  "usageMonitor.selectTemplate": "Select Provider Template"
+  "usageMonitor.selectTemplate": "Select Provider Template",
+  "usageMonitor.variable.label": "Variable",
+  "usageMonitor.variable.key": "Key",
+  "usageMonitor.addVariable": "Add Variable",
+  "usageMonitor.deleteVariable": "Delete Variable"
 }
