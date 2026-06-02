@@ -383,14 +383,7 @@ type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func structSliceToMapSlice[T any](in []T) []map[string]any {
+func structSliceToMapSlice[T any](in []T) []map[string]any {
 	out := make([]map[string]any, len(in))
 	for i, v := range in {
 		raw, err := json.Marshal(v)
@@ -405,6 +398,7 @@ type updateUsageMonitorChannelInputResolver struct{ *Resolver }
 	}
 	return out
 }
+
 func mapSliceToStructSlice[T any](in []map[string]any) []*T {
 	out := make([]*T, len(in))
 	for i, m := range in {
@@ -420,4 +414,3 @@ func mapSliceToStructSlice[T any](in []map[string]any) []*T {
 	}
 	return out
 }
-*/

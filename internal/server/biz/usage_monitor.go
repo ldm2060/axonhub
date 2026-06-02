@@ -31,6 +31,247 @@ func assembleHeadersFromAPIKey(apiKey string, headerFormat string) map[string]an
 	}
 }
 
+// convertMapSliceToVariables converts []map[string]any (DB storage) to []Variable.
+func convertMapSliceToVariables(maps []map[string]any) []usage_monitor.Variable {
+	result := make([]usage_monitor.Variable, 0, len(maps))
+	for _, m := range maps {
+		v := usage_monitor.Variable{}
+		if key, ok := m["key"].(string); ok {
+			v.Key = key
+		}
+		if path, ok := m["path"].(string); ok {
+			v.Path = path
+		}
+		if typ, ok := m["type"].(string); ok {
+			v.Type = typ
+		}
+		if gi, ok := m["groupIndex"]; ok {
+			if arr, ok := gi.([]any); ok {
+				for _, item := range arr {
+					if n, ok := item.(float64); ok {
+						v.GroupIndex = append(v.GroupIndex, int(n))
+					} else if n, ok := item.(int); ok {
+						v.GroupIndex = append(v.GroupIndex, n)
+					}
+				}
+			}
+		}
+		result = append(result, v)
+	}
+	return result
+}
+
+// convertMapSliceToDisplayFields converts []map[string]any (DB storage) to []DisplayField.
+func convertMapSliceToDisplayFields(maps []map[string]any) []usage_monitor.DisplayField {
+	result := make([]usage_monitor.DisplayField, 0, len(maps))
+	for _, m := range maps {
+		d := usage_monitor.DisplayField{}
+		if key, ok := m["key"].(string); ok {
+			d.Key = key
+		}
+		if label, ok := m["label"].(string); ok {
+			d.Label = label
+		}
+		if ref, ok := m["valueRef"].(string); ok {
+			d.ValueRef = ref
+		}
+		if format, ok := m["format"].(string); ok {
+			d.Format = format
+		}
+		if unit, ok := m["unit"].(string); ok {
+			d.Unit = unit
+		}
+		if totalRef, ok := m["totalRef"].(string); ok {
+			d.TotalRef = totalRef
+		}
+		if order, ok := m["displayOrder"]; ok {
+			if n, ok := order.(float64); ok {
+				d.DisplayOrder = int(n)
+			} else if n, ok := order.(int); ok {
+				d.DisplayOrder = n
+			}
+		}
+		if badge, ok := m["badge"].(string); ok {
+			d.Badge = badge
+		}
+		if presets, ok := m["badgePresets"].(string); ok {
+			d.BadgePresets = presets
+		}
+		result = append(result, d)
+	}
+	return result
+}
+
+// convertMapSliceToFieldConfigs converts []map[string]any (legacy DB storage) to []FieldConfig.
+func convertMapSliceToFieldConfigs(maps []map[string]any) []usage_monitor.FieldConfig {
+	result := make([]usage_monitor.FieldConfig, 0, len(maps))
+	for _, f := range maps {
+		fc := usage_monitor.FieldConfig{}
+		if v, ok := f["key"].(string); ok {
+			fc.Key = v
+		}
+		if v, ok := f["label"].(string); ok {
+			fc.Label = v
+		}
+		if v, ok := f["path"].(string); ok {
+			fc.Path = v
+		}
+		if v, ok := f["type"].(string); ok {
+			fc.Type = v
+		}
+		if v, ok := f["format"].(string); ok {
+			fc.Format = v
+		}
+		if v, ok := f["totalPath"].(string); ok {
+			fc.TotalPath = v
+		}
+		if v, ok := f["unit"].(string); ok {
+			fc.Unit = v
+		}
+		if v, ok := f["displayOrder"]; ok {
+			if n, ok := v.(float64); ok {
+				fc.DisplayOrder = int(n)
+			} else if n, ok := v.(int); ok {
+				fc.DisplayOrder = n
+			}
+		}
+		if v, ok := f["groupIndex"]; ok {
+			if arr, ok := v.([]any); ok {
+				for _, item := range arr {
+					if n, ok := item.(float64); ok {
+						fc.GroupIndex = append(fc.GroupIndex, int(n))
+					} else if n, ok := item.(int); ok {
+						fc.GroupIndex = append(fc.GroupIndex, n)
+					}
+				}
+			}
+		}
+		if v, ok := f["expression"].(string); ok {
+			fc.Expression = v
+		}
+		result = append(result, fc)
+	}
+	return result
+}
+
+// convertVariablesToMapSlice converts []Variable to []map[string]any for DB storage.
+func convertVariablesToMapSlice(vars []usage_monitor.Variable) []map[string]any {
+	result := make([]map[string]any, 0, len(vars))
+	for _, v := range vars {
+		m := map[string]any{
+			"key":  v.Key,
+			"path": v.Path,
+			"type": v.Type,
+		}
+		if len(v.GroupIndex) > 0 {
+			m["groupIndex"] = v.GroupIndex
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+// convertDisplayFieldsToMapSlice converts []DisplayField to []map[string]any for DB storage.
+func convertDisplayFieldsToMapSlice(dfs []usage_monitor.DisplayField) []map[string]any {
+	result := make([]map[string]any, 0, len(dfs))
+	for _, d := range dfs {
+		m := map[string]any{
+			"key":          d.Key,
+			"label":        d.Label,
+			"valueRef":     d.ValueRef,
+			"format":       d.Format,
+			"displayOrder": d.DisplayOrder,
+		}
+		if d.Unit != "" {
+			m["unit"] = d.Unit
+		}
+		if d.TotalRef != "" {
+			m["totalRef"] = d.TotalRef
+		}
+		if d.Badge != "" {
+			m["badge"] = d.Badge
+		}
+		if d.BadgePresets != "" {
+			m["badgePresets"] = d.BadgePresets
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+// convertFieldConfigsToMapSlice converts []FieldConfig (legacy) to []map[string]any for DB storage.
+func convertFieldConfigsToMapSlice(fcs []usage_monitor.FieldConfig) []map[string]any {
+	result := make([]map[string]any, 0, len(fcs))
+	for _, fc := range fcs {
+		m := map[string]any{
+			"key":          fc.Key,
+			"label":        fc.Label,
+			"path":         fc.Path,
+			"type":         fc.Type,
+			"format":       fc.Format,
+			"displayOrder": fc.DisplayOrder,
+		}
+		if fc.TotalPath != "" {
+			m["totalPath"] = fc.TotalPath
+		}
+		if fc.Unit != "" {
+			m["unit"] = fc.Unit
+		}
+		if len(fc.GroupIndex) > 0 {
+			m["groupIndex"] = fc.GroupIndex
+		}
+		if fc.Expression != "" {
+			m["expression"] = fc.Expression
+		}
+		result = append(result, m)
+	}
+	return result
+}
+
+// convertNewToLegacyFields converts new Variables + DisplayFields back to legacy []map[string]any Fields format.
+// This enables dual-write so that older code reading the fields column still works during migration.
+func convertNewToLegacyFields(variablesMapSlice []map[string]any, displayFieldsMapSlice []map[string]any) []map[string]any {
+	vars := convertMapSliceToVariables(variablesMapSlice)
+	dfs := convertMapSliceToDisplayFields(displayFieldsMapSlice)
+
+	// Build a map from variable key to variable for lookup
+	varMap := make(map[string]usage_monitor.Variable, len(vars))
+	for _, v := range vars {
+		varMap[v.Key] = v
+	}
+
+	// Convert DisplayFields back to FieldConfig format
+	result := make([]map[string]any, 0, len(dfs))
+	for _, df := range dfs {
+		fc := map[string]any{
+			"key":          df.Key,
+			"label":        df.Label,
+			"format":       df.Format,
+			"displayOrder": df.DisplayOrder,
+		}
+		if df.Unit != "" {
+			fc["unit"] = df.Unit
+		}
+		if df.TotalRef != "" {
+			fc["totalPath"] = df.TotalRef
+		}
+		if df.ValueRef != "" && df.ValueRef != df.Key {
+			fc["expression"] = df.ValueRef
+		}
+
+		// Find matching variable for path/type
+		if v, ok := varMap[df.Key]; ok {
+			fc["path"] = v.Path
+			fc["type"] = v.Type
+			if len(v.GroupIndex) > 0 {
+				fc["groupIndex"] = v.GroupIndex
+			}
+		}
+		result = append(result, fc)
+	}
+	return result
+}
+
 type UsageMonitorServiceParams struct {
 	fx.In
 
@@ -174,78 +415,66 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		}
 	}
 
-	// Convert fields from []FieldConfig to []map[string]any
-	fields := make([]map[string]any, 0, len(input.Fields))
-	for _, f := range input.Fields {
-		fieldMap := map[string]any{
-			"key":          f.Key,
-			"label":        f.Label,
-			"path":         f.Path,
-			"type":         f.Type,
-			"format":       f.Format,
-			"displayOrder": f.DisplayOrder,
-		}
-		if f.TotalPath != "" {
-			fieldMap["totalPath"] = f.TotalPath
-		}
-		if f.Unit != "" {
-			fieldMap["unit"] = f.Unit
-		}
-		if len(f.GroupIndex) > 0 {
-			fieldMap["groupIndex"] = f.GroupIndex
-		}
-		fields = append(fields, fieldMap)
-	}
+	// Source-aware validation and auto-fill
+	var variablesMapSlice []map[string]any
+	var displayFieldsMapSlice []map[string]any
 
-	// Handle source=template: auto-fill from template registry
-	if input.Source == "template" {
+	switch input.Source {
+	case "template":
 		if input.ProviderType == nil || *input.ProviderType == "" {
 			return nil, fmt.Errorf("providerType is required when source=template")
 		}
 		if input.ApiKey == nil || *input.ApiKey == "" {
 			return nil, fmt.Errorf("apiKey is required when source=template")
 		}
-		tmpl := usage_monitor.GetQuotaMonitorTemplate(*input.ProviderType)
+		tmpl := usage_monitor.GetChannelTemplate(*input.ProviderType)
 		if tmpl == nil {
 			return nil, fmt.Errorf("unknown provider template: %s", *input.ProviderType)
 		}
+		// Template provides API config
 		input.ApiURL = tmpl.ApiURL
 		input.ApiMethod = tmpl.ApiMethod
 		if tmpl.ApiBody != "" {
 			input.ApiBody = &tmpl.ApiBody
 		}
-		input.Fields = tmpl.Fields
-
-		// Assemble headers from apiKey
-		apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
-		headersBytes, _ := json.Marshal(apiHeaders)
-		input.ApiHeaders = string(headersBytes)
-
-		// Re-convert template fields to []map[string]any
-		fields = make([]map[string]any, 0, len(input.Fields))
-		for _, f := range input.Fields {
-			fieldMap := map[string]any{
-				"key":          f.Key,
-				"label":        f.Label,
-				"path":         f.Path,
-				"type":         f.Type,
-				"format":       f.Format,
-				"displayOrder": f.DisplayOrder,
-			}
-			if f.TotalPath != "" {
-				fieldMap["totalPath"] = f.TotalPath
-			}
-			if f.Unit != "" {
-				fieldMap["unit"] = f.Unit
-			}
-			if len(f.GroupIndex) > 0 {
-				fieldMap["groupIndex"] = f.GroupIndex
-			}
-			if f.Expression != "" {
-				fieldMap["expression"] = f.Expression
-			}
-			fields = append(fields, fieldMap)
+		// Template provides variables/displayFields; user may override displayFields
+		if len(input.Variables) == 0 {
+			input.Variables = tmpl.Variables
 		}
+		if len(input.DisplayFields) == 0 {
+			input.DisplayFields = tmpl.DisplayFields
+		}
+		// Assemble headers from apiKey + template headerFormat
+		apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+
+	case "custom":
+		if input.ApiURL == "" {
+			return nil, fmt.Errorf("apiUrl is required when source=custom")
+		}
+		if len(input.Variables) == 0 && len(input.Fields) == 0 {
+			return nil, fmt.Errorf("variables or fields are required when source=custom")
+		}
+		if len(input.DisplayFields) == 0 && len(input.Fields) == 0 {
+			return nil, fmt.Errorf("displayFields or fields are required when source=custom")
+		}
+
+	case "builtin":
+		if input.ChannelID == nil || *input.ChannelID == "" {
+			return nil, fmt.Errorf("channelId is required when source=builtin")
+		}
+	}
+
+	// Convert Variables and DisplayFields to []map[string]any for DB storage
+	variablesMapSlice = convertVariablesToMapSlice(input.Variables)
+	displayFieldsMapSlice = convertDisplayFieldsToMapSlice(input.DisplayFields)
+
+	// Dual-write: also populate legacy fields column from new columns
+	var fieldsMapSlice []map[string]any
+	if len(variablesMapSlice) > 0 && len(displayFieldsMapSlice) > 0 {
+		fieldsMapSlice = convertNewToLegacyFields(variablesMapSlice, displayFieldsMapSlice)
+	} else {
+		// Fall back to converting from legacy FieldConfig input
+		fieldsMapSlice = convertFieldConfigsToMapSlice(input.Fields)
 	}
 
 	create := client.UsageMonitorChannel.Create().
@@ -255,7 +484,9 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		SetAPIMethod(usagemonitorchannel.APIMethod(input.ApiMethod)).
 		SetAPIHeaders(apiHeaders).
 		SetPollInterval(input.PollInterval).
-		SetFields(fields).
+		SetFields(fieldsMapSlice).
+		SetVariables(variablesMapSlice).
+		SetDisplayFields(displayFieldsMapSlice).
 		SetStatus(usagemonitorchannel.StatusActive)
 
 	if input.ChannelID != nil && *input.ChannelID != "" {
@@ -301,6 +532,12 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input usage_monitor.UpdateUsageMonitorChannelInput) (*ent.UsageMonitorChannel, error) {
 	client := svc.entFromContext(ctx)
 
+	// Load existing channel for source-aware decisions
+	existing, err := svc.GetChannel(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get usage monitor channel: %w", err)
+	}
+
 	update := client.UsageMonitorChannel.UpdateOneID(id)
 
 	if input.Name != nil {
@@ -331,9 +568,8 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 	if input.ApiKey != nil {
 		update.SetAPIKey(*input.ApiKey)
 		// Re-assemble headers if this is a template channel
-		existing, err := svc.GetChannel(ctx, id)
-		if err == nil && existing.Source == usagemonitorchannel.SourceTemplate {
-			tmpl := usage_monitor.GetQuotaMonitorTemplate(string(existing.ProviderType))
+		if existing.Source == usagemonitorchannel.SourceTemplate {
+			tmpl := usage_monitor.GetChannelTemplate(string(existing.ProviderType))
 			if tmpl != nil {
 				apiHeaders := assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
 				update.SetAPIHeaders(apiHeaders)
@@ -349,32 +585,44 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 		update.SetPollInterval(*input.PollInterval)
 	}
 
-	if input.Fields != nil {
-		fields := make([]map[string]any, 0, len(*input.Fields))
-		for _, f := range *input.Fields {
-			fieldMap := map[string]any{
-				"key":          f.Key,
-				"label":        f.Label,
-				"path":         f.Path,
-				"type":         f.Type,
-				"format":       f.Format,
-				"displayOrder": f.DisplayOrder,
-			}
-			if f.TotalPath != "" {
-				fieldMap["totalPath"] = f.TotalPath
-			}
-			if f.Unit != "" {
-				fieldMap["unit"] = f.Unit
-			}
-			if len(f.GroupIndex) > 0 {
-				fieldMap["groupIndex"] = f.GroupIndex
-			}
-			if f.Expression != "" {
-				fieldMap["expression"] = f.Expression
-			}
-			fields = append(fields, fieldMap)
+	// Source-aware handling of Variables and DisplayFields
+	// Template channels: variables are read-only (owned by the template)
+	if existing.Source != usagemonitorchannel.SourceTemplate {
+		if input.Variables != nil {
+			varsMapSlice := convertVariablesToMapSlice(*input.Variables)
+			update.SetVariables(varsMapSlice)
 		}
-		update.SetFields(fields)
+	}
+
+	// DisplayFields are always editable
+	if input.DisplayFields != nil {
+		dfsMapSlice := convertDisplayFieldsToMapSlice(*input.DisplayFields)
+		update.SetDisplayFields(dfsMapSlice)
+	}
+
+	// Dual-write: if variables or displayFields changed, also update legacy fields
+	if input.Variables != nil || input.DisplayFields != nil {
+		// Determine effective variables and displayFields for the legacy conversion
+		var effectiveVars []map[string]any
+		var effectiveDFs []map[string]any
+
+		if input.Variables != nil {
+			effectiveVars = convertVariablesToMapSlice(*input.Variables)
+		} else {
+			effectiveVars = existing.Variables
+		}
+
+		if input.DisplayFields != nil {
+			effectiveDFs = convertDisplayFieldsToMapSlice(*input.DisplayFields)
+		} else {
+			effectiveDFs = existing.DisplayFields
+		}
+
+		legacyFields := convertNewToLegacyFields(effectiveVars, effectiveDFs)
+		update.SetFields(legacyFields)
+	} else if input.Fields != nil {
+		// Legacy path: update fields column directly if only fields provided
+		update.SetFields(convertFieldConfigsToMapSlice(*input.Fields))
 	}
 
 	if input.Status != nil {
@@ -473,60 +721,21 @@ func (svc *UsageMonitorService) runPollAll(ctx context.Context) {
 }
 
 func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMonitorChannel) {
-	// Convert stored fields back to []FieldConfig
-	fieldConfigs := make([]usage_monitor.FieldConfig, 0, len(ch.Fields))
-	for _, f := range ch.Fields {
-		fc := usage_monitor.FieldConfig{}
-		if v, ok := f["key"].(string); ok {
-			fc.Key = v
-		}
-		if v, ok := f["label"].(string); ok {
-			fc.Label = v
-		}
-		if v, ok := f["path"].(string); ok {
-			fc.Path = v
-		}
-		if v, ok := f["type"].(string); ok {
-			fc.Type = v
-		}
-		if v, ok := f["format"].(string); ok {
-			fc.Format = v
-		}
-		if v, ok := f["totalPath"].(string); ok {
-			fc.TotalPath = v
-		}
-		if v, ok := f["unit"].(string); ok {
-			fc.Unit = v
-		}
-		if v, ok := f["displayOrder"]; ok {
-			if n, ok := v.(float64); ok {
-				fc.DisplayOrder = int(n)
-			} else if n, ok := v.(int); ok {
-				fc.DisplayOrder = n
-			}
-		}
-		if v, ok := f["groupIndex"]; ok {
-			if arr, ok := v.([]any); ok {
-				for _, item := range arr {
-					if n, ok := item.(float64); ok {
-						fc.GroupIndex = append(fc.GroupIndex, int(n))
-					} else if n, ok := item.(int); ok {
-						fc.GroupIndex = append(fc.GroupIndex, n)
-					}
-				}
-			} else if arr, ok := v.([]int); ok {
-				fc.GroupIndex = arr
-			}
-			if v, ok := f["expression"].(string); ok {
-				fc.Expression = v
-			}
-		}
-		fieldConfigs = append(fieldConfigs, fc)
-	}
-
 	apiBody := ch.APIBody
 
-	pollData, err := svc.genericChecker.Poll(ctx, ch.APIURL, string(ch.APIMethod), ch.APIHeaders, apiBody, fieldConfigs)
+	var pollData *usage_monitor.PollData
+	var err error
+
+	// Prefer new columns (Variables + DisplayFields) if populated
+	if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
+		vars := convertMapSliceToVariables(ch.Variables)
+		dfs := convertMapSliceToDisplayFields(ch.DisplayFields)
+		pollData, err = svc.genericChecker.PollV2(ctx, ch.APIURL, string(ch.APIMethod), ch.APIHeaders, apiBody, vars, dfs)
+	} else {
+		// Fall back to legacy Fields column
+		fieldConfigs := convertMapSliceToFieldConfigs(ch.Fields)
+		pollData, err = svc.genericChecker.Poll(ctx, ch.APIURL, string(ch.APIMethod), ch.APIHeaders, apiBody, fieldConfigs)
+	}
 	if err != nil {
 		log.Error(ctx, "Failed to poll usage monitor channel",
 			log.Int("channel_id", ch.ID),
