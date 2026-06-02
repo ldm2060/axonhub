@@ -52,7 +52,7 @@ var channelTemplates = []ChannelTemplate{
 		DisplayFields: []DisplayField{
 			{Key: "5h_utilization", Label: "5h Window Utilization", ValueRef: "5h_utilization", Format: "percentage", DisplayOrder: 0},
 			{Key: "7d_utilization", Label: "7d Window Utilization", ValueRef: "7d_utilization", Format: "percentage", DisplayOrder: 1},
-			{Key: "unified_status", Label: "Unified Status", ValueRef: "unified_status", Format: "text", DisplayOrder: 2},
+			{Key: "unified_status", Label: "Unified Status", ValueRef: "unified_status", Format: "text", DisplayOrder: 2, Badge: "status", BadgePresets: `{"closed":"sapphire","paused":"rosegold"}`},
 		},
 	},
 	{
@@ -73,7 +73,7 @@ var channelTemplates = []ChannelTemplate{
 		DisplayFields: []DisplayField{
 			{Key: "primary_used_pct", Label: "Primary Window Used %", ValueRef: "primary_used_pct", Format: "percentage", DisplayOrder: 0},
 			{Key: "primary_reset", Label: "Primary Reset At", ValueRef: "primary_reset", Format: "datetime", DisplayOrder: 1},
-			{Key: "plan_type", Label: "Plan Type", ValueRef: "plan_type", Format: "text", DisplayOrder: 2},
+			{Key: "plan_type", Label: "Plan Type", ValueRef: "plan_type", Format: "text", DisplayOrder: 2, Badge: "plan", BadgePresets: `{"free":"sapphire","plus":"rosegold","pro":"champagne","team":"champagne"}`},
 		},
 	},
 	{
@@ -115,7 +115,7 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "weekly_tokens_pct", Label: "Weekly Tokens Used %", ValueRef: "weekly_tokens_pct", Format: "percentage", DisplayOrder: 0},
 			{Key: "daily_tokens_pct", Label: "Daily Tokens Used %", ValueRef: "daily_tokens_pct", Format: "percentage", DisplayOrder: 1},
 			{Key: "daily_images_pct", Label: "Daily Images Used %", ValueRef: "daily_images_pct", Format: "percentage", DisplayOrder: 2},
-			{Key: "state", Label: "State", ValueRef: "state", Format: "text", DisplayOrder: 3},
+			{Key: "state", Label: "State", ValueRef: "state", Format: "text", DisplayOrder: 3, Badge: "state", BadgePresets: `{"active":"sapphire","expired":"rosegold","cancelled":"rosegold"}`},
 		},
 	},
 	{
