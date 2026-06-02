@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
-import type { FieldConfig } from './schema';
+import type { FieldConfig, Variable, DisplayField } from './schema';
 
 const QUOTA_MONITOR_TEMPLATES_QUERY = `
   query QuotaMonitorTemplates {
@@ -23,6 +23,23 @@ const QUOTA_MONITOR_TEMPLATES_QUERY = `
         groupIndex
         displayOrder
       }
+      variables {
+        key
+        path
+        type
+        groupIndex
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
+      }
     }
   }
 `;
@@ -36,6 +53,8 @@ export type QuotaMonitorTemplate = {
   headerFormat: string;
   apiBody?: string;
   fields: FieldConfig[];
+  variables: Variable[];
+  displayFields: DisplayField[];
 };
 
 export function useQuotaMonitorTemplates() {

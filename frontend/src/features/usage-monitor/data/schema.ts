@@ -13,6 +13,25 @@ export const fieldConfigSchema = z.object({
   expression: z.string().optional(),
 });
 
+export const variableSchema = z.object({
+  key: z.string(),
+  path: z.string(),
+  type: z.enum(['jsonpath', 'regex']),
+  groupIndex: z.array(z.number()).optional(),
+});
+
+export const displayFieldSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  valueRef: z.string(),
+  format: z.enum(['percentage', 'fraction', 'number', 'datetime', 'text']),
+  unit: z.string().optional(),
+  totalRef: z.string().optional(),
+  displayOrder: z.number(),
+  badge: z.string().optional(),
+  badgePresets: z.string().optional(),
+});
+
 export const parsedFieldSchema = z.object({
   key: z.string(),
   label: z.string(),
@@ -44,6 +63,8 @@ export const usageMonitorChannelSchema = z.object({
   apiBody: z.string().nullable().optional(),
   pollInterval: z.number(),
   fields: z.array(fieldConfigSchema),
+  variables: z.array(variableSchema),
+  displayFields: z.array(displayFieldSchema),
   status: z.enum(['active', 'paused', 'error']),
   lastPollAt: z.string().nullable().optional(),
   parsedData: z.array(parsedFieldSchema).nullable().optional(),
@@ -60,6 +81,27 @@ export const testResultSchema = z.object({
 });
 
 export type FieldConfig = z.infer<typeof fieldConfigSchema>;
+export type Variable = z.infer<typeof variableSchema>;
+export type DisplayField = z.infer<typeof displayFieldSchema>;
 export type ParsedField = z.infer<typeof parsedFieldSchema>;
 export type UsageMonitorChannel = z.infer<typeof usageMonitorChannelSchema>;
 export type TestResult = z.infer<typeof testResultSchema>;
+
+export interface VariableInput {
+  key: string;
+  path: string;
+  type: string;
+  groupIndex?: number[];
+}
+
+export interface DisplayFieldInput {
+  key: string;
+  label: string;
+  valueRef: string;
+  format: string;
+  unit?: string;
+  totalRef?: string;
+  displayOrder: number;
+  badge?: string;
+  badgePresets?: string;
+}

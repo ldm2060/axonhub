@@ -7,6 +7,10 @@ import {
   usageMonitorChannelSchema,
   testResultSchema,
   type FieldConfig,
+  type Variable,
+  type DisplayField,
+  type VariableInput,
+  type DisplayFieldInput,
   type UsageMonitorChannel,
   type TestResult,
 } from './schema';
@@ -32,6 +36,23 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
       apiBody
       pollInterval
       fields
+      variables {
+        key
+        path
+        type
+        groupIndex
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
+      }
       status
       lastPollAt
       lastPollError
@@ -70,6 +91,23 @@ const CREATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       apiBody
       pollInterval
       fields
+      variables {
+        key
+        path
+        type
+        groupIndex
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
+      }
       status
       lastPollAt
       lastPollError
@@ -108,6 +146,23 @@ const UPDATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       apiBody
       pollInterval
       fields
+      variables {
+        key
+        path
+        type
+        groupIndex
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
+      }
       status
       lastPollAt
       lastPollError
@@ -172,6 +227,23 @@ const REFRESH_USAGE_MONITOR_CHANNEL_MUTATION = `
       apiBody
       pollInterval
       fields
+      variables {
+        key
+        path
+        type
+        groupIndex
+      }
+      displayFields {
+        key
+        label
+        valueRef
+        format
+        unit
+        totalRef
+        displayOrder
+        badge
+        badgePresets
+      }
       status
       lastPollAt
       lastPollError
@@ -211,6 +283,8 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     apiBody: raw.apiBody ?? null,
     pollInterval: raw.pollInterval,
     fields: Array.isArray(raw.fields) ? raw.fields : (raw.fields?.items ?? []),
+    variables: raw.variables ?? [],
+    displayFields: raw.displayFields ?? [],
     status: raw.status,
     lastPollAt: raw.lastPollAt ?? null,
     parsedData: raw.parsedData ?? null,
@@ -258,6 +332,8 @@ export type CreateUsageMonitorChannelInput = {
   apiBody?: string;
   pollInterval: number;
   fields: FieldConfig[];
+  variables?: VariableInput[];
+  displayFields?: DisplayFieldInput[];
 };
 
 export function useCreateUsageMonitorChannel() {
@@ -290,6 +366,8 @@ export type UpdateUsageMonitorChannelInput = {
   apiBody?: string;
   pollInterval?: number;
   fields?: FieldConfig[];
+  variables?: VariableInput[];
+  displayFields?: DisplayFieldInput[];
   status?: 'active' | 'paused' | 'error';
   apiKey?: string;
 };
