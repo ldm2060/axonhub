@@ -6,9 +6,9 @@ export const fieldConfigSchema = z.object({
   path: z.string(),
   type: z.enum(['jsonpath', 'regex']),
   format: z.enum(['percentage', 'fraction', 'number', 'datetime', 'text']),
-  totalPath: z.string().optional(),
-  unit: z.string().optional(),
-  groupIndex: z.array(z.number()).optional(),
+  totalPath: z.string().optional().nullable(),
+  unit: z.string().optional().nullable(),
+  groupIndex: z.array(z.number()).optional().nullable(),
   displayOrder: z.number(),
   expression: z.string().optional(),
 });
@@ -17,7 +17,7 @@ export const variableSchema = z.object({
   key: z.string(),
   path: z.string(),
   type: z.enum(['jsonpath', 'regex']),
-  groupIndex: z.array(z.number()).optional(),
+  groupIndex: z.array(z.number()).optional().nullable(),
 });
 
 export const displayFieldSchema = z.object({
@@ -25,11 +25,11 @@ export const displayFieldSchema = z.object({
   label: z.string(),
   valueRef: z.string(),
   format: z.enum(['percentage', 'fraction', 'number', 'datetime', 'text']),
-  unit: z.string().optional(),
-  totalRef: z.string().optional(),
+  unit: z.string().optional().nullable(),
+  totalRef: z.string().optional().nullable(),
   displayOrder: z.number(),
-  badge: z.string().optional(),
-  badgePresets: z.string().optional(),
+  badge: z.string().optional().nullable(),
+  badgePresets: z.string().optional().nullable(),
 });
 
 export const parsedFieldSchema = z.object({
@@ -58,7 +58,7 @@ export const usageMonitorChannelSchema = z.object({
     .nullable()
     .optional(),
   apiUrl: z.string(),
-  apiMethod: z.enum(['GET', 'POST']),
+  apiMethod: z.enum(['GET', 'POST']).nullable(),
   apiHeaders: z.string(),
   apiBody: z.string().nullable().optional(),
   pollInterval: z.number(),
