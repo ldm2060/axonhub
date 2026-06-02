@@ -63,5 +63,14 @@
   "usageMonitor.variable.label": "Variable",
   "usageMonitor.variable.key": "Key",
   "usageMonitor.addVariable": "Add Variable",
-  "usageMonitor.deleteVariable": "Delete Variable"
+  "usageMonitor.deleteVariable": "Delete Variable",
+  "usageMonitor.displayField.label": "Display Field",
+  "usageMonitor.displayField.valueRef": "Value Reference",
+  "usageMonitor.displayField.expression": "Expression...",
+  "usageMonitor.displayField.totalRef": "Total Reference",
+  "usageMonitor.displayField.badgeConfig": "Badge Config",
+  "usageMonitor.displayField.badgeKey": "Badge Key",
+  "usageMonitor.displayField.badgePresets": "Badge Presets",
+  "usageMonitor.addDisplayField": "Add Display Field",
+  "usageMonitor.deleteDisplayField": "Delete Display Field"
 }

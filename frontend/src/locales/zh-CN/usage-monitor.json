@@ -63,5 +63,14 @@
   "usageMonitor.variable.label": "变量",
   "usageMonitor.variable.key": "键名",
   "usageMonitor.addVariable": "添加变量",
-  "usageMonitor.deleteVariable": "删除变量"
+  "usageMonitor.deleteVariable": "删除变量",
+  "usageMonitor.displayField.label": "展示字段",
+  "usageMonitor.displayField.valueRef": "值引用",
+  "usageMonitor.displayField.expression": "表达式...",
+  "usageMonitor.displayField.totalRef": "总量引用",
+  "usageMonitor.displayField.badgeConfig": "铭牌配置",
+  "usageMonitor.displayField.badgeKey": "铭牌键",
+  "usageMonitor.displayField.badgePresets": "铭牌预设",
+  "usageMonitor.addDisplayField": "添加展示字段",
+  "usageMonitor.deleteDisplayField": "删除展示字段"
 }
