@@ -46,6 +46,10 @@ const (
 	FieldPollInterval = "poll_interval"
 	// FieldFields holds the string denoting the fields field in the database.
 	FieldFields = "fields"
+	// FieldVariables holds the string denoting the variables field in the database.
+	FieldVariables = "variables"
+	// FieldDisplayFields holds the string denoting the display_fields field in the database.
+	FieldDisplayFields = "display_fields"
 	// FieldLastPollAt holds the string denoting the last_poll_at field in the database.
 	FieldLastPollAt = "last_poll_at"
 	// FieldLastPollData holds the string denoting the last_poll_data field in the database.
@@ -101,6 +105,8 @@ var Columns = []string{
 	FieldAPIKey,
 	FieldPollInterval,
 	FieldFields,
+	FieldVariables,
+	FieldDisplayFields,
 	FieldLastPollAt,
 	FieldLastPollData,
 	FieldLastPollError,
@@ -154,6 +160,10 @@ var (
 	APIURLValidator func(string) error
 	// DefaultPollInterval holds the default value on creation for the "poll_interval" field.
 	DefaultPollInterval int
+	// DefaultVariables holds the default value on creation for the "variables" field.
+	DefaultVariables []map[string]interface{}
+	// DefaultDisplayFields holds the default value on creation for the "display_fields" field.
+	DefaultDisplayFields []map[string]interface{}
 	// DefaultQuotaReady holds the default value on creation for the "quota_ready" field.
 	DefaultQuotaReady bool
 )

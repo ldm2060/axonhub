@@ -234,6 +234,42 @@ func (_u *UsageMonitorChannelUpdate) AppendFields(v []map[string]interface{}) *U
 	return _u
 }
 
+// SetVariables sets the "variables" field.
+func (_u *UsageMonitorChannelUpdate) SetVariables(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.SetVariables(v)
+	return _u
+}
+
+// AppendVariables appends value to the "variables" field.
+func (_u *UsageMonitorChannelUpdate) AppendVariables(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.AppendVariables(v)
+	return _u
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (_u *UsageMonitorChannelUpdate) ClearVariables() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearVariables()
+	return _u
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (_u *UsageMonitorChannelUpdate) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.SetDisplayFields(v)
+	return _u
+}
+
+// AppendDisplayFields appends value to the "display_fields" field.
+func (_u *UsageMonitorChannelUpdate) AppendDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.AppendDisplayFields(v)
+	return _u
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (_u *UsageMonitorChannelUpdate) ClearDisplayFields() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearDisplayFields()
+	return _u
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (_u *UsageMonitorChannelUpdate) SetLastPollAt(v time.Time) *UsageMonitorChannelUpdate {
 	_u.mutation.SetLastPollAt(v)
@@ -570,6 +606,28 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 			sqljson.Append(u, usagemonitorchannel.FieldFields, value)
 		})
 	}
+	if value, ok := _u.mutation.Variables(); ok {
+		_spec.SetField(usagemonitorchannel.FieldVariables, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedVariables(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldVariables, value)
+		})
+	}
+	if _u.mutation.VariablesCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldVariables, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.DisplayFields(); ok {
+		_spec.SetField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedDisplayFields(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldDisplayFields, value)
+		})
+	}
+	if _u.mutation.DisplayFieldsCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)
 	}
@@ -899,6 +957,42 @@ func (_u *UsageMonitorChannelUpdateOne) SetFields(v []map[string]interface{}) *U
 // AppendFields appends value to the "fields" field.
 func (_u *UsageMonitorChannelUpdateOne) AppendFields(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
 	_u.mutation.AppendFields(v)
+	return _u
+}
+
+// SetVariables sets the "variables" field.
+func (_u *UsageMonitorChannelUpdateOne) SetVariables(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetVariables(v)
+	return _u
+}
+
+// AppendVariables appends value to the "variables" field.
+func (_u *UsageMonitorChannelUpdateOne) AppendVariables(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AppendVariables(v)
+	return _u
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearVariables() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearVariables()
+	return _u
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (_u *UsageMonitorChannelUpdateOne) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetDisplayFields(v)
+	return _u
+}
+
+// AppendDisplayFields appends value to the "display_fields" field.
+func (_u *UsageMonitorChannelUpdateOne) AppendDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AppendDisplayFields(v)
+	return _u
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearDisplayFields() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearDisplayFields()
 	return _u
 }
 
@@ -1267,6 +1361,28 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, usagemonitorchannel.FieldFields, value)
 		})
+	}
+	if value, ok := _u.mutation.Variables(); ok {
+		_spec.SetField(usagemonitorchannel.FieldVariables, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedVariables(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldVariables, value)
+		})
+	}
+	if _u.mutation.VariablesCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldVariables, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.DisplayFields(); ok {
+		_spec.SetField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedDisplayFields(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, usagemonitorchannel.FieldDisplayFields, value)
+		})
+	}
+	if _u.mutation.DisplayFieldsCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)

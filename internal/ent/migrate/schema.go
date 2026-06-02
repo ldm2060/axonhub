@@ -1002,6 +1002,8 @@ var (
 		{Name: "api_key", Type: field.TypeString, Nullable: true},
 		{Name: "poll_interval", Type: field.TypeInt, Default: 300},
 		{Name: "fields", Type: field.TypeJSON},
+		{Name: "variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "display_fields", Type: field.TypeJSON, Nullable: true},
 		{Name: "last_poll_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_poll_data", Type: field.TypeJSON, Nullable: true},
 		{Name: "last_poll_error", Type: field.TypeString, Nullable: true},
@@ -1021,13 +1023,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "usage_monitor_channels_channels_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[22]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[24]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "usage_monitor_channels_users_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[23]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[25]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1036,17 +1038,17 @@ var (
 			{
 				Name:    "usagemonitorchannel_channel_id",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[22]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[24]},
 			},
 			{
 				Name:    "usagemonitorchannel_status",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[17]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[19]},
 			},
 			{
 				Name:    "usagemonitorchannel_quota_status",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[18]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[20]},
 			},
 		},
 	}

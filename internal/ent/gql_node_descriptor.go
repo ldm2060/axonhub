@@ -2827,7 +2827,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageMonitorChannel",
-		Fields: make([]*Field, 21),
+		Fields: make([]*Field, 23),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -2935,10 +2935,26 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 		Name:  "fields",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.LastPollAt); err != nil {
+	if buf, err = json.Marshal(_m.Variables); err != nil {
 		return nil, err
 	}
 	node.Fields[13] = &Field{
+		Type:  "[]map[string]interface {}",
+		Name:  "variables",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.DisplayFields); err != nil {
+		return nil, err
+	}
+	node.Fields[14] = &Field{
+		Type:  "[]map[string]interface {}",
+		Name:  "display_fields",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastPollAt); err != nil {
+		return nil, err
+	}
+	node.Fields[15] = &Field{
 		Type:  "time.Time",
 		Name:  "last_poll_at",
 		Value: string(buf),
@@ -2946,7 +2962,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.LastPollData); err != nil {
 		return nil, err
 	}
-	node.Fields[14] = &Field{
+	node.Fields[16] = &Field{
 		Type:  "map[string]interface {}",
 		Name:  "last_poll_data",
 		Value: string(buf),
@@ -2954,7 +2970,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.LastPollError); err != nil {
 		return nil, err
 	}
-	node.Fields[15] = &Field{
+	node.Fields[17] = &Field{
 		Type:  "string",
 		Name:  "last_poll_error",
 		Value: string(buf),
@@ -2962,7 +2978,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.Status); err != nil {
 		return nil, err
 	}
-	node.Fields[16] = &Field{
+	node.Fields[18] = &Field{
 		Type:  "usagemonitorchannel.Status",
 		Name:  "status",
 		Value: string(buf),
@@ -2970,7 +2986,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.QuotaStatus); err != nil {
 		return nil, err
 	}
-	node.Fields[17] = &Field{
+	node.Fields[19] = &Field{
 		Type:  "usagemonitorchannel.QuotaStatus",
 		Name:  "quota_status",
 		Value: string(buf),
@@ -2978,7 +2994,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.QuotaReady); err != nil {
 		return nil, err
 	}
-	node.Fields[18] = &Field{
+	node.Fields[20] = &Field{
 		Type:  "bool",
 		Name:  "quota_ready",
 		Value: string(buf),
@@ -2986,7 +3002,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.QuotaLimits); err != nil {
 		return nil, err
 	}
-	node.Fields[19] = &Field{
+	node.Fields[21] = &Field{
 		Type:  "[]map[string]interface {}",
 		Name:  "quota_limits",
 		Value: string(buf),
@@ -2994,7 +3010,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	if buf, err = json.Marshal(_m.NextResetAt); err != nil {
 		return nil, err
 	}
-	node.Fields[20] = &Field{
+	node.Fields[22] = &Field{
 		Type:  "time.Time",
 		Name:  "next_reset_at",
 		Value: string(buf),

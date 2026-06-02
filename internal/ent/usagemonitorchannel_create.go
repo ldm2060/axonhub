@@ -180,6 +180,18 @@ func (_c *UsageMonitorChannelCreate) SetFields(v []map[string]interface{}) *Usag
 	return _c
 }
 
+// SetVariables sets the "variables" field.
+func (_c *UsageMonitorChannelCreate) SetVariables(v []map[string]interface{}) *UsageMonitorChannelCreate {
+	_c.mutation.SetVariables(v)
+	return _c
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (_c *UsageMonitorChannelCreate) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelCreate {
+	_c.mutation.SetDisplayFields(v)
+	return _c
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (_c *UsageMonitorChannelCreate) SetLastPollAt(v time.Time) *UsageMonitorChannelCreate {
 	_c.mutation.SetLastPollAt(v)
@@ -355,6 +367,14 @@ func (_c *UsageMonitorChannelCreate) defaults() error {
 		v := usagemonitorchannel.DefaultPollInterval
 		_c.mutation.SetPollInterval(v)
 	}
+	if _, ok := _c.mutation.Variables(); !ok {
+		v := usagemonitorchannel.DefaultVariables
+		_c.mutation.SetVariables(v)
+	}
+	if _, ok := _c.mutation.DisplayFields(); !ok {
+		v := usagemonitorchannel.DefaultDisplayFields
+		_c.mutation.SetDisplayFields(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := usagemonitorchannel.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -511,6 +531,14 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 	if value, ok := _c.mutation.GetFields(); ok {
 		_spec.SetField(usagemonitorchannel.FieldFields, field.TypeJSON, value)
 		_node.Fields = value
+	}
+	if value, ok := _c.mutation.Variables(); ok {
+		_spec.SetField(usagemonitorchannel.FieldVariables, field.TypeJSON, value)
+		_node.Variables = value
+	}
+	if value, ok := _c.mutation.DisplayFields(); ok {
+		_spec.SetField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON, value)
+		_node.DisplayFields = value
 	}
 	if value, ok := _c.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)
@@ -819,6 +847,42 @@ func (u *UsageMonitorChannelUpsert) SetFields(v []map[string]interface{}) *Usage
 // UpdateFields sets the "fields" field to the value that was provided on create.
 func (u *UsageMonitorChannelUpsert) UpdateFields() *UsageMonitorChannelUpsert {
 	u.SetExcluded(usagemonitorchannel.FieldFields)
+	return u
+}
+
+// SetVariables sets the "variables" field.
+func (u *UsageMonitorChannelUpsert) SetVariables(v []map[string]interface{}) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldVariables, v)
+	return u
+}
+
+// UpdateVariables sets the "variables" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateVariables() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldVariables)
+	return u
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (u *UsageMonitorChannelUpsert) ClearVariables() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldVariables)
+	return u
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (u *UsageMonitorChannelUpsert) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldDisplayFields, v)
+	return u
+}
+
+// UpdateDisplayFields sets the "display_fields" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateDisplayFields() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldDisplayFields)
+	return u
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (u *UsageMonitorChannelUpsert) ClearDisplayFields() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldDisplayFields)
 	return u
 }
 
@@ -1226,6 +1290,48 @@ func (u *UsageMonitorChannelUpsertOne) SetFields(v []map[string]interface{}) *Us
 func (u *UsageMonitorChannelUpsertOne) UpdateFields() *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.UpdateFields()
+	})
+}
+
+// SetVariables sets the "variables" field.
+func (u *UsageMonitorChannelUpsertOne) SetVariables(v []map[string]interface{}) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetVariables(v)
+	})
+}
+
+// UpdateVariables sets the "variables" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateVariables() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateVariables()
+	})
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (u *UsageMonitorChannelUpsertOne) ClearVariables() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearVariables()
+	})
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (u *UsageMonitorChannelUpsertOne) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetDisplayFields(v)
+	})
+}
+
+// UpdateDisplayFields sets the "display_fields" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateDisplayFields() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateDisplayFields()
+	})
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (u *UsageMonitorChannelUpsertOne) ClearDisplayFields() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearDisplayFields()
 	})
 }
 
@@ -1822,6 +1928,48 @@ func (u *UsageMonitorChannelUpsertBulk) SetFields(v []map[string]interface{}) *U
 func (u *UsageMonitorChannelUpsertBulk) UpdateFields() *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.UpdateFields()
+	})
+}
+
+// SetVariables sets the "variables" field.
+func (u *UsageMonitorChannelUpsertBulk) SetVariables(v []map[string]interface{}) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetVariables(v)
+	})
+}
+
+// UpdateVariables sets the "variables" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateVariables() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateVariables()
+	})
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearVariables() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearVariables()
+	})
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (u *UsageMonitorChannelUpsertBulk) SetDisplayFields(v []map[string]interface{}) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetDisplayFields(v)
+	})
+}
+
+// UpdateDisplayFields sets the "display_fields" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateDisplayFields() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateDisplayFields()
+	})
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearDisplayFields() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearDisplayFields()
 	})
 }
 

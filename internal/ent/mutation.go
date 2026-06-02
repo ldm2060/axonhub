@@ -27550,42 +27550,46 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 // UsageMonitorChannelMutation represents an operation that mutates the UsageMonitorChannel nodes in the graph.
 type UsageMonitorChannelMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *int
-	created_at         *time.Time
-	updated_at         *time.Time
-	deleted_at         *int
-	adddeleted_at      *int
-	name               *string
-	source             *usagemonitorchannel.Source
-	provider_type      *usagemonitorchannel.ProviderType
-	api_url            *string
-	api_method         *usagemonitorchannel.APIMethod
-	api_headers        *map[string]interface{}
-	api_body           *string
-	api_key            *string
-	poll_interval      *int
-	addpoll_interval   *int
-	fields             *[]map[string]interface{}
-	appendfields       []map[string]interface{}
-	last_poll_at       *time.Time
-	last_poll_data     *map[string]interface{}
-	last_poll_error    *string
-	status             *usagemonitorchannel.Status
-	quota_status       *usagemonitorchannel.QuotaStatus
-	quota_ready        *bool
-	quota_limits       *[]map[string]interface{}
-	appendquota_limits []map[string]interface{}
-	next_reset_at      *time.Time
-	clearedFields      map[string]struct{}
-	channel            *int
-	clearedchannel     bool
-	owner              *int
-	clearedowner       bool
-	done               bool
-	oldValue           func(context.Context) (*UsageMonitorChannel, error)
-	predicates         []predicate.UsageMonitorChannel
+	op                   Op
+	typ                  string
+	id                   *int
+	created_at           *time.Time
+	updated_at           *time.Time
+	deleted_at           *int
+	adddeleted_at        *int
+	name                 *string
+	source               *usagemonitorchannel.Source
+	provider_type        *usagemonitorchannel.ProviderType
+	api_url              *string
+	api_method           *usagemonitorchannel.APIMethod
+	api_headers          *map[string]interface{}
+	api_body             *string
+	api_key              *string
+	poll_interval        *int
+	addpoll_interval     *int
+	fields               *[]map[string]interface{}
+	appendfields         []map[string]interface{}
+	variables            *[]map[string]interface{}
+	appendvariables      []map[string]interface{}
+	display_fields       *[]map[string]interface{}
+	appenddisplay_fields []map[string]interface{}
+	last_poll_at         *time.Time
+	last_poll_data       *map[string]interface{}
+	last_poll_error      *string
+	status               *usagemonitorchannel.Status
+	quota_status         *usagemonitorchannel.QuotaStatus
+	quota_ready          *bool
+	quota_limits         *[]map[string]interface{}
+	appendquota_limits   []map[string]interface{}
+	next_reset_at        *time.Time
+	clearedFields        map[string]struct{}
+	channel              *int
+	clearedchannel       bool
+	owner                *int
+	clearedowner         bool
+	done                 bool
+	oldValue             func(context.Context) (*UsageMonitorChannel, error)
+	predicates           []predicate.UsageMonitorChannel
 }
 
 var _ ent.Mutation = (*UsageMonitorChannelMutation)(nil)
@@ -28297,6 +28301,136 @@ func (m *UsageMonitorChannelMutation) ResetFields() {
 	m.appendfields = nil
 }
 
+// SetVariables sets the "variables" field.
+func (m *UsageMonitorChannelMutation) SetVariables(value []map[string]interface{}) {
+	m.variables = &value
+	m.appendvariables = nil
+}
+
+// Variables returns the value of the "variables" field in the mutation.
+func (m *UsageMonitorChannelMutation) Variables() (r []map[string]interface{}, exists bool) {
+	v := m.variables
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVariables returns the old "variables" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldVariables(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVariables is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVariables requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVariables: %w", err)
+	}
+	return oldValue.Variables, nil
+}
+
+// AppendVariables adds value to the "variables" field.
+func (m *UsageMonitorChannelMutation) AppendVariables(value []map[string]interface{}) {
+	m.appendvariables = append(m.appendvariables, value...)
+}
+
+// AppendedVariables returns the list of values that were appended to the "variables" field in this mutation.
+func (m *UsageMonitorChannelMutation) AppendedVariables() ([]map[string]interface{}, bool) {
+	if len(m.appendvariables) == 0 {
+		return nil, false
+	}
+	return m.appendvariables, true
+}
+
+// ClearVariables clears the value of the "variables" field.
+func (m *UsageMonitorChannelMutation) ClearVariables() {
+	m.variables = nil
+	m.appendvariables = nil
+	m.clearedFields[usagemonitorchannel.FieldVariables] = struct{}{}
+}
+
+// VariablesCleared returns if the "variables" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) VariablesCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldVariables]
+	return ok
+}
+
+// ResetVariables resets all changes to the "variables" field.
+func (m *UsageMonitorChannelMutation) ResetVariables() {
+	m.variables = nil
+	m.appendvariables = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldVariables)
+}
+
+// SetDisplayFields sets the "display_fields" field.
+func (m *UsageMonitorChannelMutation) SetDisplayFields(value []map[string]interface{}) {
+	m.display_fields = &value
+	m.appenddisplay_fields = nil
+}
+
+// DisplayFields returns the value of the "display_fields" field in the mutation.
+func (m *UsageMonitorChannelMutation) DisplayFields() (r []map[string]interface{}, exists bool) {
+	v := m.display_fields
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisplayFields returns the old "display_fields" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldDisplayFields(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisplayFields is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisplayFields requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisplayFields: %w", err)
+	}
+	return oldValue.DisplayFields, nil
+}
+
+// AppendDisplayFields adds value to the "display_fields" field.
+func (m *UsageMonitorChannelMutation) AppendDisplayFields(value []map[string]interface{}) {
+	m.appenddisplay_fields = append(m.appenddisplay_fields, value...)
+}
+
+// AppendedDisplayFields returns the list of values that were appended to the "display_fields" field in this mutation.
+func (m *UsageMonitorChannelMutation) AppendedDisplayFields() ([]map[string]interface{}, bool) {
+	if len(m.appenddisplay_fields) == 0 {
+		return nil, false
+	}
+	return m.appenddisplay_fields, true
+}
+
+// ClearDisplayFields clears the value of the "display_fields" field.
+func (m *UsageMonitorChannelMutation) ClearDisplayFields() {
+	m.display_fields = nil
+	m.appenddisplay_fields = nil
+	m.clearedFields[usagemonitorchannel.FieldDisplayFields] = struct{}{}
+}
+
+// DisplayFieldsCleared returns if the "display_fields" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) DisplayFieldsCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldDisplayFields]
+	return ok
+}
+
+// ResetDisplayFields resets all changes to the "display_fields" field.
+func (m *UsageMonitorChannelMutation) ResetDisplayFields() {
+	m.display_fields = nil
+	m.appenddisplay_fields = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldDisplayFields)
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (m *UsageMonitorChannelMutation) SetLastPollAt(t time.Time) {
 	m.last_poll_at = &t
@@ -28792,7 +28926,7 @@ func (m *UsageMonitorChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageMonitorChannelMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
 	}
@@ -28834,6 +28968,12 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	}
 	if m.fields != nil {
 		fields = append(fields, usagemonitorchannel.FieldFields)
+	}
+	if m.variables != nil {
+		fields = append(fields, usagemonitorchannel.FieldVariables)
+	}
+	if m.display_fields != nil {
+		fields = append(fields, usagemonitorchannel.FieldDisplayFields)
 	}
 	if m.last_poll_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
@@ -28895,6 +29035,10 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.PollInterval()
 	case usagemonitorchannel.FieldFields:
 		return m.GetFields()
+	case usagemonitorchannel.FieldVariables:
+		return m.Variables()
+	case usagemonitorchannel.FieldDisplayFields:
+		return m.DisplayFields()
 	case usagemonitorchannel.FieldLastPollAt:
 		return m.LastPollAt()
 	case usagemonitorchannel.FieldLastPollData:
@@ -28948,6 +29092,10 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldPollInterval(ctx)
 	case usagemonitorchannel.FieldFields:
 		return m.OldFields(ctx)
+	case usagemonitorchannel.FieldVariables:
+		return m.OldVariables(ctx)
+	case usagemonitorchannel.FieldDisplayFields:
+		return m.OldDisplayFields(ctx)
 	case usagemonitorchannel.FieldLastPollAt:
 		return m.OldLastPollAt(ctx)
 	case usagemonitorchannel.FieldLastPollData:
@@ -29070,6 +29218,20 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetFields(v)
+		return nil
+	case usagemonitorchannel.FieldVariables:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVariables(v)
+		return nil
+	case usagemonitorchannel.FieldDisplayFields:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisplayFields(v)
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		v, ok := value.(time.Time)
@@ -29196,6 +29358,12 @@ func (m *UsageMonitorChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(usagemonitorchannel.FieldAPIKey) {
 		fields = append(fields, usagemonitorchannel.FieldAPIKey)
 	}
+	if m.FieldCleared(usagemonitorchannel.FieldVariables) {
+		fields = append(fields, usagemonitorchannel.FieldVariables)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldDisplayFields) {
+		fields = append(fields, usagemonitorchannel.FieldDisplayFields)
+	}
 	if m.FieldCleared(usagemonitorchannel.FieldLastPollAt) {
 		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
 	}
@@ -29242,6 +29410,12 @@ func (m *UsageMonitorChannelMutation) ClearField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldAPIKey:
 		m.ClearAPIKey()
+		return nil
+	case usagemonitorchannel.FieldVariables:
+		m.ClearVariables()
+		return nil
+	case usagemonitorchannel.FieldDisplayFields:
+		m.ClearDisplayFields()
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		m.ClearLastPollAt()
@@ -29313,6 +29487,12 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldFields:
 		m.ResetFields()
+		return nil
+	case usagemonitorchannel.FieldVariables:
+		m.ResetVariables()
+		return nil
+	case usagemonitorchannel.FieldDisplayFields:
+		m.ResetDisplayFields()
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		m.ResetLastPollAt()

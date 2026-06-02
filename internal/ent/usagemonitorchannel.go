@@ -48,6 +48,10 @@ type UsageMonitorChannel struct {
 	PollInterval int `json:"poll_interval,omitempty"`
 	// Array of field configurations
 	Fields []map[string]interface{} `json:"fields,omitempty"`
+	// Variable extraction rules
+	Variables []map[string]interface{} `json:"variables,omitempty"`
+	// Display field definitions with optional badge styling
+	DisplayFields []map[string]interface{} `json:"display_fields,omitempty"`
 	// Last successful poll timestamp
 	LastPollAt *time.Time `json:"last_poll_at,omitempty"`
 	// Last poll parsed data for degraded display
@@ -111,7 +115,7 @@ func (*UsageMonitorChannel) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
+		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldVariables, usagemonitorchannel.FieldDisplayFields, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
 			values[i] = new([]byte)
 		case usagemonitorchannel.FieldQuotaReady:
 			values[i] = new(sql.NullBool)
@@ -231,6 +235,22 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.Fields); err != nil {
 					return fmt.Errorf("unmarshal field fields: %w", err)
+				}
+			}
+		case usagemonitorchannel.FieldVariables:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field variables", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Variables); err != nil {
+					return fmt.Errorf("unmarshal field variables: %w", err)
+				}
+			}
+		case usagemonitorchannel.FieldDisplayFields:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field display_fields", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.DisplayFields); err != nil {
+					return fmt.Errorf("unmarshal field display_fields: %w", err)
 				}
 			}
 		case usagemonitorchannel.FieldLastPollAt:
@@ -384,6 +404,12 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("fields=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Fields))
+	builder.WriteString(", ")
+	builder.WriteString("variables=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Variables))
+	builder.WriteString(", ")
+	builder.WriteString("display_fields=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DisplayFields))
 	builder.WriteString(", ")
 	if v := _m.LastPollAt; v != nil {
 		builder.WriteString("last_poll_at=")

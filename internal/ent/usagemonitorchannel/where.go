@@ -660,6 +660,26 @@ func PollIntervalLTE(v int) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldLTE(FieldPollInterval, v))
 }
 
+// VariablesIsNil applies the IsNil predicate on the "variables" field.
+func VariablesIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldVariables))
+}
+
+// VariablesNotNil applies the NotNil predicate on the "variables" field.
+func VariablesNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldVariables))
+}
+
+// DisplayFieldsIsNil applies the IsNil predicate on the "display_fields" field.
+func DisplayFieldsIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldDisplayFields))
+}
+
+// DisplayFieldsNotNil applies the NotNil predicate on the "display_fields" field.
+func DisplayFieldsNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldDisplayFields))
+}
+
 // LastPollAtEQ applies the EQ predicate on the "last_poll_at" field.
 func LastPollAtEQ(v time.Time) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldLastPollAt, v))

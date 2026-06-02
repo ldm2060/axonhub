@@ -958,8 +958,16 @@ func init() {
 	usagemonitorchannelDescPollInterval := usagemonitorchannelFields[9].Descriptor()
 	// usagemonitorchannel.DefaultPollInterval holds the default value on creation for the poll_interval field.
 	usagemonitorchannel.DefaultPollInterval = usagemonitorchannelDescPollInterval.Default.(int)
+	// usagemonitorchannelDescVariables is the schema descriptor for variables field.
+	usagemonitorchannelDescVariables := usagemonitorchannelFields[11].Descriptor()
+	// usagemonitorchannel.DefaultVariables holds the default value on creation for the variables field.
+	usagemonitorchannel.DefaultVariables = usagemonitorchannelDescVariables.Default.([]map[string]interface{})
+	// usagemonitorchannelDescDisplayFields is the schema descriptor for display_fields field.
+	usagemonitorchannelDescDisplayFields := usagemonitorchannelFields[12].Descriptor()
+	// usagemonitorchannel.DefaultDisplayFields holds the default value on creation for the display_fields field.
+	usagemonitorchannel.DefaultDisplayFields = usagemonitorchannelDescDisplayFields.Default.([]map[string]interface{})
 	// usagemonitorchannelDescQuotaReady is the schema descriptor for quota_ready field.
-	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[16].Descriptor()
+	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[18].Descriptor()
 	// usagemonitorchannel.DefaultQuotaReady holds the default value on creation for the quota_ready field.
 	usagemonitorchannel.DefaultQuotaReady = usagemonitorchannelDescQuotaReady.Default.(bool)
 	userMixin := schema.User{}.Mixin()

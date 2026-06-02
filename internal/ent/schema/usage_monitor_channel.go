@@ -59,6 +59,16 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 		field.JSON("fields", []map[string]any{}).
 			Comment("Array of field configurations").
 			Annotations(entgql.Type("Map")),
+		field.JSON("variables", []map[string]any{}).
+			Annotations(entgql.Type("Map")).
+			Optional().
+			Default([]map[string]any{}).
+			Comment("Variable extraction rules"),
+		field.JSON("display_fields", []map[string]any{}).
+			Annotations(entgql.Type("Map")).
+			Optional().
+			Default([]map[string]any{}).
+			Comment("Display field definitions with optional badge styling"),
 		field.Time("last_poll_at").Optional().Nillable().
 			Comment("Last successful poll timestamp"),
 		field.JSON("last_poll_data", map[string]any{}).Optional().
