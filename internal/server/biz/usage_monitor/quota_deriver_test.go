@@ -84,3 +84,49 @@ func TestDeriveQuotaStatus_Generic_WithDatetime(t *testing.T) {
 	assert.NotNil(t, result.NextResetAt)
 	assert.NotNil(t, result.Limits[0].NextResetAt)
 }
+
+// Fraction fields with total (e.g. Xunfei: value=35358, total=90000, percent=39.29)
+// must use percent/100 as the ratio, not the raw value.
+func TestDeriveQuotaStatus_Generic_FractionWithTotal(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "pkg_usage", Format: "fraction", Value: 35358, Total: 90000, Percent: 39.29},
+		{Key: "rp5h", Format: "fraction", Value: 500, Total: 6000, Percent: 8.33},
+		{Key: "rpw", Format: "fraction", Value: 9670, Total: 45000, Percent: 21.49},
+	}
+	result := DeriveQuotaStatus("", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.InDelta(t, 0.3929, result.Limits[0].UsageRatio, 0.01)
+}
+
+// Fraction with total that is actually exhausted
+func TestDeriveQuotaStatus_Generic_FractionWithTotal_Exhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "pkg_usage", Format: "fraction", Value: 90000, Total: 90000, Percent: 100},
+	}
+	result := DeriveQuotaStatus("", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// Pure ratio fraction (no total, value is 0-1) still works
+func TestDeriveQuotaStatus_Generic_FractionPureRatio(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "utilization", Format: "fraction", Value: 0.85},
+	}
+	result := DeriveQuotaStatus("", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+	assert.Equal(t, 0.85, result.Limits[0].UsageRatio)
+}
+
+// Mix of fraction-with-total and pure-ratio fraction picks the worst
+func TestDeriveQuotaStatus_Generic_MixedFractionTypes(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "pkg_usage", Format: "fraction", Value: 35358, Total: 90000, Percent: 39.29},
+		{Key: "utilization", Format: "fraction", Value: 0.85},
+	}
+	result := DeriveQuotaStatus("", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.Equal(t, 0.85, result.Limits[0].UsageRatio)
+}

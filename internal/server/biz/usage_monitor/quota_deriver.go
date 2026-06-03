@@ -392,8 +392,9 @@ func earliestDatetime(fields []ParsedField) *time.Time {
 }
 
 // deriveGeneric derives quota status from any percentage or fraction display fields.
-// It collects all numeric utilization ratios (percentage fields used as-is,
-// fraction fields used as-is) and applies the standard 0.8/1.0 thresholds.
+// It collects all numeric utilization ratios and applies the standard 0.8/1.0 thresholds.
+// For fraction fields with a computed percent (value/total), it uses percent/100;
+// for fraction fields without percent (pure ratio 0-1), it uses value directly.
 // This enables quota indicators for custom/generic templates without a hardcoded
 // provider-specific derivation function.
 func deriveGeneric(fields []ParsedField) QuotaDerivedStatus {
@@ -408,7 +409,13 @@ func deriveGeneric(fields []ParsedField) QuotaDerivedStatus {
 				hasNumericField = true
 			}
 		case "fraction":
-			if v, err := toFloat(f.Value); err == nil && v > 0 {
+			// Prefer computed percent (value/total) over raw value.
+			// Fraction fields with a total produce percent via computePercent;
+			// those without represent a pure 0-1 ratio.
+			if f.Percent > 0 {
+				maxRatio = max(maxRatio, f.Percent/100.0)
+				hasNumericField = true
+			} else if v, err := toFloat(f.Value); err == nil && v > 0 {
 				maxRatio = max(maxRatio, v)
 				hasNumericField = true
 			}
