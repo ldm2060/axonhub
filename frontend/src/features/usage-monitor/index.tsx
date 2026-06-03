@@ -62,12 +62,14 @@ function UsageMonitorContent() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {channels.map((channel) => (
-        <MonitorErrorBoundary key={channel.id} channelName={channel.name}>
-          <MonitorCard channel={channel} />
-        </MonitorErrorBoundary>
-      ))}
+    <div className="flex-1 overflow-y-auto">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {channels.map((channel) => (
+          <MonitorErrorBoundary key={channel.id} channelName={channel.name}>
+            <MonitorCard channel={channel} />
+          </MonitorErrorBoundary>
+        ))}
+      </div>
     </div>
   );
 }
