@@ -307,8 +307,7 @@ export function useUsageMonitorChannels() {
         normalizeChannel(raw),
       );
     },
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: true,
+    refetchInterval: false,
   });
 }
 
@@ -457,6 +456,30 @@ export function useRefreshUsageMonitorChannel() {
     },
     onError: (error) => {
       handleError(error, { context: 'Refresh Usage Monitor Channel' });
+    },
+  });
+}
+
+/**
+ * Silent refresh – same mutation as useRefreshUsageMonitorChannel but without
+ * toast notifications so it can be used for automatic per-channel polling.
+ */
+export function useSilentRefreshUsageMonitorChannel() {
+  const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await graphqlRequest<{
+        refreshUsageMonitorChannel: any;
+      }>(REFRESH_USAGE_MONITOR_CHANNEL_MUTATION, { id });
+      return normalizeChannel(data.refreshUsageMonitorChannel);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+    },
+    onError: (error) => {
+      handleError(error, { context: 'Auto-refresh Usage Monitor Channel' });
     },
   });
 }

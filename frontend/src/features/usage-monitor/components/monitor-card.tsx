@@ -1,10 +1,11 @@
 import { formatDistanceToNow } from 'date-fns';
 import { Pencil, Pause, Play, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useUpdateUsageMonitorChannel, useRefreshUsageMonitorChannel } from '../data/usage-monitor';
+import { useUpdateUsageMonitorChannel, useRefreshUsageMonitorChannel, useSilentRefreshUsageMonitorChannel } from '../data/usage-monitor';
 import type { UsageMonitorChannel } from '../data/schema';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import { SharedFieldRenderer } from './shared-field-renderer';
@@ -42,9 +43,24 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
   const { setOpen, setCurrentChannel } = useUsageMonitorContext();
   const updateMutation = useUpdateUsageMonitorChannel();
   const refreshMutation = useRefreshUsageMonitorChannel();
+  const silentRefresh = useSilentRefreshUsageMonitorChannel();
+  const silentRefreshRef = useRef(silentRefresh.mutate);
+  silentRefreshRef.current = silentRefresh.mutate;
 
   const isPaused = channel.status === 'paused';
   const isRefreshing = refreshMutation.isPending;
+
+  // Per-channel auto-polling based on the channel's pollInterval setting
+  useEffect(() => {
+    if (isPaused) return;
+
+    const intervalMs = channel.pollInterval * 1000;
+    const id = setInterval(() => {
+      silentRefreshRef.current(channel.id);
+    }, intervalMs);
+
+    return () => clearInterval(id);
+  }, [channel.id, channel.pollInterval, isPaused]);
 
   function handleEdit() {
     setCurrentChannel(channel);
