@@ -806,29 +806,27 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 
 	now := pollData.PolledAt
 
-	// Derive quota status from parsed fields
+	// Derive quota status from parsed fields (works for all provider types including generic/custom)
 	var quotaStatus string
 	var quotaReady *bool
 	var quotaLimits []map[string]any
 	var nextResetAt *time.Time
 
-	if ch.ProviderType != "" {
-		derived := usage_monitor.DeriveQuotaStatus(string(ch.ProviderType), pollData.Fields)
-		quotaStatus = derived.Status
-		quotaReady = &derived.Ready
-		nextResetAt = derived.NextResetAt
-		for _, l := range derived.Limits {
-			m := map[string]any{
-				"type":       string(l.Type),
-				"status":     l.Status,
-				"usageRatio": l.UsageRatio,
-				"ready":      l.Ready,
-			}
-			if l.NextResetAt != nil {
-				m["nextResetAt"] = l.NextResetAt.Format(time.RFC3339)
-			}
-			quotaLimits = append(quotaLimits, m)
+	derived := usage_monitor.DeriveQuotaStatus(string(ch.ProviderType), pollData.Fields)
+	quotaStatus = derived.Status
+	quotaReady = &derived.Ready
+	nextResetAt = derived.NextResetAt
+	for _, l := range derived.Limits {
+		m := map[string]any{
+			"type":       string(l.Type),
+			"status":     l.Status,
+			"usageRatio": l.UsageRatio,
+			"ready":      l.Ready,
 		}
+		if l.NextResetAt != nil {
+			m["nextResetAt"] = l.NextResetAt.Format(time.RFC3339)
+		}
+		quotaLimits = append(quotaLimits, m)
 	}
 
 	// Update DB with success

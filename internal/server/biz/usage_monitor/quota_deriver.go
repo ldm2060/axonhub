@@ -17,6 +17,8 @@ type QuotaDerivedStatus struct {
 
 // DeriveQuotaStatus derives routing-compatible quota status from parsed field data.
 // The providerType determines which fields to inspect and what thresholds to use.
+// For unknown/empty provider types, a generic derivation is applied based on
+// percentage and fraction display fields.
 func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedStatus {
 	switch providerType {
 	case "claudecode":
@@ -38,7 +40,7 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 	case "antigravity":
 		return deriveAntigravity(fields)
 	default:
-		return QuotaDerivedStatus{Status: "unknown", Ready: true}
+		return deriveGeneric(fields)
 	}
 }
 
@@ -387,4 +389,50 @@ func earliestDatetime(fields []ParsedField) *time.Time {
 		}
 	}
 	return earliest
+}
+
+// deriveGeneric derives quota status from any percentage or fraction display fields.
+// It collects all numeric utilization ratios (percentage fields used as-is,
+// fraction fields used as-is) and applies the standard 0.8/1.0 thresholds.
+// This enables quota indicators for custom/generic templates without a hardcoded
+// provider-specific derivation function.
+func deriveGeneric(fields []ParsedField) QuotaDerivedStatus {
+	var maxRatio float64
+	var hasNumericField bool
+
+	for _, f := range fields {
+		switch f.Format {
+		case "percentage":
+			if f.Percent > 0 {
+				maxRatio = max(maxRatio, f.Percent/100.0)
+				hasNumericField = true
+			}
+		case "fraction":
+			if v, err := toFloat(f.Value); err == nil && v > 0 {
+				maxRatio = max(maxRatio, v)
+				hasNumericField = true
+			}
+		}
+	}
+
+	if !hasNumericField {
+		return QuotaDerivedStatus{Status: "unknown", Ready: true}
+	}
+
+	status := "available"
+	if maxRatio >= 1.0 {
+		status = "exhausted"
+	} else if maxRatio >= warningThreshold {
+		status = "warning"
+	}
+
+	nextReset := earliestDatetime(fields)
+	return QuotaDerivedStatus{
+		Status: status,
+		Ready:  status != "exhausted",
+		Limits: []provider_quota.QuotaLimitStatus{
+			provider_quota.NewTokenLimitStatus(status, maxRatio, nextReset),
+		},
+		NextResetAt: nextReset,
+	}
 }

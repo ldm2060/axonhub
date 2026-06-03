@@ -1091,8 +1091,38 @@ export function useUpdateChannelStatus() {
         throw error;
       }
     },
+    onMutate: async ({ id, status }) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['channels'] });
+
+      // Snapshot the previous value
+      const previousQueries = queryClient.getQueriesData({ queryKey: ['channels'] });
+
+      // Optimistically update all channel queries
+      queryClient.setQueriesData<{ edges: Array<{ node: any }>; totalCount?: number } | undefined>(
+        { queryKey: ['channels'] },
+        (old) => {
+          if (!old?.edges) return old;
+          return {
+            ...old,
+            edges: old.edges.map((edge) =>
+              edge.node.id === id ? { ...edge, node: { ...edge.node, status } } : edge
+            ),
+          };
+        }
+      );
+
+      return { previousQueries };
+    },
+    onError: (_err, _variables, context) => {
+      // Roll back to the previous state on error
+      if (context?.previousQueries) {
+        for (const [queryKey, data] of context.previousQueries) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+    },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['channels'] });
       const statusText =
         variables.status === 'enabled'
           ? t('channels.status.enabled')
@@ -1103,6 +1133,11 @@ export function useUpdateChannelStatus() {
       const messageKey = variables.status === 'archived' ? 'channels.messages.archiveSuccess' : 'channels.messages.statusUpdateSuccess';
 
       toast.success(variables.status === 'archived' ? t(messageKey) : t(messageKey, { status: statusText }));
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure server state
+      queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['errorChannelsCount'] });
     },
   });
 }
