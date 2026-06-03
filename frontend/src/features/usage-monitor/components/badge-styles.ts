@@ -1,4 +1,4 @@
-export type BadgeGradientKey = 'sapphire' | 'rosegold' | 'champagne' | 'freshgreen' | 'default';
+export type BadgeGradientKey = 'sapphire' | 'rosegold' | 'champagne' | 'freshgreen' | 'amber' | 'default';
 
 export const BADGE_GRADIENTS: Record<BadgeGradientKey, { css: string; textColor: string; label: string }> = {
   sapphire: {
@@ -20,6 +20,11 @@ export const BADGE_GRADIENTS: Record<BadgeGradientKey, { css: string; textColor:
     css: 'linear-gradient(135deg, #E8F8F5 0%, #A3E4D7 50%, #48C9B0 100%)',
     textColor: '#1a4a3a',
     label: 'Fresh Green',
+  },
+  amber: {
+    css: 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #92400E 100%)',
+    textColor: '#ffffff',
+    label: 'Amber',
   },
   default: {
     css: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',

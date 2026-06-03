@@ -1,6 +1,7 @@
 package usage_monitor
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
@@ -82,34 +83,170 @@ func deriveClaudeCode(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
-	pct := findFieldPercent(fields, "primary_used_pct") / 100.0
-	secondaryPct := findFieldPercent(fields, "secondary_used_pct") / 100.0
-	// Use the worse of primary and secondary windows
-	if secondaryPct > pct {
-		pct = secondaryPct
+	// If limit_reached is "true", the overall status is exhausted.
+	for _, f := range fields {
+		if f.Key == "limit_reached" {
+			if val, ok := f.Value.(string); ok && val == "true" {
+				pct := findFieldPercent(fields, "primary_used_pct") / 100.0
+				return QuotaDerivedStatus{
+					Status: "exhausted",
+					Ready:  false,
+					Limits: []provider_quota.QuotaLimitStatus{
+						provider_quota.NewTokenLimitStatus("exhausted", pct, nil),
+					},
+				}
+			}
+		}
 	}
 
-	status := "available"
-	if pct >= 1.0 {
-		status = "exhausted"
-	} else if pct >= warningThreshold {
-		status = "warning"
+	// Collect all percentage windows: primary, secondary, and additional N.
+	type windowInfo struct {
+		label      string
+		pct        float64
+		nextReset  *time.Time
+	}
+	windows := make([]windowInfo, 0, 6)
+
+	// Primary window
+	primaryPct := findFieldPercent(fields, "primary_used_pct") / 100.0
+	primaryReset := findFieldTime(fields, "primary_reset")
+	windows = append(windows, windowInfo{label: "primary", pct: primaryPct, nextReset: primaryReset})
+
+	// Secondary window
+	secondaryPct := findFieldPercent(fields, "secondary_used_pct") / 100.0
+	secondaryReset := findFieldTime(fields, "secondary_reset")
+	windows = append(windows, windowInfo{label: "secondary", pct: secondaryPct, nextReset: secondaryReset})
+
+	// Additional rate limit windows (0 and 1)
+	for i := range 2 {
+		featureName := findFieldString(fields, fmt.Sprintf("additional_%d_name", i))
+		if featureName == "" {
+			continue
+		}
+
+		for _, suffix := range []string{"primary", "secondary"} {
+			pctKey := fmt.Sprintf("additional_%d_%s_pct", i, suffix)
+			resetKey := fmt.Sprintf("additional_%d_%s_reset", i, suffix)
+			pct := findFieldPercent(fields, pctKey) / 100.0
+			if pct == 0 {
+				continue
+			}
+			reset := findFieldTime(fields, resetKey)
+			windows = append(windows, windowInfo{
+				label:     fmt.Sprintf("%s_%s", featureName, suffix),
+				pct:       pct,
+				nextReset: reset,
+			})
+		}
+	}
+
+	// Build per-window QuotaLimitStatus entries and find worst status.
+	var limits []provider_quota.QuotaLimitStatus
+	var worstStatus string
+
+	for _, w := range windows {
+		limitStatus := "available"
+		if w.pct >= 1.0 {
+			limitStatus = "exhausted"
+		} else if w.pct >= warningThreshold {
+			limitStatus = "warning"
+		}
+
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:        provider_quota.QuotaLimitTypeToken,
+			Status:      limitStatus,
+			UsageRatio:  w.pct,
+			Ready:       limitStatus != "exhausted",
+			NextResetAt: w.nextReset,
+		})
+
+		if worstStatus == "" || quotaStatusRank(limitStatus) > quotaStatusRank(worstStatus) {
+			worstStatus = limitStatus
+		}
+	}
+
+	if worstStatus == "" {
+		worstStatus = "available"
 	}
 
 	nextReset := earliestDatetime(fields)
 	return QuotaDerivedStatus{
-		Status: status,
-		Ready:  status != "exhausted",
-		Limits: []provider_quota.QuotaLimitStatus{
-			provider_quota.NewTokenLimitStatus(status, pct, nextReset),
-		},
+		Status:      worstStatus,
+		Ready:       worstStatus != "exhausted",
+		Limits:      limits,
 		NextResetAt: nextReset,
 	}
 }
 
 func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
-	// GitHub Copilot template only has text fields (plan, access_type), no percentage data
-	return QuotaDerivedStatus{Status: "available", Ready: true}
+	var apiQuotaAccess, chatQuotaAccess *bool
+
+	for _, f := range fields {
+		if f.Key == "api_quota_access" {
+			if val, ok := f.Value.(string); ok {
+				access := val == "true"
+				apiQuotaAccess = &access
+			}
+		}
+		if f.Key == "chat_quota_access" {
+			if val, ok := f.Value.(string); ok {
+				access := val == "true"
+				chatQuotaAccess = &access
+			}
+		}
+	}
+
+	// If neither field exists (old template data), fall back to available.
+	if apiQuotaAccess == nil && chatQuotaAccess == nil {
+		return QuotaDerivedStatus{Status: "available", Ready: true}
+	}
+
+	var limits []provider_quota.QuotaLimitStatus
+	var worstStatus string
+
+	// API quota status
+	if apiQuotaAccess != nil {
+		apiStatus := "available"
+		if !*apiQuotaAccess {
+			apiStatus = "exhausted"
+		}
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:       provider_quota.QuotaLimitTypeToken,
+			Status:     apiStatus,
+			UsageRatio: 0, // No percentage data available
+			Ready:      *apiQuotaAccess,
+		})
+		if worstStatus == "" || quotaStatusRank(apiStatus) > quotaStatusRank(worstStatus) {
+			worstStatus = apiStatus
+		}
+	}
+
+	// Chat quota status
+	if chatQuotaAccess != nil {
+		chatStatus := "available"
+		if !*chatQuotaAccess {
+			chatStatus = "exhausted"
+		}
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:       provider_quota.QuotaLimitTypeToken,
+			Status:     chatStatus,
+			UsageRatio: 0, // No percentage data available
+			Ready:      *chatQuotaAccess,
+		})
+		if worstStatus == "" || quotaStatusRank(chatStatus) > quotaStatusRank(worstStatus) {
+			worstStatus = chatStatus
+		}
+	}
+
+	if worstStatus == "" {
+		worstStatus = "available"
+	}
+
+	return QuotaDerivedStatus{
+		Status: worstStatus,
+		Ready:  worstStatus != "exhausted",
+		Limits: limits,
+	}
 }
 
 func deriveNanoGPT(fields []ParsedField) QuotaDerivedStatus {
@@ -368,6 +505,17 @@ func findFieldTime(fields []ParsedField, key string) *time.Time {
 		}
 	}
 	return nil
+}
+
+func findFieldString(fields []ParsedField, key string) string {
+	for _, f := range fields {
+		if f.Key == key {
+			if s, ok := f.Value.(string); ok {
+				return s
+			}
+		}
+	}
+	return ""
 }
 
 func earliestDatetime(fields []ParsedField) *time.Time {

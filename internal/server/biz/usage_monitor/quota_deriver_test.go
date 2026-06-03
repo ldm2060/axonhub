@@ -143,7 +143,9 @@ func TestDeriveQuotaStatus_Codex_Available(t *testing.T) {
 	result := DeriveQuotaStatus("codex", fields)
 	assert.Equal(t, "available", result.Status)
 	assert.True(t, result.Ready)
+	assert.Len(t, result.Limits, 2) // primary + secondary
 	assert.InDelta(t, 0.5, result.Limits[0].UsageRatio, 0.01)
+	assert.InDelta(t, 0.3, result.Limits[1].UsageRatio, 0.01)
 }
 
 func TestDeriveQuotaStatus_Codex_Warning(t *testing.T) {
@@ -175,6 +177,149 @@ func TestDeriveQuotaStatus_Codex_LowUsage_NotExhausted(t *testing.T) {
 	result := DeriveQuotaStatus("codex", fields)
 	assert.Equal(t, "available", result.Status)
 	assert.True(t, result.Ready)
+}
+
+// Codex: limit_reached="true" forces exhausted status regardless of percentages.
+func TestDeriveQuotaStatus_Codex_LimitReached_Exhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+		{Key: "limit_reached", Format: "text", Value: "true"},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// Codex: limit_reached="false" does not override percentage-based status.
+func TestDeriveQuotaStatus_Codex_LimitReached_False(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+		{Key: "limit_reached", Format: "text", Value: "false"},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+}
+
+// Codex: additional rate limits are included in per-window limits.
+func TestDeriveQuotaStatus_Codex_AdditionalRateLimits(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+		{Key: "additional_0_name", Format: "text", Value: "images"},
+		{Key: "additional_0_primary_pct", Format: "percentage", Percent: 90},
+		{Key: "additional_0_secondary_pct", Format: "percentage", Percent: 40},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "warning", result.Status) // 90% on additional_0_primary triggers warning
+	assert.True(t, result.Ready)
+	assert.Len(t, result.Limits, 4) // primary + secondary + additional_0 primary + additional_0 secondary
+}
+
+// Codex: additional rate limit that is exhausted drives overall status.
+func TestDeriveQuotaStatus_Codex_AdditionalRateLimit_Exhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+		{Key: "additional_0_name", Format: "text", Value: "extended_context"},
+		{Key: "additional_0_primary_pct", Format: "percentage", Percent: 100},
+		{Key: "additional_0_secondary_pct", Format: "percentage", Percent: 40},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// Codex: pro_lite plan type works correctly.
+func TestDeriveQuotaStatus_Codex_ProLite(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 60},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 20},
+		{Key: "plan_type", Format: "text", Value: "pro_lite"},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+}
+
+// Codex: no additional rate limits (missing additional_0_name) only returns primary+secondary.
+func TestDeriveQuotaStatus_Codex_NoAdditionalLimits(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Len(t, result.Limits, 2)
+}
+
+// --- GitHub Copilot tests ---
+
+// GitHub Copilot: both quotas available.
+func TestDeriveQuotaStatus_GitHubCopilot_BothAvailable(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "plan", Format: "text", Value: "individual"},
+		{Key: "api_quota_access", Format: "text", Value: "true"},
+		{Key: "chat_quota_access", Format: "text", Value: "true"},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.Len(t, result.Limits, 2)
+}
+
+// GitHub Copilot: API quota exhausted.
+func TestDeriveQuotaStatus_GitHubCopilot_ApiQuotaExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "plan", Format: "text", Value: "individual"},
+		{Key: "api_quota_access", Format: "text", Value: "false"},
+		{Key: "chat_quota_access", Format: "text", Value: "true"},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	assert.Len(t, result.Limits, 2)
+	assert.Equal(t, "exhausted", result.Limits[0].Status)
+	assert.Equal(t, "available", result.Limits[1].Status)
+}
+
+// GitHub Copilot: chat quota exhausted.
+func TestDeriveQuotaStatus_GitHubCopilot_ChatQuotaExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "plan", Format: "text", Value: "individual"},
+		{Key: "api_quota_access", Format: "text", Value: "true"},
+		{Key: "chat_quota_access", Format: "text", Value: "false"},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	assert.Len(t, result.Limits, 2)
+	assert.Equal(t, "available", result.Limits[0].Status)
+	assert.Equal(t, "exhausted", result.Limits[1].Status)
+}
+
+// GitHub Copilot: both quotas exhausted.
+func TestDeriveQuotaStatus_GitHubCopilot_BothExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "api_quota_access", Format: "text", Value: "false"},
+		{Key: "chat_quota_access", Format: "text", Value: "false"},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// GitHub Copilot: no quota fields (backward compat) falls back to available.
+func TestDeriveQuotaStatus_GitHubCopilot_NoQuotaFields(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "plan", Format: "text", Value: "individual"},
+		{Key: "access_type", Format: "text", Value: "pro"},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.Empty(t, result.Limits)
 }
 
 // Wafer: percentage field where Percent=75, must convert to 0-1 ratio
