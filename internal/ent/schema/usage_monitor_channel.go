@@ -37,7 +37,7 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Values("builtin", "custom", "template").
 			Comment("builtin: linked to existing Channel; custom: fully manual; template: from provider template"),
 		field.Enum("provider_type").
-			Values("claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu", "gemini").
+			Values("claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu", "antigravity").
 			Optional().
 			Comment("Provider type for quota template (required when source=template)"),
 		field.Int("channel_id").Optional().Nillable().

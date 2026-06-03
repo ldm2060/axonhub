@@ -35,6 +35,8 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveNeuralWatt(fields)
 	case "zhipu":
 		return deriveZhipu(fields)
+	case "antigravity":
+		return deriveAntigravity(fields)
 	default:
 		return QuotaDerivedStatus{Status: "unknown", Ready: true}
 	}
@@ -43,8 +45,10 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 func deriveClaudeCode(fields []ParsedField) QuotaDerivedStatus {
 	var maxUtil float64
 	for _, f := range fields {
-		if f.Format == "percentage" && f.Percent > maxUtil {
-			maxUtil = f.Percent / 100.0
+		if f.Format == "fraction" {
+			if v, err := toFloat(f.Value); err == nil && v > maxUtil {
+				maxUtil = v
+			}
 		}
 		if f.Key == "unified_status" {
 			if val, ok := f.Value.(string); ok && val == "throttled" {
@@ -77,6 +81,12 @@ func deriveClaudeCode(fields []ParsedField) QuotaDerivedStatus {
 
 func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 	pct := findFieldPercent(fields, "primary_used_pct")
+	secondaryPct := findFieldPercent(fields, "secondary_used_pct")
+	// Use the worse of primary and secondary windows
+	if secondaryPct > pct {
+		pct = secondaryPct
+	}
+
 	status := "available"
 	if pct >= 1.0 {
 		status = "exhausted"
@@ -279,6 +289,36 @@ func deriveZhipu(fields []ParsedField) QuotaDerivedStatus {
 		Status:      worstStatus,
 		Ready:       worstStatus != "exhausted",
 		Limits:      limits,
+		NextResetAt: nextReset,
+	}
+}
+
+func deriveAntigravity(fields []ParsedField) QuotaDerivedStatus {
+	// remaining_fraction is 0-1 where 1=full, 0=exhausted. Invert for usage ratio.
+	remaining := 1.0
+	for _, f := range fields {
+		if f.Key == "bucket_0_remaining_fraction" {
+			if v, err := toFloat(f.Value); err == nil {
+				remaining = v
+			}
+		}
+	}
+	used := 1.0 - remaining
+
+	status := "available"
+	if used >= 1.0 {
+		status = "exhausted"
+	} else if used >= warningThreshold {
+		status = "warning"
+	}
+
+	nextReset := findFieldTime(fields, "bucket_0_reset_time")
+	return QuotaDerivedStatus{
+		Status: status,
+		Ready:  status != "exhausted",
+		Limits: []provider_quota.QuotaLimitStatus{
+			provider_quota.NewTokenLimitStatus(status, used, nextReset),
+		},
 		NextResetAt: nextReset,
 	}
 }
