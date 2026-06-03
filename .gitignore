@@ -11,6 +11,7 @@
 !Dockerfile
 !VERSION
 *.exe
+*.exe~
 
 # Unignore all dirs
 !*/

@@ -7526,7 +7526,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   synthetic
   neuralwatt
   zhipu
-  gemini
+  antigravity
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status

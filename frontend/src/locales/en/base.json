@@ -156,6 +156,7 @@
   "common.errors.duplicateName": "Name '{{value}}' already exists. Please choose a different name.",
   "common.errors.duplicateKey": "This item already exists. Please use different values.",
   "common.errors.notFound": "{{resource}} not found",
+  "common.errors.resourceFallback": "Resource",
   "common.errors.forbidden": "You don't have permission to perform this action",
   "common.errors.noAdminPermission": "No permission to access admin pages.",
   "common.success.duplicated": "Duplicated successfully",

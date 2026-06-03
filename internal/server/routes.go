@@ -46,6 +46,7 @@ type Services struct {
 	TraceService  *biz.TraceService
 	ThreadService *biz.ThreadService
 	AuthService   *biz.AuthService
+	SystemService *biz.SystemService
 }
 
 func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services Services) {
@@ -160,7 +161,12 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		)
 	}
 
-	openAPIGroup := server.Group("/openapi", middleware.WithOpenAPIAuth(services.AuthService), middleware.WithTimeout(server.Config.RequestTimeout))
+	openAPIGroup := server.Group(
+		"/openapi",
+		middleware.WithIPBlocklist(services.SystemService),
+		middleware.WithOpenAPIAuth(services.AuthService),
+		middleware.WithTimeout(server.Config.RequestTimeout),
+	)
 	{
 		openAPIGroup.POST("/v1/graphql", func(c *gin.Context) {
 			handlers.OpenAPIGraphql.Graphql.ServeHTTP(c.Writer, c.Request)
@@ -174,6 +180,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 	apiGroup := server.Group("/",
 		middleware.WithTimeout(server.Config.LLMRequestTimeout),
+		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
 		middleware.WithSource(request.SourceAPI),
 		middleware.WithThread(server.Config.Trace, services.ThreadService),
@@ -231,6 +238,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		geminiGroup := server.Group("/gemini/:gemini-api-version",
 			middleware.WithTimeout(server.Config.LLMRequestTimeout),
+			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
@@ -242,6 +250,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		// Alias for Gemini API
 		geminiAliasGroup := server.Group("/v1beta",
 			middleware.WithTimeout(server.Config.LLMRequestTimeout),
+			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),

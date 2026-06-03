@@ -11,13 +11,14 @@ import { GeneralSettings } from './general-settings';
 import { QuotaSettings } from './quota-settings';
 import { RegistrationSettingsTab } from './registration-settings';
 import { RetrySettings } from './retry-settings';
+import { SecuritySettings } from './security-settings';
 import { StorageSettings } from './storage-settings';
 import { BackupSettings } from './backup-settings';
 import { ProxyPresetsSettings } from './proxy-presets-settings';
 import { WebhookSettings } from './webhook-settings';
 import { usePermissions } from '@/hooks/usePermissions';
 
-type SystemTabKey = 'general' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
+type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
 
 interface SystemSettingsTabsProps {
   initialTab?: SystemTabKey;
@@ -57,6 +58,9 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       <TabsList className='shadow-soft border-border bg-background flex w-full rounded-2xl border overflow-x-auto scrollbar-hide'>
         <TabsTrigger value='general' data-value='general'>
           {t('system.tabs.general')}
+        </TabsTrigger>
+        <TabsTrigger value='security' data-value='security'>
+          {t('system.tabs.security')}
         </TabsTrigger>
         <TabsTrigger value='brand' data-value='brand'>
           {t('system.tabs.brand')}
@@ -103,6 +107,9 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       <div className='shadow-soft border-border bg-card mt-6 rounded-2xl border p-4 sm:p-6'>
         <TabsContent value='general' className='mt-0 p-0'>
           <GeneralSettings />
+        </TabsContent>
+        <TabsContent value='security' className='mt-0 p-0'>
+          <SecuritySettings />
         </TabsContent>
         <TabsContent value='brand' className='mt-0 p-0'>
           <BrandSettings />
