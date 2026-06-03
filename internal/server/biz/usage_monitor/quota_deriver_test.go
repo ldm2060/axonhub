@@ -130,3 +130,92 @@ func TestDeriveQuotaStatus_Generic_MixedFractionTypes(t *testing.T) {
 	assert.Equal(t, "warning", result.Status)
 	assert.Equal(t, 0.85, result.Limits[0].UsageRatio)
 }
+
+// --- Built-in provider tests ---
+
+// Codex: percentage fields where Percent=75 (raw API value), must convert to 0-1 ratio
+func TestDeriveQuotaStatus_Codex_Available(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 50},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+		{Key: "plan_type", Format: "text", Value: "pro"},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.InDelta(t, 0.5, result.Limits[0].UsageRatio, 0.01)
+}
+
+func TestDeriveQuotaStatus_Codex_Warning(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 85},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 30},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+}
+
+func TestDeriveQuotaStatus_Codex_Exhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 100},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 50},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// Codex with low usage must NOT be exhausted (was a bug where raw 75 >= 1.0)
+func TestDeriveQuotaStatus_Codex_LowUsage_NotExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 75},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 40},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+}
+
+// Wafer: percentage field where Percent=75, must convert to 0-1 ratio
+func TestDeriveQuotaStatus_Wafer_Available(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "used_pct", Format: "percentage", Percent: 50},
+		{Key: "remaining", Format: "number", Value: 500},
+	}
+	result := DeriveQuotaStatus("wafer", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.InDelta(t, 0.5, result.Limits[0].UsageRatio, 0.01)
+}
+
+func TestDeriveQuotaStatus_Wafer_Warning(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "used_pct", Format: "percentage", Percent: 85},
+		{Key: "remaining", Format: "number", Value: 150},
+	}
+	result := DeriveQuotaStatus("wafer", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+}
+
+func TestDeriveQuotaStatus_Wafer_Exhausted_NoRemaining(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "used_pct", Format: "percentage", Percent: 100},
+		{Key: "remaining", Format: "number", Value: 0},
+	}
+	result := DeriveQuotaStatus("wafer", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+// Wafer with 75% usage must NOT be warning (was a bug where raw 75 >= 0.8)
+func TestDeriveQuotaStatus_Wafer_75Pct_NotWarning(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "used_pct", Format: "percentage", Percent: 75},
+		{Key: "remaining", Format: "number", Value: 250},
+	}
+	result := DeriveQuotaStatus("wafer", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+}

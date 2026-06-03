@@ -82,8 +82,8 @@ func deriveClaudeCode(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
-	pct := findFieldPercent(fields, "primary_used_pct")
-	secondaryPct := findFieldPercent(fields, "secondary_used_pct")
+	pct := findFieldPercent(fields, "primary_used_pct") / 100.0
+	secondaryPct := findFieldPercent(fields, "secondary_used_pct") / 100.0
 	// Use the worse of primary and secondary windows
 	if secondaryPct > pct {
 		pct = secondaryPct
@@ -161,7 +161,7 @@ func deriveNanoGPT(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveWafer(fields []ParsedField) QuotaDerivedStatus {
-	pct := findFieldPercent(fields, "used_pct")
+	pct := findFieldPercent(fields, "used_pct") / 100.0
 	remaining := findFieldNumber(fields, "remaining")
 
 	status := "available"
@@ -175,7 +175,7 @@ func deriveWafer(fields []ParsedField) QuotaDerivedStatus {
 		Status: status,
 		Ready:  status != "exhausted",
 		Limits: []provider_quota.QuotaLimitStatus{
-			provider_quota.NewTokenLimitStatus(status, pct/100.0, nil),
+			provider_quota.NewTokenLimitStatus(status, pct, nil),
 		},
 	}
 }
