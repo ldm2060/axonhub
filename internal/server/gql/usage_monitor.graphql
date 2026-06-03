@@ -121,6 +121,8 @@ input TestUsageMonitorChannelInput {
     apiMethod: UsageMonitorChannelAPIMethod!
     apiHeaders: String!
     apiBody: String
+    providerType: String
+    apiKey: String
     fields: [FieldConfigInput!]
     variables: [VariableInput!]
     displayFields: [DisplayFieldInput!]

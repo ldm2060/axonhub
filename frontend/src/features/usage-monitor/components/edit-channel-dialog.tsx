@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import { antigravityOAuthExchange, antigravityOAuthStart } from '@/features/channels/data/antigravity';
+import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { useQuotaMonitorTemplates } from '../data/templates';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
@@ -48,6 +50,14 @@ export function EditChannelDialog() {
   // API key state for template channels
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+
+  // Antigravity OAuth flow for edit dialog
+  const authType = templateForChannel?.authType || 'api_key';
+  const antigravityOAuth = useOAuthFlow({
+    startFn: antigravityOAuthStart,
+    exchangeFn: antigravityOAuthExchange,
+    onSuccess: (credentials) => setApiKey(credentials),
+  });
 
   // Populate form when channel changes
   useEffect(() => {
@@ -195,7 +205,62 @@ export function EditChannelDialog() {
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
           <div className="space-y-5 pb-4">
             {/* Template channel: Credential */}
-            {isTemplate && (
+            {isTemplate && authType === 'oauth' && currentChannel?.providerType === 'antigravity' && (
+              <div className="space-y-1.5">
+                <Label>{templateForChannel?.credentialLabel || t('usageMonitor.apiKey')}</Label>
+                <div className="rounded-md border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => antigravityOAuth.start()}
+                      disabled={antigravityOAuth.isStarting}
+                    >
+                      {antigravityOAuth.isStarting
+                        ? t('channels.dialogs.antigravity.buttons.starting')
+                        : t('channels.dialogs.antigravity.buttons.startOAuth')}
+                    </Button>
+                    {antigravityOAuth.authUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => window.open(antigravityOAuth.authUrl || '', '_blank', 'noopener,noreferrer')}
+                      >
+                        {t('channels.dialogs.antigravity.buttons.openOAuthLink')}
+                      </Button>
+                    )}
+                  </div>
+                  {antigravityOAuth.authUrl && (
+                    <div className="mt-3 space-y-2">
+                      <Input
+                        value={antigravityOAuth.callbackUrl}
+                        onChange={(e) => antigravityOAuth.setCallbackUrl(e.target.value)}
+                        placeholder={t('channels.dialogs.antigravity.placeholders.callbackUrl')}
+                        className="font-mono text-xs"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => antigravityOAuth.exchange()}
+                        disabled={antigravityOAuth.isExchanging || !antigravityOAuth.sessionId}
+                      >
+                        {antigravityOAuth.isExchanging
+                          ? t('channels.dialogs.antigravity.buttons.exchanging')
+                          : t('channels.dialogs.antigravity.buttons.exchangeAndFillApiKey')}
+                      </Button>
+                    </div>
+                  )}
+                  {apiKey && apiKey !== MASKED_API_KEY && (
+                    <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                      {t('channels.dialogs.oauth.messages.credentialsImported')}
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {apiKey === MASKED_API_KEY ? t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key' : ''}
+                </p>
+              </div>
+            )}
+            {isTemplate && !(authType === 'oauth' && currentChannel?.providerType === 'antigravity') && (
               <div className="space-y-1.5">
                 <Label>{templateForChannel?.credentialLabel || t('usageMonitor.apiKey')}</Label>
                 <div className="relative">
@@ -339,6 +404,8 @@ export function EditChannelDialog() {
               apiBody={apiBody}
               variables={variables}
               displayFields={displayFields}
+              providerType={currentChannel?.providerType ?? undefined}
+              apiKey={apiKey !== MASKED_API_KEY ? apiKey : undefined}
             />
           </div>
         </div>

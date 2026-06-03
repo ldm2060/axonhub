@@ -89946,7 +89946,7 @@ func (ec *executionContext) unmarshalInputTestUsageMonitorChannelInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"apiUrl", "apiMethod", "apiHeaders", "apiBody", "fields", "variables", "displayFields"}
+	fieldsInOrder := [...]string{"apiUrl", "apiMethod", "apiHeaders", "apiBody", "providerType", "apiKey", "fields", "variables", "displayFields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -89983,6 +89983,20 @@ func (ec *executionContext) unmarshalInputTestUsageMonitorChannelInput(ctx conte
 				return it, err
 			}
 			it.ApiBody = data
+		case "providerType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderType = data
+		case "apiKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ApiKey = data
 		case "fields":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fields"))
 			data, err := ec.unmarshalOFieldConfigInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐFieldConfigᚄ(ctx, v)

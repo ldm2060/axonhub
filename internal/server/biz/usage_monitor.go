@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +19,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/oauth"
+	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 )
 
 func assembleHeadersFromAPIKey(apiKey string, headerFormat string) map[string]any {
@@ -298,6 +301,7 @@ type UsageMonitorService struct {
 
 	cache              *live.IndexedCache[int, *ent.UsageMonitorChannel]
 	genericChecker     *usage_monitor.GenericQuotaChecker
+	httpClient         *httpclient.HttpClient
 	mu                 sync.Mutex
 	quotaCacheCallback QuotaCacheCallback
 }
@@ -306,6 +310,7 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 	svc := &UsageMonitorService{
 		AbstractService: &AbstractService{db: params.Ent},
 		genericChecker:  usage_monitor.NewGenericQuotaChecker(params.HttpClient),
+		httpClient:      params.HttpClient,
 	}
 
 	svc.cache = live.NewIndexedCache(live.IndexedOptions[int, *ent.UsageMonitorChannel]{
@@ -456,7 +461,13 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 			input.DisplayFields = tmpl.DisplayFields
 		}
 		// Assemble headers from apiKey + template headerFormat
-		apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+		// Special case: Antigravity stores refreshToken|projectId, not a usable Bearer token.
+		// The pollChannel method will refresh the token before each poll, so store empty headers.
+		if *input.ProviderType == "antigravity" {
+			apiHeaders = map[string]any{}
+		} else {
+			apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+		}
 		// For url_key format, append API key as query parameter to the URL
 		if tmpl.HeaderFormat == "url_key" && input.ApiKey != nil {
 			input.ApiURL = tmpl.ApiURL + "?key=" + *input.ApiKey
@@ -590,8 +601,14 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 				if tmpl.HeaderFormat == "url_key" {
 					update.SetAPIURL(tmpl.ApiURL + "?key=" + *input.ApiKey)
 				}
-				apiHeaders := assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
-				update.SetAPIHeaders(apiHeaders)
+				// Special case: Antigravity stores refreshToken|projectId, not a usable Bearer token.
+				// The pollChannel method will refresh the token before each poll, so store empty headers.
+				if string(existing.ProviderType) == "antigravity" {
+					update.SetAPIHeaders(map[string]any{})
+				} else {
+					apiHeaders := assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
+					update.SetAPIHeaders(apiHeaders)
+				}
 			}
 		}
 	}
@@ -690,6 +707,18 @@ func (svc *UsageMonitorService) TestConnection(ctx context.Context, input usage_
 		}
 	}
 
+	// For Antigravity OAuth, refresh the access token before testing.
+	if input.ProviderType != nil && *input.ProviderType == "antigravity" && input.ApiKey != nil && *input.ApiKey != "" {
+		refreshedHeaders, err := svc.refreshAntigravityToken(ctx, *input.ApiKey)
+		if err != nil {
+			return &usage_monitor.TestResult{
+				Success: false,
+				Error:   fmt.Sprintf("Antigravity token refresh failed: %v", err),
+			}
+		}
+		apiHeaders = refreshedHeaders
+	}
+
 	apiBody := ""
 	if input.ApiBody != nil {
 		apiBody = *input.ApiBody
@@ -746,6 +775,38 @@ func (svc *UsageMonitorService) runPollAll(ctx context.Context) {
 
 func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMonitorChannel) {
 	apiBody := ch.APIBody
+	apiHeaders := ch.APIHeaders
+
+	// For Antigravity OAuth channels, refresh the access token before polling.
+	// The apiKey is stored as "refreshToken|projectId" and we need a fresh
+	// access token for the Authorization header.
+	if ch.Source == usagemonitorchannel.SourceTemplate &&
+		ch.ProviderType == usagemonitorchannel.ProviderTypeAntigravity &&
+		ch.APIKey != "" {
+		refreshedHeaders, err := svc.refreshAntigravityToken(ctx, ch.APIKey)
+		if err != nil {
+			log.Error(ctx, "Failed to refresh Antigravity token for usage monitor channel",
+				log.Int("channel_id", ch.ID),
+				log.String("channel_name", ch.Name),
+				log.Cause(err))
+
+			// Update DB with error status
+			client := svc.entFromContext(ctx)
+			errMsg := fmt.Sprintf("Antigravity token refresh failed: %v", err)
+			_, updateErr := client.UsageMonitorChannel.UpdateOneID(ch.ID).
+				SetLastPollError(errMsg).
+				SetStatus(usagemonitorchannel.StatusError).
+				Save(ctx)
+			if updateErr != nil {
+				log.Error(ctx, "Failed to update error status for usage monitor channel",
+					log.Int("channel_id", ch.ID),
+					log.Cause(updateErr))
+			}
+			svc.cache.Invalidate(ch.ID)
+			return
+		}
+		apiHeaders = refreshedHeaders
+	}
 
 	var pollData *usage_monitor.PollData
 	var err error
@@ -754,11 +815,11 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
 		vars := convertMapSliceToVariables(ch.Variables)
 		dfs := convertMapSliceToDisplayFields(ch.DisplayFields)
-		pollData, err = svc.genericChecker.PollV2(ctx, ch.APIURL, string(ch.APIMethod), ch.APIHeaders, apiBody, vars, dfs)
+		pollData, err = svc.genericChecker.PollV2(ctx, ch.APIURL, string(ch.APIMethod), apiHeaders, apiBody, vars, dfs)
 	} else {
 		// Fall back to legacy Fields column
 		fieldConfigs := convertMapSliceToFieldConfigs(ch.Fields)
-		pollData, err = svc.genericChecker.Poll(ctx, ch.APIURL, string(ch.APIMethod), ch.APIHeaders, apiBody, fieldConfigs)
+		pollData, err = svc.genericChecker.Poll(ctx, ch.APIURL, string(ch.APIMethod), apiHeaders, apiBody, fieldConfigs)
 	}
 	if err != nil {
 		log.Error(ctx, "Failed to poll usage monitor channel",
@@ -873,4 +934,30 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 		log.Int("channel_id", ch.ID),
 		log.String("channel_name", ch.Name),
 		log.Int("fields_parsed", len(pollData.Fields)))
+}
+
+// refreshAntigravityToken takes an apiKey in "refreshToken|projectId" format,
+// uses the refresh token to obtain a fresh access token, and returns headers
+// suitable for making the quota API call.
+func (svc *UsageMonitorService) refreshAntigravityToken(ctx context.Context, apiKey string) (map[string]any, error) {
+	parts := strings.SplitN(apiKey, "|", 2)
+	if len(parts) != 2 || parts[0] == "" {
+		return nil, fmt.Errorf("invalid Antigravity credentials format, expected refreshToken|projectId")
+	}
+	refreshToken := parts[0]
+
+	tokenProvider := antigravity.NewTokenProvider(oauth.TokenProviderParams{
+		HTTPClient: svc.httpClient,
+		Credentials: &oauth.OAuthCredentials{
+			RefreshToken: refreshToken,
+			ClientID:     antigravity.ClientID,
+		},
+	})
+
+	creds, err := tokenProvider.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to refresh Antigravity token: %w", err)
+	}
+
+	return map[string]any{"Authorization": "Bearer " + creds.AccessToken}, nil
 }

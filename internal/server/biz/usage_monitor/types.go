@@ -163,7 +163,9 @@ type TestUsageMonitorChannelInput struct {
 	ApiMethod    string         `json:"apiMethod"`
 	ApiHeaders   string         `json:"apiHeaders"`
 	ApiBody      *string        `json:"apiBody,omitempty"`
-	Fields       []FieldConfig  `json:"fields,omitempty"`        // deprecated, kept for backward compat
-	Variables    []Variable     `json:"variables,omitempty"`     // new: variable extraction config
+	ProviderType *string        `json:"providerType,omitempty"` // needed for OAuth providers (e.g. antigravity)
+	ApiKey       *string        `json:"apiKey,omitempty"`       // needed for OAuth providers to refresh tokens
+	Fields       []FieldConfig  `json:"fields,omitempty"`       // deprecated, kept for backward compat
+	Variables    []Variable     `json:"variables,omitempty"`    // new: variable extraction config
 	DisplayFields []DisplayField `json:"displayFields,omitempty"` // new: display field config
 }

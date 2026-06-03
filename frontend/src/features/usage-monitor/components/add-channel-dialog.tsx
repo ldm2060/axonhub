@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQueryChannels } from '@/features/channels/data/channels';
 import { claudecodeOAuthExchange, claudecodeOAuthStart } from '@/features/channels/data/claudecode';
 import { codexOAuthExchange, codexOAuthStart } from '@/features/channels/data/codex';
+import { antigravityOAuthExchange, antigravityOAuthStart } from '@/features/channels/data/antigravity';
 import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
 import { CopilotDeviceFlow } from '@/features/channels/components/copilot-device-flow';
 import { useCreateUsageMonitorChannel } from '../data/usage-monitor';
@@ -59,6 +60,11 @@ export function AddChannelDialog() {
   const codexOAuth = useOAuthFlow({
     startFn: codexOAuthStart,
     exchangeFn: codexOAuthExchange,
+    onSuccess: (credentials) => setApiKey(credentials),
+  });
+  const antigravityOAuth = useOAuthFlow({
+    startFn: antigravityOAuthStart,
+    exchangeFn: antigravityOAuthExchange,
     onSuccess: (credentials) => setApiKey(credentials),
   });
 
@@ -547,6 +553,58 @@ export function AddChannelDialog() {
                       )}
                     </div>
                   )}
+                  {authType === 'oauth' && selectedTemplate.providerType === 'antigravity' && (
+                    <div className="space-y-1.5">
+                      <Label>{t('usageMonitor.apiKey')}</Label>
+                      <div className="rounded-md border p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => antigravityOAuth.start()}
+                            disabled={antigravityOAuth.isStarting}
+                          >
+                            {antigravityOAuth.isStarting
+                              ? t('channels.dialogs.antigravity.buttons.starting')
+                              : t('channels.dialogs.antigravity.buttons.startOAuth')}
+                          </Button>
+                          {antigravityOAuth.authUrl && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => window.open(antigravityOAuth.authUrl || '', '_blank', 'noopener,noreferrer')}
+                            >
+                              {t('channels.dialogs.antigravity.buttons.openOAuthLink')}
+                            </Button>
+                          )}
+                        </div>
+                        {antigravityOAuth.authUrl && (
+                          <div className="mt-3 space-y-2">
+                            <Input
+                              value={antigravityOAuth.callbackUrl}
+                              onChange={(e) => antigravityOAuth.setCallbackUrl(e.target.value)}
+                              placeholder={t('channels.dialogs.antigravity.placeholders.callbackUrl')}
+                              className="font-mono text-xs"
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => antigravityOAuth.exchange()}
+                              disabled={antigravityOAuth.isExchanging || !antigravityOAuth.sessionId}
+                            >
+                              {antigravityOAuth.isExchanging
+                                ? t('channels.dialogs.antigravity.buttons.exchanging')
+                                : t('channels.dialogs.antigravity.buttons.exchangeAndFillApiKey')}
+                            </Button>
+                          </div>
+                        )}
+                        {apiKey && (
+                          <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                            {t('channels.dialogs.oauth.messages.credentialsImported')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {authType === 'api_key' && (
                     <div className="space-y-1.5">
                       <Label>{selectedTemplate.credentialLabel || t('usageMonitor.apiKey')}</Label>
@@ -618,6 +676,8 @@ export function AddChannelDialog() {
                     apiBody={apiBody}
                     variables={variables}
                     displayFields={displayFields}
+                    providerType={selectedTemplate?.providerType}
+                    apiKey={apiKey}
                   />
                 </>
               )}

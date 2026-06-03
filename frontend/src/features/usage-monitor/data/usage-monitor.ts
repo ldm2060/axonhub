@@ -418,6 +418,8 @@ export type TestUsageMonitorChannelInput = {
   apiMethod: 'GET' | 'POST';
   apiHeaders: string;
   apiBody?: string;
+  providerType?: string;
+  apiKey?: string;
   variables?: VariableInput[];
   displayFields?: DisplayFieldInput[];
 };

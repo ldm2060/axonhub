@@ -15,9 +15,11 @@ interface Props {
   apiBody: string;
   variables: Variable[];
   displayFields: DisplayField[];
+  providerType?: string;
+  apiKey?: string;
 }
 
-export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variables, displayFields }: Props) {
+export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variables, displayFields, providerType, apiKey }: Props) {
   const { t } = useTranslation();
   const testMutation = useTestUsageMonitorChannel();
   const [result, setResult] = useState<TestResult | null>(null);
@@ -48,6 +50,8 @@ export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variabl
         apiMethod: apiMethod as 'GET' | 'POST',
         apiHeaders,
         apiBody: apiBody || undefined,
+        providerType: providerType || undefined,
+        apiKey: apiKey || undefined,
         variables: variableInputs,
         displayFields: displayFieldInputs,
       });
