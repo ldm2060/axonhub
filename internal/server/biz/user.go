@@ -163,6 +163,30 @@ func (s *UserService) UpdateSelf(ctx context.Context, id int, input ent.UpdateUs
 	})
 }
 
+// UpdateSelfPassword updates the current user's own password.
+// No permission check is needed since a user always has permission to update their own password.
+// Bypasses Ent privacy layer since this is a validated self-service operation.
+func (s *UserService) UpdateSelfPassword(ctx context.Context, id int, newPassword string) error {
+	return authz.RunWithSystemBypassVoid(ctx, "update-self-password", func(bypassCtx context.Context) error {
+		hashedPassword, err := HashPassword(newPassword)
+		if err != nil {
+			return err
+		}
+
+		_, err = s.entFromContext(bypassCtx).User.UpdateOneID(id).
+			SetPassword(hashedPassword).
+			Save(bypassCtx)
+		if err != nil {
+			return fmt.Errorf("failed to update password: %w", err)
+		}
+
+		// Invalidate cache
+		s.invalidateUserCache(ctx, id)
+
+		return nil
+	})
+}
+
 // UpdateUser updates an existing user (admin operation).
 // Validates permissions before updating scopes, roles, and other sensitive fields.
 func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {

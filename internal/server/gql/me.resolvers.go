@@ -56,9 +56,7 @@ func (r *mutationResolver) UpdateMyPassword(ctx context.Context, input UpdateMyP
 		}
 	}
 
-	_, err := r.userService.UpdateUser(ctx, user.ID, ent.UpdateUserInput{
-		Password: &input.NewPassword,
-	})
+	err := r.userService.UpdateSelfPassword(ctx, user.ID, input.NewPassword)
 	if err != nil {
 		return false, err
 	}
