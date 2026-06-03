@@ -894,11 +894,14 @@ func convertMultiplePartContent(msg llm.Message) (MessageContent, bool) {
 
 	for _, toolCall := range msg.ToolCalls {
 		// Use safe JSON repair/fallback for tool input
+		input := xjson.SafeJSONRawMessage(toolCall.Function.Arguments)
+		input = sanitizeToolUseInput(toolCall.Function.Name, input)
+
 		blocks = append(blocks, MessageContentBlock{
 			Type:         "tool_use",
 			ID:           toolCall.ID,
 			Name:         &toolCall.Function.Name,
-			Input:        xjson.SafeJSONRawMessage(toolCall.Function.Arguments),
+			Input:        input,
 			CacheControl: convertToAnthropicCacheControl(toolCall.CacheControl),
 		})
 	}

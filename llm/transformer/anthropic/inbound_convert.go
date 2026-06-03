@@ -594,6 +594,7 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 					} else {
 						input = json.RawMessage("{}")
 					}
+					input = sanitizeToolUseInput(toolCall.Function.Name, input)
 
 					contentBlocks = append(contentBlocks, MessageContentBlock{
 						Type:  "tool_use",

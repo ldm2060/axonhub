@@ -174,6 +174,10 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 							block.Input = []byte(repaired)
 						}
 					}
+					if block.Name != nil {
+						block.Input = sanitizeToolUseInput(*block.Name, block.Input)
+					}
+					contentBlocks[index] = block
 				}
 			}
 		case "message_stop":

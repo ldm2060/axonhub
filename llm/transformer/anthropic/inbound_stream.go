@@ -22,7 +22,9 @@ func (t *InboundTransformer) TransformStream(
 	return &anthropicInboundStream{
 		source:               stream,
 		ctx:                  ctx,
-		toolCalls:            make(map[int]*llm.ToolCall),
+		toolCalls:           make(map[int]*llm.ToolCall),
+			toolNameByIndex:     make(map[int]string),
+			toolArgsByIndex:     make(map[int]string),
 		pendingTextCitations: nil,
 	}, nil
 }
@@ -47,7 +49,9 @@ type anthropicInboundStream struct {
 	err                       error
 	stopReason                *string
 	// Tool call tracking
-	toolCalls map[int]*llm.ToolCall // Track tool calls by index
+	toolCalls         map[int]*llm.ToolCall // Track tool calls by index
+	toolNameByIndex   map[int]string        // Track tool name by content block index
+	toolArgsByIndex   map[int]string        // Buffer Read tool args by content block index
 
 	lastEventType string
 
@@ -352,6 +356,26 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
+				// Emit sanitized Read tool input
+				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
+					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
+					streamEvent := StreamEvent{
+						Type:  "content_block_delta",
+						Index: &s.contentIndex,
+						Delta: &StreamDelta{
+							Type:        lo.ToPtr("input_json_delta"),
+							PartialJSON: lo.ToPtr(string(sanitized)),
+						},
+					}
+					err := s.enqueEvent(&streamEvent)
+					if err != nil {
+						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
+						return false
+					}
+					delete(s.toolArgsByIndex, int(s.contentIndex))
+					delete(s.toolNameByIndex, int(s.contentIndex))
+				}
+
 				streamEvent := StreamEvent{
 					Type:  "content_block_stop",
 					Index: &s.contentIndex,
@@ -428,6 +452,26 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
+				// Emit sanitized Read tool input
+				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
+					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
+					streamEvent := StreamEvent{
+						Type:  "content_block_delta",
+						Index: &s.contentIndex,
+						Delta: &StreamDelta{
+							Type:        lo.ToPtr("input_json_delta"),
+							PartialJSON: lo.ToPtr(string(sanitized)),
+						},
+					}
+					err := s.enqueEvent(&streamEvent)
+					if err != nil {
+						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
+						return false
+					}
+					delete(s.toolArgsByIndex, int(s.contentIndex))
+					delete(s.toolNameByIndex, int(s.contentIndex))
+				}
+
 				streamEvent := StreamEvent{
 					Type:  "content_block_stop",
 					Index: &s.contentIndex,
@@ -503,6 +547,26 @@ func (s *anthropicInboundStream) Next() bool {
 			// If the tool content has started before the content block, we need to stop it
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
+
+				// Emit sanitized Read tool input
+				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
+					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
+					streamEvent := StreamEvent{
+						Type:  "content_block_delta",
+						Index: &s.contentIndex,
+						Delta: &StreamDelta{
+							Type:        lo.ToPtr("input_json_delta"),
+							PartialJSON: lo.ToPtr(string(sanitized)),
+						},
+					}
+					err := s.enqueEvent(&streamEvent)
+					if err != nil {
+						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
+						return false
+					}
+					delete(s.toolArgsByIndex, int(s.contentIndex))
+					delete(s.toolNameByIndex, int(s.contentIndex))
+				}
 
 				streamEvent := StreamEvent{
 					Type:  "content_block_stop",
@@ -723,6 +787,26 @@ func (s *anthropicInboundStream) Next() bool {
 
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
+
+				// Emit sanitized Read tool input
+				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
+					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
+					streamEvent := StreamEvent{
+						Type:  "content_block_delta",
+						Index: &s.contentIndex,
+						Delta: &StreamDelta{
+							Type:        lo.ToPtr("input_json_delta"),
+							PartialJSON: lo.ToPtr(string(sanitized)),
+						},
+					}
+					err := s.enqueEvent(&streamEvent)
+					if err != nil {
+						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
+						return false
+					}
+					delete(s.toolArgsByIndex, int(s.contentIndex))
+					delete(s.toolNameByIndex, int(s.contentIndex))
+				}
 
 				streamEvent := StreamEvent{
 					Type:  "content_block_stop",
