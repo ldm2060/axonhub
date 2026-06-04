@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -22,9 +23,10 @@ func (t *InboundTransformer) TransformStream(
 	return &anthropicInboundStream{
 		source:               stream,
 		ctx:                  ctx,
-		toolCalls:           make(map[int]*llm.ToolCall),
-			toolNameByIndex:     make(map[int]string),
-			toolArgsByIndex:     make(map[int]string),
+		toolCalls:            make(map[int]*llm.ToolCall),
+		toolNameByIndex:      make(map[int]string),
+		toolArgsByIndex:      make(map[int]string),
+		readToolIndices:      make(map[int]bool),
 		pendingTextCitations: nil,
 	}, nil
 }
@@ -49,9 +51,13 @@ type anthropicInboundStream struct {
 	err                       error
 	stopReason                *string
 	// Tool call tracking
-	toolCalls         map[int]*llm.ToolCall // Track tool calls by index
-	toolNameByIndex   map[int]string        // Track tool name by content block index
-	toolArgsByIndex   map[int]string        // Buffer Read tool args by content block index
+	toolCalls map[int]*llm.ToolCall // Track tool calls by index
+	// Read tool sanitization: track tool name and buffer args by content block index.
+	// For Read tool calls, we buffer the arguments and emit sanitized input when
+	// the content block closes, because we cannot "undo" already-sent streaming deltas.
+	toolNameByIndex map[int]string // Track tool name by content block index
+	toolArgsByIndex map[int]string // Buffer tool args by content block index (for Read tool)
+	readToolIndices map[int]bool   // Track which content block indices are Read tool calls
 
 	lastEventType string
 
@@ -116,6 +122,51 @@ func (s *anthropicInboundStream) flushPendingTextCitations() error {
 	return nil
 }
 
+// isReadTool returns true if the tool name is "Read" (case-insensitive).
+func isReadTool(name string) bool {
+	return strings.EqualFold(name, "Read")
+}
+
+// flushReadToolInput emits a single input_json_delta event with the sanitized
+// complete tool input for the current content block index, then cleans up the
+// tracking maps. It returns true if a sanitized event was emitted.
+func (s *anthropicInboundStream) flushReadToolInput() (bool, error) {
+	idx := int(s.contentIndex)
+	if !s.readToolIndices[idx] {
+		return false, nil
+	}
+
+	args, ok := s.toolArgsByIndex[idx]
+	if !ok {
+		// No args were buffered; nothing to emit.
+		delete(s.readToolIndices, idx)
+		delete(s.toolNameByIndex, idx)
+		return false, nil
+	}
+
+	toolName := s.toolNameByIndex[idx]
+	sanitized := sanitizeToolUseInput(toolName, json.RawMessage(args))
+
+	streamEvent := StreamEvent{
+		Type:  "content_block_delta",
+		Index: &s.contentIndex,
+		Delta: &StreamDelta{
+			Type:        lo.ToPtr("input_json_delta"),
+			PartialJSON: lo.ToPtr(string(sanitized)),
+		},
+	}
+
+	if err := s.enqueEvent(&streamEvent); err != nil {
+		return false, fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
+	}
+
+	delete(s.toolArgsByIndex, idx)
+	delete(s.toolNameByIndex, idx)
+	delete(s.readToolIndices, idx)
+
+	return true, nil
+}
+
 // closeThinkingBlock ensures any open or implied thinking block is properly
 // closed. It handles three scenarios:
 //  1. pendingSignature exists but no thinking block was started — creates a
@@ -151,6 +202,11 @@ func (s *anthropicInboundStream) closeThinkingBlock() error {
 
 		if s.hasToolContentStarted {
 			s.hasToolContentStarted = false
+
+			// Flush buffered Read tool input before closing the block.
+			if _, err := s.flushReadToolInput(); err != nil {
+				return fmt.Errorf("failed to flush Read tool input before pending signature: %w", err)
+			}
 
 			if err := s.enqueEvent(&StreamEvent{
 				Type:  "content_block_stop",
@@ -356,24 +412,10 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
-				// Emit sanitized Read tool input
-				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
-					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
-					streamEvent := StreamEvent{
-						Type:  "content_block_delta",
-						Index: &s.contentIndex,
-						Delta: &StreamDelta{
-							Type:        lo.ToPtr("input_json_delta"),
-							PartialJSON: lo.ToPtr(string(sanitized)),
-						},
-					}
-					err := s.enqueEvent(&streamEvent)
-					if err != nil {
-						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
-						return false
-					}
-					delete(s.toolArgsByIndex, int(s.contentIndex))
-					delete(s.toolNameByIndex, int(s.contentIndex))
+				// Flush buffered Read tool input before closing the block.
+				if _, err := s.flushReadToolInput(); err != nil {
+					s.err = fmt.Errorf("failed to flush Read tool input before thinking: %w", err)
+					return false
 				}
 
 				streamEvent := StreamEvent{
@@ -452,24 +494,10 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
-				// Emit sanitized Read tool input
-				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
-					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
-					streamEvent := StreamEvent{
-						Type:  "content_block_delta",
-						Index: &s.contentIndex,
-						Delta: &StreamDelta{
-							Type:        lo.ToPtr("input_json_delta"),
-							PartialJSON: lo.ToPtr(string(sanitized)),
-						},
-					}
-					err := s.enqueEvent(&streamEvent)
-					if err != nil {
-						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
-						return false
-					}
-					delete(s.toolArgsByIndex, int(s.contentIndex))
-					delete(s.toolNameByIndex, int(s.contentIndex))
+				// Flush buffered Read tool input before closing the block.
+				if _, err := s.flushReadToolInput(); err != nil {
+					s.err = fmt.Errorf("failed to flush Read tool input before redacted thinking: %w", err)
+					return false
 				}
 
 				streamEvent := StreamEvent{
@@ -548,24 +576,10 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
-				// Emit sanitized Read tool input
-				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
-					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
-					streamEvent := StreamEvent{
-						Type:  "content_block_delta",
-						Index: &s.contentIndex,
-						Delta: &StreamDelta{
-							Type:        lo.ToPtr("input_json_delta"),
-							PartialJSON: lo.ToPtr(string(sanitized)),
-						},
-					}
-					err := s.enqueEvent(&streamEvent)
-					if err != nil {
-						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
-						return false
-					}
-					delete(s.toolArgsByIndex, int(s.contentIndex))
-					delete(s.toolNameByIndex, int(s.contentIndex))
+				// Flush buffered Read tool input before closing the block.
+				if _, err := s.flushReadToolInput(); err != nil {
+					s.err = fmt.Errorf("failed to flush Read tool input before text content: %w", err)
+					return false
 				}
 
 				streamEvent := StreamEvent{
@@ -659,6 +673,12 @@ func (s *anthropicInboundStream) Next() bool {
 						if s.hasToolContentStarted {
 							s.hasToolContentStarted = false
 
+							// Flush buffered Read tool input before closing the previous tool block.
+							if _, err := s.flushReadToolInput(); err != nil {
+								s.err = fmt.Errorf("failed to flush Read tool input before next tool: %w", err)
+								return false
+							}
+
 							streamEvent := StreamEvent{
 								Type:  "content_block_stop",
 								Index: &s.contentIndex,
@@ -684,6 +704,13 @@ func (s *anthropicInboundStream) Next() bool {
 							Arguments: "",
 						},
 						TransformerMetadata: deltaToolCall.TransformerMetadata,
+					}
+
+					// Track tool name and mark Read tools for buffered sanitization.
+					toolName := deltaToolCall.Function.Name
+					s.toolNameByIndex[int(s.contentIndex)] = toolName
+					if isReadTool(toolName) {
+						s.readToolIndices[int(s.contentIndex)] = true
 					}
 
 					// Restore the original Anthropic block type (tool_use /
@@ -712,10 +739,39 @@ func (s *anthropicInboundStream) Next() bool {
 						return false
 					}
 
-					// If the tool call has arguments, we need to generate a content_block_delta.
+					// If the tool call has arguments, buffer or stream them.
 					if deltaToolCall.Function.Arguments != "" {
 						s.toolCalls[toolCallIndex].Function.Arguments += deltaToolCall.Function.Arguments
 
+						if s.readToolIndices[int(s.contentIndex)] {
+							// Read tool: buffer arguments, don't stream yet.
+							s.toolArgsByIndex[int(s.contentIndex)] += deltaToolCall.Function.Arguments
+						} else {
+							// Non-Read tool: stream arguments directly.
+							streamEvent := StreamEvent{
+								Type:  "content_block_delta",
+								Index: &s.contentIndex,
+								Delta: &StreamDelta{
+									Type:        lo.ToPtr("input_json_delta"),
+									PartialJSON: &deltaToolCall.Function.Arguments,
+								},
+							}
+
+							err := s.enqueEvent(&streamEvent)
+							if err != nil {
+								s.err = fmt.Errorf("failed to enqueue content_block_delta event: %w", err)
+								return false
+							}
+						}
+					}
+				} else {
+					s.toolCalls[toolCallIndex].Function.Arguments += deltaToolCall.Function.Arguments
+
+					if s.readToolIndices[int(s.contentIndex)] {
+						// Read tool: buffer arguments, don't stream yet.
+						s.toolArgsByIndex[int(s.contentIndex)] += deltaToolCall.Function.Arguments
+					} else {
+						// Non-Read tool: stream arguments directly.
 						streamEvent := StreamEvent{
 							Type:  "content_block_delta",
 							Index: &s.contentIndex,
@@ -730,29 +786,6 @@ func (s *anthropicInboundStream) Next() bool {
 							s.err = fmt.Errorf("failed to enqueue content_block_delta event: %w", err)
 							return false
 						}
-					}
-				} else {
-					s.toolCalls[toolCallIndex].Function.Arguments += deltaToolCall.Function.Arguments
-
-					// Generate content_block_delta for input_json_delta
-					// contentBlockIndex := int64(toolCallIndex)
-					// if s.hasTextContentStarted || s.hasThinkingContentStarted {
-					// 	contentBlockIndex = s.contentIndex + 1 + int64(toolCallIndex)
-					// }
-
-					streamEvent := StreamEvent{
-						Type:  "content_block_delta",
-						Index: &s.contentIndex,
-						Delta: &StreamDelta{
-							Type:        lo.ToPtr("input_json_delta"),
-							PartialJSON: &deltaToolCall.Function.Arguments,
-						},
-					}
-
-					err := s.enqueEvent(&streamEvent)
-					if err != nil {
-						s.err = fmt.Errorf("failed to enqueue content_block_delta event: %w", err)
-						return false
 					}
 				}
 			}
@@ -771,6 +804,12 @@ func (s *anthropicInboundStream) Next() bool {
 			// Close any open tool_use block before starting a tool_result.
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
+
+				// Flush buffered Read tool input before closing the block.
+				if _, err := s.flushReadToolInput(); err != nil {
+					s.err = fmt.Errorf("failed to flush Read tool input before tool_result: %w", err)
+					return false
+				}
 
 				stopEvent := StreamEvent{
 					Type:  "content_block_stop",
@@ -869,24 +908,10 @@ func (s *anthropicInboundStream) Next() bool {
 			if s.hasToolContentStarted {
 				s.hasToolContentStarted = false
 
-				// Emit sanitized Read tool input
-				if args, ok := s.toolArgsByIndex[int(s.contentIndex)]; ok {
-					sanitized := sanitizeToolUseInput("Read", json.RawMessage(args))
-					streamEvent := StreamEvent{
-						Type:  "content_block_delta",
-						Index: &s.contentIndex,
-						Delta: &StreamDelta{
-							Type:        lo.ToPtr("input_json_delta"),
-							PartialJSON: lo.ToPtr(string(sanitized)),
-						},
-					}
-					err := s.enqueEvent(&streamEvent)
-					if err != nil {
-						s.err = fmt.Errorf("failed to enqueue sanitized input_json_delta event: %w", err)
-						return false
-					}
-					delete(s.toolArgsByIndex, int(s.contentIndex))
-					delete(s.toolNameByIndex, int(s.contentIndex))
+				// Flush buffered Read tool input before closing the block.
+				if _, err := s.flushReadToolInput(); err != nil {
+					s.err = fmt.Errorf("failed to flush Read tool input at finish: %w", err)
+					return false
 				}
 
 				streamEvent := StreamEvent{

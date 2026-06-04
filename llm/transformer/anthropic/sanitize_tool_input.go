@@ -1,12 +1,16 @@
 package anthropic
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // sanitizeToolUseInput removes empty-string fields that are invalid for Anthropic tool_use input.
 // Specifically, the "pages" field in the "Read" tool is removed when it is an empty string,
 // because OpenAI's Responses API includes `"pages": ""` but Anthropic rejects it.
+// Tool name comparison is case-insensitive for robustness across providers.
 func sanitizeToolUseInput(name string, input json.RawMessage) json.RawMessage {
-	if name != "Read" || len(input) == 0 {
+	if !strings.EqualFold(name, "Read") || len(input) == 0 {
 		return input
 	}
 
