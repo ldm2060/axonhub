@@ -256,65 +256,79 @@ func TestDeriveQuotaStatus_Codex_NoAdditionalLimits(t *testing.T) {
 
 // --- GitHub Copilot tests ---
 
-// GitHub Copilot: both quotas available.
-func TestDeriveQuotaStatus_GitHubCopilot_BothAvailable(t *testing.T) {
+// GitHub Copilot: limited quotas available (Free account with remaining quota).
+func TestDeriveQuotaStatus_GitHubCopilot_LimitedQuotasAvailable(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "individual"},
-		{Key: "api_quota_access", Format: "text", Value: "true"},
-		{Key: "chat_quota_access", Format: "text", Value: "true"},
+		{Key: "access_type", Format: "text", Value: "copilot_free"},
+		{Key: "limited_quotas", Format: "text", Value: map[string]any{"chat": float64(800), "completions": float64(500)}},
+		{Key: "monthly_quotas", Format: "text", Value: map[string]any{"chat": float64(1000), "completions": float64(1000)}},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "available", result.Status)
 	assert.True(t, result.Ready)
-	assert.Len(t, result.Limits, 2)
+	assert.Len(t, result.Limits, 1)
 }
 
-// GitHub Copilot: API quota exhausted.
-func TestDeriveQuotaStatus_GitHubCopilot_ApiQuotaExhausted(t *testing.T) {
+// GitHub Copilot: limited quotas exhausted (Free account).
+func TestDeriveQuotaStatus_GitHubCopilot_LimitedQuotasExhausted(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "individual"},
-		{Key: "api_quota_access", Format: "text", Value: "false"},
-		{Key: "chat_quota_access", Format: "text", Value: "true"},
+		{Key: "access_type", Format: "text", Value: "copilot_free"},
+		{Key: "limited_quotas", Format: "text", Value: map[string]any{"chat": float64(0), "completions": float64(500)}},
+		{Key: "monthly_quotas", Format: "text", Value: map[string]any{"chat": float64(1000), "completions": float64(1000)}},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "exhausted", result.Status)
 	assert.False(t, result.Ready)
-	assert.Len(t, result.Limits, 2)
-	assert.Equal(t, "exhausted", result.Limits[0].Status)
-	assert.Equal(t, "available", result.Limits[1].Status)
 }
 
-// GitHub Copilot: chat quota exhausted.
-func TestDeriveQuotaStatus_GitHubCopilot_ChatQuotaExhausted(t *testing.T) {
+// GitHub Copilot: quota snapshots with percent_remaining (EDU/Premium account).
+func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsAvailable(t *testing.T) {
 	fields := []ParsedField{
-		{Key: "plan", Format: "text", Value: "individual"},
-		{Key: "api_quota_access", Format: "text", Value: "true"},
-		{Key: "chat_quota_access", Format: "text", Value: "false"},
+		{Key: "plan", Format: "text", Value: "business"},
+		{Key: "access_type", Format: "text", Value: "copilot_business"},
+		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
+			"claude": map[string]any{"unlimited": false, "percent_remaining": float64(85)},
+		}},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
-	assert.Equal(t, "exhausted", result.Status)
-	assert.False(t, result.Ready)
-	assert.Len(t, result.Limits, 2)
-	assert.Equal(t, "available", result.Limits[0].Status)
-	assert.Equal(t, "exhausted", result.Limits[1].Status)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
 }
 
-// GitHub Copilot: both quotas exhausted.
-func TestDeriveQuotaStatus_GitHubCopilot_BothExhausted(t *testing.T) {
+// GitHub Copilot: quota snapshots exhausted.
+func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsExhausted(t *testing.T) {
 	fields := []ParsedField{
-		{Key: "api_quota_access", Format: "text", Value: "false"},
-		{Key: "chat_quota_access", Format: "text", Value: "false"},
+		{Key: "plan", Format: "text", Value: "business"},
+		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
+			"claude": map[string]any{"unlimited": false, "percent_remaining": float64(0)},
+		}},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "exhausted", result.Status)
 	assert.False(t, result.Ready)
+}
+
+// GitHub Copilot: unlimited snapshots should be skipped.
+func TestDeriveQuotaStatus_GitHubCopilot_UnlimitedSkipped(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "plan", Format: "text", Value: "enterprise"},
+		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
+			"claude": map[string]any{"unlimited": true, "percent_remaining": float64(0)},
+		}},
+	}
+	result := DeriveQuotaStatus("github_copilot", fields)
+	// Unlimited should be skipped, so no quota data -> available
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
 }
 
 // GitHub Copilot: no quota fields (backward compat) falls back to available.
 func TestDeriveQuotaStatus_GitHubCopilot_NoQuotaFields(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "individual"},
-		{Key: "access_type", Format: "text", Value: "pro"},
+		{Key: "access_type", Format: "text", Value: "copilot_pro"},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "available", result.Status)

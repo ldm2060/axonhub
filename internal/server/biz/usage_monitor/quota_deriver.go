@@ -179,73 +179,90 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
-	var apiQuotaAccess, chatQuotaAccess *bool
+	var lowestPct float64 = 100
+	var hasQuotaData bool
 
 	for _, f := range fields {
-		if f.Key == "api_quota_access" {
-			if val, ok := f.Value.(string); ok {
-				access := val == "true"
-				apiQuotaAccess = &access
+		switch f.Key {
+		case "limited_quotas":
+			// Free accounts: limited_user_quotas is a map of feature -> remaining count
+			// Need to compare with monthly_quotas to get percentage
+			limitedMap, ok := f.Value.(map[string]any)
+			if !ok || len(limitedMap) == 0 {
+				continue
+			}
+			// Find the monthly_quotas field for totals
+			var monthlyMap map[string]any
+			for _, mf := range fields {
+				if mf.Key == "monthly_quotas" {
+					monthlyMap, _ = mf.Value.(map[string]any)
+					break
+				}
+			}
+			for key, remainingVal := range limitedMap {
+				remaining, err := toFloat(remainingVal)
+				if err != nil {
+					continue
+				}
+				total := remaining
+				if monthlyMap != nil {
+					if t, err2 := toFloat(monthlyMap[key]); err2 == nil && t > 0 {
+						total = t
+					}
+				}
+				if total > 0 {
+					pct := (remaining / total) * 100
+					if pct < lowestPct {
+						lowestPct = pct
+					}
+					hasQuotaData = true
+				}
+			}
+
+		case "quota_snapshots":
+			// EDU/Premium accounts: quota_snapshots is a map with percent_remaining
+			snapshots, ok := f.Value.(map[string]any)
+			if !ok || len(snapshots) == 0 {
+				continue
+			}
+			for _, snapshot := range snapshots {
+				s, ok := snapshot.(map[string]any)
+				if !ok {
+					continue
+				}
+				// Skip unlimited features
+				if unlimited, _ := s["unlimited"].(bool); unlimited {
+					continue
+				}
+				if pct, err := toFloat(s["percent_remaining"]); err == nil {
+					if pct < lowestPct {
+						lowestPct = pct
+					}
+					hasQuotaData = true
+				}
 			}
 		}
-		if f.Key == "chat_quota_access" {
-			if val, ok := f.Value.(string); ok {
-				access := val == "true"
-				chatQuotaAccess = &access
-			}
-		}
 	}
 
-	// If neither field exists (old template data), fall back to available.
-	if apiQuotaAccess == nil && chatQuotaAccess == nil {
-		return QuotaDerivedStatus{Status: "available", Ready: true}
+	// No quota data available (e.g. only plan/access_type fields)
+	if !hasQuotaData {
+		nextReset := earliestDatetime(fields)
+		return QuotaDerivedStatus{Status: "available", Ready: true, NextResetAt: nextReset}
 	}
 
-	var limits []provider_quota.QuotaLimitStatus
-	var worstStatus string
-
-	// API quota status
-	if apiQuotaAccess != nil {
-		apiStatus := "available"
-		if !*apiQuotaAccess {
-			apiStatus = "exhausted"
-		}
-		limits = append(limits, provider_quota.QuotaLimitStatus{
-			Type:       provider_quota.QuotaLimitTypeToken,
-			Status:     apiStatus,
-			UsageRatio: 0, // No percentage data available
-			Ready:      *apiQuotaAccess,
-		})
-		if worstStatus == "" || quotaStatusRank(apiStatus) > quotaStatusRank(worstStatus) {
-			worstStatus = apiStatus
-		}
+	status := "available"
+	if lowestPct <= 0 {
+		status = "exhausted"
+	} else if lowestPct < 20 {
+		status = "warning"
 	}
 
-	// Chat quota status
-	if chatQuotaAccess != nil {
-		chatStatus := "available"
-		if !*chatQuotaAccess {
-			chatStatus = "exhausted"
-		}
-		limits = append(limits, provider_quota.QuotaLimitStatus{
-			Type:       provider_quota.QuotaLimitTypeToken,
-			Status:     chatStatus,
-			UsageRatio: 0, // No percentage data available
-			Ready:      *chatQuotaAccess,
-		})
-		if worstStatus == "" || quotaStatusRank(chatStatus) > quotaStatusRank(worstStatus) {
-			worstStatus = chatStatus
-		}
-	}
-
-	if worstStatus == "" {
-		worstStatus = "available"
-	}
-
+	nextReset := earliestDatetime(fields)
 	return QuotaDerivedStatus{
-		Status: worstStatus,
-		Ready:  worstStatus != "exhausted",
-		Limits: limits,
+		Status:      status,
+		Ready:       status != "exhausted",
+		Limits:      []provider_quota.QuotaLimitStatus{provider_quota.NewTokenLimitStatus(status, (100-lowestPct)/100, nextReset)},
+		NextResetAt: nextReset,
 	}
 }
 

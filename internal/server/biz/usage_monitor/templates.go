@@ -121,16 +121,26 @@ var channelTemplates = []ChannelTemplate{
 			Variables: []Variable{
 				{Key: "plan", Path: "$.copilot_plan", Type: "jsonpath"},
 				{Key: "access_type", Path: "$.access_type_sku", Type: "jsonpath"},
-				{Key: "api_quota_access", Path: "$.api_quota_access", Type: "jsonpath"},
-				{Key: "chat_quota_access", Path: "$.chat_quota_access", Type: "jsonpath"},
-				{Key: "manage_subscription_user", Path: "$.manage_subscription_user", Type: "jsonpath"},
+				// Limited quotas (Free accounts): remaining counts per feature
+				{Key: "limited_quotas", Path: "$.limited_user_quotas", Type: "jsonpath"},
+				// Monthly quotas (total counts per feature)
+				{Key: "monthly_quotas", Path: "$.monthly_quotas", Type: "jsonpath"},
+				// Quota snapshots (EDU/Premium accounts): percent_remaining per feature
+				{Key: "quota_snapshots", Path: "$.quota_snapshots", Type: "jsonpath"},
+				// Reset dates
+				{Key: "limited_reset_date", Path: "$.limited_user_reset_date", Type: "jsonpath"},
+				{Key: "quota_reset_date_utc", Path: "$.quota_reset_date_utc", Type: "jsonpath"},
+				{Key: "quota_reset_date", Path: "$.quota_reset_date", Type: "jsonpath"},
 			},
 			DisplayFields: []DisplayField{
-				{Key: "plan", Label: "Plan", ValueRef: "plan", Format: "text", DisplayOrder: 0, Badge: "plan", BadgePresets: `{"individual":"sapphire","business":"champagne","enterprise":"champagne"}`},
-				{Key: "access_type", Label: "Access Type", ValueRef: "access_type", Format: "text", DisplayOrder: 1},
-				{Key: "api_quota_access", Label: "API Quota", ValueRef: "api_quota_access", Format: "text", DisplayOrder: 2, Badge: "api", BadgePresets: `{"true":"sapphire","false":"rosegold"}`},
-				{Key: "chat_quota_access", Label: "Chat Quota", ValueRef: "chat_quota_access", Format: "text", DisplayOrder: 3, Badge: "chat", BadgePresets: `{"true":"sapphire","false":"rosegold"}`},
-				{Key: "manage_subscription_user", Label: "Subscription Mgmt", ValueRef: "manage_subscription_user", Format: "text", DisplayOrder: 4, Badge: "sub", BadgePresets: `{"true":"sapphire","false":"rosegold"}`},
+				{Key: "plan", Label: "Plan", ValueRef: "plan", Format: "text", DisplayOrder: 0, Badge: "plan", BadgePresets: `{"individual":"sapphire","business":"rosegold","enterprise":"champagne"}`},
+				{Key: "access_type", Label: "Access Type", ValueRef: "access_type", Format: "text", DisplayOrder: 1, Badge: "access_type", BadgePresets: `{"copilot_free":"sapphire","free_limited_copilot":"sapphire","copilot_pro":"rosegold","copilot_pro_plus":"champagne","copilot_business":"champagne","copilot_enterprise":"champagne","free_educational_quota":"freshgreen"}`},
+				{Key: "limited_quotas", Label: "Limited Quotas", ValueRef: "limited_quotas", Format: "text", DisplayOrder: 2},
+				{Key: "monthly_quotas", Label: "Monthly Quotas", ValueRef: "monthly_quotas", Format: "text", DisplayOrder: 3},
+				{Key: "quota_snapshots", Label: "Quota Snapshots", ValueRef: "quota_snapshots", Format: "text", DisplayOrder: 4},
+				{Key: "limited_reset_date", Label: "Limited Reset", ValueRef: "limited_reset_date", Format: "text", DisplayOrder: 5},
+				{Key: "quota_reset_date_utc", Label: "Quota Reset (UTC)", ValueRef: "quota_reset_date_utc", Format: "datetime", DisplayOrder: 6},
+				{Key: "quota_reset_date", Label: "Quota Reset", ValueRef: "quota_reset_date", Format: "text", DisplayOrder: 7},
 			},
 	},
 	{
