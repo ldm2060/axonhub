@@ -144,6 +144,12 @@ func (r *quotaMonitorTemplateResolver) DisplayFields(ctx context.Context, obj *u
 		if df.BadgePresets != "" {
 			result[i].BadgePresets = &df.BadgePresets
 		}
+		if df.Group != "" {
+			result[i].Group = &df.Group
+		}
+		if df.GroupLabelRef != "" {
+			result[i].GroupLabelRef = &df.GroupLabelRef
+		}
 	}
 	return result, nil
 }
@@ -210,29 +216,51 @@ func (r *usageMonitorChannelResolver) Variables(ctx context.Context, obj *ent.Us
 
 // DisplayFields is the resolver for the displayFields field.
 func (r *usageMonitorChannelResolver) DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*DisplayField, error) {
+	enrichFromTemplate := func(dfs []usage_monitor.DisplayField) {
+		if obj.Source != usagemonitorchannel.SourceTemplate || obj.ProviderType == "" {
+			return
+		}
+		tmpl := usage_monitor.GetChannelTemplate(string(obj.ProviderType))
+		if tmpl == nil {
+			return
+		}
+		tmplDFMap := make(map[string]usage_monitor.DisplayField, len(tmpl.DisplayFields))
+		for _, df := range tmpl.DisplayFields {
+			tmplDFMap[df.Key] = df
+		}
+		for i := range dfs {
+			tdf, ok := tmplDFMap[dfs[i].Key]
+			if !ok {
+				continue
+			}
+			if dfs[i].Badge == "" && tdf.Badge != "" {
+				dfs[i].Badge = tdf.Badge
+			}
+			if dfs[i].BadgePresets == "" && tdf.BadgePresets != "" {
+				dfs[i].BadgePresets = tdf.BadgePresets
+			}
+			if dfs[i].Group == "" && tdf.Group != "" {
+				dfs[i].Group = tdf.Group
+			}
+			if dfs[i].GroupLabelRef == "" && tdf.GroupLabelRef != "" {
+				dfs[i].GroupLabelRef = tdf.GroupLabelRef
+			}
+		}
+	}
+
 	if len(obj.DisplayFields) > 0 {
-		return mapSliceToStructSlice[DisplayField](obj.DisplayFields), nil
+		var dfs []usage_monitor.DisplayField
+		raw, _ := json.Marshal(obj.DisplayFields)
+		_ = json.Unmarshal(raw, &dfs)
+		enrichFromTemplate(dfs)
+		return mapSliceToStructSlice[DisplayField](structSliceToMapSlice(dfs)), nil
 	}
 	// Fallback: convert from legacy fields
 	var fcs []usage_monitor.FieldConfig
 	raw, _ := json.Marshal(obj.Fields)
 	_ = json.Unmarshal(raw, &fcs)
 	dfs := usage_monitor.DisplayFieldsFromFieldConfigs(fcs)
-	// For template channels, enrich with badge config from the template
-	if obj.Source == usagemonitorchannel.SourceTemplate && obj.ProviderType != "" {
-		if tmpl := usage_monitor.GetChannelTemplate(string(obj.ProviderType)); tmpl != nil {
-			tmplDFMap := make(map[string]usage_monitor.DisplayField, len(tmpl.DisplayFields))
-			for _, df := range tmpl.DisplayFields {
-				tmplDFMap[df.Key] = df
-			}
-			for i := range dfs {
-				if tdf, ok := tmplDFMap[dfs[i].Key]; ok {
-					dfs[i].Badge = tdf.Badge
-					dfs[i].BadgePresets = tdf.BadgePresets
-				}
-			}
-		}
-	}
+	enrichFromTemplate(dfs)
 	return mapSliceToStructSlice[DisplayField](structSliceToMapSlice(dfs)), nil
 }
 
@@ -290,15 +318,17 @@ func (r *createUsageMonitorChannelInputResolver) DisplayFields(ctx context.Conte
 		dfs := make([]usage_monitor.DisplayField, len(data))
 		for i, v := range data {
 			dfs[i] = usage_monitor.DisplayField{
-				Key:          v.Key,
-				Label:        v.Label,
-				ValueRef:     v.ValueRef,
-				Format:       v.Format,
-				Unit:         lo.FromPtr(v.Unit),
-				TotalRef:     lo.FromPtr(v.TotalRef),
-				DisplayOrder: v.DisplayOrder,
-				Badge:        lo.FromPtr(v.Badge),
-				BadgePresets: lo.FromPtr(v.BadgePresets),
+				Key:           v.Key,
+				Label:         v.Label,
+				ValueRef:      v.ValueRef,
+				Format:        v.Format,
+				Unit:          lo.FromPtr(v.Unit),
+				TotalRef:      lo.FromPtr(v.TotalRef),
+				DisplayOrder:  v.DisplayOrder,
+				Badge:         lo.FromPtr(v.Badge),
+				BadgePresets:  lo.FromPtr(v.BadgePresets),
+				Group:         lo.FromPtr(v.Group),
+				GroupLabelRef: lo.FromPtr(v.GroupLabelRef),
 			}
 		}
 		obj.DisplayFields = dfs
@@ -335,15 +365,17 @@ func (r *testUsageMonitorChannelInputResolver) DisplayFields(ctx context.Context
 		dfs := make([]usage_monitor.DisplayField, len(data))
 		for i, v := range data {
 			dfs[i] = usage_monitor.DisplayField{
-				Key:          v.Key,
-				Label:        v.Label,
-				ValueRef:     v.ValueRef,
-				Format:       v.Format,
-				Unit:         lo.FromPtr(v.Unit),
-				TotalRef:     lo.FromPtr(v.TotalRef),
-				DisplayOrder: v.DisplayOrder,
-				Badge:        lo.FromPtr(v.Badge),
-				BadgePresets: lo.FromPtr(v.BadgePresets),
+				Key:           v.Key,
+				Label:         v.Label,
+				ValueRef:      v.ValueRef,
+				Format:        v.Format,
+				Unit:          lo.FromPtr(v.Unit),
+				TotalRef:      lo.FromPtr(v.TotalRef),
+				DisplayOrder:  v.DisplayOrder,
+				Badge:         lo.FromPtr(v.Badge),
+				BadgePresets:  lo.FromPtr(v.BadgePresets),
+				Group:         lo.FromPtr(v.Group),
+				GroupLabelRef: lo.FromPtr(v.GroupLabelRef),
 			}
 		}
 		obj.DisplayFields = dfs
@@ -383,15 +415,17 @@ func (r *updateUsageMonitorChannelInputResolver) DisplayFields(ctx context.Conte
 		dfs := make([]usage_monitor.DisplayField, len(data))
 		for i, v := range data {
 			dfs[i] = usage_monitor.DisplayField{
-				Key:          v.Key,
-				Label:        v.Label,
-				ValueRef:     v.ValueRef,
-				Format:       v.Format,
-				Unit:         lo.FromPtr(v.Unit),
-				TotalRef:     lo.FromPtr(v.TotalRef),
-				DisplayOrder: v.DisplayOrder,
-				Badge:        lo.FromPtr(v.Badge),
-				BadgePresets: lo.FromPtr(v.BadgePresets),
+				Key:           v.Key,
+				Label:         v.Label,
+				ValueRef:      v.ValueRef,
+				Format:        v.Format,
+				Unit:          lo.FromPtr(v.Unit),
+				TotalRef:      lo.FromPtr(v.TotalRef),
+				DisplayOrder:  v.DisplayOrder,
+				Badge:         lo.FromPtr(v.Badge),
+				BadgePresets:  lo.FromPtr(v.BadgePresets),
+				Group:         lo.FromPtr(v.Group),
+				GroupLabelRef: lo.FromPtr(v.GroupLabelRef),
 			}
 		}
 		obj.DisplayFields = &dfs

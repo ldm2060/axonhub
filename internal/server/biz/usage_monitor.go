@@ -116,6 +116,39 @@ func convertMapSliceToDisplayFields(maps []map[string]any) []usage_monitor.Displ
 	return result
 }
 
+// enrichDisplayFieldsFromTemplate fills missing group/badge fields from the provider template.
+func enrichDisplayFieldsFromTemplate(ch *ent.UsageMonitorChannel, dfs []usage_monitor.DisplayField) {
+	if ch.Source != usagemonitorchannel.SourceTemplate || ch.ProviderType == "" {
+		return
+	}
+	tmpl := usage_monitor.GetChannelTemplate(string(ch.ProviderType))
+	if tmpl == nil {
+		return
+	}
+	tmplDFMap := make(map[string]usage_monitor.DisplayField, len(tmpl.DisplayFields))
+	for _, df := range tmpl.DisplayFields {
+		tmplDFMap[df.Key] = df
+	}
+	for i := range dfs {
+		tdf, ok := tmplDFMap[dfs[i].Key]
+		if !ok {
+			continue
+		}
+		if dfs[i].Badge == "" && tdf.Badge != "" {
+			dfs[i].Badge = tdf.Badge
+		}
+		if dfs[i].BadgePresets == "" && tdf.BadgePresets != "" {
+			dfs[i].BadgePresets = tdf.BadgePresets
+		}
+		if dfs[i].Group == "" && tdf.Group != "" {
+			dfs[i].Group = tdf.Group
+		}
+		if dfs[i].GroupLabelRef == "" && tdf.GroupLabelRef != "" {
+			dfs[i].GroupLabelRef = tdf.GroupLabelRef
+		}
+	}
+}
+
 // convertMapSliceToFieldConfigs converts []map[string]any (legacy DB storage) to []FieldConfig.
 func convertMapSliceToFieldConfigs(maps []map[string]any) []usage_monitor.FieldConfig {
 	result := make([]usage_monitor.FieldConfig, 0, len(maps))
@@ -766,9 +799,30 @@ func (svc *UsageMonitorService) runPollAll(ctx context.Context) {
 		return
 	}
 
-	log.Debug(ctx, "Polling all usage monitor channels", log.Int("count", len(all)))
-
+	now := time.Now()
+	pollable := make([]*ent.UsageMonitorChannel, 0, len(all))
 	for _, ch := range all {
+		if ch.Status == usagemonitorchannel.StatusPaused {
+			continue
+		}
+		interval := time.Duration(ch.PollInterval) * time.Second
+		if interval <= 0 {
+			interval = 60 * time.Second
+		}
+		lastPoll := ch.LastPollAt
+		if lastPoll == nil {
+			lastPoll = &time.Time{}
+		}
+		if now.Sub(*lastPoll) >= interval {
+			pollable = append(pollable, ch)
+		}
+	}
+
+	log.Debug(ctx, "Polling usage monitor channels",
+		log.Int("total", len(all)),
+		log.Int("pollable", len(pollable)))
+
+	for _, ch := range pollable {
 		svc.pollChannel(ctx, ch)
 	}
 }
@@ -815,6 +869,7 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
 		vars := convertMapSliceToVariables(ch.Variables)
 		dfs := convertMapSliceToDisplayFields(ch.DisplayFields)
+		enrichDisplayFieldsFromTemplate(ch, dfs)
 		pollData, err = svc.genericChecker.PollV2(ctx, ch.APIURL, string(ch.APIMethod), apiHeaders, apiBody, vars, dfs)
 	} else {
 		// Fall back to legacy Fields column
