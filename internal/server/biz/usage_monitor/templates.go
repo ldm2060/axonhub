@@ -125,8 +125,17 @@ var channelTemplates = []ChannelTemplate{
 				{Key: "limited_quotas", Path: "$.limited_user_quotas", Type: "jsonpath"},
 				// Monthly quotas (total counts per feature)
 				{Key: "monthly_quotas", Path: "$.monthly_quotas", Type: "jsonpath"},
-				// Quota snapshots (EDU/Premium accounts): percent_remaining per feature
-				{Key: "quota_snapshots", Path: "$.quota_snapshots", Type: "jsonpath"},
+				// Quota snapshots (EDU/Premium accounts): individual fields per feature
+				// For unlimited quotas, remaining will be 0, so we display "Unlimited" badge instead
+				{Key: "chat_pct", Path: "$.quota_snapshots.chat.percent_remaining", Type: "jsonpath"},
+				{Key: "chat_remaining", Path: "$.quota_snapshots.chat.remaining", Type: "jsonpath"},
+				{Key: "chat_unlimited", Path: "$.quota_snapshots.chat.unlimited", Type: "jsonpath"},
+				{Key: "completions_pct", Path: "$.quota_snapshots.completions.percent_remaining", Type: "jsonpath"},
+				{Key: "completions_remaining", Path: "$.quota_snapshots.completions.remaining", Type: "jsonpath"},
+				{Key: "completions_unlimited", Path: "$.quota_snapshots.completions.unlimited", Type: "jsonpath"},
+				{Key: "premium_pct", Path: "$.quota_snapshots.premium_interactions.percent_remaining", Type: "jsonpath"},
+				{Key: "premium_remaining", Path: "$.quota_snapshots.premium_interactions.remaining", Type: "jsonpath"},
+				{Key: "premium_unlimited", Path: "$.quota_snapshots.premium_interactions.unlimited", Type: "jsonpath"},
 				// Reset dates
 				{Key: "limited_reset_date", Path: "$.limited_user_reset_date", Type: "jsonpath"},
 				{Key: "quota_reset_date_utc", Path: "$.quota_reset_date_utc", Type: "jsonpath"},
@@ -137,10 +146,19 @@ var channelTemplates = []ChannelTemplate{
 				{Key: "access_type", Label: "Access Type", ValueRef: "access_type", Format: "text", DisplayOrder: 1, Badge: "access_type", BadgePresets: `{"copilot_free":"sapphire","free_limited_copilot":"sapphire","copilot_pro":"rosegold","copilot_pro_plus":"champagne","copilot_business":"champagne","copilot_enterprise":"champagne","free_educational_quota":"freshgreen"}`},
 				{Key: "limited_quotas", Label: "Limited Quotas", ValueRef: "limited_quotas", Format: "text", DisplayOrder: 2},
 				{Key: "monthly_quotas", Label: "Monthly Quotas", ValueRef: "monthly_quotas", Format: "text", DisplayOrder: 3},
-				{Key: "quota_snapshots", Label: "Quota Snapshots", ValueRef: "quota_snapshots", Format: "text", DisplayOrder: 4},
-				{Key: "limited_reset_date", Label: "Limited Reset", ValueRef: "limited_reset_date", Format: "text", DisplayOrder: 5},
-				{Key: "quota_reset_date_utc", Label: "Quota Reset (UTC)", ValueRef: "quota_reset_date_utc", Format: "datetime", DisplayOrder: 6},
-				{Key: "quota_reset_date", Label: "Quota Reset", ValueRef: "quota_reset_date", Format: "text", DisplayOrder: 7},
+				// Quota snapshot fields - unlimited quotas show as badge, limited show percentage
+				{Key: "chat_unlimited", Label: "Chat", ValueRef: "chat_unlimited", Format: "text", DisplayOrder: 4, Badge: "quota", BadgePresets: `{"true":"sapphire","false":"rosegold"}`, Group: "quota_snapshots"},
+				{Key: "chat_pct", Label: "Chat Usage", ValueRef: "chat_pct", Format: "percentage", DisplayOrder: 5, Group: "quota_snapshots"},
+				{Key: "chat_remaining", Label: "Chat Remaining", ValueRef: "chat_remaining", Format: "number", DisplayOrder: 6, Group: "quota_snapshots"},
+				{Key: "completions_unlimited", Label: "Completions", ValueRef: "completions_unlimited", Format: "text", DisplayOrder: 7, Badge: "quota", BadgePresets: `{"true":"sapphire","false":"rosegold"}`, Group: "quota_snapshots"},
+				{Key: "completions_pct", Label: "Completions Usage", ValueRef: "completions_pct", Format: "percentage", DisplayOrder: 8, Group: "quota_snapshots"},
+				{Key: "completions_remaining", Label: "Completions Remaining", ValueRef: "completions_remaining", Format: "number", DisplayOrder: 9, Group: "quota_snapshots"},
+				{Key: "premium_unlimited", Label: "Premium", ValueRef: "premium_unlimited", Format: "text", DisplayOrder: 10, Badge: "quota", BadgePresets: `{"true":"sapphire","false":"rosegold"}`, Group: "quota_snapshots"},
+				{Key: "premium_pct", Label: "Premium Usage", ValueRef: "premium_pct", Format: "percentage", DisplayOrder: 11, Group: "quota_snapshots"},
+				{Key: "premium_remaining", Label: "Premium Remaining", ValueRef: "premium_remaining", Format: "number", DisplayOrder: 12, Group: "quota_snapshots"},
+				{Key: "limited_reset_date", Label: "Limited Reset", ValueRef: "limited_reset_date", Format: "text", DisplayOrder: 13},
+				{Key: "quota_reset_date_utc", Label: "Quota Reset (UTC)", ValueRef: "quota_reset_date_utc", Format: "datetime", DisplayOrder: 14},
+				{Key: "quota_reset_date", Label: "Quota Reset", ValueRef: "quota_reset_date", Format: "text", DisplayOrder: 15},
 			},
 	},
 	{

@@ -182,6 +182,25 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 	var lowestPct float64 = 100
 	var hasQuotaData bool
 
+	// Build a map of quota type -> unlimited status
+	unlimitedMap := make(map[string]bool)
+	for _, f := range fields {
+		switch f.Key {
+		case "chat_unlimited":
+			if v, ok := f.Value.(bool); ok {
+				unlimitedMap["chat"] = v
+			}
+		case "completions_unlimited":
+			if v, ok := f.Value.(bool); ok {
+				unlimitedMap["completions"] = v
+			}
+		case "premium_unlimited":
+			if v, ok := f.Value.(bool); ok {
+				unlimitedMap["premium_interactions"] = v
+			}
+		}
+	}
+
 	for _, f := range fields {
 		switch f.Key {
 		case "limited_quotas":
@@ -219,27 +238,29 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 				}
 			}
 
-		case "quota_snapshots":
-			// EDU/Premium accounts: quota_snapshots is a map with percent_remaining
-			snapshots, ok := f.Value.(map[string]any)
-			if !ok || len(snapshots) == 0 {
+		case "chat_pct", "completions_pct", "premium_pct":
+			// EDU/Premium accounts: individual quota percentage fields
+			// Determine which quota type this is
+			var quotaType string
+			switch f.Key {
+			case "chat_pct":
+				quotaType = "chat"
+			case "completions_pct":
+				quotaType = "completions"
+			case "premium_pct":
+				quotaType = "premium_interactions"
+			}
+
+			// Skip unlimited quotas
+			if unlimited, ok := unlimitedMap[quotaType]; ok && unlimited {
 				continue
 			}
-			for _, snapshot := range snapshots {
-				s, ok := snapshot.(map[string]any)
-				if !ok {
-					continue
+
+			if pct, err := toFloat(f.Value); err == nil {
+				if pct < lowestPct {
+					lowestPct = pct
 				}
-				// Skip unlimited features
-				if unlimited, _ := s["unlimited"].(bool); unlimited {
-					continue
-				}
-				if pct, err := toFloat(s["percent_remaining"]); err == nil {
-					if pct < lowestPct {
-						lowestPct = pct
-					}
-					hasQuotaData = true
-				}
+				hasQuotaData = true
 			}
 		}
 	}

@@ -288,9 +288,8 @@ func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsAvailable(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "business"},
 		{Key: "access_type", Format: "text", Value: "copilot_business"},
-		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
-			"claude": map[string]any{"unlimited": false, "percent_remaining": float64(85)},
-		}},
+		{Key: "chat_pct", Format: "percentage", Value: float64(85)},
+		{Key: "chat_unlimited", Format: "text", Value: false},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "available", result.Status)
@@ -301,9 +300,8 @@ func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsAvailable(t *testing.T) {
 func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsExhausted(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "business"},
-		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
-			"claude": map[string]any{"unlimited": false, "percent_remaining": float64(0)},
-		}},
+		{Key: "chat_pct", Format: "percentage", Value: float64(0)},
+		{Key: "chat_unlimited", Format: "text", Value: false},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	assert.Equal(t, "exhausted", result.Status)
@@ -314,9 +312,8 @@ func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsExhausted(t *testing.T) {
 func TestDeriveQuotaStatus_GitHubCopilot_UnlimitedSkipped(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "enterprise"},
-		{Key: "quota_snapshots", Format: "text", Value: map[string]any{
-			"claude": map[string]any{"unlimited": true, "percent_remaining": float64(0)},
-		}},
+		{Key: "chat_pct", Format: "percentage", Value: float64(0)},
+		{Key: "chat_unlimited", Format: "text", Value: true},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
 	// Unlimited should be skipped, so no quota data -> available
