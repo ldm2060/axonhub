@@ -193,6 +193,29 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           />
         </div>
 
+        {/* Group */}
+        <div className="space-y-1.5">
+          <Label>{t('usageMonitor.displayField.group')}</Label>
+          <Input
+            value={df.group ?? ''}
+            onChange={(e) => onUpdate({ group: e.target.value || undefined })}
+            placeholder="primary"
+            disabled={readOnly}
+          />
+        </div>
+
+        {/* Group Label Ref */}
+        <div className="space-y-1.5">
+          <Label>{t('usageMonitor.displayField.groupLabelRef')}</Label>
+          <Input
+            value={df.groupLabelRef ?? ''}
+            onChange={(e) => onUpdate({ groupLabelRef: e.target.value || undefined })}
+            placeholder="additional_0_name"
+            className="font-mono"
+            disabled={readOnly}
+          />
+        </div>
+
         {/* Total Ref - only for fraction format */}
         {df.format === 'fraction' && (
           <div className="space-y-1.5">

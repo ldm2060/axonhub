@@ -46,8 +46,8 @@ type APIKeyTokenUsageStats struct {
 
 type APIKeyTokenUsageStatsInput struct {
 	APIKeyIds    []*objects.GUID `json:"apiKeyIds,omitempty"`
-	CreatedAtGTE *time.Time      `json:"createdAtGTE,omitempty"`
-	CreatedAtLTE *time.Time      `json:"createdAtLTE,omitempty"`
+	CreatedAtGte *time.Time      `json:"createdAtGTE,omitempty"`
+	CreatedAtLte *time.Time      `json:"createdAtLTE,omitempty"`
 }
 
 type AddUserToProjectInput struct {
@@ -222,27 +222,31 @@ type DashboardOverview struct {
 }
 
 type DisplayField struct {
-	Key          string  `json:"key"`
-	Label        string  `json:"label"`
-	ValueRef     string  `json:"valueRef"`
-	Format       string  `json:"format"`
-	Unit         *string `json:"unit,omitempty"`
-	TotalRef     *string `json:"totalRef,omitempty"`
-	DisplayOrder int     `json:"displayOrder"`
-	Badge        *string `json:"badge,omitempty"`
-	BadgePresets *string `json:"badgePresets,omitempty"`
+	Key           string  `json:"key"`
+	Label         string  `json:"label"`
+	ValueRef      string  `json:"valueRef"`
+	Format        string  `json:"format"`
+	Unit          *string `json:"unit,omitempty"`
+	TotalRef      *string `json:"totalRef,omitempty"`
+	DisplayOrder  int     `json:"displayOrder"`
+	Badge         *string `json:"badge,omitempty"`
+	BadgePresets  *string `json:"badgePresets,omitempty"`
+	Group         *string `json:"group,omitempty"`
+	GroupLabelRef *string `json:"groupLabelRef,omitempty"`
 }
 
 type DisplayFieldInput struct {
-	Key          string  `json:"key"`
-	Label        string  `json:"label"`
-	ValueRef     string  `json:"valueRef"`
-	Format       string  `json:"format"`
-	Unit         *string `json:"unit,omitempty"`
-	TotalRef     *string `json:"totalRef,omitempty"`
-	DisplayOrder int     `json:"displayOrder"`
-	Badge        *string `json:"badge,omitempty"`
-	BadgePresets *string `json:"badgePresets,omitempty"`
+	Key           string  `json:"key"`
+	Label         string  `json:"label"`
+	ValueRef      string  `json:"valueRef"`
+	Format        string  `json:"format"`
+	Unit          *string `json:"unit,omitempty"`
+	TotalRef      *string `json:"totalRef,omitempty"`
+	DisplayOrder  int     `json:"displayOrder"`
+	Badge         *string `json:"badge,omitempty"`
+	BadgePresets  *string `json:"badgePresets,omitempty"`
+	Group         *string `json:"group,omitempty"`
+	GroupLabelRef *string `json:"groupLabelRef,omitempty"`
 }
 
 type FastestChannel struct {

@@ -233,6 +233,9 @@ func (r *usageMonitorChannelResolver) DisplayFields(ctx context.Context, obj *en
 			if !ok {
 				continue
 			}
+			if dfs[i].ValueRef == dfs[i].Key && tdf.ValueRef != "" && tdf.ValueRef != tdf.Key {
+				dfs[i].ValueRef = tdf.ValueRef
+			}
 			if dfs[i].Badge == "" && tdf.Badge != "" {
 				dfs[i].Badge = tdf.Badge
 			}

@@ -42,6 +42,8 @@ const QUOTA_MONITOR_TEMPLATES_QUERY = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
     }
   }

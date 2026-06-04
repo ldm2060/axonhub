@@ -43,15 +43,17 @@ type Variable struct {
 
 // DisplayField defines how a value is shown on a monitor card.
 type DisplayField struct {
-	Key          string `json:"key"`
-	Label        string `json:"label"`
-	ValueRef     string `json:"valueRef"` // variable key or expression like "${used}/${total}*100"
-	Format       string `json:"format"`   // "percentage" | "fraction" | "number" | "datetime" | "text"
-	Unit         string `json:"unit,omitempty"`
-	TotalRef     string `json:"totalRef,omitempty"` // variable key for denominator
-	DisplayOrder int    `json:"displayOrder"`
-	Badge        string `json:"badge,omitempty"`        // badge style key, e.g. "level", "plan"
-	BadgePresets string `json:"badgePresets,omitempty"` // JSON map of value->gradient, e.g. '{"lite":"sapphire","pro":"rosegold"}'
+	Key           string `json:"key"`
+	Label         string `json:"label"`
+	ValueRef      string `json:"valueRef"` // variable key or expression like "${used}/${total}*100"
+	Format        string `json:"format"`   // "percentage" | "fraction" | "number" | "datetime" | "text"
+	Unit          string `json:"unit,omitempty"`
+	TotalRef      string `json:"totalRef,omitempty"` // variable key for denominator
+	DisplayOrder  int    `json:"displayOrder"`
+	Badge         string `json:"badge,omitempty"`         // badge style key, e.g. "level", "plan"
+	BadgePresets  string `json:"badgePresets,omitempty"`  // JSON map of value->gradient, e.g. '{"lite":"sapphire","pro":"rosegold"}'
+	Group         string `json:"group,omitempty"`         // group name for visual grouping (e.g. "primary", "additional_0")
+	GroupLabelRef string `json:"groupLabelRef,omitempty"` // variable key whose value becomes the group title (e.g. "additional_0_name")
 }
 
 // VariablesFromFieldConfigs converts deprecated FieldConfigs to Variables.
@@ -105,14 +107,16 @@ func DisplayFieldsFromFieldConfigs(fcs []FieldConfig) []DisplayField {
 }
 
 type ParsedField struct {
-	Key     string      `json:"key"`
-	Label   string      `json:"label"`
-	Value   interface{} `json:"value"`
-	Total   interface{} `json:"total,omitempty"`
-	Percent float64     `json:"percent,omitempty"`
-	Unit    string      `json:"unit,omitempty"`
-	Format  string      `json:"format"`
-	Error   string      `json:"error,omitempty"`
+	Key        string  `json:"key"`
+	Label      string  `json:"label"`
+	Value      any     `json:"value"`
+	Total      any     `json:"total,omitempty"`
+	Percent    float64 `json:"percent,omitempty"`
+	Unit       string  `json:"unit,omitempty"`
+	Format     string  `json:"format"`
+	Error      string  `json:"error,omitempty"`
+	Group      string  `json:"group,omitempty"`
+	GroupLabel string  `json:"groupLabel,omitempty"`
 }
 
 type PollData struct {
@@ -159,13 +163,13 @@ type UpdateUsageMonitorChannelInput struct {
 }
 
 type TestUsageMonitorChannelInput struct {
-	ApiURL       string         `json:"apiUrl"`
-	ApiMethod    string         `json:"apiMethod"`
-	ApiHeaders   string         `json:"apiHeaders"`
-	ApiBody      *string        `json:"apiBody,omitempty"`
-	ProviderType *string        `json:"providerType,omitempty"` // needed for OAuth providers (e.g. antigravity)
-	ApiKey       *string        `json:"apiKey,omitempty"`       // needed for OAuth providers to refresh tokens
-	Fields       []FieldConfig  `json:"fields,omitempty"`       // deprecated, kept for backward compat
-	Variables    []Variable     `json:"variables,omitempty"`    // new: variable extraction config
+	ApiURL        string         `json:"apiUrl"`
+	ApiMethod     string         `json:"apiMethod"`
+	ApiHeaders    string         `json:"apiHeaders"`
+	ApiBody       *string        `json:"apiBody,omitempty"`
+	ProviderType  *string        `json:"providerType,omitempty"`  // needed for OAuth providers (e.g. antigravity)
+	ApiKey        *string        `json:"apiKey,omitempty"`        // needed for OAuth providers to refresh tokens
+	Fields        []FieldConfig  `json:"fields,omitempty"`        // deprecated, kept for backward compat
+	Variables     []Variable     `json:"variables,omitempty"`     // new: variable extraction config
 	DisplayFields []DisplayField `json:"displayFields,omitempty"` // new: display field config
 }

@@ -24,6 +24,8 @@ type ParsedFieldValue {
     unit: String
     format: String!
     error: String
+    group: String
+    groupLabel: String
 }
 
 type Variable {
@@ -43,6 +45,8 @@ type DisplayField {
     displayOrder: Int!
     badge: String
     badgePresets: String
+    group: String
+    groupLabelRef: String
 }
 
 # Extend the Ent-generated UsageMonitorChannel with computed fields
@@ -84,6 +88,8 @@ input DisplayFieldInput {
     displayOrder: Int!
     badge: String
     badgePresets: String
+    group: String
+    groupLabelRef: String
 }
 
 input CreateUsageMonitorChannelInput {

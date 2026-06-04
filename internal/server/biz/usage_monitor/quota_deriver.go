@@ -101,9 +101,9 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 
 	// Collect all percentage windows: primary, secondary, and additional N.
 	type windowInfo struct {
-		label      string
-		pct        float64
-		nextReset  *time.Time
+		label     string
+		pct       float64
+		nextReset *time.Time
 	}
 	windows := make([]windowInfo, 0, 6)
 
@@ -179,7 +179,7 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
-	var lowestPct float64 = 100
+	var maxUsage float64
 	var hasQuotaData bool
 
 	// Build a map of quota type -> unlimited status
@@ -204,8 +204,8 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 	for _, f := range fields {
 		switch f.Key {
 		case "limited_quotas":
-			// Free accounts: limited_user_quotas is a map of feature -> remaining count
-			// Need to compare with monthly_quotas to get percentage
+			// Free accounts: limited_user_quotas is a map of feature -> remaining count.
+			// Compare with monthly_quotas to derive the used ratio.
 			limitedMap, ok := f.Value.(map[string]any)
 			if !ok || len(limitedMap) == 0 {
 				continue
@@ -230,17 +230,19 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 					}
 				}
 				if total > 0 {
-					pct := (remaining / total) * 100
-					if pct < lowestPct {
-						lowestPct = pct
+					usedRatio := (total - remaining) / total
+					if usedRatio < 0 {
+						usedRatio = 0
+					}
+					if usedRatio > maxUsage {
+						maxUsage = usedRatio
 					}
 					hasQuotaData = true
 				}
 			}
 
 		case "chat_pct", "completions_pct", "premium_pct":
-			// EDU/Premium accounts: individual quota percentage fields
-			// Determine which quota type this is
+			// Template rendering converts GitHub's percent_remaining to used percentage.
 			var quotaType string
 			switch f.Key {
 			case "chat_pct":
@@ -257,8 +259,9 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 			}
 
 			if pct, err := toFloat(f.Value); err == nil {
-				if pct < lowestPct {
-					lowestPct = pct
+				usedRatio := pct / 100.0
+				if usedRatio > maxUsage {
+					maxUsage = usedRatio
 				}
 				hasQuotaData = true
 			}
@@ -272,9 +275,9 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 	}
 
 	status := "available"
-	if lowestPct <= 0 {
+	if maxUsage >= 1.0 {
 		status = "exhausted"
-	} else if lowestPct < 20 {
+	} else if maxUsage >= warningThreshold {
 		status = "warning"
 	}
 
@@ -282,7 +285,7 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 	return QuotaDerivedStatus{
 		Status:      status,
 		Ready:       status != "exhausted",
-		Limits:      []provider_quota.QuotaLimitStatus{provider_quota.NewTokenLimitStatus(status, (100-lowestPct)/100, nextReset)},
+		Limits:      []provider_quota.QuotaLimitStatus{provider_quota.NewTokenLimitStatus(status, maxUsage, nextReset)},
 		NextResetAt: nextReset,
 	}
 }

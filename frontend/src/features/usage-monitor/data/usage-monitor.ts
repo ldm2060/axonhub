@@ -52,6 +52,8 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
       status
       lastPollAt
@@ -72,6 +74,8 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
         unit
         format
         error
+        group
+        groupLabel
       }
     }
   }
@@ -107,6 +111,8 @@ const CREATE_USAGE_MONITOR_CHANNEL_MUTATION = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
       status
       lastPollAt
@@ -127,6 +133,8 @@ const CREATE_USAGE_MONITOR_CHANNEL_MUTATION = `
         unit
         format
         error
+        group
+        groupLabel
       }
     }
   }
@@ -162,6 +170,8 @@ const UPDATE_USAGE_MONITOR_CHANNEL_MUTATION = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
       status
       lastPollAt
@@ -182,6 +192,8 @@ const UPDATE_USAGE_MONITOR_CHANNEL_MUTATION = `
         unit
         format
         error
+        group
+        groupLabel
       }
     }
   }
@@ -207,6 +219,8 @@ const TEST_USAGE_MONITOR_CHANNEL_MUTATION = `
         unit
         format
         error
+        group
+        groupLabel
       }
       error
     }
@@ -243,6 +257,8 @@ const REFRESH_USAGE_MONITOR_CHANNEL_MUTATION = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
       status
       lastPollAt
@@ -263,6 +279,8 @@ const REFRESH_USAGE_MONITOR_CHANNEL_MUTATION = `
         unit
         format
         error
+        group
+        groupLabel
       }
     }
   }

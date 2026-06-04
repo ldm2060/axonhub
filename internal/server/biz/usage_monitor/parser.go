@@ -2,6 +2,7 @@ package usage_monitor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/oliveagle/jsonpath"
 )
+
+var errMissingValueRef = errors.New("value reference missing")
 
 // ExtractVariables extracts raw values from API response using variable definitions.
 func ExtractVariables(body []byte, variables []Variable) map[string]any {
@@ -29,6 +32,9 @@ func ExtractVariables(body []byte, variables []Variable) map[string]any {
 }
 
 // RenderDisplayFields produces ParsedFields from variable map and display field definitions.
+// When a ValueRef variable was not extracted from the API response (e.g. JSONPath
+// out-of-bounds on a dynamic array), the field is kept with value=nil instead of
+// producing an error — the UI renders these as "N/A".
 func RenderDisplayFields(vars map[string]any, fields []DisplayField) []ParsedField {
 	result := make([]ParsedField, 0, len(fields))
 	for _, df := range fields {
@@ -37,11 +43,32 @@ func RenderDisplayFields(vars map[string]any, fields []DisplayField) []ParsedFie
 			Label:  df.Label,
 			Format: df.Format,
 			Unit:   df.Unit,
+			Group:  df.Group,
+		}
+
+		// Resolve GroupLabelRef if set (e.g. use a variable value as the group title)
+		if df.GroupLabelRef != "" {
+			if val, ok := vars[df.GroupLabelRef]; ok {
+				if s, ok := val.(string); ok {
+					pf.GroupLabel = s
+				} else {
+					pf.GroupLabel = fmt.Sprintf("%v", val)
+				}
+			}
 		}
 
 		value, err := resolveValueRef(vars, df.ValueRef)
 		if err != nil {
-			pf.Error = err.Error()
+			// Distinguish two cases:
+			// 1. Simple variable not found (e.g. JSONPath out-of-bounds on a dynamic array)
+			//    → keep field with nil value, UI renders as "N/A"
+			// 2. Expression error (e.g. unresolved reference in ${...} expression)
+			//    → keep field with error, UI shows the error
+			if errors.Is(err, errMissingValueRef) {
+				pf.Value = nil
+			} else {
+				pf.Error = err.Error()
+			}
 			result = append(result, pf)
 			continue
 		}
@@ -67,14 +94,18 @@ func RenderDisplayFields(vars map[string]any, fields []DisplayField) []ParsedFie
 	return result
 }
 
-// resolveValueRef resolves a valueRef: plain variable key or expression with ${var} syntax.
+// resolveValueRef resolves a valueRef: plain variable key, expression with ${var}
+// syntax, or an expression template function such as used_percent_from_remaining(var).
 func resolveValueRef(vars map[string]any, valueRef string) (any, error) {
 	// Plain variable reference
 	if !strings.Contains(valueRef, "${") {
 		if val, ok := vars[valueRef]; ok {
 			return val, nil
 		}
-		return nil, fmt.Errorf("variable %q not found", valueRef)
+		if fnResult, ok, err := resolveValueFunction(vars, valueRef); ok || err != nil {
+			return fnResult, err
+		}
+		return nil, fmt.Errorf("%w: variable %q not found", errMissingValueRef, valueRef)
 	}
 	// Expression: build float map and evaluate
 	floatVals := make(map[string]float64)
@@ -88,6 +119,39 @@ func resolveValueRef(vars map[string]any, valueRef string) (any, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+// resolveValueFunction resolves small display-template helpers that cannot be
+// represented by the arithmetic expression grammar.
+func resolveValueFunction(vars map[string]any, valueRef string) (any, bool, error) {
+	const fnPrefix = "used_percent_from_remaining("
+	if !strings.HasPrefix(valueRef, fnPrefix) || !strings.HasSuffix(valueRef, ")") {
+		return nil, false, nil
+	}
+
+	key := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(valueRef, fnPrefix), ")"))
+	if key == "" {
+		return nil, true, fmt.Errorf("used_percent_from_remaining requires a variable key")
+	}
+
+	value, ok := vars[key]
+	if !ok {
+		return nil, true, fmt.Errorf("%w: variable %q not found", errMissingValueRef, key)
+	}
+
+	remaining, err := toFloat(value)
+	if err != nil {
+		return nil, true, fmt.Errorf("used_percent_from_remaining(%s) failed: %w", key, err)
+	}
+
+	used := 100 - remaining
+	if used < 0 {
+		return 0.0, true, nil
+	}
+	if used > 100 {
+		return 100.0, true, nil
+	}
+	return used, true, nil
 }
 
 // extractJSONPathValue extracts a single JSONPath value from raw data.

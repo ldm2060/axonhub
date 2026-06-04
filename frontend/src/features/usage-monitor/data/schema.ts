@@ -30,6 +30,8 @@ export const displayFieldSchema = z.object({
   displayOrder: z.number(),
   badge: z.string().optional().nullable(),
   badgePresets: z.string().optional().nullable(),
+  group: z.string().optional().nullable(),
+  groupLabelRef: z.string().optional().nullable(),
 });
 
 export const parsedFieldSchema = z.object({
@@ -41,6 +43,8 @@ export const parsedFieldSchema = z.object({
   unit: z.string().optional(),
   format: z.string(),
   error: z.string().optional().nullable(),
+  group: z.string().optional().nullable(),
+  groupLabel: z.string().optional().nullable(),
 });
 
 export const usageMonitorChannelSchema = z.object({
@@ -104,4 +108,6 @@ export interface DisplayFieldInput {
   displayOrder: number;
   badge?: string;
   badgePresets?: string;
+  group?: string;
+  groupLabelRef?: string;
 }

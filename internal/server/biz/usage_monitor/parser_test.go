@@ -459,7 +459,9 @@ func TestRenderDisplayFields_MissingVariable(t *testing.T) {
 	}
 	result := RenderDisplayFields(vars, fields)
 	assert.Len(t, result, 1)
-	assert.NotEmpty(t, result[0].Error)
+	// Missing simple variable → value is nil (not an error), UI renders as N/A
+	assert.Nil(t, result[0].Value)
+	assert.Empty(t, result[0].Error)
 }
 
 func TestRenderDisplayFields_TotalRef(t *testing.T) {
@@ -474,12 +476,41 @@ func TestRenderDisplayFields_TotalRef(t *testing.T) {
 	assert.InDelta(t, 25.0, result[0].Percent, 0.01)
 }
 
-func TestRenderDisplayFields_ExpressionSubtraction(t *testing.T) {
-	vars := map[string]any{"total": float64(1000), "used": float64(250)}
-	fields := []DisplayField{
-		{Key: "remaining", Label: "Remaining", ValueRef: "${total}-${used}", Format: "number", DisplayOrder: 0},
+func TestRenderDisplayFields_GitHubCopilotPercentRemainingRenderedAsUsage(t *testing.T) {
+	rawData := []byte(`{
+		"copilot_plan": "individual",
+		"access_type_sku": "copilot_free",
+		"quota_snapshots": {
+			"chat": {"percent_remaining": 100, "remaining": 50, "unlimited": false}
+		}
+	}`)
+
+	tmpl := GetChannelTemplate("github_copilot")
+	if !assert.NotNil(t, tmpl) {
+		return
 	}
-	result := RenderDisplayFields(vars, fields)
-	assert.Len(t, result, 1)
-	assert.InDelta(t, 750.0, result[0].Value, 0.01)
+
+	vars := ExtractVariables(rawData, tmpl.Variables)
+	results := RenderDisplayFields(vars, tmpl.DisplayFields)
+
+	var chatUsage *ParsedField
+	for i := range results {
+		if results[i].Key == "chat_pct" {
+			chatUsage = &results[i]
+			break
+		}
+	}
+
+	if assert.NotNil(t, chatUsage) {
+		assert.Empty(t, chatUsage.Error)
+		assert.InDelta(t, 0, chatUsage.Value, 0.01)
+		assert.InDelta(t, 0, chatUsage.Percent, 0.01)
+	}
+
+	derived := DeriveQuotaStatus("github_copilot", results)
+	assert.Equal(t, "available", derived.Status)
+	assert.True(t, derived.Ready)
+	if assert.Len(t, derived.Limits, 1) {
+		assert.InDelta(t, 0, derived.Limits[0].UsageRatio, 0.01)
+	}
 }

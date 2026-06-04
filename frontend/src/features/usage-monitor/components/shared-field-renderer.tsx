@@ -7,15 +7,8 @@ interface SharedFieldRendererProps {
   displayFields?: DisplayField[];
 }
 
-function formatCompactNumber(value: number): string {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`;
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
-  return value.toLocaleString();
-}
-
 /**
- * HSL-based progress bar color calculation from QuotaBadges.
+ * HSL-based progress bar color calculation.
  * Transitions from green (0%) → yellow (50%) → red (100%).
  */
 function getProgressHSL(percentage: number): { h: number; s: number; l: number } {
@@ -57,9 +50,9 @@ function formatRelativeTime(dateStr: string | null, t: (key: string, params?: Re
   const h = t('quota.label.h');
   const m = t('quota.label.m');
 
-  if (diffDays > 0) return t('quota.label.resets_in_time', { time: `${diffDays}${d} ${diffHours % 24}${h}` });
-  if (diffHours > 0) return t('quota.label.resets_in_time', { time: `${diffHours}${h} ${diffMins % 60}${m}` });
-  return t('quota.label.resets_in_time', { time: `${diffMins}${m}` });
+  if (diffDays > 0) return `${diffDays}${d} ${diffHours % 24}${h}`;
+  if (diffHours > 0) return `${diffHours}${h} ${diffMins % 60}${m}`;
+  return `${diffMins}${m}`;
 }
 
 /**
@@ -100,29 +93,27 @@ function ProgressBar({ percentage }: { percentage: number }) {
   );
 }
 
+/** A single progress-bar field with its reset time embedded in the bottom-right. */
 function FieldGroup({
   group,
-  index,
   t,
 }: {
   group: { pct: ParsedField; reset?: ParsedField };
-  index: number;
   t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   const pct = group.pct.percent ?? 0;
+  const resetText = group.reset ? formatRelativeTime(group.reset.value, t) : undefined;
 
   return (
-    <div className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-2.5' : 'space-y-1.5'}>
-      <div className='space-y-1'>
-        <div className='flex items-center justify-between text-xs'>
-          <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
-          <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
-        </div>
-        <ProgressBar percentage={pct} />
+    <div className='space-y-0.5'>
+      <div className='flex items-center justify-between text-xs'>
+        <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
+        <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
       </div>
-      {group.reset && (
+      <ProgressBar percentage={pct} />
+      {resetText && (
         <div className='text-muted-foreground text-right text-[11px]'>
-          {formatRelativeTime(group.reset.value, t)}
+          {resetText}
         </div>
       )}
     </div>
@@ -198,48 +189,133 @@ function TextField({ field, displayField }: { field: ParsedField; displayField?:
   );
 }
 
+/** Render a named group section with a header and grouped field content. */
+function NamedGroup({
+  groupName,
+  groupLabel,
+  fields,
+  displayFields,
+  t,
+}: {
+  groupName: string;
+  groupLabel?: string;
+  fields: ParsedField[];
+  displayFields?: DisplayField[];
+  t: (key: string, params?: Record<string, unknown>) => string;
+}) {
+  // Within a named group, group percentage/fraction fields with their reset datetime fields
+  const fieldGroups = groupFields(fields);
+  const groupedKeys = new Set(fieldGroups.map(g => g.pct.key));
+  if (fieldGroups.some(g => g.reset)) {
+    fieldGroups.forEach(g => { if (g.reset) groupedKeys.add(g.reset.key); });
+  }
+
+  const otherFields = fields.filter(f => !groupedKeys.has(f.key));
+
+  const headerText = groupLabel || groupName;
+
+  return (
+    <div className='border-border/60 space-y-2 border-t border-dashed pt-2.5'>
+      <div className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>{headerText}</div>
+      <div className='space-y-2'>
+        {fieldGroups.length > 0 && (
+          <div className='space-y-2'>
+            {fieldGroups.map((group) => (
+              <FieldGroup key={group.pct.key} group={group} t={t} />
+            ))}
+          </div>
+        )}
+        {otherFields.length > 0 && (
+          <div className='space-y-1'>
+            {otherFields.map((field) => {
+              const displayField = findDisplayField(displayFields, field.key);
+              // Skip fields whose value is null (variable not extracted, e.g. additional_1 on Pro Lite)
+              if (field.value === null && !field.error) return null;
+              if (field.error) {
+                return (
+                  <div key={field.key} className="text-xs text-red-500">
+                    ⚠ {t('usageMonitor.parseFailed')}: {field.error}
+                  </div>
+                );
+              }
+              switch (field.format) {
+                case 'number':
+                  return <NumberField key={field.key} field={field} />;
+                case 'datetime':
+                  return <DatetimeField key={field.key} field={field} t={t} />;
+                case 'text':
+                default:
+                  return <TextField key={field.key} field={field} displayField={displayField} />;
+              }
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRendererProps) {
   const { t } = useTranslation();
 
   if (!fields || fields.length === 0) return null;
 
-  // Group percentage/fraction fields with their reset datetime fields
-  const fieldGroups = groupFields(fields);
-  const groupedKeys = new Set(fieldGroups.map(g => g.pct.key));
-  if (fieldGroups.some(g => g.reset)) {
-    fieldGroups.forEach(g => {
-      if (g.reset) groupedKeys.add(g.reset.key);
-    });
+  // Partition fields into: ungrouped, and named groups
+  const ungroupedFields: ParsedField[] = [];
+  const groupMap = new Map<string, { fields: ParsedField[]; groupLabel?: string }>();
+
+  // Maintain group insertion order
+  const groupOrder: string[] = [];
+
+  for (const field of fields) {
+    if (field.group) {
+      if (!groupMap.has(field.group)) {
+        groupMap.set(field.group, { fields: [], groupLabel: field.groupLabel });
+        groupOrder.push(field.group);
+      }
+      groupMap.get(field.group)!.fields.push(field);
+      // Update groupLabel if we find a better one (from a field with groupLabel set)
+      if (field.groupLabel && !groupMap.get(field.group)!.groupLabel) {
+        groupMap.get(field.group)!.groupLabel = field.groupLabel;
+      }
+    } else {
+      ungroupedFields.push(field);
+    }
   }
 
-  // Non-grouped fields (number, datetime not used as reset, text)
-  const otherFields = fields.filter(f => !groupedKeys.has(f.key));
+  // Within ungrouped fields, auto-group percentage/fraction fields with their reset datetime fields
+  const autoGroups = groupFields(ungroupedFields);
+  const autoGroupedKeys = new Set(autoGroups.map(g => g.pct.key));
+  if (autoGroups.some(g => g.reset)) {
+    autoGroups.forEach(g => { if (g.reset) autoGroupedKeys.add(g.reset.key); });
+  }
+  const ungroupedOther = ungroupedFields.filter(f => !autoGroupedKeys.has(f.key));
 
   return (
     <div className="space-y-2">
-      {/* Render grouped percentage/fraction fields with reset times */}
-      {fieldGroups.length > 0 && (
+      {/* Auto-grouped progress bars (ungrouped percentage/fraction + datetime reset pairs) */}
+      {autoGroups.length > 0 && (
         <div className='space-y-2'>
-          {fieldGroups.map((group, idx) => (
-            <FieldGroup key={group.pct.key} group={group} index={idx} t={t} />
+          {autoGroups.map((group) => (
+            <FieldGroup key={group.pct.key} group={group} t={t} />
           ))}
         </div>
       )}
 
-      {/* Render other fields */}
-      {otherFields.length > 0 && (
-        <div className="space-y-2">
-          {otherFields.map((field) => {
+      {/* Ungrouped other fields (text, number, datetime not used as reset, badges) */}
+      {ungroupedOther.length > 0 && (
+        <div className="space-y-1">
+          {ungroupedOther.map((field) => {
             const displayField = findDisplayField(displayFields, field.key);
-
+            // Skip fields whose value is null (variable not extracted)
+            if (field.value === null && !field.error) return null;
             if (field.error) {
               return (
                 <div key={field.key} className="text-xs text-red-500">
-                  {'⚠'} {t('usageMonitor.parseFailed')}: {field.error}
+                  ⚠ {t('usageMonitor.parseFailed')}: {field.error}
                 </div>
               );
             }
-
             switch (field.format) {
               case 'number':
                 return <NumberField key={field.key} field={field} />;
@@ -252,6 +328,25 @@ export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRender
           })}
         </div>
       )}
+
+      {/* Named groups */}
+      {groupOrder.map((groupName) => {
+        const groupData = groupMap.get(groupName)!;
+        // If all fields in the group have null values (e.g. additional_1 on Pro Lite), skip the entire group
+        const hasAnyValue = groupData.fields.some(f => f.value !== null);
+        if (!hasAnyValue) return null;
+
+        return (
+          <NamedGroup
+            key={groupName}
+            groupName={groupName}
+            groupLabel={groupData.groupLabel}
+            fields={groupData.fields}
+            displayFields={displayFields}
+            t={t}
+          />
+        );
+      })}
     </div>
   );
 }

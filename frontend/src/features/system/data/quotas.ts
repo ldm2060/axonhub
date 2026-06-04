@@ -54,6 +54,8 @@ const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
         unit
         format
         error
+        group
+        groupLabel
       }
       displayFields {
         key
@@ -65,6 +67,8 @@ const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
         displayOrder
         badge
         badgePresets
+        group
+        groupLabelRef
       }
     }
   }

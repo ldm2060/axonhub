@@ -283,12 +283,12 @@ func TestDeriveQuotaStatus_GitHubCopilot_LimitedQuotasExhausted(t *testing.T) {
 	assert.False(t, result.Ready)
 }
 
-// GitHub Copilot: quota snapshots with percent_remaining (EDU/Premium account).
+// GitHub Copilot: quota snapshots after rendering use used percentages derived from percent_remaining.
 func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsAvailable(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "business"},
 		{Key: "access_type", Format: "text", Value: "copilot_business"},
-		{Key: "chat_pct", Format: "percentage", Value: float64(85)},
+		{Key: "chat_pct", Format: "percentage", Value: float64(15), Percent: 15},
 		{Key: "chat_unlimited", Format: "text", Value: false},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)
@@ -300,7 +300,7 @@ func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsAvailable(t *testing.T) {
 func TestDeriveQuotaStatus_GitHubCopilot_SnapshotsExhausted(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "business"},
-		{Key: "chat_pct", Format: "percentage", Value: float64(0)},
+		{Key: "chat_pct", Format: "percentage", Value: float64(100), Percent: 100},
 		{Key: "chat_unlimited", Format: "text", Value: false},
 	}
 	result := DeriveQuotaStatus("github_copilot", fields)

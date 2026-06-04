@@ -675,15 +675,17 @@ type ComplexityRoot struct {
 	}
 
 	DisplayField struct {
-		Badge        func(childComplexity int) int
-		BadgePresets func(childComplexity int) int
-		DisplayOrder func(childComplexity int) int
-		Format       func(childComplexity int) int
-		Key          func(childComplexity int) int
-		Label        func(childComplexity int) int
-		TotalRef     func(childComplexity int) int
-		Unit         func(childComplexity int) int
-		ValueRef     func(childComplexity int) int
+		Badge         func(childComplexity int) int
+		BadgePresets  func(childComplexity int) int
+		DisplayOrder  func(childComplexity int) int
+		Format        func(childComplexity int) int
+		Group         func(childComplexity int) int
+		GroupLabelRef func(childComplexity int) int
+		Key           func(childComplexity int) int
+		Label         func(childComplexity int) int
+		TotalRef      func(childComplexity int) int
+		Unit          func(childComplexity int) int
+		ValueRef      func(childComplexity int) int
 	}
 
 	EmailSettings struct {
@@ -1142,14 +1144,16 @@ type ComplexityRoot struct {
 	}
 
 	ParsedFieldValue struct {
-		Error   func(childComplexity int) int
-		Format  func(childComplexity int) int
-		Key     func(childComplexity int) int
-		Label   func(childComplexity int) int
-		Percent func(childComplexity int) int
-		Total   func(childComplexity int) int
-		Unit    func(childComplexity int) int
-		Value   func(childComplexity int) int
+		Error      func(childComplexity int) int
+		Format     func(childComplexity int) int
+		Group      func(childComplexity int) int
+		GroupLabel func(childComplexity int) int
+		Key        func(childComplexity int) int
+		Label      func(childComplexity int) int
+		Percent    func(childComplexity int) int
+		Total      func(childComplexity int) int
+		Unit       func(childComplexity int) int
+		Value      func(childComplexity int) int
 	}
 
 	PassThroughSettings struct {
@@ -4870,6 +4874,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DisplayField.Format(childComplexity), true
+	case "DisplayField.group":
+		if e.complexity.DisplayField.Group == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.Group(childComplexity), true
+	case "DisplayField.groupLabelRef":
+		if e.complexity.DisplayField.GroupLabelRef == nil {
+			break
+		}
+
+		return e.complexity.DisplayField.GroupLabelRef(childComplexity), true
 	case "DisplayField.key":
 		if e.complexity.DisplayField.Key == nil {
 			break
@@ -7505,6 +7521,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ParsedFieldValue.Format(childComplexity), true
+	case "ParsedFieldValue.group":
+		if e.complexity.ParsedFieldValue.Group == nil {
+			break
+		}
+
+		return e.complexity.ParsedFieldValue.Group(childComplexity), true
+	case "ParsedFieldValue.groupLabel":
+		if e.complexity.ParsedFieldValue.GroupLabel == nil {
+			break
+		}
+
+		return e.complexity.ParsedFieldValue.GroupLabel(childComplexity), true
 	case "ParsedFieldValue.key":
 		if e.complexity.ParsedFieldValue.Key == nil {
 			break
@@ -28075,6 +28103,64 @@ func (ec *executionContext) fieldContext_DisplayField_badgePresets(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _DisplayField_group(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_group,
+		func(ctx context.Context) (any, error) {
+			return obj.Group, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_group(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DisplayField_groupLabelRef(ctx context.Context, field graphql.CollectedField, obj *DisplayField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DisplayField_groupLabelRef,
+		func(ctx context.Context) (any, error) {
+			return obj.GroupLabelRef, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_DisplayField_groupLabelRef(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DisplayField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _EmailSettings_smtpHost(ctx context.Context, field graphql.CollectedField, obj *biz.EmailSettings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -41664,6 +41750,64 @@ func (ec *executionContext) fieldContext_ParsedFieldValue_error(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ParsedFieldValue_group(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ParsedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ParsedFieldValue_group,
+		func(ctx context.Context) (any, error) {
+			return obj.Group, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ParsedFieldValue_group(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParsedFieldValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ParsedFieldValue_groupLabel(ctx context.Context, field graphql.CollectedField, obj *usage_monitor.ParsedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ParsedFieldValue_groupLabel,
+		func(ctx context.Context) (any, error) {
+			return obj.GroupLabel, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ParsedFieldValue_groupLabel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ParsedFieldValue",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PassThroughSettings_enabled(ctx context.Context, field graphql.CollectedField, obj *PassThroughSettings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -51171,6 +51315,10 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_displayFields(_ co
 				return ec.fieldContext_DisplayField_badge(ctx, field)
 			case "badgePresets":
 				return ec.fieldContext_DisplayField_badgePresets(ctx, field)
+			case "group":
+				return ec.fieldContext_DisplayField_group(ctx, field)
+			case "groupLabelRef":
+				return ec.fieldContext_DisplayField_groupLabelRef(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayField", field.Name)
 		},
@@ -58431,6 +58579,10 @@ func (ec *executionContext) fieldContext_TestResult_parsedFields(_ context.Conte
 				return ec.fieldContext_ParsedFieldValue_format(ctx, field)
 			case "error":
 				return ec.fieldContext_ParsedFieldValue_error(ctx, field)
+			case "group":
+				return ec.fieldContext_ParsedFieldValue_group(ctx, field)
+			case "groupLabel":
+				return ec.fieldContext_ParsedFieldValue_groupLabel(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParsedFieldValue", field.Name)
 		},
@@ -63475,6 +63627,10 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_parsedData(_ contex
 				return ec.fieldContext_ParsedFieldValue_format(ctx, field)
 			case "error":
 				return ec.fieldContext_ParsedFieldValue_error(ctx, field)
+			case "group":
+				return ec.fieldContext_ParsedFieldValue_group(ctx, field)
+			case "groupLabel":
+				return ec.fieldContext_ParsedFieldValue_groupLabel(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ParsedFieldValue", field.Name)
 		},
@@ -63592,6 +63748,10 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_displayFields(_ con
 				return ec.fieldContext_DisplayField_badge(ctx, field)
 			case "badgePresets":
 				return ec.fieldContext_DisplayField_badgePresets(ctx, field)
+			case "group":
+				return ec.fieldContext_DisplayField_group(ctx, field)
+			case "groupLabelRef":
+				return ec.fieldContext_DisplayField_groupLabelRef(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayField", field.Name)
 		},
@@ -70202,14 +70362,14 @@ func (ec *executionContext) unmarshalInputAPIKeyTokenUsageStatsInput(ctx context
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtGTE = data
+			it.CreatedAtGte = data
 		case "createdAtLTE":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtLTE = data
+			it.CreatedAtLte = data
 		}
 	}
 
@@ -77922,7 +78082,7 @@ func (ec *executionContext) unmarshalInputDisplayFieldInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"key", "label", "valueRef", "format", "unit", "totalRef", "displayOrder", "badge", "badgePresets"}
+	fieldsInOrder := [...]string{"key", "label", "valueRef", "format", "unit", "totalRef", "displayOrder", "badge", "badgePresets", "group", "groupLabelRef"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -77992,6 +78152,20 @@ func (ec *executionContext) unmarshalInputDisplayFieldInput(ctx context.Context,
 				return it, err
 			}
 			it.BadgePresets = data
+		case "group":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("group"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Group = data
+		case "groupLabelRef":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupLabelRef"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GroupLabelRef = data
 		}
 	}
 
@@ -105255,6 +105429,10 @@ func (ec *executionContext) _DisplayField(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._DisplayField_badge(ctx, field, obj)
 		case "badgePresets":
 			out.Values[i] = ec._DisplayField_badgePresets(ctx, field, obj)
+		case "group":
+			out.Values[i] = ec._DisplayField_group(ctx, field, obj)
+		case "groupLabelRef":
+			out.Values[i] = ec._DisplayField_groupLabelRef(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -108888,6 +109066,10 @@ func (ec *executionContext) _ParsedFieldValue(ctx context.Context, sel ast.Selec
 			}
 		case "error":
 			out.Values[i] = ec._ParsedFieldValue_error(ctx, field, obj)
+		case "group":
+			out.Values[i] = ec._ParsedFieldValue_group(ctx, field, obj)
+		case "groupLabel":
+			out.Values[i] = ec._ParsedFieldValue_groupLabel(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

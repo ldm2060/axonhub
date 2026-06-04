@@ -72,6 +72,8 @@
   "usageMonitor.displayField.badgeConfig": "Badge Config",
   "usageMonitor.displayField.badgeKey": "Badge Key",
   "usageMonitor.displayField.badgePresets": "Badge Presets",
+  "usageMonitor.displayField.group": "Group",
+  "usageMonitor.displayField.groupLabelRef": "Group Label Ref",
   "usageMonitor.addDisplayField": "Add Display Field",
   "usageMonitor.deleteDisplayField": "Delete Display Field",
   "usageMonitor.tabs.builtin": "From Channel",

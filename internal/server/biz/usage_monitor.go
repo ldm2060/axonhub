@@ -134,6 +134,9 @@ func enrichDisplayFieldsFromTemplate(ch *ent.UsageMonitorChannel, dfs []usage_mo
 		if !ok {
 			continue
 		}
+		if dfs[i].ValueRef == dfs[i].Key && tdf.ValueRef != "" && tdf.ValueRef != tdf.Key {
+			dfs[i].ValueRef = tdf.ValueRef
+		}
 		if dfs[i].Badge == "" && tdf.Badge != "" {
 			dfs[i].Badge = tdf.Badge
 		}
