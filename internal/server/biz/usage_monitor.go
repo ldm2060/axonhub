@@ -429,14 +429,21 @@ func (svc *UsageMonitorService) loadSince(ctx context.Context, since time.Time) 
 	return items, maxUpdated, nil
 }
 
-// ListChannels returns all active (non-soft-deleted) monitor channels from cache.
+// ListChannels returns all active (non-soft-deleted) monitor channels from the database.
 func (svc *UsageMonitorService) ListChannels(ctx context.Context) ([]*ent.UsageMonitorChannel, error) {
-	all := svc.cache.GetAll()
-	result := make([]*ent.UsageMonitorChannel, 0, len(all))
-	for _, ch := range all {
-		result = append(result, ch)
+	client := svc.entFromContext(ctx)
+	channels, err := client.UsageMonitorChannel.Query().
+		Where(usagemonitorchannel.DeletedAtEQ(0)).
+		All(ctx)
+	if err != nil {
+		return nil, err
 	}
-	return result, nil
+
+	for _, ch := range channels {
+		svc.cache.Set(ch.ID, ch)
+	}
+
+	return channels, nil
 }
 
 // ListChannelsFromCache returns all usage monitor channels from the in-memory cache.
