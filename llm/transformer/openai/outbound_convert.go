@@ -1,6 +1,8 @@
 package openai
 
 import (
+	"encoding/json"
+
 	"github.com/samber/lo"
 
 	"github.com/ldm2060/axonhub/llm"
@@ -252,6 +254,49 @@ func MessageContentPartFromLLM(p llm.MessageContentPart) MessageContentPart {
 	return part
 }
 
+func cleanToolSchema(schema json.RawMessage) json.RawMessage {
+	if len(schema) == 0 {
+		return schema
+	}
+
+	var value any
+	if err := json.Unmarshal(schema, &value); err != nil {
+		return schema
+	}
+
+	cleaned := cleanToolSchemaValue(value)
+	data, err := json.Marshal(cleaned)
+	if err != nil {
+		return schema
+	}
+
+	return data
+}
+
+func cleanToolSchemaValue(value any) any {
+	switch v := value.(type) {
+	case map[string]any:
+		cleaned := make(map[string]any, len(v))
+		for key, child := range v {
+			if key == "format" {
+				if format, ok := child.(string); ok && format == "uri" {
+					continue
+				}
+			}
+			cleaned[key] = cleanToolSchemaValue(child)
+		}
+		return cleaned
+	case []any:
+		cleaned := make([]any, len(v))
+		for i, child := range v {
+			cleaned[i] = cleanToolSchemaValue(child)
+		}
+		return cleaned
+	default:
+		return value
+	}
+}
+
 // ToolFromLLM creates OpenAI Tool from unified llm.Tool.
 func ToolFromLLM(t llm.Tool) Tool {
 	return Tool{
@@ -259,7 +304,7 @@ func ToolFromLLM(t llm.Tool) Tool {
 		Function: Function{
 			Name:        t.Function.Name,
 			Description: t.Function.Description,
-			Parameters:  t.Function.Parameters,
+			Parameters:  cleanToolSchema(t.Function.Parameters),
 			Strict:      t.Function.Strict,
 		},
 	}

@@ -19,6 +19,8 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer"
 )
 
+const infiniteWhitespaceThreshold = 500
+
 // PlatformType represents the platform type for OpenAI API.
 type PlatformType string
 
@@ -268,9 +270,17 @@ func (t *OutboundTransformer) TransformResponse(
 }
 
 func (t *OutboundTransformer) TransformStream(ctx context.Context, req *httpclient.Request, stream streams.Stream[*httpclient.StreamEvent]) (streams.Stream[*llm.Response], error) {
-	return streams.MapErr(stream, func(event *httpclient.StreamEvent) (*llm.Response, error) {
-		return t.TransformStreamChunk(ctx, event)
-	}), nil
+	guard := newToolCallWhitespaceGuard()
+
+	return streams.NoNil(streams.MapErr(stream, func(event *httpclient.StreamEvent) (*llm.Response, error) {
+		resp, err := t.TransformStreamChunk(ctx, event)
+		if err != nil || resp == nil {
+			return resp, err
+		}
+
+		filterAbortedToolCalls(resp, guard)
+		return resp, nil
+	})), nil
 }
 
 func (t *OutboundTransformer) TransformStreamChunk(
@@ -294,6 +304,28 @@ func (t *OutboundTransformer) TransformStreamChunk(
 	}
 
 	return t.TransformResponse(ctx, httpResp)
+}
+
+func filterAbortedToolCalls(resp *llm.Response, guard *toolCallWhitespaceGuard) {
+	if resp == nil || guard == nil {
+		return
+	}
+
+	for i := range resp.Choices {
+		choice := &resp.Choices[i]
+		if choice.Delta == nil || len(choice.Delta.ToolCalls) == 0 {
+			continue
+		}
+
+		toolCalls := choice.Delta.ToolCalls[:0]
+		for _, toolCall := range choice.Delta.ToolCalls {
+			if guard.allow(toolCall.Index, toolCall.Function.Arguments) {
+				toolCalls = append(toolCalls, toolCall)
+			}
+		}
+
+		choice.Delta.ToolCalls = toolCalls
+	}
 }
 
 func parseStreamErrorEvent(event *httpclient.StreamEvent) *llm.ResponseError {

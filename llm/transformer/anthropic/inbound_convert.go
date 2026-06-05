@@ -628,6 +628,12 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 				}
 			}
 
+			if message.Refusal != "" {
+				appendOrdered(nil, MessageContentBlock{
+					Type: "text",
+					Text: lo.ToPtr(message.Refusal),
+				})
+			}
 
 			// Handle tool calls
 			if len(message.ToolCalls) > 0 {
@@ -683,6 +689,9 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 				resp.StopReason = &stopReason
 			case "tool_calls":
 				stopReason := "tool_use"
+				resp.StopReason = &stopReason
+			case "content_filter":
+				stopReason := "end_turn"
 				resp.StopReason = &stopReason
 			default:
 				resp.StopReason = choice.FinishReason

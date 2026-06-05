@@ -24,6 +24,7 @@ type choiceAggregator struct {
 	finishReason        *string
 	role                string
 	annotations         map[string]llm.Annotation // Map to track unique annotations by stable annotation key
+	whitespaceGuard     *toolCallWhitespaceGuard
 }
 
 func buildAnnotationKey(annotation Annotation) string {
@@ -151,10 +152,11 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 			// Initialize choice aggregator if it doesn't exist
 			if _, ok := choicesAggs[choiceIndex]; !ok {
 				choicesAggs[choiceIndex] = &choiceAggregator{
-					index:       choiceIndex,
-					toolCalls:   make(map[int]*llm.ToolCall),
-					annotations: make(map[string]llm.Annotation),
-					role:        "assistant",
+					index:           choiceIndex,
+					toolCalls:       make(map[int]*llm.ToolCall),
+					annotations:     make(map[string]llm.Annotation),
+					role:            "assistant",
+					whitespaceGuard: newToolCallWhitespaceGuard(),
 				}
 			}
 
@@ -200,7 +202,7 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 						}
 
 						// Aggregate function arguments
-						if deltaToolCall.Function.Arguments != "" {
+						if deltaToolCall.Function.Arguments != "" && choiceAgg.whitespaceGuard.allow(toolCallIndex, deltaToolCall.Function.Arguments) {
 							choiceAgg.toolCalls[toolCallIndex].Function.Arguments += deltaToolCall.Function.Arguments
 						}
 
