@@ -31,7 +31,7 @@ func TestCodexRefreshPersistsChannelCredentials(t *testing.T) {
 
 	t.Cleanup(func() { codex.DefaultTokenURLs = prevURLs })
 
-	db := enttest.Open(t, "sqlite3", "file:ent?mode=memory&_fk=0")
+	db := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=0")
 	t.Cleanup(func() { _ = db.Close() })
 
 	ctx := ent.NewContext(context.Background(), db)

@@ -86,6 +86,14 @@ func (m *persistRequestExecutionMiddleware) OnOutboundRawRequest(ctx context.Con
 		reasoningEffort = state.LlmRequest.ReasoningEffort
 	}
 
+	// Prefer the API format of the actual outbound request: transformers may emit
+	// multiple formats (e.g. OpenAI outbound also builds audio speech/transcription
+	// requests) while APIFormat() only reports the primary one.
+	format := m.outbound.APIFormat()
+	if request.APIFormat != "" {
+		format = llm.APIFormat(request.APIFormat)
+	}
+
 	requestExec, err := state.RequestService.CreateRequestExecution(
 		ctx,
 		channel,
@@ -93,7 +101,7 @@ func (m *persistRequestExecutionMiddleware) OnOutboundRawRequest(ctx context.Con
 		reasoningEffort,
 		state.Request,
 		*request,
-		m.outbound.APIFormat(),
+		format,
 	)
 	if err != nil {
 		return nil, err
@@ -165,11 +173,15 @@ func (m *persistRequestExecutionMiddleware) OnOutboundLlmResponse(ctx context.Co
 		}
 	}
 
+	// Audio responses (binary TTS / non-JSON STT) must be converted to JSON-safe payloads
+	// before persisting into the JSON response_body column.
+	respBody := audioSafeResponseBody(llmResp.RequestType, m.rawResponse.Headers.Get("Content-Type"), m.rawResponse.Body)
+
 	err := state.RequestService.UpdateRequestExecutionCompleted(
 		persistCtx,
 		state.RequestExec.ID,
 		llmResp.ID,
-		m.rawResponse.Body,
+		respBody,
 		metrics,
 	)
 	if err != nil {
