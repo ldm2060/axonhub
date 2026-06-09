@@ -50,6 +50,15 @@ type Server struct {
 	addr        string
 }
 
+func (srv *Server) newHTTPServer(addr string) *http.Server {
+	return &http.Server{
+		Addr:         addr,
+		Handler:      srv.Engine,
+		ReadTimeout:  srv.Config.ReadTimeout,
+		WriteTimeout: 0,
+	}
+}
+
 func (srv *Server) Run() error {
 	log.Info(context.Background(), "run server",
 		log.String("name", srv.Config.Name),
@@ -57,12 +66,7 @@ func (srv *Server) Run() error {
 		log.Int("port", srv.Config.Port),
 	)
 	addr := fmt.Sprintf("%s:%d", srv.Config.Host, srv.Config.Port)
-	srv.server = &http.Server{
-		Addr:         addr,
-		Handler:      srv.Engine,
-		ReadTimeout:  srv.Config.ReadTimeout,
-		WriteTimeout: max(srv.Config.RequestTimeout, srv.Config.LLMRequestTimeout),
-	}
+	srv.server = srv.newHTTPServer(addr)
 	srv.addr = addr
 
 	if srv.Config.Pprof.Enabled {

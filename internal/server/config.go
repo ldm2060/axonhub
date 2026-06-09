@@ -17,17 +17,20 @@ type Config struct {
 	// RequestTimeout is the maximum duration for processing a request.
 	RequestTimeout time.Duration `conf:"request_timeout" yaml:"request_timeout" json:"request_timeout"`
 
-	// LLMRequestTimeout is the maximum duration for processing a request to LLM.
+	// LLMRequestTimeout is the maximum duration for processing a non-streaming request to LLM.
 	LLMRequestTimeout time.Duration `conf:"llm_request_timeout" yaml:"llm_request_timeout" json:"llm_request_timeout"`
+
+	// LLMStreamIdleTimeout is the maximum duration a streaming LLM request may wait without chunks.
+	LLMStreamIdleTimeout time.Duration `conf:"llm_stream_idle_timeout" yaml:"llm_stream_idle_timeout" json:"llm_stream_idle_timeout"`
 
 	Trace     tracing.Config `conf:"trace" yaml:"trace" json:"trace"`
 	Dashboard Dashboard      `conf:"dashboard" yaml:"dashboard" json:"dashboard"`
 
-	Debug            bool   `conf:"debug" yaml:"debug" json:"debug"`
-	DisableSSLVerify bool   `conf:"disable_ssl_verify" yaml:"disable_ssl_verify" json:"disable_ssl_verify"`
-	CORS             CORS   `conf:"cors" yaml:"cors" json:"cors"`
-	API              API    `conf:"api" yaml:"api" json:"api"`
-	Pprof            Pprof  `conf:"pprof" yaml:"pprof" json:"pprof"`
+	Debug            bool  `conf:"debug" yaml:"debug" json:"debug"`
+	DisableSSLVerify bool  `conf:"disable_ssl_verify" yaml:"disable_ssl_verify" json:"disable_ssl_verify"`
+	CORS             CORS  `conf:"cors" yaml:"cors" json:"cors"`
+	API              API   `conf:"api" yaml:"api" json:"api"`
+	Pprof            Pprof `conf:"pprof" yaml:"pprof" json:"pprof"`
 }
 
 type Pprof struct {
