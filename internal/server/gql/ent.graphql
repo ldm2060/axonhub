@@ -1313,6 +1313,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   nanogpt
   nanogpt_responses
   opencode_go
+  opencode_go_anthropic
   ollama
 }
 """

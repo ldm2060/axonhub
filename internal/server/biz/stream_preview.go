@@ -1,9 +1,7 @@
 package biz
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -96,20 +94,11 @@ func marshalPreviewChunks(buffer *chunkbuffer.Buffer) []objects.JSONRawMessage {
 
 	var result []objects.JSONRawMessage
 	for _, chunk := range chunks {
-		// Skip terminal DONE events
-		if bytes.Equal(chunk.Data, llm.DoneStreamEvent.Data) {
+		if shouldSkipStoredStreamChunk(chunk) {
 			continue
 		}
 
-		b, err := xjson.Marshal(struct {
-			LastEventID string          `json:"last_event_id,omitempty"`
-			Type        string          `json:"event"`
-			Data        json.RawMessage `json:"data"`
-		}{
-			LastEventID: chunk.LastEventID,
-			Type:        chunk.Type,
-			Data:        chunk.Data,
-		})
+		b, err := marshalStreamEventForStorage(chunk)
 		if err != nil {
 			continue
 		}
