@@ -90,7 +90,7 @@ func NewRequestPreviewHandlers(params RequestPreviewHandlersParams) *RequestPrev
 	return &RequestPreviewHandlers{
 		RequestService:     params.RequestService,
 		LiveStreamRegistry: params.LiveStreamRegistry,
-		StreamWriter:       WriteSSEStream,
+		StreamWriter:       WriteSSEStreamWithOptions,
 	}
 }
 
@@ -140,9 +140,9 @@ func (h *RequestPreviewHandlers) PreviewRequest(c *gin.Context) {
 
 	streamWriter := h.StreamWriter
 	if streamWriter == nil {
-		streamWriter = WriteSSEStream
+		streamWriter = WriteSSEStreamWithOptions
 	}
-	streamWriter(c, stream)
+	streamWriter(c, stream, StreamWriteOptions{})
 }
 
 func (h *RequestPreviewHandlers) writeStaticPreview(c *gin.Context, req *ent.Request) {

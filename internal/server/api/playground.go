@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -32,24 +34,27 @@ type PlaygroundResponseError struct {
 type PlaygroundHandlersParams struct {
 	fx.In
 
-	ChannelService  *biz.ChannelService
-	ModelService    *biz.ModelService
-	DefaultSelector *orchestrator.DefaultSelector
-	RequestService  *biz.RequestService
-	SystemService   *biz.SystemService
-	UsageLogService *biz.UsageLogService
-	PromptService   *biz.PromptService
+	ChannelService              *biz.ChannelService
+	ModelService                *biz.ModelService
+	DefaultSelector             *orchestrator.DefaultSelector
+	RequestService              *biz.RequestService
+	SystemService               *biz.SystemService
+	UsageLogService             *biz.UsageLogService
+	PromptService               *biz.PromptService
 	PromptProtectionRuleService *biz.PromptProtectionRuleService
-	QuotaService    *biz.QuotaService
-	HttpClient      *httpclient.HttpClient
-	LiveStreamRegistry *biz.LiveStreamRegistry
+	QuotaService                *biz.QuotaService
+	HttpClient                  *httpclient.HttpClient
+	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	TimeoutConfig               TimeoutConfig
 }
 
 type PlaygroundHandlers struct {
 	ChannelService             *biz.ChannelService
 	ChatCompletionOrchestrator *orchestrator.ChatCompletionOrchestrator
+	RequestTimeout             time.Duration
+	StreamIdleTimeout          time.Duration
 }
 
 func NewPlaygroundHandlers(params PlaygroundHandlersParams) *PlaygroundHandlers {
@@ -70,6 +75,8 @@ func NewPlaygroundHandlers(params PlaygroundHandlersParams) *PlaygroundHandlers 
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
 		),
+		RequestTimeout:    params.TimeoutConfig.LLMRequestTimeout,
+		StreamIdleTimeout: params.TimeoutConfig.LLMStreamIdleTimeout,
 	}
 }
 
@@ -263,6 +270,13 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 		c.Request = c.Request.WithContext(ctx)
 	}
 
+	if !requestBodyWantsStream(genericReq) && handlers.RequestTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, handlers.RequestTimeout)
+		defer cancel()
+		c.Request = c.Request.WithContext(ctx)
+	}
+
 	log.Debug(ctx, "Received request", log.Any("request", genericReq), log.String("channel_id", channelIDStr), log.String("project_id", projectIDStr))
 
 	processor := handlers.ChatCompletionOrchestrator
@@ -317,15 +331,6 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 			}
 		}()
 
-		// Set AI SDK data stream headers
-
-		c.Header("Content-Type", "text/event-stream")
-		c.Header("Cache-Control", "no-cache")
-		c.Header("Connection", "keep-alive")
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("X-Vercel-AI-Data-Stream", "v1")
-		c.Status(http.StatusOK)
-
-		WriteSSEStream(c, result.ChatCompletionStream)
+		WriteJSONStreamWithOptions(c, result.ChatCompletionStream, StreamWriteOptions{IdleTimeout: handlers.StreamIdleTimeout})
 	}
 }

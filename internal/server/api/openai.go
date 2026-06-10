@@ -42,6 +42,7 @@ type OpenAIHandlersParams struct {
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	Client                      *ent.Client
+	TimeoutConfig               TimeoutConfig
 }
 
 type OpenAIHandlers struct {
@@ -74,7 +75,7 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 	videoInbound := openai.NewVideoInboundTransformer()
 	speechInbound := openai.NewSpeechInboundTransformer()
 
-	return &OpenAIHandlers{
+	handlers := &OpenAIHandlers{
 		ChatCompletionHandlers: &ChatCompletionHandlers{
 			ChatCompletionOrchestrator: orchestrator.NewChatCompletionOrchestrator(
 				params.ChannelService,
@@ -287,6 +288,21 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 			),
 		},
 	}
+
+	handlers.ChatCompletionHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.CompletionHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.ResponseCompletionHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.CompactHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.EmbeddingHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.ImageGenerationHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.ImageEditHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.ImageVariationHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.VideoHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.SpeechHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.TranscriptionHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.TranslationHandlers.WithTimeouts(params.TimeoutConfig)
+
+	return handlers
 }
 
 func (handlers *OpenAIHandlers) ChatCompletion(c *gin.Context) {
@@ -332,7 +348,7 @@ func (handlers *OpenAIHandlers) CreateSpeech(c *gin.Context) {
 		return
 	}
 
-	handlers.SpeechHandlers.WithStreamWriter(WriteBinaryStream).ChatCompletionWithRequest(c, genericReq)
+	handlers.SpeechHandlers.WithStreamWriter(WriteBinaryStreamWithOptions).ChatCompletionWithRequest(c, genericReq)
 }
 
 func shouldUseBinarySpeechStream(genericReq *httpclient.Request) (bool, error) {

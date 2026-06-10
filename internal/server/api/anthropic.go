@@ -17,19 +17,20 @@ import (
 type AnthropicHandlersParams struct {
 	fx.In
 
-	ChannelService  *biz.ChannelService
-	ModelService    *biz.ModelService
-	DefaultSelector *orchestrator.DefaultSelector
-	RequestService  *biz.RequestService
-	SystemService   *biz.SystemService
-	UsageLogService *biz.UsageLogService
-	PromptService   *biz.PromptService
+	ChannelService              *biz.ChannelService
+	ModelService                *biz.ModelService
+	DefaultSelector             *orchestrator.DefaultSelector
+	RequestService              *biz.RequestService
+	SystemService               *biz.SystemService
+	UsageLogService             *biz.UsageLogService
+	PromptService               *biz.PromptService
 	PromptProtectionRuleService *biz.PromptProtectionRuleService
-	QuotaService    *biz.QuotaService
-	HttpClient      *httpclient.HttpClient
-	LiveStreamRegistry *biz.LiveStreamRegistry
+	QuotaService                *biz.QuotaService
+	HttpClient                  *httpclient.HttpClient
+	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	TimeoutConfig               TimeoutConfig
 }
 
 type AnthropicHandlers struct {
@@ -40,27 +41,29 @@ type AnthropicHandlers struct {
 }
 
 func NewAnthropicHandlers(params AnthropicHandlersParams) *AnthropicHandlers {
+	handler := (&ChatCompletionHandlers{
+		ChatCompletionOrchestrator: orchestrator.NewChatCompletionOrchestrator(
+			params.ChannelService,
+			params.DefaultSelector,
+			params.RequestService,
+			params.HttpClient,
+			anthropic.NewInboundTransformer(),
+			params.SystemService,
+			params.UsageLogService,
+			params.PromptService,
+			params.QuotaService,
+			params.PromptProtectionRuleService,
+			params.LiveStreamRegistry,
+			params.ChannelLimiterManager,
+			params.ProviderQuotaStatusProvider,
+		),
+	}).WithTimeouts(params.TimeoutConfig)
+
 	return &AnthropicHandlers{
-		ChatCompletionHandlers: &ChatCompletionHandlers{
-			ChatCompletionOrchestrator: orchestrator.NewChatCompletionOrchestrator(
-				params.ChannelService,
-				params.DefaultSelector,
-				params.RequestService,
-				params.HttpClient,
-				anthropic.NewInboundTransformer(),
-				params.SystemService,
-				params.UsageLogService,
-				params.PromptService,
-				params.QuotaService,
-				params.PromptProtectionRuleService,
-				params.LiveStreamRegistry,
-				params.ChannelLimiterManager,
-				params.ProviderQuotaStatusProvider,
-			),
-		},
-		ChannelService: params.ChannelService,
-		ModelService:   params.ModelService,
-		SystemService:  params.SystemService,
+		ChatCompletionHandlers: handler,
+		ChannelService:         params.ChannelService,
+		ModelService:           params.ModelService,
+		SystemService:          params.SystemService,
 	}
 }
 

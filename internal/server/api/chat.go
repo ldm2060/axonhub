@@ -6,12 +6,14 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/sse"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -24,25 +26,52 @@ const (
 )
 
 // StreamWriter is a function type for writing stream events to the response.
-type StreamWriter func(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent])
+type StreamWriter func(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions)
+
+type ChatCompletionProcessor interface {
+	Process(ctx context.Context, genericReq *httpclient.Request) (orchestrator.ChatCompletionResult, error)
+}
 
 type ChatCompletionHandlers struct {
 	ChatCompletionOrchestrator *orchestrator.ChatCompletionOrchestrator
+	Processor                  ChatCompletionProcessor
 	StreamWriter               StreamWriter
+	RequestTimeout             time.Duration
+	StreamIdleTimeout          time.Duration
 }
 
 func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestrator) *ChatCompletionHandlers {
 	return &ChatCompletionHandlers{
 		ChatCompletionOrchestrator: orchestrator,
-		StreamWriter:               WriteSSEStream,
+		Processor:                  orchestrator,
+		StreamWriter:               WriteSSEStreamWithOptions,
 	}
+}
+
+func (handlers *ChatCompletionHandlers) processor() ChatCompletionProcessor {
+	if handlers.Processor != nil {
+		return handlers.Processor
+	}
+
+	return handlers.ChatCompletionOrchestrator
+}
+
+func (handlers *ChatCompletionHandlers) systemService() *biz.SystemService {
+	if handlers.ChatCompletionOrchestrator == nil {
+		return nil
+	}
+
+	return handlers.ChatCompletionOrchestrator.SystemService
 }
 
 // WithStreamWriter returns a new ChatCompletionHandlers with the specified stream writer.
 func (handlers *ChatCompletionHandlers) WithStreamWriter(writer StreamWriter) *ChatCompletionHandlers {
 	return &ChatCompletionHandlers{
 		ChatCompletionOrchestrator: handlers.ChatCompletionOrchestrator,
+		Processor:                  handlers.processor(),
 		StreamWriter:               writer,
+		RequestTimeout:             handlers.RequestTimeout,
+		StreamIdleTimeout:          handlers.StreamIdleTimeout,
 	}
 }
 
@@ -61,6 +90,26 @@ func (handlers *ChatCompletionHandlers) ChatCompletion(c *gin.Context) {
 	handlers.ChatCompletionWithRequest(c, genericReq)
 }
 
+func requestBodyWantsStream(genericReq *httpclient.Request) bool {
+	if genericReq == nil {
+		return false
+	}
+
+	if strings.Contains(strings.ToLower(genericReq.Path), ":streamgeneratecontent") {
+		return true
+	}
+
+	if len(genericReq.Body) == 0 {
+		return false
+	}
+
+	if gjson.GetBytes(genericReq.Body, "stream").Bool() {
+		return true
+	}
+
+	return strings.TrimSpace(gjson.GetBytes(genericReq.Body, "stream_format").String()) != ""
+}
+
 func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context, genericReq *httpclient.Request) {
 	ctx := c.Request.Context()
 
@@ -69,9 +118,17 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		return
 	}
 
+	streaming := requestBodyWantsStream(genericReq)
+	if !streaming && handlers.RequestTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, handlers.RequestTimeout)
+		defer cancel()
+		c.Request = c.Request.WithContext(ctx)
+	}
+
 	// log.Debug(ctx, "Chat completion request", log.Any("request", genericReq))
 
-	result, err := handlers.ChatCompletionOrchestrator.Process(ctx, genericReq)
+	result, err := handlers.processor().Process(ctx, genericReq)
 	if err != nil {
 		log.Error(ctx, "Error processing chat completion", log.Cause(err))
 
@@ -108,10 +165,10 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 
 		streamWriter := handlers.StreamWriter
 		if streamWriter == nil {
-			streamWriter = WriteSSEStream
+			streamWriter = WriteSSEStreamWithOptions
 		}
 
-		streamWriter(c, newUpstreamErrorStream(ctx, result.ChatCompletionStream, handlers.ChatCompletionOrchestrator.SystemService))
+		streamWriter(c, newUpstreamErrorStream(ctx, result.ChatCompletionStream, handlers.systemService()), StreamWriteOptions{IdleTimeout: handlers.StreamIdleTimeout})
 	}
 }
 
@@ -120,11 +177,19 @@ type StreamErrorFormatter func(ctx context.Context, err error) any
 
 // WriteSSEStream writes stream events as Server-Sent Events (SSE) with default error formatting.
 func WriteSSEStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
-	WriteSSEStreamWithErrorFormatter(c, stream, FormatStreamError)
+	WriteSSEStreamWithOptionsAndErrorFormatter(c, stream, StreamWriteOptions{}, FormatStreamError)
+}
+
+func WriteSSEStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions) {
+	WriteSSEStreamWithOptionsAndErrorFormatter(c, stream, opts, FormatStreamError)
 }
 
 // WriteSSEStreamWithErrorFormatter writes stream events as SSE with a custom error formatter.
 func WriteSSEStreamWithErrorFormatter(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], formatErr StreamErrorFormatter) {
+	WriteSSEStreamWithOptionsAndErrorFormatter(c, stream, StreamWriteOptions{}, formatErr)
+}
+
+func WriteSSEStreamWithOptionsAndErrorFormatter(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions, formatErr StreamErrorFormatter) {
 	ctx := c.Request.Context()
 	clientDisconnected := false
 
@@ -145,36 +210,43 @@ func WriteSSEStreamWithErrorFormatter(c *gin.Context, stream streams.Stream[*htt
 	c.Writer.Flush()
 
 	for {
-		select {
-		case <-ctx.Done():
-			clientDisconnected = true
+		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		if result.ok {
+			cur := result.event
+			c.SSEvent(cur.Type, cur.Data)
+			log.Debug(ctx, "write stream event", log.Any("event", cur))
+			c.Writer.Flush()
+			continue
+		}
 
-			log.Warn(ctx, "Context done, stopping stream")
-
-			return
-		default:
-			if stream.Next() {
-				cur := stream.Current()
-				c.SSEvent(cur.Type, cur.Data)
-				log.Debug(ctx, "write stream event", log.Any("event", cur))
-				c.Writer.Flush()
-			} else {
-				if stream.Err() != nil {
-					log.Error(ctx, "Error in stream", log.Cause(stream.Err()))
-					c.SSEvent("error", formatErr(ctx, stream.Err()))
-				}
-
-				c.Writer.Flush()
-
+		if result.err != nil {
+			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+				clientDisconnected = true
+				log.Warn(ctx, "Context done, stopping stream", log.Cause(result.err))
 				return
 			}
+
+			if errors.Is(result.err, ErrStreamIdleTimeout) {
+				log.Warn(ctx, "Stream idle timeout, stopping stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
+			} else {
+				log.Error(ctx, "Error in stream", log.Cause(result.err))
+			}
+
+			c.SSEvent("error", formatErr(ctx, result.err))
 		}
+
+		c.Writer.Flush()
+		return
 	}
 }
 
 // WriteBinaryStream writes raw bytes from stream events directly to the response body.
 // The first chunk type is treated as the stream Content-Type when present.
 func WriteBinaryStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
+	WriteBinaryStreamWithOptions(c, stream, StreamWriteOptions{})
+}
+
+func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions) {
 	ctx := c.Request.Context()
 	clientDisconnected := false
 	headersWritten := false
@@ -187,54 +259,59 @@ func WriteBinaryStream(c *gin.Context, stream streams.Stream[*httpclient.StreamE
 	}()
 
 	for {
-		select {
-		case <-ctx.Done():
-			clientDisconnected = true
-			log.Warn(ctx, "Context done, stopping binary stream")
-			return
-		default:
-			if !stream.Next() {
-				if stream.Err() != nil {
-					log.Error(ctx, "Error in binary stream", log.Cause(stream.Err()))
-					if !headersWritten {
-						c.JSON(streamErrorStatus(stream.Err()), FormatStreamError(ctx, stream.Err()))
-						return
-					}
+		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		if !result.ok {
+			if result.err != nil {
+				if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+					clientDisconnected = true
+					log.Warn(ctx, "Context done, stopping binary stream", log.Cause(result.err))
+					return
 				}
 
-				c.Writer.Flush()
-				return
-			}
-
-			cur := stream.Current()
-			if cur != nil && cur.Type == httpclient.BinaryStreamDoneEventType {
-				continue
-			}
-
-			if cur == nil || len(cur.Data) == 0 {
-				continue
-			}
-
-			if !headersWritten {
-				if ct := strings.TrimSpace(cur.Type); ct != "" {
-					contentType = ct
+				if errors.Is(result.err, ErrStreamIdleTimeout) {
+					log.Warn(ctx, "Stream idle timeout, stopping binary stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
+				} else {
+					log.Error(ctx, "Error in binary stream", log.Cause(result.err))
 				}
 
-				c.Header("Content-Type", contentType)
-				c.Header("Cache-Control", "no-cache")
-				c.Header("Connection", "keep-alive")
-				c.Header("Access-Control-Allow-Origin", "*")
-				headersWritten = true
-			}
-
-			if _, err := c.Writer.Write(cur.Data); err != nil {
-				clientDisconnected = true
-				log.Warn(ctx, "Failed to write binary stream chunk", log.Cause(err))
-				return
+				if !headersWritten {
+					c.JSON(streamErrorStatus(result.err), FormatStreamError(ctx, result.err))
+					return
+				}
 			}
 
 			c.Writer.Flush()
+			return
 		}
+
+		cur := result.event
+		if cur != nil && cur.Type == httpclient.BinaryStreamDoneEventType {
+			continue
+		}
+
+		if cur == nil || len(cur.Data) == 0 {
+			continue
+		}
+
+		if !headersWritten {
+			if ct := strings.TrimSpace(cur.Type); ct != "" {
+				contentType = ct
+			}
+
+			c.Header("Content-Type", contentType)
+			c.Header("Cache-Control", "no-cache")
+			c.Header("Connection", "keep-alive")
+			c.Header("Access-Control-Allow-Origin", "*")
+			headersWritten = true
+		}
+
+		if _, err := c.Writer.Write(cur.Data); err != nil {
+			clientDisconnected = true
+			log.Warn(ctx, "Failed to write binary stream chunk", log.Cause(err))
+			return
+		}
+
+		c.Writer.Flush()
 	}
 }
 

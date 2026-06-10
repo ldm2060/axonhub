@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -18,19 +20,20 @@ import (
 type GeminiHandlersParams struct {
 	fx.In
 
-	ChannelService  *biz.ChannelService
-	ModelService    *biz.ModelService
-	DefaultSelector *orchestrator.DefaultSelector
-	RequestService  *biz.RequestService
-	SystemService   *biz.SystemService
-	UsageLogService *biz.UsageLogService
-	PromptService   *biz.PromptService
+	ChannelService              *biz.ChannelService
+	ModelService                *biz.ModelService
+	DefaultSelector             *orchestrator.DefaultSelector
+	RequestService              *biz.RequestService
+	SystemService               *biz.SystemService
+	UsageLogService             *biz.UsageLogService
+	PromptService               *biz.PromptService
 	PromptProtectionRuleService *biz.PromptProtectionRuleService
-	QuotaService    *biz.QuotaService
-	HttpClient      *httpclient.HttpClient
-	LiveStreamRegistry *biz.LiveStreamRegistry
+	QuotaService                *biz.QuotaService
+	HttpClient                  *httpclient.HttpClient
+	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	TimeoutConfig               TimeoutConfig
 }
 
 type GeminiHandlers struct {
@@ -57,7 +60,7 @@ func NewGeminiHandlers(params GeminiHandlersParams) *GeminiHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 			),
-		),
+		).WithTimeouts(params.TimeoutConfig),
 		ChannelService: params.ChannelService,
 		ModelService:   params.ModelService,
 	}
@@ -67,13 +70,17 @@ func (handlers *GeminiHandlers) GenerateContent(c *gin.Context) {
 	alt := c.Query("alt")
 	switch alt {
 	case "sse":
-		handlers.ChatCompletionHandlers.WithStreamWriter(WriteSSEStream).ChatCompletion(c)
+		handlers.ChatCompletionHandlers.WithStreamWriter(WriteSSEStreamWithOptions).ChatCompletion(c)
 	default:
-		handlers.ChatCompletionHandlers.WithStreamWriter(WriteGeminiStream).ChatCompletion(c)
+		handlers.ChatCompletionHandlers.WithStreamWriter(WriteGeminiStreamWithOptions).ChatCompletion(c)
 	}
 }
 
 func WriteGeminiStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
+	WriteGeminiStreamWithOptions(c, stream, StreamWriteOptions{})
+}
+
+func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions) {
 	ctx := c.Request.Context()
 	clientDisconnected := false
 
@@ -90,36 +97,38 @@ func WriteGeminiStream(c *gin.Context, stream streams.Stream[*httpclient.StreamE
 	first := true
 
 	for {
-		select {
-		case <-ctx.Done():
-			clientDisconnected = true
+		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		if result.ok {
+			cur := result.event
 
-			log.Warn(ctx, "Client disconnected, stop streaming")
+			if !first {
+				_, _ = c.Writer.Write([]byte(","))
+			}
 
-			return
-		default:
-			if stream.Next() {
-				cur := stream.Current()
+			_, _ = c.Writer.Write(cur.Data)
+			first = false
 
-				if !first {
-					_, _ = c.Writer.Write([]byte(","))
-				}
+			log.Debug(ctx, "write stream event", log.Any("event", cur))
+			c.Writer.Flush()
+			continue
+		}
 
-				_, _ = c.Writer.Write(cur.Data)
-				first = false
-
-				log.Debug(ctx, "write stream event", log.Any("event", cur))
-				c.Writer.Flush()
-			} else {
-				if err := stream.Err(); err != nil {
-					log.Error(ctx, "Error in stream", log.Cause(err))
-				}
-
-				_, _ = c.Writer.Write([]byte("]"))
-
+		if result.err != nil {
+			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+				clientDisconnected = true
+				log.Warn(ctx, "Client disconnected, stop streaming", log.Cause(result.err))
 				return
 			}
+
+			if errors.Is(result.err, ErrStreamIdleTimeout) {
+				log.Warn(ctx, "Stream idle timeout, stopping Gemini stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
+			} else {
+				log.Error(ctx, "Error in stream", log.Cause(result.err))
+			}
 		}
+
+		_, _ = c.Writer.Write([]byte("]"))
+		return
 	}
 }
 

@@ -135,6 +135,12 @@ func Run(opts ...fx.Option) {
 			backup.Module,
 			video_storage.Module,
 			api.Module,
+			fx.Provide(func(cfg Config) api.TimeoutConfig {
+				return api.TimeoutConfig{
+					LLMRequestTimeout:    cfg.LLMRequestTimeout,
+					LLMStreamIdleTimeout: cfg.LLMStreamIdleTimeout,
+				}
+			}),
 			fx.Provide(fx.Annotate(func(cfg Config) string { return cfg.PublicURL }, fx.ResultTags(`name:"public_url"`))),
 			fx.Invoke(func(cfg log.Config) {
 				log.SetGlobalConfig(cfg)

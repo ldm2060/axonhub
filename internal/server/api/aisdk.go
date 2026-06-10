@@ -1,6 +1,9 @@
 package api
 
 import (
+	"context"
+	"errors"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
@@ -28,6 +31,7 @@ type AiSdkHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	TimeoutConfig               TimeoutConfig
 }
 
 type AiSDKHandlers struct {
@@ -36,7 +40,7 @@ type AiSDKHandlers struct {
 
 func NewAiSDKHandlers(params AiSdkHandlersParams) *AiSDKHandlers {
 	return &AiSDKHandlers{
-		ChatCompletionHandler: &ChatCompletionHandlers{
+		ChatCompletionHandler: (&ChatCompletionHandlers{
 			ChatCompletionOrchestrator: orchestrator.NewChatCompletionOrchestrator(
 				params.ChannelService,
 				params.DefaultSelector,
@@ -52,8 +56,8 @@ func NewAiSDKHandlers(params AiSdkHandlersParams) *AiSDKHandlers {
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
 			),
-			StreamWriter: WriteJSONStream,
-		},
+			StreamWriter: WriteJSONStreamWithOptions,
+		}).WithTimeouts(params.TimeoutConfig),
 	}
 }
 
@@ -63,6 +67,10 @@ func (handlers *AiSDKHandlers) ChatCompletion(c *gin.Context) {
 
 // WriteJSONStream writes stream events as plain JSON text stream.
 func WriteJSONStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
+	WriteJSONStreamWithOptions(c, stream, StreamWriteOptions{})
+}
+
+func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions) {
 	ctx := c.Request.Context()
 	clientDisconnected := false
 
@@ -80,27 +88,31 @@ func WriteJSONStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEve
 	c.Header("X-Vercel-AI-Data-Stream", "v1")
 
 	for {
-		select {
-		case <-ctx.Done():
-			clientDisconnected = true
+		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		if result.ok {
+			cur := result.event
+			_, _ = c.Writer.Write(cur.Data)
+			log.Debug(ctx, "write stream event", log.Any("event", cur))
+			c.Writer.Flush()
+			continue
+		}
 
-			log.Warn(ctx, "Client disconnected, stop streaming")
-
-			return
-		default:
-			if stream.Next() {
-				cur := stream.Current()
-				_, _ = c.Writer.Write(cur.Data)
-				log.Debug(ctx, "write stream event", log.Any("event", cur))
-				c.Writer.Flush()
-			} else {
-				if err := stream.Err(); err != nil {
-					log.Error(ctx, "Error in stream", log.Cause(err))
-					_, _ = c.Writer.Write([]byte("3:" + `"` + err.Error() + `"` + "\n"))
-				}
-
+		if result.err != nil {
+			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+				clientDisconnected = true
+				log.Warn(ctx, "Client disconnected, stop streaming", log.Cause(result.err))
 				return
 			}
+
+			if errors.Is(result.err, ErrStreamIdleTimeout) {
+				log.Warn(ctx, "Stream idle timeout, stopping AI SDK stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
+			} else {
+				log.Error(ctx, "Error in stream", log.Cause(result.err))
+			}
+
+			_, _ = c.Writer.Write([]byte("3:" + `"` + result.err.Error() + `"` + "\n"))
 		}
+
+		return
 	}
 }
