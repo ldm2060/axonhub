@@ -123,10 +123,6 @@ export const routeConfigs: RouteGroup[] = [
         requiredScopes: ['read_requests'],
         mode: 'hidden',
       },
-      {
-        path: '/project/playground',
-        // Playground is accessible to all users
-      },
     ],
   },
   {

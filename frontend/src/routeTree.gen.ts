@@ -46,7 +46,6 @@ import { Route as AuthenticatedProjectThreadsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedProjectRolesIndexRouteImport } from './routes/_authenticated/project/roles/index'
 import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/_authenticated/project/requests/index'
 import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
-import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
@@ -265,12 +264,6 @@ const AuthenticatedProjectPromptsIndexRoute =
     path: '/project/prompts/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProjectPlaygroundIndexRoute =
-  AuthenticatedProjectPlaygroundIndexRouteImport.update({
-    id: '/project/playground/',
-    path: '/project/playground/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedProjectApiKeysIndexRoute =
   AuthenticatedProjectApiKeysIndexRouteImport.update({
     id: '/project/api-keys/',
@@ -401,7 +394,6 @@ export interface FileRoutesByFullPath {
   '/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
-  '/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
   '/project/requests/': typeof AuthenticatedProjectRequestsIndexRoute
   '/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
@@ -452,7 +444,6 @@ export interface FileRoutesByTo {
   '/admin/usage-monitor': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
-  '/project/playground': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
   '/project/requests': typeof AuthenticatedProjectRequestsIndexRoute
   '/project/roles': typeof AuthenticatedProjectRolesIndexRoute
@@ -507,7 +498,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
-  '/_authenticated/project/playground/': typeof AuthenticatedProjectPlaygroundIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
   '/_authenticated/project/requests/': typeof AuthenticatedProjectRequestsIndexRoute
   '/_authenticated/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
@@ -562,7 +552,6 @@ export interface FileRouteTypes {
     | '/admin/usage-monitor/'
     | '/admin/users/'
     | '/project/api-keys/'
-    | '/project/playground/'
     | '/project/prompts/'
     | '/project/requests/'
     | '/project/roles/'
@@ -613,7 +602,6 @@ export interface FileRouteTypes {
     | '/admin/usage-monitor'
     | '/admin/users'
     | '/project/api-keys'
-    | '/project/playground'
     | '/project/prompts'
     | '/project/requests'
     | '/project/roles'
@@ -667,7 +655,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/usage-monitor/'
     | '/_authenticated/admin/users/'
     | '/_authenticated/project/api-keys/'
-    | '/_authenticated/project/playground/'
     | '/_authenticated/project/prompts/'
     | '/_authenticated/project/requests/'
     | '/_authenticated/project/roles/'
@@ -953,13 +940,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectPromptsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/project/playground/': {
-      id: '/_authenticated/project/playground/'
-      path: '/project/playground'
-      fullPath: '/project/playground/'
-      preLoaderRoute: typeof AuthenticatedProjectPlaygroundIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/project/api-keys/': {
       id: '/_authenticated/project/api-keys/'
       path: '/project/api-keys'
@@ -1140,7 +1120,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
   AuthenticatedProjectTracesTraceIdRoute: typeof AuthenticatedProjectTracesTraceIdRoute
   AuthenticatedProjectApiKeysIndexRoute: typeof AuthenticatedProjectApiKeysIndexRoute
-  AuthenticatedProjectPlaygroundIndexRoute: typeof AuthenticatedProjectPlaygroundIndexRoute
   AuthenticatedProjectPromptsIndexRoute: typeof AuthenticatedProjectPromptsIndexRoute
   AuthenticatedProjectRequestsIndexRoute: typeof AuthenticatedProjectRequestsIndexRoute
   AuthenticatedProjectRolesIndexRoute: typeof AuthenticatedProjectRolesIndexRoute
@@ -1169,8 +1148,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectTracesTraceIdRoute:
     AuthenticatedProjectTracesTraceIdRoute,
   AuthenticatedProjectApiKeysIndexRoute: AuthenticatedProjectApiKeysIndexRoute,
-  AuthenticatedProjectPlaygroundIndexRoute:
-    AuthenticatedProjectPlaygroundIndexRoute,
   AuthenticatedProjectPromptsIndexRoute: AuthenticatedProjectPromptsIndexRoute,
   AuthenticatedProjectRequestsIndexRoute:
     AuthenticatedProjectRequestsIndexRoute,

@@ -9,7 +9,6 @@ import {
   IconSettings,
   IconChartBar,
   IconShield,
-  IconPlayerPlay,
   IconHelpCircle,
   IconArrowLeft,
   IconExternalLink,
@@ -74,13 +73,6 @@ export default function NotFoundError() {
       path: '/roles',
       icon: <IconShield className='h-5 w-5' />,
       keywords: ['roles', 'permissions', 'access', 'security', 'rbac'],
-    },
-    {
-      title: 'Playground',
-      description: 'Test and experiment with AI models',
-      path: '/playground',
-      icon: <IconPlayerPlay className='h-5 w-5' />,
-      keywords: ['playground', 'test', 'experiment', 'try', 'demo'],
     },
     {
       title: 'Settings',

@@ -75,7 +75,7 @@ export function useSignIn() {
 
       // Redirect based on user role
       // Owner users go to dashboard, non-owner users go to requests page
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      const redirectPath = data.user.isOwner ? '/' : '/project/requests';
       router.navigate({ to: redirectPath });
     },
     onError: (error: any) => {
@@ -206,7 +206,7 @@ export function useOIDCExchange() {
       toast.success(i18n.t('common.success.signedIn'));
 
       // Redirect based on user role
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      const redirectPath = data.user.isOwner ? '/' : '/project/requests';
       router.navigate({ to: redirectPath });
     },
     onError: (error: unknown) => {

@@ -155,11 +155,6 @@ export function useSidebarData(): SidebarData {
           url: '/project/threads',
           icon: IconBaselineDensityMedium,
         } as NavLink,
-        {
-          title: t('sidebar.items.playground'),
-          url: '/project/playground',
-          icon: IconRobot,
-        } as NavLink,
       ],
     },
     {
