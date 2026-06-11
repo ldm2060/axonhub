@@ -514,3 +514,37 @@ func TestRenderDisplayFields_GitHubCopilotPercentRemainingRenderedAsUsage(t *tes
 		assert.InDelta(t, 0, derived.Limits[0].UsageRatio, 0.01)
 	}
 }
+
+func TestRenderDisplayFields_ApertisTemplate(t *testing.T) {
+	rawData := []byte(`{
+		"is_subscriber": true,
+		"subscription": {
+			"status": "active",
+			"cycle_quota_limit": 100,
+			"cycle_quota_used": 85,
+			"cycle_quota_remaining": 15,
+			"cycle_end": "2026-07-01T00:00:00Z"
+		},
+		"payg": {
+			"account_credits": 25,
+			"token_used": 5,
+			"token_total": 100,
+			"token_is_unlimited": false
+		}
+	}`)
+
+	tmpl := GetChannelTemplate("apertis")
+	if !assert.NotNil(t, tmpl) {
+		return
+	}
+
+	vars := ExtractVariables(rawData, tmpl.Variables)
+	results := RenderDisplayFields(vars, tmpl.DisplayFields)
+
+	derived := DeriveQuotaStatus("apertis", results)
+	assert.Equal(t, "warning", derived.Status)
+	assert.True(t, derived.Ready)
+	if assert.Len(t, derived.Limits, 1) {
+		assert.InDelta(t, 0.85, derived.Limits[0].UsageRatio, 0.01)
+	}
+}

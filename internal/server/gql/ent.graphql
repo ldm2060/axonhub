@@ -1315,6 +1315,8 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   opencode_go
   opencode_go_anthropic
   ollama
+  evolink
+  evolink_anthropic
 }
 """
 ChannelVisibility is enum for the field visibility
@@ -4000,6 +4002,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   synthetic
   neuralwatt
   zhipu
+  apertis
 }
 """
 ProviderQuotaStatusStatus is enum for the field status
@@ -7528,6 +7531,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   neuralwatt
   zhipu
   antigravity
+  apertis
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status

@@ -3,6 +3,7 @@ package usage_monitor
 import (
 	"testing"
 
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -374,4 +375,36 @@ func TestDeriveQuotaStatus_Wafer_75Pct_NotWarning(t *testing.T) {
 	result := DeriveQuotaStatus("wafer", fields)
 	assert.Equal(t, "available", result.Status)
 	assert.True(t, result.Ready)
+}
+
+func TestDeriveQuotaStatus_ApertisSubscriptionWarning(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "is_subscriber", Format: "text", Value: true},
+		{Key: "subscription_status", Format: "text", Value: "active"},
+		{Key: "cycle_used", Format: "number", Value: float64(85)},
+		{Key: "cycle_limit", Format: "number", Value: float64(100)},
+		{Key: "cycle_remaining", Format: "number", Value: float64(15)},
+	}
+	result := DeriveQuotaStatus("apertis", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+	assert.Len(t, result.Limits, 1)
+	if assert.NotEmpty(t, result.Limits) {
+		assert.Equal(t, provider_quota.QuotaLimitTypeSubscriptionCycle, result.Limits[0].Type)
+		assert.InDelta(t, 0.85, result.Limits[0].UsageRatio, 0.01)
+	}
+}
+
+func TestDeriveQuotaStatus_ApertisPaygExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "is_subscriber", Format: "text", Value: false},
+		{Key: "account_credits", Format: "number", Value: float64(0)},
+		{Key: "token_used", Format: "number", Value: float64(10)},
+		{Key: "token_total", Format: "number", Value: float64(10)},
+	}
+	result := DeriveQuotaStatus("apertis", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	assert.Len(t, result.Limits, 1)
+	assert.Equal(t, provider_quota.QuotaLimitTypeToken, result.Limits[0].Type)
 }

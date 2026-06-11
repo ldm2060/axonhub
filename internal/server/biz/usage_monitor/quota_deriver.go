@@ -36,6 +36,8 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveSynthetic(fields)
 	case "neuralwatt":
 		return deriveNeuralWatt(fields)
+	case "apertis":
+		return deriveApertis(fields)
 	case "zhipu":
 		return deriveZhipu(fields)
 	case "antigravity":
@@ -412,6 +414,87 @@ func deriveNeuralWatt(fields []ParsedField) QuotaDerivedStatus {
 	}
 }
 
+func deriveApertis(fields []ParsedField) QuotaDerivedStatus {
+	cycleLimit := findFieldNumber(fields, "cycle_limit")
+	if cycleLimit == 0 {
+		cycleLimit = findFieldTotal(fields, "cycle_used")
+	}
+	isSubscriber := findFieldBool(fields, "is_subscriber") || findFieldString(fields, "subscription_status") != "" || cycleLimit > 0
+	var limits []provider_quota.QuotaLimitStatus
+	var bestStatus string
+
+	if isSubscriber {
+		subStatus := findFieldString(fields, "subscription_status")
+		cycleUsed := findFieldNumber(fields, "cycle_used")
+		cycleRemaining := findFieldNumber(fields, "cycle_remaining")
+		usageRatio := 0.0
+		if cycleLimit > 0 {
+			usageRatio = cycleUsed / cycleLimit
+		}
+
+		status := "available"
+		if subStatus == "suspended" || subStatus == "cancelled" || (cycleLimit > 0 && cycleRemaining <= 0) {
+			status = "exhausted"
+		} else if usageRatio >= warningThreshold {
+			status = "warning"
+		} else if cycleLimit <= 0 {
+			status = "unknown"
+		}
+
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:       provider_quota.QuotaLimitTypeSubscriptionCycle,
+			Status:     status,
+			UsageRatio: usageRatio,
+			Ready:      provider_quota.IsReadyStatus(status),
+		})
+		bestStatus = status
+	}
+
+	accountCredits := findFieldNumber(fields, "account_credits")
+	tokenTotal := findFieldNumber(fields, "token_total")
+	if tokenTotal == 0 {
+		tokenTotal = findFieldTotal(fields, "token_used")
+	}
+	tokenUsed := findFieldNumber(fields, "token_used")
+	tokenUnlimited := findFieldBool(fields, "token_is_unlimited")
+	hasPayg := tokenUnlimited || accountCredits > 0 || tokenTotal > 0 || tokenUsed > 0
+	if hasPayg && (!isSubscriber || findFieldBool(fields, "payg_fallback_enabled") || bestStatus == "exhausted" || bestStatus == "") {
+		status := "available"
+		usageRatio := 0.0
+		if tokenUnlimited {
+			status = "available"
+		} else if accountCredits <= 0 {
+			status = "exhausted"
+		} else if tokenTotal > 0 {
+			usageRatio = tokenUsed / tokenTotal
+			if usageRatio >= 1.0 {
+				status = "exhausted"
+			} else if usageRatio >= warningThreshold {
+				status = "warning"
+			}
+		}
+
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:       provider_quota.QuotaLimitTypeToken,
+			Status:     status,
+			UsageRatio: usageRatio,
+			Ready:      provider_quota.IsReadyStatus(status),
+		})
+		bestStatus = betterQuotaStatus(bestStatus, status)
+	}
+
+	if bestStatus == "" {
+		bestStatus = "unknown"
+	}
+
+	return QuotaDerivedStatus{
+		Status:      bestStatus,
+		Ready:       provider_quota.IsReadyStatus(bestStatus),
+		Limits:      limits,
+		NextResetAt: earliestDatetime(fields),
+	}
+}
+
 func deriveZhipu(fields []ParsedField) QuotaDerivedStatus {
 	var limits []provider_quota.QuotaLimitStatus
 	var worstStatus string
@@ -535,6 +618,16 @@ func findFieldNumber(fields []ParsedField, key string) float64 {
 	return 0
 }
 
+func findFieldTotal(fields []ParsedField, key string) float64 {
+	for _, f := range fields {
+		if f.Key == key {
+			v, _ := toFloat(f.Total)
+			return v
+		}
+	}
+	return 0
+}
+
 func findFieldTime(fields []ParsedField, key string) *time.Time {
 	for _, f := range fields {
 		if f.Key == key && f.Format == "datetime" {
@@ -546,6 +639,31 @@ func findFieldTime(fields []ParsedField, key string) *time.Time {
 		}
 	}
 	return nil
+}
+
+func findFieldBool(fields []ParsedField, key string) bool {
+	for _, f := range fields {
+		if f.Key != key {
+			continue
+		}
+		if b, ok := f.Value.(bool); ok {
+			return b
+		}
+		if s, ok := f.Value.(string); ok {
+			return s == "true"
+		}
+	}
+	return false
+}
+
+func betterQuotaStatus(a, b string) string {
+	if a == "" {
+		return b
+	}
+	if quotaStatusRank(b) < quotaStatusRank(a) {
+		return b
+	}
+	return a
 }
 
 func findFieldString(fields []ParsedField, key string) string {

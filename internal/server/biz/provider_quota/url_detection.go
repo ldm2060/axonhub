@@ -17,6 +17,7 @@ var urlProviderMap = []urlProviderEntry{
 	{hostPattern: "api.neuralwatt.com", providerType: "neuralwatt"},
 	{hostPattern: "open.bigmodel.cn", providerType: "zhipu"},
 	{hostPattern: "api.z.ai", providerType: "zhipu"},
+	{hostPattern: "api.apertis.ai", providerType: "apertis"},
 }
 
 func URLDetectedProviders() map[string]struct{} {

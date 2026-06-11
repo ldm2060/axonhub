@@ -106,6 +106,8 @@ const RETRY_POLICY_QUERY = `
       maxChannelRetries
       maxSingleChannelRetries
       retryDelayMs
+      streamFirstEventTimeoutSeconds
+      nonStreamResponseTimeoutSeconds
       loadBalancerStrategy
       enabled
       emptyResponseDetection
@@ -352,6 +354,8 @@ export interface RetryPolicy {
   maxChannelRetries: number;
   maxSingleChannelRetries: number;
   retryDelayMs: number;
+  streamFirstEventTimeoutSeconds: number;
+  nonStreamResponseTimeoutSeconds: number;
   loadBalancerStrategy: string;
   enabled: boolean;
   autoDisableChannel: AutoDisableChannel;
@@ -378,6 +382,8 @@ export interface RetryPolicyInput {
   maxChannelRetries?: number;
   maxSingleChannelRetries?: number;
   retryDelayMs?: number;
+  streamFirstEventTimeoutSeconds?: number;
+  nonStreamResponseTimeoutSeconds?: number;
   loadBalancerStrategy?: string;
   enabled?: boolean;
   autoDisableChannel?: AutoDisableChannelInput;
