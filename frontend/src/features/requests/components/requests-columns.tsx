@@ -24,6 +24,16 @@ import { getStatusColor } from './help';
 interface UseRequestsColumnsOptions {
   onBodyClick?: (requestId: string, index: number) => void;
   onViewDetail?: (requestId: string) => void;
+  showOwnershipColumns?: boolean;
+}
+
+function formatUserName(user?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
+  const firstName = user?.firstName?.trim() ?? '';
+  const lastName = user?.lastName?.trim() ?? '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+  if (fullName) return fullName;
+  return user?.email?.trim() || '-';
 }
 
 export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnDef<Request>[] {
@@ -88,6 +98,32 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       enableSorting: true,
       enableHiding: false,
     },
+    ...(options?.showOwnershipColumns
+      ? ([
+          {
+            id: 'project',
+            accessorFn: (row) => row.project?.name || '',
+            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.project')} />,
+            enableSorting: false,
+            enableHiding: true,
+            cell: ({ row }) => {
+              const projectName = row.original.project?.name;
+              return <div className='px-2 text-sm font-medium'>{projectName || '-'}</div>;
+            },
+          },
+          {
+            id: 'requestUser',
+            accessorFn: (row) => formatUserName(row.apiKey?.user),
+            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
+            enableSorting: false,
+            enableHiding: true,
+            cell: ({ row }) => {
+              const user = row.original.apiKey?.user;
+              return <div className='px-2 text-sm'>{formatUserName(user)}</div>;
+            },
+          },
+        ] as ColumnDef<Request>[])
+      : []),
 
     {
       id: 'modelID',
