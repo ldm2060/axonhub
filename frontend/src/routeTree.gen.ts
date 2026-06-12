@@ -49,10 +49,9 @@ import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
-import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
-import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './routes/_authenticated/admin/requests/$requestId'
 import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
 import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
+import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
 import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
 import { Route as AuthenticatedAdminPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/admin/prompt-protection-rules/index'
 import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
@@ -61,6 +60,7 @@ import { Route as AuthenticatedAdminChannelsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
 import { Route as AuthenticatedProjectThreadsThreadIdRouteImport } from './routes/_authenticated/project/threads/$threadId'
 import { Route as AuthenticatedProjectRequestsRequestIdRouteImport } from './routes/_authenticated/project/requests/$requestId'
+import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './routes/_authenticated/admin/requests/$requestId'
 import { Route as AuthenticatedAdminDashboardChannelSuccessRatesRouteImport } from './routes/_authenticated/admin/dashboard/channel-success-rates'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -284,18 +284,6 @@ const AuthenticatedAdminUsageMonitorIndexRoute =
     path: '/usage-monitor/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminRequestsIndexRoute =
-  AuthenticatedAdminRequestsIndexRouteImport.update({
-    id: '/requests/',
-    path: '/requests/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminRequestsRequestIdRoute =
-  AuthenticatedAdminRequestsRequestIdRouteImport.update({
-    id: '/requests/$requestId',
-    path: '/requests/$requestId',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
 const AuthenticatedAdminSystemIndexRoute =
   AuthenticatedAdminSystemIndexRouteImport.update({
     id: '/system/',
@@ -306,6 +294,12 @@ const AuthenticatedAdminRolesIndexRoute =
   AuthenticatedAdminRolesIndexRouteImport.update({
     id: '/roles/',
     path: '/roles/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsIndexRoute =
+  AuthenticatedAdminRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminPublishRequestsIndexRoute =
@@ -356,6 +350,12 @@ const AuthenticatedProjectRequestsRequestIdRoute =
     path: '/project/requests/$requestId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminRequestsRequestIdRoute =
+  AuthenticatedAdminRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminDashboardChannelSuccessRatesRoute =
   AuthenticatedAdminDashboardChannelSuccessRatesRouteImport.update({
     id: '/dashboard/channel-success-rates',
@@ -395,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
+  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -403,11 +404,10 @@ export interface FileRoutesByFullPath {
   '/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
   '/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
-  '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
-  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -447,6 +447,7 @@ export interface FileRoutesByTo {
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
+  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -455,11 +456,10 @@ export interface FileRoutesByTo {
   '/admin/models': typeof AuthenticatedAdminModelsIndexRoute
   '/admin/prompt-protection-rules': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/roles': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor': typeof AuthenticatedAdminUsageMonitorIndexRoute
-  '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
-  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
@@ -503,6 +503,7 @@ export interface FileRoutesById {
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
+  '/_authenticated/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/_authenticated/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -511,11 +512,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
   '/_authenticated/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/_authenticated/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
+  '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/_authenticated/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/_authenticated/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/_authenticated/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
-  '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
-  '/_authenticated/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -559,6 +559,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/settings/'
     | '/admin/dashboard/channel-success-rates'
+    | '/admin/requests/$requestId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -567,11 +568,10 @@ export interface FileRouteTypes {
     | '/admin/models/'
     | '/admin/prompt-protection-rules/'
     | '/admin/publish-requests/'
+    | '/admin/requests/'
     | '/admin/roles/'
     | '/admin/system/'
     | '/admin/usage-monitor/'
-    | '/admin/requests/'
-    | '/admin/requests/$requestId'
     | '/admin/users/'
     | '/project/api-keys/'
     | '/project/prompts/'
@@ -611,6 +611,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/settings'
     | '/admin/dashboard/channel-success-rates'
+    | '/admin/requests/$requestId'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -619,11 +620,10 @@ export interface FileRouteTypes {
     | '/admin/models'
     | '/admin/prompt-protection-rules'
     | '/admin/publish-requests'
+    | '/admin/requests'
     | '/admin/roles'
     | '/admin/system'
     | '/admin/usage-monitor'
-    | '/admin/requests'
-    | '/admin/requests/$requestId'
     | '/admin/users'
     | '/project/api-keys'
     | '/project/prompts'
@@ -666,6 +666,7 @@ export interface FileRouteTypes {
     | '/_authenticated/projects/'
     | '/_authenticated/settings/'
     | '/_authenticated/admin/dashboard/channel-success-rates'
+    | '/_authenticated/admin/requests/$requestId'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
     | '/_authenticated/project/traces/$traceId'
@@ -674,11 +675,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/models/'
     | '/_authenticated/admin/prompt-protection-rules/'
     | '/_authenticated/admin/publish-requests/'
+    | '/_authenticated/admin/requests/'
     | '/_authenticated/admin/roles/'
     | '/_authenticated/admin/system/'
     | '/_authenticated/admin/usage-monitor/'
-    | '/_authenticated/admin/requests/'
-    | '/_authenticated/admin/requests/$requestId'
     | '/_authenticated/admin/users/'
     | '/_authenticated/project/api-keys/'
     | '/_authenticated/project/prompts/'
@@ -987,20 +987,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsageMonitorIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/requests/': {
-      id: '/_authenticated/admin/requests/'
-      path: '/requests'
-      fullPath: '/admin/requests/'
-      preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/requests/$requestId': {
-      id: '/_authenticated/admin/requests/$requestId'
-      path: '/requests/$requestId'
-      fullPath: '/admin/requests/$requestId'
-      preLoaderRoute: typeof AuthenticatedAdminRequestsRequestIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
     '/_authenticated/admin/system/': {
       id: '/_authenticated/admin/system/'
       path: '/system'
@@ -1013,6 +999,13 @@ declare module '@tanstack/react-router' {
       path: '/roles'
       fullPath: '/admin/roles/'
       preLoaderRoute: typeof AuthenticatedAdminRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/requests/': {
+      id: '/_authenticated/admin/requests/'
+      path: '/requests'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/publish-requests/': {
@@ -1071,6 +1064,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectRequestsRequestIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/requests/$requestId': {
+      id: '/_authenticated/admin/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/admin/requests/$requestId'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/dashboard/channel-success-rates': {
       id: '/_authenticated/admin/dashboard/channel-success-rates'
       path: '/dashboard/channel-success-rates'
@@ -1084,16 +1084,16 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminDashboardChannelSuccessRatesRoute: typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
+  AuthenticatedAdminRequestsRequestIdRoute: typeof AuthenticatedAdminRequestsRequestIdRoute
   AuthenticatedAdminChannelsIndexRoute: typeof AuthenticatedAdminChannelsIndexRoute
   AuthenticatedAdminDataStoragesIndexRoute: typeof AuthenticatedAdminDataStoragesIndexRoute
   AuthenticatedAdminModelsIndexRoute: typeof AuthenticatedAdminModelsIndexRoute
   AuthenticatedAdminPromptProtectionRulesIndexRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   AuthenticatedAdminPublishRequestsIndexRoute: typeof AuthenticatedAdminPublishRequestsIndexRoute
+  AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
   AuthenticatedAdminRolesIndexRoute: typeof AuthenticatedAdminRolesIndexRoute
   AuthenticatedAdminSystemIndexRoute: typeof AuthenticatedAdminSystemIndexRoute
   AuthenticatedAdminUsageMonitorIndexRoute: typeof AuthenticatedAdminUsageMonitorIndexRoute
-  AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
-  AuthenticatedAdminRequestsRequestIdRoute: typeof AuthenticatedAdminRequestsRequestIdRoute
   AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
 }
 
@@ -1102,6 +1102,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
     AuthenticatedAdminDashboardChannelSuccessRatesRoute:
       AuthenticatedAdminDashboardChannelSuccessRatesRoute,
+    AuthenticatedAdminRequestsRequestIdRoute:
+      AuthenticatedAdminRequestsRequestIdRoute,
     AuthenticatedAdminChannelsIndexRoute: AuthenticatedAdminChannelsIndexRoute,
     AuthenticatedAdminDataStoragesIndexRoute:
       AuthenticatedAdminDataStoragesIndexRoute,
@@ -1110,13 +1112,11 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
       AuthenticatedAdminPromptProtectionRulesIndexRoute,
     AuthenticatedAdminPublishRequestsIndexRoute:
       AuthenticatedAdminPublishRequestsIndexRoute,
+    AuthenticatedAdminRequestsIndexRoute: AuthenticatedAdminRequestsIndexRoute,
     AuthenticatedAdminRolesIndexRoute: AuthenticatedAdminRolesIndexRoute,
     AuthenticatedAdminSystemIndexRoute: AuthenticatedAdminSystemIndexRoute,
     AuthenticatedAdminUsageMonitorIndexRoute:
       AuthenticatedAdminUsageMonitorIndexRoute,
-    AuthenticatedAdminRequestsIndexRoute: AuthenticatedAdminRequestsIndexRoute,
-    AuthenticatedAdminRequestsRequestIdRoute:
-      AuthenticatedAdminRequestsRequestIdRoute,
     AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
   }
 
