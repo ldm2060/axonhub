@@ -29,6 +29,7 @@ import { useProxyPresets, useSaveProxyPreset } from '@/features/system/data/syst
 import { antigravityOAuthExchange, antigravityOAuthStart } from '../data/antigravity';
 import {
   useCreateChannel,
+  useDuplicateChannel,
   useUpdateChannel,
   useFetchModels,
   useAllChannelNames,
@@ -99,6 +100,36 @@ function getResponsesTransportBaseURLError(transport: ResponsesTransport): strin
   return transport === 'websocket'
     ? 'channels.dialogs.fields.baseURL.errors.websocketScheme'
     : 'channels.dialogs.fields.baseURL.errors.httpScheme';
+}
+
+function formatRetryableStatusCodes(codes: number[] | null | undefined): string {
+  return (codes ?? []).join(', ');
+}
+
+function parseRetryableStatusCodesInput(value: string): number[] | null {
+  const tokens = value
+    .split(/[,\s]+/)
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return [];
+  }
+
+  const codes: number[] = [];
+  for (const token of tokens) {
+    if (!/^\d+$/.test(token)) {
+      return null;
+    }
+
+    const code = Number(token);
+    if (code < 400 || code > 599) {
+      return null;
+    }
+
+    codes.push(code);
+  }
+
+  return Array.from(new Set(codes)).sort((a, b) => a - b);
 }
 
 function getResponsesTransportFromChannel(channel?: Pick<Channel, 'baseURL' | 'endpoints'>): ResponsesTransport {
@@ -258,6 +289,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const isDuplicate = !!duplicateFromRow && !isEdit;
   const initialRow: Channel | undefined = currentRow || duplicateFromRow;
   const createChannel = useCreateChannel();
+  const duplicateChannel = useDuplicateChannel();
   const updateChannel = useUpdateChannel();
   const fetchModels = useFetchModels();
   const syncChannelModels = useSyncChannelModels();
@@ -318,6 +350,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const [passThroughBody, setPassThroughBody] = useState<boolean | null>(() => {
     return initialRow?.settings?.passThroughBody ?? null;
   });
+  const [retryableStatusCodesText, setRetryableStatusCodesText] = useState(() =>
+    formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes)
+  );
 
   // Memoized proxy config for OAuth exchange
   const proxyConfig: ProxyConfig | undefined = useMemo(() => {
@@ -632,6 +667,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
   const apiKeys = form.watch('credentials.apiKeys');
   const apiKeysCount = useMemo(() => (apiKeys || []).filter((k) => k.trim().length > 0).length, [apiKeys]);
+  const isSubmitting = createChannel.isPending || duplicateChannel.isPending || updateChannel.isPending;
 
   const { data: disabledKeys = [] } = useChannelDisabledAPIKeys(currentRow?.id || '', {
     enabled: isEdit && !!currentRow?.id && showApiKeysPanel,
@@ -1045,6 +1081,12 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         values.credentials.apiKeys = [...new Set(values.credentials.apiKeys.filter((k) => k.trim().length > 0))];
       }
 
+      const retryableStatusCodes = parseRetryableStatusCodesInput(retryableStatusCodesText);
+      if (retryableStatusCodes === null) {
+        toast.error(t('channels.dialogs.retryableStatusCodes.validation'));
+        return;
+      }
+
       const valuesForSubmit = isEdit
         ? values
         : {
@@ -1083,6 +1125,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         const nextSettings = mergeChannelSettingsForUpdate(values.settings, {
           passThroughUserAgent,
           passThroughBody,
+          retryableStatusCodes,
         });
 
         const updateInput = {
@@ -1125,12 +1168,22 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           proxy: proxyConfig,
           passThroughUserAgent,
           passThroughBody,
+          retryableStatusCodes,
         });
 
-        await createChannel.mutateAsync({
+        const createInput = {
           ...(dataWithModels as z.infer<typeof createChannelInputSchema>),
           settings: nextSettings,
-        } as z.infer<typeof createChannelInputSchema>);
+        } as z.infer<typeof createChannelInputSchema>;
+
+        if (isDuplicate && duplicateFromRow) {
+          await duplicateChannel.mutateAsync({
+            sourceID: duplicateFromRow.id,
+            input: createInput,
+          });
+        } else {
+          await createChannel.mutateAsync(createInput);
+        }
 
         // Auto-save proxy preset (preserve existing name if available)
         if (proxyType === ProxyType.URL && proxyUrl) {
@@ -1542,6 +1595,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             setProxyPassword(initialRow?.settings?.proxy?.password || '');
             setPassThroughUserAgent(initialRow?.settings?.passThroughUserAgent ?? null);
             setPassThroughBody(initialRow?.settings?.passThroughBody ?? null);
+            setRetryableStatusCodesText(formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes));
             // Reset provider and API format state
             if (initialRow) {
               setSelectedProvider(getProviderFromChannelType(initialRow.type) || 'openai');
@@ -2641,6 +2695,34 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         </div>
                       </FormItem>
 
+                      <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <FormLabel className='flex items-center gap-1.5 pt-2 font-medium md:col-span-2 md:justify-end md:text-right'>
+                          {t('channels.dialogs.retryableStatusCodes.label')}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type='button'
+                                className='text-muted-foreground hover:text-foreground inline-flex items-center'
+                                aria-label={t('channels.dialogs.retryableStatusCodes.tooltip')}
+                              >
+                                <Info className='h-3.5 w-3.5' />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t('channels.dialogs.retryableStatusCodes.tooltip')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </FormLabel>
+                        <div className='space-y-1 md:col-span-6'>
+                          <Input
+                            value={retryableStatusCodesText}
+                            onChange={(event) => setRetryableStatusCodesText(event.target.value)}
+                            placeholder={t('channels.dialogs.retryableStatusCodes.placeholder')}
+                            className='font-mono text-sm'
+                          />
+                        </div>
+                      </FormItem>
+
                       <FormField
                         control={form.control}
                         name='tags'
@@ -3090,10 +3172,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             <Button
               type='submit'
               form='channel-form'
-              disabled={createChannel.isPending || updateChannel.isPending || supportedModels.length === 0}
+              disabled={isSubmitting || supportedModels.length === 0}
               data-testid='channel-submit-button'
             >
-              {createChannel.isPending || updateChannel.isPending
+              {isSubmitting
                 ? isEdit
                   ? t('common.buttons.editing')
                   : t('common.buttons.creating')

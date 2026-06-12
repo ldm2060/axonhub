@@ -9,10 +9,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ldm2060/axonhub/internal/ent"
-	"github.com/ldm2060/axonhub/internal/ent/model"
-	"github.com/ldm2060/axonhub/internal/objects"
-	"github.com/ldm2060/axonhub/internal/server/biz"
+		"github.com/ldm2060/axonhub/internal/authz"
+		"github.com/ldm2060/axonhub/internal/ent"
+		"github.com/ldm2060/axonhub/internal/ent/model"
+		"github.com/ldm2060/axonhub/internal/objects"
+		"github.com/ldm2060/axonhub/internal/scopes"
+		"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/samber/lo"
 )
 
@@ -101,6 +103,10 @@ func (r *mutationResolver) BulkDeleteModels(ctx context.Context, ids []*objects.
 
 // FetchModels is the resolver for the fetchModels field.
 func (r *queryResolver) FetchModels(ctx context.Context, input biz.FetchModelsInput) (*FetchModelsPayload, error) {
+	if err := authz.RequireScope(ctx, scopes.ScopeWriteChannels); err != nil {
+		return nil, err
+	}
+
 	// Call the model fetcher service
 	result, err := r.modelFetcher.FetchModels(ctx, input)
 	if err != nil {

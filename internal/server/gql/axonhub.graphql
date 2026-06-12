@@ -110,6 +110,7 @@ type ChannelSettings {
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
   rateLimit: ChannelRateLimit
+  retryableStatusCodes: [Int!]
 }
 
 enum CapabilityPolicy {
@@ -176,6 +177,7 @@ input ChannelSettingsInput {
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
   rateLimit: ChannelRateLimitInput
+  retryableStatusCodes: [Int!]
 }
 
 input ChannelRateLimitInput {
@@ -787,6 +789,7 @@ type DeleteDisabledAPIKeysPayload {
 
 type Mutation {
   createChannel(input: CreateChannelInput!): Channel!
+  duplicateChannel(sourceID: ID!, input: CreateChannelInput!): Channel!
   bulkCreateChannels(input: BulkCreateChannelsInput!): [Channel!]!
   updateChannel(id: ID!, input: UpdateChannelInput!): Channel!
   saveChannelEndpoints(input: SaveChannelEndpointsInput!): Channel!

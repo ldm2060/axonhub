@@ -628,15 +628,14 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 				}
 			}
 
-			if message.Refusal != "" {
-				appendOrdered(nil, MessageContentBlock{
-					Type: "text",
-					Text: lo.ToPtr(message.Refusal),
-				})
-			}
 
-			// Handle tool calls
-			if len(message.ToolCalls) > 0 {
+				if message.Refusal != "" {
+					appendOrdered(nil, MessageContentBlock{
+						Type: "text",
+						Text: lo.ToPtr(message.Refusal),
+					})
+				}
+
 				for _, toolCall := range message.ToolCalls {
 					var input json.RawMessage
 					if toolCall.Function.Arguments != "" {
@@ -644,7 +643,7 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 					} else {
 						input = json.RawMessage("{}")
 					}
-					input = sanitizeToolUseInput(toolCall.Function.Name, input)
+					input = sanitizeReadToolInput(toolCall.Function.Name, input)
 
 					blockType := "tool_use"
 					if at := getAnthropicType(toolCall.TransformerMetadata); at != "" {
@@ -659,7 +658,7 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 						Caller: getAnthropicCaller(toolCall.TransformerMetadata),
 					})
 				}
-			}
+
 
 			for _, ir := range message.InlineToolResults {
 				if block, ok := toolResultBlockFromInline(ir); ok {

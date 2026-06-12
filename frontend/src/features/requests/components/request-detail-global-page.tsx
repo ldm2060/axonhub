@@ -21,6 +21,7 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
   const currentSearch = useRouterState({
     select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
   });
+  const { data: request } = useRequest(requestId, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
 
   const handleBack = () => {
     if (backTo === '/admin/requests') {
@@ -30,8 +31,6 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
 
     navigate({ to: backTo });
   };
-
-  const { data: request } = useRequest(requestId, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
 
   return (
     <div className='flex h-screen flex-col'>
