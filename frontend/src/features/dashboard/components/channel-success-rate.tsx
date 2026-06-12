@@ -4,13 +4,15 @@ import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useChannelSuccessRates, type DashboardMode } from '../data/dashboard';
 
+const CHANNEL_SUCCESS_RATE_PREVIEW_LIMIT = 5;
+
 interface ChannelSuccessRateProps {
   mode: DashboardMode;
 }
 
 export function ChannelSuccessRate({ mode }: ChannelSuccessRateProps) {
   const { t } = useTranslation();
-  const { data: channels, isLoading, error } = useChannelSuccessRates(undefined, undefined, mode);
+  const { data: channels, isLoading, error } = useChannelSuccessRates(CHANNEL_SUCCESS_RATE_PREVIEW_LIMIT, undefined, mode);
 
   if (isLoading) {
     return (
