@@ -396,18 +396,22 @@ export function useApiKeys(
   },
   options?: {
     disableAutoFetch?: boolean;
+    projectId?: string | null;
+    scopeToSelectedProject?: boolean;
   }
 ) {
   const { t } = useTranslation();
   const { handleError } = useErrorHandler();
   const selectedProjectId = useSelectedProjectId();
+  const scopeToSelectedProject = options?.scopeToSelectedProject ?? true;
+  const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
 
   return useQuery({
-    queryKey: ['apiKeys', variables, selectedProjectId],
+    queryKey: ['apiKeys', variables, projectId, scopeToSelectedProject],
     queryFn: async () => {
       try {
         const query = buildApiKeysQuery();
-        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const headers = scopeToSelectedProject && projectId ? { 'X-Project-ID': projectId } : undefined;
         const mergedVariables = {
           ...variables,
           where: {
@@ -422,7 +426,7 @@ export function useApiKeys(
         throw error;
       }
     },
-    enabled: !options?.disableAutoFetch && !!selectedProjectId, // Only query when a project is selected
+    enabled: !options?.disableAutoFetch && (!scopeToSelectedProject || !!projectId),
   });
 }
 

@@ -52,6 +52,12 @@ export default defineConfig({
       '/admin/requests': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
+        bypass: (req) => {
+          // Only proxy API calls (preview/content); let SPA handle page routes
+          if (!req.url?.match(/\/preview($|\?)|\/content($|\?)/)) {
+            return req.url;
+          }
+        },
       },
       '/admin/codex': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',

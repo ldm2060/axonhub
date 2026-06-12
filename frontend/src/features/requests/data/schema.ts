@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { pageInfoSchema } from '@/gql/pagination';
 import { apiKeySchema } from '@/features/apikeys/data/schema';
 import { channelSchema } from '@/features/channels/data';
+import { projectSchema } from '@/features/projects/data/schema';
 import { usageLogSchema } from './usage-logs-schema';
 
 // Request Status
@@ -50,6 +51,7 @@ export const requestSchema = z.object({
   apiKey: apiKeySchema.partial().nullable().optional(),
   // channelID: z.string().optional().nullable(),
   channel: channelSchema.partial().nullable().optional(),
+  project: projectSchema.partial().nullable().optional(),
   source: requestSourceSchema,
   modelID: z.string(),
   reasoningEffort: z.string().nullable().optional(),

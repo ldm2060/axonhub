@@ -13,13 +13,35 @@ import {
   requestSchema,
 } from './schema';
 
+interface RequestQueryOptions {
+  includeAdminFields?: boolean;
+}
+
 // Dynamic GraphQL query builder
-function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }) {
+function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields
+    ? `
+            project {
+              id
+              name
+            }`
+    : '';
+
+  const apiKeyUserFields = options.includeAdminFields
+    ? `
+            user {
+              id
+              email
+              firstName
+              lastName
+            }`
+    : '';
+
   const apiKeyFields = permissions.canViewApiKeys
     ? `
           apiKey {
             id
-            name
+            name${apiKeyUserFields}
           }`
     : '';
 
@@ -53,7 +75,7 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
           node {
             id
             createdAt
-            updatedAt${apiKeyFields}${requestChannelFields}
+            updatedAt${adminProjectFields}${apiKeyFields}${requestChannelFields}
             source
             modelID
             format
@@ -109,12 +131,30 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
   `;
 }
 
-function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }) {
+function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields
+    ? `
+            project {
+              id
+              name
+            }`
+    : '';
+
+  const apiKeyUserFields = options.includeAdminFields
+    ? `
+            user {
+              id
+              email
+              firstName
+              lastName
+            }`
+    : '';
+
   const apiKeyFields = permissions.canViewApiKeys
     ? `
           apiKey {
             id
-            name
+            name${apiKeyUserFields}
         }`
     : '';
 
@@ -132,7 +172,7 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
         ... on Request {
           id
           createdAt
-          updatedAt${apiKeyFields}${requestChannelFields}
+          updatedAt${adminProjectFields}${apiKeyFields}${requestChannelFields}
           source
           modelID
           stream
@@ -167,12 +207,30 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
   `;
 }
 
-function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }) {
+function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields
+    ? `
+            project {
+              id
+              name
+            }`
+    : '';
+
+  const apiKeyUserFields = options.includeAdminFields
+    ? `
+            user {
+              id
+              email
+              firstName
+              lastName
+            }`
+    : '';
+
   const apiKeyFields = permissions.canViewApiKeys
     ? `
           apiKey {
             id
-            name
+            name${apiKeyUserFields}
         }`
     : '';
 
@@ -190,7 +248,7 @@ function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; 
         ... on Request {
           id
           createdAt
-          updatedAt${apiKeyFields}${requestChannelFields}
+          updatedAt${adminProjectFields}${apiKeyFields}${requestChannelFields}
           source
           modelID
           stream
@@ -284,7 +342,7 @@ export function useRequests(variables?: {
     projectID?: string;
     [key: string]: any;
   };
-}, options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean }) {
+}, options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean; includeAdminFields?: boolean }) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
   const permissions = useRequestPermissions();
@@ -294,10 +352,10 @@ export function useRequests(variables?: {
   const enabled = options?.enabled ?? true;
 
   return useQuery({
-    queryKey: ['requests', variables, permissions, projectId, scopeToSelectedProject],
+    queryKey: ['requests', variables, permissions, projectId, scopeToSelectedProject, options?.includeAdminFields],
     queryFn: async () => {
       try {
-        const query = buildRequestsQuery(permissions);
+        const query = buildRequestsQuery(permissions, { includeAdminFields: options?.includeAdminFields });
         const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
 
         // Add project filter if project scoping is enabled
@@ -327,6 +385,7 @@ export function useRequest(
     projectId?: string | null;
     enabled?: boolean;
     disableAutoRefresh?: boolean;
+    includeAdminFields?: boolean;
   }
 ) {
   const { handleError } = useErrorHandler();
@@ -337,7 +396,7 @@ export function useRequest(
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
   const enabled = options?.enabled ?? true;
 
-  const queryKey = ['request', id, permissions, projectId] as const;
+  const queryKey = ['request', id, permissions, projectId, options?.includeAdminFields] as const;
 
   return useQuery({
     queryKey,
@@ -348,8 +407,8 @@ export function useRequest(
         const shouldUseLightweightPolling = previousRequest?.status === 'processing';
 
         const query = shouldUseLightweightPolling
-          ? buildRequestDetailPollingQuery(permissions)
-          : buildRequestDetailQuery(permissions);
+          ? buildRequestDetailPollingQuery(permissions, { includeAdminFields: options?.includeAdminFields })
+          : buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields });
 
         const data = await graphqlRequest<{ node: Request }>(query, { id }, headers);
         if (!data.node) {
@@ -363,7 +422,7 @@ export function useRequest(
         }
 
         if (parsedRequest.status !== 'processing') {
-          const fullData = await graphqlRequest<{ node: Request }>(buildRequestDetailQuery(permissions), { id }, headers);
+          const fullData = await graphqlRequest<{ node: Request }>(buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields }), { id }, headers);
           if (!fullData.node) {
             throw new Error('Request not found');
           }
@@ -407,8 +466,9 @@ export async function fetchAdjacentRequestPage(params: {
   where?: Record<string, any>;
   permissions: { canViewApiKeys: boolean; canViewChannels: boolean };
   projectId?: string | null;
+  includeAdminFields?: boolean;
 }): Promise<{ requests: Request[]; pageInfo: RequestConnection['pageInfo'] }> {
-  const query = buildRequestsQuery(params.permissions);
+  const query = buildRequestsQuery(params.permissions, { includeAdminFields: params.includeAdminFields });
   const variables =
     params.direction === 'older'
       ? { first: params.pageSize, after: params.cursor }

@@ -27,6 +27,7 @@ interface DataTableToolbarProps<TData> {
   showRefresh?: boolean;
   autoRefresh?: boolean;
   onAutoRefreshChange?: (enabled: boolean) => void;
+  adminScope?: boolean;
 }
 
 export function DataTableToolbar<TData>({
@@ -38,6 +39,7 @@ export function DataTableToolbar<TData>({
   showRefresh = false,
   autoRefresh = false,
   onAutoRefreshChange,
+  adminScope = false,
 }: DataTableToolbarProps<TData>) {
   const { t } = useTranslation();
   const [showArchivedApiKeys, setShowArchivedApiKeys] = useState(false);
@@ -91,7 +93,7 @@ export function DataTableToolbar<TData>({
   const canViewChannels = isOwner || userScopes.includes('*') || userScopes.includes('read_channels');
   const canViewApiKeys = isOwner || userScopes.includes('*') || userScopes.includes('read_api_keys');
 
-  const { data: channelsData, isFetching: isFetchingChannels } = useAllChannelSummarys(selectedProjectId, {
+  const { data: channelsData, isFetching: isFetchingChannels } = useAllChannelSummarys(adminScope ? null : selectedProjectId, {
     enabled: canViewChannels,
     includeArchived: showArchivedChannels,
   });
@@ -110,6 +112,8 @@ export function DataTableToolbar<TData>({
     },
     {
       disableAutoFetch: !canViewApiKeys,
+      projectId: adminScope ? null : undefined,
+      scopeToSelectedProject: !adminScope,
     }
   );
 

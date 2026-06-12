@@ -57,6 +57,7 @@ interface RequestsTableProps {
   showRefresh: boolean;
   autoRefresh?: boolean;
   onAutoRefreshChange?: (enabled: boolean) => void;
+  adminScope?: boolean;
 }
 
 export interface RequestTableFilters {
@@ -101,6 +102,7 @@ export function RequestsTable({
   showRefresh,
   autoRefresh = false,
   onAutoRefreshChange,
+  adminScope = false,
 }: RequestsTableProps) {
   const { t } = useTranslation();
 
@@ -114,11 +116,14 @@ export function RequestsTable({
     setDrawerOpen(true);
   }, []);
 
-  const requestsColumns = useRequestsColumns({ onBodyClick: handleBodyClick, onViewDetail });
+  const requestsColumns = useRequestsColumns({ onBodyClick: handleBodyClick, onViewDetail, showOwnershipColumns: adminScope });
+
+  const columnVisibilityStorageKey = adminScope ? 'admin-requests-table-column-visibility' : 'requests-table-column-visibility';
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
-    const stored = localStorage.getItem('requests-table-column-visibility');
+    const stored = localStorage.getItem(columnVisibilityStorageKey);
     if (stored) {
       try {
         return JSON.parse(stored);
@@ -132,8 +137,8 @@ export function RequestsTable({
   const [rowSelection, setRowSelection] = useState({});
 
   useEffect(() => {
-    localStorage.setItem('requests-table-column-visibility', JSON.stringify(columnVisibility));
-  }, [columnVisibility]);
+    localStorage.setItem(columnVisibilityStorageKey, JSON.stringify(columnVisibility));
+  }, [columnVisibility, columnVisibilityStorageKey]);
 
   const displayedData = useAnimatedList(data, autoRefresh, pageSize);
 
@@ -208,6 +213,7 @@ export function RequestsTable({
         showRefresh={showRefresh}
         autoRefresh={autoRefresh}
         onAutoRefreshChange={onAutoRefreshChange}
+        adminScope={adminScope}
       />
       <div className='shadow-soft relative mt-4 flex-1 overflow-auto rounded-2xl border border-[var(--table-border)]'>
         <div className='min-w-max'>
@@ -295,6 +301,8 @@ export function RequestsTable({
         pageInfo={pageInfo}
         queryWhere={queryWhere}
         onViewDetail={onViewDetail}
+        projectId={adminScope ? null : undefined}
+        includeAdminFields={adminScope}
       />
     </div>
   );
