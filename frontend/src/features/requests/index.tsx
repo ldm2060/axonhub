@@ -33,6 +33,8 @@ const REQUEST_FILTER_SEARCH_KEYS = {
 
 const REQUEST_CURSOR_SEARCH_KEYS = ['startCursor', 'endCursor', 'cursorDirection', 'cursorHistory'] as const;
 
+export type RequestsScope = 'project' | 'admin';
+
 type RequestSearchFilters = RequestTableFilters & {
   dateRange?: DateTimeRangeValue;
 };
@@ -172,7 +174,7 @@ function clearRequestFilterSearch(draft: Record<string, unknown>) {
   });
 }
 
-function RequestsContent() {
+function RequestsContent({ scope }: { scope: RequestsScope }) {
   const navigate = useNavigate();
   const currentSearch = useRouterState({
     select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
@@ -187,6 +189,7 @@ function RequestsContent() {
   );
   const debouncedModelIDFilter = useDebounce(modelIDFilter, 300);
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const isAdminScope = scope === 'admin';
 
   // Build where clause with filters
   const whereClause = (() => {
@@ -211,14 +214,21 @@ function RequestsContent() {
     return Object.keys(where).length > 0 ? where : undefined;
   })();
 
-  const { data, isLoading, refetch } = useRequests({
-    ...paginationArgs,
-    where: whereClause,
-    orderBy: {
-      field: 'CREATED_AT',
-      direction: 'DESC',
+  const { data, isLoading, refetch } = useRequests(
+    {
+      ...paginationArgs,
+      where: whereClause,
+      orderBy: {
+        field: 'CREATED_AT',
+        direction: 'DESC',
+      },
     },
-  });
+    {
+      projectId: isAdminScope ? null : undefined,
+      scopeToSelectedProject: !isAdminScope,
+      includeAdminFields: isAdminScope,
+    }
+  );
 
   const requests = data?.edges?.map((edge) => edge.node) || [];
   const pageInfo = data?.pageInfo;
@@ -324,13 +334,22 @@ function RequestsContent() {
 
   const handleViewDetail = useCallback(
     (requestId: string) => {
+      if (isAdminScope) {
+        navigate({
+          to: '/admin/requests/$requestId',
+          params: { requestId },
+          search: currentSearch,
+        });
+        return;
+      }
+
       navigate({
         to: '/project/requests/$requestId',
         params: { requestId },
         search: currentSearch,
       });
     },
-    [navigate, currentSearch]
+    [navigate, currentSearch, isAdminScope]
   );
 
   return (
@@ -359,12 +378,13 @@ function RequestsContent() {
         showRefresh={isFirstPage}
         autoRefresh={autoRefresh}
         onAutoRefreshChange={setAutoRefresh}
+        adminScope={isAdminScope}
       />
     </div>
   );
 }
 
-export default function RequestsManagement() {
+export default function RequestsManagement({ scope = 'project' }: { scope?: RequestsScope }) {
   const { t } = useTranslation();
 
   return (
@@ -379,7 +399,7 @@ export default function RequestsManagement() {
       </Header>
 
       <Main fixed>
-        <RequestsContent />
+        <RequestsContent scope={scope} />
       </Main>
     </RequestsProvider>
   );

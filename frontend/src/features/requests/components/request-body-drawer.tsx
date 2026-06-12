@@ -44,6 +44,7 @@ interface RequestBodyDrawerProps {
   /** Optional server-side filter currently applied to the table. */
   queryWhere?: Record<string, any>;
   projectId?: string | null;
+  includeAdminFields?: boolean;
   onViewDetail?: (requestId: string) => void;
 }
 
@@ -58,6 +59,7 @@ export function RequestBodyDrawer({
   pageInfo: initialPageInfo,
   queryWhere,
   projectId,
+  includeAdminFields = false,
   onViewDetail,
 }: RequestBodyDrawerProps) {
   const { t } = useTranslation();
@@ -117,6 +119,7 @@ export function RequestBodyDrawer({
   const { data: request, isLoading, isFetching } = useRequest(currentRequestId ?? '', {
     projectId: effectiveProjectId,
     enabled: open && canRenderBody && !!currentRequestId,
+    includeAdminFields,
   });
 
   // Keep previous request data visible while loading the next one.
@@ -181,6 +184,7 @@ export function RequestBodyDrawer({
         where: queryWhere,
         permissions,
         projectId: effectiveProjectId,
+        includeAdminFields,
       });
       setAllRequests((prev) => {
         const merged = [...prev, ...result.requests];
@@ -213,6 +217,7 @@ export function RequestBodyDrawer({
         where: queryWhere,
         permissions,
         projectId: effectiveProjectId,
+        includeAdminFields,
       });
       // Prepend newer items; adjust index for shift.
       setAllRequests((prev) => {
