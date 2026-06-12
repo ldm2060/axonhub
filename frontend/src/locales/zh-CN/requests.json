@@ -65,6 +65,7 @@
   "requests.filters.source": "来源",
   "requests.filters.channel": "渠道",
   "requests.filters.apiKey": "API密钥",
+  "requests.filters.user": "用户",
   "requests.detail.title": "请求详情",
   "requests.detail.overview": "概览",
   "requests.detail.tabs.request": "请求",

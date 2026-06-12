@@ -25,6 +25,7 @@ const REQUEST_FILTER_SEARCH_KEYS = {
   channel: 'channel',
   apiKey: 'apiKey',
   modelID: 'modelID',
+  user: 'user',
   createdAtFrom: 'createdAtFrom',
   createdAtTo: 'createdAtTo',
   createdAtStartTime: 'createdAtStartTime',
@@ -151,6 +152,7 @@ function parseRequestSearchFilters(search: Record<string, unknown>): RequestSear
     channelFilter: getSearchStringArray(search[REQUEST_FILTER_SEARCH_KEYS.channel]),
     apiKeyFilter: getSearchStringArray(search[REQUEST_FILTER_SEARCH_KEYS.apiKey]),
     modelIDFilter: getSearchString(search[REQUEST_FILTER_SEARCH_KEYS.modelID]),
+    userFilter: getSearchStringArray(search[REQUEST_FILTER_SEARCH_KEYS.user]),
     dateRange: hasDateRange
       ? normalizeDateTimeRangeValue({
           from,
@@ -183,7 +185,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
     defaultPageSize: 20,
     pageSizeStorageKey: 'requests-table-page-size',
   });
-  const { statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter, dateRange } = useMemo(
+  const { statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter, userFilter, dateRange } = useMemo(
     () => parseRequestSearchFilters(currentSearch),
     [currentSearch]
   );
@@ -207,6 +209,9 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
     }
     if (apiKeyFilter.length > 0) {
       where.apiKeyIDIn = apiKeyFilter;
+    }
+    if (userFilter.length > 0) {
+      where.hasAPIKeyWith = userFilter.map((id) => ({ userID: id }));
     }
     if (debouncedModelIDFilter) {
       where.modelIDContainsFold = debouncedModelIDFilter;
@@ -282,6 +287,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
         setSearchStringArray(draft, REQUEST_FILTER_SEARCH_KEYS.channel, filters.channelFilter);
         setSearchStringArray(draft, REQUEST_FILTER_SEARCH_KEYS.apiKey, filters.apiKeyFilter);
         setSearchString(draft, REQUEST_FILTER_SEARCH_KEYS.modelID, filters.modelIDFilter);
+        setSearchStringArray(draft, REQUEST_FILTER_SEARCH_KEYS.user, filters.userFilter);
       });
     },
     [updateRequestSearch]
@@ -365,6 +371,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
         channelFilter={channelFilter}
         apiKeyFilter={apiKeyFilter}
         modelIDFilter={modelIDFilter}
+        userFilter={userFilter}
         dateRange={dateRange}
         queryWhere={whereClause}
         onNextPage={handleNextPage}

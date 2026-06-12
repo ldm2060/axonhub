@@ -15,6 +15,7 @@ import { DateRangePicker } from '@/components/date-range-picker';
 import { useApiKeys } from '@/features/apikeys/data';
 import { useMe } from '@/features/auth/data/auth';
 import { useAllChannelSummarys } from '@/features/channels/data/channels';
+import { useUsers } from '@/features/users/data/users';
 import { RequestStatus } from '../data/schema';
 import { DataTableViewOptions } from './data-table-view-options';
 
@@ -92,6 +93,7 @@ export function DataTableToolbar<TData>({
 
   const canViewChannels = isOwner || userScopes.includes('*') || userScopes.includes('read_channels');
   const canViewApiKeys = isOwner || userScopes.includes('*') || userScopes.includes('read_api_keys');
+  const canViewUsers = isOwner || userScopes.includes('*') || (userScopes.includes('read_users') && userScopes.includes('read_api_keys'));
 
   const { data: channelsData, isFetching: isFetchingChannels } = useAllChannelSummarys(adminScope ? null : selectedProjectId, {
     enabled: canViewChannels,
@@ -134,6 +136,19 @@ export function DataTableToolbar<TData>({
       label: edge.node.name,
     }));
   }, [canViewApiKeys, apiKeysData]);
+
+  const { data: usersData } = useUsers(
+    { first: 100, orderBy: { field: 'CREATED_AT', direction: 'DESC' } },
+    { disableAutoFetch: !canViewUsers || !adminScope }
+  );
+
+  const userOptions = useMemo(() => {
+    if (!canViewUsers || !usersData?.edges) return [];
+    return usersData.edges.map((edge) => ({
+      value: edge.node.id,
+      label: `${edge.node.firstName} ${edge.node.lastName} (${edge.node.email})`,
+    }));
+  }, [canViewUsers, usersData]);
 
   const requestStatuses = [
     {
@@ -237,6 +252,9 @@ export function DataTableToolbar<TData>({
               </div>
             }
           />
+        )}
+        {adminScope && canViewUsers && table.getColumn('user') && userOptions.length > 0 && (
+          <DataTableFacetedFilter column={table.getColumn('user')} title={t('requests.filters.user')} options={userOptions} />
         )}
         <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
         {hasDateRange && (

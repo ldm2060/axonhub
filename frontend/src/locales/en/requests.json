@@ -65,6 +65,7 @@
   "requests.filters.source": "Source",
   "requests.filters.channel": "Channel",
   "requests.filters.apiKey": "API Key",
+  "requests.filters.user": "User",
   "requests.detail.title": "Request Details",
   "requests.detail.overview": "Overview",
   "requests.detail.tabs.request": "Request",

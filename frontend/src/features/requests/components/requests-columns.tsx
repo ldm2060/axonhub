@@ -706,6 +706,13 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       enableSorting: false,
       enableHiding: true,
     },
+    {
+      id: 'user',
+      header: () => null,
+      cell: () => null,
+      enableHiding: true,
+      meta: { className: 'hidden' },
+    },
   ];
   return columns;
 }

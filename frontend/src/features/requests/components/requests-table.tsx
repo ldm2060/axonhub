@@ -44,6 +44,7 @@ interface RequestsTableProps {
   channelFilter: string[];
   apiKeyFilter: string[];
   modelIDFilter: string;
+  userFilter: string[];
   dateRange?: DateTimeRangeValue;
   queryWhere?: Record<string, any>;
   onNextPage: () => void;
@@ -66,6 +67,7 @@ export interface RequestTableFilters {
   channelFilter: string[];
   apiKeyFilter: string[];
   modelIDFilter: string;
+  userFilter: string[];
 }
 
 function getFilterArrayValue(filters: ColumnFiltersState, id: string) {
@@ -89,6 +91,7 @@ export function RequestsTable({
   channelFilter,
   apiKeyFilter,
   modelIDFilter,
+  userFilter = [],
   dateRange,
   queryWhere,
   onNextPage,
@@ -159,8 +162,11 @@ export function RequestsTable({
     if (modelIDFilter) {
       filters.push({ id: 'modelID', value: modelIDFilter });
     }
+    if (userFilter.length > 0) {
+      filters.push({ id: 'user', value: userFilter });
+    }
     return filters;
-  }, [statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter]);
+  }, [statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter, userFilter]);
 
   const handleColumnFiltersChange = useCallback(
     (updater: any) => {
@@ -172,6 +178,7 @@ export function RequestsTable({
         channelFilter: getFilterArrayValue(newFilters, 'channel'),
         apiKeyFilter: getFilterArrayValue(newFilters, 'apiKey'),
         modelIDFilter: getFilterStringValue(newFilters, 'modelID'),
+        userFilter: getFilterArrayValue(newFilters, 'user'),
       });
     },
     [columnFilters, onFiltersChange]
