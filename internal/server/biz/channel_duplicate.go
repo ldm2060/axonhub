@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/channelmodelprice"
-	"github.com/looplj/axonhub/internal/ent/channelmodelpriceversion"
-	"github.com/looplj/axonhub/internal/pkg/xerrors"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
+	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
+	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 )
 
 // DuplicateChannel creates a new channel from input and copies current model prices
