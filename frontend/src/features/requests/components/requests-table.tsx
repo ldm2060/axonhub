@@ -117,10 +117,13 @@ export function RequestsTable({
   }, []);
 
   const requestsColumns = useRequestsColumns({ onBodyClick: handleBodyClick, onViewDetail, showOwnershipColumns: adminScope });
+
+  const columnVisibilityStorageKey = adminScope ? 'admin-requests-table-column-visibility' : 'requests-table-column-visibility';
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
-    const stored = localStorage.getItem('requests-table-column-visibility');
+    const stored = localStorage.getItem(columnVisibilityStorageKey);
     if (stored) {
       try {
         return JSON.parse(stored);
@@ -134,8 +137,8 @@ export function RequestsTable({
   const [rowSelection, setRowSelection] = useState({});
 
   useEffect(() => {
-    localStorage.setItem('requests-table-column-visibility', JSON.stringify(columnVisibility));
-  }, [columnVisibility]);
+    localStorage.setItem(columnVisibilityStorageKey, JSON.stringify(columnVisibility));
+  }, [columnVisibility, columnVisibilityStorageKey]);
 
   const displayedData = useAnimatedList(data, autoRefresh, pageSize);
 

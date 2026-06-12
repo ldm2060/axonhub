@@ -199,7 +199,7 @@ export function RequestBodyDrawer({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentIndex, allRequests.length, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length]);
+  }, [currentIndex, allRequests.length, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length, includeAdminFields]);
 
   const handleNext = useCallback(async () => {
     if (currentIndex > 0) {
@@ -234,7 +234,7 @@ export function RequestBodyDrawer({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentIndex, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length]);
+  }, [currentIndex, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length, includeAdminFields]);
 
   const handleViewDetail = useCallback(() => {
     if (currentRequestId) {
