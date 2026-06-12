@@ -49,6 +49,8 @@ import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
+import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
+import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './routes/_authenticated/admin/requests/$requestId'
 import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
 import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
 import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
@@ -282,6 +284,18 @@ const AuthenticatedAdminUsageMonitorIndexRoute =
     path: '/usage-monitor/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminRequestsIndexRoute =
+  AuthenticatedAdminRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsRequestIdRoute =
+  AuthenticatedAdminRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSystemIndexRoute =
   AuthenticatedAdminSystemIndexRouteImport.update({
     id: '/system/',
@@ -392,6 +406,8 @@ export interface FileRoutesByFullPath {
   '/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
+  '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
+  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -442,6 +458,8 @@ export interface FileRoutesByTo {
   '/admin/roles': typeof AuthenticatedAdminRolesIndexRoute
   '/admin/system': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor': typeof AuthenticatedAdminUsageMonitorIndexRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
+  '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/project/api-keys': typeof AuthenticatedProjectApiKeysIndexRoute
   '/project/prompts': typeof AuthenticatedProjectPromptsIndexRoute
@@ -496,6 +514,8 @@ export interface FileRoutesById {
   '/_authenticated/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
   '/_authenticated/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/_authenticated/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
+  '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
+  '/_authenticated/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/_authenticated/project/api-keys/': typeof AuthenticatedProjectApiKeysIndexRoute
   '/_authenticated/project/prompts/': typeof AuthenticatedProjectPromptsIndexRoute
@@ -550,6 +570,8 @@ export interface FileRouteTypes {
     | '/admin/roles/'
     | '/admin/system/'
     | '/admin/usage-monitor/'
+    | '/admin/requests/'
+    | '/admin/requests/$requestId'
     | '/admin/users/'
     | '/project/api-keys/'
     | '/project/prompts/'
@@ -600,6 +622,8 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/system'
     | '/admin/usage-monitor'
+    | '/admin/requests'
+    | '/admin/requests/$requestId'
     | '/admin/users'
     | '/project/api-keys'
     | '/project/prompts'
@@ -653,6 +677,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/roles/'
     | '/_authenticated/admin/system/'
     | '/_authenticated/admin/usage-monitor/'
+    | '/_authenticated/admin/requests/'
+    | '/_authenticated/admin/requests/$requestId'
     | '/_authenticated/admin/users/'
     | '/_authenticated/project/api-keys/'
     | '/_authenticated/project/prompts/'
@@ -961,6 +987,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsageMonitorIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/requests/': {
+      id: '/_authenticated/admin/requests/'
+      path: '/requests'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/requests/$requestId': {
+      id: '/_authenticated/admin/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/admin/requests/$requestId'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/system/': {
       id: '/_authenticated/admin/system/'
       path: '/system'
@@ -1052,6 +1092,8 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminRolesIndexRoute: typeof AuthenticatedAdminRolesIndexRoute
   AuthenticatedAdminSystemIndexRoute: typeof AuthenticatedAdminSystemIndexRoute
   AuthenticatedAdminUsageMonitorIndexRoute: typeof AuthenticatedAdminUsageMonitorIndexRoute
+  AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
+  AuthenticatedAdminRequestsRequestIdRoute: typeof AuthenticatedAdminRequestsRequestIdRoute
   AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
 }
 
@@ -1072,6 +1114,9 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminSystemIndexRoute: AuthenticatedAdminSystemIndexRoute,
     AuthenticatedAdminUsageMonitorIndexRoute:
       AuthenticatedAdminUsageMonitorIndexRoute,
+    AuthenticatedAdminRequestsIndexRoute: AuthenticatedAdminRequestsIndexRoute,
+    AuthenticatedAdminRequestsRequestIdRoute:
+      AuthenticatedAdminRequestsRequestIdRoute,
     AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
   }
 

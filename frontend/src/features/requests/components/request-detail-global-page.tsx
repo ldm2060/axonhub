@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { useParams, useNavigate } from '@tanstack/react-router';
+import { useParams, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { extractNumberID } from '@/lib/utils';
@@ -10,17 +10,34 @@ import { Main } from '@/components/layout/main';
 import { useRequest } from '../data';
 import { RequestDetailContent } from './request-detail-content';
 
-export default function RequestDetailGlobalPage() {
+interface RequestDetailGlobalPageProps {
+  backTo?: '/admin/channels' | '/admin/requests';
+}
+
+export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: RequestDetailGlobalPageProps) {
   const { t } = useTranslation();
-  const { requestId } = useParams({ from: '/_authenticated/requests/$requestId' });
+  const { requestId } = useParams({ strict: false }) as { requestId: string };
   const navigate = useNavigate();
-  const { data: request } = useRequest(requestId, { projectId: null });
+  const currentSearch = useRouterState({
+    select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
+  });
+
+  const handleBack = () => {
+    if (backTo === '/admin/requests') {
+      navigate({ to: backTo, search: currentSearch });
+      return;
+    }
+
+    navigate({ to: backTo });
+  };
+
+  const { data: request } = useRequest(requestId, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
 
   return (
     <div className='flex h-screen flex-col'>
       <Header className='bg-background/95 supports-[backdrop-filter]:bg-background/60 border-b backdrop-blur'>
         <div className='flex items-center space-x-4'>
-          <Button variant='ghost' size='sm' onClick={() => navigate({ to: '/admin/channels' })} className='hover:bg-accent'>
+          <Button variant='ghost' size='sm' onClick={handleBack} className='hover:bg-accent'>
             <ArrowLeft className='mr-2 h-4 w-4' />
             {t('common.back')}
           </Button>

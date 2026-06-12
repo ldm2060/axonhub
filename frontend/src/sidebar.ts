@@ -81,6 +81,11 @@ export function useSidebarData(): SidebarData {
           icon: IconChartBar,
         } as NavLink,
         {
+          title: t('sidebar.items.requests'),
+          url: '/admin/requests',
+          icon: IconActivity,
+        } as NavLink,
+        {
           title: t('sidebar.items.models'),
           url: '/admin/models',
           icon: IconRobot,
