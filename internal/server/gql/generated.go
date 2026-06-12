@@ -13686,12 +13686,12 @@ func (ec *executionContext) field_Mutation_disableChannelAPIKey_args(ctx context
 func (ec *executionContext) field_Mutation_duplicateChannel_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "sourceID", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "sourceID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
 	if err != nil {
 		return nil, err
 	}
 	args["sourceID"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateChannelInput2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐCreateChannelInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateChannelInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐCreateChannelInput)
 	if err != nil {
 		return nil, err
 	}
@@ -33382,7 +33382,7 @@ func (ec *executionContext) _Mutation_duplicateChannel(ctx context.Context, fiel
 			return ec.resolvers.Mutation().DuplicateChannel(ctx, fc.Args["sourceID"].(objects.GUID), fc.Args["input"].(ent.CreateChannelInput))
 		},
 		nil,
-		ec.marshalNChannel2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋentᚐChannel,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel,
 		true,
 		true,
 	)
