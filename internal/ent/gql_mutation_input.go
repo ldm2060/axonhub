@@ -238,6 +238,10 @@ type UpdateChannelInput struct {
 	ClearEndpoints               bool
 	Endpoints                    []objects.ChannelEndpoint
 	AppendEndpoints              []objects.ChannelEndpoint
+	ClearClientRestriction       bool
+	ClientRestriction            *channel.ClientRestriction
+	ClearAutoDisableConfig       bool
+	AutoDisableConfig            *objects.ChannelAutoDisableConfig
 	Visibility                   *channel.Visibility
 	ClearUsageMonitorChannels    bool
 	AddUsageMonitorChannelIDs    []int
@@ -335,6 +339,18 @@ func (i *UpdateChannelInput) Mutate(m *ChannelMutation) {
 	}
 	if i.AppendEndpoints != nil {
 		m.AppendEndpoints(i.Endpoints)
+	}
+	if i.ClearClientRestriction {
+		m.ClearClientRestriction()
+	}
+	if v := i.ClientRestriction; v != nil {
+		m.SetClientRestriction(*v)
+	}
+	if i.ClearAutoDisableConfig {
+		m.ClearAutoDisableConfig()
+	}
+	if v := i.AutoDisableConfig; v != nil {
+		m.SetAutoDisableConfig(v)
 	}
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)

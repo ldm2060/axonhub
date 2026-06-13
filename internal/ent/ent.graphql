@@ -430,6 +430,14 @@ type Channel implements Node {
   Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type.
   """
   endpoints: [ChannelEndpoint!]
+  """
+  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  """
+  clientRestriction: ChannelClientRestriction
+  """
+  Channel-level auto-disable configuration. nil = inherit global settings.
+  """
+  autoDisableConfig: ChannelAutoDisableConfig
   ownerID: ID
   visibility: ChannelVisibility!
   sharedWith: [Int!]
@@ -531,6 +539,14 @@ type Channel implements Node {
   channelModelPrices: [ChannelModelPrice!]
   providerQuotaStatus: ProviderQuotaStatus @goField(forceResolver: true)
   usageMonitorChannels: [UsageMonitorChannel!]
+}
+"""
+ChannelClientRestriction is enum for the field client_restriction
+"""
+enum ChannelClientRestriction @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.ClientRestriction") {
+  off
+  lenient
+  strict
 }
 """
 A connection to a list of items.
@@ -1313,7 +1329,10 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   nanogpt
   nanogpt_responses
   opencode_go
+  opencode_go_anthropic
   ollama
+  evolink
+  evolink_anthropic
 }
 """
 ChannelVisibility is enum for the field visibility
@@ -1498,6 +1517,15 @@ input ChannelWhereInput {
   remarkNotNil: Boolean
   remarkEqualFold: String
   remarkContainsFold: String
+  """
+  client_restriction field predicates
+  """
+  clientRestriction: ChannelClientRestriction
+  clientRestrictionNEQ: ChannelClientRestriction
+  clientRestrictionIn: [ChannelClientRestriction!]
+  clientRestrictionNotIn: [ChannelClientRestriction!]
+  clientRestrictionIsNil: Boolean
+  clientRestrictionNotNil: Boolean
   """
   owner_id field predicates
   """
@@ -3999,6 +4027,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   synthetic
   neuralwatt
   zhipu
+  apertis
 }
 """
 ProviderQuotaStatusStatus is enum for the field status
@@ -6510,6 +6539,16 @@ input UpdateChannelInput {
   endpoints: [ChannelEndpointInput!]
   appendEndpoints: [ChannelEndpointInput!]
   clearEndpoints: Boolean
+  """
+  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  """
+  clientRestriction: ChannelClientRestriction
+  clearClientRestriction: Boolean
+  """
+  Channel-level auto-disable configuration. nil = inherit global settings.
+  """
+  autoDisableConfig: ChannelAutoDisableConfig
+  clearAutoDisableConfig: Boolean
   visibility: ChannelVisibility
   addUsageMonitorChannelIDs: [ID!]
   removeUsageMonitorChannelIDs: [ID!]
@@ -7527,6 +7566,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   neuralwatt
   zhipu
   antigravity
+  apertis
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status

@@ -865,6 +865,16 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				selectedFields = append(selectedFields, channel.FieldEndpoints)
 				fieldSeen[channel.FieldEndpoints] = struct{}{}
 			}
+		case "clientRestriction":
+			if _, ok := fieldSeen[channel.FieldClientRestriction]; !ok {
+				selectedFields = append(selectedFields, channel.FieldClientRestriction)
+				fieldSeen[channel.FieldClientRestriction] = struct{}{}
+			}
+		case "autoDisableConfig":
+			if _, ok := fieldSeen[channel.FieldAutoDisableConfig]; !ok {
+				selectedFields = append(selectedFields, channel.FieldAutoDisableConfig)
+				fieldSeen[channel.FieldAutoDisableConfig] = struct{}{}
+			}
 		case "ownerID":
 			if _, ok := fieldSeen[channel.FieldOwnerID]; !ok {
 				selectedFields = append(selectedFields, channel.FieldOwnerID)

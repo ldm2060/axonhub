@@ -156,9 +156,23 @@ func (Channel) Fields() []ent.Field {
 			Default([]objects.ChannelEndpoint{}).
 			Optional().
 			Comment("Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type."),
-			field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
-			field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		field.Enum("client_restriction").
+			Values("off", "lenient", "strict").
+			Optional().
+			Nillable().
+			Comment("Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.").
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput),
+			),
+		field.JSON("auto_disable_config", &objects.ChannelAutoDisableConfig{}).
+			Optional().
+			Comment("Channel-level auto-disable configuration. nil = inherit global settings.").
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput),
+			),
+		field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
+		field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 

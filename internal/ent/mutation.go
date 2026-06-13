@@ -2042,6 +2042,8 @@ type ChannelMutation struct {
 	remark                        *string
 	endpoints                     *[]objects.ChannelEndpoint
 	appendendpoints               []objects.ChannelEndpoint
+	client_restriction            *channel.ClientRestriction
+	auto_disable_config           **objects.ChannelAutoDisableConfig
 	visibility                    *channel.Visibility
 	shared_with                   *[]int
 	appendshared_with             []int
@@ -3176,6 +3178,104 @@ func (m *ChannelMutation) ResetEndpoints() {
 	delete(m.clearedFields, channel.FieldEndpoints)
 }
 
+// SetClientRestriction sets the "client_restriction" field.
+func (m *ChannelMutation) SetClientRestriction(cr channel.ClientRestriction) {
+	m.client_restriction = &cr
+}
+
+// ClientRestriction returns the value of the "client_restriction" field in the mutation.
+func (m *ChannelMutation) ClientRestriction() (r channel.ClientRestriction, exists bool) {
+	v := m.client_restriction
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientRestriction returns the old "client_restriction" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldClientRestriction(ctx context.Context) (v *channel.ClientRestriction, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientRestriction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientRestriction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientRestriction: %w", err)
+	}
+	return oldValue.ClientRestriction, nil
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (m *ChannelMutation) ClearClientRestriction() {
+	m.client_restriction = nil
+	m.clearedFields[channel.FieldClientRestriction] = struct{}{}
+}
+
+// ClientRestrictionCleared returns if the "client_restriction" field was cleared in this mutation.
+func (m *ChannelMutation) ClientRestrictionCleared() bool {
+	_, ok := m.clearedFields[channel.FieldClientRestriction]
+	return ok
+}
+
+// ResetClientRestriction resets all changes to the "client_restriction" field.
+func (m *ChannelMutation) ResetClientRestriction() {
+	m.client_restriction = nil
+	delete(m.clearedFields, channel.FieldClientRestriction)
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (m *ChannelMutation) SetAutoDisableConfig(oadc *objects.ChannelAutoDisableConfig) {
+	m.auto_disable_config = &oadc
+}
+
+// AutoDisableConfig returns the value of the "auto_disable_config" field in the mutation.
+func (m *ChannelMutation) AutoDisableConfig() (r *objects.ChannelAutoDisableConfig, exists bool) {
+	v := m.auto_disable_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoDisableConfig returns the old "auto_disable_config" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldAutoDisableConfig(ctx context.Context) (v *objects.ChannelAutoDisableConfig, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoDisableConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoDisableConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoDisableConfig: %w", err)
+	}
+	return oldValue.AutoDisableConfig, nil
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (m *ChannelMutation) ClearAutoDisableConfig() {
+	m.auto_disable_config = nil
+	m.clearedFields[channel.FieldAutoDisableConfig] = struct{}{}
+}
+
+// AutoDisableConfigCleared returns if the "auto_disable_config" field was cleared in this mutation.
+func (m *ChannelMutation) AutoDisableConfigCleared() bool {
+	_, ok := m.clearedFields[channel.FieldAutoDisableConfig]
+	return ok
+}
+
+// ResetAutoDisableConfig resets all changes to the "auto_disable_config" field.
+func (m *ChannelMutation) ResetAutoDisableConfig() {
+	m.auto_disable_config = nil
+	delete(m.clearedFields, channel.FieldAutoDisableConfig)
+}
+
 // SetOwnerID sets the "owner_id" field.
 func (m *ChannelMutation) SetOwnerID(i int) {
 	m.owner = &i
@@ -3750,7 +3850,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 26)
 	if m.created_at != nil {
 		fields = append(fields, channel.FieldCreatedAt)
 	}
@@ -3814,6 +3914,12 @@ func (m *ChannelMutation) Fields() []string {
 	if m.endpoints != nil {
 		fields = append(fields, channel.FieldEndpoints)
 	}
+	if m.client_restriction != nil {
+		fields = append(fields, channel.FieldClientRestriction)
+	}
+	if m.auto_disable_config != nil {
+		fields = append(fields, channel.FieldAutoDisableConfig)
+	}
 	if m.owner != nil {
 		fields = append(fields, channel.FieldOwnerID)
 	}
@@ -3873,6 +3979,10 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.Remark()
 	case channel.FieldEndpoints:
 		return m.Endpoints()
+	case channel.FieldClientRestriction:
+		return m.ClientRestriction()
+	case channel.FieldAutoDisableConfig:
+		return m.AutoDisableConfig()
 	case channel.FieldOwnerID:
 		return m.OwnerID()
 	case channel.FieldVisibility:
@@ -3930,6 +4040,10 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldRemark(ctx)
 	case channel.FieldEndpoints:
 		return m.OldEndpoints(ctx)
+	case channel.FieldClientRestriction:
+		return m.OldClientRestriction(ctx)
+	case channel.FieldAutoDisableConfig:
+		return m.OldAutoDisableConfig(ctx)
 	case channel.FieldOwnerID:
 		return m.OldOwnerID(ctx)
 	case channel.FieldVisibility:
@@ -4092,6 +4206,20 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEndpoints(v)
 		return nil
+	case channel.FieldClientRestriction:
+		v, ok := value.(channel.ClientRestriction)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientRestriction(v)
+		return nil
+	case channel.FieldAutoDisableConfig:
+		v, ok := value.(*objects.ChannelAutoDisableConfig)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoDisableConfig(v)
+		return nil
 	case channel.FieldOwnerID:
 		v, ok := value.(int)
 		if !ok {
@@ -4200,6 +4328,12 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldEndpoints) {
 		fields = append(fields, channel.FieldEndpoints)
 	}
+	if m.FieldCleared(channel.FieldClientRestriction) {
+		fields = append(fields, channel.FieldClientRestriction)
+	}
+	if m.FieldCleared(channel.FieldAutoDisableConfig) {
+		fields = append(fields, channel.FieldAutoDisableConfig)
+	}
 	if m.FieldCleared(channel.FieldOwnerID) {
 		fields = append(fields, channel.FieldOwnerID)
 	}
@@ -4249,6 +4383,12 @@ func (m *ChannelMutation) ClearField(name string) error {
 		return nil
 	case channel.FieldEndpoints:
 		m.ClearEndpoints()
+		return nil
+	case channel.FieldClientRestriction:
+		m.ClearClientRestriction()
+		return nil
+	case channel.FieldAutoDisableConfig:
+		m.ClearAutoDisableConfig()
 		return nil
 	case channel.FieldOwnerID:
 		m.ClearOwnerID()
@@ -4326,6 +4466,12 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldEndpoints:
 		m.ResetEndpoints()
+		return nil
+	case channel.FieldClientRestriction:
+		m.ResetClientRestriction()
+		return nil
+	case channel.FieldAutoDisableConfig:
+		m.ResetAutoDisableConfig()
 		return nil
 	case channel.FieldOwnerID:
 		m.ResetOwnerID()

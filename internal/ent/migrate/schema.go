@@ -117,6 +117,8 @@ var (
 		{Name: "error_message", Type: field.TypeString, Nullable: true},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
 		{Name: "endpoints", Type: field.TypeJSON, Nullable: true},
+		{Name: "client_restriction", Type: field.TypeEnum, Nullable: true, Enums: []string{"off", "lenient", "strict"}},
+		{Name: "auto_disable_config", Type: field.TypeJSON, Nullable: true},
 		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"private", "shared", "published"}, Default: "private"},
 		{Name: "shared_with", Type: field.TypeJSON, Nullable: true},
 		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
@@ -129,7 +131,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "channels_users_owned_channels",
-				Columns:    []*schema.Column{ChannelsColumns[24]},
+				Columns:    []*schema.Column{ChannelsColumns[26]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -143,7 +145,7 @@ var (
 			{
 				Name:    "channels_by_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{ChannelsColumns[24], ChannelsColumns[3]},
+				Columns: []*schema.Column{ChannelsColumns[26], ChannelsColumns[3]},
 			},
 		},
 	}

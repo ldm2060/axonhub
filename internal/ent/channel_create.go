@@ -245,6 +245,26 @@ func (_c *ChannelCreate) SetEndpoints(v []objects.ChannelEndpoint) *ChannelCreat
 	return _c
 }
 
+// SetClientRestriction sets the "client_restriction" field.
+func (_c *ChannelCreate) SetClientRestriction(v channel.ClientRestriction) *ChannelCreate {
+	_c.mutation.SetClientRestriction(v)
+	return _c
+}
+
+// SetNillableClientRestriction sets the "client_restriction" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableClientRestriction(v *channel.ClientRestriction) *ChannelCreate {
+	if v != nil {
+		_c.SetClientRestriction(*v)
+	}
+	return _c
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (_c *ChannelCreate) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelCreate {
+	_c.mutation.SetAutoDisableConfig(v)
+	return _c
+}
+
 // SetOwnerID sets the "owner_id" field.
 func (_c *ChannelCreate) SetOwnerID(v int) *ChannelCreate {
 	_c.mutation.SetOwnerID(v)
@@ -534,6 +554,11 @@ func (_c *ChannelCreate) check() error {
 	if _, ok := _c.mutation.OrderingWeight(); !ok {
 		return &ValidationError{Name: "ordering_weight", err: errors.New(`ent: missing required field "Channel.ordering_weight"`)}
 	}
+	if v, ok := _c.mutation.ClientRestriction(); ok {
+		if err := channel.ClientRestrictionValidator(v); err != nil {
+			return &ValidationError{Name: "client_restriction", err: fmt.Errorf(`ent: validator failed for field "Channel.client_restriction": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Visibility(); !ok {
 		return &ValidationError{Name: "visibility", err: errors.New(`ent: missing required field "Channel.visibility"`)}
 	}
@@ -652,6 +677,14 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Endpoints(); ok {
 		_spec.SetField(channel.FieldEndpoints, field.TypeJSON, value)
 		_node.Endpoints = value
+	}
+	if value, ok := _c.mutation.ClientRestriction(); ok {
+		_spec.SetField(channel.FieldClientRestriction, field.TypeEnum, value)
+		_node.ClientRestriction = &value
+	}
+	if value, ok := _c.mutation.AutoDisableConfig(); ok {
+		_spec.SetField(channel.FieldAutoDisableConfig, field.TypeJSON, value)
+		_node.AutoDisableConfig = value
 	}
 	if value, ok := _c.mutation.Visibility(); ok {
 		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)
@@ -1154,6 +1187,42 @@ func (u *ChannelUpsert) ClearEndpoints() *ChannelUpsert {
 	return u
 }
 
+// SetClientRestriction sets the "client_restriction" field.
+func (u *ChannelUpsert) SetClientRestriction(v channel.ClientRestriction) *ChannelUpsert {
+	u.Set(channel.FieldClientRestriction, v)
+	return u
+}
+
+// UpdateClientRestriction sets the "client_restriction" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateClientRestriction() *ChannelUpsert {
+	u.SetExcluded(channel.FieldClientRestriction)
+	return u
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (u *ChannelUpsert) ClearClientRestriction() *ChannelUpsert {
+	u.SetNull(channel.FieldClientRestriction)
+	return u
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (u *ChannelUpsert) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelUpsert {
+	u.Set(channel.FieldAutoDisableConfig, v)
+	return u
+}
+
+// UpdateAutoDisableConfig sets the "auto_disable_config" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateAutoDisableConfig() *ChannelUpsert {
+	u.SetExcluded(channel.FieldAutoDisableConfig)
+	return u
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (u *ChannelUpsert) ClearAutoDisableConfig() *ChannelUpsert {
+	u.SetNull(channel.FieldAutoDisableConfig)
+	return u
+}
+
 // SetVisibility sets the "visibility" field.
 func (u *ChannelUpsert) SetVisibility(v channel.Visibility) *ChannelUpsert {
 	u.Set(channel.FieldVisibility, v)
@@ -1593,6 +1662,48 @@ func (u *ChannelUpsertOne) UpdateEndpoints() *ChannelUpsertOne {
 func (u *ChannelUpsertOne) ClearEndpoints() *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearEndpoints()
+	})
+}
+
+// SetClientRestriction sets the "client_restriction" field.
+func (u *ChannelUpsertOne) SetClientRestriction(v channel.ClientRestriction) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetClientRestriction(v)
+	})
+}
+
+// UpdateClientRestriction sets the "client_restriction" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateClientRestriction() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateClientRestriction()
+	})
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (u *ChannelUpsertOne) ClearClientRestriction() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearClientRestriction()
+	})
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (u *ChannelUpsertOne) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetAutoDisableConfig(v)
+	})
+}
+
+// UpdateAutoDisableConfig sets the "auto_disable_config" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateAutoDisableConfig() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateAutoDisableConfig()
+	})
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (u *ChannelUpsertOne) ClearAutoDisableConfig() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearAutoDisableConfig()
 	})
 }
 
@@ -2206,6 +2317,48 @@ func (u *ChannelUpsertBulk) UpdateEndpoints() *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) ClearEndpoints() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearEndpoints()
+	})
+}
+
+// SetClientRestriction sets the "client_restriction" field.
+func (u *ChannelUpsertBulk) SetClientRestriction(v channel.ClientRestriction) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetClientRestriction(v)
+	})
+}
+
+// UpdateClientRestriction sets the "client_restriction" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateClientRestriction() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateClientRestriction()
+	})
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (u *ChannelUpsertBulk) ClearClientRestriction() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearClientRestriction()
+	})
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (u *ChannelUpsertBulk) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetAutoDisableConfig(v)
+	})
+}
+
+// UpdateAutoDisableConfig sets the "auto_disable_config" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateAutoDisableConfig() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateAutoDisableConfig()
+	})
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (u *ChannelUpsertBulk) ClearAutoDisableConfig() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearAutoDisableConfig()
 	})
 }
 

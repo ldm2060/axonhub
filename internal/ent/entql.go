@@ -118,6 +118,8 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldErrorMessage:            {Type: field.TypeString, Column: channel.FieldErrorMessage},
 			channel.FieldRemark:                  {Type: field.TypeString, Column: channel.FieldRemark},
 			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
+			channel.FieldClientRestriction:       {Type: field.TypeEnum, Column: channel.FieldClientRestriction},
+			channel.FieldAutoDisableConfig:       {Type: field.TypeJSON, Column: channel.FieldAutoDisableConfig},
 			channel.FieldOwnerID:                 {Type: field.TypeInt, Column: channel.FieldOwnerID},
 			channel.FieldVisibility:              {Type: field.TypeEnum, Column: channel.FieldVisibility},
 			channel.FieldSharedWith:              {Type: field.TypeJSON, Column: channel.FieldSharedWith},
@@ -2045,6 +2047,16 @@ func (f *ChannelFilter) WhereRemark(p entql.StringP) {
 // WhereEndpoints applies the entql json.RawMessage predicate on the endpoints field.
 func (f *ChannelFilter) WhereEndpoints(p entql.BytesP) {
 	f.Where(p.Field(channel.FieldEndpoints))
+}
+
+// WhereClientRestriction applies the entql string predicate on the client_restriction field.
+func (f *ChannelFilter) WhereClientRestriction(p entql.StringP) {
+	f.Where(p.Field(channel.FieldClientRestriction))
+}
+
+// WhereAutoDisableConfig applies the entql json.RawMessage predicate on the auto_disable_config field.
+func (f *ChannelFilter) WhereAutoDisableConfig(p entql.BytesP) {
+	f.Where(p.Field(channel.FieldAutoDisableConfig))
 }
 
 // WhereOwnerID applies the entql int predicate on the owner_id field.

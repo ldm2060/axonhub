@@ -63,6 +63,10 @@ type Channel struct {
 	Remark *string `json:"remark,omitempty"`
 	// Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type.
 	Endpoints []objects.ChannelEndpoint `json:"endpoints,omitempty"`
+	// Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+	ClientRestriction *channel.ClientRestriction `json:"client_restriction,omitempty"`
+	// Channel-level auto-disable configuration. nil = inherit global settings.
+	AutoDisableConfig *objects.ChannelAutoDisableConfig `json:"auto_disable_config,omitempty"`
 	// OwnerID holds the value of the "owner_id" field.
 	OwnerID int `json:"owner_id,omitempty"`
 	// Visibility holds the value of the "visibility" field.
@@ -188,13 +192,13 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case channel.FieldCredentials, channel.FieldDisabledAPIKeys, channel.FieldSupportedModels, channel.FieldManualModels, channel.FieldTags, channel.FieldPolicies, channel.FieldSettings, channel.FieldEndpoints, channel.FieldSharedWith:
+		case channel.FieldCredentials, channel.FieldDisabledAPIKeys, channel.FieldSupportedModels, channel.FieldManualModels, channel.FieldTags, channel.FieldPolicies, channel.FieldSettings, channel.FieldEndpoints, channel.FieldAutoDisableConfig, channel.FieldSharedWith:
 			values[i] = new([]byte)
 		case channel.FieldAutoSyncSupportedModels:
 			values[i] = new(sql.NullBool)
 		case channel.FieldID, channel.FieldDeletedAt, channel.FieldOrderingWeight, channel.FieldOwnerID:
 			values[i] = new(sql.NullInt64)
-		case channel.FieldType, channel.FieldBaseURL, channel.FieldName, channel.FieldStatus, channel.FieldAutoSyncModelPattern, channel.FieldDefaultTestModel, channel.FieldErrorMessage, channel.FieldRemark, channel.FieldVisibility:
+		case channel.FieldType, channel.FieldBaseURL, channel.FieldName, channel.FieldStatus, channel.FieldAutoSyncModelPattern, channel.FieldDefaultTestModel, channel.FieldErrorMessage, channel.FieldRemark, channel.FieldClientRestriction, channel.FieldVisibility:
 			values[i] = new(sql.NullString)
 		case channel.FieldCreatedAt, channel.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -363,6 +367,21 @@ func (_m *Channel) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field endpoints: %w", err)
 				}
 			}
+		case channel.FieldClientRestriction:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field client_restriction", values[i])
+			} else if value.Valid {
+				_m.ClientRestriction = new(channel.ClientRestriction)
+				*_m.ClientRestriction = channel.ClientRestriction(value.String)
+			}
+		case channel.FieldAutoDisableConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_disable_config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.AutoDisableConfig); err != nil {
+					return fmt.Errorf("unmarshal field auto_disable_config: %w", err)
+				}
+			}
 		case channel.FieldOwnerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
@@ -523,6 +542,14 @@ func (_m *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("endpoints=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Endpoints))
+	builder.WriteString(", ")
+	if v := _m.ClientRestriction; v != nil {
+		builder.WriteString("client_restriction=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("auto_disable_config=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AutoDisableConfig))
 	builder.WriteString(", ")
 	builder.WriteString("owner_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))

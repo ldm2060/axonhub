@@ -61,6 +61,10 @@ const (
 	FieldRemark = "remark"
 	// FieldEndpoints holds the string denoting the endpoints field in the database.
 	FieldEndpoints = "endpoints"
+	// FieldClientRestriction holds the string denoting the client_restriction field in the database.
+	FieldClientRestriction = "client_restriction"
+	// FieldAutoDisableConfig holds the string denoting the auto_disable_config field in the database.
+	FieldAutoDisableConfig = "auto_disable_config"
 	// FieldOwnerID holds the string denoting the owner_id field in the database.
 	FieldOwnerID = "owner_id"
 	// FieldVisibility holds the string denoting the visibility field in the database.
@@ -167,6 +171,8 @@ var Columns = []string{
 	FieldErrorMessage,
 	FieldRemark,
 	FieldEndpoints,
+	FieldClientRestriction,
+	FieldAutoDisableConfig,
 	FieldOwnerID,
 	FieldVisibility,
 	FieldSharedWith,
@@ -325,6 +331,30 @@ func StatusValidator(s Status) error {
 	}
 }
 
+// ClientRestriction defines the type for the "client_restriction" enum field.
+type ClientRestriction string
+
+// ClientRestriction values.
+const (
+	ClientRestrictionOff     ClientRestriction = "off"
+	ClientRestrictionLenient ClientRestriction = "lenient"
+	ClientRestrictionStrict  ClientRestriction = "strict"
+)
+
+func (cr ClientRestriction) String() string {
+	return string(cr)
+}
+
+// ClientRestrictionValidator is a validator for the "client_restriction" field enum values. It is called by the builders before save.
+func ClientRestrictionValidator(cr ClientRestriction) error {
+	switch cr {
+	case ClientRestrictionOff, ClientRestrictionLenient, ClientRestrictionStrict:
+		return nil
+	default:
+		return fmt.Errorf("channel: invalid enum value for client_restriction field: %q", cr)
+	}
+}
+
 // Visibility defines the type for the "visibility" enum field.
 type Visibility string
 
@@ -423,6 +453,11 @@ func ByErrorMessage(opts ...sql.OrderTermOption) OrderOption {
 // ByRemark orders the results by the remark field.
 func ByRemark(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRemark, opts...).ToFunc()
+}
+
+// ByClientRestriction orders the results by the client_restriction field.
+func ByClientRestriction(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClientRestriction, opts...).ToFunc()
 }
 
 // ByOwnerID orders the results by the owner_id field.
@@ -621,6 +656,24 @@ func (e *Status) UnmarshalGQL(val interface{}) error {
 	*e = Status(str)
 	if err := StatusValidator(*e); err != nil {
 		return fmt.Errorf("%s is not a valid Status", str)
+	}
+	return nil
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (e ClientRestriction) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(e.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (e *ClientRestriction) UnmarshalGQL(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("enum %T must be a string", val)
+	}
+	*e = ClientRestriction(str)
+	if err := ClientRestrictionValidator(*e); err != nil {
+		return fmt.Errorf("%s is not a valid ClientRestriction", str)
 	}
 	return nil
 }

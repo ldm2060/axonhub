@@ -366,6 +366,38 @@ func (_u *ChannelUpdate) ClearEndpoints() *ChannelUpdate {
 	return _u
 }
 
+// SetClientRestriction sets the "client_restriction" field.
+func (_u *ChannelUpdate) SetClientRestriction(v channel.ClientRestriction) *ChannelUpdate {
+	_u.mutation.SetClientRestriction(v)
+	return _u
+}
+
+// SetNillableClientRestriction sets the "client_restriction" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillableClientRestriction(v *channel.ClientRestriction) *ChannelUpdate {
+	if v != nil {
+		_u.SetClientRestriction(*v)
+	}
+	return _u
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (_u *ChannelUpdate) ClearClientRestriction() *ChannelUpdate {
+	_u.mutation.ClearClientRestriction()
+	return _u
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (_u *ChannelUpdate) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelUpdate {
+	_u.mutation.SetAutoDisableConfig(v)
+	return _u
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (_u *ChannelUpdate) ClearAutoDisableConfig() *ChannelUpdate {
+	_u.mutation.ClearAutoDisableConfig()
+	return _u
+}
+
 // SetVisibility sets the "visibility" field.
 func (_u *ChannelUpdate) SetVisibility(v channel.Visibility) *ChannelUpdate {
 	_u.mutation.SetVisibility(v)
@@ -698,6 +730,11 @@ func (_u *ChannelUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Channel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ClientRestriction(); ok {
+		if err := channel.ClientRestrictionValidator(v); err != nil {
+			return &ValidationError{Name: "client_restriction", err: fmt.Errorf(`ent: validator failed for field "Channel.client_restriction": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Visibility(); ok {
 		if err := channel.VisibilityValidator(v); err != nil {
 			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
@@ -844,6 +881,18 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.EndpointsCleared() {
 		_spec.ClearField(channel.FieldEndpoints, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ClientRestriction(); ok {
+		_spec.SetField(channel.FieldClientRestriction, field.TypeEnum, value)
+	}
+	if _u.mutation.ClientRestrictionCleared() {
+		_spec.ClearField(channel.FieldClientRestriction, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.AutoDisableConfig(); ok {
+		_spec.SetField(channel.FieldAutoDisableConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.AutoDisableConfigCleared() {
+		_spec.ClearField(channel.FieldAutoDisableConfig, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.Visibility(); ok {
 		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)
@@ -1508,6 +1557,38 @@ func (_u *ChannelUpdateOne) ClearEndpoints() *ChannelUpdateOne {
 	return _u
 }
 
+// SetClientRestriction sets the "client_restriction" field.
+func (_u *ChannelUpdateOne) SetClientRestriction(v channel.ClientRestriction) *ChannelUpdateOne {
+	_u.mutation.SetClientRestriction(v)
+	return _u
+}
+
+// SetNillableClientRestriction sets the "client_restriction" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillableClientRestriction(v *channel.ClientRestriction) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetClientRestriction(*v)
+	}
+	return _u
+}
+
+// ClearClientRestriction clears the value of the "client_restriction" field.
+func (_u *ChannelUpdateOne) ClearClientRestriction() *ChannelUpdateOne {
+	_u.mutation.ClearClientRestriction()
+	return _u
+}
+
+// SetAutoDisableConfig sets the "auto_disable_config" field.
+func (_u *ChannelUpdateOne) SetAutoDisableConfig(v *objects.ChannelAutoDisableConfig) *ChannelUpdateOne {
+	_u.mutation.SetAutoDisableConfig(v)
+	return _u
+}
+
+// ClearAutoDisableConfig clears the value of the "auto_disable_config" field.
+func (_u *ChannelUpdateOne) ClearAutoDisableConfig() *ChannelUpdateOne {
+	_u.mutation.ClearAutoDisableConfig()
+	return _u
+}
+
 // SetVisibility sets the "visibility" field.
 func (_u *ChannelUpdateOne) SetVisibility(v channel.Visibility) *ChannelUpdateOne {
 	_u.mutation.SetVisibility(v)
@@ -1853,6 +1934,11 @@ func (_u *ChannelUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Channel.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ClientRestriction(); ok {
+		if err := channel.ClientRestrictionValidator(v); err != nil {
+			return &ValidationError{Name: "client_restriction", err: fmt.Errorf(`ent: validator failed for field "Channel.client_restriction": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Visibility(); ok {
 		if err := channel.VisibilityValidator(v); err != nil {
 			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
@@ -2016,6 +2102,18 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 	}
 	if _u.mutation.EndpointsCleared() {
 		_spec.ClearField(channel.FieldEndpoints, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ClientRestriction(); ok {
+		_spec.SetField(channel.FieldClientRestriction, field.TypeEnum, value)
+	}
+	if _u.mutation.ClientRestrictionCleared() {
+		_spec.ClearField(channel.FieldClientRestriction, field.TypeEnum)
+	}
+	if value, ok := _u.mutation.AutoDisableConfig(); ok {
+		_spec.SetField(channel.FieldAutoDisableConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.AutoDisableConfigCleared() {
+		_spec.ClearField(channel.FieldAutoDisableConfig, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.Visibility(); ok {
 		_spec.SetField(channel.FieldVisibility, field.TypeEnum, value)

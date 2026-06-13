@@ -253,7 +253,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "Channel",
-		Fields: make([]*Field, 23),
+		Fields: make([]*Field, 25),
 		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
@@ -417,10 +417,26 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "endpoints",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.OwnerID); err != nil {
+	if buf, err = json.Marshal(_m.ClientRestriction); err != nil {
 		return nil, err
 	}
 	node.Fields[20] = &Field{
+		Type:  "channel.ClientRestriction",
+		Name:  "client_restriction",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AutoDisableConfig); err != nil {
+		return nil, err
+	}
+	node.Fields[21] = &Field{
+		Type:  "*objects.ChannelAutoDisableConfig",
+		Name:  "auto_disable_config",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.OwnerID); err != nil {
+		return nil, err
+	}
+	node.Fields[22] = &Field{
 		Type:  "int",
 		Name:  "owner_id",
 		Value: string(buf),
@@ -428,7 +444,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Visibility); err != nil {
 		return nil, err
 	}
-	node.Fields[21] = &Field{
+	node.Fields[23] = &Field{
 		Type:  "channel.Visibility",
 		Name:  "visibility",
 		Value: string(buf),
@@ -436,7 +452,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.SharedWith); err != nil {
 		return nil, err
 	}
-	node.Fields[22] = &Field{
+	node.Fields[24] = &Field{
 		Type:  "[]int",
 		Name:  "shared_with",
 		Value: string(buf),

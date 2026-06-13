@@ -815,6 +815,46 @@ func EndpointsNotNil() predicate.Channel {
 	return predicate.Channel(sql.FieldNotNull(FieldEndpoints))
 }
 
+// ClientRestrictionEQ applies the EQ predicate on the "client_restriction" field.
+func ClientRestrictionEQ(v ClientRestriction) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldClientRestriction, v))
+}
+
+// ClientRestrictionNEQ applies the NEQ predicate on the "client_restriction" field.
+func ClientRestrictionNEQ(v ClientRestriction) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldClientRestriction, v))
+}
+
+// ClientRestrictionIn applies the In predicate on the "client_restriction" field.
+func ClientRestrictionIn(vs ...ClientRestriction) predicate.Channel {
+	return predicate.Channel(sql.FieldIn(FieldClientRestriction, vs...))
+}
+
+// ClientRestrictionNotIn applies the NotIn predicate on the "client_restriction" field.
+func ClientRestrictionNotIn(vs ...ClientRestriction) predicate.Channel {
+	return predicate.Channel(sql.FieldNotIn(FieldClientRestriction, vs...))
+}
+
+// ClientRestrictionIsNil applies the IsNil predicate on the "client_restriction" field.
+func ClientRestrictionIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldClientRestriction))
+}
+
+// ClientRestrictionNotNil applies the NotNil predicate on the "client_restriction" field.
+func ClientRestrictionNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldClientRestriction))
+}
+
+// AutoDisableConfigIsNil applies the IsNil predicate on the "auto_disable_config" field.
+func AutoDisableConfigIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldAutoDisableConfig))
+}
+
+// AutoDisableConfigNotNil applies the NotNil predicate on the "auto_disable_config" field.
+func AutoDisableConfigNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldAutoDisableConfig))
+}
+
 // OwnerIDEQ applies the EQ predicate on the "owner_id" field.
 func OwnerIDEQ(v int) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldOwnerID, v))

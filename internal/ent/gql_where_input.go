@@ -985,6 +985,14 @@ type ChannelWhereInput struct {
 	RemarkEqualFold    *string  `json:"remarkEqualFold,omitempty"`
 	RemarkContainsFold *string  `json:"remarkContainsFold,omitempty"`
 
+	// "client_restriction" field predicates.
+	ClientRestriction       *channel.ClientRestriction  `json:"clientRestriction,omitempty"`
+	ClientRestrictionNEQ    *channel.ClientRestriction  `json:"clientRestrictionNEQ,omitempty"`
+	ClientRestrictionIn     []channel.ClientRestriction `json:"clientRestrictionIn,omitempty"`
+	ClientRestrictionNotIn  []channel.ClientRestriction `json:"clientRestrictionNotIn,omitempty"`
+	ClientRestrictionIsNil  bool                        `json:"clientRestrictionIsNil,omitempty"`
+	ClientRestrictionNotNil bool                        `json:"clientRestrictionNotNil,omitempty"`
+
 	// "owner_id" field predicates.
 	OwnerID       *int  `json:"ownerID,omitempty"`
 	OwnerIDNEQ    *int  `json:"ownerIDNEQ,omitempty"`
@@ -1486,6 +1494,24 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 	}
 	if i.RemarkContainsFold != nil {
 		predicates = append(predicates, channel.RemarkContainsFold(*i.RemarkContainsFold))
+	}
+	if i.ClientRestriction != nil {
+		predicates = append(predicates, channel.ClientRestrictionEQ(*i.ClientRestriction))
+	}
+	if i.ClientRestrictionNEQ != nil {
+		predicates = append(predicates, channel.ClientRestrictionNEQ(*i.ClientRestrictionNEQ))
+	}
+	if len(i.ClientRestrictionIn) > 0 {
+		predicates = append(predicates, channel.ClientRestrictionIn(i.ClientRestrictionIn...))
+	}
+	if len(i.ClientRestrictionNotIn) > 0 {
+		predicates = append(predicates, channel.ClientRestrictionNotIn(i.ClientRestrictionNotIn...))
+	}
+	if i.ClientRestrictionIsNil {
+		predicates = append(predicates, channel.ClientRestrictionIsNil())
+	}
+	if i.ClientRestrictionNotNil {
+		predicates = append(predicates, channel.ClientRestrictionNotNil())
 	}
 	if i.OwnerID != nil {
 		predicates = append(predicates, channel.OwnerIDEQ(*i.OwnerID))
