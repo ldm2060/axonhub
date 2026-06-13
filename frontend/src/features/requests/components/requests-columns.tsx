@@ -101,17 +101,6 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
     ...(options?.showOwnershipColumns
       ? ([
           {
-            id: 'project',
-            accessorFn: (row) => row.project?.name || '',
-            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.project')} />,
-            enableSorting: false,
-            enableHiding: true,
-            cell: ({ row }) => {
-              const projectName = row.original.project?.name;
-              return <div className='px-2 text-sm font-medium'>{projectName || '-'}</div>;
-            },
-          },
-          {
             id: 'requestUser',
             accessorFn: (row) => formatUserName(row.apiKey?.user),
             header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
