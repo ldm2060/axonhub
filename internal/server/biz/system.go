@@ -368,7 +368,23 @@ type RetryPolicy struct {
 
 	// UpstreamErrorPolicy controls how provider errors are exposed to API users.
 	UpstreamErrorPolicy UpstreamErrorPolicy `json:"upstream_error_policy"`
+
+	// ClientRestriction defines the global client access restriction level
+	// Only applies to coding channels (claudecode, codex, etc.)
+	ClientRestriction ClientRestrictionLevel `json:"client_restriction"`
 }
+
+// ClientRestrictionLevel defines the level of client access restriction
+type ClientRestrictionLevel string
+
+const (
+	// ClientRestrictionOff disables client restriction checks
+	ClientRestrictionOff ClientRestrictionLevel = "off"
+	// ClientRestrictionLenient allows any supported coding agent client
+	ClientRestrictionLenient ClientRestrictionLevel = "lenient"
+	// ClientRestrictionStrict allows only same-family clients
+	ClientRestrictionStrict ClientRestrictionLevel = "strict"
+)
 
 type UpstreamErrorPolicy struct {
 	// Mode controls whether provider errors are passed through, hidden, or replaced with a custom message.
@@ -1095,6 +1111,18 @@ func normalizeRetryPolicy(policy *RetryPolicy) {
 	if policy.UpstreamErrorPolicy.Mode == UpstreamErrorModeCustom &&
 		strings.TrimSpace(policy.UpstreamErrorPolicy.CustomMessage) == "" {
 		policy.UpstreamErrorPolicy.Mode = UpstreamErrorModeHidden
+	}
+
+	// Validate and default ClientRestriction
+	switch policy.ClientRestriction {
+	case ClientRestrictionOff, ClientRestrictionLenient, ClientRestrictionStrict:
+		// Valid value, no change needed
+	case "":
+		// Default to off
+		policy.ClientRestriction = ClientRestrictionOff
+	default:
+		// Invalid value, default to off
+		policy.ClientRestriction = ClientRestrictionOff
 	}
 }
 

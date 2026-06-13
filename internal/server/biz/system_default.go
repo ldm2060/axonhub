@@ -28,6 +28,7 @@ var defaultRetryPolicy = RetryPolicy{
 	UpstreamErrorPolicy: UpstreamErrorPolicy{
 		Mode: UpstreamErrorModePassthrough,
 	},
+	ClientRestriction: ClientRestrictionOff,
 }
 
 var defaultModelSettings = SystemModelSettings{
