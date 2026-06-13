@@ -1626,6 +1626,7 @@ type ComplexityRoot struct {
 
 	RetryPolicy struct {
 		AutoDisableChannel              func(childComplexity int) int
+		ClientRestriction               func(childComplexity int) int
 		EmptyResponseDetection          func(childComplexity int) int
 		Enabled                         func(childComplexity int) int
 		LoadBalancerStrategy            func(childComplexity int) int
@@ -9992,6 +9993,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.RetryPolicy.AutoDisableChannel(childComplexity), true
+	case "RetryPolicy.clientRestriction":
+		if e.complexity.RetryPolicy.ClientRestriction == nil {
+			break
+		}
+
+		return e.complexity.RetryPolicy.ClientRestriction(childComplexity), true
 	case "RetryPolicy.emptyResponseDetection":
 		if e.complexity.RetryPolicy.EmptyResponseDetection == nil {
 			break
@@ -48938,6 +48945,8 @@ func (ec *executionContext) fieldContext_Query_retryPolicy(_ context.Context, fi
 				return ec.fieldContext_RetryPolicy_emptyResponseDetection(ctx, field)
 			case "upstreamErrorPolicy":
 				return ec.fieldContext_RetryPolicy_upstreamErrorPolicy(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_RetryPolicy_clientRestriction(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RetryPolicy", field.Name)
 		},
@@ -55390,6 +55399,35 @@ func (ec *executionContext) fieldContext_RetryPolicy_upstreamErrorPolicy(_ conte
 				return ec.fieldContext_UpstreamErrorPolicy_customMessage(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UpstreamErrorPolicy", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RetryPolicy_clientRestriction(ctx context.Context, field graphql.CollectedField, obj *biz.RetryPolicy) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RetryPolicy_clientRestriction,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientRestriction, nil
+		},
+		nil,
+		ec.marshalNClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RetryPolicy_clientRestriction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RetryPolicy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ClientRestrictionLevel does not have child fields")
 		},
 	}
 	return fc, nil
@@ -93788,7 +93826,7 @@ func (ec *executionContext) unmarshalInputUpdateRetryPolicyInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"maxChannelRetries", "maxSingleChannelRetries", "retryDelayMs", "streamFirstEventTimeoutSeconds", "nonStreamResponseTimeoutSeconds", "loadBalancerStrategy", "enabled", "autoDisableChannel", "emptyResponseDetection", "upstreamErrorPolicy"}
+	fieldsInOrder := [...]string{"maxChannelRetries", "maxSingleChannelRetries", "retryDelayMs", "streamFirstEventTimeoutSeconds", "nonStreamResponseTimeoutSeconds", "loadBalancerStrategy", "enabled", "autoDisableChannel", "emptyResponseDetection", "upstreamErrorPolicy", "clientRestriction"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -93865,6 +93903,13 @@ func (ec *executionContext) unmarshalInputUpdateRetryPolicyInput(ctx context.Con
 				return it, err
 			}
 			it.UpstreamErrorPolicy = data
+		case "clientRestriction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestriction"))
+			data, err := ec.unmarshalOClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestriction = data
 		}
 	}
 
@@ -116110,6 +116155,11 @@ func (ec *executionContext) _RetryPolicy(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "clientRestriction":
+			out.Values[i] = ec._RetryPolicy_clientRestriction(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -124529,6 +124579,23 @@ func (ec *executionContext) marshalNClearChannelOverrideTemplatesPayload2ᚖgith
 	return ec._ClearChannelOverrideTemplatesPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, v any) (biz.ClientRestrictionLevel, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := biz.ClientRestrictionLevel(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, sel ast.SelectionSet, v biz.ClientRestrictionLevel) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNCompleteAutoDisableChannelOnboardingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCompleteAutoDisableChannelOnboardingInput(ctx context.Context, v any) (CompleteAutoDisableChannelOnboardingInput, error) {
 	res, err := ec.unmarshalInputCompleteAutoDisableChannelOnboardingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -131662,6 +131729,19 @@ func (ec *executionContext) unmarshalOCleanupOptionInput2ᚕgithubᚗcomᚋldm20
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, v any) (biz.ClientRestrictionLevel, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := biz.ClientRestrictionLevel(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, sel ast.SelectionSet, v biz.ClientRestrictionLevel) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(string(v))
+	return res
 }
 
 func (ec *executionContext) marshalOCostItem2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐCostItemᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.CostItem) graphql.Marshaler {
