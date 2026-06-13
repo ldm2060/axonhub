@@ -302,11 +302,13 @@ type ComplexityRoot struct {
 
 	Channel struct {
 		AllModelEntries         func(childComplexity int) int
+		AutoDisableConfig       func(childComplexity int) int
 		AutoSyncModelPattern    func(childComplexity int) int
 		AutoSyncSupportedModels func(childComplexity int) int
 		BaseURL                 func(childComplexity int) int
 		ChannelModelPrices      func(childComplexity int) int
 		ChannelProbes           func(childComplexity int) int
+		ClientRestriction       func(childComplexity int) int
 		CreatedAt               func(childComplexity int) int
 		Credentials             func(childComplexity int) int
 		DefaultEndpoints        func(childComplexity int) int
@@ -336,6 +338,12 @@ type ComplexityRoot struct {
 		UsageLogs               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
 		UsageMonitorChannels    func(childComplexity int) int
 		Visibility              func(childComplexity int) int
+	}
+
+	ChannelAutoDisableConfig struct {
+		Enabled  func(childComplexity int) int
+		Mode     func(childComplexity int) int
+		Statuses func(childComplexity int) int
 	}
 
 	ChannelAvailability struct {
@@ -3425,6 +3433,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.AllModelEntries(childComplexity), true
+	case "Channel.autoDisableConfig":
+		if e.complexity.Channel.AutoDisableConfig == nil {
+			break
+		}
+
+		return e.complexity.Channel.AutoDisableConfig(childComplexity), true
 	case "Channel.autoSyncModelPattern":
 		if e.complexity.Channel.AutoSyncModelPattern == nil {
 			break
@@ -3455,6 +3469,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.ChannelProbes(childComplexity), true
+	case "Channel.clientRestriction":
+		if e.complexity.Channel.ClientRestriction == nil {
+			break
+		}
+
+		return e.complexity.Channel.ClientRestriction(childComplexity), true
 	case "Channel.createdAt":
 		if e.complexity.Channel.CreatedAt == nil {
 			break
@@ -3644,6 +3664,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.Visibility(childComplexity), true
+
+	case "ChannelAutoDisableConfig.enabled":
+		if e.complexity.ChannelAutoDisableConfig.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelAutoDisableConfig.Enabled(childComplexity), true
+	case "ChannelAutoDisableConfig.mode":
+		if e.complexity.ChannelAutoDisableConfig.Mode == nil {
+			break
+		}
+
+		return e.complexity.ChannelAutoDisableConfig.Mode(childComplexity), true
+	case "ChannelAutoDisableConfig.statuses":
+		if e.complexity.ChannelAutoDisableConfig.Statuses == nil {
+			break
+		}
+
+		return e.complexity.ChannelAutoDisableConfig.Statuses(childComplexity), true
 
 	case "ChannelAvailability.rules":
 		if e.complexity.ChannelAvailability.Rules == nil {
@@ -12478,6 +12517,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBulkImportChannelItem,
 		ec.unmarshalInputBulkImportChannelsInput,
 		ec.unmarshalInputBulkUpdateChannelOrderingInput,
+		ec.unmarshalInputChannelAutoDisableConfigInput,
 		ec.unmarshalInputChannelAvailabilityInput,
 		ec.unmarshalInputChannelAvailabilityRuleInput,
 		ec.unmarshalInputChannelCredentialsInput,
@@ -18884,6 +18924,10 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -19432,7 +19476,7 @@ func (ec *executionContext) _AutoDisableChannel_statuses(ctx context.Context, fi
 			return obj.Statuses, nil
 		},
 		nil,
-		ec.marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatusᚄ,
+		ec.marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ,
 		true,
 		true,
 	)
@@ -19515,7 +19559,7 @@ func (ec *executionContext) fieldContext_AutoDisableChannelOnboarding_completedA
 	return fc, nil
 }
 
-func (ec *executionContext) _AutoDisableChannelStatus_status(ctx context.Context, field graphql.CollectedField, obj *biz.AutoDisableChannelStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _AutoDisableChannelStatus_status(ctx context.Context, field graphql.CollectedField, obj *objects.AutoDisableChannelStatus) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -19544,7 +19588,7 @@ func (ec *executionContext) fieldContext_AutoDisableChannelStatus_status(_ conte
 	return fc, nil
 }
 
-func (ec *executionContext) _AutoDisableChannelStatus_times(ctx context.Context, field graphql.CollectedField, obj *biz.AutoDisableChannelStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _AutoDisableChannelStatus_times(ctx context.Context, field graphql.CollectedField, obj *objects.AutoDisableChannelStatus) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
@@ -19925,6 +19969,10 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -20084,6 +20132,10 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -20715,6 +20767,72 @@ func (ec *executionContext) fieldContext_Channel_endpoints(_ context.Context, fi
 				return ec.fieldContext_ChannelEndpoint_transport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelEndpoint", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_clientRestriction(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_clientRestriction,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientRestriction, nil
+		},
+		nil,
+		ec.marshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_clientRestriction(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ChannelClientRestriction does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_autoDisableConfig(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_autoDisableConfig,
+		func(ctx context.Context) (any, error) {
+			return obj.AutoDisableConfig, nil
+		},
+		nil,
+		ec.marshalOChannelAutoDisableConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAutoDisableConfig,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_autoDisableConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "mode":
+				return ec.fieldContext_ChannelAutoDisableConfig_mode(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelAutoDisableConfig_enabled(ctx, field)
+			case "statuses":
+				return ec.fieldContext_ChannelAutoDisableConfig_statuses(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelAutoDisableConfig", field.Name)
 		},
 	}
 	return fc, nil
@@ -21470,6 +21588,99 @@ func (ec *executionContext) fieldContext_Channel_liveLimiterStats(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelAutoDisableConfig_mode(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAutoDisableConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAutoDisableConfig_mode,
+		func(ctx context.Context) (any, error) {
+			return obj.Mode, nil
+		},
+		nil,
+		ec.marshalNAutoDisableMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableMode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAutoDisableConfig_mode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAutoDisableConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AutoDisableMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAutoDisableConfig_enabled(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAutoDisableConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAutoDisableConfig_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAutoDisableConfig_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAutoDisableConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelAutoDisableConfig_statuses(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAutoDisableConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelAutoDisableConfig_statuses,
+		func(ctx context.Context) (any, error) {
+			return obj.Statuses, nil
+		},
+		nil,
+		ec.marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelAutoDisableConfig_statuses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelAutoDisableConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "status":
+				return ec.fieldContext_AutoDisableChannelStatus_status(ctx, field)
+			case "times":
+				return ec.fieldContext_AutoDisableChannelStatus_times(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AutoDisableChannelStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelAvailability_rules(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelAvailability) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -21959,6 +22170,10 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -22702,6 +22917,10 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -24641,6 +24860,10 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -26334,6 +26557,10 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -32233,6 +32460,10 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -33321,6 +33552,10 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -33434,6 +33669,18 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
 				return ec.fieldContext_Channel_requests(ctx, field)
 			case "executions":
@@ -33446,6 +33693,8 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
 			case "providerQuotaStatus":
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "usageMonitorChannels":
+				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -33537,6 +33786,10 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -33650,6 +33903,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -33763,6 +34020,10 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -33876,6 +34137,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -39824,6 +40089,10 @@ func (ec *executionContext) fieldContext_Mutation_shareChannel(ctx context.Conte
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -39937,6 +40206,10 @@ func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Con
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -45074,6 +45347,10 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -47023,6 +47300,10 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -49694,6 +49975,10 @@ func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Contex
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -52855,6 +53140,10 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -53973,6 +54262,10 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -61488,6 +61781,10 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -62575,6 +62872,10 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -63678,6 +63979,10 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_channel(_ context.C
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -64493,6 +64798,10 @@ func (ec *executionContext) fieldContext_User_ownedChannels(_ context.Context, f
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
 				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
 			case "ownerID":
 				return ec.fieldContext_Channel_ownerID(ctx, field)
 			case "visibility":
@@ -71364,7 +71673,7 @@ func (ec *executionContext) unmarshalInputAutoDisableChannelInput(ctx context.Co
 			it.Enabled = data
 		case "statuses":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
-			data, err := ec.unmarshalOAutoDisableChannelStatusInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatusᚄ(ctx, v)
+			data, err := ec.unmarshalOAutoDisableChannelStatusInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -71375,8 +71684,8 @@ func (ec *executionContext) unmarshalInputAutoDisableChannelInput(ctx context.Co
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputAutoDisableChannelStatusInput(ctx context.Context, obj any) (biz.AutoDisableChannelStatus, error) {
-	var it biz.AutoDisableChannelStatus
+func (ec *executionContext) unmarshalInputAutoDisableChannelStatusInput(ctx context.Context, obj any) (objects.AutoDisableChannelStatus, error) {
+	var it objects.AutoDisableChannelStatus
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -71695,6 +72004,47 @@ func (ec *executionContext) unmarshalInputBulkUpdateChannelOrderingInput(ctx con
 				return it, err
 			}
 			it.Channels = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChannelAutoDisableConfigInput(ctx context.Context, obj any) (objects.ChannelAutoDisableConfig, error) {
+	var it objects.ChannelAutoDisableConfig
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"mode", "enabled", "statuses"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "mode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mode"))
+			data, err := ec.unmarshalNAutoDisableMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableMode(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Mode = data
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "statuses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statuses"))
+			data, err := ec.unmarshalOAutoDisableChannelStatusInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Statuses = data
 		}
 	}
 
@@ -74700,7 +75050,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -75656,6 +76006,48 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.RemarkContainsFold = data
+		case "clientRestriction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestriction"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestriction = data
+		case "clientRestrictionNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestrictionNEQ"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestrictionNEQ = data
+		case "clientRestrictionIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestrictionIn"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestrictionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestrictionIn = data
+		case "clientRestrictionNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestrictionNotIn"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestrictionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestrictionNotIn = data
+		case "clientRestrictionIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestrictionIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestrictionIsNil = data
+		case "clientRestrictionNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestrictionNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestrictionNotNil = data
 		case "ownerID":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
 			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
@@ -91835,7 +92227,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "visibility", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
+	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "clientRestriction", "clearClientRestriction", "autoDisableConfig", "clearAutoDisableConfig", "visibility", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92052,6 +92444,34 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.ClearEndpoints = data
+		case "clientRestriction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestriction"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestriction = data
+		case "clearClientRestriction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearClientRestriction"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearClientRestriction = data
+		case "autoDisableConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableConfig"))
+			data, err := ec.unmarshalOChannelAutoDisableConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAutoDisableConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableConfig = data
+		case "clearAutoDisableConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearAutoDisableConfig"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearAutoDisableConfig = data
 		case "visibility":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
 			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)
@@ -101674,7 +102094,7 @@ func (ec *executionContext) _AutoDisableChannelOnboarding(ctx context.Context, s
 
 var autoDisableChannelStatusImplementors = []string{"AutoDisableChannelStatus"}
 
-func (ec *executionContext) _AutoDisableChannelStatus(ctx context.Context, sel ast.SelectionSet, obj *biz.AutoDisableChannelStatus) graphql.Marshaler {
+func (ec *executionContext) _AutoDisableChannelStatus(ctx context.Context, sel ast.SelectionSet, obj *objects.AutoDisableChannelStatus) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, autoDisableChannelStatusImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -102076,6 +102496,10 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Channel_remark(ctx, field, obj)
 		case "endpoints":
 			out.Values[i] = ec._Channel_endpoints(ctx, field, obj)
+		case "clientRestriction":
+			out.Values[i] = ec._Channel_clientRestriction(ctx, field, obj)
+		case "autoDisableConfig":
+			out.Values[i] = ec._Channel_autoDisableConfig(ctx, field, obj)
 		case "ownerID":
 			field := field
 
@@ -102560,6 +102984,55 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelAutoDisableConfigImplementors = []string{"ChannelAutoDisableConfig"}
+
+func (ec *executionContext) _ChannelAutoDisableConfig(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelAutoDisableConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelAutoDisableConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelAutoDisableConfig")
+		case "mode":
+			out.Values[i] = ec._ChannelAutoDisableConfig_mode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enabled":
+			out.Values[i] = ec._ChannelAutoDisableConfig_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "statuses":
+			out.Values[i] = ec._ChannelAutoDisableConfig_statuses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -122858,11 +123331,11 @@ func (ec *executionContext) marshalNAutoDisableChannel2githubᚗcomᚋldm2060ᚋ
 	return ec._AutoDisableChannel(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAutoDisableChannelStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatus(ctx context.Context, sel ast.SelectionSet, v biz.AutoDisableChannelStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNAutoDisableChannelStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatus(ctx context.Context, sel ast.SelectionSet, v objects.AutoDisableChannelStatus) graphql.Marshaler {
 	return ec._AutoDisableChannelStatus(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.AutoDisableChannelStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.AutoDisableChannelStatus) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -122886,7 +123359,7 @@ func (ec *executionContext) marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋl
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAutoDisableChannelStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNAutoDisableChannelStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -122906,9 +123379,26 @@ func (ec *executionContext) marshalNAutoDisableChannelStatus2ᚕgithubᚗcomᚋl
 	return ret
 }
 
-func (ec *executionContext) unmarshalNAutoDisableChannelStatusInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatus(ctx context.Context, v any) (biz.AutoDisableChannelStatus, error) {
+func (ec *executionContext) unmarshalNAutoDisableChannelStatusInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatus(ctx context.Context, v any) (objects.AutoDisableChannelStatus, error) {
 	res, err := ec.unmarshalInputAutoDisableChannelStatusInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAutoDisableMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableMode(ctx context.Context, v any) (objects.AutoDisableMode, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := objects.AutoDisableMode(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAutoDisableMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableMode(ctx context.Context, sel ast.SelectionSet, v objects.AutoDisableMode) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNAutoSyncFrequency2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoSyncFrequency(ctx context.Context, v any) (biz.AutoSyncFrequency, error) {
@@ -123208,6 +123698,16 @@ func (ec *executionContext) marshalNChannelAvailabilityRuleType2githubᚗcomᚋl
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNChannelClientRestriction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx context.Context, v any) (channel.ClientRestriction, error) {
+	var res channel.ClientRestriction
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannelClientRestriction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx context.Context, sel ast.SelectionSet, v channel.ClientRestriction) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNChannelConnection2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelConnection(ctx context.Context, sel ast.SelectionSet, v ent.ChannelConnection) graphql.Marshaler {
@@ -129872,17 +130372,17 @@ func (ec *executionContext) marshalOAutoDisableChannelOnboarding2ᚖgithubᚗcom
 	return ec._AutoDisableChannelOnboarding(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAutoDisableChannelStatusInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatusᚄ(ctx context.Context, v any) ([]biz.AutoDisableChannelStatus, error) {
+func (ec *executionContext) unmarshalOAutoDisableChannelStatusInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatusᚄ(ctx context.Context, v any) ([]objects.AutoDisableChannelStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
 	var vSlice []any
 	vSlice = graphql.CoerceList(v)
 	var err error
-	res := make([]biz.AutoDisableChannelStatus, len(vSlice))
+	res := make([]objects.AutoDisableChannelStatus, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNAutoDisableChannelStatusInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐAutoDisableChannelStatus(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNAutoDisableChannelStatusInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAutoDisableChannelStatus(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -130006,6 +130506,21 @@ func (ec *executionContext) marshalOChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhub�
 	return ec._Channel(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOChannelAutoDisableConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAutoDisableConfig(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelAutoDisableConfig) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChannelAutoDisableConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOChannelAutoDisableConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAutoDisableConfig(ctx context.Context, v any) (*objects.ChannelAutoDisableConfig, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChannelAutoDisableConfigInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalOChannelAvailability2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAvailability(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelAvailability) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -130019,6 +130534,87 @@ func (ec *executionContext) unmarshalOChannelAvailabilityInput2ᚖgithubᚗcom�
 	}
 	res, err := ec.unmarshalInputChannelAvailabilityInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChannelClientRestriction2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestrictionᚄ(ctx context.Context, v any) ([]channel.ClientRestriction, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]channel.ClientRestriction, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelClientRestriction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOChannelClientRestriction2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestrictionᚄ(ctx context.Context, sel ast.SelectionSet, v []channel.ClientRestriction) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelClientRestriction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx context.Context, v any) (*channel.ClientRestriction, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(channel.ClientRestriction)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx context.Context, sel ast.SelectionSet, v *channel.ClientRestriction) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOChannelCredentials2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelCredentials(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelCredentials) graphql.Marshaler {

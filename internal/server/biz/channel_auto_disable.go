@@ -96,8 +96,15 @@ func (svc *ChannelService) markChannelUnavailable(ctx context.Context, channelID
 }
 
 // checkAndHandleChannelError checks if the channel should be disabled based on the error status code.
-func (svc *ChannelService) checkAndHandleChannelError(ctx context.Context, perf *PerformanceRecord, policy *RetryPolicy) bool {
-	for _, statusConfig := range policy.AutoDisableChannel.Statuses {
+func (svc *ChannelService) checkAndHandleChannelError(ctx context.Context, perf *PerformanceRecord, channel *Channel, policy *RetryPolicy) bool {
+	// Resolve channel's auto-disable configuration
+	enabled, statuses := ResolveChannelAutoDisableConfig(channel.Channel, policy)
+
+	if !enabled {
+		return false // Auto-disable disabled for this channel
+	}
+
+	for _, statusConfig := range statuses {
 		if statusConfig.Status != perf.ResponseStatusCode {
 			continue
 		}
@@ -127,8 +134,15 @@ func (svc *ChannelService) checkAndHandleChannelError(ctx context.Context, perf 
 
 // checkAndHandleAPIKeyError checks if the API key should be disabled based on the error status code.
 // Returns true if the API key was disabled.
-func (svc *ChannelService) checkAndHandleAPIKeyError(ctx context.Context, perf *PerformanceRecord, policy *RetryPolicy) bool {
-	for _, statusConfig := range policy.AutoDisableChannel.Statuses {
+func (svc *ChannelService) checkAndHandleAPIKeyError(ctx context.Context, perf *PerformanceRecord, channel *Channel, policy *RetryPolicy) bool {
+	// Resolve channel's auto-disable configuration
+	enabled, statuses := ResolveChannelAutoDisableConfig(channel.Channel, policy)
+
+	if !enabled {
+		return false // Auto-disable disabled for this channel
+	}
+
+	for _, statusConfig := range statuses {
 		if statusConfig.Status != perf.ResponseStatusCode {
 			continue
 		}

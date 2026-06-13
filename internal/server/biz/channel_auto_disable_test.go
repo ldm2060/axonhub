@@ -219,7 +219,10 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 				tt.setupFunc()
 			}
 
-			result := svc.checkAndHandleAPIKeyError(ctx, tt.perf, tt.policy)
+			// Wrap the ent.Channel in a biz.Channel
+			bizChannel := &Channel{Channel: ch}
+
+			result := svc.checkAndHandleAPIKeyError(ctx, tt.perf, bizChannel, tt.policy)
 			require.Equal(t, tt.expectedDisabled, result)
 
 			if tt.expectedDisabled {
@@ -322,7 +325,10 @@ func TestChannelService_checkAndHandleChannelError(t *testing.T) {
 				tt.setupFunc()
 			}
 
-			result := svc.checkAndHandleChannelError(ctx, tt.perf, tt.policy)
+			// Wrap the ent.Channel in a biz.Channel
+			bizChannel := &Channel{Channel: ch}
+
+			result := svc.checkAndHandleChannelError(ctx, tt.perf, bizChannel, tt.policy)
 			require.Equal(t, tt.expectedDisabled, result)
 
 			if tt.expectedDisabled {
@@ -486,7 +492,10 @@ func TestChannelService_MultipleStatusCodes(t *testing.T) {
 		Success:            false,
 	}
 
-	result := svc.checkAndHandleAPIKeyError(ctx, perf401, policy)
+	// Wrap the ent.Channel in a biz.Channel
+	bizChannel := &Channel{Channel: ch}
+
+	result := svc.checkAndHandleAPIKeyError(ctx, perf401, bizChannel, policy)
 	require.True(t, result)
 
 	// Reset for 403 test
@@ -505,7 +514,7 @@ func TestChannelService_MultipleStatusCodes(t *testing.T) {
 		Success:            false,
 	}
 
-	result = svc.checkAndHandleAPIKeyError(ctx, perf403, policy)
+	result = svc.checkAndHandleAPIKeyError(ctx, perf403, bizChannel, policy)
 	require.True(t, result)
 
 	// Verify key2 is disabled
@@ -541,6 +550,9 @@ func TestChannelService_ConcurrentErrorTracking(t *testing.T) {
 
 	numGoroutines := 10
 
+	// Wrap the ent.Channel in a biz.Channel
+	bizChannel := &Channel{Channel: ch}
+
 	for i := range numGoroutines {
 		wg.Add(1)
 
@@ -553,7 +565,7 @@ func TestChannelService_ConcurrentErrorTracking(t *testing.T) {
 				ResponseStatusCode: 401,
 				Success:            false,
 			}
-			svc.checkAndHandleAPIKeyError(ctx, perf, policy)
+			svc.checkAndHandleAPIKeyError(ctx, perf, bizChannel, policy)
 		}(i)
 	}
 

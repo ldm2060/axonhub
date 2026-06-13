@@ -68,6 +68,24 @@ type AutoDisableChannel {
   statuses: [AutoDisableChannelStatus!]!
 }
 
+enum AutoDisableMode {
+  INHERIT_GLOBAL
+  DISABLED
+  CUSTOM
+}
+
+type ChannelAutoDisableConfig {
+  mode: AutoDisableMode!
+  enabled: Boolean!
+  statuses: [AutoDisableChannelStatus!]!
+}
+
+input ChannelAutoDisableConfigInput {
+  mode: AutoDisableMode!
+  enabled: Boolean
+  statuses: [AutoDisableChannelStatusInput!]
+}
+
 type AutoDisableAPIKeyStatus {
   status: Int!
   times: Int!

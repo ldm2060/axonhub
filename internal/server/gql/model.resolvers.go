@@ -9,12 +9,12 @@ import (
 	"context"
 	"fmt"
 
-		"github.com/ldm2060/axonhub/internal/authz"
-		"github.com/ldm2060/axonhub/internal/ent"
-		"github.com/ldm2060/axonhub/internal/ent/model"
-		"github.com/ldm2060/axonhub/internal/objects"
-		"github.com/ldm2060/axonhub/internal/scopes"
-		"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/scopes"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/samber/lo"
 )
 

@@ -325,14 +325,23 @@ func (svc *ChannelService) RecordPerformance(ctx context.Context, perf *Performa
 		policy := svc.SystemService.RetryPolicyOrDefault(ctx)
 
 		if policy.AutoDisableChannel.Enabled {
-			// Check API key error first if available.
-			if perf.APIKey != "" {
-				if svc.checkAndHandleAPIKeyError(ctx, perf, policy) {
-					return
-				}
+			// Retrieve channel to resolve its auto-disable configuration
+			channel, err := svc.GetChannel(ctx, perf.ChannelID)
+			if err != nil {
+				log.Warn(ctx, "Failed to get channel for auto-disable check, skipping",
+					log.Int("channel_id", perf.ChannelID),
+					log.Cause(err),
+				)
 			} else {
-				if svc.checkAndHandleChannelError(ctx, perf, policy) {
-					return
+				// Check API key error first if available.
+				if perf.APIKey != "" {
+					if svc.checkAndHandleAPIKeyError(ctx, perf, channel, policy) {
+						return
+					}
+				} else {
+					if svc.checkAndHandleChannelError(ctx, perf, channel, policy) {
+						return
+					}
 				}
 			}
 		}
