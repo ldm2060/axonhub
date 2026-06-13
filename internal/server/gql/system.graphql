@@ -74,6 +74,12 @@ enum AutoDisableMode {
   CUSTOM
 }
 
+enum ClientRestrictionLevel {
+  OFF
+  LENIENT
+  STRICT
+}
+
 type ChannelAutoDisableConfig {
   mode: AutoDisableMode!
   enabled: Boolean!
@@ -147,6 +153,7 @@ type RetryPolicy {
   autoDisableChannel: AutoDisableChannel!
   emptyResponseDetection: Boolean!
   upstreamErrorPolicy: UpstreamErrorPolicy!
+  clientRestriction: ClientRestrictionLevel!
 }
 
 type UpstreamErrorPolicy {
@@ -180,6 +187,7 @@ input UpdateRetryPolicyInput {
   autoDisableChannel: AutoDisableChannelInput
   emptyResponseDetection: Boolean
   upstreamErrorPolicy: UpstreamErrorPolicyInput
+  clientRestriction: ClientRestrictionLevel
 }
 
 enum QuotaEnforcementMode {

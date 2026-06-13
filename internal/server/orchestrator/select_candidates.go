@@ -69,6 +69,7 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 
 		selector = WithStreamPolicySelector(selector)
 		selector = WithAvailabilitySelector(selector, systemService)
+		selector = WithClientRestrictionSelector(selector, inbound.state.RetryPolicyProvider)
 
 		quotaSelector := WithProviderQuotaSelector(selector, quotaProvider, systemService)
 		selector = quotaSelector

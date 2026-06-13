@@ -1646,6 +1646,14 @@ input CreateChannelInput {
   Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type.
   """
   endpoints: [ChannelEndpointInput!]
+  """
+  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  """
+  clientRestriction: ChannelClientRestriction
+  """
+  Channel-level auto-disable configuration. nil = inherit global settings.
+  """
+  autoDisableConfig: ChannelAutoDisableConfigInput
   visibility: ChannelVisibility
   usageMonitorChannelIDs: [ID!]
 }
