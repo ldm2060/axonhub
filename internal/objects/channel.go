@@ -416,3 +416,32 @@ func SerializeOverrideOperations(ops []OverrideOperation) (string, error) {
 
 	return string(data), nil
 }
+
+// AutoDisableChannelStatus defines a status code and occurrence threshold for auto-disabling channels.
+type AutoDisableChannelStatus struct {
+	// Status is the HTTP status code to trigger auto-disable.
+	Status int `json:"status"`
+
+	// Times is the number of times the status code occurs before auto-disable the channel.
+	Times int `json:"times"`
+}
+
+// AutoDisableMode defines the mode for channel-level auto-disable configuration
+type AutoDisableMode string
+
+const (
+	// AutoDisableModeInheritGlobal inherits global auto-disable settings
+	AutoDisableModeInheritGlobal AutoDisableMode = "inherit_global"
+	// AutoDisableModeDisabled explicitly disables auto-disable for this channel
+	AutoDisableModeDisabled AutoDisableMode = "disabled"
+	// AutoDisableModeCustom uses channel-specific auto-disable rules
+	AutoDisableModeCustom AutoDisableMode = "custom"
+)
+
+// ChannelAutoDisableConfig defines channel-level auto-disable configuration
+type ChannelAutoDisableConfig struct {
+	Mode AutoDisableMode `json:"mode"`
+	// Enabled and Statuses are only used when Mode is Custom
+	Enabled  bool                       `json:"enabled,omitempty"`
+	Statuses []AutoDisableChannelStatus `json:"statuses,omitempty"`
+}

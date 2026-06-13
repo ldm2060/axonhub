@@ -218,13 +218,13 @@ models:
       - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannel
   AutoDisableChannelStatus:
     model:
-      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannelStatus
+      - github.com/ldm2060/axonhub/internal/objects.AutoDisableChannelStatus
   AutoDisableChannelInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannel
   AutoDisableChannelStatusInput:
     model:
-      - github.com/ldm2060/axonhub/internal/server/biz.AutoDisableChannelStatus
+      - github.com/ldm2060/axonhub/internal/objects.AutoDisableChannelStatus
   UpstreamErrorPolicy:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.UpstreamErrorPolicy

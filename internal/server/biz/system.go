@@ -399,15 +399,7 @@ type AutoDisableChannel struct {
 	Enabled bool `json:"enabled"`
 
 	// Statuses defines the status codes and times to auto-disable a channel
-	Statuses []AutoDisableChannelStatus `json:"statuses"`
-}
-
-type AutoDisableChannelStatus struct {
-	// Status is the HTTP status code to trigger auto-disable.
-	Status int `json:"status"`
-
-	// Times is the number of times the status code occurs before auto-disable the channel.
-	Times int `json:"times"`
+	Statuses []objects.AutoDisableChannelStatus `json:"statuses"`
 }
 
 type WebhookNotifierConfig struct {
@@ -1099,7 +1091,7 @@ func normalizeRetryPolicy(policy *RetryPolicy) {
 	}
 
 	if policy.AutoDisableChannel.Statuses == nil {
-		policy.AutoDisableChannel.Statuses = []AutoDisableChannelStatus{}
+		policy.AutoDisableChannel.Statuses = []objects.AutoDisableChannelStatus{}
 	}
 
 	switch policy.UpstreamErrorPolicy.Mode {

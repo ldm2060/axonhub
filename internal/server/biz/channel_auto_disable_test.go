@@ -95,7 +95,7 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 3},
 					},
 				},
@@ -116,7 +116,7 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 3},
 					},
 				},
@@ -139,7 +139,7 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 3},
 					},
 				},
@@ -170,7 +170,7 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 3},
 					},
 				},
@@ -193,7 +193,7 @@ func TestChannelService_checkAndHandleAPIKeyError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 3},
 					},
 				},
@@ -264,7 +264,7 @@ func TestChannelService_checkAndHandleChannelError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 2},
 					},
 				},
@@ -290,7 +290,7 @@ func TestChannelService_checkAndHandleChannelError(t *testing.T) {
 			policy: &RetryPolicy{
 				AutoDisableChannel: AutoDisableChannel{
 					Enabled: true,
-					Statuses: []AutoDisableChannelStatus{
+					Statuses: []objects.AutoDisableChannelStatus{
 						{Status: 401, Times: 2},
 					},
 				},
@@ -467,7 +467,7 @@ func TestChannelService_MultipleStatusCodes(t *testing.T) {
 	policy := &RetryPolicy{
 		AutoDisableChannel: AutoDisableChannel{
 			Enabled: true,
-			Statuses: []AutoDisableChannelStatus{
+			Statuses: []objects.AutoDisableChannelStatus{
 				{Status: 401, Times: 2},
 				{Status: 403, Times: 1},
 			},
@@ -530,7 +530,7 @@ func TestChannelService_ConcurrentErrorTracking(t *testing.T) {
 	policy := &RetryPolicy{
 		AutoDisableChannel: AutoDisableChannel{
 			Enabled: true,
-			Statuses: []AutoDisableChannelStatus{
+			Statuses: []objects.AutoDisableChannelStatus{
 				{Status: 401, Times: 5},
 			},
 		},
