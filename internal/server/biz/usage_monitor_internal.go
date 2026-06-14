@@ -75,22 +75,33 @@ func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReady(ctx context.C
 	case channel.QuotaMultiMonitorStrategyAll:
 		// Disable if ALL monitors are not ready
 		allNotReady := true
+		var firstNotReady *ent.UsageMonitorChannel
 		for _, m := range monitors {
 			// Handle nullable QuotaReady field safely
 			if m.QuotaReady != nil && *m.QuotaReady {
 				allNotReady = false
 				break
+			} else if firstNotReady == nil {
+				firstNotReady = m
 			}
 		}
 		if allNotReady {
 			ready = false
-			errorMsg = buildErrorMessage(monitors[0])
+			if firstNotReady != nil {
+				errorMsg = buildErrorMessage(firstNotReady)
+			} else if len(monitors) > 0 {
+				errorMsg = buildErrorMessage(monitors[0])
+			}
 		} else {
 			ready = true
 		}
 
 	default:
 		// Unknown strategy - default to ready
+		log.Warn(ctx, "Unknown multi-monitor strategy, defaulting to ready",
+			log.Int("channel_id", channelID),
+			log.String("strategy", string(*strategy)),
+		)
 		ready = true
 	}
 
