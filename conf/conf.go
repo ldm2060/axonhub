@@ -105,17 +105,6 @@ func Load() (Config, error) {
 	config.AllowNoAuth = config.APIServer.API.Auth.AllowNoAuth
 	config.APIKeyPrefix = config.APIServer.API.Auth.KeyPrefix
 
-	// Apply default values for QuotaChannelBinding if not set
-	if config.QuotaChannelBinding.DefaultDisableThreshold == 0 {
-		config.QuotaChannelBinding.DefaultDisableThreshold = 1.0
-	}
-	if config.QuotaChannelBinding.DefaultEnableThreshold == 0 {
-		config.QuotaChannelBinding.DefaultEnableThreshold = 0.95
-	}
-	if config.QuotaChannelBinding.DefaultMultiMonitorStrategy == "" {
-		config.QuotaChannelBinding.DefaultMultiMonitorStrategy = "any"
-	}
-
 	if config.Cache.Redis.Addr != "" {
 		log.Warn(context.Background(), "Config `cache.redis.addr` Deprecated: Use `cache.redis.addrs` instead.")
 	}
