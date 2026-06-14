@@ -61,6 +61,8 @@ import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
 import { ProxyType } from './channels-proxy-dialog';
 import { CopilotDeviceFlow } from './copilot-device-flow';
 import { ManualModelBadge } from './manual-model-badge';
+import { ChannelClientRestriction } from './channel-client-restriction';
+import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
 
 interface Props {
   currentRow?: Channel;
@@ -2767,6 +2769,42 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           </FormItem>
                         )}
                       />
+
+                      {/* Client Restriction */}
+                      <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <div className='pt-2 md:col-span-2' />
+                        <div className='md:col-span-6'>
+                          <ChannelClientRestriction
+                            channel={currentRow}
+                            onUpdate={(updates) => {
+                              if (updates.clientRestriction !== undefined) {
+                                form.setValue('clientRestriction', updates.clientRestriction);
+                              }
+                              if (updates.clearClientRestriction) {
+                                form.setValue('clientRestriction', null);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Auto-Disable Config */}
+                      <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <div className='pt-2 md:col-span-2' />
+                        <div className='md:col-span-6'>
+                          <ChannelAutoDisableConfig
+                            channel={currentRow}
+                            onUpdate={(updates) => {
+                              if (updates.autoDisableConfig !== undefined) {
+                                form.setValue('autoDisableConfig', updates.autoDisableConfig);
+                              }
+                              if (updates.clearAutoDisableConfig) {
+                                form.setValue('autoDisableConfig', null);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </form>

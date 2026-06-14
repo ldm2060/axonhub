@@ -27,6 +27,7 @@ export function RetrySettings() {
     nonStreamResponseTimeoutSeconds: 0,
     loadBalancerStrategy: 'adaptive',
     emptyResponseDetection: false,
+    clientRestriction: 'OFF',
     upstreamErrorPolicy: {
       mode: 'passthrough',
       customMessage: '',
@@ -48,6 +49,7 @@ export function RetrySettings() {
         nonStreamResponseTimeoutSeconds: retryPolicy.nonStreamResponseTimeoutSeconds,
         loadBalancerStrategy: retryPolicy.loadBalancerStrategy,
         emptyResponseDetection: retryPolicy.emptyResponseDetection,
+        clientRestriction: retryPolicy.clientRestriction || 'OFF',
         upstreamErrorPolicy: {
           mode: retryPolicy.upstreamErrorPolicy?.mode || 'passthrough',
           customMessage: retryPolicy.upstreamErrorPolicy?.customMessage || '',
@@ -318,6 +320,36 @@ export function RetrySettings() {
                   checked={formData.emptyResponseDetection || false}
                   onCheckedChange={(checked) => handleInputChange('emptyResponseDetection', checked)}
                 />
+              </div>
+
+              <Separator />
+
+              {/* Client Restriction */}
+              <div className='space-y-2'>
+                <Label htmlFor='client-restriction'>{t('system.retry.clientRestriction.label')}</Label>
+                <div className='text-muted-foreground mb-2 text-sm'>{t('system.retry.clientRestriction.description')}</div>
+                <Select
+                  value={formData.clientRestriction || 'OFF'}
+                  onValueChange={(value) => handleInputChange('clientRestriction', value)}
+                >
+                  <SelectTrigger id='client-restriction' className='w-56'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='OFF'>{t('system.retry.clientRestriction.options.off')}</SelectItem>
+                    <SelectItem value='LENIENT'>{t('system.retry.clientRestriction.options.lenient')}</SelectItem>
+                    <SelectItem value='STRICT'>{t('system.retry.clientRestriction.options.strict')}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Strategy Documentation */}
+                {formData.clientRestriction && (
+                  <div className='bg-muted/50 mt-3 rounded-md border p-3'>
+                    <div className='text-muted-foreground text-xs leading-relaxed'>
+                      {t(`system.retry.clientRestriction.documentation.${formData.clientRestriction.toLowerCase()}`)}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Separator />

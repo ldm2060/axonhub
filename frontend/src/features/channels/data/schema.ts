@@ -315,6 +315,22 @@ export const channelSchema = z.object({
   orderingWeight: z.number().optional().default(0),
   errorMessage: z.string().optional().nullable(),
   remark: z.string().optional().nullable(),
+  clientRestriction: z.string().optional().nullable(),
+  autoDisableConfig: z
+    .object({
+      mode: z.string(),
+      enabled: z.boolean().optional(),
+      statuses: z
+        .array(
+          z.object({
+            status: z.number().int(),
+            times: z.number().int(),
+          })
+        )
+        .optional(),
+    })
+    .optional()
+    .nullable(),
   allModelEntries: z.array(channelModelEntrySchema).optional(),
   liveLimiterStats: channelLimiterStatsSchema.optional().nullable(),
   endpoints: z.array(channelEndpointSchema).optional().default([]).nullable(),
@@ -470,6 +486,24 @@ export const createChannelInputSchema = z
     defaultTestModel: z.string().min(1, 'Please select a default test model'),
     remark: z.string().optional(),
     orderingWeight: z.number().int().optional(),
+    clientRestriction: z.string().optional().nullable(),
+    clearClientRestriction: z.boolean().optional(),
+    autoDisableConfig: z
+      .object({
+        mode: z.string(),
+        enabled: z.boolean().optional(),
+        statuses: z
+          .array(
+            z.object({
+              status: z.number().int().min(400).max(599),
+              times: z.number().int().min(1),
+            })
+          )
+          .optional(),
+      })
+      .optional()
+      .nullable(),
+    clearAutoDisableConfig: z.boolean().optional(),
     settings: channelSettingsSchema.optional(),
     endpoints: z.array(channelEndpointSchema).optional(),
     credentials: z.object({
@@ -558,6 +592,24 @@ export const updateChannelInputSchema = z
     settings: channelSettingsSchema.optional(),
     errorMessage: z.string().optional().nullable(),
     remark: z.string().optional().nullable(),
+    clientRestriction: z.string().optional().nullable(),
+    clearClientRestriction: z.boolean().optional(),
+    autoDisableConfig: z
+      .object({
+        mode: z.string(),
+        enabled: z.boolean().optional(),
+        statuses: z
+          .array(
+            z.object({
+              status: z.number().int().min(400).max(599),
+              times: z.number().int().min(1),
+            })
+          )
+          .optional(),
+      })
+      .optional()
+      .nullable(),
+    clearAutoDisableConfig: z.boolean().optional(),
     endpoints: z.array(channelEndpointSchema).optional(),
     credentials: z
       .object({

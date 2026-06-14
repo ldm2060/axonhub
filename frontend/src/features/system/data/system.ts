@@ -358,6 +358,7 @@ export interface RetryPolicy {
   nonStreamResponseTimeoutSeconds: number;
   loadBalancerStrategy: string;
   enabled: boolean;
+  clientRestriction: string;
   autoDisableChannel: AutoDisableChannel;
   emptyResponseDetection: boolean;
   upstreamErrorPolicy: UpstreamErrorPolicy;
@@ -386,6 +387,7 @@ export interface RetryPolicyInput {
   nonStreamResponseTimeoutSeconds?: number;
   loadBalancerStrategy?: string;
   enabled?: boolean;
+  clientRestriction?: string;
   autoDisableChannel?: AutoDisableChannelInput;
   emptyResponseDetection?: boolean;
   upstreamErrorPolicy?: Partial<UpstreamErrorPolicy>;
