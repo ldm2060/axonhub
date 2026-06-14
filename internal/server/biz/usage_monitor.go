@@ -111,6 +111,12 @@ func convertMapSliceToDisplayFields(maps []map[string]any) []usage_monitor.Displ
 		if presets, ok := m["badgePresets"].(string); ok {
 			d.BadgePresets = presets
 		}
+		if group, ok := m["group"].(string); ok {
+			d.Group = group
+		}
+		if groupLabelRef, ok := m["groupLabelRef"].(string); ok {
+			d.GroupLabelRef = groupLabelRef
+		}
 		result = append(result, d)
 	}
 	return result

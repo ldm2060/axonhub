@@ -189,6 +189,8 @@ export function AddChannelDialog() {
         displayOrder: df.displayOrder,
         badge: df.badge,
         badgePresets: df.badgePresets,
+        group: df.group,
+        groupLabelRef: df.groupLabelRef,
       }));
 
       // For template source, use template fields as the legacy fields array
