@@ -771,13 +771,14 @@ func TestChatCompletionOrchestrator_Process_QueueRejectionDoesNotConsumeRPM(t *t
 	queueTimeoutMs := int64(30)
 	bizChannel := &biz.Channel{
 		Channel: &ent.Channel{
-			ID:               ch.ID,
-			Name:             ch.Name,
-			BaseURL:          ch.BaseURL,
-			Credentials:      ch.Credentials,
-			SupportedModels:  ch.SupportedModels,
-			DefaultTestModel: ch.DefaultTestModel,
-			Status:           ch.Status,
+			ID:                ch.ID,
+			Name:              ch.Name,
+			BaseURL:           ch.BaseURL,
+			Credentials:       ch.Credentials,
+			SupportedModels:   ch.SupportedModels,
+			DefaultTestModel:  ch.DefaultTestModel,
+			Status:            ch.Status,
+			QuotaBindingReady: true,
 			Settings: &objects.ChannelSettings{
 				RateLimit: &objects.ChannelRateLimit{
 					MaxConcurrent:  &maxConcurrent,
@@ -865,13 +866,14 @@ func TestChatCompletionOrchestrator_Process_ChannelLimiter(t *testing.T) {
 	queueSize := int64(5)
 	bizChannel := &biz.Channel{
 		Channel: &ent.Channel{
-			ID:               ch.ID,
-			Name:             ch.Name,
-			BaseURL:          ch.BaseURL,
-			Credentials:      ch.Credentials,
-			SupportedModels:  ch.SupportedModels,
-			DefaultTestModel: ch.DefaultTestModel,
-			Status:           ch.Status,
+			ID:                ch.ID,
+			Name:              ch.Name,
+			BaseURL:           ch.BaseURL,
+			Credentials:       ch.Credentials,
+			SupportedModels:   ch.SupportedModels,
+			DefaultTestModel:  ch.DefaultTestModel,
+			Status:            ch.Status,
+			QuotaBindingReady: true,
 			Settings: &objects.ChannelSettings{
 				RateLimit: &objects.ChannelRateLimit{
 					MaxConcurrent: &maxConcurrent,

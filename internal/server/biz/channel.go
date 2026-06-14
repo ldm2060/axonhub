@@ -231,7 +231,10 @@ func (svc *ChannelService) reloadEnabledChannels(ctx context.Context, current []
 	}
 
 	entities, err := svc.entFromContext(ctx).Channel.Query().
-		Where(channel.StatusEQ(channel.StatusEnabled)).
+		Where(
+			channel.StatusEQ(channel.StatusEnabled),
+			channel.QuotaBindingReady(true),
+		).
 		Order(ent.Desc(channel.FieldOrderingWeight)).
 		All(ctx)
 	if err != nil {

@@ -41,6 +41,15 @@ func (s *ProviderQuotaSelector) Select(ctx context.Context, req *llm.Request) ([
 		return candidates, nil
 	}
 
+	// Always filter by quota_binding_ready regardless of enforcement settings
+	candidates = lo.Filter(candidates, func(c *ChannelModelsCandidate, _ int) bool {
+		return c.Channel.QuotaBindingReady
+	})
+
+	if len(candidates) == 0 {
+		return candidates, nil
+	}
+
 	if s.provider == nil {
 		return candidates, nil
 	}

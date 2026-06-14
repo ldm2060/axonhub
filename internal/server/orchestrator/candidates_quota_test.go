@@ -28,9 +28,9 @@ func TestProviderQuotaSelector_ExhaustedOnlyMode(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -57,9 +57,9 @@ func TestProviderQuotaSelector_DePrioritizeMode(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -88,7 +88,7 @@ func TestProviderQuotaSelector_EnforcementDisabled(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -112,8 +112,8 @@ func TestProviderQuotaSelector_AllExhausted(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "c1"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "c2"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "c1", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "c2", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -134,7 +134,7 @@ func TestProviderQuotaSelector_NoQuotaData(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "no-data"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "no-data", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -152,7 +152,7 @@ func TestProviderQuotaSelector_NilProvider(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "test"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "test", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -205,7 +205,7 @@ func TestProviderQuotaSelector_UnknownStatusKept(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "unknown"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "unknown", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -231,11 +231,11 @@ func TestProviderQuotaSelector_MixedCandidates(t *testing.T) {
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 4, Name: "unknown"}}},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 5, Name: "no-data"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "warning", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 4, Name: "unknown", QuotaBindingReady: true}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 5, Name: "no-data", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -268,7 +268,7 @@ func TestProviderQuotaSelector_PerLimit_ImageExhausted_KeptForToken(t *testing.T
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ch1"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ch1", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -303,9 +303,9 @@ func TestProviderQuotaSelector_FiltersExhaustedBeforeLoadBalancer(t *testing.T) 
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted-1"}}, Priority: 0},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "exhausted-2"}}, Priority: 0},
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available"}}, Priority: 1},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "exhausted-1", QuotaBindingReady: true}}, Priority: 0},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "exhausted-2", QuotaBindingReady: true}}, Priority: 0},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 3, Name: "available", QuotaBindingReady: true}}, Priority: 1},
 		},
 	}
 
@@ -332,7 +332,7 @@ func TestProviderQuotaSelector_ChannelExhaustedOverridesPerLimitAvailable(t *tes
 
 	inner := &mockSelector{
 		candidates: []*ChannelModelsCandidate{
-			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ch1"}}},
+			{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ch1", QuotaBindingReady: true}}},
 		},
 	}
 
@@ -346,4 +346,84 @@ func TestProviderQuotaSelector_ChannelExhaustedOverridesPerLimitAvailable(t *tes
 	result, err := selector.Select(context.Background(), tokenReq)
 	require.NoError(t, err)
 	require.Empty(t, result, "channel with Exhausted channel-level status must be filtered even if per-limit token status is available")
+}
+
+func TestProviderQuotaSelector_WithQuotaBinding(t *testing.T) {
+	t.Run("filters out quota_binding_ready=false channels", func(t *testing.T) {
+		provider := &mockQuotaStatusProvider{
+			statuses: map[int]*biz.QuotaChannelStatus{
+				1: {Status: providerquotastatus.StatusAvailable, Ready: true},
+				2: {Status: providerquotastatus.StatusAvailable, Ready: true},
+			},
+		}
+		settings := &mockQuotaEnforcementSettingsProvider{
+			settings: &biz.QuotaEnforcementSettings{Enabled: true, Mode: biz.QuotaEnforcementModeExhaustedOnly},
+		}
+
+		inner := &mockSelector{
+			candidates: []*ChannelModelsCandidate{
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ready", QuotaBindingReady: true}}},
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "not-ready", QuotaBindingReady: false}}},
+			},
+		}
+
+		selector := WithProviderQuotaSelector(inner, provider, settings)
+		got, err := selector.Select(context.Background(), &llm.Request{})
+
+		require.NoError(t, err)
+		require.Len(t, got, 1, "should only return quota_binding_ready=true channel")
+		require.Equal(t, 1, got[0].Channel.ID)
+		require.Equal(t, "ready", got[0].Channel.Name)
+	})
+
+	t.Run("keeps both channels when both have quota_binding_ready=true", func(t *testing.T) {
+		provider := &mockQuotaStatusProvider{
+			statuses: map[int]*biz.QuotaChannelStatus{
+				1: {Status: providerquotastatus.StatusAvailable, Ready: true},
+				2: {Status: providerquotastatus.StatusAvailable, Ready: true},
+			},
+		}
+		settings := &mockQuotaEnforcementSettingsProvider{
+			settings: &biz.QuotaEnforcementSettings{Enabled: true, Mode: biz.QuotaEnforcementModeExhaustedOnly},
+		}
+
+		inner := &mockSelector{
+			candidates: []*ChannelModelsCandidate{
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ready1", QuotaBindingReady: true}}},
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "ready2", QuotaBindingReady: true}}},
+			},
+		}
+
+		selector := WithProviderQuotaSelector(inner, provider, settings)
+		got, err := selector.Select(context.Background(), &llm.Request{})
+
+		require.NoError(t, err)
+		require.Len(t, got, 2, "should return both quota_binding_ready=true channels")
+	})
+
+	t.Run("enforcement disabled - still filters by quota_binding_ready", func(t *testing.T) {
+		provider := &mockQuotaStatusProvider{
+			statuses: map[int]*biz.QuotaChannelStatus{
+				1: {Status: providerquotastatus.StatusAvailable, Ready: true},
+				2: {Status: providerquotastatus.StatusAvailable, Ready: true},
+			},
+		}
+		settings := &mockQuotaEnforcementSettingsProvider{
+			settings: &biz.QuotaEnforcementSettings{Enabled: false, Mode: biz.QuotaEnforcementModeExhaustedOnly},
+		}
+
+		inner := &mockSelector{
+			candidates: []*ChannelModelsCandidate{
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "ready", QuotaBindingReady: true}}},
+				{Channel: &biz.Channel{Channel: &ent.Channel{ID: 2, Name: "not-ready", QuotaBindingReady: false}}},
+			},
+		}
+
+		selector := WithProviderQuotaSelector(inner, provider, settings)
+		got, err := selector.Select(context.Background(), &llm.Request{})
+
+		require.NoError(t, err)
+		require.Len(t, got, 1, "should filter by quota_binding_ready even when enforcement is disabled")
+		require.Equal(t, 1, got[0].Channel.ID)
+	})
 }
