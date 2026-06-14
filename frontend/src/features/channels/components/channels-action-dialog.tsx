@@ -54,7 +54,7 @@ import {
   getApiFormatsForProvider,
   getChannelTypeForApiFormat,
 } from '../data/config_providers';
-import { Channel, ChannelType, ApiFormat, createChannelInputSchema, updateChannelInputSchema } from '../data/schema';
+import { Channel, ChannelType, ApiFormat, RetryableErrorPattern, createChannelInputSchema, updateChannelInputSchema } from '../data/schema';
 import { ProxyConfig, useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
@@ -109,9 +109,7 @@ function formatRetryableStatusCodes(codes: number[] | null | undefined): string 
 }
 
 function parseRetryableStatusCodesInput(value: string): number[] | null {
-  const tokens = value
-    .split(/[,\s]+/)
-    .filter(Boolean);
+  const tokens = value.split(/[,\s]+/).filter(Boolean);
 
   if (tokens.length === 0) {
     return [];
@@ -132,6 +130,39 @@ function parseRetryableStatusCodesInput(value: string): number[] | null {
   }
 
   return Array.from(new Set(codes)).sort((a, b) => a - b);
+}
+
+function formatRetryableErrorPatterns(patterns: RetryableErrorPattern[] | null | undefined): string {
+  return (patterns ?? []).map(({ pattern, regex }) => (regex ? `regex:${pattern}` : pattern)).join('\n');
+}
+
+function parseRetryableErrorPatternsInput(value: string): RetryableErrorPattern[] | null {
+  const patterns: RetryableErrorPattern[] = [];
+  const seen = new Set<string>();
+
+  for (const rawLine of value.split(/\r?\n/)) {
+    let line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    const regex = line.toLowerCase().startsWith('regex:');
+    if (regex) {
+      line = line.slice('regex:'.length).trim();
+    }
+
+    if (!line) {
+      return null;
+    }
+
+    const key = `${regex}\0${line}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      patterns.push({ pattern: line, regex });
+    }
+  }
+
+  return patterns;
 }
 
 function getResponsesTransportFromChannel(channel?: Pick<Channel, 'baseURL' | 'endpoints'>): ResponsesTransport {
@@ -267,7 +298,6 @@ function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string } }):
   }
 }
 
-
 function isOfficialClaudeCodeChannel(channel: { credentials?: { apiKey?: string }; baseURL: string }): boolean {
   const apiKey = channel.credentials?.apiKey || '';
   const defaultURL = getDefaultBaseURL('claudecode');
@@ -332,7 +362,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   // Debounced search values for better performance
   const debouncedFetchedModelsSearch = useDebounce(fetchedModelsSearch, 300);
   const debouncedSupportedModelsSearch = useDebounce(supportedModelsSearch, 300);
-  
+
   // Refs for virtual scrolling
   const fetchedModelsParentRef = useRef<HTMLDivElement>(null);
   const supportedModelsParentRef = useRef<HTMLDivElement>(null);
@@ -354,6 +384,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   });
   const [retryableStatusCodesText, setRetryableStatusCodesText] = useState(() =>
     formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes)
+  );
+  const [retryableErrorPatternsText, setRetryableErrorPatternsText] = useState(() =>
+    formatRetryableErrorPatterns(initialRow?.settings?.retryableErrorPatterns)
   );
 
   // Memoized proxy config for OAuth exchange
@@ -766,7 +799,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         form.setValue('type', 'codex');
         if (!isEdit) {
           const baseURL = responsesTransport === 'websocket' ? getResponsesWebSocketBaseURL('codex') : getDefaultBaseURL('codex');
-          if (baseURL && !isDuplicate) {
+          if (baseURL) {
             form.setValue('baseURL', baseURL, { shouldDirty: true });
           }
           setFetchedModels([]);
@@ -879,16 +912,16 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
   const handleResponsesTransportChange = useCallback(
     (transport: ResponsesTransport) => {
-      if (isOAuthChannel) return;
+      if (isOAuthChannel && selectedProvider !== 'codex') return;
       setResponsesTransport(transport);
 
       const channelType = selectedProvider === 'codex' ? 'codex' : selectedType || derivedChannelType;
       const baseURL = transport === 'websocket' ? getResponsesWebSocketBaseURL(channelType) : getDefaultBaseURL(channelType);
-      if (baseURL && !isDuplicate) {
+      if (baseURL) {
         form.setValue('baseURL', baseURL, { shouldDirty: true });
       }
     },
-    [derivedChannelType, form, isDuplicate, isOAuthChannel, selectedProvider, selectedType]
+    [derivedChannelType, form, isOAuthChannel, selectedProvider, selectedType]
   );
 
   const handleGeminiVertexChange = useCallback(
@@ -1089,6 +1122,12 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         return;
       }
 
+      const retryableErrorPatterns = parseRetryableErrorPatternsInput(retryableErrorPatternsText);
+      if (retryableErrorPatterns === null) {
+        toast.error(t('channels.dialogs.retryableErrorPatterns.validation'));
+        return;
+      }
+
       const valuesForSubmit = isEdit
         ? values
         : {
@@ -1103,10 +1142,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         credentials: valuesForSubmit.credentials,
       };
 
-      if (
-        ((isCodexType && (authMode === 'official' || authMode === 'auth-json')) || (isClaudeCodeType && authMode === 'official')) &&
-        !isDuplicate
-      ) {
+      const shouldUseProtocolDefaultBaseURL =
+        (isCodexType && (!isEdit || authMode === 'official' || authMode === 'auth-json')) ||
+        (isClaudeCodeType && authMode === 'official' && !isDuplicate);
+      if (shouldUseProtocolDefaultBaseURL) {
         const currentType = selectedType || derivedChannelType;
         const baseURL =
           isCodexType && responsesTransport === 'websocket' ? getResponsesWebSocketBaseURL('codex') : getDefaultBaseURL(currentType);
@@ -1128,6 +1167,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           passThroughUserAgent,
           passThroughBody,
           retryableStatusCodes,
+          retryableErrorPatterns,
         });
 
         const updateInput = {
@@ -1171,6 +1211,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           passThroughUserAgent,
           passThroughBody,
           retryableStatusCodes,
+          retryableErrorPatterns,
         });
 
         const createInput = {
@@ -1598,6 +1639,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             setPassThroughUserAgent(initialRow?.settings?.passThroughUserAgent ?? null);
             setPassThroughBody(initialRow?.settings?.passThroughBody ?? null);
             setRetryableStatusCodesText(formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes));
+            setRetryableErrorPatternsText(formatRetryableErrorPatterns(initialRow?.settings?.retryableErrorPatterns));
             // Reset provider and API format state
             if (initialRow) {
               setSelectedProvider(getProviderFromChannelType(initialRow.type) || 'openai');
@@ -1765,7 +1807,6 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                               onValueChange={(value) =>
                                 handleResponsesTransportChange(value === OPENAI_RESPONSES_WEBSOCKET ? 'websocket' : 'http')
                               }
-                              disabled={!!isOAuthChannel}
                               placeholder={t('channels.dialogs.fields.apiFormat.placeholder')}
                               data-testid='api-format-select'
                               isControlled={true}
@@ -1774,9 +1815,6 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                 { value: OPENAI_RESPONSES_WEBSOCKET, label: getApiFormatOptionLabel(OPENAI_RESPONSES_WEBSOCKET) },
                               ]}
                             />
-                            {isOAuthChannel && (
-                              <p className='text-muted-foreground mt-1 text-xs'>{t('channels.dialogs.fields.apiFormat.editDisabled')}</p>
-                            )}
                           </div>
                         </FormItem>
                       )}
@@ -2070,9 +2108,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                 aria-invalid={!!fieldState.error}
                                 data-testid='channel-base-url-input'
                                 disabled={
-                                  (isCodexType && (authMode === 'official' || authMode === 'auth-json')) ||
-                                  (isClaudeCodeType && authMode === 'official') ||
-                                  selectedProvider === 'antigravity'
+                                  isCodexType || (isClaudeCodeType && authMode === 'official') || selectedProvider === 'antigravity'
                                 }
                                 {...field}
                               />
@@ -2698,29 +2734,57 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                       </FormItem>
 
                       <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                        <FormLabel className='flex items-center gap-1.5 pt-2 font-medium md:col-span-2 md:justify-end md:text-right'>
-                          {t('channels.dialogs.retryableStatusCodes.label')}
+                        <div className='flex items-center gap-1.5 pt-2 md:relative md:col-span-2 md:block md:text-right'>
+                          <FormLabel className='font-medium'>{t('channels.dialogs.retryableStatusCodes.label')}</FormLabel>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type='button'
-                                className='text-muted-foreground hover:text-foreground inline-flex items-center'
+                                className='text-muted-foreground hover:text-foreground inline-flex items-center md:absolute md:top-2 md:left-full md:ml-1.5'
                                 aria-label={t('channels.dialogs.retryableStatusCodes.tooltip')}
                               >
                                 <Info className='h-3.5 w-3.5' />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent className='max-w-sm'>
                               <p>{t('channels.dialogs.retryableStatusCodes.tooltip')}</p>
                             </TooltipContent>
                           </Tooltip>
-                        </FormLabel>
-                        <div className='space-y-1 md:col-span-6'>
+                        </div>
+                        <div className='md:col-span-6'>
                           <Input
                             value={retryableStatusCodesText}
                             onChange={(event) => setRetryableStatusCodesText(event.target.value)}
                             placeholder={t('channels.dialogs.retryableStatusCodes.placeholder')}
                             className='font-mono text-sm'
+                          />
+                        </div>
+                      </FormItem>
+
+                      <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <div className='flex items-center gap-1.5 pt-2 md:relative md:col-span-2 md:block md:text-right'>
+                          <FormLabel className='font-medium'>{t('channels.dialogs.retryableErrorPatterns.label')}</FormLabel>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type='button'
+                                className='text-muted-foreground hover:text-foreground inline-flex items-center md:absolute md:top-2 md:left-full md:ml-1.5'
+                                aria-label={t('channels.dialogs.retryableErrorPatterns.description')}
+                              >
+                                <Info className='h-3.5 w-3.5' />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className='max-w-sm'>
+                              <p>{t('channels.dialogs.retryableErrorPatterns.description')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <div className='md:col-span-6'>
+                          <Textarea
+                            value={retryableErrorPatternsText}
+                            onChange={(event) => setRetryableErrorPatternsText(event.target.value)}
+                            placeholder={t('channels.dialogs.retryableErrorPatterns.placeholder')}
+                            className='min-h-[88px] resize-y font-mono text-sm'
                           />
                         </div>
                       </FormItem>

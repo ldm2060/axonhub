@@ -150,6 +150,12 @@ models:
   ChannelSettingsInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
+  RetryableErrorPattern:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.RetryableErrorPattern
+  RetryableErrorPatternInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.RetryableErrorPattern
   ChannelRateLimit:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelRateLimit
