@@ -173,6 +173,14 @@ func (Channel) Fields() []ent.Field {
 		field.Int("owner_id").Optional().Immutable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 		field.Enum("visibility").Values("private", "shared", "published").Default("private").Annotations(entgql.OrderField("VISIBILITY")),
 		field.JSON("shared_with", []int{}).Optional().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		field.Bool("quota_binding_ready").
+			Default(true).
+			Comment("Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing."),
+		field.Enum("quota_multi_monitor_strategy").
+			Values("any", "all").
+			Optional().
+			Nillable().
+			Comment("Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default."),
 	}
 }
 
