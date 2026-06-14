@@ -87,34 +87,39 @@ field.Float("auto_enable_threshold").
     Default(0.95).
     Optional().
     Comment("Re-enable channel when max usage ratio < this threshold (0.0-1.0). Only used when auto_disable_enabled=true"),
-
-field.Enum("multi_monitor_strategy").
-    Values("any", "all").
-    Default("any").
-    Optional().
-    Comment("Strategy when multiple monitors bind to the same channel: 'any'=disable if any exhausted, 'all'=disable if all exhausted"),
 ```
 
 **Field Semantics**:
 - `auto_disable_enabled`: Master switch for this feature. When false, all auto-disable logic is skipped for this monitor.
 - `auto_disable_threshold`: Usage ratio threshold (0.0-1.0) for triggering channel disable. When `max_usage_ratio >= threshold`, set `quota_ready=false`.
 - `auto_enable_threshold`: Usage ratio threshold for re-enabling. When `max_usage_ratio < threshold`, set `quota_ready=true`. Must be <= `auto_disable_threshold`.
-- `multi_monitor_strategy`: How to aggregate status when multiple monitors bind to the same channel.
 
 #### 2. Channel Schema Changes
 
-Add the following field to `internal/ent/schema/channel.go`:
+Add the following fields to `internal/ent/schema/channel.go`:
 
 ```go
 field.Bool("quota_binding_ready").
     Default(true).
     Comment("Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing."),
+
+field.Enum("quota_multi_monitor_strategy").
+    Values("any", "all").
+    Default("any").
+    Optional().
+    Comment("Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default."),
 ```
 
-**Why a separate field?**
+**Why a separate quota_binding_ready field?**
 - Decouples quota management from manual channel control (`status` field)
 - Allows independent states: user can manually disable a channel, and quota auto-disable won't interfere
 - Simplifies orchestrator logic: single boolean check instead of querying related monitors
+
+**Why quota_multi_monitor_strategy on Channel?**
+- The aggregation strategy is a Channel-level policy decision, not a per-monitor configuration
+- Avoids configuration conflicts when multiple monitors bind to the same channel
+- Each Channel has a single, unambiguous strategy for all its bound monitors
+- When nil, falls back to global default from `conf.yaml`
 
 #### 3. Global Configuration
 
@@ -252,8 +257,17 @@ func (s *UsageMonitorService) evaluateAndUpdateChannelQuotaReady(ctx context.Con
         return s.updateChannelQuotaBindingReady(ctx, channelID, true, "")
     }
     
-    // Aggregate based on strategy
-    strategy := monitors[0].MultiMonitorStrategy  // Assume all monitors use same strategy
+    // Get the channel's multi-monitor strategy
+    channel, err := s.entClient.Channel.Get(ctx, channelID)
+    if err != nil {
+        return err
+    }
+    
+    strategy := channel.QuotaMultiMonitorStrategy
+    if strategy == "" {
+        // Fall back to global default
+        strategy = s.conf.QuotaChannelBinding.DefaultMultiMonitorStrategy
+    }
     
     var ready bool
     var errorMsg string
@@ -376,8 +390,9 @@ func (s *ProviderQuotaSelector) Select(ctx context.Context, req *llm.Request) ([
 - Toggle switch: "Enable Automatic Channel Disabling"
 - Number input: "Disable Threshold (%)" with hint showing global default
 - Number input: "Re-enable Threshold (%)" with hint showing global default
-- Select: "Multiple Monitors Strategy" (any/all)
 - Validation: Ensure `disable_threshold >= enable_threshold`
+
+**Note**: The multi-monitor strategy is NOT configured per-monitor. It is configured at the Channel level (see Channel form below).
 
 #### 2. Channel List
 
@@ -394,7 +409,20 @@ func (s *ProviderQuotaSelector) Select(ctx context.Context, req *llm.Request) ([
 )}
 ```
 
-#### 3. Channel Detail Page
+#### 3. Channel Form
+
+**File**: `frontend/src/features/channels/components/ChannelForm.tsx`
+
+**New Section**: "Quota Binding Settings"
+
+- Select: "Multiple Monitors Strategy" with options:
+  - "Use Global Default" (value: null, shows hint with current global setting)
+  - "Any - Disable if any monitor exhausted" (value: "any")
+  - "All - Disable if all monitors exhausted" (value: "all")
+
+This setting determines how quota status is aggregated when multiple UsageMonitorChannels bind to this channel.
+
+#### 4. Channel Detail Page
 
 **File**: `frontend/src/features/channels/components/ChannelDetail.tsx`
 
@@ -417,11 +445,11 @@ extend type UsageMonitorChannel {
   autoDisableEnabled: Boolean!
   autoDisableThreshold: Float
   autoEnableThreshold: Float
-  multiMonitorStrategy: String
 }
 
 extend type Channel {
   quotaBindingReady: Boolean!
+  quotaMultiMonitorStrategy: String
 }
 ```
 
@@ -502,10 +530,10 @@ log.Error(ctx, "Failed to evaluate channel quota status",
 ALTER TABLE usage_monitor_channels ADD COLUMN auto_disable_enabled BOOLEAN DEFAULT false;
 ALTER TABLE usage_monitor_channels ADD COLUMN auto_disable_threshold REAL DEFAULT 1.0;
 ALTER TABLE usage_monitor_channels ADD COLUMN auto_enable_threshold REAL DEFAULT 0.95;
-ALTER TABLE usage_monitor_channels ADD COLUMN multi_monitor_strategy TEXT DEFAULT 'any';
 
--- Add new field to channels
+-- Add new fields to channels
 ALTER TABLE channels ADD COLUMN quota_binding_ready BOOLEAN DEFAULT true;
+ALTER TABLE channels ADD COLUMN quota_multi_monitor_strategy TEXT DEFAULT NULL;
 
 -- Initialize quota_binding_ready for existing channels
 UPDATE channels SET quota_binding_ready = true WHERE quota_binding_ready IS NULL;
