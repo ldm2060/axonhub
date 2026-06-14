@@ -3,6 +3,7 @@ package datamigrate
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/ent"
@@ -26,7 +27,7 @@ func (v *V0_1_10) Version() string {
 
 // Migrate converts old fields data to variables + display_fields for all UsageMonitorChannels.
 func (v *V0_1_10) Migrate(ctx context.Context, client *ent.Client) error {
-	ctx = authz.WithSystemBypass(context.Background(), "database-migrate")
+	ctx = authz.WithSystemBypass(ctx, "database-migrate")
 
 	channels, err := client.UsageMonitorChannel.Query().All(ctx)
 	if err != nil {
@@ -65,8 +66,20 @@ func (v *V0_1_10) Migrate(ctx context.Context, client *ent.Client) error {
 		dfs := usage_monitor.DisplayFieldsFromFieldConfigs(fcs)
 
 		// Convert to []map[string]any for Ent
-		varsMaps := structSliceToMapSlice(vars)
-		dfsMaps := structSliceToMapSlice(dfs)
+		varsMaps, err := structSliceToMapSlice(vars)
+		if err != nil {
+			log.Warn(ctx, "failed to convert variables to maps",
+				log.Int("channel_id", ch.ID),
+				log.Cause(err))
+			continue
+		}
+		dfsMaps, err := structSliceToMapSlice(dfs)
+		if err != nil {
+			log.Warn(ctx, "failed to convert display_fields to maps",
+				log.Int("channel_id", ch.ID),
+				log.Cause(err))
+			continue
+		}
 
 		_, err = client.UsageMonitorChannel.UpdateOneID(ch.ID).
 			SetVariables(varsMaps).
@@ -92,18 +105,18 @@ func (v *V0_1_10) Migrate(ctx context.Context, client *ent.Client) error {
 }
 
 // structSliceToMapSlice converts a slice of structs to a slice of maps using JSON marshaling.
-func structSliceToMapSlice[T any](in []T) []map[string]any {
+func structSliceToMapSlice[T any](in []T) ([]map[string]any, error) {
 	out := make([]map[string]any, len(in))
 	for i, v := range in {
 		raw, err := json.Marshal(v)
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("failed to marshal: %w", err)
 		}
 		var m map[string]any
 		if err := json.Unmarshal(raw, &m); err != nil {
-			continue
+			return nil, fmt.Errorf("failed to unmarshal: %w", err)
 		}
 		out[i] = m
 	}
-	return out
+	return out, nil
 }
