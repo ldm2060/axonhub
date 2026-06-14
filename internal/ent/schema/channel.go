@@ -178,6 +178,7 @@ func (Channel) Fields() []ent.Field {
 			Comment("Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing."),
 		field.Enum("quota_multi_monitor_strategy").
 			Values("any", "all").
+			Default("any").
 			Optional().
 			Nillable().
 			Comment("Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default."),
