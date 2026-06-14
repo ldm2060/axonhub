@@ -90,6 +90,15 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Annotations(entgql.Type("Map")),
 		field.Time("next_reset_at").Optional().Nillable().
 			Comment("Earliest quota reset time across all limits"),
+		field.Bool("auto_disable_enabled").
+			Default(false).
+			Comment("Enable automatic channel disabling based on quota status"),
+		field.Float("auto_disable_threshold").
+			Optional().
+			Comment("Disable channel when max usage ratio >= this threshold (0.0-1.0). nil = use global default"),
+		field.Float("auto_enable_threshold").
+			Optional().
+			Comment("Re-enable channel when max usage ratio < this threshold (0.0-1.0). nil = use global default"),
 	}
 }
 
