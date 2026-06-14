@@ -94,11 +94,13 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Default(false).
 			Comment("Enable automatic channel disabling based on quota status"),
 		field.Float("auto_disable_threshold").
+			Default(1.0).
 			Optional().
-			Comment("Disable channel when max usage ratio >= this threshold (0.0-1.0). nil = use global default"),
+			Comment("Disable channel when max usage ratio >= this threshold (0.0-1.0). Only used when auto_disable_enabled=true"),
 		field.Float("auto_enable_threshold").
+			Default(0.95).
 			Optional().
-			Comment("Re-enable channel when max usage ratio < this threshold (0.0-1.0). nil = use global default"),
+			Comment("Re-enable channel when max usage ratio < this threshold (0.0-1.0). Only used when auto_disable_enabled=true"),
 	}
 }
 
