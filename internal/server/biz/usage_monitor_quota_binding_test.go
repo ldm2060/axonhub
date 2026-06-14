@@ -325,8 +325,3 @@ func TestGetEnableThreshold(t *testing.T) {
 		})
 	}
 }
-
-// floatPtr is a helper function to create float64 pointers for tests (no longer needed but kept for potential future use).
-func floatPtr(f float64) *float64 {
-	return &f
-}
