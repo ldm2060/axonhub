@@ -27,22 +27,30 @@ import (
 type Config struct {
 	fx.Out `yaml:"-" json:"-"`
 
-	DB               db.Config           `conf:"db" yaml:"db" json:"db"`
-	Log              log.Config          `conf:"log" yaml:"log" json:"log"`
-	APIServer        server.Config       `conf:"server" yaml:"server" json:"server"`
-	Metrics          metrics.Config      `conf:"metrics" yaml:"metrics" json:"metrics"`
-	GC               gc.Config           `conf:"gc" yaml:"gc" json:"gc"`
-	Cache            xcache.Config       `conf:"cache" yaml:"cache" json:"cache"`
-	ProviderQuota    providerQuotaConfig `conf:"provider_quota" yaml:"provider_quota" json:"provider_quota"`
-	OIDC             biz.OIDCConfig      `conf:"oidc" yaml:"oidc" json:"oidc"`
-	DisableSSLVerify bool                `name:"disable_ssl_verify" yaml:"-" json:"-"`
-	AllowNoAuth      bool                `name:"allow_no_auth" yaml:"-" json:"-"`
-	APIKeyPrefix     string              `name:"api_key_prefix" yaml:"-" json:"-"`
+	DB                  db.Config                  `conf:"db" yaml:"db" json:"db"`
+	Log                 log.Config                 `conf:"log" yaml:"log" json:"log"`
+	APIServer           server.Config              `conf:"server" yaml:"server" json:"server"`
+	Metrics             metrics.Config             `conf:"metrics" yaml:"metrics" json:"metrics"`
+	GC                  gc.Config                  `conf:"gc" yaml:"gc" json:"gc"`
+	Cache               xcache.Config              `conf:"cache" yaml:"cache" json:"cache"`
+	ProviderQuota       providerQuotaConfig        `conf:"provider_quota" yaml:"provider_quota" json:"provider_quota"`
+	QuotaChannelBinding QuotaChannelBindingConfig  `conf:"quota_channel_binding" yaml:"quota_channel_binding" json:"quota_channel_binding"`
+	OIDC                biz.OIDCConfig             `conf:"oidc" yaml:"oidc" json:"oidc"`
+	DisableSSLVerify    bool                       `name:"disable_ssl_verify" yaml:"-" json:"-"`
+	AllowNoAuth         bool                       `name:"allow_no_auth" yaml:"-" json:"-"`
+	APIKeyPrefix        string                     `name:"api_key_prefix" yaml:"-" json:"-"`
 }
 
 type providerQuotaConfig struct {
 	CheckInterval             time.Duration `conf:"check_interval" yaml:"check_interval" json:"check_interval"`
 	WarningCheckIntervalRatio int           `conf:"warning_check_interval_ratio" yaml:"warning_check_interval_ratio" json:"warning_check_interval_ratio"`
+}
+
+// QuotaChannelBindingConfig configures automatic channel disabling based on quota status.
+type QuotaChannelBindingConfig struct {
+	DefaultDisableThreshold     float64 `conf:"default_disable_threshold" yaml:"default_disable_threshold" json:"default_disable_threshold"`
+	DefaultEnableThreshold      float64 `conf:"default_enable_threshold" yaml:"default_enable_threshold" json:"default_enable_threshold"`
+	DefaultMultiMonitorStrategy string  `conf:"default_multi_monitor_strategy" yaml:"default_multi_monitor_strategy" json:"default_multi_monitor_strategy"`
 }
 
 // Load loads configuration from YAML file and environment variables.
@@ -96,6 +104,17 @@ func Load() (Config, error) {
 	config.DisableSSLVerify = config.APIServer.DisableSSLVerify
 	config.AllowNoAuth = config.APIServer.API.Auth.AllowNoAuth
 	config.APIKeyPrefix = config.APIServer.API.Auth.KeyPrefix
+
+	// Apply default values for QuotaChannelBinding if not set
+	if config.QuotaChannelBinding.DefaultDisableThreshold == 0 {
+		config.QuotaChannelBinding.DefaultDisableThreshold = 1.0
+	}
+	if config.QuotaChannelBinding.DefaultEnableThreshold == 0 {
+		config.QuotaChannelBinding.DefaultEnableThreshold = 0.95
+	}
+	if config.QuotaChannelBinding.DefaultMultiMonitorStrategy == "" {
+		config.QuotaChannelBinding.DefaultMultiMonitorStrategy = "any"
+	}
 
 	if config.Cache.Redis.Addr != "" {
 		log.Warn(context.Background(), "Config `cache.redis.addr` Deprecated: Use `cache.redis.addrs` instead.")
@@ -238,6 +257,11 @@ func setDefaults(v *viper.Viper) {
 	// Provider quota defaults
 	v.SetDefault("provider_quota.check_interval", "5m")
 	v.SetDefault("provider_quota.warning_check_interval_ratio", 4) // Warning interval = check_interval * ratio
+
+	// Quota channel binding defaults
+	v.SetDefault("quota_channel_binding.default_disable_threshold", 1.0)
+	v.SetDefault("quota_channel_binding.default_enable_threshold", 0.95)
+	v.SetDefault("quota_channel_binding.default_multi_monitor_strategy", "any")
 
 	// Cache defaults
 	v.SetDefault("cache.mode", "memory")
