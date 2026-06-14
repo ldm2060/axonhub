@@ -115,6 +115,11 @@ func OwnerID(v int) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldOwnerID, v))
 }
 
+// QuotaBindingReady applies equality check predicate on the "quota_binding_ready" field. It's identical to QuotaBindingReadyEQ.
+func QuotaBindingReady(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldQuotaBindingReady, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Channel {
 	return predicate.Channel(sql.FieldEQ(FieldCreatedAt, v))
@@ -913,6 +918,46 @@ func SharedWithIsNil() predicate.Channel {
 // SharedWithNotNil applies the NotNil predicate on the "shared_with" field.
 func SharedWithNotNil() predicate.Channel {
 	return predicate.Channel(sql.FieldNotNull(FieldSharedWith))
+}
+
+// QuotaBindingReadyEQ applies the EQ predicate on the "quota_binding_ready" field.
+func QuotaBindingReadyEQ(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldQuotaBindingReady, v))
+}
+
+// QuotaBindingReadyNEQ applies the NEQ predicate on the "quota_binding_ready" field.
+func QuotaBindingReadyNEQ(v bool) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldQuotaBindingReady, v))
+}
+
+// QuotaMultiMonitorStrategyEQ applies the EQ predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyEQ(v QuotaMultiMonitorStrategy) predicate.Channel {
+	return predicate.Channel(sql.FieldEQ(FieldQuotaMultiMonitorStrategy, v))
+}
+
+// QuotaMultiMonitorStrategyNEQ applies the NEQ predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyNEQ(v QuotaMultiMonitorStrategy) predicate.Channel {
+	return predicate.Channel(sql.FieldNEQ(FieldQuotaMultiMonitorStrategy, v))
+}
+
+// QuotaMultiMonitorStrategyIn applies the In predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyIn(vs ...QuotaMultiMonitorStrategy) predicate.Channel {
+	return predicate.Channel(sql.FieldIn(FieldQuotaMultiMonitorStrategy, vs...))
+}
+
+// QuotaMultiMonitorStrategyNotIn applies the NotIn predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyNotIn(vs ...QuotaMultiMonitorStrategy) predicate.Channel {
+	return predicate.Channel(sql.FieldNotIn(FieldQuotaMultiMonitorStrategy, vs...))
+}
+
+// QuotaMultiMonitorStrategyIsNil applies the IsNil predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyIsNil() predicate.Channel {
+	return predicate.Channel(sql.FieldIsNull(FieldQuotaMultiMonitorStrategy))
+}
+
+// QuotaMultiMonitorStrategyNotNil applies the NotNil predicate on the "quota_multi_monitor_strategy" field.
+func QuotaMultiMonitorStrategyNotNil() predicate.Channel {
+	return predicate.Channel(sql.FieldNotNull(FieldQuotaMultiMonitorStrategy))
 }
 
 // HasOwner applies the HasEdge predicate on the "owner" edge.

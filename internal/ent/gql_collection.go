@@ -890,6 +890,16 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 				selectedFields = append(selectedFields, channel.FieldSharedWith)
 				fieldSeen[channel.FieldSharedWith] = struct{}{}
 			}
+		case "quotaBindingReady":
+			if _, ok := fieldSeen[channel.FieldQuotaBindingReady]; !ok {
+				selectedFields = append(selectedFields, channel.FieldQuotaBindingReady)
+				fieldSeen[channel.FieldQuotaBindingReady] = struct{}{}
+			}
+		case "quotaMultiMonitorStrategy":
+			if _, ok := fieldSeen[channel.FieldQuotaMultiMonitorStrategy]; !ok {
+				selectedFields = append(selectedFields, channel.FieldQuotaMultiMonitorStrategy)
+				fieldSeen[channel.FieldQuotaMultiMonitorStrategy] = struct{}{}
+			}
 		case "id":
 		case "__typename":
 		default:
@@ -5857,6 +5867,21 @@ func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bo
 			if _, ok := fieldSeen[usagemonitorchannel.FieldNextResetAt]; !ok {
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldNextResetAt)
 				fieldSeen[usagemonitorchannel.FieldNextResetAt] = struct{}{}
+			}
+		case "autoDisableEnabled":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAutoDisableEnabled]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAutoDisableEnabled)
+				fieldSeen[usagemonitorchannel.FieldAutoDisableEnabled] = struct{}{}
+			}
+		case "autoDisableThreshold":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAutoDisableThreshold]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAutoDisableThreshold)
+				fieldSeen[usagemonitorchannel.FieldAutoDisableThreshold] = struct{}{}
+			}
+		case "autoEnableThreshold":
+			if _, ok := fieldSeen[usagemonitorchannel.FieldAutoEnableThreshold]; !ok {
+				selectedFields = append(selectedFields, usagemonitorchannel.FieldAutoEnableThreshold)
+				fieldSeen[usagemonitorchannel.FieldAutoEnableThreshold] = struct{}{}
 			}
 		case "id":
 		case "__typename":

@@ -73,6 +73,10 @@ type Channel struct {
 	Visibility channel.Visibility `json:"visibility,omitempty"`
 	// SharedWith holds the value of the "shared_with" field.
 	SharedWith []int `json:"shared_with,omitempty"`
+	// Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing.
+	QuotaBindingReady bool `json:"quota_binding_ready,omitempty"`
+	// Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default.
+	QuotaMultiMonitorStrategy *channel.QuotaMultiMonitorStrategy `json:"quota_multi_monitor_strategy,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ChannelQuery when eager-loading is set.
 	Edges        ChannelEdges `json:"edges"`
@@ -194,11 +198,11 @@ func (*Channel) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case channel.FieldCredentials, channel.FieldDisabledAPIKeys, channel.FieldSupportedModels, channel.FieldManualModels, channel.FieldTags, channel.FieldPolicies, channel.FieldSettings, channel.FieldEndpoints, channel.FieldAutoDisableConfig, channel.FieldSharedWith:
 			values[i] = new([]byte)
-		case channel.FieldAutoSyncSupportedModels:
+		case channel.FieldAutoSyncSupportedModels, channel.FieldQuotaBindingReady:
 			values[i] = new(sql.NullBool)
 		case channel.FieldID, channel.FieldDeletedAt, channel.FieldOrderingWeight, channel.FieldOwnerID:
 			values[i] = new(sql.NullInt64)
-		case channel.FieldType, channel.FieldBaseURL, channel.FieldName, channel.FieldStatus, channel.FieldAutoSyncModelPattern, channel.FieldDefaultTestModel, channel.FieldErrorMessage, channel.FieldRemark, channel.FieldClientRestriction, channel.FieldVisibility:
+		case channel.FieldType, channel.FieldBaseURL, channel.FieldName, channel.FieldStatus, channel.FieldAutoSyncModelPattern, channel.FieldDefaultTestModel, channel.FieldErrorMessage, channel.FieldRemark, channel.FieldClientRestriction, channel.FieldVisibility, channel.FieldQuotaMultiMonitorStrategy:
 			values[i] = new(sql.NullString)
 		case channel.FieldCreatedAt, channel.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -402,6 +406,19 @@ func (_m *Channel) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field shared_with: %w", err)
 				}
 			}
+		case channel.FieldQuotaBindingReady:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field quota_binding_ready", values[i])
+			} else if value.Valid {
+				_m.QuotaBindingReady = value.Bool
+			}
+		case channel.FieldQuotaMultiMonitorStrategy:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field quota_multi_monitor_strategy", values[i])
+			} else if value.Valid {
+				_m.QuotaMultiMonitorStrategy = new(channel.QuotaMultiMonitorStrategy)
+				*_m.QuotaMultiMonitorStrategy = channel.QuotaMultiMonitorStrategy(value.String)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -559,6 +576,14 @@ func (_m *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("shared_with=")
 	builder.WriteString(fmt.Sprintf("%v", _m.SharedWith))
+	builder.WriteString(", ")
+	builder.WriteString("quota_binding_ready=")
+	builder.WriteString(fmt.Sprintf("%v", _m.QuotaBindingReady))
+	builder.WriteString(", ")
+	if v := _m.QuotaMultiMonitorStrategy; v != nil {
+		builder.WriteString("quota_multi_monitor_strategy=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

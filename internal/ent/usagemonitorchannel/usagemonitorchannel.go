@@ -66,6 +66,12 @@ const (
 	FieldQuotaLimits = "quota_limits"
 	// FieldNextResetAt holds the string denoting the next_reset_at field in the database.
 	FieldNextResetAt = "next_reset_at"
+	// FieldAutoDisableEnabled holds the string denoting the auto_disable_enabled field in the database.
+	FieldAutoDisableEnabled = "auto_disable_enabled"
+	// FieldAutoDisableThreshold holds the string denoting the auto_disable_threshold field in the database.
+	FieldAutoDisableThreshold = "auto_disable_threshold"
+	// FieldAutoEnableThreshold holds the string denoting the auto_enable_threshold field in the database.
+	FieldAutoEnableThreshold = "auto_enable_threshold"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
 	EdgeChannel = "channel"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
@@ -115,6 +121,9 @@ var Columns = []string{
 	FieldQuotaReady,
 	FieldQuotaLimits,
 	FieldNextResetAt,
+	FieldAutoDisableEnabled,
+	FieldAutoDisableThreshold,
+	FieldAutoEnableThreshold,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "usage_monitor_channels"
@@ -166,6 +175,12 @@ var (
 	DefaultDisplayFields []map[string]interface{}
 	// DefaultQuotaReady holds the default value on creation for the "quota_ready" field.
 	DefaultQuotaReady bool
+	// DefaultAutoDisableEnabled holds the default value on creation for the "auto_disable_enabled" field.
+	DefaultAutoDisableEnabled bool
+	// DefaultAutoDisableThreshold holds the default value on creation for the "auto_disable_threshold" field.
+	DefaultAutoDisableThreshold float64
+	// DefaultAutoEnableThreshold holds the default value on creation for the "auto_enable_threshold" field.
+	DefaultAutoEnableThreshold float64
 )
 
 // Source defines the type for the "source" enum field.
@@ -397,6 +412,21 @@ func ByQuotaReady(opts ...sql.OrderTermOption) OrderOption {
 // ByNextResetAt orders the results by the next_reset_at field.
 func ByNextResetAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNextResetAt, opts...).ToFunc()
+}
+
+// ByAutoDisableEnabled orders the results by the auto_disable_enabled field.
+func ByAutoDisableEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAutoDisableEnabled, opts...).ToFunc()
+}
+
+// ByAutoDisableThreshold orders the results by the auto_disable_threshold field.
+func ByAutoDisableThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAutoDisableThreshold, opts...).ToFunc()
+}
+
+// ByAutoEnableThreshold orders the results by the auto_enable_threshold field.
+func ByAutoEnableThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAutoEnableThreshold, opts...).ToFunc()
 }
 
 // ByChannelField orders the results by channel field.

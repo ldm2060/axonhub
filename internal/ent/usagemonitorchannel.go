@@ -68,6 +68,12 @@ type UsageMonitorChannel struct {
 	QuotaLimits []map[string]interface{} `json:"quota_limits,omitempty"`
 	// Earliest quota reset time across all limits
 	NextResetAt *time.Time `json:"next_reset_at,omitempty"`
+	// Enable automatic channel disabling based on quota status
+	AutoDisableEnabled bool `json:"auto_disable_enabled,omitempty"`
+	// Disable channel when max usage ratio >= this threshold (0.0-1.0). Only used when auto_disable_enabled=true
+	AutoDisableThreshold float64 `json:"auto_disable_threshold,omitempty"`
+	// Re-enable channel when max usage ratio < this threshold (0.0-1.0). Only used when auto_disable_enabled=true
+	AutoEnableThreshold float64 `json:"auto_enable_threshold,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UsageMonitorChannelQuery when eager-loading is set.
 	Edges                       UsageMonitorChannelEdges `json:"edges"`
@@ -117,8 +123,10 @@ func (*UsageMonitorChannel) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldVariables, usagemonitorchannel.FieldDisplayFields, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
 			values[i] = new([]byte)
-		case usagemonitorchannel.FieldQuotaReady:
+		case usagemonitorchannel.FieldQuotaReady, usagemonitorchannel.FieldAutoDisableEnabled:
 			values[i] = new(sql.NullBool)
+		case usagemonitorchannel.FieldAutoDisableThreshold, usagemonitorchannel.FieldAutoEnableThreshold:
+			values[i] = new(sql.NullFloat64)
 		case usagemonitorchannel.FieldID, usagemonitorchannel.FieldDeletedAt, usagemonitorchannel.FieldChannelID, usagemonitorchannel.FieldPollInterval:
 			values[i] = new(sql.NullInt64)
 		case usagemonitorchannel.FieldName, usagemonitorchannel.FieldSource, usagemonitorchannel.FieldProviderType, usagemonitorchannel.FieldAPIURL, usagemonitorchannel.FieldAPIMethod, usagemonitorchannel.FieldAPIBody, usagemonitorchannel.FieldAPIKey, usagemonitorchannel.FieldLastPollError, usagemonitorchannel.FieldStatus, usagemonitorchannel.FieldQuotaStatus:
@@ -309,6 +317,24 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 				_m.NextResetAt = new(time.Time)
 				*_m.NextResetAt = value.Time
 			}
+		case usagemonitorchannel.FieldAutoDisableEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_disable_enabled", values[i])
+			} else if value.Valid {
+				_m.AutoDisableEnabled = value.Bool
+			}
+		case usagemonitorchannel.FieldAutoDisableThreshold:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_disable_threshold", values[i])
+			} else if value.Valid {
+				_m.AutoDisableThreshold = value.Float64
+			}
+		case usagemonitorchannel.FieldAutoEnableThreshold:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_enable_threshold", values[i])
+			} else if value.Valid {
+				_m.AutoEnableThreshold = value.Float64
+			}
 		case usagemonitorchannel.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field user_usage_monitor_channels", value)
@@ -442,6 +468,15 @@ func (_m *UsageMonitorChannel) String() string {
 		builder.WriteString("next_reset_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("auto_disable_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AutoDisableEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("auto_disable_threshold=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AutoDisableThreshold))
+	builder.WriteString(", ")
+	builder.WriteString("auto_enable_threshold=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AutoEnableThreshold))
 	builder.WriteByte(')')
 	return builder.String()
 }

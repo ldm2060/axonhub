@@ -301,43 +301,45 @@ type ComplexityRoot struct {
 	}
 
 	Channel struct {
-		AllModelEntries         func(childComplexity int) int
-		AutoDisableConfig       func(childComplexity int) int
-		AutoSyncModelPattern    func(childComplexity int) int
-		AutoSyncSupportedModels func(childComplexity int) int
-		BaseURL                 func(childComplexity int) int
-		ChannelModelPrices      func(childComplexity int) int
-		ChannelProbes           func(childComplexity int) int
-		ClientRestriction       func(childComplexity int) int
-		CreatedAt               func(childComplexity int) int
-		Credentials             func(childComplexity int) int
-		DefaultEndpoints        func(childComplexity int) int
-		DefaultTestModel        func(childComplexity int) int
-		DisabledAPIKeys         func(childComplexity int) int
-		Endpoints               func(childComplexity int) int
-		ErrorMessage            func(childComplexity int) int
-		Executions              func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestExecutionOrder, where *ent.RequestExecutionWhereInput) int
-		ID                      func(childComplexity int) int
-		LiveLimiterStats        func(childComplexity int) int
-		ManualModels            func(childComplexity int) int
-		Name                    func(childComplexity int) int
-		OrderingWeight          func(childComplexity int) int
-		Owner                   func(childComplexity int) int
-		OwnerID                 func(childComplexity int) int
-		Policies                func(childComplexity int) int
-		ProviderQuotaStatus     func(childComplexity int) int
-		Remark                  func(childComplexity int) int
-		Requests                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
-		Settings                func(childComplexity int) int
-		SharedWith              func(childComplexity int) int
-		Status                  func(childComplexity int) int
-		SupportedModels         func(childComplexity int) int
-		Tags                    func(childComplexity int) int
-		Type                    func(childComplexity int) int
-		UpdatedAt               func(childComplexity int) int
-		UsageLogs               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
-		UsageMonitorChannels    func(childComplexity int) int
-		Visibility              func(childComplexity int) int
+		AllModelEntries           func(childComplexity int) int
+		AutoDisableConfig         func(childComplexity int) int
+		AutoSyncModelPattern      func(childComplexity int) int
+		AutoSyncSupportedModels   func(childComplexity int) int
+		BaseURL                   func(childComplexity int) int
+		ChannelModelPrices        func(childComplexity int) int
+		ChannelProbes             func(childComplexity int) int
+		ClientRestriction         func(childComplexity int) int
+		CreatedAt                 func(childComplexity int) int
+		Credentials               func(childComplexity int) int
+		DefaultEndpoints          func(childComplexity int) int
+		DefaultTestModel          func(childComplexity int) int
+		DisabledAPIKeys           func(childComplexity int) int
+		Endpoints                 func(childComplexity int) int
+		ErrorMessage              func(childComplexity int) int
+		Executions                func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestExecutionOrder, where *ent.RequestExecutionWhereInput) int
+		ID                        func(childComplexity int) int
+		LiveLimiterStats          func(childComplexity int) int
+		ManualModels              func(childComplexity int) int
+		Name                      func(childComplexity int) int
+		OrderingWeight            func(childComplexity int) int
+		Owner                     func(childComplexity int) int
+		OwnerID                   func(childComplexity int) int
+		Policies                  func(childComplexity int) int
+		ProviderQuotaStatus       func(childComplexity int) int
+		QuotaBindingReady         func(childComplexity int) int
+		QuotaMultiMonitorStrategy func(childComplexity int) int
+		Remark                    func(childComplexity int) int
+		Requests                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
+		Settings                  func(childComplexity int) int
+		SharedWith                func(childComplexity int) int
+		Status                    func(childComplexity int) int
+		SupportedModels           func(childComplexity int) int
+		Tags                      func(childComplexity int) int
+		Type                      func(childComplexity int) int
+		UpdatedAt                 func(childComplexity int) int
+		UsageLogs                 func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
+		UsageMonitorChannels      func(childComplexity int) int
+		Visibility                func(childComplexity int) int
 	}
 
 	ChannelAutoDisableConfig struct {
@@ -548,6 +550,7 @@ type ComplexityRoot struct {
 		PassThroughUserAgent     func(childComplexity int) int
 		Proxy                    func(childComplexity int) int
 		RateLimit                func(childComplexity int) int
+		RetryableErrorPatterns   func(childComplexity int) int
 		RetryableStatusCodes     func(childComplexity int) int
 		TransformOptions         func(childComplexity int) int
 	}
@@ -1638,6 +1641,11 @@ type ComplexityRoot struct {
 		UpstreamErrorPolicy             func(childComplexity int) int
 	}
 
+	RetryableErrorPattern struct {
+		Pattern func(childComplexity int) int
+		Regex   func(childComplexity int) int
+	}
+
 	Role struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -2046,34 +2054,37 @@ type ComplexityRoot struct {
 	}
 
 	UsageMonitorChannel struct {
-		APIBody          func(childComplexity int) int
-		APIHeaders       func(childComplexity int) int
-		APIHeadersString func(childComplexity int) int
-		APIKey           func(childComplexity int) int
-		APIMethod        func(childComplexity int) int
-		APIURL           func(childComplexity int) int
-		Channel          func(childComplexity int) int
-		ChannelID        func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		DisplayFields    func(childComplexity int) int
-		Fields           func(childComplexity int) int
-		ID               func(childComplexity int) int
-		LastPollAt       func(childComplexity int) int
-		LastPollData     func(childComplexity int) int
-		LastPollError    func(childComplexity int) int
-		Name             func(childComplexity int) int
-		NextResetAt      func(childComplexity int) int
-		Owner            func(childComplexity int) int
-		ParsedData       func(childComplexity int) int
-		PollInterval     func(childComplexity int) int
-		ProviderType     func(childComplexity int) int
-		QuotaLimits      func(childComplexity int) int
-		QuotaReady       func(childComplexity int) int
-		QuotaStatus      func(childComplexity int) int
-		Source           func(childComplexity int) int
-		Status           func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
-		Variables        func(childComplexity int) int
+		APIBody              func(childComplexity int) int
+		APIHeaders           func(childComplexity int) int
+		APIHeadersString     func(childComplexity int) int
+		APIKey               func(childComplexity int) int
+		APIMethod            func(childComplexity int) int
+		APIURL               func(childComplexity int) int
+		AutoDisableEnabled   func(childComplexity int) int
+		AutoDisableThreshold func(childComplexity int) int
+		AutoEnableThreshold  func(childComplexity int) int
+		Channel              func(childComplexity int) int
+		ChannelID            func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		DisplayFields        func(childComplexity int) int
+		Fields               func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		LastPollAt           func(childComplexity int) int
+		LastPollData         func(childComplexity int) int
+		LastPollError        func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		NextResetAt          func(childComplexity int) int
+		Owner                func(childComplexity int) int
+		ParsedData           func(childComplexity int) int
+		PollInterval         func(childComplexity int) int
+		ProviderType         func(childComplexity int) int
+		QuotaLimits          func(childComplexity int) int
+		QuotaReady           func(childComplexity int) int
+		QuotaStatus          func(childComplexity int) int
+		Source               func(childComplexity int) int
+		Status               func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		Variables            func(childComplexity int) int
 	}
 
 	User struct {
@@ -3583,6 +3594,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.ProviderQuotaStatus(childComplexity), true
+	case "Channel.quotaBindingReady":
+		if e.complexity.Channel.QuotaBindingReady == nil {
+			break
+		}
+
+		return e.complexity.Channel.QuotaBindingReady(childComplexity), true
+	case "Channel.quotaMultiMonitorStrategy":
+		if e.complexity.Channel.QuotaMultiMonitorStrategy == nil {
+			break
+		}
+
+		return e.complexity.Channel.QuotaMultiMonitorStrategy(childComplexity), true
 	case "Channel.remark":
 		if e.complexity.Channel.Remark == nil {
 			break
@@ -4432,6 +4455,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelSettings.RateLimit(childComplexity), true
+	case "ChannelSettings.retryableErrorPatterns":
+		if e.complexity.ChannelSettings.RetryableErrorPatterns == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.RetryableErrorPatterns(childComplexity), true
 	case "ChannelSettings.retryableStatusCodes":
 		if e.complexity.ChannelSettings.RetryableStatusCodes == nil {
 			break
@@ -10054,6 +10083,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.RetryPolicy.UpstreamErrorPolicy(childComplexity), true
 
+	case "RetryableErrorPattern.pattern":
+		if e.complexity.RetryableErrorPattern.Pattern == nil {
+			break
+		}
+
+		return e.complexity.RetryableErrorPattern.Pattern(childComplexity), true
+	case "RetryableErrorPattern.regex":
+		if e.complexity.RetryableErrorPattern.Regex == nil {
+			break
+		}
+
+		return e.complexity.RetryableErrorPattern.Regex(childComplexity), true
+
 	case "Role.createdAt":
 		if e.complexity.Role.CreatedAt == nil {
 			break
@@ -11595,6 +11637,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.APIURL(childComplexity), true
+	case "UsageMonitorChannel.autoDisableEnabled":
+		if e.complexity.UsageMonitorChannel.AutoDisableEnabled == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.AutoDisableEnabled(childComplexity), true
+	case "UsageMonitorChannel.autoDisableThreshold":
+		if e.complexity.UsageMonitorChannel.AutoDisableThreshold == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.AutoDisableThreshold(childComplexity), true
+	case "UsageMonitorChannel.autoEnableThreshold":
+		if e.complexity.UsageMonitorChannel.AutoEnableThreshold == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.AutoEnableThreshold(childComplexity), true
 	case "UsageMonitorChannel.channel":
 		if e.complexity.UsageMonitorChannel.Channel == nil {
 			break
@@ -12640,6 +12700,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRequestOrder,
 		ec.unmarshalInputRequestWhereInput,
 		ec.unmarshalInputRestoreOptionsInput,
+		ec.unmarshalInputRetryableErrorPatternInput,
 		ec.unmarshalInputRoleOrder,
 		ec.unmarshalInputRoleWhereInput,
 		ec.unmarshalInputS3Input,
@@ -18941,6 +19002,10 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -19986,6 +20051,10 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -20149,6 +20218,10 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -20646,6 +20719,8 @@ func (ec *executionContext) fieldContext_Channel_settings(_ context.Context, fie
 				return ec.fieldContext_ChannelSettings_rateLimit(ctx, field)
 			case "retryableStatusCodes":
 				return ec.fieldContext_ChannelSettings_retryableStatusCodes(ctx, field)
+			case "retryableErrorPatterns":
+				return ec.fieldContext_ChannelSettings_retryableErrorPatterns(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelSettings", field.Name)
 		},
@@ -20927,6 +21002,64 @@ func (ec *executionContext) fieldContext_Channel_sharedWith(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_quotaBindingReady(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_quotaBindingReady,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaBindingReady, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_quotaBindingReady(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_quotaMultiMonitorStrategy(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_quotaMultiMonitorStrategy,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaMultiMonitorStrategy, nil
+		},
+		nil,
+		ec.marshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_quotaMultiMonitorStrategy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ChannelQuotaMultiMonitorStrategy does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21381,6 +21514,12 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -22187,6 +22326,10 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -22934,6 +23077,10 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -24877,6 +25024,10 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -25864,6 +26015,41 @@ func (ec *executionContext) fieldContext_ChannelSettings_retryableStatusCodes(_ 
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelSettings_retryableErrorPatterns(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_retryableErrorPatterns,
+		func(ctx context.Context) (any, error) {
+			return obj.RetryableErrorPatterns, nil
+		},
+		nil,
+		ec.marshalORetryableErrorPattern2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPatternᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_retryableErrorPatterns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "pattern":
+				return ec.fieldContext_RetryableErrorPattern_pattern(ctx, field)
+			case "regex":
+				return ec.fieldContext_RetryableErrorPattern_regex(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RetryableErrorPattern", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelSuccessRate_channelId(ctx context.Context, field graphql.CollectedField, obj *ChannelSuccessRate) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -26574,6 +26760,10 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -32477,6 +32667,10 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -33569,6 +33763,10 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -33686,6 +33884,10 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -33803,6 +34005,10 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -33920,6 +34126,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -34037,6 +34247,10 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -34154,6 +34368,10 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -40106,6 +40324,10 @@ func (ec *executionContext) fieldContext_Mutation_shareChannel(ctx context.Conte
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -40223,6 +40445,10 @@ func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Con
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -40334,6 +40560,12 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -40433,6 +40665,12 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -40624,6 +40862,12 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -45364,6 +45608,10 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -47317,6 +47565,10 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -49994,6 +50246,10 @@ func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Contex
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -51032,6 +51288,12 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -51120,6 +51382,12 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -53159,6 +53427,10 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -54281,6 +54553,10 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -55428,6 +55704,64 @@ func (ec *executionContext) fieldContext_RetryPolicy_clientRestriction(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ClientRestrictionLevel does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RetryableErrorPattern_pattern(ctx context.Context, field graphql.CollectedField, obj *objects.RetryableErrorPattern) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RetryableErrorPattern_pattern,
+		func(ctx context.Context) (any, error) {
+			return obj.Pattern, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RetryableErrorPattern_pattern(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RetryableErrorPattern",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RetryableErrorPattern_regex(ctx context.Context, field graphql.CollectedField, obj *objects.RetryableErrorPattern) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RetryableErrorPattern_regex,
+		func(ctx context.Context) (any, error) {
+			return obj.Regex, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RetryableErrorPattern_regex(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RetryableErrorPattern",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -61829,6 +62163,10 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -62920,6 +63258,10 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -63955,6 +64297,93 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_nextResetAt(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _UsageMonitorChannel_autoDisableEnabled(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_autoDisableEnabled,
+		func(ctx context.Context) (any, error) {
+			return obj.AutoDisableEnabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_autoDisableEnabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_autoDisableThreshold(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_autoDisableThreshold,
+		func(ctx context.Context) (any, error) {
+			return obj.AutoDisableThreshold, nil
+		},
+		nil,
+		ec.marshalOFloat2float64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_autoDisableThreshold(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_autoEnableThreshold(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_autoEnableThreshold,
+		func(ctx context.Context) (any, error) {
+			return obj.AutoEnableThreshold, nil
+		},
+		nil,
+		ec.marshalOFloat2float64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_autoEnableThreshold(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UsageMonitorChannel_channel(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -64027,6 +64456,10 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_channel(_ context.C
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -64846,6 +65279,10 @@ func (ec *executionContext) fieldContext_User_ownedChannels(_ context.Context, f
 				return ec.fieldContext_Channel_visibility(ctx, field)
 			case "sharedWith":
 				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
 			case "owner":
 				return ec.fieldContext_Channel_owner(ctx, field)
 			case "requests":
@@ -65489,6 +65926,12 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
 			case "nextResetAt":
 				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
 			case "channel":
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
@@ -74902,7 +75345,7 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes", "retryableErrorPatterns"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -75007,6 +75450,13 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.RetryableStatusCodes = data
+		case "retryableErrorPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("retryableErrorPatterns"))
+			data, err := ec.unmarshalORetryableErrorPatternInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPatternᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RetryableErrorPatterns = data
 		}
 	}
 
@@ -75088,7 +75538,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "quotaBindingReady", "quotaBindingReadyNEQ", "quotaMultiMonitorStrategy", "quotaMultiMonitorStrategyNEQ", "quotaMultiMonitorStrategyIn", "quotaMultiMonitorStrategyNotIn", "quotaMultiMonitorStrategyIsNil", "quotaMultiMonitorStrategyNotNil", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -76172,6 +76622,62 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.VisibilityNotIn = data
+		case "quotaBindingReady":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaBindingReady"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaBindingReady = data
+		case "quotaBindingReadyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaBindingReadyNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaBindingReadyNEQ = data
+		case "quotaMultiMonitorStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategy"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategy = data
+		case "quotaMultiMonitorStrategyNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategyNEQ"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategyNEQ = data
+		case "quotaMultiMonitorStrategyIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategyIn"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategyᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategyIn = data
+		case "quotaMultiMonitorStrategyNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategyNotIn"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategyᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategyNotIn = data
+		case "quotaMultiMonitorStrategyIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategyIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategyIsNil = data
+		case "quotaMultiMonitorStrategyNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategyNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategyNotNil = data
 		case "hasOwner":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasOwner"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -76652,7 +77158,7 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility", "usageMonitorChannelIDs"}
+	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "usageMonitorChannelIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -76771,6 +77277,20 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.Visibility = data
+		case "quotaBindingReady":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaBindingReady"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaBindingReady = data
+		case "quotaMultiMonitorStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategy"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategy = data
 		case "usageMonitorChannelIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelIDs"))
 			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
@@ -89584,6 +90104,40 @@ func (ec *executionContext) unmarshalInputRestoreOptionsInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRetryableErrorPatternInput(ctx context.Context, obj any) (objects.RetryableErrorPattern, error) {
+	var it objects.RetryableErrorPattern
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"pattern", "regex"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "pattern":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pattern"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Pattern = data
+		case "regex":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("regex"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Regex = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRoleOrder(ctx context.Context, obj any) (ent.RoleOrder, error) {
 	var it ent.RoleOrder
 	asMap := map[string]any{}
@@ -92265,7 +92819,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "clientRestriction", "clearClientRestriction", "autoDisableConfig", "clearAutoDisableConfig", "visibility", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
+	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "clientRestriction", "clearClientRestriction", "autoDisableConfig", "clearAutoDisableConfig", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "clearQuotaMultiMonitorStrategy", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92517,6 +93071,27 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.Visibility = data
+		case "quotaBindingReady":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaBindingReady"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaBindingReady = data
+		case "quotaMultiMonitorStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMultiMonitorStrategy"))
+			data, err := ec.unmarshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaMultiMonitorStrategy = data
+		case "clearQuotaMultiMonitorStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearQuotaMultiMonitorStrategy"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearQuotaMultiMonitorStrategy = data
 		case "addUsageMonitorChannelIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addUsageMonitorChannelIDs"))
 			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
@@ -96769,7 +97344,7 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "quotaStatus", "quotaStatusNEQ", "quotaStatusIn", "quotaStatusNotIn", "quotaStatusIsNil", "quotaStatusNotNil", "quotaReady", "quotaReadyNEQ", "quotaReadyIsNil", "quotaReadyNotNil", "nextResetAt", "nextResetAtNEQ", "nextResetAtIn", "nextResetAtNotIn", "nextResetAtGT", "nextResetAtGTE", "nextResetAtLT", "nextResetAtLTE", "nextResetAtIsNil", "nextResetAtNotNil", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "quotaStatus", "quotaStatusNEQ", "quotaStatusIn", "quotaStatusNotIn", "quotaStatusIsNil", "quotaStatusNotNil", "quotaReady", "quotaReadyNEQ", "quotaReadyIsNil", "quotaReadyNotNil", "nextResetAt", "nextResetAtNEQ", "nextResetAtIn", "nextResetAtNotIn", "nextResetAtGT", "nextResetAtGTE", "nextResetAtLT", "nextResetAtLTE", "nextResetAtIsNil", "nextResetAtNotNil", "autoDisableEnabled", "autoDisableEnabledNEQ", "autoDisableThreshold", "autoDisableThresholdNEQ", "autoDisableThresholdIn", "autoDisableThresholdNotIn", "autoDisableThresholdGT", "autoDisableThresholdGTE", "autoDisableThresholdLT", "autoDisableThresholdLTE", "autoDisableThresholdIsNil", "autoDisableThresholdNotNil", "autoEnableThreshold", "autoEnableThresholdNEQ", "autoEnableThresholdIn", "autoEnableThresholdNotIn", "autoEnableThresholdGT", "autoEnableThresholdGTE", "autoEnableThresholdLT", "autoEnableThresholdLTE", "autoEnableThresholdIsNil", "autoEnableThresholdNotNil", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -97839,6 +98414,160 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 				return it, err
 			}
 			it.NextResetAtNotNil = data
+		case "autoDisableEnabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableEnabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableEnabled = data
+		case "autoDisableEnabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableEnabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableEnabledNEQ = data
+		case "autoDisableThreshold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThreshold"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThreshold = data
+		case "autoDisableThresholdNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdNEQ"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdNEQ = data
+		case "autoDisableThresholdIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdIn = data
+		case "autoDisableThresholdNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdNotIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdNotIn = data
+		case "autoDisableThresholdGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdGT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdGT = data
+		case "autoDisableThresholdGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdGTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdGTE = data
+		case "autoDisableThresholdLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdLT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdLT = data
+		case "autoDisableThresholdLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdLTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdLTE = data
+		case "autoDisableThresholdIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdIsNil = data
+		case "autoDisableThresholdNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableThresholdNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableThresholdNotNil = data
+		case "autoEnableThreshold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThreshold"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThreshold = data
+		case "autoEnableThresholdNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdNEQ"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdNEQ = data
+		case "autoEnableThresholdIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdIn = data
+		case "autoEnableThresholdNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdNotIn"))
+			data, err := ec.unmarshalOFloat2ᚕfloat64ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdNotIn = data
+		case "autoEnableThresholdGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdGT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdGT = data
+		case "autoEnableThresholdGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdGTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdGTE = data
+		case "autoEnableThresholdLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdLT"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdLT = data
+		case "autoEnableThresholdLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdLTE"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdLTE = data
+		case "autoEnableThresholdIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdIsNil = data
+		case "autoEnableThresholdNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoEnableThresholdNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoEnableThresholdNotNil = data
 		case "hasChannel":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannel"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -102585,6 +103314,13 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "sharedWith":
 			out.Values[i] = ec._Channel_sharedWith(ctx, field, obj)
+		case "quotaBindingReady":
+			out.Values[i] = ec._Channel_quotaBindingReady(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "quotaMultiMonitorStrategy":
+			out.Values[i] = ec._Channel_quotaMultiMonitorStrategy(ctx, field, obj)
 		case "owner":
 			field := field
 
@@ -105054,6 +105790,8 @@ func (ec *executionContext) _ChannelSettings(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._ChannelSettings_rateLimit(ctx, field, obj)
 		case "retryableStatusCodes":
 			out.Values[i] = ec._ChannelSettings_retryableStatusCodes(ctx, field, obj)
+		case "retryableErrorPatterns":
+			out.Values[i] = ec._ChannelSettings_retryableErrorPatterns(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -116183,6 +116921,50 @@ func (ec *executionContext) _RetryPolicy(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var retryableErrorPatternImplementors = []string{"RetryableErrorPattern"}
+
+func (ec *executionContext) _RetryableErrorPattern(ctx context.Context, sel ast.SelectionSet, obj *objects.RetryableErrorPattern) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, retryableErrorPatternImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RetryableErrorPattern")
+		case "pattern":
+			out.Values[i] = ec._RetryableErrorPattern_pattern(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "regex":
+			out.Values[i] = ec._RetryableErrorPattern_regex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var roleImplementors = []string{"Role", "Node"}
 
 func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *ent.Role) graphql.Marshaler {
@@ -120265,6 +121047,15 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "nextResetAt":
 			out.Values[i] = ec._UsageMonitorChannel_nextResetAt(ctx, field, obj)
+		case "autoDisableEnabled":
+			out.Values[i] = ec._UsageMonitorChannel_autoDisableEnabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "autoDisableThreshold":
+			out.Values[i] = ec._UsageMonitorChannel_autoDisableThreshold(ctx, field, obj)
+		case "autoEnableThreshold":
+			out.Values[i] = ec._UsageMonitorChannel_autoEnableThreshold(ctx, field, obj)
 		case "channel":
 			field := field
 
@@ -124345,6 +125136,16 @@ func (ec *executionContext) unmarshalNChannelProbeWhereInput2ᚖgithubᚗcomᚋl
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNChannelQuotaMultiMonitorStrategy2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx context.Context, v any) (channel.QuotaMultiMonitorStrategy, error) {
+	var res channel.QuotaMultiMonitorStrategy
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannelQuotaMultiMonitorStrategy2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx context.Context, sel ast.SelectionSet, v channel.QuotaMultiMonitorStrategy) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNChannelStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐStatus(ctx context.Context, v any) (channel.Status, error) {
 	var res channel.Status
 	err := res.UnmarshalGQL(v)
@@ -127857,6 +128658,15 @@ func (ec *executionContext) marshalNRetryPolicy2ᚖgithubᚗcomᚋldm2060ᚋaxon
 	return ec._RetryPolicy(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRetryableErrorPattern2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPattern(ctx context.Context, sel ast.SelectionSet, v objects.RetryableErrorPattern) graphql.Marshaler {
+	return ec._RetryableErrorPattern(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNRetryableErrorPatternInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPattern(ctx context.Context, v any) (objects.RetryableErrorPattern, error) {
+	res, err := ec.unmarshalInputRetryableErrorPatternInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNReviewAction2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐReviewAction(ctx context.Context, v any) (ReviewAction, error) {
 	var res ReviewAction
 	err := res.UnmarshalGQL(v)
@@ -131354,6 +132164,87 @@ func (ec *executionContext) unmarshalOChannelProbeWhereInput2ᚖgithubᚗcomᚋl
 	}
 	res, err := ec.unmarshalInputChannelProbeWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChannelQuotaMultiMonitorStrategy2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategyᚄ(ctx context.Context, v any) ([]channel.QuotaMultiMonitorStrategy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]channel.QuotaMultiMonitorStrategy, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelQuotaMultiMonitorStrategy2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOChannelQuotaMultiMonitorStrategy2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategyᚄ(ctx context.Context, sel ast.SelectionSet, v []channel.QuotaMultiMonitorStrategy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelQuotaMultiMonitorStrategy2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx context.Context, v any) (*channel.QuotaMultiMonitorStrategy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(channel.QuotaMultiMonitorStrategy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelQuotaMultiMonitorStrategy2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx context.Context, sel ast.SelectionSet, v *channel.QuotaMultiMonitorStrategy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOChannelRateLimit2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelRateLimit(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelRateLimit) graphql.Marshaler {
@@ -135647,6 +136538,71 @@ func (ec *executionContext) unmarshalORequestWhereInput2ᚖgithubᚗcomᚋldm206
 	}
 	res, err := ec.unmarshalInputRequestWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalORetryableErrorPattern2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPatternᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.RetryableErrorPattern) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRetryableErrorPattern2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPattern(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalORetryableErrorPatternInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPatternᚄ(ctx context.Context, v any) ([]objects.RetryableErrorPattern, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]objects.RetryableErrorPattern, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRetryableErrorPatternInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPattern(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalORole2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐRole(ctx context.Context, sel ast.SelectionSet, v *ent.Role) graphql.Marshaler {

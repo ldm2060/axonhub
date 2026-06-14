@@ -299,6 +299,34 @@ func (_c *ChannelCreate) SetSharedWith(v []int) *ChannelCreate {
 	return _c
 }
 
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (_c *ChannelCreate) SetQuotaBindingReady(v bool) *ChannelCreate {
+	_c.mutation.SetQuotaBindingReady(v)
+	return _c
+}
+
+// SetNillableQuotaBindingReady sets the "quota_binding_ready" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableQuotaBindingReady(v *bool) *ChannelCreate {
+	if v != nil {
+		_c.SetQuotaBindingReady(*v)
+	}
+	return _c
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (_c *ChannelCreate) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelCreate {
+	_c.mutation.SetQuotaMultiMonitorStrategy(v)
+	return _c
+}
+
+// SetNillableQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field if the given value is not nil.
+func (_c *ChannelCreate) SetNillableQuotaMultiMonitorStrategy(v *channel.QuotaMultiMonitorStrategy) *ChannelCreate {
+	if v != nil {
+		_c.SetQuotaMultiMonitorStrategy(*v)
+	}
+	return _c
+}
+
 // SetOwner sets the "owner" edge to the User entity.
 func (_c *ChannelCreate) SetOwner(v *User) *ChannelCreate {
 	return _c.SetOwnerID(v.ID)
@@ -512,6 +540,14 @@ func (_c *ChannelCreate) defaults() error {
 		v := channel.DefaultVisibility
 		_c.mutation.SetVisibility(v)
 	}
+	if _, ok := _c.mutation.QuotaBindingReady(); !ok {
+		v := channel.DefaultQuotaBindingReady
+		_c.mutation.SetQuotaBindingReady(v)
+	}
+	if _, ok := _c.mutation.QuotaMultiMonitorStrategy(); !ok {
+		v := channel.DefaultQuotaMultiMonitorStrategy
+		_c.mutation.SetQuotaMultiMonitorStrategy(v)
+	}
 	return nil
 }
 
@@ -565,6 +601,14 @@ func (_c *ChannelCreate) check() error {
 	if v, ok := _c.mutation.Visibility(); ok {
 		if err := channel.VisibilityValidator(v); err != nil {
 			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.QuotaBindingReady(); !ok {
+		return &ValidationError{Name: "quota_binding_ready", err: errors.New(`ent: missing required field "Channel.quota_binding_ready"`)}
+	}
+	if v, ok := _c.mutation.QuotaMultiMonitorStrategy(); ok {
+		if err := channel.QuotaMultiMonitorStrategyValidator(v); err != nil {
+			return &ValidationError{Name: "quota_multi_monitor_strategy", err: fmt.Errorf(`ent: validator failed for field "Channel.quota_multi_monitor_strategy": %w`, err)}
 		}
 	}
 	return nil
@@ -693,6 +737,14 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.SharedWith(); ok {
 		_spec.SetField(channel.FieldSharedWith, field.TypeJSON, value)
 		_node.SharedWith = value
+	}
+	if value, ok := _c.mutation.QuotaBindingReady(); ok {
+		_spec.SetField(channel.FieldQuotaBindingReady, field.TypeBool, value)
+		_node.QuotaBindingReady = value
+	}
+	if value, ok := _c.mutation.QuotaMultiMonitorStrategy(); ok {
+		_spec.SetField(channel.FieldQuotaMultiMonitorStrategy, field.TypeEnum, value)
+		_node.QuotaMultiMonitorStrategy = &value
 	}
 	if nodes := _c.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1253,6 +1305,36 @@ func (u *ChannelUpsert) ClearSharedWith() *ChannelUpsert {
 	return u
 }
 
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (u *ChannelUpsert) SetQuotaBindingReady(v bool) *ChannelUpsert {
+	u.Set(channel.FieldQuotaBindingReady, v)
+	return u
+}
+
+// UpdateQuotaBindingReady sets the "quota_binding_ready" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateQuotaBindingReady() *ChannelUpsert {
+	u.SetExcluded(channel.FieldQuotaBindingReady)
+	return u
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsert) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelUpsert {
+	u.Set(channel.FieldQuotaMultiMonitorStrategy, v)
+	return u
+}
+
+// UpdateQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field to the value that was provided on create.
+func (u *ChannelUpsert) UpdateQuotaMultiMonitorStrategy() *ChannelUpsert {
+	u.SetExcluded(channel.FieldQuotaMultiMonitorStrategy)
+	return u
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsert) ClearQuotaMultiMonitorStrategy() *ChannelUpsert {
+	u.SetNull(channel.FieldQuotaMultiMonitorStrategy)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1739,6 +1821,41 @@ func (u *ChannelUpsertOne) UpdateSharedWith() *ChannelUpsertOne {
 func (u *ChannelUpsertOne) ClearSharedWith() *ChannelUpsertOne {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearSharedWith()
+	})
+}
+
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (u *ChannelUpsertOne) SetQuotaBindingReady(v bool) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetQuotaBindingReady(v)
+	})
+}
+
+// UpdateQuotaBindingReady sets the "quota_binding_ready" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateQuotaBindingReady() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateQuotaBindingReady()
+	})
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsertOne) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetQuotaMultiMonitorStrategy(v)
+	})
+}
+
+// UpdateQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field to the value that was provided on create.
+func (u *ChannelUpsertOne) UpdateQuotaMultiMonitorStrategy() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateQuotaMultiMonitorStrategy()
+	})
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsertOne) ClearQuotaMultiMonitorStrategy() *ChannelUpsertOne {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearQuotaMultiMonitorStrategy()
 	})
 }
 
@@ -2394,6 +2511,41 @@ func (u *ChannelUpsertBulk) UpdateSharedWith() *ChannelUpsertBulk {
 func (u *ChannelUpsertBulk) ClearSharedWith() *ChannelUpsertBulk {
 	return u.Update(func(s *ChannelUpsert) {
 		s.ClearSharedWith()
+	})
+}
+
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (u *ChannelUpsertBulk) SetQuotaBindingReady(v bool) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetQuotaBindingReady(v)
+	})
+}
+
+// UpdateQuotaBindingReady sets the "quota_binding_ready" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateQuotaBindingReady() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateQuotaBindingReady()
+	})
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsertBulk) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.SetQuotaMultiMonitorStrategy(v)
+	})
+}
+
+// UpdateQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field to the value that was provided on create.
+func (u *ChannelUpsertBulk) UpdateQuotaMultiMonitorStrategy() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.UpdateQuotaMultiMonitorStrategy()
+	})
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (u *ChannelUpsertBulk) ClearQuotaMultiMonitorStrategy() *ChannelUpsertBulk {
+	return u.Update(func(s *ChannelUpsert) {
+		s.ClearQuotaMultiMonitorStrategy()
 	})
 }
 

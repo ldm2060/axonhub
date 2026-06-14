@@ -134,23 +134,25 @@ func (c *APIKeyProfileTemplateUpdateOne) SetInput(i UpdateAPIKeyProfileTemplateI
 
 // CreateChannelInput represents a mutation input for creating channels.
 type CreateChannelInput struct {
-	Type                    channel.Type
-	BaseURL                 *string
-	Name                    string
-	Credentials             objects.ChannelCredentials
-	SupportedModels         []string
-	ManualModels            []string
-	AutoSyncSupportedModels *bool
-	AutoSyncModelPattern    *string
-	Tags                    []string
-	DefaultTestModel        string
-	Policies                *objects.ChannelPolicies
-	Settings                *objects.ChannelSettings
-	OrderingWeight          *int
-	Remark                  *string
-	Endpoints               []objects.ChannelEndpoint
-	Visibility              *channel.Visibility
-	UsageMonitorChannelIDs  []int
+	Type                      channel.Type
+	BaseURL                   *string
+	Name                      string
+	Credentials               objects.ChannelCredentials
+	SupportedModels           []string
+	ManualModels              []string
+	AutoSyncSupportedModels   *bool
+	AutoSyncModelPattern      *string
+	Tags                      []string
+	DefaultTestModel          string
+	Policies                  *objects.ChannelPolicies
+	Settings                  *objects.ChannelSettings
+	OrderingWeight            *int
+	Remark                    *string
+	Endpoints                 []objects.ChannelEndpoint
+	Visibility                *channel.Visibility
+	QuotaBindingReady         *bool
+	QuotaMultiMonitorStrategy *channel.QuotaMultiMonitorStrategy
+	UsageMonitorChannelIDs    []int
 }
 
 // Mutate applies the CreateChannelInput on the ChannelMutation builder.
@@ -195,6 +197,12 @@ func (i *CreateChannelInput) Mutate(m *ChannelMutation) {
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)
 	}
+	if v := i.QuotaBindingReady; v != nil {
+		m.SetQuotaBindingReady(*v)
+	}
+	if v := i.QuotaMultiMonitorStrategy; v != nil {
+		m.SetQuotaMultiMonitorStrategy(*v)
+	}
 	if v := i.UsageMonitorChannelIDs; len(v) > 0 {
 		m.AddUsageMonitorChannelIDs(v...)
 	}
@@ -208,44 +216,47 @@ func (c *ChannelCreate) SetInput(i CreateChannelInput) *ChannelCreate {
 
 // UpdateChannelInput represents a mutation input for updating channels.
 type UpdateChannelInput struct {
-	Type                         *channel.Type
-	ClearBaseURL                 bool
-	BaseURL                      *string
-	Name                         *string
-	Status                       *channel.Status
-	Credentials                  *objects.ChannelCredentials
-	SupportedModels              []string
-	AppendSupportedModels        []string
-	ClearManualModels            bool
-	ManualModels                 []string
-	AppendManualModels           []string
-	AutoSyncSupportedModels      *bool
-	ClearAutoSyncModelPattern    bool
-	AutoSyncModelPattern         *string
-	ClearTags                    bool
-	Tags                         []string
-	AppendTags                   []string
-	DefaultTestModel             *string
-	ClearPolicies                bool
-	Policies                     *objects.ChannelPolicies
-	ClearSettings                bool
-	Settings                     *objects.ChannelSettings
-	OrderingWeight               *int
-	ClearErrorMessage            bool
-	ErrorMessage                 *string
-	ClearRemark                  bool
-	Remark                       *string
-	ClearEndpoints               bool
-	Endpoints                    []objects.ChannelEndpoint
-	AppendEndpoints              []objects.ChannelEndpoint
-	ClearClientRestriction       bool
-	ClientRestriction            *channel.ClientRestriction
-	ClearAutoDisableConfig       bool
-	AutoDisableConfig            *objects.ChannelAutoDisableConfig
-	Visibility                   *channel.Visibility
-	ClearUsageMonitorChannels    bool
-	AddUsageMonitorChannelIDs    []int
-	RemoveUsageMonitorChannelIDs []int
+	Type                           *channel.Type
+	ClearBaseURL                   bool
+	BaseURL                        *string
+	Name                           *string
+	Status                         *channel.Status
+	Credentials                    *objects.ChannelCredentials
+	SupportedModels                []string
+	AppendSupportedModels          []string
+	ClearManualModels              bool
+	ManualModels                   []string
+	AppendManualModels             []string
+	AutoSyncSupportedModels        *bool
+	ClearAutoSyncModelPattern      bool
+	AutoSyncModelPattern           *string
+	ClearTags                      bool
+	Tags                           []string
+	AppendTags                     []string
+	DefaultTestModel               *string
+	ClearPolicies                  bool
+	Policies                       *objects.ChannelPolicies
+	ClearSettings                  bool
+	Settings                       *objects.ChannelSettings
+	OrderingWeight                 *int
+	ClearErrorMessage              bool
+	ErrorMessage                   *string
+	ClearRemark                    bool
+	Remark                         *string
+	ClearEndpoints                 bool
+	Endpoints                      []objects.ChannelEndpoint
+	AppendEndpoints                []objects.ChannelEndpoint
+	ClearClientRestriction         bool
+	ClientRestriction              *channel.ClientRestriction
+	ClearAutoDisableConfig         bool
+	AutoDisableConfig              *objects.ChannelAutoDisableConfig
+	Visibility                     *channel.Visibility
+	QuotaBindingReady              *bool
+	ClearQuotaMultiMonitorStrategy bool
+	QuotaMultiMonitorStrategy      *channel.QuotaMultiMonitorStrategy
+	ClearUsageMonitorChannels      bool
+	AddUsageMonitorChannelIDs      []int
+	RemoveUsageMonitorChannelIDs   []int
 }
 
 // Mutate applies the UpdateChannelInput on the ChannelMutation builder.
@@ -354,6 +365,15 @@ func (i *UpdateChannelInput) Mutate(m *ChannelMutation) {
 	}
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)
+	}
+	if v := i.QuotaBindingReady; v != nil {
+		m.SetQuotaBindingReady(*v)
+	}
+	if i.ClearQuotaMultiMonitorStrategy {
+		m.ClearQuotaMultiMonitorStrategy()
+	}
+	if v := i.QuotaMultiMonitorStrategy; v != nil {
+		m.SetQuotaMultiMonitorStrategy(*v)
 	}
 	if i.ClearUsageMonitorChannels {
 		m.ClearUsageMonitorChannels()

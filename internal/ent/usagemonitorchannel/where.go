@@ -120,6 +120,21 @@ func NextResetAt(v time.Time) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldNextResetAt, v))
 }
 
+// AutoDisableEnabled applies equality check predicate on the "auto_disable_enabled" field. It's identical to AutoDisableEnabledEQ.
+func AutoDisableEnabled(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoDisableEnabled, v))
+}
+
+// AutoDisableThreshold applies equality check predicate on the "auto_disable_threshold" field. It's identical to AutoDisableThresholdEQ.
+func AutoDisableThreshold(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoDisableThreshold, v))
+}
+
+// AutoEnableThreshold applies equality check predicate on the "auto_enable_threshold" field. It's identical to AutoEnableThresholdEQ.
+func AutoEnableThreshold(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoEnableThreshold, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldCreatedAt, v))
@@ -943,6 +958,116 @@ func NextResetAtIsNil() predicate.UsageMonitorChannel {
 // NextResetAtNotNil applies the NotNil predicate on the "next_reset_at" field.
 func NextResetAtNotNil() predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldNextResetAt))
+}
+
+// AutoDisableEnabledEQ applies the EQ predicate on the "auto_disable_enabled" field.
+func AutoDisableEnabledEQ(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoDisableEnabled, v))
+}
+
+// AutoDisableEnabledNEQ applies the NEQ predicate on the "auto_disable_enabled" field.
+func AutoDisableEnabledNEQ(v bool) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldAutoDisableEnabled, v))
+}
+
+// AutoDisableThresholdEQ applies the EQ predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdEQ(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdNEQ applies the NEQ predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdNEQ(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdIn applies the In predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdIn(vs ...float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldAutoDisableThreshold, vs...))
+}
+
+// AutoDisableThresholdNotIn applies the NotIn predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdNotIn(vs ...float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldAutoDisableThreshold, vs...))
+}
+
+// AutoDisableThresholdGT applies the GT predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdGT(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGT(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdGTE applies the GTE predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdGTE(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGTE(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdLT applies the LT predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdLT(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLT(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdLTE applies the LTE predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdLTE(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLTE(FieldAutoDisableThreshold, v))
+}
+
+// AutoDisableThresholdIsNil applies the IsNil predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldAutoDisableThreshold))
+}
+
+// AutoDisableThresholdNotNil applies the NotNil predicate on the "auto_disable_threshold" field.
+func AutoDisableThresholdNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldAutoDisableThreshold))
+}
+
+// AutoEnableThresholdEQ applies the EQ predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdEQ(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdNEQ applies the NEQ predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdNEQ(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNEQ(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdIn applies the In predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdIn(vs ...float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIn(FieldAutoEnableThreshold, vs...))
+}
+
+// AutoEnableThresholdNotIn applies the NotIn predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdNotIn(vs ...float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotIn(FieldAutoEnableThreshold, vs...))
+}
+
+// AutoEnableThresholdGT applies the GT predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdGT(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGT(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdGTE applies the GTE predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdGTE(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldGTE(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdLT applies the LT predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdLT(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLT(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdLTE applies the LTE predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdLTE(v float64) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldLTE(FieldAutoEnableThreshold, v))
+}
+
+// AutoEnableThresholdIsNil applies the IsNil predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldAutoEnableThreshold))
+}
+
+// AutoEnableThresholdNotNil applies the NotNil predicate on the "auto_enable_threshold" field.
+func AutoEnableThresholdNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldAutoEnableThreshold))
 }
 
 // HasChannel applies the HasEdge predicate on the "channel" edge.

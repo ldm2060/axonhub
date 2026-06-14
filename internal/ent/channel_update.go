@@ -430,6 +430,40 @@ func (_u *ChannelUpdate) ClearSharedWith() *ChannelUpdate {
 	return _u
 }
 
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (_u *ChannelUpdate) SetQuotaBindingReady(v bool) *ChannelUpdate {
+	_u.mutation.SetQuotaBindingReady(v)
+	return _u
+}
+
+// SetNillableQuotaBindingReady sets the "quota_binding_ready" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillableQuotaBindingReady(v *bool) *ChannelUpdate {
+	if v != nil {
+		_u.SetQuotaBindingReady(*v)
+	}
+	return _u
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (_u *ChannelUpdate) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelUpdate {
+	_u.mutation.SetQuotaMultiMonitorStrategy(v)
+	return _u
+}
+
+// SetNillableQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field if the given value is not nil.
+func (_u *ChannelUpdate) SetNillableQuotaMultiMonitorStrategy(v *channel.QuotaMultiMonitorStrategy) *ChannelUpdate {
+	if v != nil {
+		_u.SetQuotaMultiMonitorStrategy(*v)
+	}
+	return _u
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (_u *ChannelUpdate) ClearQuotaMultiMonitorStrategy() *ChannelUpdate {
+	_u.mutation.ClearQuotaMultiMonitorStrategy()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *ChannelUpdate) AddRequestIDs(ids ...int) *ChannelUpdate {
 	_u.mutation.AddRequestIDs(ids...)
@@ -740,6 +774,11 @@ func (_u *ChannelUpdate) check() error {
 			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.QuotaMultiMonitorStrategy(); ok {
+		if err := channel.QuotaMultiMonitorStrategyValidator(v); err != nil {
+			return &ValidationError{Name: "quota_multi_monitor_strategy", err: fmt.Errorf(`ent: validator failed for field "Channel.quota_multi_monitor_strategy": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -907,6 +946,15 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SharedWithCleared() {
 		_spec.ClearField(channel.FieldSharedWith, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.QuotaBindingReady(); ok {
+		_spec.SetField(channel.FieldQuotaBindingReady, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.QuotaMultiMonitorStrategy(); ok {
+		_spec.SetField(channel.FieldQuotaMultiMonitorStrategy, field.TypeEnum, value)
+	}
+	if _u.mutation.QuotaMultiMonitorStrategyCleared() {
+		_spec.ClearField(channel.FieldQuotaMultiMonitorStrategy, field.TypeEnum)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1621,6 +1669,40 @@ func (_u *ChannelUpdateOne) ClearSharedWith() *ChannelUpdateOne {
 	return _u
 }
 
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (_u *ChannelUpdateOne) SetQuotaBindingReady(v bool) *ChannelUpdateOne {
+	_u.mutation.SetQuotaBindingReady(v)
+	return _u
+}
+
+// SetNillableQuotaBindingReady sets the "quota_binding_ready" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillableQuotaBindingReady(v *bool) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetQuotaBindingReady(*v)
+	}
+	return _u
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (_u *ChannelUpdateOne) SetQuotaMultiMonitorStrategy(v channel.QuotaMultiMonitorStrategy) *ChannelUpdateOne {
+	_u.mutation.SetQuotaMultiMonitorStrategy(v)
+	return _u
+}
+
+// SetNillableQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field if the given value is not nil.
+func (_u *ChannelUpdateOne) SetNillableQuotaMultiMonitorStrategy(v *channel.QuotaMultiMonitorStrategy) *ChannelUpdateOne {
+	if v != nil {
+		_u.SetQuotaMultiMonitorStrategy(*v)
+	}
+	return _u
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (_u *ChannelUpdateOne) ClearQuotaMultiMonitorStrategy() *ChannelUpdateOne {
+	_u.mutation.ClearQuotaMultiMonitorStrategy()
+	return _u
+}
+
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
 func (_u *ChannelUpdateOne) AddRequestIDs(ids ...int) *ChannelUpdateOne {
 	_u.mutation.AddRequestIDs(ids...)
@@ -1944,6 +2026,11 @@ func (_u *ChannelUpdateOne) check() error {
 			return &ValidationError{Name: "visibility", err: fmt.Errorf(`ent: validator failed for field "Channel.visibility": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.QuotaMultiMonitorStrategy(); ok {
+		if err := channel.QuotaMultiMonitorStrategyValidator(v); err != nil {
+			return &ValidationError{Name: "quota_multi_monitor_strategy", err: fmt.Errorf(`ent: validator failed for field "Channel.quota_multi_monitor_strategy": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -2128,6 +2215,15 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 	}
 	if _u.mutation.SharedWithCleared() {
 		_spec.ClearField(channel.FieldSharedWith, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.QuotaBindingReady(); ok {
+		_spec.SetField(channel.FieldQuotaBindingReady, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.QuotaMultiMonitorStrategy(); ok {
+		_spec.SetField(channel.FieldQuotaMultiMonitorStrategy, field.TypeEnum, value)
+	}
+	if _u.mutation.QuotaMultiMonitorStrategyCleared() {
+		_spec.ClearField(channel.FieldQuotaMultiMonitorStrategy, field.TypeEnum)
 	}
 	if _u.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

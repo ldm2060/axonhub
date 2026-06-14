@@ -71,6 +71,10 @@ const (
 	FieldVisibility = "visibility"
 	// FieldSharedWith holds the string denoting the shared_with field in the database.
 	FieldSharedWith = "shared_with"
+	// FieldQuotaBindingReady holds the string denoting the quota_binding_ready field in the database.
+	FieldQuotaBindingReady = "quota_binding_ready"
+	// FieldQuotaMultiMonitorStrategy holds the string denoting the quota_multi_monitor_strategy field in the database.
+	FieldQuotaMultiMonitorStrategy = "quota_multi_monitor_strategy"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
 	// EdgeRequests holds the string denoting the requests edge name in mutations.
@@ -176,6 +180,8 @@ var Columns = []string{
 	FieldOwnerID,
 	FieldVisibility,
 	FieldSharedWith,
+	FieldQuotaBindingReady,
+	FieldQuotaMultiMonitorStrategy,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -223,6 +229,8 @@ var (
 	DefaultOrderingWeight int
 	// DefaultEndpoints holds the default value on creation for the "endpoints" field.
 	DefaultEndpoints []objects.ChannelEndpoint
+	// DefaultQuotaBindingReady holds the default value on creation for the "quota_binding_ready" field.
+	DefaultQuotaBindingReady bool
 )
 
 // Type defines the type for the "type" enum field.
@@ -382,6 +390,32 @@ func VisibilityValidator(v Visibility) error {
 	}
 }
 
+// QuotaMultiMonitorStrategy defines the type for the "quota_multi_monitor_strategy" enum field.
+type QuotaMultiMonitorStrategy string
+
+// QuotaMultiMonitorStrategyAny is the default value of the QuotaMultiMonitorStrategy enum.
+const DefaultQuotaMultiMonitorStrategy = QuotaMultiMonitorStrategyAny
+
+// QuotaMultiMonitorStrategy values.
+const (
+	QuotaMultiMonitorStrategyAny QuotaMultiMonitorStrategy = "any"
+	QuotaMultiMonitorStrategyAll QuotaMultiMonitorStrategy = "all"
+)
+
+func (qmms QuotaMultiMonitorStrategy) String() string {
+	return string(qmms)
+}
+
+// QuotaMultiMonitorStrategyValidator is a validator for the "quota_multi_monitor_strategy" field enum values. It is called by the builders before save.
+func QuotaMultiMonitorStrategyValidator(qmms QuotaMultiMonitorStrategy) error {
+	switch qmms {
+	case QuotaMultiMonitorStrategyAny, QuotaMultiMonitorStrategyAll:
+		return nil
+	default:
+		return fmt.Errorf("channel: invalid enum value for quota_multi_monitor_strategy field: %q", qmms)
+	}
+}
+
 // OrderOption defines the ordering options for the Channel queries.
 type OrderOption func(*sql.Selector)
 
@@ -468,6 +502,16 @@ func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
 // ByVisibility orders the results by the visibility field.
 func ByVisibility(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVisibility, opts...).ToFunc()
+}
+
+// ByQuotaBindingReady orders the results by the quota_binding_ready field.
+func ByQuotaBindingReady(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuotaBindingReady, opts...).ToFunc()
+}
+
+// ByQuotaMultiMonitorStrategy orders the results by the quota_multi_monitor_strategy field.
+func ByQuotaMultiMonitorStrategy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldQuotaMultiMonitorStrategy, opts...).ToFunc()
 }
 
 // ByOwnerField orders the results by owner field.
@@ -692,6 +736,24 @@ func (e *Visibility) UnmarshalGQL(val interface{}) error {
 	*e = Visibility(str)
 	if err := VisibilityValidator(*e); err != nil {
 		return fmt.Errorf("%s is not a valid Visibility", str)
+	}
+	return nil
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (e QuotaMultiMonitorStrategy) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(e.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (e *QuotaMultiMonitorStrategy) UnmarshalGQL(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("enum %T must be a string", val)
+	}
+	*e = QuotaMultiMonitorStrategy(str)
+	if err := QuotaMultiMonitorStrategyValidator(*e); err != nil {
+		return fmt.Errorf("%s is not a valid QuotaMultiMonitorStrategy", str)
 	}
 	return nil
 }

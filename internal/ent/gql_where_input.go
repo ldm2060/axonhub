@@ -1007,6 +1007,18 @@ type ChannelWhereInput struct {
 	VisibilityIn    []channel.Visibility `json:"visibilityIn,omitempty"`
 	VisibilityNotIn []channel.Visibility `json:"visibilityNotIn,omitempty"`
 
+	// "quota_binding_ready" field predicates.
+	QuotaBindingReady    *bool `json:"quotaBindingReady,omitempty"`
+	QuotaBindingReadyNEQ *bool `json:"quotaBindingReadyNEQ,omitempty"`
+
+	// "quota_multi_monitor_strategy" field predicates.
+	QuotaMultiMonitorStrategy       *channel.QuotaMultiMonitorStrategy  `json:"quotaMultiMonitorStrategy,omitempty"`
+	QuotaMultiMonitorStrategyNEQ    *channel.QuotaMultiMonitorStrategy  `json:"quotaMultiMonitorStrategyNEQ,omitempty"`
+	QuotaMultiMonitorStrategyIn     []channel.QuotaMultiMonitorStrategy `json:"quotaMultiMonitorStrategyIn,omitempty"`
+	QuotaMultiMonitorStrategyNotIn  []channel.QuotaMultiMonitorStrategy `json:"quotaMultiMonitorStrategyNotIn,omitempty"`
+	QuotaMultiMonitorStrategyIsNil  bool                                `json:"quotaMultiMonitorStrategyIsNil,omitempty"`
+	QuotaMultiMonitorStrategyNotNil bool                                `json:"quotaMultiMonitorStrategyNotNil,omitempty"`
+
 	// "owner" edge predicates.
 	HasOwner     *bool             `json:"hasOwner,omitempty"`
 	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
@@ -1542,6 +1554,30 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 	}
 	if len(i.VisibilityNotIn) > 0 {
 		predicates = append(predicates, channel.VisibilityNotIn(i.VisibilityNotIn...))
+	}
+	if i.QuotaBindingReady != nil {
+		predicates = append(predicates, channel.QuotaBindingReadyEQ(*i.QuotaBindingReady))
+	}
+	if i.QuotaBindingReadyNEQ != nil {
+		predicates = append(predicates, channel.QuotaBindingReadyNEQ(*i.QuotaBindingReadyNEQ))
+	}
+	if i.QuotaMultiMonitorStrategy != nil {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyEQ(*i.QuotaMultiMonitorStrategy))
+	}
+	if i.QuotaMultiMonitorStrategyNEQ != nil {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyNEQ(*i.QuotaMultiMonitorStrategyNEQ))
+	}
+	if len(i.QuotaMultiMonitorStrategyIn) > 0 {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyIn(i.QuotaMultiMonitorStrategyIn...))
+	}
+	if len(i.QuotaMultiMonitorStrategyNotIn) > 0 {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyNotIn(i.QuotaMultiMonitorStrategyNotIn...))
+	}
+	if i.QuotaMultiMonitorStrategyIsNil {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyIsNil())
+	}
+	if i.QuotaMultiMonitorStrategyNotNil {
+		predicates = append(predicates, channel.QuotaMultiMonitorStrategyNotNil())
 	}
 
 	if i.HasOwner != nil {
@@ -12040,6 +12076,34 @@ type UsageMonitorChannelWhereInput struct {
 	NextResetAtIsNil  bool        `json:"nextResetAtIsNil,omitempty"`
 	NextResetAtNotNil bool        `json:"nextResetAtNotNil,omitempty"`
 
+	// "auto_disable_enabled" field predicates.
+	AutoDisableEnabled    *bool `json:"autoDisableEnabled,omitempty"`
+	AutoDisableEnabledNEQ *bool `json:"autoDisableEnabledNEQ,omitempty"`
+
+	// "auto_disable_threshold" field predicates.
+	AutoDisableThreshold       *float64  `json:"autoDisableThreshold,omitempty"`
+	AutoDisableThresholdNEQ    *float64  `json:"autoDisableThresholdNEQ,omitempty"`
+	AutoDisableThresholdIn     []float64 `json:"autoDisableThresholdIn,omitempty"`
+	AutoDisableThresholdNotIn  []float64 `json:"autoDisableThresholdNotIn,omitempty"`
+	AutoDisableThresholdGT     *float64  `json:"autoDisableThresholdGT,omitempty"`
+	AutoDisableThresholdGTE    *float64  `json:"autoDisableThresholdGTE,omitempty"`
+	AutoDisableThresholdLT     *float64  `json:"autoDisableThresholdLT,omitempty"`
+	AutoDisableThresholdLTE    *float64  `json:"autoDisableThresholdLTE,omitempty"`
+	AutoDisableThresholdIsNil  bool      `json:"autoDisableThresholdIsNil,omitempty"`
+	AutoDisableThresholdNotNil bool      `json:"autoDisableThresholdNotNil,omitempty"`
+
+	// "auto_enable_threshold" field predicates.
+	AutoEnableThreshold       *float64  `json:"autoEnableThreshold,omitempty"`
+	AutoEnableThresholdNEQ    *float64  `json:"autoEnableThresholdNEQ,omitempty"`
+	AutoEnableThresholdIn     []float64 `json:"autoEnableThresholdIn,omitempty"`
+	AutoEnableThresholdNotIn  []float64 `json:"autoEnableThresholdNotIn,omitempty"`
+	AutoEnableThresholdGT     *float64  `json:"autoEnableThresholdGT,omitempty"`
+	AutoEnableThresholdGTE    *float64  `json:"autoEnableThresholdGTE,omitempty"`
+	AutoEnableThresholdLT     *float64  `json:"autoEnableThresholdLT,omitempty"`
+	AutoEnableThresholdLTE    *float64  `json:"autoEnableThresholdLTE,omitempty"`
+	AutoEnableThresholdIsNil  bool      `json:"autoEnableThresholdIsNil,omitempty"`
+	AutoEnableThresholdNotNil bool      `json:"autoEnableThresholdNotNil,omitempty"`
+
 	// "channel" edge predicates.
 	HasChannel     *bool                `json:"hasChannel,omitempty"`
 	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
@@ -12590,6 +12654,72 @@ func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, erro
 	}
 	if i.NextResetAtNotNil {
 		predicates = append(predicates, usagemonitorchannel.NextResetAtNotNil())
+	}
+	if i.AutoDisableEnabled != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableEnabledEQ(*i.AutoDisableEnabled))
+	}
+	if i.AutoDisableEnabledNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableEnabledNEQ(*i.AutoDisableEnabledNEQ))
+	}
+	if i.AutoDisableThreshold != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdEQ(*i.AutoDisableThreshold))
+	}
+	if i.AutoDisableThresholdNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdNEQ(*i.AutoDisableThresholdNEQ))
+	}
+	if len(i.AutoDisableThresholdIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdIn(i.AutoDisableThresholdIn...))
+	}
+	if len(i.AutoDisableThresholdNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdNotIn(i.AutoDisableThresholdNotIn...))
+	}
+	if i.AutoDisableThresholdGT != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdGT(*i.AutoDisableThresholdGT))
+	}
+	if i.AutoDisableThresholdGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdGTE(*i.AutoDisableThresholdGTE))
+	}
+	if i.AutoDisableThresholdLT != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdLT(*i.AutoDisableThresholdLT))
+	}
+	if i.AutoDisableThresholdLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdLTE(*i.AutoDisableThresholdLTE))
+	}
+	if i.AutoDisableThresholdIsNil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdIsNil())
+	}
+	if i.AutoDisableThresholdNotNil {
+		predicates = append(predicates, usagemonitorchannel.AutoDisableThresholdNotNil())
+	}
+	if i.AutoEnableThreshold != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdEQ(*i.AutoEnableThreshold))
+	}
+	if i.AutoEnableThresholdNEQ != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdNEQ(*i.AutoEnableThresholdNEQ))
+	}
+	if len(i.AutoEnableThresholdIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdIn(i.AutoEnableThresholdIn...))
+	}
+	if len(i.AutoEnableThresholdNotIn) > 0 {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdNotIn(i.AutoEnableThresholdNotIn...))
+	}
+	if i.AutoEnableThresholdGT != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdGT(*i.AutoEnableThresholdGT))
+	}
+	if i.AutoEnableThresholdGTE != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdGTE(*i.AutoEnableThresholdGTE))
+	}
+	if i.AutoEnableThresholdLT != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdLT(*i.AutoEnableThresholdLT))
+	}
+	if i.AutoEnableThresholdLTE != nil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdLTE(*i.AutoEnableThresholdLTE))
+	}
+	if i.AutoEnableThresholdIsNil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdIsNil())
+	}
+	if i.AutoEnableThresholdNotNil {
+		predicates = append(predicates, usagemonitorchannel.AutoEnableThresholdNotNil())
 	}
 
 	if i.HasChannel != nil {

@@ -205,6 +205,10 @@ func init() {
 	channelDescEndpoints := channelFields[17].Descriptor()
 	// channel.DefaultEndpoints holds the default value on creation for the endpoints field.
 	channel.DefaultEndpoints = channelDescEndpoints.Default.([]objects.ChannelEndpoint)
+	// channelDescQuotaBindingReady is the schema descriptor for quota_binding_ready field.
+	channelDescQuotaBindingReady := channelFields[23].Descriptor()
+	// channel.DefaultQuotaBindingReady holds the default value on creation for the quota_binding_ready field.
+	channel.DefaultQuotaBindingReady = channelDescQuotaBindingReady.Default.(bool)
 	channelmodelpriceMixin := schema.ChannelModelPrice{}.Mixin()
 	channelmodelprice.Policy = privacy.NewPolicies(schema.ChannelModelPrice{})
 	channelmodelprice.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -970,6 +974,18 @@ func init() {
 	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[18].Descriptor()
 	// usagemonitorchannel.DefaultQuotaReady holds the default value on creation for the quota_ready field.
 	usagemonitorchannel.DefaultQuotaReady = usagemonitorchannelDescQuotaReady.Default.(bool)
+	// usagemonitorchannelDescAutoDisableEnabled is the schema descriptor for auto_disable_enabled field.
+	usagemonitorchannelDescAutoDisableEnabled := usagemonitorchannelFields[21].Descriptor()
+	// usagemonitorchannel.DefaultAutoDisableEnabled holds the default value on creation for the auto_disable_enabled field.
+	usagemonitorchannel.DefaultAutoDisableEnabled = usagemonitorchannelDescAutoDisableEnabled.Default.(bool)
+	// usagemonitorchannelDescAutoDisableThreshold is the schema descriptor for auto_disable_threshold field.
+	usagemonitorchannelDescAutoDisableThreshold := usagemonitorchannelFields[22].Descriptor()
+	// usagemonitorchannel.DefaultAutoDisableThreshold holds the default value on creation for the auto_disable_threshold field.
+	usagemonitorchannel.DefaultAutoDisableThreshold = usagemonitorchannelDescAutoDisableThreshold.Default.(float64)
+	// usagemonitorchannelDescAutoEnableThreshold is the schema descriptor for auto_enable_threshold field.
+	usagemonitorchannelDescAutoEnableThreshold := usagemonitorchannelFields[23].Descriptor()
+	// usagemonitorchannel.DefaultAutoEnableThreshold holds the default value on creation for the auto_enable_threshold field.
+	usagemonitorchannel.DefaultAutoEnableThreshold = usagemonitorchannelDescAutoEnableThreshold.Default.(float64)
 	userMixin := schema.User{}.Mixin()
 	user.Policy = privacy.NewPolicies(schema.User{})
 	user.Hooks[0] = func(next ent.Mutator) ent.Mutator {

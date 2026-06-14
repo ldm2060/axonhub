@@ -97,32 +97,34 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "Channel",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			channel.FieldCreatedAt:               {Type: field.TypeTime, Column: channel.FieldCreatedAt},
-			channel.FieldUpdatedAt:               {Type: field.TypeTime, Column: channel.FieldUpdatedAt},
-			channel.FieldDeletedAt:               {Type: field.TypeInt, Column: channel.FieldDeletedAt},
-			channel.FieldType:                    {Type: field.TypeEnum, Column: channel.FieldType},
-			channel.FieldBaseURL:                 {Type: field.TypeString, Column: channel.FieldBaseURL},
-			channel.FieldName:                    {Type: field.TypeString, Column: channel.FieldName},
-			channel.FieldStatus:                  {Type: field.TypeEnum, Column: channel.FieldStatus},
-			channel.FieldCredentials:             {Type: field.TypeJSON, Column: channel.FieldCredentials},
-			channel.FieldDisabledAPIKeys:         {Type: field.TypeJSON, Column: channel.FieldDisabledAPIKeys},
-			channel.FieldSupportedModels:         {Type: field.TypeJSON, Column: channel.FieldSupportedModels},
-			channel.FieldManualModels:            {Type: field.TypeJSON, Column: channel.FieldManualModels},
-			channel.FieldAutoSyncSupportedModels: {Type: field.TypeBool, Column: channel.FieldAutoSyncSupportedModels},
-			channel.FieldAutoSyncModelPattern:    {Type: field.TypeString, Column: channel.FieldAutoSyncModelPattern},
-			channel.FieldTags:                    {Type: field.TypeJSON, Column: channel.FieldTags},
-			channel.FieldDefaultTestModel:        {Type: field.TypeString, Column: channel.FieldDefaultTestModel},
-			channel.FieldPolicies:                {Type: field.TypeJSON, Column: channel.FieldPolicies},
-			channel.FieldSettings:                {Type: field.TypeJSON, Column: channel.FieldSettings},
-			channel.FieldOrderingWeight:          {Type: field.TypeInt, Column: channel.FieldOrderingWeight},
-			channel.FieldErrorMessage:            {Type: field.TypeString, Column: channel.FieldErrorMessage},
-			channel.FieldRemark:                  {Type: field.TypeString, Column: channel.FieldRemark},
-			channel.FieldEndpoints:               {Type: field.TypeJSON, Column: channel.FieldEndpoints},
-			channel.FieldClientRestriction:       {Type: field.TypeEnum, Column: channel.FieldClientRestriction},
-			channel.FieldAutoDisableConfig:       {Type: field.TypeJSON, Column: channel.FieldAutoDisableConfig},
-			channel.FieldOwnerID:                 {Type: field.TypeInt, Column: channel.FieldOwnerID},
-			channel.FieldVisibility:              {Type: field.TypeEnum, Column: channel.FieldVisibility},
-			channel.FieldSharedWith:              {Type: field.TypeJSON, Column: channel.FieldSharedWith},
+			channel.FieldCreatedAt:                 {Type: field.TypeTime, Column: channel.FieldCreatedAt},
+			channel.FieldUpdatedAt:                 {Type: field.TypeTime, Column: channel.FieldUpdatedAt},
+			channel.FieldDeletedAt:                 {Type: field.TypeInt, Column: channel.FieldDeletedAt},
+			channel.FieldType:                      {Type: field.TypeEnum, Column: channel.FieldType},
+			channel.FieldBaseURL:                   {Type: field.TypeString, Column: channel.FieldBaseURL},
+			channel.FieldName:                      {Type: field.TypeString, Column: channel.FieldName},
+			channel.FieldStatus:                    {Type: field.TypeEnum, Column: channel.FieldStatus},
+			channel.FieldCredentials:               {Type: field.TypeJSON, Column: channel.FieldCredentials},
+			channel.FieldDisabledAPIKeys:           {Type: field.TypeJSON, Column: channel.FieldDisabledAPIKeys},
+			channel.FieldSupportedModels:           {Type: field.TypeJSON, Column: channel.FieldSupportedModels},
+			channel.FieldManualModels:              {Type: field.TypeJSON, Column: channel.FieldManualModels},
+			channel.FieldAutoSyncSupportedModels:   {Type: field.TypeBool, Column: channel.FieldAutoSyncSupportedModels},
+			channel.FieldAutoSyncModelPattern:      {Type: field.TypeString, Column: channel.FieldAutoSyncModelPattern},
+			channel.FieldTags:                      {Type: field.TypeJSON, Column: channel.FieldTags},
+			channel.FieldDefaultTestModel:          {Type: field.TypeString, Column: channel.FieldDefaultTestModel},
+			channel.FieldPolicies:                  {Type: field.TypeJSON, Column: channel.FieldPolicies},
+			channel.FieldSettings:                  {Type: field.TypeJSON, Column: channel.FieldSettings},
+			channel.FieldOrderingWeight:            {Type: field.TypeInt, Column: channel.FieldOrderingWeight},
+			channel.FieldErrorMessage:              {Type: field.TypeString, Column: channel.FieldErrorMessage},
+			channel.FieldRemark:                    {Type: field.TypeString, Column: channel.FieldRemark},
+			channel.FieldEndpoints:                 {Type: field.TypeJSON, Column: channel.FieldEndpoints},
+			channel.FieldClientRestriction:         {Type: field.TypeEnum, Column: channel.FieldClientRestriction},
+			channel.FieldAutoDisableConfig:         {Type: field.TypeJSON, Column: channel.FieldAutoDisableConfig},
+			channel.FieldOwnerID:                   {Type: field.TypeInt, Column: channel.FieldOwnerID},
+			channel.FieldVisibility:                {Type: field.TypeEnum, Column: channel.FieldVisibility},
+			channel.FieldSharedWith:                {Type: field.TypeJSON, Column: channel.FieldSharedWith},
+			channel.FieldQuotaBindingReady:         {Type: field.TypeBool, Column: channel.FieldQuotaBindingReady},
+			channel.FieldQuotaMultiMonitorStrategy: {Type: field.TypeEnum, Column: channel.FieldQuotaMultiMonitorStrategy},
 		},
 	}
 	graph.Nodes[3] = &sqlgraph.Node{
@@ -609,30 +611,33 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "UsageMonitorChannel",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			usagemonitorchannel.FieldCreatedAt:     {Type: field.TypeTime, Column: usagemonitorchannel.FieldCreatedAt},
-			usagemonitorchannel.FieldUpdatedAt:     {Type: field.TypeTime, Column: usagemonitorchannel.FieldUpdatedAt},
-			usagemonitorchannel.FieldDeletedAt:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldDeletedAt},
-			usagemonitorchannel.FieldName:          {Type: field.TypeString, Column: usagemonitorchannel.FieldName},
-			usagemonitorchannel.FieldSource:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldSource},
-			usagemonitorchannel.FieldProviderType:  {Type: field.TypeEnum, Column: usagemonitorchannel.FieldProviderType},
-			usagemonitorchannel.FieldChannelID:     {Type: field.TypeInt, Column: usagemonitorchannel.FieldChannelID},
-			usagemonitorchannel.FieldAPIURL:        {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIURL},
-			usagemonitorchannel.FieldAPIMethod:     {Type: field.TypeEnum, Column: usagemonitorchannel.FieldAPIMethod},
-			usagemonitorchannel.FieldAPIHeaders:    {Type: field.TypeJSON, Column: usagemonitorchannel.FieldAPIHeaders},
-			usagemonitorchannel.FieldAPIBody:       {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIBody},
-			usagemonitorchannel.FieldAPIKey:        {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIKey},
-			usagemonitorchannel.FieldPollInterval:  {Type: field.TypeInt, Column: usagemonitorchannel.FieldPollInterval},
-			usagemonitorchannel.FieldFields:        {Type: field.TypeJSON, Column: usagemonitorchannel.FieldFields},
-			usagemonitorchannel.FieldVariables:     {Type: field.TypeJSON, Column: usagemonitorchannel.FieldVariables},
-			usagemonitorchannel.FieldDisplayFields: {Type: field.TypeJSON, Column: usagemonitorchannel.FieldDisplayFields},
-			usagemonitorchannel.FieldLastPollAt:    {Type: field.TypeTime, Column: usagemonitorchannel.FieldLastPollAt},
-			usagemonitorchannel.FieldLastPollData:  {Type: field.TypeJSON, Column: usagemonitorchannel.FieldLastPollData},
-			usagemonitorchannel.FieldLastPollError: {Type: field.TypeString, Column: usagemonitorchannel.FieldLastPollError},
-			usagemonitorchannel.FieldStatus:        {Type: field.TypeEnum, Column: usagemonitorchannel.FieldStatus},
-			usagemonitorchannel.FieldQuotaStatus:   {Type: field.TypeEnum, Column: usagemonitorchannel.FieldQuotaStatus},
-			usagemonitorchannel.FieldQuotaReady:    {Type: field.TypeBool, Column: usagemonitorchannel.FieldQuotaReady},
-			usagemonitorchannel.FieldQuotaLimits:   {Type: field.TypeJSON, Column: usagemonitorchannel.FieldQuotaLimits},
-			usagemonitorchannel.FieldNextResetAt:   {Type: field.TypeTime, Column: usagemonitorchannel.FieldNextResetAt},
+			usagemonitorchannel.FieldCreatedAt:            {Type: field.TypeTime, Column: usagemonitorchannel.FieldCreatedAt},
+			usagemonitorchannel.FieldUpdatedAt:            {Type: field.TypeTime, Column: usagemonitorchannel.FieldUpdatedAt},
+			usagemonitorchannel.FieldDeletedAt:            {Type: field.TypeInt, Column: usagemonitorchannel.FieldDeletedAt},
+			usagemonitorchannel.FieldName:                 {Type: field.TypeString, Column: usagemonitorchannel.FieldName},
+			usagemonitorchannel.FieldSource:               {Type: field.TypeEnum, Column: usagemonitorchannel.FieldSource},
+			usagemonitorchannel.FieldProviderType:         {Type: field.TypeEnum, Column: usagemonitorchannel.FieldProviderType},
+			usagemonitorchannel.FieldChannelID:            {Type: field.TypeInt, Column: usagemonitorchannel.FieldChannelID},
+			usagemonitorchannel.FieldAPIURL:               {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIURL},
+			usagemonitorchannel.FieldAPIMethod:            {Type: field.TypeEnum, Column: usagemonitorchannel.FieldAPIMethod},
+			usagemonitorchannel.FieldAPIHeaders:           {Type: field.TypeJSON, Column: usagemonitorchannel.FieldAPIHeaders},
+			usagemonitorchannel.FieldAPIBody:              {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIBody},
+			usagemonitorchannel.FieldAPIKey:               {Type: field.TypeString, Column: usagemonitorchannel.FieldAPIKey},
+			usagemonitorchannel.FieldPollInterval:         {Type: field.TypeInt, Column: usagemonitorchannel.FieldPollInterval},
+			usagemonitorchannel.FieldFields:               {Type: field.TypeJSON, Column: usagemonitorchannel.FieldFields},
+			usagemonitorchannel.FieldVariables:            {Type: field.TypeJSON, Column: usagemonitorchannel.FieldVariables},
+			usagemonitorchannel.FieldDisplayFields:        {Type: field.TypeJSON, Column: usagemonitorchannel.FieldDisplayFields},
+			usagemonitorchannel.FieldLastPollAt:           {Type: field.TypeTime, Column: usagemonitorchannel.FieldLastPollAt},
+			usagemonitorchannel.FieldLastPollData:         {Type: field.TypeJSON, Column: usagemonitorchannel.FieldLastPollData},
+			usagemonitorchannel.FieldLastPollError:        {Type: field.TypeString, Column: usagemonitorchannel.FieldLastPollError},
+			usagemonitorchannel.FieldStatus:               {Type: field.TypeEnum, Column: usagemonitorchannel.FieldStatus},
+			usagemonitorchannel.FieldQuotaStatus:          {Type: field.TypeEnum, Column: usagemonitorchannel.FieldQuotaStatus},
+			usagemonitorchannel.FieldQuotaReady:           {Type: field.TypeBool, Column: usagemonitorchannel.FieldQuotaReady},
+			usagemonitorchannel.FieldQuotaLimits:          {Type: field.TypeJSON, Column: usagemonitorchannel.FieldQuotaLimits},
+			usagemonitorchannel.FieldNextResetAt:          {Type: field.TypeTime, Column: usagemonitorchannel.FieldNextResetAt},
+			usagemonitorchannel.FieldAutoDisableEnabled:   {Type: field.TypeBool, Column: usagemonitorchannel.FieldAutoDisableEnabled},
+			usagemonitorchannel.FieldAutoDisableThreshold: {Type: field.TypeFloat64, Column: usagemonitorchannel.FieldAutoDisableThreshold},
+			usagemonitorchannel.FieldAutoEnableThreshold:  {Type: field.TypeFloat64, Column: usagemonitorchannel.FieldAutoEnableThreshold},
 		},
 	}
 	graph.Nodes[24] = &sqlgraph.Node{
@@ -2072,6 +2077,16 @@ func (f *ChannelFilter) WhereVisibility(p entql.StringP) {
 // WhereSharedWith applies the entql json.RawMessage predicate on the shared_with field.
 func (f *ChannelFilter) WhereSharedWith(p entql.BytesP) {
 	f.Where(p.Field(channel.FieldSharedWith))
+}
+
+// WhereQuotaBindingReady applies the entql bool predicate on the quota_binding_ready field.
+func (f *ChannelFilter) WhereQuotaBindingReady(p entql.BoolP) {
+	f.Where(p.Field(channel.FieldQuotaBindingReady))
+}
+
+// WhereQuotaMultiMonitorStrategy applies the entql string predicate on the quota_multi_monitor_strategy field.
+func (f *ChannelFilter) WhereQuotaMultiMonitorStrategy(p entql.StringP) {
+	f.Where(p.Field(channel.FieldQuotaMultiMonitorStrategy))
 }
 
 // WhereHasOwner applies a predicate to check if query has an edge owner.
@@ -4839,6 +4854,21 @@ func (f *UsageMonitorChannelFilter) WhereQuotaLimits(p entql.BytesP) {
 // WhereNextResetAt applies the entql time.Time predicate on the next_reset_at field.
 func (f *UsageMonitorChannelFilter) WhereNextResetAt(p entql.TimeP) {
 	f.Where(p.Field(usagemonitorchannel.FieldNextResetAt))
+}
+
+// WhereAutoDisableEnabled applies the entql bool predicate on the auto_disable_enabled field.
+func (f *UsageMonitorChannelFilter) WhereAutoDisableEnabled(p entql.BoolP) {
+	f.Where(p.Field(usagemonitorchannel.FieldAutoDisableEnabled))
+}
+
+// WhereAutoDisableThreshold applies the entql float64 predicate on the auto_disable_threshold field.
+func (f *UsageMonitorChannelFilter) WhereAutoDisableThreshold(p entql.Float64P) {
+	f.Where(p.Field(usagemonitorchannel.FieldAutoDisableThreshold))
+}
+
+// WhereAutoEnableThreshold applies the entql float64 predicate on the auto_enable_threshold field.
+func (f *UsageMonitorChannelFilter) WhereAutoEnableThreshold(p entql.Float64P) {
+	f.Where(p.Field(usagemonitorchannel.FieldAutoEnableThreshold))
 }
 
 // WhereHasChannel applies a predicate to check if query has an edge channel.

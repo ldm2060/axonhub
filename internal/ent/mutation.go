@@ -2047,6 +2047,8 @@ type ChannelMutation struct {
 	visibility                    *channel.Visibility
 	shared_with                   *[]int
 	appendshared_with             []int
+	quota_binding_ready           *bool
+	quota_multi_monitor_strategy  *channel.QuotaMultiMonitorStrategy
 	clearedFields                 map[string]struct{}
 	owner                         *int
 	clearedowner                  bool
@@ -3426,6 +3428,91 @@ func (m *ChannelMutation) ResetSharedWith() {
 	delete(m.clearedFields, channel.FieldSharedWith)
 }
 
+// SetQuotaBindingReady sets the "quota_binding_ready" field.
+func (m *ChannelMutation) SetQuotaBindingReady(b bool) {
+	m.quota_binding_ready = &b
+}
+
+// QuotaBindingReady returns the value of the "quota_binding_ready" field in the mutation.
+func (m *ChannelMutation) QuotaBindingReady() (r bool, exists bool) {
+	v := m.quota_binding_ready
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaBindingReady returns the old "quota_binding_ready" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldQuotaBindingReady(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaBindingReady is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaBindingReady requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaBindingReady: %w", err)
+	}
+	return oldValue.QuotaBindingReady, nil
+}
+
+// ResetQuotaBindingReady resets all changes to the "quota_binding_ready" field.
+func (m *ChannelMutation) ResetQuotaBindingReady() {
+	m.quota_binding_ready = nil
+}
+
+// SetQuotaMultiMonitorStrategy sets the "quota_multi_monitor_strategy" field.
+func (m *ChannelMutation) SetQuotaMultiMonitorStrategy(cmms channel.QuotaMultiMonitorStrategy) {
+	m.quota_multi_monitor_strategy = &cmms
+}
+
+// QuotaMultiMonitorStrategy returns the value of the "quota_multi_monitor_strategy" field in the mutation.
+func (m *ChannelMutation) QuotaMultiMonitorStrategy() (r channel.QuotaMultiMonitorStrategy, exists bool) {
+	v := m.quota_multi_monitor_strategy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldQuotaMultiMonitorStrategy returns the old "quota_multi_monitor_strategy" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldQuotaMultiMonitorStrategy(ctx context.Context) (v *channel.QuotaMultiMonitorStrategy, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldQuotaMultiMonitorStrategy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldQuotaMultiMonitorStrategy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldQuotaMultiMonitorStrategy: %w", err)
+	}
+	return oldValue.QuotaMultiMonitorStrategy, nil
+}
+
+// ClearQuotaMultiMonitorStrategy clears the value of the "quota_multi_monitor_strategy" field.
+func (m *ChannelMutation) ClearQuotaMultiMonitorStrategy() {
+	m.quota_multi_monitor_strategy = nil
+	m.clearedFields[channel.FieldQuotaMultiMonitorStrategy] = struct{}{}
+}
+
+// QuotaMultiMonitorStrategyCleared returns if the "quota_multi_monitor_strategy" field was cleared in this mutation.
+func (m *ChannelMutation) QuotaMultiMonitorStrategyCleared() bool {
+	_, ok := m.clearedFields[channel.FieldQuotaMultiMonitorStrategy]
+	return ok
+}
+
+// ResetQuotaMultiMonitorStrategy resets all changes to the "quota_multi_monitor_strategy" field.
+func (m *ChannelMutation) ResetQuotaMultiMonitorStrategy() {
+	m.quota_multi_monitor_strategy = nil
+	delete(m.clearedFields, channel.FieldQuotaMultiMonitorStrategy)
+}
+
 // ClearOwner clears the "owner" edge to the User entity.
 func (m *ChannelMutation) ClearOwner() {
 	m.clearedowner = true
@@ -3850,7 +3937,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 26)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, channel.FieldCreatedAt)
 	}
@@ -3929,6 +4016,12 @@ func (m *ChannelMutation) Fields() []string {
 	if m.shared_with != nil {
 		fields = append(fields, channel.FieldSharedWith)
 	}
+	if m.quota_binding_ready != nil {
+		fields = append(fields, channel.FieldQuotaBindingReady)
+	}
+	if m.quota_multi_monitor_strategy != nil {
+		fields = append(fields, channel.FieldQuotaMultiMonitorStrategy)
+	}
 	return fields
 }
 
@@ -3989,6 +4082,10 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.Visibility()
 	case channel.FieldSharedWith:
 		return m.SharedWith()
+	case channel.FieldQuotaBindingReady:
+		return m.QuotaBindingReady()
+	case channel.FieldQuotaMultiMonitorStrategy:
+		return m.QuotaMultiMonitorStrategy()
 	}
 	return nil, false
 }
@@ -4050,6 +4147,10 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldVisibility(ctx)
 	case channel.FieldSharedWith:
 		return m.OldSharedWith(ctx)
+	case channel.FieldQuotaBindingReady:
+		return m.OldQuotaBindingReady(ctx)
+	case channel.FieldQuotaMultiMonitorStrategy:
+		return m.OldQuotaMultiMonitorStrategy(ctx)
 	}
 	return nil, fmt.Errorf("unknown Channel field %s", name)
 }
@@ -4241,6 +4342,20 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSharedWith(v)
 		return nil
+	case channel.FieldQuotaBindingReady:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaBindingReady(v)
+		return nil
+	case channel.FieldQuotaMultiMonitorStrategy:
+		v, ok := value.(channel.QuotaMultiMonitorStrategy)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetQuotaMultiMonitorStrategy(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
 }
@@ -4340,6 +4455,9 @@ func (m *ChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(channel.FieldSharedWith) {
 		fields = append(fields, channel.FieldSharedWith)
 	}
+	if m.FieldCleared(channel.FieldQuotaMultiMonitorStrategy) {
+		fields = append(fields, channel.FieldQuotaMultiMonitorStrategy)
+	}
 	return fields
 }
 
@@ -4395,6 +4513,9 @@ func (m *ChannelMutation) ClearField(name string) error {
 		return nil
 	case channel.FieldSharedWith:
 		m.ClearSharedWith()
+		return nil
+	case channel.FieldQuotaMultiMonitorStrategy:
+		m.ClearQuotaMultiMonitorStrategy()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel nullable field %s", name)
@@ -4481,6 +4602,12 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldSharedWith:
 		m.ResetSharedWith()
+		return nil
+	case channel.FieldQuotaBindingReady:
+		m.ResetQuotaBindingReady()
+		return nil
+	case channel.FieldQuotaMultiMonitorStrategy:
+		m.ResetQuotaMultiMonitorStrategy()
 		return nil
 	}
 	return fmt.Errorf("unknown Channel field %s", name)
@@ -27696,46 +27823,51 @@ func (m *UsageLogMutation) ResetEdge(name string) error {
 // UsageMonitorChannelMutation represents an operation that mutates the UsageMonitorChannel nodes in the graph.
 type UsageMonitorChannelMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	created_at           *time.Time
-	updated_at           *time.Time
-	deleted_at           *int
-	adddeleted_at        *int
-	name                 *string
-	source               *usagemonitorchannel.Source
-	provider_type        *usagemonitorchannel.ProviderType
-	api_url              *string
-	api_method           *usagemonitorchannel.APIMethod
-	api_headers          *map[string]interface{}
-	api_body             *string
-	api_key              *string
-	poll_interval        *int
-	addpoll_interval     *int
-	fields               *[]map[string]interface{}
-	appendfields         []map[string]interface{}
-	variables            *[]map[string]interface{}
-	appendvariables      []map[string]interface{}
-	display_fields       *[]map[string]interface{}
-	appenddisplay_fields []map[string]interface{}
-	last_poll_at         *time.Time
-	last_poll_data       *map[string]interface{}
-	last_poll_error      *string
-	status               *usagemonitorchannel.Status
-	quota_status         *usagemonitorchannel.QuotaStatus
-	quota_ready          *bool
-	quota_limits         *[]map[string]interface{}
-	appendquota_limits   []map[string]interface{}
-	next_reset_at        *time.Time
-	clearedFields        map[string]struct{}
-	channel              *int
-	clearedchannel       bool
-	owner                *int
-	clearedowner         bool
-	done                 bool
-	oldValue             func(context.Context) (*UsageMonitorChannel, error)
-	predicates           []predicate.UsageMonitorChannel
+	op                        Op
+	typ                       string
+	id                        *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	deleted_at                *int
+	adddeleted_at             *int
+	name                      *string
+	source                    *usagemonitorchannel.Source
+	provider_type             *usagemonitorchannel.ProviderType
+	api_url                   *string
+	api_method                *usagemonitorchannel.APIMethod
+	api_headers               *map[string]interface{}
+	api_body                  *string
+	api_key                   *string
+	poll_interval             *int
+	addpoll_interval          *int
+	fields                    *[]map[string]interface{}
+	appendfields              []map[string]interface{}
+	variables                 *[]map[string]interface{}
+	appendvariables           []map[string]interface{}
+	display_fields            *[]map[string]interface{}
+	appenddisplay_fields      []map[string]interface{}
+	last_poll_at              *time.Time
+	last_poll_data            *map[string]interface{}
+	last_poll_error           *string
+	status                    *usagemonitorchannel.Status
+	quota_status              *usagemonitorchannel.QuotaStatus
+	quota_ready               *bool
+	quota_limits              *[]map[string]interface{}
+	appendquota_limits        []map[string]interface{}
+	next_reset_at             *time.Time
+	auto_disable_enabled      *bool
+	auto_disable_threshold    *float64
+	addauto_disable_threshold *float64
+	auto_enable_threshold     *float64
+	addauto_enable_threshold  *float64
+	clearedFields             map[string]struct{}
+	channel                   *int
+	clearedchannel            bool
+	owner                     *int
+	clearedowner              bool
+	done                      bool
+	oldValue                  func(context.Context) (*UsageMonitorChannel, error)
+	predicates                []predicate.UsageMonitorChannel
 }
 
 var _ ent.Mutation = (*UsageMonitorChannelMutation)(nil)
@@ -28972,6 +29104,182 @@ func (m *UsageMonitorChannelMutation) ResetNextResetAt() {
 	delete(m.clearedFields, usagemonitorchannel.FieldNextResetAt)
 }
 
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (m *UsageMonitorChannelMutation) SetAutoDisableEnabled(b bool) {
+	m.auto_disable_enabled = &b
+}
+
+// AutoDisableEnabled returns the value of the "auto_disable_enabled" field in the mutation.
+func (m *UsageMonitorChannelMutation) AutoDisableEnabled() (r bool, exists bool) {
+	v := m.auto_disable_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoDisableEnabled returns the old "auto_disable_enabled" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAutoDisableEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoDisableEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoDisableEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoDisableEnabled: %w", err)
+	}
+	return oldValue.AutoDisableEnabled, nil
+}
+
+// ResetAutoDisableEnabled resets all changes to the "auto_disable_enabled" field.
+func (m *UsageMonitorChannelMutation) ResetAutoDisableEnabled() {
+	m.auto_disable_enabled = nil
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (m *UsageMonitorChannelMutation) SetAutoDisableThreshold(f float64) {
+	m.auto_disable_threshold = &f
+	m.addauto_disable_threshold = nil
+}
+
+// AutoDisableThreshold returns the value of the "auto_disable_threshold" field in the mutation.
+func (m *UsageMonitorChannelMutation) AutoDisableThreshold() (r float64, exists bool) {
+	v := m.auto_disable_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoDisableThreshold returns the old "auto_disable_threshold" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAutoDisableThreshold(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoDisableThreshold is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoDisableThreshold requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoDisableThreshold: %w", err)
+	}
+	return oldValue.AutoDisableThreshold, nil
+}
+
+// AddAutoDisableThreshold adds f to the "auto_disable_threshold" field.
+func (m *UsageMonitorChannelMutation) AddAutoDisableThreshold(f float64) {
+	if m.addauto_disable_threshold != nil {
+		*m.addauto_disable_threshold += f
+	} else {
+		m.addauto_disable_threshold = &f
+	}
+}
+
+// AddedAutoDisableThreshold returns the value that was added to the "auto_disable_threshold" field in this mutation.
+func (m *UsageMonitorChannelMutation) AddedAutoDisableThreshold() (r float64, exists bool) {
+	v := m.addauto_disable_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (m *UsageMonitorChannelMutation) ClearAutoDisableThreshold() {
+	m.auto_disable_threshold = nil
+	m.addauto_disable_threshold = nil
+	m.clearedFields[usagemonitorchannel.FieldAutoDisableThreshold] = struct{}{}
+}
+
+// AutoDisableThresholdCleared returns if the "auto_disable_threshold" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) AutoDisableThresholdCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldAutoDisableThreshold]
+	return ok
+}
+
+// ResetAutoDisableThreshold resets all changes to the "auto_disable_threshold" field.
+func (m *UsageMonitorChannelMutation) ResetAutoDisableThreshold() {
+	m.auto_disable_threshold = nil
+	m.addauto_disable_threshold = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldAutoDisableThreshold)
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (m *UsageMonitorChannelMutation) SetAutoEnableThreshold(f float64) {
+	m.auto_enable_threshold = &f
+	m.addauto_enable_threshold = nil
+}
+
+// AutoEnableThreshold returns the value of the "auto_enable_threshold" field in the mutation.
+func (m *UsageMonitorChannelMutation) AutoEnableThreshold() (r float64, exists bool) {
+	v := m.auto_enable_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoEnableThreshold returns the old "auto_enable_threshold" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldAutoEnableThreshold(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoEnableThreshold is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoEnableThreshold requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoEnableThreshold: %w", err)
+	}
+	return oldValue.AutoEnableThreshold, nil
+}
+
+// AddAutoEnableThreshold adds f to the "auto_enable_threshold" field.
+func (m *UsageMonitorChannelMutation) AddAutoEnableThreshold(f float64) {
+	if m.addauto_enable_threshold != nil {
+		*m.addauto_enable_threshold += f
+	} else {
+		m.addauto_enable_threshold = &f
+	}
+}
+
+// AddedAutoEnableThreshold returns the value that was added to the "auto_enable_threshold" field in this mutation.
+func (m *UsageMonitorChannelMutation) AddedAutoEnableThreshold() (r float64, exists bool) {
+	v := m.addauto_enable_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (m *UsageMonitorChannelMutation) ClearAutoEnableThreshold() {
+	m.auto_enable_threshold = nil
+	m.addauto_enable_threshold = nil
+	m.clearedFields[usagemonitorchannel.FieldAutoEnableThreshold] = struct{}{}
+}
+
+// AutoEnableThresholdCleared returns if the "auto_enable_threshold" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) AutoEnableThresholdCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldAutoEnableThreshold]
+	return ok
+}
+
+// ResetAutoEnableThreshold resets all changes to the "auto_enable_threshold" field.
+func (m *UsageMonitorChannelMutation) ResetAutoEnableThreshold() {
+	m.auto_enable_threshold = nil
+	m.addauto_enable_threshold = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldAutoEnableThreshold)
+}
+
 // ClearChannel clears the "channel" edge to the Channel entity.
 func (m *UsageMonitorChannelMutation) ClearChannel() {
 	m.clearedchannel = true
@@ -29072,7 +29380,7 @@ func (m *UsageMonitorChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageMonitorChannelMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 27)
 	if m.created_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
 	}
@@ -29145,6 +29453,15 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	if m.next_reset_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldNextResetAt)
 	}
+	if m.auto_disable_enabled != nil {
+		fields = append(fields, usagemonitorchannel.FieldAutoDisableEnabled)
+	}
+	if m.auto_disable_threshold != nil {
+		fields = append(fields, usagemonitorchannel.FieldAutoDisableThreshold)
+	}
+	if m.auto_enable_threshold != nil {
+		fields = append(fields, usagemonitorchannel.FieldAutoEnableThreshold)
+	}
 	return fields
 }
 
@@ -29201,6 +29518,12 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.QuotaLimits()
 	case usagemonitorchannel.FieldNextResetAt:
 		return m.NextResetAt()
+	case usagemonitorchannel.FieldAutoDisableEnabled:
+		return m.AutoDisableEnabled()
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		return m.AutoDisableThreshold()
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		return m.AutoEnableThreshold()
 	}
 	return nil, false
 }
@@ -29258,6 +29581,12 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldQuotaLimits(ctx)
 	case usagemonitorchannel.FieldNextResetAt:
 		return m.OldNextResetAt(ctx)
+	case usagemonitorchannel.FieldAutoDisableEnabled:
+		return m.OldAutoDisableEnabled(ctx)
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		return m.OldAutoDisableThreshold(ctx)
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		return m.OldAutoEnableThreshold(ctx)
 	}
 	return nil, fmt.Errorf("unknown UsageMonitorChannel field %s", name)
 }
@@ -29435,6 +29764,27 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 		}
 		m.SetNextResetAt(v)
 		return nil
+	case usagemonitorchannel.FieldAutoDisableEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoDisableEnabled(v)
+		return nil
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoDisableThreshold(v)
+		return nil
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoEnableThreshold(v)
+		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)
 }
@@ -29449,6 +29799,12 @@ func (m *UsageMonitorChannelMutation) AddedFields() []string {
 	if m.addpoll_interval != nil {
 		fields = append(fields, usagemonitorchannel.FieldPollInterval)
 	}
+	if m.addauto_disable_threshold != nil {
+		fields = append(fields, usagemonitorchannel.FieldAutoDisableThreshold)
+	}
+	if m.addauto_enable_threshold != nil {
+		fields = append(fields, usagemonitorchannel.FieldAutoEnableThreshold)
+	}
 	return fields
 }
 
@@ -29461,6 +29817,10 @@ func (m *UsageMonitorChannelMutation) AddedField(name string) (ent.Value, bool) 
 		return m.AddedDeletedAt()
 	case usagemonitorchannel.FieldPollInterval:
 		return m.AddedPollInterval()
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		return m.AddedAutoDisableThreshold()
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		return m.AddedAutoEnableThreshold()
 	}
 	return nil, false
 }
@@ -29483,6 +29843,20 @@ func (m *UsageMonitorChannelMutation) AddField(name string, value ent.Value) err
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddPollInterval(v)
+		return nil
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAutoDisableThreshold(v)
+		return nil
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAutoEnableThreshold(v)
 		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel numeric field %s", name)
@@ -29530,6 +29904,12 @@ func (m *UsageMonitorChannelMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(usagemonitorchannel.FieldNextResetAt) {
 		fields = append(fields, usagemonitorchannel.FieldNextResetAt)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldAutoDisableThreshold) {
+		fields = append(fields, usagemonitorchannel.FieldAutoDisableThreshold)
+	}
+	if m.FieldCleared(usagemonitorchannel.FieldAutoEnableThreshold) {
+		fields = append(fields, usagemonitorchannel.FieldAutoEnableThreshold)
 	}
 	return fields
 }
@@ -29583,6 +29963,12 @@ func (m *UsageMonitorChannelMutation) ClearField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldNextResetAt:
 		m.ClearNextResetAt()
+		return nil
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		m.ClearAutoDisableThreshold()
+		return nil
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		m.ClearAutoEnableThreshold()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel nullable field %s", name)
@@ -29663,6 +30049,15 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldNextResetAt:
 		m.ResetNextResetAt()
+		return nil
+	case usagemonitorchannel.FieldAutoDisableEnabled:
+		m.ResetAutoDisableEnabled()
+		return nil
+	case usagemonitorchannel.FieldAutoDisableThreshold:
+		m.ResetAutoDisableThreshold()
+		return nil
+	case usagemonitorchannel.FieldAutoEnableThreshold:
+		m.ResetAutoEnableThreshold()
 		return nil
 	}
 	return fmt.Errorf("unknown UsageMonitorChannel field %s", name)

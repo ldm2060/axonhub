@@ -121,6 +121,8 @@ var (
 		{Name: "auto_disable_config", Type: field.TypeJSON, Nullable: true},
 		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"private", "shared", "published"}, Default: "private"},
 		{Name: "shared_with", Type: field.TypeJSON, Nullable: true},
+		{Name: "quota_binding_ready", Type: field.TypeBool, Default: true},
+		{Name: "quota_multi_monitor_strategy", Type: field.TypeEnum, Nullable: true, Enums: []string{"any", "all"}, Default: "any"},
 		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ChannelsTable holds the schema information for the "channels" table.
@@ -131,7 +133,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "channels_users_owned_channels",
-				Columns:    []*schema.Column{ChannelsColumns[26]},
+				Columns:    []*schema.Column{ChannelsColumns[28]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -145,7 +147,7 @@ var (
 			{
 				Name:    "channels_by_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{ChannelsColumns[26], ChannelsColumns[3]},
+				Columns: []*schema.Column{ChannelsColumns[28], ChannelsColumns[3]},
 			},
 		},
 	}
@@ -1014,6 +1016,9 @@ var (
 		{Name: "quota_ready", Type: field.TypeBool, Nullable: true, Default: true},
 		{Name: "quota_limits", Type: field.TypeJSON, Nullable: true},
 		{Name: "next_reset_at", Type: field.TypeTime, Nullable: true},
+		{Name: "auto_disable_enabled", Type: field.TypeBool, Default: false},
+		{Name: "auto_disable_threshold", Type: field.TypeFloat64, Nullable: true, Default: 1},
+		{Name: "auto_enable_threshold", Type: field.TypeFloat64, Nullable: true, Default: 0.95},
 		{Name: "channel_id", Type: field.TypeInt, Nullable: true},
 		{Name: "user_usage_monitor_channels", Type: field.TypeInt},
 	}
@@ -1025,13 +1030,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "usage_monitor_channels_channels_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[24]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[27]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "usage_monitor_channels_users_usage_monitor_channels",
-				Columns:    []*schema.Column{UsageMonitorChannelsColumns[25]},
+				Columns:    []*schema.Column{UsageMonitorChannelsColumns[28]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -1040,7 +1045,7 @@ var (
 			{
 				Name:    "usagemonitorchannel_channel_id",
 				Unique:  false,
-				Columns: []*schema.Column{UsageMonitorChannelsColumns[24]},
+				Columns: []*schema.Column{UsageMonitorChannelsColumns[27]},
 			},
 			{
 				Name:    "usagemonitorchannel_status",

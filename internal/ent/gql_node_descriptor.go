@@ -253,7 +253,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "Channel",
-		Fields: make([]*Field, 25),
+		Fields: make([]*Field, 27),
 		Edges:  make([]*Edge, 8),
 	}
 	var buf []byte
@@ -455,6 +455,22 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	node.Fields[24] = &Field{
 		Type:  "[]int",
 		Name:  "shared_with",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaBindingReady); err != nil {
+		return nil, err
+	}
+	node.Fields[25] = &Field{
+		Type:  "bool",
+		Name:  "quota_binding_ready",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.QuotaMultiMonitorStrategy); err != nil {
+		return nil, err
+	}
+	node.Fields[26] = &Field{
+		Type:  "channel.QuotaMultiMonitorStrategy",
+		Name:  "quota_multi_monitor_strategy",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{
@@ -2843,7 +2859,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "UsageMonitorChannel",
-		Fields: make([]*Field, 21),
+		Fields: make([]*Field, 24),
 		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
@@ -3013,6 +3029,30 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	node.Fields[20] = &Field{
 		Type:  "time.Time",
 		Name:  "next_reset_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AutoDisableEnabled); err != nil {
+		return nil, err
+	}
+	node.Fields[21] = &Field{
+		Type:  "bool",
+		Name:  "auto_disable_enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AutoDisableThreshold); err != nil {
+		return nil, err
+	}
+	node.Fields[22] = &Field{
+		Type:  "float64",
+		Name:  "auto_disable_threshold",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.AutoEnableThreshold); err != nil {
+		return nil, err
+	}
+	node.Fields[23] = &Field{
+		Type:  "float64",
+		Name:  "auto_enable_threshold",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{

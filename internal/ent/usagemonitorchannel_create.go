@@ -288,6 +288,48 @@ func (_c *UsageMonitorChannelCreate) SetNillableNextResetAt(v *time.Time) *Usage
 	return _c
 }
 
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (_c *UsageMonitorChannelCreate) SetAutoDisableEnabled(v bool) *UsageMonitorChannelCreate {
+	_c.mutation.SetAutoDisableEnabled(v)
+	return _c
+}
+
+// SetNillableAutoDisableEnabled sets the "auto_disable_enabled" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableAutoDisableEnabled(v *bool) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetAutoDisableEnabled(*v)
+	}
+	return _c
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (_c *UsageMonitorChannelCreate) SetAutoDisableThreshold(v float64) *UsageMonitorChannelCreate {
+	_c.mutation.SetAutoDisableThreshold(v)
+	return _c
+}
+
+// SetNillableAutoDisableThreshold sets the "auto_disable_threshold" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableAutoDisableThreshold(v *float64) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetAutoDisableThreshold(*v)
+	}
+	return _c
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (_c *UsageMonitorChannelCreate) SetAutoEnableThreshold(v float64) *UsageMonitorChannelCreate {
+	_c.mutation.SetAutoEnableThreshold(v)
+	return _c
+}
+
+// SetNillableAutoEnableThreshold sets the "auto_enable_threshold" field if the given value is not nil.
+func (_c *UsageMonitorChannelCreate) SetNillableAutoEnableThreshold(v *float64) *UsageMonitorChannelCreate {
+	if v != nil {
+		_c.SetAutoEnableThreshold(*v)
+	}
+	return _c
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_c *UsageMonitorChannelCreate) SetChannel(v *Channel) *UsageMonitorChannelCreate {
 	return _c.SetChannelID(v.ID)
@@ -383,6 +425,18 @@ func (_c *UsageMonitorChannelCreate) defaults() error {
 		v := usagemonitorchannel.DefaultQuotaReady
 		_c.mutation.SetQuotaReady(v)
 	}
+	if _, ok := _c.mutation.AutoDisableEnabled(); !ok {
+		v := usagemonitorchannel.DefaultAutoDisableEnabled
+		_c.mutation.SetAutoDisableEnabled(v)
+	}
+	if _, ok := _c.mutation.AutoDisableThreshold(); !ok {
+		v := usagemonitorchannel.DefaultAutoDisableThreshold
+		_c.mutation.SetAutoDisableThreshold(v)
+	}
+	if _, ok := _c.mutation.AutoEnableThreshold(); !ok {
+		v := usagemonitorchannel.DefaultAutoEnableThreshold
+		_c.mutation.SetAutoEnableThreshold(v)
+	}
 	return nil
 }
 
@@ -449,6 +503,9 @@ func (_c *UsageMonitorChannelCreate) check() error {
 		if err := usagemonitorchannel.QuotaStatusValidator(v); err != nil {
 			return &ValidationError{Name: "quota_status", err: fmt.Errorf(`ent: validator failed for field "UsageMonitorChannel.quota_status": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.AutoDisableEnabled(); !ok {
+		return &ValidationError{Name: "auto_disable_enabled", err: errors.New(`ent: missing required field "UsageMonitorChannel.auto_disable_enabled"`)}
 	}
 	if len(_c.mutation.OwnerIDs()) == 0 {
 		return &ValidationError{Name: "owner", err: errors.New(`ent: missing required edge "UsageMonitorChannel.owner"`)}
@@ -571,6 +628,18 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 	if value, ok := _c.mutation.NextResetAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldNextResetAt, field.TypeTime, value)
 		_node.NextResetAt = &value
+	}
+	if value, ok := _c.mutation.AutoDisableEnabled(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableEnabled, field.TypeBool, value)
+		_node.AutoDisableEnabled = value
+	}
+	if value, ok := _c.mutation.AutoDisableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64, value)
+		_node.AutoDisableThreshold = value
+	}
+	if value, ok := _c.mutation.AutoEnableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64, value)
+		_node.AutoEnableThreshold = value
 	}
 	if nodes := _c.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1021,6 +1090,66 @@ func (u *UsageMonitorChannelUpsert) UpdateNextResetAt() *UsageMonitorChannelUpse
 // ClearNextResetAt clears the value of the "next_reset_at" field.
 func (u *UsageMonitorChannelUpsert) ClearNextResetAt() *UsageMonitorChannelUpsert {
 	u.SetNull(usagemonitorchannel.FieldNextResetAt)
+	return u
+}
+
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (u *UsageMonitorChannelUpsert) SetAutoDisableEnabled(v bool) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldAutoDisableEnabled, v)
+	return u
+}
+
+// UpdateAutoDisableEnabled sets the "auto_disable_enabled" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateAutoDisableEnabled() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldAutoDisableEnabled)
+	return u
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsert) SetAutoDisableThreshold(v float64) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldAutoDisableThreshold, v)
+	return u
+}
+
+// UpdateAutoDisableThreshold sets the "auto_disable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateAutoDisableThreshold() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldAutoDisableThreshold)
+	return u
+}
+
+// AddAutoDisableThreshold adds v to the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsert) AddAutoDisableThreshold(v float64) *UsageMonitorChannelUpsert {
+	u.Add(usagemonitorchannel.FieldAutoDisableThreshold, v)
+	return u
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsert) ClearAutoDisableThreshold() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldAutoDisableThreshold)
+	return u
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsert) SetAutoEnableThreshold(v float64) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldAutoEnableThreshold, v)
+	return u
+}
+
+// UpdateAutoEnableThreshold sets the "auto_enable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateAutoEnableThreshold() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldAutoEnableThreshold)
+	return u
+}
+
+// AddAutoEnableThreshold adds v to the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsert) AddAutoEnableThreshold(v float64) *UsageMonitorChannelUpsert {
+	u.Add(usagemonitorchannel.FieldAutoEnableThreshold, v)
+	return u
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsert) ClearAutoEnableThreshold() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldAutoEnableThreshold)
 	return u
 }
 
@@ -1493,6 +1622,76 @@ func (u *UsageMonitorChannelUpsertOne) UpdateNextResetAt() *UsageMonitorChannelU
 func (u *UsageMonitorChannelUpsertOne) ClearNextResetAt() *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearNextResetAt()
+	})
+}
+
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (u *UsageMonitorChannelUpsertOne) SetAutoDisableEnabled(v bool) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoDisableEnabled(v)
+	})
+}
+
+// UpdateAutoDisableEnabled sets the "auto_disable_enabled" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateAutoDisableEnabled() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoDisableEnabled()
+	})
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) SetAutoDisableThreshold(v float64) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoDisableThreshold(v)
+	})
+}
+
+// AddAutoDisableThreshold adds v to the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) AddAutoDisableThreshold(v float64) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.AddAutoDisableThreshold(v)
+	})
+}
+
+// UpdateAutoDisableThreshold sets the "auto_disable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateAutoDisableThreshold() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoDisableThreshold()
+	})
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) ClearAutoDisableThreshold() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAutoDisableThreshold()
+	})
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) SetAutoEnableThreshold(v float64) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoEnableThreshold(v)
+	})
+}
+
+// AddAutoEnableThreshold adds v to the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) AddAutoEnableThreshold(v float64) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.AddAutoEnableThreshold(v)
+	})
+}
+
+// UpdateAutoEnableThreshold sets the "auto_enable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateAutoEnableThreshold() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoEnableThreshold()
+	})
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertOne) ClearAutoEnableThreshold() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAutoEnableThreshold()
 	})
 }
 
@@ -2131,6 +2330,76 @@ func (u *UsageMonitorChannelUpsertBulk) UpdateNextResetAt() *UsageMonitorChannel
 func (u *UsageMonitorChannelUpsertBulk) ClearNextResetAt() *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearNextResetAt()
+	})
+}
+
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (u *UsageMonitorChannelUpsertBulk) SetAutoDisableEnabled(v bool) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoDisableEnabled(v)
+	})
+}
+
+// UpdateAutoDisableEnabled sets the "auto_disable_enabled" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateAutoDisableEnabled() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoDisableEnabled()
+	})
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) SetAutoDisableThreshold(v float64) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoDisableThreshold(v)
+	})
+}
+
+// AddAutoDisableThreshold adds v to the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) AddAutoDisableThreshold(v float64) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.AddAutoDisableThreshold(v)
+	})
+}
+
+// UpdateAutoDisableThreshold sets the "auto_disable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateAutoDisableThreshold() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoDisableThreshold()
+	})
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearAutoDisableThreshold() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAutoDisableThreshold()
+	})
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) SetAutoEnableThreshold(v float64) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetAutoEnableThreshold(v)
+	})
+}
+
+// AddAutoEnableThreshold adds v to the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) AddAutoEnableThreshold(v float64) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.AddAutoEnableThreshold(v)
+	})
+}
+
+// UpdateAutoEnableThreshold sets the "auto_enable_threshold" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateAutoEnableThreshold() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateAutoEnableThreshold()
+	})
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearAutoEnableThreshold() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearAutoEnableThreshold()
 	})
 }
 

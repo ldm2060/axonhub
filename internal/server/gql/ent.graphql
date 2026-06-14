@@ -441,6 +441,14 @@ type Channel implements Node {
   ownerID: ID
   visibility: ChannelVisibility!
   sharedWith: [Int!]
+  """
+  Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing.
+  """
+  quotaBindingReady: Boolean!
+  """
+  Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default.
+  """
+  quotaMultiMonitorStrategy: ChannelQuotaMultiMonitorStrategy
   owner: User
   requests(
     """
@@ -1264,6 +1272,13 @@ input ChannelProbeWhereInput {
   hasChannelWith: [ChannelWhereInput!]
 }
 """
+ChannelQuotaMultiMonitorStrategy is enum for the field quota_multi_monitor_strategy
+"""
+enum ChannelQuotaMultiMonitorStrategy @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.QuotaMultiMonitorStrategy") {
+  any
+  all
+}
+"""
 ChannelStatus is enum for the field status
 """
 enum ChannelStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.Status") {
@@ -1543,6 +1558,20 @@ input ChannelWhereInput {
   visibilityIn: [ChannelVisibility!]
   visibilityNotIn: [ChannelVisibility!]
   """
+  quota_binding_ready field predicates
+  """
+  quotaBindingReady: Boolean
+  quotaBindingReadyNEQ: Boolean
+  """
+  quota_multi_monitor_strategy field predicates
+  """
+  quotaMultiMonitorStrategy: ChannelQuotaMultiMonitorStrategy
+  quotaMultiMonitorStrategyNEQ: ChannelQuotaMultiMonitorStrategy
+  quotaMultiMonitorStrategyIn: [ChannelQuotaMultiMonitorStrategy!]
+  quotaMultiMonitorStrategyNotIn: [ChannelQuotaMultiMonitorStrategy!]
+  quotaMultiMonitorStrategyIsNil: Boolean
+  quotaMultiMonitorStrategyNotNil: Boolean
+  """
   owner edge predicates
   """
   hasOwner: Boolean
@@ -1647,6 +1676,14 @@ input CreateChannelInput {
   """
   endpoints: [ChannelEndpointInput!]
   visibility: ChannelVisibility
+  """
+  Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing.
+  """
+  quotaBindingReady: Boolean
+  """
+  Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default.
+  """
+  quotaMultiMonitorStrategy: ChannelQuotaMultiMonitorStrategy
   usageMonitorChannelIDs: [ID!]
 }
 """
@@ -6550,6 +6587,15 @@ input UpdateChannelInput {
   autoDisableConfig: ChannelAutoDisableConfigInput
   clearAutoDisableConfig: Boolean
   visibility: ChannelVisibility
+  """
+  Aggregated quota-ready status from all bound UsageMonitorChannels. When false, channel is excluded from routing.
+  """
+  quotaBindingReady: Boolean
+  """
+  Strategy for aggregating quota status from multiple bound monitors: 'any'=disable if any exhausted, 'all'=disable if all exhausted. nil = use global default.
+  """
+  quotaMultiMonitorStrategy: ChannelQuotaMultiMonitorStrategy
+  clearQuotaMultiMonitorStrategy: Boolean
   addUsageMonitorChannelIDs: [ID!]
   removeUsageMonitorChannelIDs: [ID!]
   clearUsageMonitorChannels: Boolean
@@ -7523,6 +7569,18 @@ type UsageMonitorChannel implements Node {
   Earliest quota reset time across all limits
   """
   nextResetAt: Time
+  """
+  Enable automatic channel disabling based on quota status
+  """
+  autoDisableEnabled: Boolean!
+  """
+  Disable channel when max usage ratio >= this threshold (0.0-1.0). Only used when auto_disable_enabled=true
+  """
+  autoDisableThreshold: Float
+  """
+  Re-enable channel when max usage ratio < this threshold (0.0-1.0). Only used when auto_disable_enabled=true
+  """
+  autoEnableThreshold: Float
   channel: Channel
   owner: User!
 }
@@ -7794,6 +7852,37 @@ input UsageMonitorChannelWhereInput {
   nextResetAtLTE: Time
   nextResetAtIsNil: Boolean
   nextResetAtNotNil: Boolean
+  """
+  auto_disable_enabled field predicates
+  """
+  autoDisableEnabled: Boolean
+  autoDisableEnabledNEQ: Boolean
+  """
+  auto_disable_threshold field predicates
+  """
+  autoDisableThreshold: Float
+  autoDisableThresholdNEQ: Float
+  autoDisableThresholdIn: [Float!]
+  autoDisableThresholdNotIn: [Float!]
+  autoDisableThresholdGT: Float
+  autoDisableThresholdGTE: Float
+  autoDisableThresholdLT: Float
+  autoDisableThresholdLTE: Float
+  autoDisableThresholdIsNil: Boolean
+  autoDisableThresholdNotNil: Boolean
+  """
+  auto_enable_threshold field predicates
+  """
+  autoEnableThreshold: Float
+  autoEnableThresholdNEQ: Float
+  autoEnableThresholdIn: [Float!]
+  autoEnableThresholdNotIn: [Float!]
+  autoEnableThresholdGT: Float
+  autoEnableThresholdGTE: Float
+  autoEnableThresholdLT: Float
+  autoEnableThresholdLTE: Float
+  autoEnableThresholdIsNil: Boolean
+  autoEnableThresholdNotNil: Boolean
   """
   channel edge predicates
   """

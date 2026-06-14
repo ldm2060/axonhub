@@ -414,6 +414,74 @@ func (_u *UsageMonitorChannelUpdate) ClearNextResetAt() *UsageMonitorChannelUpda
 	return _u
 }
 
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (_u *UsageMonitorChannelUpdate) SetAutoDisableEnabled(v bool) *UsageMonitorChannelUpdate {
+	_u.mutation.SetAutoDisableEnabled(v)
+	return _u
+}
+
+// SetNillableAutoDisableEnabled sets the "auto_disable_enabled" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableAutoDisableEnabled(v *bool) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetAutoDisableEnabled(*v)
+	}
+	return _u
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) SetAutoDisableThreshold(v float64) *UsageMonitorChannelUpdate {
+	_u.mutation.ResetAutoDisableThreshold()
+	_u.mutation.SetAutoDisableThreshold(v)
+	return _u
+}
+
+// SetNillableAutoDisableThreshold sets the "auto_disable_threshold" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableAutoDisableThreshold(v *float64) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetAutoDisableThreshold(*v)
+	}
+	return _u
+}
+
+// AddAutoDisableThreshold adds value to the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) AddAutoDisableThreshold(v float64) *UsageMonitorChannelUpdate {
+	_u.mutation.AddAutoDisableThreshold(v)
+	return _u
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) ClearAutoDisableThreshold() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearAutoDisableThreshold()
+	return _u
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) SetAutoEnableThreshold(v float64) *UsageMonitorChannelUpdate {
+	_u.mutation.ResetAutoEnableThreshold()
+	_u.mutation.SetAutoEnableThreshold(v)
+	return _u
+}
+
+// SetNillableAutoEnableThreshold sets the "auto_enable_threshold" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdate) SetNillableAutoEnableThreshold(v *float64) *UsageMonitorChannelUpdate {
+	if v != nil {
+		_u.SetAutoEnableThreshold(*v)
+	}
+	return _u
+}
+
+// AddAutoEnableThreshold adds value to the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) AddAutoEnableThreshold(v float64) *UsageMonitorChannelUpdate {
+	_u.mutation.AddAutoEnableThreshold(v)
+	return _u
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdate) ClearAutoEnableThreshold() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearAutoEnableThreshold()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *UsageMonitorChannelUpdate) SetChannel(v *Channel) *UsageMonitorChannelUpdate {
 	return _u.SetChannelID(v.ID)
@@ -677,6 +745,27 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 	}
 	if _u.mutation.NextResetAtCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldNextResetAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.AutoDisableEnabled(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AutoDisableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAutoDisableThreshold(); ok {
+		_spec.AddField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.AutoDisableThresholdCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.AutoEnableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAutoEnableThreshold(); ok {
+		_spec.AddField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.AutoEnableThresholdCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1140,6 +1229,74 @@ func (_u *UsageMonitorChannelUpdateOne) ClearNextResetAt() *UsageMonitorChannelU
 	return _u
 }
 
+// SetAutoDisableEnabled sets the "auto_disable_enabled" field.
+func (_u *UsageMonitorChannelUpdateOne) SetAutoDisableEnabled(v bool) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetAutoDisableEnabled(v)
+	return _u
+}
+
+// SetNillableAutoDisableEnabled sets the "auto_disable_enabled" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableAutoDisableEnabled(v *bool) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetAutoDisableEnabled(*v)
+	}
+	return _u
+}
+
+// SetAutoDisableThreshold sets the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) SetAutoDisableThreshold(v float64) *UsageMonitorChannelUpdateOne {
+	_u.mutation.ResetAutoDisableThreshold()
+	_u.mutation.SetAutoDisableThreshold(v)
+	return _u
+}
+
+// SetNillableAutoDisableThreshold sets the "auto_disable_threshold" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableAutoDisableThreshold(v *float64) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetAutoDisableThreshold(*v)
+	}
+	return _u
+}
+
+// AddAutoDisableThreshold adds value to the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) AddAutoDisableThreshold(v float64) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AddAutoDisableThreshold(v)
+	return _u
+}
+
+// ClearAutoDisableThreshold clears the value of the "auto_disable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearAutoDisableThreshold() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearAutoDisableThreshold()
+	return _u
+}
+
+// SetAutoEnableThreshold sets the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) SetAutoEnableThreshold(v float64) *UsageMonitorChannelUpdateOne {
+	_u.mutation.ResetAutoEnableThreshold()
+	_u.mutation.SetAutoEnableThreshold(v)
+	return _u
+}
+
+// SetNillableAutoEnableThreshold sets the "auto_enable_threshold" field if the given value is not nil.
+func (_u *UsageMonitorChannelUpdateOne) SetNillableAutoEnableThreshold(v *float64) *UsageMonitorChannelUpdateOne {
+	if v != nil {
+		_u.SetAutoEnableThreshold(*v)
+	}
+	return _u
+}
+
+// AddAutoEnableThreshold adds value to the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) AddAutoEnableThreshold(v float64) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AddAutoEnableThreshold(v)
+	return _u
+}
+
+// ClearAutoEnableThreshold clears the value of the "auto_enable_threshold" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearAutoEnableThreshold() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearAutoEnableThreshold()
+	return _u
+}
+
 // SetChannel sets the "channel" edge to the Channel entity.
 func (_u *UsageMonitorChannelUpdateOne) SetChannel(v *Channel) *UsageMonitorChannelUpdateOne {
 	return _u.SetChannelID(v.ID)
@@ -1433,6 +1590,27 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 	}
 	if _u.mutation.NextResetAtCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldNextResetAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.AutoDisableEnabled(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AutoDisableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAutoDisableThreshold(); ok {
+		_spec.AddField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.AutoDisableThresholdCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAutoDisableThreshold, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.AutoEnableThreshold(); ok {
+		_spec.SetField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAutoEnableThreshold(); ok {
+		_spec.AddField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.AutoEnableThresholdCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldAutoEnableThreshold, field.TypeFloat64)
 	}
 	if _u.mutation.ChannelCleared() {
 		edge := &sqlgraph.EdgeSpec{
