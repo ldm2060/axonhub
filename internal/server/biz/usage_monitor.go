@@ -336,6 +336,7 @@ type UsageMonitorServiceParams struct {
 	Scheduler               *scheduler.Scheduler
 	DefaultDisableThreshold float64 `name:"quota_channel_binding.default_disable_threshold"`
 	DefaultEnableThreshold  float64 `name:"quota_channel_binding.default_enable_threshold"`
+	DefaultMultiMonitorStrategy string `name:"quota_channel_binding.default_multi_monitor_strategy"`
 }
 
 type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limits []map[string]any)
@@ -343,22 +344,24 @@ type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limi
 type UsageMonitorService struct {
 	*AbstractService
 
-	cache                   *live.IndexedCache[int, *ent.UsageMonitorChannel]
-	genericChecker          *usage_monitor.GenericQuotaChecker
-	httpClient              *httpclient.HttpClient
-	defaultDisableThreshold float64
-	defaultEnableThreshold  float64
-	mu                      sync.Mutex
-	quotaCacheCallback      QuotaCacheCallback
+	cache                       *live.IndexedCache[int, *ent.UsageMonitorChannel]
+	genericChecker              *usage_monitor.GenericQuotaChecker
+	httpClient                  *httpclient.HttpClient
+	defaultDisableThreshold     float64
+	defaultEnableThreshold      float64
+	defaultMultiMonitorStrategy string
+	mu                          sync.Mutex
+	quotaCacheCallback          QuotaCacheCallback
 }
 
 func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorService {
 	svc := &UsageMonitorService{
-		AbstractService:         &AbstractService{db: params.Ent},
-		genericChecker:          usage_monitor.NewGenericQuotaChecker(params.HttpClient),
-		httpClient:              params.HttpClient,
-		defaultDisableThreshold: params.DefaultDisableThreshold,
-		defaultEnableThreshold:  params.DefaultEnableThreshold,
+		AbstractService:             &AbstractService{db: params.Ent},
+		genericChecker:              usage_monitor.NewGenericQuotaChecker(params.HttpClient),
+		httpClient:                  params.HttpClient,
+		defaultDisableThreshold:     params.DefaultDisableThreshold,
+		defaultEnableThreshold:      params.DefaultEnableThreshold,
+		defaultMultiMonitorStrategy: params.DefaultMultiMonitorStrategy,
 	}
 
 	svc.cache = live.NewIndexedCache(live.IndexedOptions[int, *ent.UsageMonitorChannel]{
@@ -1035,7 +1038,12 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 
 		// If source=builtin and channel_id is set, evaluate channel quota_ready status
 		if updated.Source == usagemonitorchannel.SourceBuiltin && updated.ChannelID != nil {
-			svc.evaluateAndUpdateChannelQuotaReady(ctx, *updated.ChannelID)
+			if err := svc.evaluateAndUpdateChannelQuotaReady(ctx, *updated.ChannelID); err != nil {
+				log.Error(ctx, "Failed to evaluate channel quota_ready status",
+					log.Int("channel_id", *updated.ChannelID),
+					log.Int("monitor_id", updated.ID),
+					log.Cause(err))
+			}
 		}
 	}
 
@@ -1069,17 +1077,4 @@ func (svc *UsageMonitorService) refreshAntigravityToken(ctx context.Context, api
 	}
 
 	return map[string]any{"Authorization": "Bearer " + creds.AccessToken}, nil
-}
-
-// evaluateAndUpdateChannelQuotaReady evaluates all monitors bound to a channel
-// and updates the channel's quota_binding_ready status based on the aggregation strategy.
-// This is a stub implementation - Task 7 will implement the full logic.
-func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReady(ctx context.Context, channelID int) {
-	log.Debug(ctx, "Channel quota_ready evaluation triggered (stub)",
-		log.Int("channel_id", channelID))
-	// TODO: Task 7 will implement:
-	// 1. Query all monitors where source=builtin and channel_id=channelID
-	// 2. Apply multi-monitor strategy (any/all)
-	// 3. Update Channel.quota_binding_ready if changed
-	// 4. Log state transitions
 }
