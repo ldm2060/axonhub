@@ -85,3 +85,18 @@ func (svc *ChannelService) ReloadEnabledChannelsCache(ctx context.Context) error
 
 	return nil
 }
+
+// onQuotaBindingChannelsReload is registered with UsageMonitorService and
+// invoked after a channel's quota_binding_ready state changes. It refreshes
+// the local enabled-channels cache immediately and notifies other instances,
+// so the orchestrator stops/starts routing to the channel without waiting for
+// the cache's 1-minute refresh tick (mirrors markChannelUnavailable).
+func (svc *ChannelService) onQuotaBindingChannelsReload(ctx context.Context, channelID int) {
+	if err := svc.ReloadEnabledChannelsCache(ctx); err != nil {
+		log.Warn(ctx, "failed to reload enabled channels cache after quota binding change",
+			log.Int("channel_id", channelID),
+			log.Cause(err))
+		return
+	}
+	svc.asyncReloadChannels()
+}

@@ -20,7 +20,7 @@ func (v *V0_1_34) Version() string {
 }
 
 func (v *V0_1_34) Migrate(ctx context.Context, client *ent.Client) error {
-	ctx = authz.WithSystemBypass(context.Background(), "database-migrate")
+	ctx = authz.WithSystemBypass(ctx, "database-migrate")
 
 	// 1. Set quota_binding_ready=true for all existing channels
 	// This field was added with a default value of true, but existing rows need explicit update

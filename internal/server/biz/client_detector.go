@@ -17,6 +17,7 @@ var SupportedCodingClients = []string{
 	"github-copilot",
 	"windsurf",
 	"cody",
+	"moonshot-cli",
 }
 
 var ChannelClientMapping = map[string][]string{
@@ -53,6 +54,7 @@ func (d *ClientDetector) DetectClient(userAgent string) string {
 		"copilot":        "copilot",
 		"windsurf":       "windsurf",
 		"cody":           "cody",
+		"moonshot-cli":   "moonshot-cli",
 	}
 
 	// Check in order of specificity
@@ -61,6 +63,7 @@ func (d *ClientDetector) DetectClient(userAgent string) string {
 		"codex-cli", "codex",
 		"github-copilot", "copilot",
 		"antigravity", "opencode",
+		"moonshot-cli",
 		"cursor", "windsurf", "cody",
 		"aider", "cline", "continue",
 	}

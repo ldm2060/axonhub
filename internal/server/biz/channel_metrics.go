@@ -324,24 +324,26 @@ func (svc *ChannelService) RecordPerformance(ctx context.Context, perf *Performa
 	} else if !perf.Canceled {
 		policy := svc.SystemService.RetryPolicyOrDefault(ctx)
 
-		if policy.AutoDisableChannel.Enabled {
-			// Retrieve channel to resolve its auto-disable configuration
-			channel, err := svc.GetChannel(ctx, perf.ChannelID)
-			if err != nil {
-				log.Warn(ctx, "Failed to get channel for auto-disable check, skipping",
-					log.Int("channel_id", perf.ChannelID),
-					log.Cause(err),
-				)
+		// Resolve the channel so its per-channel auto-disable config is honored.
+		// ResolveChannelAutoDisableConfig merges channel + global settings:
+		// INHERIT_GLOBAL respects the global Enabled flag, while CUSTOM lets a
+		// channel override it. Gating this whole block on the global flag alone
+		// would make CUSTOM overrides unreachable when the global switch is off.
+		channel, err := svc.GetChannel(ctx, perf.ChannelID)
+		if err != nil {
+			log.Warn(ctx, "Failed to get channel for auto-disable check, skipping",
+				log.Int("channel_id", perf.ChannelID),
+				log.Cause(err),
+			)
+		} else {
+			// Check API key error first if available.
+			if perf.APIKey != "" {
+				if svc.checkAndHandleAPIKeyError(ctx, perf, channel, policy) {
+					return
+				}
 			} else {
-				// Check API key error first if available.
-				if perf.APIKey != "" {
-					if svc.checkAndHandleAPIKeyError(ctx, perf, channel, policy) {
-						return
-					}
-				} else {
-					if svc.checkAndHandleChannelError(ctx, perf, channel, policy) {
-						return
-					}
+				if svc.checkAndHandleChannelError(ctx, perf, channel, policy) {
+					return
 				}
 			}
 		}

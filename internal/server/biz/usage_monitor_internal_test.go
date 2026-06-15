@@ -40,6 +40,7 @@ func createTestChannelForMonitor(t *testing.T, svc *UsageMonitorService, ctx con
 	create := svc.db.Channel.Create().
 		SetName("test-channel").
 		SetType(channel.TypeOpenai).
+		SetStatus(channel.StatusEnabled).
 		SetBaseURL("https://api.openai.com/v1").
 		SetDefaultTestModel("gpt-4").
 		SetSupportedModels([]string{"gpt-4"}).
@@ -506,4 +507,60 @@ func TestBuildErrorMessage(t *testing.T) {
 		assert.Contains(t, msg, "Test Monitor")
 		assert.Contains(t, msg, "N/A")
 	})
+}
+
+// TestUpdateChannelQuotaBindingReady_DisabledChannelKeepsErrorMessage verifies
+// that quota binding does not touch error_message on a disabled channel. A
+// disabled channel's error_message is owned by the subsystem that disabled it
+// (auto-disable / all-API-keys-disabled); quota binding must not overwrite or
+// clear it when quota recovers.
+func TestUpdateChannelQuotaBindingReady_DisabledChannelKeepsErrorMessage(t *testing.T) {
+	svc, ctx := setupTestUsageMonitorService(t, "any")
+	ch := createTestChannelForMonitor(t, svc, ctx, nil)
+
+	// Simulate auto-disable: channel flipped to disabled with an HTTP error reason.
+	autoDisableMsg := "Channel auto-disabled: HTTP 500"
+	_, err := svc.db.Channel.UpdateOneID(ch.ID).
+		SetStatus(channel.StatusDisabled).
+		SetErrorMessage(autoDisableMsg).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Quota recovers (ready=true) — quota binding must NOT erase the message.
+	err = svc.updateChannelQuotaBindingReady(ctx, ch.ID, true, "")
+	require.NoError(t, err)
+
+	updated, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.True(t, updated.QuotaBindingReady, "quota_binding_ready should be updated regardless of status")
+	require.NotNil(t, updated.ErrorMessage, "disabled channel must keep its auto-disable error_message")
+	assert.Equal(t, autoDisableMsg, *updated.ErrorMessage)
+}
+
+// TestUpdateChannelQuotaBindingReady_EnabledChannelWritesErrorMessage verifies
+// that an enabled channel (excluded from routing only by quota) does get its
+// error_message written/cleared by quota binding, since that is the only reason
+// it is unavailable.
+func TestUpdateChannelQuotaBindingReady_EnabledChannelWritesErrorMessage(t *testing.T) {
+	svc, ctx := setupTestUsageMonitorService(t, "any")
+	ch := createTestChannelForMonitor(t, svc, ctx, nil) // enabled
+
+	// Quota exhausted on an enabled channel → quota binding owns the message.
+	err := svc.updateChannelQuotaBindingReady(ctx, ch.ID, false, "quota exhausted 95%")
+	require.NoError(t, err)
+
+	exhausted, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.False(t, exhausted.QuotaBindingReady)
+	require.NotNil(t, exhausted.ErrorMessage)
+	assert.Equal(t, "quota exhausted 95%", *exhausted.ErrorMessage)
+
+	// Quota recovers on the still-enabled channel → message cleared.
+	err = svc.updateChannelQuotaBindingReady(ctx, ch.ID, true, "")
+	require.NoError(t, err)
+
+	recovered, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.True(t, recovered.QuotaBindingReady)
+	assert.Nil(t, recovered.ErrorMessage)
 }

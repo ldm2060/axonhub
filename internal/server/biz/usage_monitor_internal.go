@@ -117,10 +117,26 @@ func (svc *UsageMonitorService) updateChannelQuotaBindingReady(ctx context.Conte
 	update := client.Channel.UpdateOneID(channelID).
 		SetQuotaBindingReady(ready)
 
-	if errorMsg != "" {
-		update.SetErrorMessage(errorMsg)
-	} else {
-		update.ClearErrorMessage()
+	// error_message is shared with other subsystems: auto-disable
+	// (channel_auto_disable.go) and all-API-keys-disabled set it together with
+	// flipping the channel to StatusDisabled. Only touch error_message for
+	// channels that are still enabled — those are excluded from routing purely
+	// by quota status, so the quota-exhaustion reason is ours to own. A disabled
+	// channel keeps the message from whichever subsystem disabled it.
+	ch, statusErr := client.Channel.Query().
+		Where(channel.IDEQ(channelID)).
+		Select(channel.FieldStatus).
+		Only(ctx)
+	if statusErr == nil && ch.Status == channel.StatusEnabled {
+		if errorMsg != "" {
+			update.SetErrorMessage(errorMsg)
+		} else {
+			update.ClearErrorMessage()
+		}
+	} else if statusErr != nil && !ent.IsNotFound(statusErr) {
+		log.Warn(ctx, "failed to read channel status before updating quota binding error_message",
+			log.Int("channel_id", channelID),
+			log.Cause(statusErr))
 	}
 
 	_, err := update.Save(ctx)
@@ -132,6 +148,13 @@ func (svc *UsageMonitorService) updateChannelQuotaBindingReady(ctx context.Conte
 			log.Bool("ready", ready),
 			log.String("error_msg", errorMsg),
 		)
+
+		// Refresh the enabled-channels cache so ProviderQuotaSelector stops/starts
+		// using this channel immediately, instead of waiting up to 1 minute for
+		// the cache's refresh tick.
+		if svc.channelsReloadCallback != nil {
+			svc.channelsReloadCallback(ctx, channelID)
+		}
 	}
 
 	return err

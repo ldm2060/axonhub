@@ -148,6 +148,15 @@ func NewChannelService(params ChannelServiceParams) *ChannelService {
 	// Start performance metrics background flush
 	go svc.startPerformanceProcess()
 
+	// Refresh the enabled-channels cache immediately when a channel's
+	// quota_binding_ready state changes, so the orchestrator stops/starts
+	// routing to it without waiting for the cache's 1-minute refresh tick.
+	// usageMonitor is nil in some test harnesses (NewChannelServiceForTest);
+	// guard accordingly.
+	if svc.usageMonitor != nil {
+		svc.usageMonitor.SetChannelsReloadCallback(svc.onQuotaBindingChannelsReload)
+	}
+
 	return svc
 }
 

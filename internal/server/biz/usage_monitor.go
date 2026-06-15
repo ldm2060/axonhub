@@ -353,6 +353,12 @@ type UsageMonitorServiceParams struct {
 
 type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limits []map[string]any)
 
+// ChannelsReloadCallback is invoked after a channel's quota_binding_ready state
+// changes in the DB, so the owner (ChannelService) can synchronously refresh
+// the enabled-channels cache. Without this, ProviderQuotaSelector keeps reading
+// a stale QuotaBindingReady value until the cache's 1-minute refresh tick.
+type ChannelsReloadCallback func(ctx context.Context, channelID int)
+
 type UsageMonitorService struct {
 	*AbstractService
 
@@ -364,6 +370,7 @@ type UsageMonitorService struct {
 	defaultMultiMonitorStrategy string
 	mu                          sync.Mutex
 	quotaCacheCallback          QuotaCacheCallback
+	channelsReloadCallback      ChannelsReloadCallback
 }
 
 func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorService {
@@ -410,6 +417,14 @@ func (svc *UsageMonitorService) RegisterScheduledTasks(ctx context.Context, s *s
 
 func (svc *UsageMonitorService) SetQuotaCacheCallback(cb QuotaCacheCallback) {
 	svc.quotaCacheCallback = cb
+}
+
+// SetChannelsReloadCallback registers a callback invoked after a channel's
+// quota_binding_ready state is updated, so the ChannelService can refresh its
+// in-memory enabled-channels cache immediately (mirrors the pattern used by
+// markChannelUnavailable in channel_auto_disable.go).
+func (svc *UsageMonitorService) SetChannelsReloadCallback(cb ChannelsReloadCallback) {
+	svc.channelsReloadCallback = cb
 }
 
 func (svc *UsageMonitorService) loadOne(ctx context.Context, id int) (*ent.UsageMonitorChannel, error) {

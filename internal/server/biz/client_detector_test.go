@@ -99,6 +99,18 @@ func TestClientDetector_DetectClient(t *testing.T) {
 			want:      "cody",
 		},
 
+		// Moonshot CLI
+		{
+			name:      "Moonshot CLI",
+			userAgent: "moonshot-cli/1.0.0",
+			want:      "moonshot-cli",
+		},
+		{
+			name:      "Moonshot CLI - mixed case",
+			userAgent: "Moonshot-CLI/1.0.0",
+			want:      "moonshot-cli",
+		},
+
 		// Unknown clients
 		{
 			name:      "Standard browser",
@@ -161,6 +173,11 @@ func TestClientDetector_IsLenientClientAllowed(t *testing.T) {
 		{
 			name:      "Aider",
 			userAgent: "aider/0.45.0",
+			want:      true,
+		},
+		{
+			name:      "Moonshot CLI",
+			userAgent: "moonshot-cli/1.0.0",
 			want:      true,
 		},
 
@@ -268,6 +285,20 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 			want:        true,
 		},
 
+		// Moonshot coding channel tests
+		{
+			name:        "Moonshot CLI allowed for moonshot_coding channel",
+			userAgent:   "moonshot-cli/1.0.0",
+			channelType: "moonshot_coding",
+			want:        true,
+		},
+		{
+			name:        "Claude CLI not allowed for moonshot_coding channel",
+			userAgent:   "ClaudeCode/1.0.0",
+			channelType: "moonshot_coding",
+			want:        false,
+		},
+
 		// Unknown channel type
 		{
 			name:        "Unknown channel type",
@@ -343,6 +374,7 @@ func TestSupportedCodingClients(t *testing.T) {
 		"github-copilot",
 		"windsurf",
 		"cody",
+		"moonshot-cli",
 	}
 
 	assert.Equal(t, len(expectedClients), len(SupportedCodingClients), "Should have correct number of supported clients")
