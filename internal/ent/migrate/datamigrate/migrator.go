@@ -29,7 +29,7 @@ type Migrator struct {
 func NewMigrator(client *ent.Client) *Migrator {
 	migrator := NewMigratorWithoutRegistrations(client)
 	migrator.Register(NewV0_1_10())
-	migrator.Register(NewV0_1_33())
+	migrator.Register(NewV0_1_34())
 
 	return migrator
 }
