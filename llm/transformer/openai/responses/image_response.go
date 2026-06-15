@@ -3,8 +3,8 @@ package responses
 import (
 	"fmt"
 
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/internal/pkg/xurl"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 func BuildImageResponse(upstream *Response, metadata map[string]any) (*llm.Response, error) {
