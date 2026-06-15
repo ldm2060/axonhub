@@ -186,6 +186,11 @@ type ChannelSettings struct {
 	// trigger retry for this channel. When Regex is false, Pattern is matched as a
 	// case-sensitive substring of the error text.
 	RetryableErrorPatterns []RetryableErrorPattern `json:"retryableErrorPatterns,omitempty"`
+
+	// MinInputTokens sets the minimum estimated prompt tokens for a request to use this channel.
+	// When set, requests with fewer prompt tokens will be routed to other channels.
+	// nil means no minimum (default).
+	MinInputTokens *int `json:"minInputTokens,omitempty"`
 }
 
 type RetryableErrorPattern struct {

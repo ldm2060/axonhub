@@ -34,6 +34,7 @@ const rateLimitFormSchema = z
     maxConcurrent: numericField,
     queueSize: numericField,
     queueTimeoutMs: numericField,
+    minInputTokens: numericField,
   })
   .superRefine((values, ctx) => {
     const queueSize = values.queueSize;
@@ -58,6 +59,7 @@ const emptyDefaults: RateLimitFormValues = {
   maxConcurrent: '',
   queueSize: '',
   queueTimeoutMs: '',
+  minInputTokens: '',
 };
 
 function valuesFromChannel(currentRow: Channel): RateLimitFormValues {
@@ -67,6 +69,7 @@ function valuesFromChannel(currentRow: Channel): RateLimitFormValues {
     maxConcurrent: currentRow.settings?.rateLimit?.maxConcurrent ?? '',
     queueSize: currentRow.settings?.rateLimit?.queueSize ?? '',
     queueTimeoutMs: currentRow.settings?.rateLimit?.queueTimeoutMs ?? '',
+    minInputTokens: currentRow.settings?.minInputTokens ?? '',
   };
 }
 
@@ -122,6 +125,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
 
       const nextSettings = mergeChannelSettingsForUpdate(currentRow.settings, {
         rateLimit: rateLimitValue,
+        minInputTokens: normalize(values.minInputTokens),
       });
 
       await updateChannel.mutateAsync({
@@ -250,6 +254,25 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
                     'channels.dialogs.rateLimit.fields.queueTimeoutMs.label',
                     'channels.dialogs.rateLimit.fields.queueTimeoutMs.placeholder',
                     'channels.dialogs.rateLimit.fields.queueTimeoutMs.description',
+                  )}
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className='text-lg'>{t('channels.dialogs.rateLimit.routing.title')}</CardTitle>
+              <CardDescription>{t('channels.dialogs.rateLimit.routing.description')}</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <Form {...form}>
+                <form className='space-y-4'>
+                  {renderNumericField(
+                    'minInputTokens',
+                    'channels.dialogs.rateLimit.fields.minInputTokens.label',
+                    'channels.dialogs.rateLimit.fields.minInputTokens.placeholder',
+                    'channels.dialogs.rateLimit.fields.minInputTokens.description',
                   )}
                 </form>
               </Form>

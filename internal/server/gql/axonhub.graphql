@@ -122,6 +122,7 @@ type ChannelSettings {
   rateLimit: ChannelRateLimit
   retryableStatusCodes: [Int!]
   retryableErrorPatterns: [RetryableErrorPattern!]
+  minInputTokens: Int
 }
 
 enum CapabilityPolicy {
@@ -190,6 +191,7 @@ input ChannelSettingsInput {
   rateLimit: ChannelRateLimitInput
   retryableStatusCodes: [Int!]
   retryableErrorPatterns: [RetryableErrorPatternInput!]
+  minInputTokens: Int
 }
 
 input ChannelRateLimitInput {
