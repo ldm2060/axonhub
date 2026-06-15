@@ -65,6 +65,9 @@ func startServer() {
 		}),
 		fx.Provide(conf.Load),
 		fx.Provide(metrics.NewProvider),
+		fx.Provide(fx.Annotate(func(qcb conf.QuotaChannelBindingConfig) float64 { return qcb.DefaultDisableThreshold }, fx.ResultTags(`name:"quota_channel_binding.default_disable_threshold"`))),
+		fx.Provide(fx.Annotate(func(qcb conf.QuotaChannelBindingConfig) float64 { return qcb.DefaultEnableThreshold }, fx.ResultTags(`name:"quota_channel_binding.default_enable_threshold"`))),
+		fx.Provide(fx.Annotate(func(qcb conf.QuotaChannelBindingConfig) string { return qcb.DefaultMultiMonitorStrategy }, fx.ResultTags(`name:"quota_channel_binding.default_multi_monitor_strategy"`))),
 		fx.Invoke(func(lc fx.Lifecycle, server *server.Server, provider *sdk.MeterProvider, ent *ent.Client, requestSvc *biz.RequestService) {
 			lc.Append(fx.Hook{
 				OnStart: func(ctx context.Context) error {

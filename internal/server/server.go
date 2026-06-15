@@ -7,10 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/pprof"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/api"
@@ -126,7 +128,9 @@ func Run(opts ...fx.Option) {
 
 	app := fx.New(
 		append([]fx.Option{
-			// fx.NopLogger, // Temporarily disabled to debug startup issues
+			fx.WithLogger(func() fxevent.Logger {
+				return &fxevent.ConsoleLogger{W: os.Stderr}
+			}),
 			fx.Provide(constructors...),
 			dependencies.Module,
 			scheduler.Module,
