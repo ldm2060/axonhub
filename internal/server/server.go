@@ -126,7 +126,7 @@ func Run(opts ...fx.Option) {
 
 	app := fx.New(
 		append([]fx.Option{
-			fx.NopLogger,
+			// fx.NopLogger, // Temporarily disabled to debug startup issues
 			fx.Provide(constructors...),
 			dependencies.Module,
 			scheduler.Module,
