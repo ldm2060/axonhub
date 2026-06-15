@@ -25,6 +25,32 @@
 > 1. このプロジェクトは個人によって運営されています。作者は、使用に起因するリスクに対していかなる保証も責任も負いません。慎重にご検討ください。
 > 2. このプロジェクトのコアスコープには2api（サブスクリプションからAPIへの変換）は含まれていません。必要な場合は、2apiに特化した他のオープンソースプロジェクトをご検討ください。
 
+<br />
+
+<table border="1" cellspacing="0" cellpadding="16">
+  <thead>
+    <tr>
+      <th align="center" width="220">Sponsor</th>
+      <th align="left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://bloome.im/" target="_blank">
+         <strong>Bloome</strong>
+          <img src="docs/sponsors/bloome.png" alt="Bloome" height="90" />
+        </a>
+      </td>
+      <td valign="middle">
+        AxonHub をローカルセットアップなしで試すなら、Bloome で：
+        <a href="https://bloome.im/agent/join/WchosTFN?ref=MjgMzmCY" target="_blank">Quick start</a>,
+        ブラウザやスマートフォンからワンクリックで起動でき、チームにも簡単に共有できます。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ---
 
 ## 📖 プロジェクト紹介

@@ -25,6 +25,32 @@
 > 1. This project is maintained by an individual. The author makes no warranties and assumes no liability for risks arising from its use. Please evaluate carefully.
 > 2. The core scope of this project does not include 2api (subscription-to-API conversion). If you need that, consider other open-source projects focused on 2api.
 
+<br />
+
+<table border="1" cellspacing="0" cellpadding="16">
+  <thead>
+    <tr>
+      <th align="center" width="220">Sponsor</th>
+      <th align="left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://bloome.im/" target="_blank">
+         <strong>Bloome</strong>
+          <img src="docs/sponsors/bloome.png" alt="Bloome" height="90" />
+        </a>
+      </td>
+      <td valign="middle">
+        Try AxonHub with zero local setup on Bloome：
+        <a href="https://bloome.im/agent/join/WchosTFN?ref=MjgMzmCY" target="_blank">Quick start</a>,
+        one click from your browser or phone, easy to share with your team.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ---
 
 ## 📖 Project Introduction
