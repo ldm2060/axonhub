@@ -4,14 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/build"
 	"github.com/ldm2060/axonhub/internal/ent"
-	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
 	"github.com/ldm2060/axonhub/internal/ent/migrate/datamigrate"
 	"github.com/ldm2060/axonhub/internal/server/biz"
@@ -370,58 +368,5 @@ func TestMigrator_IntegrationTest(t *testing.T) {
 	assert.True(t, isInitialized)
 }
 
-func TestMigrator_UpgradeFromV0_3_0(t *testing.T) {
-	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
-	defer client.Close()
-
-	ctx := context.Background()
-	ctx = ent.NewContext(ctx, client)
-	ctx = authz.WithTestBypass(ctx)
-
-	// Simulate an already initialized system on v0.3.0 without primary data storage
-	_, err := client.System.Create().
-		SetKey(biz.SystemKeyInitialized).
-		SetValue("true").
-		Save(ctx)
-	require.NoError(t, err)
-
-	_, err = client.System.Create().
-		SetKey(biz.SystemKeyVersion).
-		SetValue("v0.3.0").
-		Save(ctx)
-	require.NoError(t, err)
-
-	migrator := datamigrate.NewMigrator(client)
-	err = migrator.Run(ctx)
-	require.NoError(t, err)
-
-	primaryCount, err := client.DataStorage.Query().
-		Where(datastorage.Primary(true)).
-		Count(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, 1, primaryCount)
-
-	primaryDS, err := client.DataStorage.Query().
-		Where(datastorage.Primary(true)).
-		Only(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, "Primary", primaryDS.Name)
-
-	systemService := biz.NewSystemService(biz.SystemServiceParams{})
-	defaultID, err := systemService.DefaultDataStorageID(ctx)
-	require.NoError(t, err)
-	assert.Equal(t, primaryDS.ID, defaultID)
-
-	version, err := systemService.Version(ctx)
-	require.NoError(t, err)
-	// The migrator only updates the system version when build.Version is newer
-	// than the current version. When build.Version is older (e.g. local dev
-	// builds where VERSION = v0.1.0), the test's seeded "v0.3.0" stays put.
-	bv, perr := semver.NewVersion(build.Version)
-	require.NoError(t, perr)
-	if bv.GreaterThan(semver.MustParse("v0.3.0")) {
-		assert.Equal(t, build.Version, version)
-	} else {
-		assert.Equal(t, "v0.3.0", version)
-	}
-}
+// TestMigrator_UpgradeFromV0_3_0 was removed because v0.3.0/v0.4.0/v0.5.0 migrations
+// were deleted (they used incorrect version numbering; should be v0.1.x format)
