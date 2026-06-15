@@ -28,7 +28,7 @@ interface ChannelAutoDisableConfigProps {
 }
 
 export function ChannelAutoDisableConfig({ channel, onUpdate }: ChannelAutoDisableConfigProps) {
-  const { t } = useTranslation(['channels']);
+  const { t } = useTranslation();
 
   const config = channel?.autoDisableConfig || { mode: 'INHERIT_GLOBAL' };
   const [mode, setMode] = useState(config.mode);

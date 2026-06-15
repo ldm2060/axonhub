@@ -65,7 +65,7 @@ export function RequestBodyDrawer({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { navigateWithSearch } = usePaginationSearch({ defaultPageSize: 20 });
-  const permissions = useRequestPermissions();
+  const permissions = useRequestPermissions({ systemOnly: projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const effectiveProjectId = projectId !== undefined ? projectId : selectedProjectId;
 

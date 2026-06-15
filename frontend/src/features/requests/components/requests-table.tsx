@@ -119,7 +119,12 @@ export function RequestsTable({
     setDrawerOpen(true);
   }, []);
 
-  const requestsColumns = useRequestsColumns({ onBodyClick: handleBodyClick, onViewDetail, showOwnershipColumns: adminScope });
+  const requestsColumns = useRequestsColumns({
+    onBodyClick: handleBodyClick,
+    onViewDetail,
+    showOwnershipColumns: adminScope,
+    systemOnly: adminScope,
+  });
 
   const columnVisibilityStorageKey = adminScope ? 'admin-requests-table-column-visibility' : 'requests-table-column-visibility';
 

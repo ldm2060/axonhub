@@ -250,6 +250,12 @@ func convertDisplayFieldsToMapSlice(dfs []usage_monitor.DisplayField) []map[stri
 		if d.BadgePresets != "" {
 			m["badgePresets"] = d.BadgePresets
 		}
+		if d.Group != "" {
+			m["group"] = d.Group
+		}
+		if d.GroupLabelRef != "" {
+			m["groupLabelRef"] = d.GroupLabelRef
+		}
 		result = append(result, m)
 	}
 	return result
@@ -311,6 +317,12 @@ func convertNewToLegacyFields(variablesMapSlice []map[string]any, displayFieldsM
 		if df.TotalRef != "" {
 			fc["totalPath"] = df.TotalRef
 		}
+		if df.Group != "" {
+			fc["group"] = df.Group
+		}
+		if df.GroupLabelRef != "" {
+			fc["groupLabelRef"] = df.GroupLabelRef
+		}
 		if df.ValueRef != "" && df.ValueRef != df.Key {
 			fc["expression"] = df.ValueRef
 		}
@@ -331,12 +343,12 @@ func convertNewToLegacyFields(variablesMapSlice []map[string]any, displayFieldsM
 type UsageMonitorServiceParams struct {
 	fx.In
 
-	Ent                     *ent.Client
-	HttpClient              *httpclient.HttpClient
-	Scheduler               *scheduler.Scheduler
-	DefaultDisableThreshold float64 `name:"quota_channel_binding.default_disable_threshold"`
-	DefaultEnableThreshold  float64 `name:"quota_channel_binding.default_enable_threshold"`
-	DefaultMultiMonitorStrategy string `name:"quota_channel_binding.default_multi_monitor_strategy"`
+	Ent                         *ent.Client
+	HttpClient                  *httpclient.HttpClient
+	Scheduler                   *scheduler.Scheduler
+	DefaultDisableThreshold     float64 `name:"quota_channel_binding.default_disable_threshold"`
+	DefaultEnableThreshold      float64 `name:"quota_channel_binding.default_enable_threshold"`
+	DefaultMultiMonitorStrategy string  `name:"quota_channel_binding.default_multi_monitor_strategy"`
 }
 
 type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limits []map[string]any)
@@ -933,14 +945,16 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	parsedFields := make([]map[string]any, 0, len(pollData.Fields))
 	for _, f := range pollData.Fields {
 		parsedFields = append(parsedFields, map[string]any{
-			"key":     f.Key,
-			"label":   f.Label,
-			"value":   f.Value,
-			"total":   f.Total,
-			"percent": f.Percent,
-			"unit":    f.Unit,
-			"format":  f.Format,
-			"error":   f.Error,
+			"key":        f.Key,
+			"label":      f.Label,
+			"value":      f.Value,
+			"total":      f.Total,
+			"percent":    f.Percent,
+			"unit":       f.Unit,
+			"format":     f.Format,
+			"error":      f.Error,
+			"group":      f.Group,
+			"groupLabel": f.GroupLabel,
 		})
 	}
 	pollDataMap["fields"] = parsedFields

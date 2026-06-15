@@ -106,6 +106,8 @@ export function EditChannelDialog() {
           displayOrder: df.displayOrder,
           badge: df.badge,
           badgePresets: df.badgePresets,
+          group: df.group,
+          groupLabelRef: df.groupLabelRef,
         }));
         await updateMutation.mutateAsync({
           id: currentChannel.id,

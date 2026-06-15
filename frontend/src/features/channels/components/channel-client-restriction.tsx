@@ -12,7 +12,7 @@ interface ChannelClientRestrictionProps {
 }
 
 export function ChannelClientRestriction({ channel, onUpdate }: ChannelClientRestrictionProps) {
-  const { t } = useTranslation(['channels']);
+  const { t } = useTranslation();
 
   const value = channel?.clientRestriction || 'INHERIT';
 

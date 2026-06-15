@@ -25,6 +25,7 @@ interface UseRequestsColumnsOptions {
   onBodyClick?: (requestId: string, index: number) => void;
   onViewDetail?: (requestId: string) => void;
   showOwnershipColumns?: boolean;
+  systemOnly?: boolean;
 }
 
 function formatUserName(user?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
@@ -39,7 +40,7 @@ function formatUserName(user?: { firstName?: string | null; lastName?: string | 
 export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnDef<Request>[] {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
-  const permissions = useRequestPermissions();
+  const permissions = useRequestPermissions({ systemOnly: options?.systemOnly ?? false });
   const { hasScope } = usePermissions();
   const { data: settings } = useGeneralSettings();
   const { data: securitySettings } = useSecuritySettings();
@@ -100,6 +101,18 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
     },
     ...(options?.showOwnershipColumns
       ? ([
+          ...(permissions.canViewProjects
+            ? [
+                {
+                  id: 'project',
+                  accessorFn: (row) => row.project?.name || '',
+                  header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.project')} />,
+                  enableSorting: false,
+                  enableHiding: true,
+                  cell: ({ row }) => <div className='px-2 text-sm'>{row.original.project?.name || '-'}</div>,
+                } as ColumnDef<Request>,
+              ]
+            : []),
           {
             id: 'requestUser',
             accessorFn: (row) => formatUserName(row.apiKey?.user),

@@ -18,8 +18,8 @@ interface RequestQueryOptions {
 }
 
 // Dynamic GraphQL query builder
-function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields
+function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
     ? `
             project {
               id
@@ -27,7 +27,7 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
             }`
     : '';
 
-  const apiKeyUserFields = options.includeAdminFields
+  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
     ? `
             user {
               id
@@ -131,8 +131,8 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
   `;
 }
 
-function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields
+function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
     ? `
             project {
               id
@@ -140,7 +140,7 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
             }`
     : '';
 
-  const apiKeyUserFields = options.includeAdminFields
+  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
     ? `
             user {
               id
@@ -207,8 +207,8 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
   `;
 }
 
-function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields
+function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
+  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
     ? `
             project {
               id
@@ -216,7 +216,7 @@ function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; 
             }`
     : '';
 
-  const apiKeyUserFields = options.includeAdminFields
+  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
     ? `
             user {
               id
@@ -345,7 +345,7 @@ export function useRequests(variables?: {
 }, options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean; includeAdminFields?: boolean }) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
-  const permissions = useRequestPermissions();
+  const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const scopeToSelectedProject = options?.scopeToSelectedProject ?? true;
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -390,7 +390,7 @@ export function useRequest(
 ) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
-  const permissions = useRequestPermissions();
+  const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const queryClient = useQueryClient();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -464,7 +464,7 @@ export async function fetchAdjacentRequestPage(params: {
   direction: 'older' | 'newer';
   pageSize: number;
   where?: Record<string, any>;
-  permissions: { canViewApiKeys: boolean; canViewChannels: boolean };
+  permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean };
   projectId?: string | null;
   includeAdminFields?: boolean;
 }): Promise<{ requests: Request[]; pageInfo: RequestConnection['pageInfo'] }> {
@@ -499,7 +499,7 @@ export function useRequestExecutions(
 ) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
-  const permissions = useRequestPermissions();
+  const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
 
