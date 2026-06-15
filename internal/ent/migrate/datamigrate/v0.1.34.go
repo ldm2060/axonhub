@@ -22,7 +22,7 @@ func (v *V0_1_34) Version() string {
 func (v *V0_1_34) Migrate(ctx context.Context, client *ent.Client) error {
 	ctx = authz.WithSystemBypass(context.Background(), "database-migrate")
 
-	// Set quota_binding_ready=true for all existing channels (if not already set)
+	// 1. Set quota_binding_ready=true for all existing channels
 	// This field was added with a default value of true, but existing rows need explicit update
 	channelUpdated, err := client.Channel.Update().
 		SetQuotaBindingReady(true).
@@ -32,6 +32,20 @@ func (v *V0_1_34) Migrate(ctx context.Context, client *ent.Client) error {
 	}
 	if channelUpdated > 0 {
 		log.Info(ctx, "set existing channels quota_binding_ready to true", log.Int("count", channelUpdated))
+	}
+
+	// 2. Set auto_disable_enabled=false for all existing usage monitor channels
+	// This field was added with a default value of false, but existing rows need explicit update
+	monitorUpdated, err := client.UsageMonitorChannel.Update().
+		SetAutoDisableEnabled(false).
+		SetAutoDisableThreshold(1.0).
+		SetAutoEnableThreshold(0.95).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate usage_monitor_channels auto_disable fields: %w", err)
+	}
+	if monitorUpdated > 0 {
+		log.Info(ctx, "set existing usage_monitor_channels auto_disable defaults", log.Int("count", monitorUpdated))
 	}
 
 	return nil
