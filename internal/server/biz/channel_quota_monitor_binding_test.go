@@ -1134,3 +1134,50 @@ func TestPollChannel_LegacyFallbackWhenNoBindings(t *testing.T) {
 	assert.False(t, updated.QuotaBindingReady,
 		"channel should be not ready via legacy evaluation")
 }
+
+// ---------------------------------------------------------------------------
+// normalizeStringSlice / normalizeConditions tests
+// ---------------------------------------------------------------------------
+
+func TestNormalizeStringSlice(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []string
+	}{
+		{"nil becomes empty", nil, []string{}},
+		{"empty stays empty", []string{}, []string{}},
+		{"non-nil preserved", []string{"a", "b"}, []string{"a", "b"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizeStringSlice(tt.input)
+			assert.Equal(t, tt.expected, result)
+			// Critical: result must never be nil (GraphQL [String!]! invariant)
+			assert.NotNil(t, result)
+		})
+	}
+}
+
+func TestNormalizeConditions(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []objects.QuotaMonitorBindingCondition
+		expected int
+	}{
+		{"nil becomes empty", nil, 0},
+		{"empty stays empty", []objects.QuotaMonitorBindingCondition{}, 0},
+		{"non-nil preserved", []objects.QuotaMonitorBindingCondition{
+			{Field: "x", Operator: objects.QuotaMonitorOperatorGTE, Value: "1"},
+		}, 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizeConditions(tt.input)
+			assert.NotNil(t, result, "result must never be nil (GraphQL [!]! invariant)")
+			assert.Len(t, result, tt.expected)
+		})
+	}
+}

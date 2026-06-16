@@ -151,15 +151,19 @@ func (r *quotaMonitorTemplateResolver) Fields(ctx context.Context, obj *usage_mo
 	vars := obj.Variables
 	result := make([]*usage_monitor.FieldConfig, len(vars))
 	for i, v := range vars {
-		result[i] = &usage_monitor.FieldConfig{
-			Key:          v.Key,
-			Path:         v.Path,
-			Type:         v.Type,
-			GroupIndex:   v.GroupIndex,
-			Label:        obj.DisplayFields[i].Label,
-			Format:       obj.DisplayFields[i].Format,
-			DisplayOrder: obj.DisplayFields[i].DisplayOrder,
+		fc := &usage_monitor.FieldConfig{
+			Key:        v.Key,
+			Path:       v.Path,
+			Type:       v.Type,
+			GroupIndex: v.GroupIndex,
 		}
+		// DisplayFields may be shorter than Variables; guard against out-of-bounds.
+		if i < len(obj.DisplayFields) {
+			fc.Label = obj.DisplayFields[i].Label
+			fc.Format = obj.DisplayFields[i].Format
+			fc.DisplayOrder = obj.DisplayFields[i].DisplayOrder
+		}
+		result[i] = fc
 	}
 	return result, nil
 }

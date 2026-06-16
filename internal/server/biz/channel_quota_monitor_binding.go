@@ -192,8 +192,8 @@ func (svc *UsageMonitorService) ListChannelQuotaMonitorBindings(
 			ChannelID:             b.ChannelID,
 			UsageMonitorChannelID: b.UsageMonitorChannelID,
 			Enabled:               b.Enabled,
-			TriggerStatuses:       b.TriggerStatuses,
-			Conditions:            b.Conditions,
+			TriggerStatuses:       normalizeStringSlice(b.TriggerStatuses),
+			Conditions:            normalizeConditions(b.Conditions),
 			LastTriggeredAt:       b.LastTriggeredAt,
 			LastTriggerReason:     b.LastTriggerReason,
 		}
@@ -232,8 +232,8 @@ func (svc *UsageMonitorService) ListUsageMonitorBindingSummaries(
 			ChannelID:             b.ChannelID,
 			UsageMonitorChannelID: b.UsageMonitorChannelID,
 			Enabled:               b.Enabled,
-			TriggerStatuses:       b.TriggerStatuses,
-			Conditions:            b.Conditions,
+			TriggerStatuses:       normalizeStringSlice(b.TriggerStatuses),
+			Conditions:            normalizeConditions(b.Conditions),
 		}
 
 		if b.Edges.Channel != nil {
@@ -354,6 +354,25 @@ func cleanConditions(conditions []objects.QuotaMonitorBindingCondition) []object
 		result = append(result, c)
 	}
 	return result
+}
+
+// normalizeStringSlice ensures a non-nil slice is returned so that GraphQL
+// [String!]! fields never serialize as null. Ent may store nil for empty
+// slices, but the GraphQL schema requires a non-null list.
+func normalizeStringSlice(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
+}
+
+// normalizeConditions ensures a non-nil slice is returned so that GraphQL
+// [QuotaMonitorBindingCondition!]! fields never serialize as null.
+func normalizeConditions(c []objects.QuotaMonitorBindingCondition) []objects.QuotaMonitorBindingCondition {
+	if c == nil {
+		return []objects.QuotaMonitorBindingCondition{}
+	}
+	return c
 }
 
 // resolveStrategy returns the effective strategy for a channel, falling back
