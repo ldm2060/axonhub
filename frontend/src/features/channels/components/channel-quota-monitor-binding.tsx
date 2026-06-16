@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,6 @@ export function ChannelQuotaMonitorBinding({
   // when array indices shift. KeyedBindings is derived from the parent's
   // bindings array plus a local _key per entry.
   const keyMapRef = useRef<Map<number, string>>(new Map());
-  const prevBindingsLengthRef = useRef(0);
 
   // Assign stable keys: existing indices keep their key, new entries get a fresh one.
   const keyedBindings: BindingWithKey[] = useMemo(() => {
@@ -72,8 +71,6 @@ export function ChannelQuotaMonitorBinding({
       return { ...b, _key: key };
     });
   }, [bindings]);
-
-  prevBindingsLengthRef.current = bindings.length;
 
   // Build a map of monitor ID -> monitor for quick lookup and field suggestions
   const monitorMap = useMemo(() => {
