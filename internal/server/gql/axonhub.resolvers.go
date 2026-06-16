@@ -793,7 +793,7 @@ func (r *queryResolver) APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.
 
 // Operator is the resolver for the operator field.
 func (r *quotaMonitorBindingConditionResolver) Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition) (string, error) {
-	panic(fmt.Errorf("not implemented: Operator - operator"))
+	return string(obj.Operator), nil
 }
 
 // ID is the resolver for the id field.
@@ -857,7 +857,8 @@ func (r *traceResolver) UsageMetadata(ctx context.Context, obj *ent.Trace) (*biz
 
 // Operator is the resolver for the operator field.
 func (r *quotaMonitorBindingConditionInputResolver) Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition, data string) error {
-	panic(fmt.Errorf("not implemented: Operator - operator"))
+	obj.Operator = objects.QuotaMonitorConditionOperator(data)
+	return nil
 }
 
 // ChannelSettings returns ChannelSettingsResolver implementation.

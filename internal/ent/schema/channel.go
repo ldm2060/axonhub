@@ -219,7 +219,7 @@ func (Channel) Edges() []ent.Edge {
 			),
 		edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
 		edge.To("quota_monitor_bindings", ChannelUsageMonitorBinding.Type),
-		}
+	}
 }
 
 func (Channel) Annotations() []schema.Annotation {
