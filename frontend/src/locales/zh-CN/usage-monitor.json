@@ -83,5 +83,13 @@
   "usageMonitor.displayFieldSection": "展示字段",
   "usageMonitor.pollIntervalUnit": "分钟",
   "usageMonitor.templateVariablesHint": "变量由模板预配置，不可修改",
-  "usageMonitor.templateDisplayFieldsHint": "展示字段可自定义，调整数据显示方式"
+  "usageMonitor.templateDisplayFieldsHint": "展示字段可自定义，调整数据显示方式",
+  "usageMonitor.bindingSummary.title": "绑定摘要",
+  "usageMonitor.bindingSummary.none": "暂无渠道绑定",
+  "usageMonitor.bindingSummary.strategyAny": "任一",
+  "usageMonitor.bindingSummary.strategyAll": "全部",
+  "usageMonitor.bindingSummary.matched": "已匹配",
+  "usageMonitor.bindingSummary.ready": "就绪",
+  "usageMonitor.bindingSummary.statusRule": "状态规则",
+  "usageMonitor.bindingSummary.conditionRule": "条件规则"
 }
