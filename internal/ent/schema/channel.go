@@ -218,7 +218,8 @@ func (Channel) Edges() []ent.Edge {
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 			),
 		edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
-	}
+		edge.To("quota_monitor_bindings", ChannelUsageMonitorBinding.Type),
+		}
 }
 
 func (Channel) Annotations() []schema.Annotation {

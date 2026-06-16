@@ -21,6 +21,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -2343,6 +2344,320 @@ func (_m *ChannelProbe) ToEdge(order *ChannelProbeOrder) *ChannelProbeEdge {
 		order = DefaultChannelProbeOrder
 	}
 	return &ChannelProbeEdge{
+		Node:   _m,
+		Cursor: order.Field.toCursor(_m),
+	}
+}
+
+// ChannelUsageMonitorBindingEdge is the edge representation of ChannelUsageMonitorBinding.
+type ChannelUsageMonitorBindingEdge struct {
+	Node   *ChannelUsageMonitorBinding `json:"node"`
+	Cursor Cursor                      `json:"cursor"`
+}
+
+// ChannelUsageMonitorBindingConnection is the connection containing edges to ChannelUsageMonitorBinding.
+type ChannelUsageMonitorBindingConnection struct {
+	Edges      []*ChannelUsageMonitorBindingEdge `json:"edges"`
+	PageInfo   PageInfo                          `json:"pageInfo"`
+	TotalCount int                               `json:"totalCount"`
+}
+
+func (c *ChannelUsageMonitorBindingConnection) build(nodes []*ChannelUsageMonitorBinding, pager *channelusagemonitorbindingPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *ChannelUsageMonitorBinding
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *ChannelUsageMonitorBinding {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *ChannelUsageMonitorBinding {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*ChannelUsageMonitorBindingEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &ChannelUsageMonitorBindingEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// ChannelUsageMonitorBindingPaginateOption enables pagination customization.
+type ChannelUsageMonitorBindingPaginateOption func(*channelusagemonitorbindingPager) error
+
+// WithChannelUsageMonitorBindingOrder configures pagination ordering.
+func WithChannelUsageMonitorBindingOrder(order *ChannelUsageMonitorBindingOrder) ChannelUsageMonitorBindingPaginateOption {
+	if order == nil {
+		order = DefaultChannelUsageMonitorBindingOrder
+	}
+	o := *order
+	return func(pager *channelusagemonitorbindingPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultChannelUsageMonitorBindingOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithChannelUsageMonitorBindingFilter configures pagination filter.
+func WithChannelUsageMonitorBindingFilter(filter func(*ChannelUsageMonitorBindingQuery) (*ChannelUsageMonitorBindingQuery, error)) ChannelUsageMonitorBindingPaginateOption {
+	return func(pager *channelusagemonitorbindingPager) error {
+		if filter == nil {
+			return errors.New("ChannelUsageMonitorBindingQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type channelusagemonitorbindingPager struct {
+	reverse bool
+	order   *ChannelUsageMonitorBindingOrder
+	filter  func(*ChannelUsageMonitorBindingQuery) (*ChannelUsageMonitorBindingQuery, error)
+}
+
+func newChannelUsageMonitorBindingPager(opts []ChannelUsageMonitorBindingPaginateOption, reverse bool) (*channelusagemonitorbindingPager, error) {
+	pager := &channelusagemonitorbindingPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultChannelUsageMonitorBindingOrder
+	}
+	return pager, nil
+}
+
+func (p *channelusagemonitorbindingPager) applyFilter(query *ChannelUsageMonitorBindingQuery) (*ChannelUsageMonitorBindingQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *channelusagemonitorbindingPager) toCursor(_m *ChannelUsageMonitorBinding) Cursor {
+	return p.order.Field.toCursor(_m)
+}
+
+func (p *channelusagemonitorbindingPager) applyCursors(query *ChannelUsageMonitorBindingQuery, after, before *Cursor) (*ChannelUsageMonitorBindingQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultChannelUsageMonitorBindingOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *channelusagemonitorbindingPager) applyOrder(query *ChannelUsageMonitorBindingQuery) *ChannelUsageMonitorBindingQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultChannelUsageMonitorBindingOrder.Field {
+		query = query.Order(DefaultChannelUsageMonitorBindingOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *channelusagemonitorbindingPager) orderExpr(query *ChannelUsageMonitorBindingQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultChannelUsageMonitorBindingOrder.Field {
+			b.Comma().Ident(DefaultChannelUsageMonitorBindingOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to ChannelUsageMonitorBinding.
+func (_m *ChannelUsageMonitorBindingQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...ChannelUsageMonitorBindingPaginateOption,
+) (*ChannelUsageMonitorBindingConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newChannelUsageMonitorBindingPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if _m, err = pager.applyFilter(_m); err != nil {
+		return nil, err
+	}
+	conn := &ChannelUsageMonitorBindingConnection{Edges: []*ChannelUsageMonitorBindingEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := _m.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if _m, err = pager.applyCursors(_m, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		_m.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := _m.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	_m = pager.applyOrder(_m)
+	nodes, err := _m.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+var (
+	// ChannelUsageMonitorBindingOrderFieldCreatedAt orders ChannelUsageMonitorBinding by created_at.
+	ChannelUsageMonitorBindingOrderFieldCreatedAt = &ChannelUsageMonitorBindingOrderField{
+		Value: func(_m *ChannelUsageMonitorBinding) (ent.Value, error) {
+			return _m.CreatedAt, nil
+		},
+		column: channelusagemonitorbinding.FieldCreatedAt,
+		toTerm: channelusagemonitorbinding.ByCreatedAt,
+		toCursor: func(_m *ChannelUsageMonitorBinding) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.CreatedAt,
+			}
+		},
+	}
+	// ChannelUsageMonitorBindingOrderFieldUpdatedAt orders ChannelUsageMonitorBinding by updated_at.
+	ChannelUsageMonitorBindingOrderFieldUpdatedAt = &ChannelUsageMonitorBindingOrderField{
+		Value: func(_m *ChannelUsageMonitorBinding) (ent.Value, error) {
+			return _m.UpdatedAt, nil
+		},
+		column: channelusagemonitorbinding.FieldUpdatedAt,
+		toTerm: channelusagemonitorbinding.ByUpdatedAt,
+		toCursor: func(_m *ChannelUsageMonitorBinding) Cursor {
+			return Cursor{
+				ID:    _m.ID,
+				Value: _m.UpdatedAt,
+			}
+		},
+	}
+)
+
+// String implement fmt.Stringer interface.
+func (f ChannelUsageMonitorBindingOrderField) String() string {
+	var str string
+	switch f.column {
+	case ChannelUsageMonitorBindingOrderFieldCreatedAt.column:
+		str = "CREATED_AT"
+	case ChannelUsageMonitorBindingOrderFieldUpdatedAt.column:
+		str = "UPDATED_AT"
+	}
+	return str
+}
+
+// MarshalGQL implements graphql.Marshaler interface.
+func (f ChannelUsageMonitorBindingOrderField) MarshalGQL(w io.Writer) {
+	io.WriteString(w, strconv.Quote(f.String()))
+}
+
+// UnmarshalGQL implements graphql.Unmarshaler interface.
+func (f *ChannelUsageMonitorBindingOrderField) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("ChannelUsageMonitorBindingOrderField %T must be a string", v)
+	}
+	switch str {
+	case "CREATED_AT":
+		*f = *ChannelUsageMonitorBindingOrderFieldCreatedAt
+	case "UPDATED_AT":
+		*f = *ChannelUsageMonitorBindingOrderFieldUpdatedAt
+	default:
+		return fmt.Errorf("%s is not a valid ChannelUsageMonitorBindingOrderField", str)
+	}
+	return nil
+}
+
+// ChannelUsageMonitorBindingOrderField defines the ordering field of ChannelUsageMonitorBinding.
+type ChannelUsageMonitorBindingOrderField struct {
+	// Value extracts the ordering value from the given ChannelUsageMonitorBinding.
+	Value    func(*ChannelUsageMonitorBinding) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) channelusagemonitorbinding.OrderOption
+	toCursor func(*ChannelUsageMonitorBinding) Cursor
+}
+
+// ChannelUsageMonitorBindingOrder defines the ordering of ChannelUsageMonitorBinding.
+type ChannelUsageMonitorBindingOrder struct {
+	Direction OrderDirection                        `json:"direction"`
+	Field     *ChannelUsageMonitorBindingOrderField `json:"field"`
+}
+
+// DefaultChannelUsageMonitorBindingOrder is the default ordering of ChannelUsageMonitorBinding.
+var DefaultChannelUsageMonitorBindingOrder = &ChannelUsageMonitorBindingOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &ChannelUsageMonitorBindingOrderField{
+		Value: func(_m *ChannelUsageMonitorBinding) (ent.Value, error) {
+			return _m.ID, nil
+		},
+		column: channelusagemonitorbinding.FieldID,
+		toTerm: channelusagemonitorbinding.ByID,
+		toCursor: func(_m *ChannelUsageMonitorBinding) Cursor {
+			return Cursor{ID: _m.ID}
+		},
+	},
+}
+
+// ToEdge converts ChannelUsageMonitorBinding into ChannelUsageMonitorBindingEdge.
+func (_m *ChannelUsageMonitorBinding) ToEdge(order *ChannelUsageMonitorBindingOrder) *ChannelUsageMonitorBindingEdge {
+	if order == nil {
+		order = DefaultChannelUsageMonitorBindingOrder
+	}
+	return &ChannelUsageMonitorBindingEdge{
 		Node:   _m,
 		Cursor: order.Field.toCursor(_m),
 	}

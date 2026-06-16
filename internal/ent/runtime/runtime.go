@@ -12,6 +12,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -323,6 +324,43 @@ func init() {
 	channeloverridetemplateDescBodyOverrideOperations := channeloverridetemplateFields[6].Descriptor()
 	// channeloverridetemplate.DefaultBodyOverrideOperations holds the default value on creation for the body_override_operations field.
 	channeloverridetemplate.DefaultBodyOverrideOperations = channeloverridetemplateDescBodyOverrideOperations.Default.([]objects.OverrideOperation)
+	channelusagemonitorbindingMixin := schema.ChannelUsageMonitorBinding{}.Mixin()
+	channelusagemonitorbindingMixinHooks1 := channelusagemonitorbindingMixin[1].Hooks()
+	channelusagemonitorbinding.Hooks[0] = channelusagemonitorbindingMixinHooks1[0]
+	channelusagemonitorbindingMixinInters1 := channelusagemonitorbindingMixin[1].Interceptors()
+	channelusagemonitorbinding.Interceptors[0] = channelusagemonitorbindingMixinInters1[0]
+	channelusagemonitorbindingMixinFields0 := channelusagemonitorbindingMixin[0].Fields()
+	_ = channelusagemonitorbindingMixinFields0
+	channelusagemonitorbindingMixinFields1 := channelusagemonitorbindingMixin[1].Fields()
+	_ = channelusagemonitorbindingMixinFields1
+	channelusagemonitorbindingFields := schema.ChannelUsageMonitorBinding{}.Fields()
+	_ = channelusagemonitorbindingFields
+	// channelusagemonitorbindingDescCreatedAt is the schema descriptor for created_at field.
+	channelusagemonitorbindingDescCreatedAt := channelusagemonitorbindingMixinFields0[0].Descriptor()
+	// channelusagemonitorbinding.DefaultCreatedAt holds the default value on creation for the created_at field.
+	channelusagemonitorbinding.DefaultCreatedAt = channelusagemonitorbindingDescCreatedAt.Default.(func() time.Time)
+	// channelusagemonitorbindingDescUpdatedAt is the schema descriptor for updated_at field.
+	channelusagemonitorbindingDescUpdatedAt := channelusagemonitorbindingMixinFields0[1].Descriptor()
+	// channelusagemonitorbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	channelusagemonitorbinding.DefaultUpdatedAt = channelusagemonitorbindingDescUpdatedAt.Default.(func() time.Time)
+	// channelusagemonitorbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	channelusagemonitorbinding.UpdateDefaultUpdatedAt = channelusagemonitorbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// channelusagemonitorbindingDescDeletedAt is the schema descriptor for deleted_at field.
+	channelusagemonitorbindingDescDeletedAt := channelusagemonitorbindingMixinFields1[0].Descriptor()
+	// channelusagemonitorbinding.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	channelusagemonitorbinding.DefaultDeletedAt = channelusagemonitorbindingDescDeletedAt.Default.(int)
+	// channelusagemonitorbindingDescEnabled is the schema descriptor for enabled field.
+	channelusagemonitorbindingDescEnabled := channelusagemonitorbindingFields[2].Descriptor()
+	// channelusagemonitorbinding.DefaultEnabled holds the default value on creation for the enabled field.
+	channelusagemonitorbinding.DefaultEnabled = channelusagemonitorbindingDescEnabled.Default.(bool)
+	// channelusagemonitorbindingDescTriggerStatuses is the schema descriptor for trigger_statuses field.
+	channelusagemonitorbindingDescTriggerStatuses := channelusagemonitorbindingFields[3].Descriptor()
+	// channelusagemonitorbinding.DefaultTriggerStatuses holds the default value on creation for the trigger_statuses field.
+	channelusagemonitorbinding.DefaultTriggerStatuses = channelusagemonitorbindingDescTriggerStatuses.Default.([]string)
+	// channelusagemonitorbindingDescConditions is the schema descriptor for conditions field.
+	channelusagemonitorbindingDescConditions := channelusagemonitorbindingFields[4].Descriptor()
+	// channelusagemonitorbinding.DefaultConditions holds the default value on creation for the conditions field.
+	channelusagemonitorbinding.DefaultConditions = channelusagemonitorbindingDescConditions.Default.([]objects.QuotaMonitorBindingCondition)
 	datastorageMixin := schema.DataStorage{}.Mixin()
 	datastorage.Policy = privacy.NewPolicies(schema.DataStorage{})
 	datastorage.Hooks[0] = func(next ent.Mutator) ent.Mutator {

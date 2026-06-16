@@ -26,6 +26,8 @@ type Tx struct {
 	ChannelOverrideTemplate *ChannelOverrideTemplateClient
 	// ChannelProbe is the client for interacting with the ChannelProbe builders.
 	ChannelProbe *ChannelProbeClient
+	// ChannelUsageMonitorBinding is the client for interacting with the ChannelUsageMonitorBinding builders.
+	ChannelUsageMonitorBinding *ChannelUsageMonitorBindingClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
 	// EmailToken is the client for interacting with the EmailToken builders.
@@ -206,6 +208,7 @@ func (tx *Tx) init() {
 	tx.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(tx.config)
 	tx.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(tx.config)
 	tx.ChannelProbe = NewChannelProbeClient(tx.config)
+	tx.ChannelUsageMonitorBinding = NewChannelUsageMonitorBindingClient(tx.config)
 	tx.DataStorage = NewDataStorageClient(tx.config)
 	tx.EmailToken = NewEmailTokenClient(tx.config)
 	tx.Model = NewModelClient(tx.config)

@@ -3,6 +3,18 @@ scalar JSONRawMessageInput
 scalar Decimal
 scalar DecimalInput
 
+type QuotaMonitorBindingCondition {
+  field: String!
+  operator: String!
+  value: String!
+}
+
+input QuotaMonitorBindingConditionInput {
+  field: String!
+  operator: String!
+  value: String!
+}
+
 type ModelMapping {
   from: String!
   to: String!

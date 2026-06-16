@@ -1116,6 +1116,29 @@ func HasOwnerWith(preds ...predicate.User) predicate.UsageMonitorChannel {
 	})
 }
 
+// HasChannelBindings applies the HasEdge predicate on the "channel_bindings" edge.
+func HasChannelBindings() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ChannelBindingsTable, ChannelBindingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChannelBindingsWith applies the HasEdge predicate on the "channel_bindings" edge with a given conditions (other predicates).
+func HasChannelBindingsWith(preds ...predicate.ChannelUsageMonitorBinding) predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(func(s *sql.Selector) {
+		step := newChannelBindingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.UsageMonitorChannel) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.AndPredicates(predicates...))

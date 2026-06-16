@@ -76,6 +76,8 @@ const (
 	EdgeChannel = "channel"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeChannelBindings holds the string denoting the channel_bindings edge name in mutations.
+	EdgeChannelBindings = "channel_bindings"
 	// Table holds the table name of the usagemonitorchannel in the database.
 	Table = "usage_monitor_channels"
 	// ChannelTable is the table that holds the channel relation/edge.
@@ -92,6 +94,13 @@ const (
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "user_usage_monitor_channels"
+	// ChannelBindingsTable is the table that holds the channel_bindings relation/edge.
+	ChannelBindingsTable = "channel_usage_monitor_bindings"
+	// ChannelBindingsInverseTable is the table name for the ChannelUsageMonitorBinding entity.
+	// It exists in this package in order to avoid circular dependency with the "channelusagemonitorbinding" package.
+	ChannelBindingsInverseTable = "channel_usage_monitor_bindings"
+	// ChannelBindingsColumn is the table column denoting the channel_bindings relation/edge.
+	ChannelBindingsColumn = "usage_monitor_channel_id"
 )
 
 // Columns holds all SQL columns for usagemonitorchannel fields.
@@ -442,6 +451,20 @@ func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByChannelBindingsCount orders the results by channel_bindings count.
+func ByChannelBindingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChannelBindingsStep(), opts...)
+	}
+}
+
+// ByChannelBindings orders the results by channel_bindings terms.
+func ByChannelBindings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChannelBindingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newChannelStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -454,6 +477,13 @@ func newOwnerStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OwnerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+	)
+}
+func newChannelBindingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChannelBindingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChannelBindingsTable, ChannelBindingsColumn),
 	)
 }
 

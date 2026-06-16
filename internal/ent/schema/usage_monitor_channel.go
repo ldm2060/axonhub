@@ -114,5 +114,6 @@ func (UsageMonitorChannel) Edges() []ent.Edge {
 			Ref("usage_monitor_channels").
 			Unique().
 			Required(),
+		edge.To("channel_bindings", ChannelUsageMonitorBinding.Type),
 	}
 }

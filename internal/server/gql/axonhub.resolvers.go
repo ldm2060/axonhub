@@ -791,6 +791,11 @@ func (r *queryResolver) APIKeyQuotaUsages(ctx context.Context, apiKeyID objects.
 	return result, nil
 }
 
+// Operator is the resolver for the operator field.
+func (r *quotaMonitorBindingConditionResolver) Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition) (string, error) {
+	panic(fmt.Errorf("not implemented: Operator - operator"))
+}
+
 // ID is the resolver for the id field.
 func (r *segmentResolver) ID(ctx context.Context, obj *biz.Segment) (*objects.GUID, error) {
 	return &objects.GUID{Type: ent.TypeRequest, ID: obj.ID}, nil
@@ -850,15 +855,32 @@ func (r *traceResolver) UsageMetadata(ctx context.Context, obj *ent.Trace) (*biz
 	return r.traceService.UsageMetadata(ctx, obj.ID)
 }
 
+// Operator is the resolver for the operator field.
+func (r *quotaMonitorBindingConditionInputResolver) Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition, data string) error {
+	panic(fmt.Errorf("not implemented: Operator - operator"))
+}
+
 // ChannelSettings returns ChannelSettingsResolver implementation.
 func (r *Resolver) ChannelSettings() ChannelSettingsResolver { return &channelSettingsResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// QuotaMonitorBindingCondition returns QuotaMonitorBindingConditionResolver implementation.
+func (r *Resolver) QuotaMonitorBindingCondition() QuotaMonitorBindingConditionResolver {
+	return &quotaMonitorBindingConditionResolver{r}
+}
+
 // Segment returns SegmentResolver implementation.
 func (r *Resolver) Segment() SegmentResolver { return &segmentResolver{r} }
 
+// QuotaMonitorBindingConditionInput returns QuotaMonitorBindingConditionInputResolver implementation.
+func (r *Resolver) QuotaMonitorBindingConditionInput() QuotaMonitorBindingConditionInputResolver {
+	return &quotaMonitorBindingConditionInputResolver{r}
+}
+
 type channelSettingsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type quotaMonitorBindingConditionResolver struct{ *Resolver }
 type segmentResolver struct{ *Resolver }
+type quotaMonitorBindingConditionInputResolver struct{ *Resolver }

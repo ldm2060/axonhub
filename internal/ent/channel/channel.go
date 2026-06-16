@@ -91,6 +91,8 @@ const (
 	EdgeProviderQuotaStatus = "provider_quota_status"
 	// EdgeUsageMonitorChannels holds the string denoting the usage_monitor_channels edge name in mutations.
 	EdgeUsageMonitorChannels = "usage_monitor_channels"
+	// EdgeQuotaMonitorBindings holds the string denoting the quota_monitor_bindings edge name in mutations.
+	EdgeQuotaMonitorBindings = "quota_monitor_bindings"
 	// Table holds the table name of the channel in the database.
 	Table = "channels"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -149,6 +151,13 @@ const (
 	UsageMonitorChannelsInverseTable = "usage_monitor_channels"
 	// UsageMonitorChannelsColumn is the table column denoting the usage_monitor_channels relation/edge.
 	UsageMonitorChannelsColumn = "channel_id"
+	// QuotaMonitorBindingsTable is the table that holds the quota_monitor_bindings relation/edge.
+	QuotaMonitorBindingsTable = "channel_usage_monitor_bindings"
+	// QuotaMonitorBindingsInverseTable is the table name for the ChannelUsageMonitorBinding entity.
+	// It exists in this package in order to avoid circular dependency with the "channelusagemonitorbinding" package.
+	QuotaMonitorBindingsInverseTable = "channel_usage_monitor_bindings"
+	// QuotaMonitorBindingsColumn is the table column denoting the quota_monitor_bindings relation/edge.
+	QuotaMonitorBindingsColumn = "channel_id"
 )
 
 // Columns holds all SQL columns for channel fields.
@@ -611,6 +620,20 @@ func ByUsageMonitorChannels(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpt
 		sqlgraph.OrderByNeighborTerms(s, newUsageMonitorChannelsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByQuotaMonitorBindingsCount orders the results by quota_monitor_bindings count.
+func ByQuotaMonitorBindingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newQuotaMonitorBindingsStep(), opts...)
+	}
+}
+
+// ByQuotaMonitorBindings orders the results by quota_monitor_bindings terms.
+func ByQuotaMonitorBindings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newQuotaMonitorBindingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -665,6 +688,13 @@ func newUsageMonitorChannelsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsageMonitorChannelsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageMonitorChannelsTable, UsageMonitorChannelsColumn),
+	)
+}
+func newQuotaMonitorBindingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(QuotaMonitorBindingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, QuotaMonitorBindingsTable, QuotaMonitorBindingsColumn),
 	)
 }
 

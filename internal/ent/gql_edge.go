@@ -168,6 +168,18 @@ func (_m *Channel) UsageMonitorChannels(ctx context.Context) (result []*UsageMon
 	return result, err
 }
 
+func (_m *Channel) QuotaMonitorBindings(ctx context.Context) (result []*ChannelUsageMonitorBinding, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedQuotaMonitorBindings(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.QuotaMonitorBindingsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryQuotaMonitorBindings().All(ctx)
+	}
+	return result, err
+}
+
 func (_m *ChannelModelPrice) Channel(ctx context.Context) (*Channel, error) {
 	result, err := _m.Edges.ChannelOrErr()
 	if IsNotLoaded(err) {
@@ -208,6 +220,22 @@ func (_m *ChannelProbe) Channel(ctx context.Context) (*Channel, error) {
 	result, err := _m.Edges.ChannelOrErr()
 	if IsNotLoaded(err) {
 		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *ChannelUsageMonitorBinding) Channel(ctx context.Context) (*Channel, error) {
+	result, err := _m.Edges.ChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannel().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *ChannelUsageMonitorBinding) UsageMonitorChannel(ctx context.Context) (*UsageMonitorChannel, error) {
+	result, err := _m.Edges.UsageMonitorChannelOrErr()
+	if IsNotLoaded(err) {
+		result, err = _m.QueryUsageMonitorChannel().Only(ctx)
 	}
 	return result, err
 }
@@ -791,6 +819,18 @@ func (_m *UsageMonitorChannel) Owner(ctx context.Context) (*User, error) {
 	result, err := _m.Edges.OwnerOrErr()
 	if IsNotLoaded(err) {
 		result, err = _m.QueryOwner().Only(ctx)
+	}
+	return result, err
+}
+
+func (_m *UsageMonitorChannel) ChannelBindings(ctx context.Context) (result []*ChannelUsageMonitorBinding, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = _m.NamedChannelBindings(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = _m.Edges.ChannelBindingsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = _m.QueryChannelBindings().All(ctx)
 	}
 	return result, err
 }

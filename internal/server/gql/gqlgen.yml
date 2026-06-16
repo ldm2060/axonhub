@@ -123,6 +123,12 @@ models:
   ChannelEndpointInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelEndpoint
+  QuotaMonitorBindingCondition:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.QuotaMonitorBindingCondition
+  QuotaMonitorBindingConditionInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.QuotaMonitorBindingCondition
   ChannelPolicies:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelPolicies

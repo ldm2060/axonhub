@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/request"
@@ -40,6 +41,7 @@ type ChannelQuery struct {
 	withChannelModelPrices        *ChannelModelPriceQuery
 	withProviderQuotaStatus       *ProviderQuotaStatusQuery
 	withUsageMonitorChannels      *UsageMonitorChannelQuery
+	withQuotaMonitorBindings      *ChannelUsageMonitorBindingQuery
 	loadTotal                     []func(context.Context, []*Channel) error
 	modifiers                     []func(*sql.Selector)
 	withNamedRequests             map[string]*RequestQuery
@@ -48,6 +50,7 @@ type ChannelQuery struct {
 	withNamedChannelProbes        map[string]*ChannelProbeQuery
 	withNamedChannelModelPrices   map[string]*ChannelModelPriceQuery
 	withNamedUsageMonitorChannels map[string]*UsageMonitorChannelQuery
+	withNamedQuotaMonitorBindings map[string]*ChannelUsageMonitorBindingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -260,6 +263,28 @@ func (_q *ChannelQuery) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
 	return query
 }
 
+// QueryQuotaMonitorBindings chains the current query on the "quota_monitor_bindings" edge.
+func (_q *ChannelQuery) QueryQuotaMonitorBindings() *ChannelUsageMonitorBindingQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, selector),
+			sqlgraph.To(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.QuotaMonitorBindingsTable, channel.QuotaMonitorBindingsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Channel entity from the query.
 // Returns a *NotFoundError when no Channel was found.
 func (_q *ChannelQuery) First(ctx context.Context) (*Channel, error) {
@@ -460,6 +485,7 @@ func (_q *ChannelQuery) Clone() *ChannelQuery {
 		withChannelModelPrices:   _q.withChannelModelPrices.Clone(),
 		withProviderQuotaStatus:  _q.withProviderQuotaStatus.Clone(),
 		withUsageMonitorChannels: _q.withUsageMonitorChannels.Clone(),
+		withQuotaMonitorBindings: _q.withQuotaMonitorBindings.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -555,6 +581,17 @@ func (_q *ChannelQuery) WithUsageMonitorChannels(opts ...func(*UsageMonitorChann
 	return _q
 }
 
+// WithQuotaMonitorBindings tells the query-builder to eager-load the nodes that are connected to
+// the "quota_monitor_bindings" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithQuotaMonitorBindings(opts ...func(*ChannelUsageMonitorBindingQuery)) *ChannelQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withQuotaMonitorBindings = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -639,7 +676,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 	var (
 		nodes       = []*Channel{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [9]bool{
 			_q.withOwner != nil,
 			_q.withRequests != nil,
 			_q.withExecutions != nil,
@@ -648,6 +685,7 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			_q.withChannelModelPrices != nil,
 			_q.withProviderQuotaStatus != nil,
 			_q.withUsageMonitorChannels != nil,
+			_q.withQuotaMonitorBindings != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -729,6 +767,15 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 			return nil, err
 		}
 	}
+	if query := _q.withQuotaMonitorBindings; query != nil {
+		if err := _q.loadQuotaMonitorBindings(ctx, query, nodes,
+			func(n *Channel) { n.Edges.QuotaMonitorBindings = []*ChannelUsageMonitorBinding{} },
+			func(n *Channel, e *ChannelUsageMonitorBinding) {
+				n.Edges.QuotaMonitorBindings = append(n.Edges.QuotaMonitorBindings, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range _q.withNamedRequests {
 		if err := _q.loadRequests(ctx, query, nodes,
 			func(n *Channel) { n.appendNamedRequests(name) },
@@ -768,6 +815,13 @@ func (_q *ChannelQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chan
 		if err := _q.loadUsageMonitorChannels(ctx, query, nodes,
 			func(n *Channel) { n.appendNamedUsageMonitorChannels(name) },
 			func(n *Channel, e *UsageMonitorChannel) { n.appendNamedUsageMonitorChannels(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedQuotaMonitorBindings {
+		if err := _q.loadQuotaMonitorBindings(ctx, query, nodes,
+			func(n *Channel) { n.appendNamedQuotaMonitorBindings(name) },
+			func(n *Channel, e *ChannelUsageMonitorBinding) { n.appendNamedQuotaMonitorBindings(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1019,6 +1073,36 @@ func (_q *ChannelQuery) loadUsageMonitorChannels(ctx context.Context, query *Usa
 	}
 	return nil
 }
+func (_q *ChannelQuery) loadQuotaMonitorBindings(ctx context.Context, query *ChannelUsageMonitorBindingQuery, nodes []*Channel, init func(*Channel), assign func(*Channel, *ChannelUsageMonitorBinding)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Channel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(channelusagemonitorbinding.FieldChannelID)
+	}
+	query.Where(predicate.ChannelUsageMonitorBinding(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(channel.QuotaMonitorBindingsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ChannelID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "channel_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (_q *ChannelQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -1197,6 +1281,20 @@ func (_q *ChannelQuery) WithNamedUsageMonitorChannels(name string, opts ...func(
 		_q.withNamedUsageMonitorChannels = make(map[string]*UsageMonitorChannelQuery)
 	}
 	_q.withNamedUsageMonitorChannels[name] = query
+	return _q
+}
+
+// WithNamedQuotaMonitorBindings tells the query-builder to eager-load the nodes that are connected to the "quota_monitor_bindings"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChannelQuery) WithNamedQuotaMonitorBindings(name string, opts ...func(*ChannelUsageMonitorBindingQuery)) *ChannelQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedQuotaMonitorBindings == nil {
+		_q.withNamedQuotaMonitorBindings = make(map[string]*ChannelUsageMonitorBindingQuery)
+	}
+	_q.withNamedQuotaMonitorBindings[name] = query
 	return _q
 }
 

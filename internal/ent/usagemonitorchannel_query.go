@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
@@ -20,15 +22,17 @@ import (
 // UsageMonitorChannelQuery is the builder for querying UsageMonitorChannel entities.
 type UsageMonitorChannelQuery struct {
 	config
-	ctx         *QueryContext
-	order       []usagemonitorchannel.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.UsageMonitorChannel
-	withChannel *ChannelQuery
-	withOwner   *UserQuery
-	withFKs     bool
-	loadTotal   []func(context.Context, []*UsageMonitorChannel) error
-	modifiers   []func(*sql.Selector)
+	ctx                      *QueryContext
+	order                    []usagemonitorchannel.OrderOption
+	inters                   []Interceptor
+	predicates               []predicate.UsageMonitorChannel
+	withChannel              *ChannelQuery
+	withOwner                *UserQuery
+	withChannelBindings      *ChannelUsageMonitorBindingQuery
+	withFKs                  bool
+	loadTotal                []func(context.Context, []*UsageMonitorChannel) error
+	modifiers                []func(*sql.Selector)
+	withNamedChannelBindings map[string]*ChannelUsageMonitorBindingQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -102,6 +106,28 @@ func (_q *UsageMonitorChannelQuery) QueryOwner() *UserQuery {
 			sqlgraph.From(usagemonitorchannel.Table, usagemonitorchannel.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usagemonitorchannel.OwnerTable, usagemonitorchannel.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChannelBindings chains the current query on the "channel_bindings" edge.
+func (_q *UsageMonitorChannelQuery) QueryChannelBindings() *ChannelUsageMonitorBindingQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagemonitorchannel.Table, usagemonitorchannel.FieldID, selector),
+			sqlgraph.To(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagemonitorchannel.ChannelBindingsTable, usagemonitorchannel.ChannelBindingsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -296,13 +322,14 @@ func (_q *UsageMonitorChannelQuery) Clone() *UsageMonitorChannelQuery {
 		return nil
 	}
 	return &UsageMonitorChannelQuery{
-		config:      _q.config,
-		ctx:         _q.ctx.Clone(),
-		order:       append([]usagemonitorchannel.OrderOption{}, _q.order...),
-		inters:      append([]Interceptor{}, _q.inters...),
-		predicates:  append([]predicate.UsageMonitorChannel{}, _q.predicates...),
-		withChannel: _q.withChannel.Clone(),
-		withOwner:   _q.withOwner.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]usagemonitorchannel.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.UsageMonitorChannel{}, _q.predicates...),
+		withChannel:         _q.withChannel.Clone(),
+		withOwner:           _q.withOwner.Clone(),
+		withChannelBindings: _q.withChannelBindings.Clone(),
 		// clone intermediate query.
 		sql:       _q.sql.Clone(),
 		path:      _q.path,
@@ -329,6 +356,17 @@ func (_q *UsageMonitorChannelQuery) WithOwner(opts ...func(*UserQuery)) *UsageMo
 		opt(query)
 	}
 	_q.withOwner = query
+	return _q
+}
+
+// WithChannelBindings tells the query-builder to eager-load the nodes that are connected to
+// the "channel_bindings" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageMonitorChannelQuery) WithChannelBindings(opts ...func(*ChannelUsageMonitorBindingQuery)) *UsageMonitorChannelQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withChannelBindings = query
 	return _q
 }
 
@@ -411,9 +449,10 @@ func (_q *UsageMonitorChannelQuery) sqlAll(ctx context.Context, hooks ...queryHo
 		nodes       = []*UsageMonitorChannel{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withChannel != nil,
 			_q.withOwner != nil,
+			_q.withChannelBindings != nil,
 		}
 	)
 	if _q.withOwner != nil {
@@ -452,6 +491,22 @@ func (_q *UsageMonitorChannelQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	if query := _q.withOwner; query != nil {
 		if err := _q.loadOwner(ctx, query, nodes, nil,
 			func(n *UsageMonitorChannel, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withChannelBindings; query != nil {
+		if err := _q.loadChannelBindings(ctx, query, nodes,
+			func(n *UsageMonitorChannel) { n.Edges.ChannelBindings = []*ChannelUsageMonitorBinding{} },
+			func(n *UsageMonitorChannel, e *ChannelUsageMonitorBinding) {
+				n.Edges.ChannelBindings = append(n.Edges.ChannelBindings, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedChannelBindings {
+		if err := _q.loadChannelBindings(ctx, query, nodes,
+			func(n *UsageMonitorChannel) { n.appendNamedChannelBindings(name) },
+			func(n *UsageMonitorChannel, e *ChannelUsageMonitorBinding) { n.appendNamedChannelBindings(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -524,6 +579,36 @@ func (_q *UsageMonitorChannelQuery) loadOwner(ctx context.Context, query *UserQu
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *UsageMonitorChannelQuery) loadChannelBindings(ctx context.Context, query *ChannelUsageMonitorBindingQuery, nodes []*UsageMonitorChannel, init func(*UsageMonitorChannel), assign func(*UsageMonitorChannel, *ChannelUsageMonitorBinding)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*UsageMonitorChannel)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(channelusagemonitorbinding.FieldUsageMonitorChannelID)
+	}
+	query.Where(predicate.ChannelUsageMonitorBinding(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(usagemonitorchannel.ChannelBindingsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UsageMonitorChannelID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "usage_monitor_channel_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -622,6 +707,20 @@ func (_q *UsageMonitorChannelQuery) sqlQuery(ctx context.Context) *sql.Selector 
 func (_q *UsageMonitorChannelQuery) Modify(modifiers ...func(s *sql.Selector)) *UsageMonitorChannelSelect {
 	_q.modifiers = append(_q.modifiers, modifiers...)
 	return _q.Select()
+}
+
+// WithNamedChannelBindings tells the query-builder to eager-load the nodes that are connected to the "channel_bindings"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UsageMonitorChannelQuery) WithNamedChannelBindings(name string, opts ...func(*ChannelUsageMonitorBindingQuery)) *UsageMonitorChannelQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedChannelBindings == nil {
+		_q.withNamedChannelBindings = make(map[string]*ChannelUsageMonitorBindingQuery)
+	}
+	_q.withNamedChannelBindings[name] = query
+	return _q
 }
 
 // UsageMonitorChannelGroupBy is the group-by builder for UsageMonitorChannel entities.

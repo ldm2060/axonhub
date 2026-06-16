@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -775,6 +776,19 @@ func (_q *ChannelQuery) collectField(ctx context.Context, oneNode bool, opCtx *g
 			_q.WithNamedUsageMonitorChannels(alias, func(wq *UsageMonitorChannelQuery) {
 				*wq = *query
 			})
+
+		case "quotaMonitorBindings":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, channelusagemonitorbindingImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedQuotaMonitorBindings(alias, func(wq *ChannelUsageMonitorBindingQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[channel.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, channel.FieldCreatedAt)
@@ -1501,6 +1515,165 @@ func newChannelProbePaginateArgs(rv map[string]any) *channelprobePaginateArgs {
 	}
 	if v, ok := rv[whereField].(*ChannelProbeWhereInput); ok {
 		args.opts = append(args.opts, WithChannelProbeFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (_q *ChannelUsageMonitorBindingQuery) CollectFields(ctx context.Context, satisfies ...string) (*ChannelUsageMonitorBindingQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return _q, nil
+	}
+	if err := _q.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return _q, nil
+}
+
+func (_q *ChannelUsageMonitorBindingQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(channelusagemonitorbinding.Columns))
+		selectedFields = []string{channelusagemonitorbinding.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "channel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, channelImplementors)...); err != nil {
+				return err
+			}
+			_q.withChannel = query
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldChannelID)
+				fieldSeen[channelusagemonitorbinding.FieldChannelID] = struct{}{}
+			}
+
+		case "usageMonitorChannel":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UsageMonitorChannelClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, usagemonitorchannelImplementors)...); err != nil {
+				return err
+			}
+			_q.withUsageMonitorChannel = query
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldUsageMonitorChannelID]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldUsageMonitorChannelID)
+				fieldSeen[channelusagemonitorbinding.FieldUsageMonitorChannelID] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldCreatedAt)
+				fieldSeen[channelusagemonitorbinding.FieldCreatedAt] = struct{}{}
+			}
+		case "updatedAt":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldUpdatedAt]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldUpdatedAt)
+				fieldSeen[channelusagemonitorbinding.FieldUpdatedAt] = struct{}{}
+			}
+		case "channelID":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldChannelID]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldChannelID)
+				fieldSeen[channelusagemonitorbinding.FieldChannelID] = struct{}{}
+			}
+		case "usageMonitorChannelID":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldUsageMonitorChannelID]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldUsageMonitorChannelID)
+				fieldSeen[channelusagemonitorbinding.FieldUsageMonitorChannelID] = struct{}{}
+			}
+		case "enabled":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldEnabled]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldEnabled)
+				fieldSeen[channelusagemonitorbinding.FieldEnabled] = struct{}{}
+			}
+		case "triggerStatuses":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldTriggerStatuses]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldTriggerStatuses)
+				fieldSeen[channelusagemonitorbinding.FieldTriggerStatuses] = struct{}{}
+			}
+		case "conditions":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldConditions]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldConditions)
+				fieldSeen[channelusagemonitorbinding.FieldConditions] = struct{}{}
+			}
+		case "lastTriggeredAt":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldLastTriggeredAt]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldLastTriggeredAt)
+				fieldSeen[channelusagemonitorbinding.FieldLastTriggeredAt] = struct{}{}
+			}
+		case "lastTriggerReason":
+			if _, ok := fieldSeen[channelusagemonitorbinding.FieldLastTriggerReason]; !ok {
+				selectedFields = append(selectedFields, channelusagemonitorbinding.FieldLastTriggerReason)
+				fieldSeen[channelusagemonitorbinding.FieldLastTriggerReason] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		_q.Select(selectedFields...)
+	}
+	return nil
+}
+
+type channelusagemonitorbindingPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []ChannelUsageMonitorBindingPaginateOption
+}
+
+func newChannelUsageMonitorBindingPaginateArgs(rv map[string]any) *channelusagemonitorbindingPaginateArgs {
+	args := &channelusagemonitorbindingPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[orderByField]; ok {
+		switch v := v.(type) {
+		case map[string]any:
+			var (
+				err1, err2 error
+				order      = &ChannelUsageMonitorBindingOrder{Field: &ChannelUsageMonitorBindingOrderField{}, Direction: entgql.OrderDirectionAsc}
+			)
+			if d, ok := v[directionField]; ok {
+				err1 = order.Direction.UnmarshalGQL(d)
+			}
+			if f, ok := v[fieldField]; ok {
+				err2 = order.Field.UnmarshalGQL(f)
+			}
+			if err1 == nil && err2 == nil {
+				args.opts = append(args.opts, WithChannelUsageMonitorBindingOrder(order))
+			}
+		case *ChannelUsageMonitorBindingOrder:
+			if v != nil {
+				args.opts = append(args.opts, WithChannelUsageMonitorBindingOrder(v))
+			}
+		}
+	}
+	if v, ok := rv[whereField].(*ChannelUsageMonitorBindingWhereInput); ok {
+		args.opts = append(args.opts, WithChannelUsageMonitorBindingFilter(v.Filter))
 	}
 	return args
 }
@@ -5768,6 +5941,19 @@ func (_q *UsageMonitorChannelQuery) collectField(ctx context.Context, oneNode bo
 				return err
 			}
 			_q.withOwner = query
+
+		case "channelBindings":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&ChannelUsageMonitorBindingClient{config: _q.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, channelusagemonitorbindingImplementors)...); err != nil {
+				return err
+			}
+			_q.WithNamedChannelBindings(alias, func(wq *ChannelUsageMonitorBindingQuery) {
+				*wq = *query
+			})
 		case "createdAt":
 			if _, ok := fieldSeen[usagemonitorchannel.FieldCreatedAt]; !ok {
 				selectedFields = append(selectedFields, usagemonitorchannel.FieldCreatedAt)

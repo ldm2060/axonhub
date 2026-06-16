@@ -277,6 +277,57 @@ var (
 			},
 		},
 	}
+	// ChannelUsageMonitorBindingsColumns holds the columns for the "channel_usage_monitor_bindings" table.
+	ChannelUsageMonitorBindingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
+		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "trigger_statuses", Type: field.TypeJSON},
+		{Name: "conditions", Type: field.TypeJSON},
+		{Name: "last_triggered_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_trigger_reason", Type: field.TypeString, Nullable: true},
+		{Name: "channel_id", Type: field.TypeInt},
+		{Name: "usage_monitor_channel_id", Type: field.TypeInt},
+	}
+	// ChannelUsageMonitorBindingsTable holds the schema information for the "channel_usage_monitor_bindings" table.
+	ChannelUsageMonitorBindingsTable = &schema.Table{
+		Name:       "channel_usage_monitor_bindings",
+		Columns:    ChannelUsageMonitorBindingsColumns,
+		PrimaryKey: []*schema.Column{ChannelUsageMonitorBindingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "channel_usage_monitor_bindings_channels_quota_monitor_bindings",
+				Columns:    []*schema.Column{ChannelUsageMonitorBindingsColumns[9]},
+				RefColumns: []*schema.Column{ChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "channel_usage_monitor_bindings_usage_monitor_channels_channel_bindings",
+				Columns:    []*schema.Column{ChannelUsageMonitorBindingsColumns[10]},
+				RefColumns: []*schema.Column{UsageMonitorChannelsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "channel_usage_monitor_bindings_unique_active",
+				Unique:  true,
+				Columns: []*schema.Column{ChannelUsageMonitorBindingsColumns[9], ChannelUsageMonitorBindingsColumns[10], ChannelUsageMonitorBindingsColumns[3]},
+			},
+			{
+				Name:    "channel_usage_monitor_bindings_by_channel",
+				Unique:  false,
+				Columns: []*schema.Column{ChannelUsageMonitorBindingsColumns[9], ChannelUsageMonitorBindingsColumns[3]},
+			},
+			{
+				Name:    "channel_usage_monitor_bindings_by_monitor",
+				Unique:  false,
+				Columns: []*schema.Column{ChannelUsageMonitorBindingsColumns[10], ChannelUsageMonitorBindingsColumns[3]},
+			},
+		},
+	}
 	// DataStoragesColumns holds the columns for the "data_storages" table.
 	DataStoragesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1249,6 +1300,7 @@ var (
 		ChannelModelPriceVersionsTable,
 		ChannelOverrideTemplatesTable,
 		ChannelProbesTable,
+		ChannelUsageMonitorBindingsTable,
 		DataStoragesTable,
 		EmailTokensTable,
 		ModelsTable,
@@ -1283,6 +1335,8 @@ func init() {
 	ChannelModelPriceVersionsTable.ForeignKeys[0].RefTable = ChannelModelPricesTable
 	ChannelOverrideTemplatesTable.ForeignKeys[0].RefTable = UsersTable
 	ChannelProbesTable.ForeignKeys[0].RefTable = ChannelsTable
+	ChannelUsageMonitorBindingsTable.ForeignKeys[0].RefTable = ChannelsTable
+	ChannelUsageMonitorBindingsTable.ForeignKeys[1].RefTable = UsageMonitorChannelsTable
 	EmailTokensTable.ForeignKeys[0].RefTable = UsersTable
 	ModelsTable.ForeignKeys[0].RefTable = UsersTable
 	OidcIdentitiesTable.ForeignKeys[0].RefTable = UsersTable

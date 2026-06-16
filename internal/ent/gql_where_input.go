@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -1050,6 +1051,10 @@ type ChannelWhereInput struct {
 	// "usage_monitor_channels" edge predicates.
 	HasUsageMonitorChannels     *bool                            `json:"hasUsageMonitorChannels,omitempty"`
 	HasUsageMonitorChannelsWith []*UsageMonitorChannelWhereInput `json:"hasUsageMonitorChannelsWith,omitempty"`
+
+	// "quota_monitor_bindings" edge predicates.
+	HasQuotaMonitorBindings     *bool                                   `json:"hasQuotaMonitorBindings,omitempty"`
+	HasQuotaMonitorBindingsWith []*ChannelUsageMonitorBindingWhereInput `json:"hasQuotaMonitorBindingsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -1723,6 +1728,24 @@ func (i *ChannelWhereInput) P() (predicate.Channel, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, channel.HasUsageMonitorChannelsWith(with...))
+	}
+	if i.HasQuotaMonitorBindings != nil {
+		p := channel.HasQuotaMonitorBindings()
+		if !*i.HasQuotaMonitorBindings {
+			p = channel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasQuotaMonitorBindingsWith) > 0 {
+		with := make([]predicate.ChannelUsageMonitorBinding, 0, len(i.HasQuotaMonitorBindingsWith))
+		for _, w := range i.HasQuotaMonitorBindingsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasQuotaMonitorBindingsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channel.HasQuotaMonitorBindingsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -3321,6 +3344,392 @@ func (i *ChannelProbeWhereInput) P() (predicate.ChannelProbe, error) {
 		return predicates[0], nil
 	default:
 		return channelprobe.And(predicates...), nil
+	}
+}
+
+// ChannelUsageMonitorBindingWhereInput represents a where input for filtering ChannelUsageMonitorBinding queries.
+type ChannelUsageMonitorBindingWhereInput struct {
+	Predicates []predicate.ChannelUsageMonitorBinding  `json:"-"`
+	Not        *ChannelUsageMonitorBindingWhereInput   `json:"not,omitempty"`
+	Or         []*ChannelUsageMonitorBindingWhereInput `json:"or,omitempty"`
+	And        []*ChannelUsageMonitorBindingWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "created_at" field predicates.
+	CreatedAt      *time.Time  `json:"createdAt,omitempty"`
+	CreatedAtNEQ   *time.Time  `json:"createdAtNEQ,omitempty"`
+	CreatedAtIn    []time.Time `json:"createdAtIn,omitempty"`
+	CreatedAtNotIn []time.Time `json:"createdAtNotIn,omitempty"`
+	CreatedAtGT    *time.Time  `json:"createdAtGT,omitempty"`
+	CreatedAtGTE   *time.Time  `json:"createdAtGTE,omitempty"`
+	CreatedAtLT    *time.Time  `json:"createdAtLT,omitempty"`
+	CreatedAtLTE   *time.Time  `json:"createdAtLTE,omitempty"`
+
+	// "updated_at" field predicates.
+	UpdatedAt      *time.Time  `json:"updatedAt,omitempty"`
+	UpdatedAtNEQ   *time.Time  `json:"updatedAtNEQ,omitempty"`
+	UpdatedAtIn    []time.Time `json:"updatedAtIn,omitempty"`
+	UpdatedAtNotIn []time.Time `json:"updatedAtNotIn,omitempty"`
+	UpdatedAtGT    *time.Time  `json:"updatedAtGT,omitempty"`
+	UpdatedAtGTE   *time.Time  `json:"updatedAtGTE,omitempty"`
+	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
+	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
+
+	// "channel_id" field predicates.
+	ChannelID      *int  `json:"channelID,omitempty"`
+	ChannelIDNEQ   *int  `json:"channelIDNEQ,omitempty"`
+	ChannelIDIn    []int `json:"channelIDIn,omitempty"`
+	ChannelIDNotIn []int `json:"channelIDNotIn,omitempty"`
+
+	// "usage_monitor_channel_id" field predicates.
+	UsageMonitorChannelID      *int  `json:"usageMonitorChannelID,omitempty"`
+	UsageMonitorChannelIDNEQ   *int  `json:"usageMonitorChannelIDNEQ,omitempty"`
+	UsageMonitorChannelIDIn    []int `json:"usageMonitorChannelIDIn,omitempty"`
+	UsageMonitorChannelIDNotIn []int `json:"usageMonitorChannelIDNotIn,omitempty"`
+
+	// "enabled" field predicates.
+	Enabled    *bool `json:"enabled,omitempty"`
+	EnabledNEQ *bool `json:"enabledNEQ,omitempty"`
+
+	// "last_triggered_at" field predicates.
+	LastTriggeredAt       *time.Time  `json:"lastTriggeredAt,omitempty"`
+	LastTriggeredAtNEQ    *time.Time  `json:"lastTriggeredAtNEQ,omitempty"`
+	LastTriggeredAtIn     []time.Time `json:"lastTriggeredAtIn,omitempty"`
+	LastTriggeredAtNotIn  []time.Time `json:"lastTriggeredAtNotIn,omitempty"`
+	LastTriggeredAtGT     *time.Time  `json:"lastTriggeredAtGT,omitempty"`
+	LastTriggeredAtGTE    *time.Time  `json:"lastTriggeredAtGTE,omitempty"`
+	LastTriggeredAtLT     *time.Time  `json:"lastTriggeredAtLT,omitempty"`
+	LastTriggeredAtLTE    *time.Time  `json:"lastTriggeredAtLTE,omitempty"`
+	LastTriggeredAtIsNil  bool        `json:"lastTriggeredAtIsNil,omitempty"`
+	LastTriggeredAtNotNil bool        `json:"lastTriggeredAtNotNil,omitempty"`
+
+	// "last_trigger_reason" field predicates.
+	LastTriggerReason             *string  `json:"lastTriggerReason,omitempty"`
+	LastTriggerReasonNEQ          *string  `json:"lastTriggerReasonNEQ,omitempty"`
+	LastTriggerReasonIn           []string `json:"lastTriggerReasonIn,omitempty"`
+	LastTriggerReasonNotIn        []string `json:"lastTriggerReasonNotIn,omitempty"`
+	LastTriggerReasonGT           *string  `json:"lastTriggerReasonGT,omitempty"`
+	LastTriggerReasonGTE          *string  `json:"lastTriggerReasonGTE,omitempty"`
+	LastTriggerReasonLT           *string  `json:"lastTriggerReasonLT,omitempty"`
+	LastTriggerReasonLTE          *string  `json:"lastTriggerReasonLTE,omitempty"`
+	LastTriggerReasonContains     *string  `json:"lastTriggerReasonContains,omitempty"`
+	LastTriggerReasonHasPrefix    *string  `json:"lastTriggerReasonHasPrefix,omitempty"`
+	LastTriggerReasonHasSuffix    *string  `json:"lastTriggerReasonHasSuffix,omitempty"`
+	LastTriggerReasonIsNil        bool     `json:"lastTriggerReasonIsNil,omitempty"`
+	LastTriggerReasonNotNil       bool     `json:"lastTriggerReasonNotNil,omitempty"`
+	LastTriggerReasonEqualFold    *string  `json:"lastTriggerReasonEqualFold,omitempty"`
+	LastTriggerReasonContainsFold *string  `json:"lastTriggerReasonContainsFold,omitempty"`
+
+	// "channel" edge predicates.
+	HasChannel     *bool                `json:"hasChannel,omitempty"`
+	HasChannelWith []*ChannelWhereInput `json:"hasChannelWith,omitempty"`
+
+	// "usage_monitor_channel" edge predicates.
+	HasUsageMonitorChannel     *bool                            `json:"hasUsageMonitorChannel,omitempty"`
+	HasUsageMonitorChannelWith []*UsageMonitorChannelWhereInput `json:"hasUsageMonitorChannelWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *ChannelUsageMonitorBindingWhereInput) AddPredicates(predicates ...predicate.ChannelUsageMonitorBinding) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the ChannelUsageMonitorBindingWhereInput filter on the ChannelUsageMonitorBindingQuery builder.
+func (i *ChannelUsageMonitorBindingWhereInput) Filter(q *ChannelUsageMonitorBindingQuery) (*ChannelUsageMonitorBindingQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyChannelUsageMonitorBindingWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyChannelUsageMonitorBindingWhereInput is returned in case the ChannelUsageMonitorBindingWhereInput is empty.
+var ErrEmptyChannelUsageMonitorBindingWhereInput = errors.New("ent: empty predicate ChannelUsageMonitorBindingWhereInput")
+
+// P returns a predicate for filtering channelusagemonitorbindings.
+// An error is returned if the input is empty or invalid.
+func (i *ChannelUsageMonitorBindingWhereInput) P() (predicate.ChannelUsageMonitorBinding, error) {
+	var predicates []predicate.ChannelUsageMonitorBinding
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, channelusagemonitorbinding.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.ChannelUsageMonitorBinding, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, channelusagemonitorbinding.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.ChannelUsageMonitorBinding, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, channelusagemonitorbinding.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.IDLTE(*i.IDLTE))
+	}
+	if i.CreatedAt != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtEQ(*i.CreatedAt))
+	}
+	if i.CreatedAtNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtNEQ(*i.CreatedAtNEQ))
+	}
+	if len(i.CreatedAtIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtIn(i.CreatedAtIn...))
+	}
+	if len(i.CreatedAtNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtNotIn(i.CreatedAtNotIn...))
+	}
+	if i.CreatedAtGT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtGT(*i.CreatedAtGT))
+	}
+	if i.CreatedAtGTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtGTE(*i.CreatedAtGTE))
+	}
+	if i.CreatedAtLT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtLT(*i.CreatedAtLT))
+	}
+	if i.CreatedAtLTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.CreatedAtLTE(*i.CreatedAtLTE))
+	}
+	if i.UpdatedAt != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtEQ(*i.UpdatedAt))
+	}
+	if i.UpdatedAtNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtNEQ(*i.UpdatedAtNEQ))
+	}
+	if len(i.UpdatedAtIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtIn(i.UpdatedAtIn...))
+	}
+	if len(i.UpdatedAtNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtNotIn(i.UpdatedAtNotIn...))
+	}
+	if i.UpdatedAtGT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtGT(*i.UpdatedAtGT))
+	}
+	if i.UpdatedAtGTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtGTE(*i.UpdatedAtGTE))
+	}
+	if i.UpdatedAtLT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtLT(*i.UpdatedAtLT))
+	}
+	if i.UpdatedAtLTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UpdatedAtLTE(*i.UpdatedAtLTE))
+	}
+	if i.ChannelID != nil {
+		predicates = append(predicates, channelusagemonitorbinding.ChannelIDEQ(*i.ChannelID))
+	}
+	if i.ChannelIDNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.ChannelIDNEQ(*i.ChannelIDNEQ))
+	}
+	if len(i.ChannelIDIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.ChannelIDIn(i.ChannelIDIn...))
+	}
+	if len(i.ChannelIDNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.ChannelIDNotIn(i.ChannelIDNotIn...))
+	}
+	if i.UsageMonitorChannelID != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UsageMonitorChannelIDEQ(*i.UsageMonitorChannelID))
+	}
+	if i.UsageMonitorChannelIDNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.UsageMonitorChannelIDNEQ(*i.UsageMonitorChannelIDNEQ))
+	}
+	if len(i.UsageMonitorChannelIDIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.UsageMonitorChannelIDIn(i.UsageMonitorChannelIDIn...))
+	}
+	if len(i.UsageMonitorChannelIDNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.UsageMonitorChannelIDNotIn(i.UsageMonitorChannelIDNotIn...))
+	}
+	if i.Enabled != nil {
+		predicates = append(predicates, channelusagemonitorbinding.EnabledEQ(*i.Enabled))
+	}
+	if i.EnabledNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.EnabledNEQ(*i.EnabledNEQ))
+	}
+	if i.LastTriggeredAt != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtEQ(*i.LastTriggeredAt))
+	}
+	if i.LastTriggeredAtNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtNEQ(*i.LastTriggeredAtNEQ))
+	}
+	if len(i.LastTriggeredAtIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtIn(i.LastTriggeredAtIn...))
+	}
+	if len(i.LastTriggeredAtNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtNotIn(i.LastTriggeredAtNotIn...))
+	}
+	if i.LastTriggeredAtGT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtGT(*i.LastTriggeredAtGT))
+	}
+	if i.LastTriggeredAtGTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtGTE(*i.LastTriggeredAtGTE))
+	}
+	if i.LastTriggeredAtLT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtLT(*i.LastTriggeredAtLT))
+	}
+	if i.LastTriggeredAtLTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtLTE(*i.LastTriggeredAtLTE))
+	}
+	if i.LastTriggeredAtIsNil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtIsNil())
+	}
+	if i.LastTriggeredAtNotNil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggeredAtNotNil())
+	}
+	if i.LastTriggerReason != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonEQ(*i.LastTriggerReason))
+	}
+	if i.LastTriggerReasonNEQ != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonNEQ(*i.LastTriggerReasonNEQ))
+	}
+	if len(i.LastTriggerReasonIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonIn(i.LastTriggerReasonIn...))
+	}
+	if len(i.LastTriggerReasonNotIn) > 0 {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonNotIn(i.LastTriggerReasonNotIn...))
+	}
+	if i.LastTriggerReasonGT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonGT(*i.LastTriggerReasonGT))
+	}
+	if i.LastTriggerReasonGTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonGTE(*i.LastTriggerReasonGTE))
+	}
+	if i.LastTriggerReasonLT != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonLT(*i.LastTriggerReasonLT))
+	}
+	if i.LastTriggerReasonLTE != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonLTE(*i.LastTriggerReasonLTE))
+	}
+	if i.LastTriggerReasonContains != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonContains(*i.LastTriggerReasonContains))
+	}
+	if i.LastTriggerReasonHasPrefix != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonHasPrefix(*i.LastTriggerReasonHasPrefix))
+	}
+	if i.LastTriggerReasonHasSuffix != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonHasSuffix(*i.LastTriggerReasonHasSuffix))
+	}
+	if i.LastTriggerReasonIsNil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonIsNil())
+	}
+	if i.LastTriggerReasonNotNil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonNotNil())
+	}
+	if i.LastTriggerReasonEqualFold != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonEqualFold(*i.LastTriggerReasonEqualFold))
+	}
+	if i.LastTriggerReasonContainsFold != nil {
+		predicates = append(predicates, channelusagemonitorbinding.LastTriggerReasonContainsFold(*i.LastTriggerReasonContainsFold))
+	}
+
+	if i.HasChannel != nil {
+		p := channelusagemonitorbinding.HasChannel()
+		if !*i.HasChannel {
+			p = channelusagemonitorbinding.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelWith) > 0 {
+		with := make([]predicate.Channel, 0, len(i.HasChannelWith))
+		for _, w := range i.HasChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channelusagemonitorbinding.HasChannelWith(with...))
+	}
+	if i.HasUsageMonitorChannel != nil {
+		p := channelusagemonitorbinding.HasUsageMonitorChannel()
+		if !*i.HasUsageMonitorChannel {
+			p = channelusagemonitorbinding.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasUsageMonitorChannelWith) > 0 {
+		with := make([]predicate.UsageMonitorChannel, 0, len(i.HasUsageMonitorChannelWith))
+		for _, w := range i.HasUsageMonitorChannelWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasUsageMonitorChannelWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, channelusagemonitorbinding.HasUsageMonitorChannelWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyChannelUsageMonitorBindingWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return channelusagemonitorbinding.And(predicates...), nil
 	}
 }
 
@@ -12111,6 +12520,10 @@ type UsageMonitorChannelWhereInput struct {
 	// "owner" edge predicates.
 	HasOwner     *bool             `json:"hasOwner,omitempty"`
 	HasOwnerWith []*UserWhereInput `json:"hasOwnerWith,omitempty"`
+
+	// "channel_bindings" edge predicates.
+	HasChannelBindings     *bool                                   `json:"hasChannelBindings,omitempty"`
+	HasChannelBindingsWith []*ChannelUsageMonitorBindingWhereInput `json:"hasChannelBindingsWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -12757,6 +13170,24 @@ func (i *UsageMonitorChannelWhereInput) P() (predicate.UsageMonitorChannel, erro
 			with = append(with, p)
 		}
 		predicates = append(predicates, usagemonitorchannel.HasOwnerWith(with...))
+	}
+	if i.HasChannelBindings != nil {
+		p := usagemonitorchannel.HasChannelBindings()
+		if !*i.HasChannelBindings {
+			p = usagemonitorchannel.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasChannelBindingsWith) > 0 {
+		with := make([]predicate.ChannelUsageMonitorBinding, 0, len(i.HasChannelBindingsWith))
+		for _, w := range i.HasChannelBindingsWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasChannelBindingsWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, usagemonitorchannel.HasChannelBindingsWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
