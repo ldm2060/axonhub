@@ -415,6 +415,11 @@ func (svc *UsageMonitorService) RegisterScheduledTasks(ctx context.Context, s *s
 	}, svc.runPollAllScheduled)
 }
 
+// SetQuotaCacheCallback registers a callback invoked after a monitor's quota
+// status changes, so the ProviderQuotaSelector cache can be updated immediately.
+// Must be called during initialization only (before Start), not concurrently
+// with pollChannel reads. The callback is read without synchronization in the
+// poll hot-path; concurrent writes during polling would cause a data race.
 func (svc *UsageMonitorService) SetQuotaCacheCallback(cb QuotaCacheCallback) {
 	svc.quotaCacheCallback = cb
 }
@@ -423,6 +428,9 @@ func (svc *UsageMonitorService) SetQuotaCacheCallback(cb QuotaCacheCallback) {
 // quota_binding_ready state is updated, so the ChannelService can refresh its
 // in-memory enabled-channels cache immediately (mirrors the pattern used by
 // markChannelUnavailable in channel_auto_disable.go).
+// Must be called during initialization only (before Start), not concurrently
+// with pollChannel reads. The callback is read without synchronization in the
+// poll hot-path; concurrent writes during polling would cause a data race.
 func (svc *UsageMonitorService) SetChannelsReloadCallback(cb ChannelsReloadCallback) {
 	svc.channelsReloadCallback = cb
 }
@@ -1076,13 +1084,20 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 			svc.quotaCacheCallback(*updated.ChannelID, quotaStatus, quotaReady != nil && *quotaReady, quotaLimits)
 		}
 
-		// Legacy direct-channel evaluation for builtin monitors with ChannelID
+		// Legacy direct-channel evaluation for builtin monitors with ChannelID.
+		// Skip if active ChannelUsageMonitorBinding rows exist for this monitor,
+		// because evaluateChannelsForMonitor (below) will already re-evaluate
+		// every bound channel. Without this guard, a builtin monitor that has
+		// been migrated to the binding model would evaluate the same channel
+		// twice per poll.
 		if updated.Source == usagemonitorchannel.SourceBuiltin && updated.ChannelID != nil {
-			if err := svc.evaluateAndUpdateChannelQuotaReady(ctx, *updated.ChannelID); err != nil {
-				log.Error(ctx, "Failed to evaluate channel quota_ready status",
-					log.Int("channel_id", *updated.ChannelID),
-					log.Int("monitor_id", updated.ID),
-					log.Cause(err))
+			if !svc.hasActiveBindingsForMonitor(ctx, updated.ID) {
+				if err := svc.evaluateAndUpdateChannelQuotaReady(ctx, *updated.ChannelID); err != nil {
+					log.Error(ctx, "Failed to evaluate channel quota_ready status (legacy fallback)",
+						log.Int("channel_id", *updated.ChannelID),
+						log.Int("monitor_id", updated.ID),
+						log.Cause(err))
+				}
 			}
 		}
 

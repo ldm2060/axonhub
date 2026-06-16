@@ -68,9 +68,10 @@ type UsageMonitorBindingSummary struct {
 // Service methods
 // ---------------------------------------------------------------------------
 
-// SaveChannelQuotaMonitorBindings replaces all active bindings for a channel,
-// stores the aggregation strategy on the channel row, and immediately evaluates
-// the resulting rule set.
+// SaveChannelQuotaMonitorBindings replaces all active bindings for a channel
+// and stores the aggregation strategy on the channel row. It does NOT evaluate
+// the resulting quota-ready state; use SaveChannelQuotaMonitorBindingsAndEvaluate
+// for that.
 func (svc *UsageMonitorService) SaveChannelQuotaMonitorBindings(
 	ctx context.Context,
 	channelID int,
@@ -140,8 +141,6 @@ func (svc *UsageMonitorService) SaveChannelQuotaMonitorBindings(
 
 		return nil
 	})
-	// After transaction commits, evaluate the channel's quota-ready state.
-	// We do this outside the transaction so the binding rows are visible.
 }
 
 // SaveChannelQuotaMonitorBindingsAndEvaluate is like
@@ -268,6 +267,28 @@ func (svc *UsageMonitorService) ListUsageMonitorBindingSummaries(
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+// hasActiveBindingsForMonitor returns true if at least one active (non-soft-deleted)
+// ChannelUsageMonitorBinding row exists for the given monitor ID. Used by pollChannel
+// to decide whether the legacy direct-channel evaluation can be skipped in favor of
+// the binding-based evaluateChannelsForMonitor path.
+func (svc *UsageMonitorService) hasActiveBindingsForMonitor(ctx context.Context, monitorID int) bool {
+	client := svc.entFromContext(ctx)
+	n, err := client.ChannelUsageMonitorBinding.Query().
+		Where(
+			channelusagemonitorbinding.UsageMonitorChannelIDEQ(monitorID),
+			channelusagemonitorbinding.DeletedAtEQ(0),
+		).
+		Limit(1).
+		Count(ctx)
+	if err != nil {
+		log.Warn(ctx, "failed to check bindings for monitor, assuming none",
+			log.Int("monitor_id", monitorID),
+			log.Cause(err))
+		return false
+	}
+	return n > 0
+}
 
 // evaluateChannelsForMonitor re-evaluates all channels that have an active
 // binding to the given monitor. Called after a monitor is updated, refreshed,
