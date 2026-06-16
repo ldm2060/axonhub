@@ -875,3 +875,125 @@ func TestBindingWithLastTriggeredAt(t *testing.T) {
 	require.NotNil(t, bindings[0].LastTriggerReason)
 	assert.Equal(t, "status=exhausted", *bindings[0].LastTriggerReason)
 }
+
+// ---------------------------------------------------------------------------
+// Non-builtin monitor re-evaluation tests
+// ---------------------------------------------------------------------------
+
+// TestEvaluateChannelsForMonitor_CustomSourceReEvaluates verifies that a
+// custom-source monitor (not builtin, no direct ChannelID) bound through
+// ChannelUsageMonitorBinding triggers re-evaluation of affected channels
+// when evaluateChannelsForMonitor is called. This proves the fix for the
+// bug where evaluateChannelsForMonitor was incorrectly gated inside the
+// builtin+ChannelID check in pollChannel.
+func TestEvaluateChannelsForMonitor_CustomSourceReEvaluates(t *testing.T) {
+	svc, ctx := setupTestBindingService(t, "any")
+
+	ch := createTestChannelForBinding(t, svc, ctx, "ch-custom-bind", nil)
+
+	// Create a custom-source monitor (no ChannelID, not builtin)
+	user, err := svc.db.User.Create().
+		SetEmail("custom-monitor@test.com").
+		SetPassword("password").
+		Save(ctx)
+	require.NoError(t, err)
+
+	monitor, err := svc.db.UsageMonitorChannel.Create().
+		SetName("Custom-Quota-Monitor").
+		SetSource(usagemonitorchannel.SourceCustom).
+		SetAPIURL("https://api.example.com/quota").
+		SetAPIMethod(usagemonitorchannel.APIMethodGET).
+		SetAPIHeaders(map[string]any{}).
+		SetFields([]map[string]any{}).
+		SetVariables([]map[string]any{}).
+		SetDisplayFields([]map[string]any{}).
+		SetStatus(usagemonitorchannel.StatusActive).
+		SetQuotaStatus(usagemonitorchannel.QuotaStatusAvailable).
+		SetOwnerID(user.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Bind the custom monitor to the channel
+	_, err = svc.db.ChannelUsageMonitorBinding.Create().
+		SetChannelID(ch.ID).
+		SetUsageMonitorChannelID(monitor.ID).
+		SetEnabled(true).
+		SetTriggerStatuses([]string{"exhausted"}).
+		SetConditions([]objects.QuotaMonitorBindingCondition{}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Channel should be ready initially (monitor is available)
+	err = svc.evaluateAndUpdateChannelQuotaReady(ctx, ch.ID)
+	require.NoError(t, err)
+	chCheck, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.True(t, chCheck.QuotaBindingReady, "channel should be ready when custom monitor is available")
+
+	// Monitor becomes exhausted (simulating what pollChannel would do on a successful poll)
+	_, err = svc.db.UsageMonitorChannel.UpdateOneID(monitor.ID).
+		SetQuotaStatus(usagemonitorchannel.QuotaStatusExhausted).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Call evaluateChannelsForMonitor (this is what the fixed pollChannel does
+	// for ALL monitors, not just builtin+ChannelID ones)
+	svc.evaluateChannelsForMonitor(ctx, monitor.ID)
+
+	// Channel should now be not ready
+	chCheck, err = svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.False(t, chCheck.QuotaBindingReady, "channel should be not ready after custom monitor becomes exhausted via evaluateChannelsForMonitor")
+	require.NotNil(t, chCheck.ErrorMessage, "error message should be set")
+	assert.Contains(t, *chCheck.ErrorMessage, "Custom-Quota-Monitor", "error message should reference the custom monitor name")
+}
+
+// TestEvaluateChannelsForMonitor_TemplateSourceReEvaluates verifies that a
+// template-source monitor bound through ChannelUsageMonitorBinding triggers
+// re-evaluation when evaluateChannelsForMonitor is called.
+func TestEvaluateChannelsForMonitor_TemplateSourceReEvaluates(t *testing.T) {
+	svc, ctx := setupTestBindingService(t, "any")
+
+	ch := createTestChannelForBinding(t, svc, ctx, "ch-template-bind", nil)
+
+	// Create a template-source monitor
+	user, err := svc.db.User.Create().
+		SetEmail("template-monitor@test.com").
+		SetPassword("password").
+		Save(ctx)
+	require.NoError(t, err)
+
+	monitor, err := svc.db.UsageMonitorChannel.Create().
+		SetName("Template-Quota-Monitor").
+		SetSource(usagemonitorchannel.SourceTemplate).
+		SetProviderType(usagemonitorchannel.ProviderTypeNanogpt).
+		SetAPIURL("https://api.openai.com/v1/usage").
+		SetAPIMethod(usagemonitorchannel.APIMethodGET).
+		SetAPIHeaders(map[string]any{}).
+		SetFields([]map[string]any{}).
+		SetVariables([]map[string]any{}).
+		SetDisplayFields([]map[string]any{}).
+		SetStatus(usagemonitorchannel.StatusActive).
+		SetQuotaStatus(usagemonitorchannel.QuotaStatusExhausted).
+		SetOwnerID(user.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Bind the template monitor to the channel
+	_, err = svc.db.ChannelUsageMonitorBinding.Create().
+		SetChannelID(ch.ID).
+		SetUsageMonitorChannelID(monitor.ID).
+		SetEnabled(true).
+		SetTriggerStatuses([]string{"exhausted"}).
+		SetConditions([]objects.QuotaMonitorBindingCondition{}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// Call evaluateChannelsForMonitor (template source, no direct ChannelID)
+	svc.evaluateChannelsForMonitor(ctx, monitor.ID)
+
+	// Channel should be not ready
+	chCheck, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.False(t, chCheck.QuotaBindingReady, "channel should be not ready when template monitor is exhausted")
+}

@@ -916,6 +916,8 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 					log.Cause(updateErr))
 			}
 			svc.cache.Invalidate(ch.ID)
+			// Re-evaluate bound channels since monitor status changed to error
+			svc.evaluateChannelsForMonitor(ctx, ch.ID)
 			return
 		}
 		apiHeaders = refreshedHeaders
@@ -956,6 +958,8 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 
 		// Invalidate cache to trigger reload
 		svc.cache.Invalidate(ch.ID)
+		// Re-evaluate bound channels since monitor status changed to error
+		svc.evaluateChannelsForMonitor(ctx, ch.ID)
 		return
 	}
 
@@ -1072,7 +1076,7 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 			svc.quotaCacheCallback(*updated.ChannelID, quotaStatus, quotaReady != nil && *quotaReady, quotaLimits)
 		}
 
-		// If source=builtin and channel_id is set, evaluate channel quota_ready status
+		// Legacy direct-channel evaluation for builtin monitors with ChannelID
 		if updated.Source == usagemonitorchannel.SourceBuiltin && updated.ChannelID != nil {
 			if err := svc.evaluateAndUpdateChannelQuotaReady(ctx, *updated.ChannelID); err != nil {
 				log.Error(ctx, "Failed to evaluate channel quota_ready status",
@@ -1080,11 +1084,13 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 					log.Int("monitor_id", updated.ID),
 					log.Cause(err))
 			}
-
-			// Re-evaluate all channels bound to this monitor (handles non-builtin
-			// monitors that do not have a direct ChannelID).
-			svc.evaluateChannelsForMonitor(ctx, updated.ID)
 		}
+
+		// Re-evaluate all channels bound to this monitor regardless of source.
+		// Custom/template monitors are bound exclusively through
+		// ChannelUsageMonitorBinding and must also trigger re-evaluation
+		// after a successful poll.
+		svc.evaluateChannelsForMonitor(ctx, updated.ID)
 	}
 
 	log.Debug(ctx, "Polled usage monitor channel",
