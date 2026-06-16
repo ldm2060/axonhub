@@ -90,6 +90,77 @@ func TestHandler_DoesNotFallbackMissingStaticAssetToSPAIndex(t *testing.T) {
 	require.NotContains(t, recorder.Header().Get("Content-Type"), "text/html")
 }
 
+func TestFrontendBuildTargetsEmbeddedStaticDist(t *testing.T) {
+	t.Helper()
+
+	viteConfig, err := os.ReadFile("../../../frontend/vite.config.ts")
+	require.NoError(t, err)
+	packageJSON, err := os.ReadFile("../../../frontend/package.json")
+	require.NoError(t, err)
+
+	config := string(viteConfig)
+	require.Contains(t, config, "outDir: '../internal/server/static/dist'")
+
+	buildScript := string(packageJSON)
+	require.Contains(t, buildScript, "vite build --emptyOutDir")
+	require.Contains(t, buildScript, "../internal/server/static/dist/.gitkeep")
+}
+
+func TestRequestsTableFiltersHandleMissingFilterValues(t *testing.T) {
+	t.Helper()
+
+	columnsSource, err := os.ReadFile("../../../frontend/src/features/requests/components/requests-columns.tsx")
+	require.NoError(t, err)
+
+	source := string(columnsSource)
+	require.Contains(t, source, "function getStringFilterValues")
+	require.NotContains(t, source, "value.length === 0")
+	require.NotContains(t, source, "value.includes(row.getValue")
+}
+
+func TestRequestsTableDefaultsFilterProps(t *testing.T) {
+	t.Helper()
+
+	tableSource, err := os.ReadFile("../../../frontend/src/features/requests/components/requests-table.tsx")
+	require.NoError(t, err)
+
+	source := string(tableSource)
+	for _, expected := range []string{
+		"statusFilter = []",
+		"sourceFilter = []",
+		"channelFilter = []",
+		"apiKeyFilter = []",
+		"modelIDFilter = ''",
+		"userFilter = []",
+	} {
+		require.Contains(t, source, expected)
+	}
+}
+
+func TestRequestsToolbarHandlesMissingFilterState(t *testing.T) {
+	t.Helper()
+
+	toolbarSource, err := os.ReadFile("../../../frontend/src/features/requests/components/data-table-toolbar.tsx")
+	require.NoError(t, err)
+
+	source := string(toolbarSource)
+	require.Contains(t, source, "const columnFilters = table.getState().columnFilters ?? []")
+	require.Contains(t, source, "Array.isArray(currentFilter) && currentFilter.length > 0")
+	require.NotContains(t, source, "as string[] | undefined")
+}
+
+func TestFacetedFilterToleratesMissingFacetedValues(t *testing.T) {
+	t.Helper()
+
+	filterSource, err := os.ReadFile("../../../frontend/src/components/data-table-faceted-filter.tsx")
+	require.NoError(t, err)
+
+	source := string(filterSource)
+	require.Contains(t, source, "try {")
+	require.Contains(t, source, "column?.getFacetedUniqueValues() ?? new Map()")
+	require.Contains(t, source, "return new Map()")
+}
+
 func TestHandler_ServesSPAForAdminFrontendRoutes(t *testing.T) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)

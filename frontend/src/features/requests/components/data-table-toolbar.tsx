@@ -46,7 +46,8 @@ export function DataTableToolbar<TData>({
   const [showArchivedApiKeys, setShowArchivedApiKeys] = useState(false);
   const [showArchivedChannels, setShowArchivedChannels] = useState(false);
   const hasDateRange = !!dateRange?.from || !!dateRange?.to;
-  const isFiltered = table.getState().columnFilters.length > 0 || hasDateRange;
+  const columnFilters = table.getState().columnFilters ?? [];
+  const isFiltered = columnFilters.length > 0 || hasDateRange;
 
   // Handler to toggle show archived API keys and prune hidden IDs from filters
   const handleToggleShowArchivedApiKeys = (checked: boolean) => {
@@ -54,8 +55,8 @@ export function DataTableToolbar<TData>({
 
     if (checked === false) {
       // When turning off show archived, prune any archived IDs from the filter
-      const currentFilter = table.getColumn('apiKey')?.getFilterValue() as string[] | undefined;
-      if (currentFilter && currentFilter.length > 0) {
+      const currentFilter = table.getColumn('apiKey')?.getFilterValue();
+      if (Array.isArray(currentFilter) && currentFilter.length > 0) {
         // Compute visible IDs from raw data (filtering for non-archived status)
         const visibleIds = new Set(
           apiKeysData?.edges?.filter((edge) => edge.node.status !== 'archived')?.map((edge) => edge.node.id) ?? []
@@ -72,8 +73,8 @@ export function DataTableToolbar<TData>({
 
     if (checked === false) {
       // When turning off show archived, prune any archived IDs from the filter
-      const currentFilter = table.getColumn('channel')?.getFilterValue() as string[] | undefined;
-      if (currentFilter && currentFilter.length > 0) {
+      const currentFilter = table.getColumn('channel')?.getFilterValue();
+      if (Array.isArray(currentFilter) && currentFilter.length > 0) {
         // Compute visible IDs from raw data (filtering for non-archived status)
         const visibleIds = new Set(
           channelsData?.edges?.filter((edge) => edge.node.status !== 'archived')?.map((edge) => edge.node.id) ?? []

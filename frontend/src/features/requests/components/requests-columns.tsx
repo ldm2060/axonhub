@@ -37,6 +37,10 @@ function formatUserName(user?: { firstName?: string | null; lastName?: string | 
   return user?.email?.trim() || '-';
 }
 
+function getStringFilterValues(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnDef<Request>[] {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
@@ -258,7 +262,8 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         );
       },
       filterFn: (row, _id, value) => {
-        return value.includes(row.original.stream?.toString() || '-');
+        const values = getStringFilterValues(value);
+        return values.includes(row.original.stream?.toString() || '-');
       },
       enableHiding: true,
     },
@@ -286,7 +291,8 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         );
       },
       filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id));
+        const values = getStringFilterValues(value);
+        return values.includes(row.getValue(id));
       },
     },
     {
@@ -431,13 +437,14 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               return <div className='px-2 font-mono text-xs'>{channel.name}</div>;
             },
             filterFn: (row, _id, value) => {
+              const values = getStringFilterValues(value);
               // For client-side filtering, check if any of the selected channels match
-              if (value.length === 0) return true; // No filter applied
+              if (values.length === 0) return true; // No filter applied
 
               const channel = row.original.channel;
               if (!channel) return false;
 
-              return value.includes(channel.id);
+              return values.includes(channel.id);
             },
           },
         ] as ColumnDef<Request>[])
@@ -464,7 +471,8 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         return <Badge className={getStatusColor(status)}>{t(`requests.status.${status}`)}</Badge>;
       },
       filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id));
+        const values = getStringFilterValues(value);
+        return values.includes(row.getValue(id));
       },
       enableSorting: false,
       enableHiding: true,

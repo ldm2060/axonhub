@@ -21,6 +21,9 @@ export default defineConfig({
     // }),
     tailwindcss(),
   ],
+  build: {
+    outDir: '../internal/server/static/dist',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

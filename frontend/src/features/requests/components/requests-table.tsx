@@ -81,16 +81,16 @@ function getFilterStringValue(filters: ColumnFiltersState, id: string) {
 }
 
 export function RequestsTable({
-  data,
+  data = [],
   loading,
   pageInfo,
   totalCount,
   pageSize,
-  statusFilter,
-  sourceFilter,
-  channelFilter,
-  apiKeyFilter,
-  modelIDFilter,
+  statusFilter = [],
+  sourceFilter = [],
+  channelFilter = [],
+  apiKeyFilter = [],
+  modelIDFilter = '',
   userFilter = [],
   dateRange,
   queryWhere,
