@@ -301,6 +301,61 @@ export const disabledAPIKeySchema = z.object({
 });
 export type DisabledAPIKey = z.infer<typeof disabledAPIKeySchema>;
 
+// Quota Monitor Binding Condition Operator
+export const quotaMonitorConditionOperatorSchema = z.enum([
+  '<',
+  '<=',
+  '=',
+  '!=',
+  '>=',
+  '>',
+  'contains',
+  'not_contains',
+]);
+export type QuotaMonitorConditionOperator = z.infer<typeof quotaMonitorConditionOperatorSchema>;
+
+// Quota Monitor Binding Condition
+export const quotaMonitorBindingConditionSchema = z.object({
+  field: z.string(),
+  operator: quotaMonitorConditionOperatorSchema,
+  value: z.string(),
+});
+export type QuotaMonitorBindingCondition = z.infer<typeof quotaMonitorBindingConditionSchema>;
+
+// Quota Monitor Binding Trigger Status
+export const quotaMonitorBindingTriggerStatusSchema = z.enum(['available', 'warning', 'exhausted', 'unknown']);
+export type QuotaMonitorBindingTriggerStatus = z.infer<typeof quotaMonitorBindingTriggerStatusSchema>;
+
+// Channel Quota Monitor Binding
+export const channelQuotaMonitorBindingSchema = z.object({
+  id: z.string(),
+  channelID: z.string(),
+  usageMonitorChannelID: z.string(),
+  usageMonitorName: z.string(),
+  enabled: z.boolean(),
+  triggerStatuses: z.array(z.string()),
+  conditions: z.array(quotaMonitorBindingConditionSchema),
+  lastTriggeredAt: z.string().optional().nullable(),
+  lastTriggerReason: z.string().optional().nullable(),
+});
+export type ChannelQuotaMonitorBinding = z.infer<typeof channelQuotaMonitorBindingSchema>;
+
+// Save Channel Quota Monitor Binding Input
+export const saveChannelQuotaMonitorBindingInputSchema = z.object({
+  usageMonitorChannelID: z.string(),
+  enabled: z.boolean(),
+  triggerStatuses: z.array(z.string()).optional(),
+  conditions: z.array(quotaMonitorBindingConditionSchema).optional(),
+});
+export type SaveChannelQuotaMonitorBindingInput = z.infer<typeof saveChannelQuotaMonitorBindingInputSchema>;
+
+// Save Channel Quota Monitor Bindings Input (top-level)
+export const saveChannelQuotaMonitorBindingsInputSchema = z.object({
+  strategy: z.enum(['any', 'all']),
+  bindings: z.array(saveChannelQuotaMonitorBindingInputSchema),
+});
+export type SaveChannelQuotaMonitorBindingsInput = z.infer<typeof saveChannelQuotaMonitorBindingsInputSchema>;
+
 // Channel
 export const channelSchema = z.object({
   id: z.string(),
@@ -346,6 +401,8 @@ export const channelSchema = z.object({
   ownerID: z.string().optional().nullable(),
   visibility: z.enum(['private', 'shared', 'published']).default('private'),
   sharedWith: z.array(z.number()).optional().default([]).nullable(),
+  quotaBindingReady: z.boolean().optional().default(true),
+  quotaMultiMonitorStrategy: z.enum(['any', 'all']).optional().nullable(),
 });
 export type Channel = z.infer<typeof channelSchema>;
 
@@ -527,6 +584,7 @@ export const createChannelInputSchema = z
         })
         .optional(),
     }),
+    quotaMultiMonitorStrategy: z.enum(['any', 'all']).optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const isOAuthType =
@@ -635,6 +693,7 @@ export const updateChannelInputSchema = z
       })
       .optional(),
     orderingWeight: z.number().optional(),
+    quotaMultiMonitorStrategy: z.enum(['any', 'all']).optional().nullable(),
   })
   .superRefine((data, ctx) => {
     const effectiveType = data.type;

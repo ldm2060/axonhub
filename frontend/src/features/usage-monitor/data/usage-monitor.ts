@@ -6,6 +6,7 @@ import { useErrorHandler } from '@/hooks/use-error-handler';
 import {
   usageMonitorChannelSchema,
   testResultSchema,
+  usageMonitorBindingSummarySchema,
   type FieldConfig,
   type Variable,
   type DisplayField,
@@ -13,6 +14,7 @@ import {
   type DisplayFieldInput,
   type UsageMonitorChannel,
   type TestResult,
+  type UsageMonitorBindingSummary,
 } from './schema';
 
 // Query key
@@ -501,5 +503,48 @@ export function useSilentRefreshUsageMonitorChannel() {
     onError: (error) => {
       handleError(error, { context: 'Auto-refresh Usage Monitor Channel' });
     },
+  });
+}
+
+// Usage Monitor Binding Summaries
+
+const USAGE_MONITOR_BINDING_SUMMARIES_QUERY = `
+  query UsageMonitorBindingSummaries {
+    usageMonitorBindingSummaries {
+      channelID
+      channelName
+      usageMonitorChannelID
+      strategy
+      enabled
+      triggerStatuses
+      conditions {
+        field
+        operator
+        value
+      }
+      matched
+      reason
+    }
+  }
+`;
+
+export function useUsageMonitorBindingSummaries(options?: { enabled?: boolean }) {
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+
+  return useQuery({
+    queryKey: ['usageMonitorBindingSummaries'],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ usageMonitorBindingSummaries: UsageMonitorBindingSummary[] }>(
+          USAGE_MONITOR_BINDING_SUMMARIES_QUERY
+        );
+        return (data.usageMonitorBindingSummaries || []).map((s) => usageMonitorBindingSummarySchema.parse(s));
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: options?.enabled !== false,
   });
 }

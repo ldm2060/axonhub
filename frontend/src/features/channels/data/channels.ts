@@ -28,6 +28,9 @@ import {
   channelModelPriceSchema,
   TestChannelAPIKeysPayload,
   testChannelAPIKeysPayloadSchema,
+  ChannelQuotaMonitorBinding,
+  channelQuotaMonitorBindingSchema,
+  SaveChannelQuotaMonitorBindingsInput,
 } from './schema';
 
 const QUERY_CHANNEL_NAMES_QUERY = `
@@ -143,6 +146,8 @@ const CREATE_CHANNEL_MUTATION = `
         baseURL
         transport
       }
+      quotaBindingReady
+      quotaMultiMonitorStrategy
     }
   }
 `;
@@ -219,6 +224,8 @@ const DUPLICATE_CHANNEL_MUTATION = `
         baseURL
         transport
       }
+      quotaBindingReady
+      quotaMultiMonitorStrategy
     }
   }
 `;
@@ -304,6 +311,8 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         baseURL
         transport
       }
+      quotaBindingReady
+      quotaMultiMonitorStrategy
     }
   }
 `;
@@ -390,6 +399,8 @@ const UPDATE_CHANNEL_MUTATION = `
         baseURL
         transport
       }
+      quotaBindingReady
+      quotaMultiMonitorStrategy
     }
   }
 `;
@@ -930,6 +941,8 @@ const QUERY_CHANNELS_QUERY = `
           ownerID
           visibility
           sharedWith
+          quotaBindingReady
+          quotaMultiMonitorStrategy
         }
         cursor
       }
@@ -1972,6 +1985,98 @@ export function useDeleteDisabledChannelAPIKeys() {
       } else {
         toast.success(t('channels.messages.deleteDisabledAPIKeysSuccess'));
       }
+    },
+  });
+}
+
+// Quota Monitor Bindings
+
+const CHANNEL_QUOTA_MONITOR_BINDINGS_QUERY = `
+  query ChannelQuotaMonitorBindings($channelID: ID!) {
+    channelQuotaMonitorBindings(channelID: $channelID) {
+      id
+      channelID
+      usageMonitorChannelID
+      usageMonitorName
+      enabled
+      triggerStatuses
+      conditions {
+        field
+        operator
+        value
+      }
+      lastTriggeredAt
+      lastTriggerReason
+    }
+  }
+`;
+
+const SAVE_CHANNEL_QUOTA_MONITOR_BINDINGS_MUTATION = `
+  mutation SaveChannelQuotaMonitorBindings($channelID: ID!, $input: SaveChannelQuotaMonitorBindingsInput!) {
+    saveChannelQuotaMonitorBindings(channelID: $channelID, input: $input) {
+      id
+      channelID
+      usageMonitorChannelID
+      usageMonitorName
+      enabled
+      triggerStatuses
+      conditions {
+        field
+        operator
+        value
+      }
+      lastTriggeredAt
+      lastTriggerReason
+    }
+  }
+`;
+
+export function useChannelQuotaMonitorBindings(channelID: string, options?: { enabled?: boolean }) {
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+
+  return useQuery({
+    queryKey: ['channelQuotaMonitorBindings', channelID],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ channelQuotaMonitorBindings: ChannelQuotaMonitorBinding[] }>(
+          CHANNEL_QUOTA_MONITOR_BINDINGS_QUERY,
+          { channelID }
+        );
+        return (data.channelQuotaMonitorBindings || []).map((b) => channelQuotaMonitorBindingSchema.parse(b));
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: !!channelID && options?.enabled !== false,
+  });
+}
+
+export function useSaveChannelQuotaMonitorBindings() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
+
+  return useMutation({
+    mutationFn: async ({ channelID, input }: { channelID: string; input: SaveChannelQuotaMonitorBindingsInput }) => {
+      try {
+        const data = await graphqlRequest<{ saveChannelQuotaMonitorBindings: ChannelQuotaMonitorBinding[] }>(
+          SAVE_CHANNEL_QUOTA_MONITOR_BINDINGS_MUTATION,
+          { channelID, input }
+        );
+        return (data.saveChannelQuotaMonitorBindings || []).map((b) => channelQuotaMonitorBindingSchema.parse(b));
+      } catch (error) {
+        handleError(error, { context: 'Save Channel Quota Monitor Bindings' });
+        throw error;
+      }
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings', variables.channelID] });
+      queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['channel', variables.channelID] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      toast.success(t('channels.quotaMonitorBinding.messages.saved'));
     },
   });
 }

@@ -111,3 +111,23 @@ export interface DisplayFieldInput {
   group?: string;
   groupLabelRef?: string;
 }
+
+// Usage Monitor Binding Summary
+export const usageMonitorBindingSummarySchema = z.object({
+  channelID: z.string(),
+  channelName: z.string(),
+  usageMonitorChannelID: z.string(),
+  strategy: z.enum(['any', 'all']),
+  enabled: z.boolean(),
+  triggerStatuses: z.array(z.string()),
+  conditions: z.array(
+    z.object({
+      field: z.string(),
+      operator: z.string(),
+      value: z.string(),
+    })
+  ),
+  matched: z.boolean(),
+  reason: z.string().optional().nullable(),
+});
+export type UsageMonitorBindingSummary = z.infer<typeof usageMonitorBindingSummarySchema>;
