@@ -767,6 +767,22 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 		mut.ClearErrorMessage()
 	}
 
+	// client_restriction and auto_disable_config are SkipMutationCreateInput
+	// fields settable only via update. The manually-built mutation above does
+	// not delegate to input.Mutate(), so apply them explicitly here — matching
+	// the generated Mutate() semantics (clear takes precedence over set).
+	if input.ClearClientRestriction {
+		mut.ClearClientRestriction()
+	} else if input.ClientRestriction != nil {
+		mut.SetClientRestriction(*input.ClientRestriction)
+	}
+
+	if input.ClearAutoDisableConfig {
+		mut.ClearAutoDisableConfig()
+	} else if input.AutoDisableConfig != nil {
+		mut.SetAutoDisableConfig(input.AutoDisableConfig)
+	}
+
 	channel, err := mut.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update channel: %w", err)

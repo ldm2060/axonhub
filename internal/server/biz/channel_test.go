@@ -496,6 +496,45 @@ func TestChannelService_UpdateChannel(t *testing.T) {
 			},
 		},
 		{
+			name: "set client restriction to strict",
+			id:   ch1.ID,
+			input: &ent.UpdateChannelInput{
+				ClientRestriction: lo.ToPtr(channel.ClientRestrictionStrict),
+			},
+			wantErr: false,
+			verify: func(t *testing.T, result *ent.Channel) {
+				require.NotNil(t, result.ClientRestriction)
+				require.Equal(t, channel.ClientRestrictionStrict, *result.ClientRestriction)
+			},
+		},
+		{
+			name: "clear client restriction back to inherit-global",
+			id:   ch1.ID,
+			input: &ent.UpdateChannelInput{
+				ClearClientRestriction: true,
+			},
+			wantErr: false,
+			verify: func(t *testing.T, result *ent.Channel) {
+				require.Nil(t, result.ClientRestriction)
+			},
+		},
+		{
+			name: "set channel auto-disable config",
+			id:   ch1.ID,
+			input: &ent.UpdateChannelInput{
+				AutoDisableConfig: &objects.ChannelAutoDisableConfig{
+					Mode:    objects.AutoDisableModeCustom,
+					Enabled: true,
+				},
+			},
+			wantErr: false,
+			verify: func(t *testing.T, result *ent.Channel) {
+				require.NotNil(t, result.AutoDisableConfig)
+				require.Equal(t, objects.AutoDisableModeCustom, result.AutoDisableConfig.Mode)
+				require.True(t, result.AutoDisableConfig.Enabled)
+			},
+		},
+		{
 			name: "update non-existent channel",
 			id:   99999,
 			input: &ent.UpdateChannelInput{

@@ -654,6 +654,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
               },
             },
             settings: currentRow.settings ?? undefined,
+            clientRestriction: currentRow.clientRestriction ?? null,
+            clearClientRestriction: false,
           }
         : duplicateFromRow
           ? {
@@ -678,6 +680,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                   jsonData: duplicateFromRow.credentials?.gcp?.jsonData || '',
                 },
               },
+              clientRestriction: duplicateFromRow.clientRestriction ?? null,
+              clearClientRestriction: false,
             }
           : {
               type: derivedChannelType,
@@ -2841,12 +2845,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           <ChannelClientRestriction
                             channel={currentRow}
                             onUpdate={(updates) => {
-                              if (updates.clientRestriction !== undefined) {
-                                form.setValue('clientRestriction', updates.clientRestriction);
-                              }
-                              if (updates.clearClientRestriction) {
-                                form.setValue('clientRestriction', null);
-                              }
+                              form.setValue('clientRestriction', updates.clientRestriction ?? null);
+                              form.setValue('clearClientRestriction', updates.clearClientRestriction ?? false);
                             }}
                           />
                         </div>

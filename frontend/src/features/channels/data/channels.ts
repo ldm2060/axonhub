@@ -121,6 +121,15 @@ const CREATE_CHANNEL_MUTATION = `
         minInputTokens
       }
       orderingWeight
+      clientRestriction
+      autoDisableConfig {
+        mode
+        enabled
+        statuses {
+          status
+          times
+        }
+      }
       remark
       defaultEndpoints {
         apiFormat
@@ -188,6 +197,15 @@ const DUPLICATE_CHANNEL_MUTATION = `
         minInputTokens
       }
       orderingWeight
+      clientRestriction
+      autoDisableConfig {
+        mode
+        enabled
+        statuses {
+          status
+          times
+        }
+      }
       remark
       defaultEndpoints {
         apiFormat
@@ -264,6 +282,15 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         minInputTokens
       }
       orderingWeight
+      clientRestriction
+      autoDisableConfig {
+        mode
+        enabled
+        statuses {
+          status
+          times
+        }
+      }
       remark
       defaultEndpoints {
         apiFormat
@@ -341,6 +368,15 @@ const UPDATE_CHANNEL_MUTATION = `
       }
       orderingWeight
       errorMessage
+      clientRestriction
+      autoDisableConfig {
+        mode
+        enabled
+        statuses {
+          status
+          times
+        }
+      }
       remark
       defaultEndpoints {
         apiFormat
@@ -857,6 +893,15 @@ const QUERY_CHANNELS_QUERY = `
           }
           orderingWeight
           errorMessage
+          clientRestriction
+          autoDisableConfig {
+            mode
+            enabled
+            statuses {
+              status
+              times
+            }
+          }
           remark
           defaultEndpoints {
             apiFormat
