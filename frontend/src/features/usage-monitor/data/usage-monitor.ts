@@ -361,6 +361,8 @@ export function useCreateUsageMonitorChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
       toast.success(t('usageMonitor.messages.createSuccess'));
     },
     onError: (error) => {
@@ -403,6 +405,8 @@ export function useUpdateUsageMonitorChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
       toast.success(t('usageMonitor.messages.updateSuccess'));
     },
     onError: (error) => {
@@ -425,6 +429,8 @@ export function useDeleteUsageMonitorChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
       toast.success(t('usageMonitor.messages.deleteSuccess'));
     },
     onError: (error) => {
@@ -474,6 +480,8 @@ export function useRefreshUsageMonitorChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
       toast.success(t('usageMonitor.messages.refreshSuccess'));
     },
     onError: (error) => {
@@ -499,6 +507,8 @@ export function useSilentRefreshUsageMonitorChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USAGE_MONITOR_CHANNELS_KEY] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
     },
     onError: (error) => {
       handleError(error, { context: 'Auto-refresh Usage Monitor Channel' });

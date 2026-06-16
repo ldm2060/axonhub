@@ -333,7 +333,7 @@ export const channelQuotaMonitorBindingSchema = z.object({
   usageMonitorChannelID: z.string(),
   usageMonitorName: z.string(),
   enabled: z.boolean(),
-  triggerStatuses: z.array(z.string()),
+  triggerStatuses: z.array(quotaMonitorBindingTriggerStatusSchema),
   conditions: z.array(quotaMonitorBindingConditionSchema),
   lastTriggeredAt: z.string().optional().nullable(),
   lastTriggerReason: z.string().optional().nullable(),
@@ -344,7 +344,7 @@ export type ChannelQuotaMonitorBinding = z.infer<typeof channelQuotaMonitorBindi
 export const saveChannelQuotaMonitorBindingInputSchema = z.object({
   usageMonitorChannelID: z.string(),
   enabled: z.boolean(),
-  triggerStatuses: z.array(z.string()).optional(),
+  triggerStatuses: z.array(quotaMonitorBindingTriggerStatusSchema).optional(),
   conditions: z.array(quotaMonitorBindingConditionSchema).optional(),
 });
 export type SaveChannelQuotaMonitorBindingInput = z.infer<typeof saveChannelQuotaMonitorBindingInputSchema>;

@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  quotaMonitorBindingConditionSchema,
+  quotaMonitorBindingTriggerStatusSchema,
+} from '@/features/channels/data/schema';
 
 export const fieldConfigSchema = z.object({
   key: z.string(),
@@ -119,15 +123,9 @@ export const usageMonitorBindingSummarySchema = z.object({
   usageMonitorChannelID: z.string(),
   strategy: z.enum(['any', 'all']),
   enabled: z.boolean(),
-  triggerStatuses: z.array(z.string()),
-  conditions: z.array(
-    z.object({
-      field: z.string(),
-      operator: z.string(),
-      value: z.string(),
-    })
-  ),
+  triggerStatuses: z.array(quotaMonitorBindingTriggerStatusSchema),
+  conditions: z.array(quotaMonitorBindingConditionSchema),
   matched: z.boolean(),
-  reason: z.string().optional().nullable(),
+  reason: z.string(),
 });
 export type UsageMonitorBindingSummary = z.infer<typeof usageMonitorBindingSummarySchema>;

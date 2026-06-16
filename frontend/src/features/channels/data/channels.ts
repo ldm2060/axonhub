@@ -1428,6 +1428,8 @@ export function useDeleteChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
       toast.success(t('channels.messages.deleteSuccess'));
     },
   });
@@ -1450,6 +1452,8 @@ export function useBulkDeleteChannels() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings'] });
+      queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
       toast.success(t('channels.messages.bulkDeleteSuccess', { count: variables.length }));
     },
   });
@@ -2074,7 +2078,6 @@ export function useSaveChannelQuotaMonitorBindings() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['channelQuotaMonitorBindings', variables.channelID] });
       queryClient.invalidateQueries({ queryKey: ['channels'] });
-      queryClient.invalidateQueries({ queryKey: ['channel', variables.channelID] });
       queryClient.invalidateQueries({ queryKey: ['usageMonitorBindingSummaries'] });
       toast.success(t('channels.quotaMonitorBinding.messages.saved'));
     },
