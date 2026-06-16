@@ -126,6 +126,6 @@ export const usageMonitorBindingSummarySchema = z.object({
   triggerStatuses: z.array(quotaMonitorBindingTriggerStatusSchema),
   conditions: z.array(quotaMonitorBindingConditionSchema),
   matched: z.boolean(),
-  reason: z.string(),
+  reason: z.string().optional().nullable(),
 });
 export type UsageMonitorBindingSummary = z.infer<typeof usageMonitorBindingSummarySchema>;

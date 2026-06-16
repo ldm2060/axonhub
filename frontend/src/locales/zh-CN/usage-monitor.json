@@ -91,5 +91,9 @@
   "usageMonitor.bindingSummary.matched": "已匹配",
   "usageMonitor.bindingSummary.ready": "就绪",
   "usageMonitor.bindingSummary.statusRule": "状态规则",
-  "usageMonitor.bindingSummary.conditionRule": "条件规则"
+  "usageMonitor.bindingSummary.conditionRule": "条件规则",
+  "usageMonitor.bindingSummary.triggerStatus.available": "可用",
+  "usageMonitor.bindingSummary.triggerStatus.warning": "警告",
+  "usageMonitor.bindingSummary.triggerStatus.exhausted": "已耗尽",
+  "usageMonitor.bindingSummary.triggerStatus.unknown": "未知"
 }

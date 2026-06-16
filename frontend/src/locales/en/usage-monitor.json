@@ -91,5 +91,9 @@
   "usageMonitor.bindingSummary.matched": "Matched",
   "usageMonitor.bindingSummary.ready": "Ready",
   "usageMonitor.bindingSummary.statusRule": "Status Rule",
-  "usageMonitor.bindingSummary.conditionRule": "Condition Rule"
+  "usageMonitor.bindingSummary.conditionRule": "Condition Rule",
+  "usageMonitor.bindingSummary.triggerStatus.available": "Available",
+  "usageMonitor.bindingSummary.triggerStatus.warning": "Warning",
+  "usageMonitor.bindingSummary.triggerStatus.exhausted": "Exhausted",
+  "usageMonitor.bindingSummary.triggerStatus.unknown": "Unknown"
 }

@@ -73,7 +73,7 @@ export function MonitorBindingSummary({ monitorID }: { monitorID: string }) {
               <div className="flex items-center gap-1">
                 {binding.triggerStatuses.map((status) => (
                   <Badge key={status} variant="secondary" className="text-xs">
-                    {status}
+                    {t(`usageMonitor.bindingSummary.triggerStatus.${status}`)}
                   </Badge>
                 ))}
               </div>
