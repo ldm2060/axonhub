@@ -758,6 +758,10 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 	// Refresh cache
 	svc.cache.Set(ch.ID, ch)
 
+	// Re-evaluate any channels that have bindings to this monitor
+	// (status/config changes may affect their quota-ready state)
+	svc.evaluateChannelsForMonitor(ctx, ch.ID)
+
 	return ch, nil
 }
 
@@ -776,6 +780,9 @@ func (svc *UsageMonitorService) DeleteChannel(ctx context.Context, id int) error
 
 	// Remove from cache
 	svc.cache.Invalidate(id)
+
+	// Re-evaluate any channels that had bindings to this monitor
+	svc.evaluateChannelsForMonitor(ctx, id)
 
 	return nil
 }
@@ -1073,6 +1080,10 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 					log.Int("monitor_id", updated.ID),
 					log.Cause(err))
 			}
+
+			// Re-evaluate all channels bound to this monitor (handles non-builtin
+			// monitors that do not have a direct ChannelID).
+			svc.evaluateChannelsForMonitor(ctx, updated.ID)
 		}
 	}
 
