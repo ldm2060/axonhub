@@ -8,7 +8,13 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 
 COPY ./frontend .
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN pnpm build
+# Build the frontend with outDir overridden to /build/dist. vite.config.ts
+# points outDir at ../internal/server/static/dist so local builds land in the
+# Go embed dir, but the Docker image copies from /build/dist (see frontend-dist
+# stage). Run vite directly so we skip the build script's .gitkeep step, which
+# writes to the embed dir and is irrelevant here (the embed dir is populated by
+# the COPY below).
+RUN pnpm exec vite build --emptyOutDir --outDir /build/dist
 
 # Copy dist to a stage with the target platform to avoid architecture mismatch
 FROM alpine AS frontend-dist
