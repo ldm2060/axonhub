@@ -209,6 +209,10 @@ func hasNonEmptyStatus(statuses []string) bool {
 // compareQuotaBindingCondition compares a field's actual value against the
 // condition's expected value using the condition's operator.
 //
+// If actual is nil (field missing from the flattened map), no operator matches
+// and a diagnostic containing "value is nil" is returned. This prevents
+// fmt.Sprintf(nil) from producing the misleading string "<nil>".
+//
 // Numeric operators (<, <=, =, !=, >=, >) require both actual and expected to
 // parse as numbers; otherwise the condition does not match and a diagnostic is returned.
 // The equality operator (=) can also use trimmed string comparison as a fallback.
@@ -216,6 +220,12 @@ func hasNonEmptyStatus(statuses []string) bool {
 func compareQuotaBindingCondition(cond objects.QuotaMonitorBindingCondition, actual any) (matched bool, diagnostic string) {
 	op := cond.Operator
 	expectedStr := cond.Value
+
+	// Nil/missing field: no operator should match. Return a consistent
+	// diagnostic so callers and tests can detect this case.
+	if actual == nil {
+		return false, fmt.Sprintf("field %q: value is nil", cond.Field)
+	}
 
 	switch op {
 	case objects.QuotaMonitorOperatorContains:
@@ -339,22 +349,35 @@ func numberFromAny(v any) (float64, bool) {
 // flattenQuotaMonitorFields copies parsed fields from the monitor's data and
 // adds the virtual field "maxUsageRatio" computed as the maximum numeric
 // usageRatio from quotaLimits.
+//
+// If quotaLimits is empty or contains no valid usageRatio entries, maxUsageRatio
+// is NOT set in the returned map. This avoids conflating "no data" with "0% usage":
+// a missing maxUsageRatio causes conditions on it to produce a nil diagnostic
+// rather than silently matching against 0.0.
 func flattenQuotaMonitorFields(parsedData map[string]any, quotaLimits []map[string]any) map[string]any {
 	fields := make(map[string]any, len(parsedData)+1)
 
 	// Copy all parsed data fields
 	maps.Copy(fields, parsedData)
 
-	// Compute maxUsageRatio from quota_limits
+	// Compute maxUsageRatio from quota_limits. Only set the field when at
+	// least one valid usageRatio entry is found, so that a missing field
+	// (nil) is distinguishable from 0% usage.
 	maxRatio := 0.0
+	hasValidRatio := false
 	for _, limit := range quotaLimits {
 		if ratio, ok := limit["usageRatio"]; ok {
-			if r, ok := numberFromAny(ratio); ok && r > maxRatio {
-				maxRatio = r
+			if r, ok := numberFromAny(ratio); ok {
+				if r > maxRatio {
+					maxRatio = r
+				}
+				hasValidRatio = true
 			}
 		}
 	}
-	fields["maxUsageRatio"] = maxRatio
+	if hasValidRatio {
+		fields["maxUsageRatio"] = maxRatio
+	}
 
 	return fields
 }

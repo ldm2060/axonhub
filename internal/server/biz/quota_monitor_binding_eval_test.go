@@ -377,6 +377,65 @@ func TestCompareQuotaBindingCondition_EqualityOperators(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// compareQuotaBindingCondition — nil/missing field values
+// ---------------------------------------------------------------------------
+
+func TestCompareQuotaBindingCondition_NilField_Contains(t *testing.T) {
+	cond := objects.QuotaMonitorBindingCondition{
+		Field: "missingField", Operator: objects.QuotaMonitorOperatorContains, Value: "anything",
+	}
+	matched, diag := compareQuotaBindingCondition(cond, nil)
+	assert.False(t, matched, "contains on nil field should not match")
+	assert.Contains(t, diag, "value is nil", "diagnostic should mention nil")
+	assert.Contains(t, diag, "missingField", "diagnostic should mention the field name")
+}
+
+func TestCompareQuotaBindingCondition_NilField_NotContains(t *testing.T) {
+	cond := objects.QuotaMonitorBindingCondition{
+		Field: "absentField", Operator: objects.QuotaMonitorOperatorNotContains, Value: "anything",
+	}
+	matched, diag := compareQuotaBindingCondition(cond, nil)
+	assert.False(t, matched, "not_contains on nil field should not match")
+	assert.Contains(t, diag, "value is nil", "diagnostic should mention nil")
+	assert.Contains(t, diag, "absentField", "diagnostic should mention the field name")
+}
+
+func TestCompareQuotaBindingCondition_NilField_NumericLT(t *testing.T) {
+	cond := objects.QuotaMonitorBindingCondition{
+		Field: "missingNum", Operator: objects.QuotaMonitorOperatorLT, Value: "5",
+	}
+	matched, diag := compareQuotaBindingCondition(cond, nil)
+	assert.False(t, matched, "numeric operator on nil field should not match")
+	assert.Contains(t, diag, "value is nil", "diagnostic should mention nil")
+	assert.Contains(t, diag, "missingNum", "diagnostic should mention the field name")
+}
+
+func TestCompareQuotaBindingCondition_NilField_Equality(t *testing.T) {
+	cond := objects.QuotaMonitorBindingCondition{
+		Field: "goneField", Operator: objects.QuotaMonitorOperatorEQ, Value: "hello",
+	}
+	matched, diag := compareQuotaBindingCondition(cond, nil)
+	assert.False(t, matched, "equality on nil field should not match")
+	assert.Contains(t, diag, "value is nil", "diagnostic should mention nil")
+	assert.Contains(t, diag, "goneField", "diagnostic should mention the field name")
+}
+
+func TestEvaluateBinding_NilFieldProducesDiagnostic(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "nonexistent", Operator: objects.QuotaMonitorOperatorContains, Value: "test"},
+		},
+		ParsedFields: map[string]any{},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Effective)
+	assert.False(t, result.Matched, "condition on missing field should not match")
+	assert.NotEmpty(t, result.Diagnostics, "should produce diagnostic for missing field")
+	assert.Contains(t, result.Diagnostics[0], "value is nil")
+}
+
+// ---------------------------------------------------------------------------
 // numberFromAny
 // ---------------------------------------------------------------------------
 
@@ -445,9 +504,40 @@ func TestMaxUsageRatio_EmptyQuotaLimits(t *testing.T) {
 		"status": "available",
 	}, nil)
 
-	ratio, ok := fields["maxUsageRatio"]
-	assert.True(t, ok, "maxUsageRatio should still be present even with empty limits")
-	assert.InDelta(t, 0.0, ratio, 0.001, "maxUsageRatio should be 0 for empty limits")
+	_, ok := fields["maxUsageRatio"]
+	assert.False(t, ok, "maxUsageRatio should be absent when quotaLimits has no valid usageRatio entries")
+}
+
+func TestMaxUsageRatio_QuotaLimitsNoValidUsageRatio(t *testing.T) {
+	quotaLimits := []map[string]any{
+		{"type": "token", "status": "available", "ready": true},
+		{"type": "image", "status": "exhausted", "usageRatio": "not-a-number", "ready": false},
+	}
+	fields := flattenQuotaMonitorFields(map[string]any{
+		"status": "available",
+	}, quotaLimits)
+
+	_, ok := fields["maxUsageRatio"]
+	assert.False(t, ok, "maxUsageRatio should be absent when no valid usageRatio entries exist")
+}
+
+func TestMaxUsageRatio_ConditionOnMissingFieldDoesNotMatch(t *testing.T) {
+	// When quotaLimits is empty, maxUsageRatio is absent (nil), so conditions
+	// on it should not match and should produce a nil diagnostic.
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0"},
+		},
+		ParsedFields: map[string]any{
+			"status": "available",
+		},
+		QuotaLimits: nil,
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Effective)
+	assert.False(t, result.Matched, "condition on absent maxUsageRatio should not match")
+	assert.NotEmpty(t, result.Diagnostics, "should include nil diagnostic for missing maxUsageRatio")
 }
 
 func TestMaxUsageRatio_VirtualFieldUsedInCondition(t *testing.T) {
