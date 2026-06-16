@@ -767,6 +767,11 @@
   "channels.quotaMonitorBinding.value": "Value",
   "channels.quotaMonitorBinding.remove": "Remove",
   "channels.quotaMonitorBinding.empty": "No monitor bindings configured.",
+  "channels.quotaMonitorBinding.statuses.available": "Available",
+  "channels.quotaMonitorBinding.statuses.warning": "Warning",
+  "channels.quotaMonitorBinding.statuses.exhausted": "Exhausted",
+  "channels.quotaMonitorBinding.statuses.unknown": "Unknown",
+  "channels.quotaMonitorBinding.messages.emptyMonitor": "Please select a monitor for each binding row before saving.",
   "channels.quotaMonitorBinding.summaryStatus": "Status",
   "channels.quotaMonitorBinding.summaryCondition": "Condition",
   "channels.quotaMonitorBinding.messages.saved": "Quota monitor bindings saved successfully"

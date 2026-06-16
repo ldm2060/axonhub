@@ -767,6 +767,11 @@
   "channels.quotaMonitorBinding.value": "值",
   "channels.quotaMonitorBinding.remove": "移除",
   "channels.quotaMonitorBinding.empty": "未配置监控绑定。",
+  "channels.quotaMonitorBinding.statuses.available": "可用",
+  "channels.quotaMonitorBinding.statuses.warning": "警告",
+  "channels.quotaMonitorBinding.statuses.exhausted": "已耗尽",
+  "channels.quotaMonitorBinding.statuses.unknown": "未知",
+  "channels.quotaMonitorBinding.messages.emptyMonitor": "请为每个绑定行选择一个监控后再保存。",
   "channels.quotaMonitorBinding.summaryStatus": "状态",
   "channels.quotaMonitorBinding.summaryCondition": "条件",
   "channels.quotaMonitorBinding.messages.saved": "配额监控绑定保存成功"

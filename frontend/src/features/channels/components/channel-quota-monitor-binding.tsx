@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Trash2 } from 'lucide-react';
 import { useUsageMonitorChannels } from '@/features/usage-monitor/data/usage-monitor';
 import type { SaveChannelQuotaMonitorBindingInput } from '../data/schema';
@@ -16,6 +17,16 @@ import type { QuotaMonitorConditionOperator, QuotaMonitorBindingTriggerStatus } 
 const TRIGGER_STATUS_OPTIONS: QuotaMonitorBindingTriggerStatus[] = ['available', 'warning', 'exhausted', 'unknown'];
 const OPERATOR_OPTIONS: QuotaMonitorConditionOperator[] = ['<', '<=', '=', '!=', '>=', '>', 'contains', 'not_contains'];
 const BUILTIN_FIELDS = ['maxUsageRatio'];
+
+/** Generate a stable local key for each binding row. */
+let _nextBindingKey = 0;
+function newBindingKey(): string {
+  return `bkey_${++_nextBindingKey}_${Date.now().toString(36)}`;
+}
+
+interface BindingWithKey extends SaveChannelQuotaMonitorBindingInput {
+  _key: string;
+}
 
 interface ChannelQuotaMonitorBindingProps {
   enabled: boolean;
@@ -36,6 +47,33 @@ export function ChannelQuotaMonitorBinding({
 }: ChannelQuotaMonitorBindingProps) {
   const { t } = useTranslation();
   const { data: monitors } = useUsageMonitorChannels();
+
+  // Maintain stable keys for each binding row so React doesn't lose DOM state
+  // when array indices shift. KeyedBindings is derived from the parent's
+  // bindings array plus a local _key per entry.
+  const keyMapRef = useRef<Map<number, string>>(new Map());
+  const prevBindingsLengthRef = useRef(0);
+
+  // Assign stable keys: existing indices keep their key, new entries get a fresh one.
+  const keyedBindings: BindingWithKey[] = useMemo(() => {
+    // Clean up keys for removed indices
+    for (const k of keyMapRef.current.keys()) {
+      if (k >= bindings.length) keyMapRef.current.delete(k);
+    }
+
+    return bindings.map((b, i) => {
+      let key = keyMapRef.current.get(i);
+      if (!key) {
+        // If index is within previous length, it's likely a shift — try to keep
+        // stable by only assigning a new key for truly new entries.
+        key = newBindingKey();
+        keyMapRef.current.set(i, key);
+      }
+      return { ...b, _key: key };
+    });
+  }, [bindings]);
+
+  prevBindingsLengthRef.current = bindings.length;
 
   // Build a map of monitor ID -> monitor for quick lookup and field suggestions
   const monitorMap = useMemo(() => {
@@ -64,6 +102,17 @@ export function ChannelQuotaMonitorBinding({
 
   const handleRemoveBinding = (index: number) => {
     const next = bindings.filter((_, i) => i !== index);
+    // Remove the key for the deleted index and re-key remaining entries
+    const newKeyMap = new Map<number, string>();
+    let srcIdx = 0;
+    for (let dstIdx = 0; dstIdx < next.length; dstIdx++) {
+      // Skip the removed index
+      if (srcIdx === index) srcIdx++;
+      const existingKey = keyMapRef.current.get(srcIdx);
+      if (existingKey) newKeyMap.set(dstIdx, existingKey);
+      srcIdx++;
+    }
+    keyMapRef.current = newKeyMap;
     onBindingsChange(next);
   };
 
@@ -113,6 +162,8 @@ export function ChannelQuotaMonitorBinding({
     return [...BUILTIN_FIELDS, ...monitor.displayFieldKeys];
   };
 
+  const removeLabel = t('channels.quotaMonitorBinding.remove');
+
   return (
     <div className='space-y-4'>
       <div>
@@ -145,12 +196,12 @@ export function ChannelQuotaMonitorBinding({
               <p className='text-muted-foreground text-sm'>{t('channels.quotaMonitorBinding.empty')}</p>
             )}
 
-            {bindings.map((binding, bindingIndex) => {
+            {keyedBindings.map((binding, bindingIndex) => {
               const selectedMonitor = monitorMap.get(binding.usageMonitorChannelID);
               const fieldSuggestions = getFieldSuggestions(binding.usageMonitorChannelID);
 
               return (
-                <div key={bindingIndex} className='border-border rounded-md border p-3 space-y-3'>
+                <div key={binding._key} className='border-border rounded-md border p-3 space-y-3'>
                   {/* Monitor select + remove */}
                   <div className='flex items-center gap-2'>
                     <div className='flex-1'>
@@ -171,15 +222,20 @@ export function ChannelQuotaMonitorBinding({
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='mt-4 h-8 w-8 shrink-0'
-                      onClick={() => handleRemoveBinding(bindingIndex)}
-                    >
-                      <Trash2 className='h-4 w-4' />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='mt-4 h-8 w-8 shrink-0'
+                          onClick={() => handleRemoveBinding(bindingIndex)}
+                        >
+                          <Trash2 className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{removeLabel}</TooltipContent>
+                    </Tooltip>
                   </div>
 
                   {/* Binding-level enabled toggle */}
@@ -204,7 +260,7 @@ export function ChannelQuotaMonitorBinding({
                             className='cursor-pointer select-none text-xs'
                             onClick={() => handleToggleTriggerStatus(bindingIndex, status)}
                           >
-                            {status}
+                            {t(`channels.quotaMonitorBinding.statuses.${status}`)}
                           </Badge>
                         );
                       })}
@@ -217,13 +273,13 @@ export function ChannelQuotaMonitorBinding({
                     {(binding.conditions ?? []).map((condition, conditionIndex) => (
                       <div key={conditionIndex} className='flex items-center gap-1.5'>
                         <Input
-                          list={`field-suggestions-${bindingIndex}-${conditionIndex}`}
+                          list={`field-suggestions-${binding._key}-${conditionIndex}`}
                           value={condition.field}
                           onChange={(e) => handleConditionChange(bindingIndex, conditionIndex, 'field', e.target.value)}
                           placeholder={t('channels.quotaMonitorBinding.field')}
                           className='h-7 flex-1 text-xs'
                         />
-                        <datalist id={`field-suggestions-${bindingIndex}-${conditionIndex}`}>
+                        <datalist id={`field-suggestions-${binding._key}-${conditionIndex}`}>
                           {fieldSuggestions.map((f) => (
                             <option key={f} value={f} />
                           ))}
@@ -249,15 +305,20 @@ export function ChannelQuotaMonitorBinding({
                           placeholder={t('channels.quotaMonitorBinding.value')}
                           className='h-7 flex-1 text-xs'
                         />
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='icon'
-                          className='h-7 w-7 shrink-0'
-                          onClick={() => handleRemoveCondition(bindingIndex, conditionIndex)}
-                        >
-                          <Trash2 className='h-3 w-3' />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='h-7 w-7 shrink-0'
+                              onClick={() => handleRemoveCondition(bindingIndex, conditionIndex)}
+                            >
+                              <Trash2 className='h-3 w-3' />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{removeLabel}</TooltipContent>
+                        </Tooltip>
                       </div>
                     ))}
                     <Button

@@ -566,28 +566,44 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
     }
   }, [open, initialRow]);
 
+  // Track whether quota bindings have been loaded at least once per dialog open
+  // so we always persist them on save (even when disabled/empty, to clear server state).
+  // Also used to gate the hydration effect so refetches don't overwrite dirty edits.
+  const quotaBindingsLoadedRef = useRef(false);
+  // Tracks which channel ID was last hydrated, so switching rows re-hydrates
+  const quotaBindingsHydratedChannelRef = useRef<string | null>(null);
+
   // Load quota monitor bindings when editing
   useEffect(() => {
     if (isEdit && open && existingQuotaBindings) {
-      const hasAny = existingQuotaBindings.length > 0;
-      const anyEnabled = hasAny && existingQuotaBindings.some((b) => b.enabled);
-      setQuotaBindingEnabled(anyEnabled);
-      setQuotaBindingStrategy(currentRow?.quotaMultiMonitorStrategy ?? 'any');
-      setQuotaBindings(
-        existingQuotaBindings.map((b) => ({
-          usageMonitorChannelID: b.usageMonitorChannelID,
-          enabled: b.enabled,
-          triggerStatuses: b.triggerStatuses,
-          conditions: b.conditions,
-        }))
-      );
+      // Only hydrate local state on the first load per dialog open / currentRow change,
+      // not on subsequent refetches that would overwrite user edits.
+      const channelKey = currentRow?.id ?? '';
+      if (quotaBindingsHydratedChannelRef.current !== channelKey) {
+        quotaBindingsHydratedChannelRef.current = channelKey;
+        quotaBindingsLoadedRef.current = true;
+        const hasAny = existingQuotaBindings.length > 0;
+        const anyEnabled = hasAny && existingQuotaBindings.some((b) => b.enabled);
+        setQuotaBindingEnabled(anyEnabled);
+        setQuotaBindingStrategy(currentRow?.quotaMultiMonitorStrategy ?? 'any');
+        setQuotaBindings(
+          existingQuotaBindings.map((b) => ({
+            usageMonitorChannelID: b.usageMonitorChannelID,
+            enabled: b.enabled,
+            triggerStatuses: b.triggerStatuses,
+            conditions: b.conditions,
+          }))
+        );
+      }
     }
     if (!isEdit || !open) {
+      quotaBindingsLoadedRef.current = false;
+      quotaBindingsHydratedChannelRef.current = null;
       setQuotaBindingEnabled(false);
       setQuotaBindingStrategy('any');
       setQuotaBindings([]);
     }
-  }, [isEdit, open, existingQuotaBindings, currentRow?.quotaMultiMonitorStrategy]);
+  }, [isEdit, open, existingQuotaBindings, currentRow?.quotaMultiMonitorStrategy, currentRow?.id]);
 
   // Get available providers (excluding fake types)
   const availableProviders = useMemo(
@@ -1239,13 +1255,33 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           input: updateInput,
         });
 
-        // Save quota monitor bindings (edit mode only)
-        if (quotaBindingEnabled || quotaBindings.length > 0) {
+        // Save quota monitor bindings (edit mode only).
+        // Always persist when bindings have been loaded so that disabling the
+        // toggle or removing all bindings correctly clears server-side state.
+        if (isEdit && quotaBindingsLoadedRef.current) {
+          // Filter out bindings with empty monitor ID to avoid sending invalid data
+          const validBindings = quotaBindings.filter(
+            (b) => b.usageMonitorChannelID.trim() !== ''
+          );
+
+          // If enabled and any binding row has an empty monitor but has
+          // conditions/statuses configured, abort and show an error.
+          if (quotaBindingEnabled) {
+            const incompleteBinding = quotaBindings.find(
+              (b) => b.usageMonitorChannelID.trim() === '' &&
+                ((b.conditions?.length ?? 0) > 0 || (b.triggerStatuses?.length ?? 0) > 0)
+            );
+            if (incompleteBinding) {
+              toast.error(t('channels.quotaMonitorBinding.messages.emptyMonitor'));
+              return;
+            }
+          }
+
           await saveQuotaBindings.mutateAsync({
             channelID: currentRow.id,
             input: {
               strategy: quotaBindingStrategy,
-              bindings: quotaBindings.map((b) => ({
+              bindings: validBindings.map((b) => ({
                 ...b,
                 enabled: quotaBindingEnabled ? b.enabled : false,
               })),

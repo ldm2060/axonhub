@@ -2054,6 +2054,7 @@ export function useChannelQuotaMonitorBindings(channelID: string, options?: { en
       }
     },
     enabled: !!channelID && options?.enabled !== false,
+    staleTime: 5 * 60 * 1000, // 5 minutes — prevent refetch from overwriting in-progress edits
   });
 }
 
