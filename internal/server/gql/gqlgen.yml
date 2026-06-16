@@ -759,3 +759,15 @@ models:
   QuotaMonitorTemplate:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz/usage_monitor.ChannelTemplate
+  ChannelQuotaMonitorBinding:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.ChannelQuotaMonitorBindingView
+  SaveChannelQuotaMonitorBindingInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.SaveChannelQuotaMonitorBindingInput
+  SaveChannelQuotaMonitorBindingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.SaveChannelQuotaMonitorBindingsInput
+  UsageMonitorBindingSummary:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.UsageMonitorBindingSummary

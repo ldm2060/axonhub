@@ -141,14 +141,64 @@ type TestResult {
     error: String
 }
 
-extend type Query {
-    "List all usage monitor channels"
-    usageMonitorChannelsList: [UsageMonitorChannel!]!
-    "Get a single usage monitor channel by ID"
-    usageMonitorChannelById(id: ID!): UsageMonitorChannel
+# -------------------------------------------------------------------------
+# Channel Quota Monitor Binding types
+# -------------------------------------------------------------------------
+
+"Read model for a channel-to-monitor binding, enriched with monitor name"
+type ChannelQuotaMonitorBinding {
+    id: ID!
+    channelID: ID!
+    usageMonitorChannelID: ID!
+    usageMonitorName: String!
+    enabled: Boolean!
+    "Which quota statuses trigger this binding (e.g. exhausted, warning)"
+    triggerStatuses: [String!]!
+    "Structured conditions for triggering; evaluated against monitor poll data"
+    conditions: [QuotaMonitorBindingCondition!]!
+    lastTriggeredAt: Time
+    lastTriggerReason: String
 }
 
+input SaveChannelQuotaMonitorBindingInput {
+    usageMonitorChannelID: ID!
+    enabled: Boolean!
+    "Which quota statuses trigger this binding"
+    triggerStatuses: [String!]
+    "Structured conditions for triggering"
+    conditions: [QuotaMonitorBindingConditionInput!]
+}
+
+input SaveChannelQuotaMonitorBindingsInput {
+    "Aggregation strategy: any (default) or all"
+    strategy: String!
+    bindings: [SaveChannelQuotaMonitorBindingInput!]!
+}
+
+# -------------------------------------------------------------------------
+# Usage Monitor Binding Summary (for monitor detail page)
+# -------------------------------------------------------------------------
+
+"Summary of one channel bound to a usage monitor"
+type UsageMonitorBindingSummary {
+    channelID: ID!
+    channelName: String!
+    usageMonitorChannelID: ID!
+    "Aggregation strategy from the channel"
+    strategy: String!
+    enabled: Boolean!
+    triggerStatuses: [String!]!
+    conditions: [QuotaMonitorBindingCondition!]!
+    "Whether the binding currently matches (trigger fires)"
+    matched: Boolean!
+    "Human-readable reason for the matched state"
+    reason: String!
+}
+
+# -------------------------------------------------------------------------
 # Quota Monitor Template - pre-configured provider templates
+# -------------------------------------------------------------------------
+
 type QuotaMonitorTemplate {
   providerType: String!
   name: String!
@@ -174,10 +224,26 @@ extend type UsageMonitorChannel {
   displayFields: [DisplayField!]! @goField(forceResolver: true)
 }
 
+# -------------------------------------------------------------------------
+# Queries
+# -------------------------------------------------------------------------
+
 extend type Query {
-  "List all available quota monitor templates"
-  quotaMonitorTemplates: [QuotaMonitorTemplate!]!
+    "List all usage monitor channels"
+    usageMonitorChannelsList: [UsageMonitorChannel!]!
+    "Get a single usage monitor channel by ID"
+    usageMonitorChannelById(id: ID!): UsageMonitorChannel
+    "List all available quota monitor templates"
+    quotaMonitorTemplates: [QuotaMonitorTemplate!]!
+    "List all active quota monitor bindings for a channel"
+    channelQuotaMonitorBindings(channelID: ID!): [ChannelQuotaMonitorBinding!]!
+    "List all binding summaries across all channels and monitors"
+    usageMonitorBindingSummaries: [UsageMonitorBindingSummary!]!
 }
+
+# -------------------------------------------------------------------------
+# Mutations
+# -------------------------------------------------------------------------
 
 extend type Mutation {
     "Create a new usage monitor channel"
@@ -190,4 +256,6 @@ extend type Mutation {
     testUsageMonitorChannel(input: TestUsageMonitorChannelInput!): TestResult!
     "Force refresh a single channel"
     refreshUsageMonitorChannel(id: ID!): UsageMonitorChannel!
+    "Save channel quota monitor bindings (replaces all active bindings for the channel) and evaluate"
+    saveChannelQuotaMonitorBindings(channelID: ID!, input: SaveChannelQuotaMonitorBindingsInput!): [ChannelQuotaMonitorBinding!]!
 }

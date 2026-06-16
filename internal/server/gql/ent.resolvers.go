@@ -260,17 +260,17 @@ func (r *channelProbeResolver) ChannelID(ctx context.Context, obj *ent.ChannelPr
 
 // ID is the resolver for the id field.
 func (r *channelUsageMonitorBindingResolver) ID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return &objects.GUID{Type: ent.TypeChannelUsageMonitorBinding, ID: obj.ID}, nil
 }
 
 // ChannelID is the resolver for the channelID field.
 func (r *channelUsageMonitorBindingResolver) ChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: ChannelID - channelID"))
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
 }
 
 // UsageMonitorChannelID is the resolver for the usageMonitorChannelID field.
 func (r *channelUsageMonitorBindingResolver) UsageMonitorChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
-	panic(fmt.Errorf("not implemented: UsageMonitorChannelID - usageMonitorChannelID"))
+	return &objects.GUID{Type: ent.TypeUsageMonitorChannel, ID: obj.UsageMonitorChannelID}, nil
 }
 
 // ID is the resolver for the id field.
