@@ -12,15 +12,42 @@ import (
 )
 
 // quotaMonitorBindingRuleInput holds the data needed to evaluate a single
-
-// quotaMonitorBindingRuleInput holds the data needed to evaluate a single
 // binding rule against a monitor's current state.
+//
+// The evaluator internally flattens ParsedFields + QuotaLimits and merges
+// LastPollData so callers do not need to pre-flatten. Merge precedence:
+// ParsedFields wins over LastPollData when both contain the same key, because
+// ParsedFields represents the authoritative parsed state of the monitor.
 type quotaMonitorBindingRuleInput struct {
-	// Status is the monitor's current quota status (e.g. "available", "warning", "exhausted").
+	// MonitorName is the human-readable name of the quota monitor, used in
+	// reason output (e.g. "monitor-a: status exhausted").
+	MonitorName string
+	// QuotaStatus is the monitor's current quota status (e.g. "available",
+	// "warning", "exhausted").
+	QuotaStatus string
+	// TriggerStatuses holds the statuses that should trigger this binding.
+	TriggerStatuses []string
+	// Conditions holds the field-based conditions for this binding.
+	Conditions []objects.QuotaMonitorBindingCondition
+	// ParsedFields is the authoritative parsed field map from the monitor.
+	ParsedFields map[string]any
+	// LastPollData contains the raw last-poll fields; merged into the
+	// flattened field map but does NOT override ParsedFields on key collision.
+	LastPollData map[string]any
+	// QuotaLimits holds the quota limit entries; the evaluator computes
+	// maxUsageRatio from these internally.
+	QuotaLimits []map[string]any
+
+	// --- Internal/backward-compatible fields below ---
+	// Status is the older alias for QuotaStatus. If QuotaStatus is empty,
+	// Status is used as a fallback so existing callers continue to work.
 	Status string
-	// Rule holds the trigger statuses and conditions for this binding.
+	// Rule holds trigger statuses and conditions in the legacy nested form.
+	// If TriggerStatuses is nil, Rule.TriggerStatuses is used. Similarly for
+	// Conditions. This keeps older call-sites functional.
 	Rule quotaMonitorBindingRule
-	// Fields is the flattened field map produced by flattenQuotaMonitorFields.
+	// Fields is a pre-flattened field map. If ParsedFields is nil, Fields is
+	// used directly as the field map (no flattening occurs).
 	Fields map[string]any
 }
 
@@ -36,6 +63,9 @@ type quotaMonitorBindingRuleResult struct {
 	Effective bool
 	// Matched is true when the rule matched (status OR condition hit).
 	Matched bool
+	// MatchedField is the field name that caused the condition match, or empty
+	// if the match was due to a status trigger or no match occurred.
+	MatchedField string
 	// Reason describes why the rule matched (human-readable).
 	Reason string
 	// Diagnostics contains non-fatal issues encountered during evaluation
@@ -51,28 +81,70 @@ type quotaMonitorBindingRuleResult struct {
 //   - Multiple field conditions are OR-ed: any one matching is sufficient.
 //   - Empty trigger statuses + empty conditions => Effective=false, Matched=false.
 //   - Valid statuses are trimmed; empty/whitespace-only entries are ignored.
+//
+// The function internally flattens ParsedFields + QuotaLimits and merges
+// LastPollData, so callers do not need to pre-flatten. When both ParsedFields
+// and LastPollData contain the same key, ParsedFields wins.
 func evaluateQuotaMonitorBindingRule(input quotaMonitorBindingRuleInput) quotaMonitorBindingRuleResult {
 	var result quotaMonitorBindingRuleResult
 
+	// Resolve status: prefer QuotaStatus, fall back to Status.
+	status := input.QuotaStatus
+	if status == "" {
+		status = input.Status
+	}
+
+	// Resolve trigger statuses: prefer top-level, fall back to Rule.
+	triggerStatuses := input.TriggerStatuses
+	if triggerStatuses == nil {
+		triggerStatuses = input.Rule.TriggerStatuses
+	}
+
+	// Resolve conditions: prefer top-level, fall back to Rule.
+	conditions := input.Conditions
+	if conditions == nil {
+		conditions = input.Rule.Conditions
+	}
+
+	// Resolve fields: if ParsedFields is provided, flatten internally.
+	// Otherwise, use the pre-flattened Fields map as-is.
+	fields := input.Fields
+	if input.ParsedFields != nil {
+		fields = buildEvalFields(input.ParsedFields, input.QuotaLimits, input.LastPollData)
+	}
+
+	// Monitor name prefix for reason output.
+	namePrefix := input.MonitorName
+	if namePrefix != "" {
+		namePrefix = namePrefix + ": "
+	}
+
 	// Check status match
-	statusMatched, statusReason := matchTriggerStatus(strings.TrimSpace(input.Status), input.Rule.TriggerStatuses)
+	statusMatched, statusReason := matchTriggerStatus(strings.TrimSpace(status), triggerStatuses)
+	if statusMatched {
+		statusReason = namePrefix + statusReason
+	}
 
 	// Check condition matches
 	var condMatched bool
 	var condReasons []string
-	for _, cond := range input.Rule.Conditions {
-		matched, diag := compareQuotaBindingCondition(cond, input.Fields[cond.Field])
+	for _, cond := range conditions {
+		matched, diag := compareQuotaBindingCondition(cond, fields[cond.Field])
 		if matched {
 			condMatched = true
-			condReasons = append(condReasons, fmt.Sprintf("%s %s %s", cond.Field, string(cond.Operator), cond.Value))
+			reason := fmt.Sprintf("%s%s %s %s", namePrefix, cond.Field, string(cond.Operator), cond.Value)
+			condReasons = append(condReasons, reason)
+			if result.MatchedField == "" {
+				result.MatchedField = cond.Field
+			}
 		}
 		if diag != "" {
 			result.Diagnostics = append(result.Diagnostics, diag)
 		}
 	}
 
-	hasStatuses := hasNonEmptyStatus(input.Rule.TriggerStatuses)
-	hasConditions := len(input.Rule.Conditions) > 0
+	hasStatuses := hasNonEmptyStatus(triggerStatuses)
+	hasConditions := len(conditions) > 0
 
 	result.Effective = hasStatuses || hasConditions
 	if !result.Effective {
@@ -90,6 +162,23 @@ func evaluateQuotaMonitorBindingRule(input quotaMonitorBindingRuleInput) quotaMo
 	result.Reason = strings.Join(reasons, "; ")
 
 	return result
+}
+
+// buildEvalFields constructs the flattened field map used by the evaluator.
+// It copies ParsedFields, computes maxUsageRatio from QuotaLimits, and then
+// merges LastPollData. ParsedFields wins over LastPollData on key collision
+// because ParsedFields is the authoritative parsed state of the monitor.
+func buildEvalFields(parsedFields map[string]any, quotaLimits []map[string]any, lastPollData map[string]any) map[string]any {
+	fields := flattenQuotaMonitorFields(parsedFields, quotaLimits)
+
+	// Merge LastPollData, but ParsedFields wins on collision.
+	for k, v := range lastPollData {
+		if _, exists := fields[k]; !exists {
+			fields[k] = v
+		}
+	}
+
+	return fields
 }
 
 // matchTriggerStatus checks if the given status matches any of the trigger statuses.

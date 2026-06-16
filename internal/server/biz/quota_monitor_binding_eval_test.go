@@ -15,27 +15,25 @@ import (
 
 func TestEvaluateBinding_StatusRuleMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "exhausted",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"exhausted", "warning"},
-			Conditions:      nil,
-		},
-		Fields: map[string]any{},
+		MonitorName:     "monitor-a",
+		QuotaStatus:     "exhausted",
+		TriggerStatuses: []string{"exhausted", "warning"},
+		Conditions:      nil,
+		ParsedFields:    map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective, "rule with trigger statuses should be effective")
 	assert.True(t, result.Matched, "status 'exhausted' should match trigger_statuses")
 	assert.Contains(t, result.Reason, "exhausted", "reason should include the matched status")
+	assert.Contains(t, result.Reason, "monitor-a", "reason should include the monitor name")
 }
 
 func TestEvaluateBinding_StatusRuleNoMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"exhausted", "warning"},
-			Conditions:      nil,
-		},
-		Fields: map[string]any{},
+		QuotaStatus:     "available",
+		TriggerStatuses: []string{"exhausted", "warning"},
+		Conditions:      nil,
+		ParsedFields:    map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
@@ -44,14 +42,12 @@ func TestEvaluateBinding_StatusRuleNoMatch(t *testing.T) {
 
 func TestEvaluateBinding_NumericConditionMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
-			},
+		MonitorName: "monitor-b",
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"remaining": 0.0,
 		},
 	}
@@ -59,72 +55,65 @@ func TestEvaluateBinding_NumericConditionMatch(t *testing.T) {
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "remaining <= 0 should match when remaining is 0")
 	assert.Contains(t, result.Reason, "remaining", "reason should reference the field")
+	assert.Contains(t, result.Reason, "monitor-b", "reason should include the monitor name for condition match")
+	assert.Equal(t, "remaining", result.MatchedField, "MatchedField should be the condition's field")
 }
 
 func TestEvaluateBinding_NumericConditionNoMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"remaining": 5.0,
 		},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.False(t, result.Matched, "remaining <= 0 should not match when remaining is 5")
+	assert.Empty(t, result.MatchedField, "MatchedField should be empty when no condition matches")
 }
 
 func TestEvaluateBinding_TextContainsMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "plan", Operator: objects.QuotaMonitorOperatorContains, Value: "pro"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "plan", Operator: objects.QuotaMonitorOperatorContains, Value: "pro"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"plan": "professional",
 		},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "'professional' contains 'pro'")
+	assert.Equal(t, "plan", result.MatchedField)
 }
 
 func TestEvaluateBinding_TextNotContainsMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "plan", Operator: objects.QuotaMonitorOperatorNotContains, Value: "enterprise"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "plan", Operator: objects.QuotaMonitorOperatorNotContains, Value: "enterprise"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"plan": "professional",
 		},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "'professional' does not contain 'enterprise'")
+	assert.Equal(t, "plan", result.MatchedField)
 }
 
 func TestEvaluateBinding_InvalidNumericValueDoesNotMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"remaining": "not-a-number",
 		},
 	}
@@ -136,14 +125,11 @@ func TestEvaluateBinding_InvalidNumericValueDoesNotMatch(t *testing.T) {
 
 func TestEvaluateBinding_InvalidNumericExpectedDoesNotMatch(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "abc"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "abc"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"remaining": 5.0,
 		},
 	}
@@ -155,12 +141,10 @@ func TestEvaluateBinding_InvalidNumericExpectedDoesNotMatch(t *testing.T) {
 
 func TestEvaluateBinding_EmptyRulesIneffective(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "exhausted",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{},
-			Conditions:      []objects.QuotaMonitorBindingCondition{},
-		},
-		Fields: map[string]any{},
+		QuotaStatus:     "exhausted",
+		TriggerStatuses: []string{},
+		Conditions:      []objects.QuotaMonitorBindingCondition{},
+		ParsedFields:    map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.False(t, result.Effective, "rule with empty statuses and conditions should be ineffective")
@@ -169,12 +153,8 @@ func TestEvaluateBinding_EmptyRulesIneffective(t *testing.T) {
 
 func TestEvaluateBinding_NilRulesIneffective(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "exhausted",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions:      nil,
-		},
-		Fields: map[string]any{},
+		QuotaStatus:  "exhausted",
+		ParsedFields: map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.False(t, result.Effective)
@@ -184,32 +164,31 @@ func TestEvaluateBinding_NilRulesIneffective(t *testing.T) {
 func TestEvaluateBinding_StatusAndConditionsAreOR(t *testing.T) {
 	// Status does not match but a condition does => overall match
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"exhausted"},
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
-			},
+		MonitorName:     "monitor-c",
+		QuotaStatus:     "available",
+		TriggerStatuses: []string{"exhausted"},
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
 		},
-		Fields: map[string]any{
+		ParsedFields: map[string]any{
 			"remaining": 0.0,
 		},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "status and conditions are OR; condition match should yield overall match")
+	assert.Contains(t, result.Reason, "monitor-c", "reason should include monitor name for condition match")
+	assert.Equal(t, "remaining", result.MatchedField)
 }
 
 func TestEvaluateBinding_MultipleConditionsAreOR(t *testing.T) {
 	// First condition does not match, second does => overall match
+	// Use Fields (pre-flattened) because maxUsageRatio is set directly.
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
-				{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.95"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "remaining", Operator: objects.QuotaMonitorOperatorLTE, Value: "0"},
+			{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.95"},
 		},
 		Fields: map[string]any{
 			"remaining":     10.0,
@@ -219,16 +198,15 @@ func TestEvaluateBinding_MultipleConditionsAreOR(t *testing.T) {
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "multiple conditions are OR; second match should yield overall match")
+	assert.Equal(t, "maxUsageRatio", result.MatchedField, "MatchedField should be the first condition that matched")
 }
 
 func TestEvaluateBinding_StatusTrimmed(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "  exhausted  ",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"exhausted"},
-			Conditions:      nil,
-		},
-		Fields: map[string]any{},
+		QuotaStatus:     "  exhausted  ",
+		TriggerStatuses: []string{"exhausted"},
+		Conditions:      nil,
+		ParsedFields:    map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Matched, "status should be trimmed before matching")
@@ -236,12 +214,10 @@ func TestEvaluateBinding_StatusTrimmed(t *testing.T) {
 
 func TestEvaluateBinding_TriggerStatusTrimmed(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
-		Status: "exhausted",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"  exhausted  ", " warning "},
-			Conditions:      nil,
-		},
-		Fields: map[string]any{},
+		QuotaStatus:     "exhausted",
+		TriggerStatuses: []string{"  exhausted  ", " warning "},
+		Conditions:      nil,
+		ParsedFields:    map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Matched, "trigger statuses should be trimmed before matching")
@@ -249,16 +225,110 @@ func TestEvaluateBinding_TriggerStatusTrimmed(t *testing.T) {
 
 func TestEvaluateBinding_EmptyTriggerStatusIgnored(t *testing.T) {
 	input := quotaMonitorBindingRuleInput{
+		QuotaStatus:     "exhausted",
+		TriggerStatuses: []string{"", "  ", "exhausted"},
+		Conditions:      nil,
+		ParsedFields:    map[string]any{},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Effective)
+	assert.True(t, result.Matched, "empty/whitespace-only trigger statuses should be ignored, but valid ones should match")
+}
+
+// Test that the legacy Status/Rule/Fields fields still work (backward compat).
+func TestEvaluateBinding_LegacyFieldsWork(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
 		Status: "exhausted",
 		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: []string{"", "  ", "exhausted"},
-			Conditions:      nil,
+			TriggerStatuses: []string{"exhausted"},
 		},
 		Fields: map[string]any{},
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
-	assert.True(t, result.Matched, "empty/whitespace-only trigger statuses should be ignored, but valid ones should match")
+	assert.True(t, result.Matched, "legacy Status/Rule/Fields should still work")
+}
+
+// Test that QuotaStatus takes precedence over Status.
+func TestEvaluateBinding_QuotaStatusOverridesStatus(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus:     "exhausted",
+		Status:          "available",
+		TriggerStatuses: []string{"exhausted"},
+		ParsedFields:    map[string]any{},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Matched, "QuotaStatus should take precedence over Status")
+}
+
+// Test that top-level TriggerStatuses take precedence over Rule.TriggerStatuses.
+func TestEvaluateBinding_TopLevelTriggerStatusesPrecedence(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus:     "exhausted",
+		TriggerStatuses: []string{"exhausted"},
+		Rule: quotaMonitorBindingRule{
+			TriggerStatuses: []string{"warning"},
+		},
+		ParsedFields: map[string]any{},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Matched, "top-level TriggerStatuses should take precedence over Rule.TriggerStatuses")
+}
+
+// Test internal flattening: ParsedFields + QuotaLimits + LastPollData merge.
+func TestEvaluateBinding_InternalFlattening(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.95"},
+		},
+		ParsedFields: map[string]any{
+			"status": "available",
+		},
+		QuotaLimits: []map[string]any{
+			{"type": "token", "usageRatio": 0.98, "status": "warning", "ready": true},
+		},
+		LastPollData: map[string]any{
+			"pollKey": "pollVal",
+		},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Effective)
+	assert.True(t, result.Matched, "maxUsageRatio should be computed from QuotaLimits internally")
+}
+
+// Test that ParsedFields wins over LastPollData on key collision.
+func TestEvaluateBinding_ParsedFieldsWinsOverLastPollData(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "sharedKey", Operator: objects.QuotaMonitorOperatorEQ, Value: "from-parsed"},
+		},
+		ParsedFields: map[string]any{
+			"sharedKey": "from-parsed",
+		},
+		LastPollData: map[string]any{
+			"sharedKey": "from-poll",
+		},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Matched, "ParsedFields value should be used when key collides with LastPollData")
+}
+
+// Test that LastPollData fields are available when not in ParsedFields.
+func TestEvaluateBinding_LastPollDataMerged(t *testing.T) {
+	input := quotaMonitorBindingRuleInput{
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "pollOnlyKey", Operator: objects.QuotaMonitorOperatorEQ, Value: "from-poll"},
+		},
+		ParsedFields: map[string]any{},
+		LastPollData: map[string]any{
+			"pollOnlyKey": "from-poll",
+		},
+	}
+	result := evaluateQuotaMonitorBindingRule(input)
+	assert.True(t, result.Matched, "LastPollData fields should be merged when not present in ParsedFields")
 }
 
 // ---------------------------------------------------------------------------
@@ -385,21 +455,45 @@ func TestMaxUsageRatio_VirtualFieldUsedInCondition(t *testing.T) {
 		{"type": "token", "usageRatio": 0.98, "status": "warning", "ready": true},
 	}
 	input := quotaMonitorBindingRuleInput{
-		Status: "available",
-		Rule: quotaMonitorBindingRule{
-			TriggerStatuses: nil,
-			Conditions: []objects.QuotaMonitorBindingCondition{
-				{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.95"},
-			},
+		QuotaStatus: "available",
+		Conditions: []objects.QuotaMonitorBindingCondition{
+			{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.95"},
 		},
-		Fields: flattenQuotaMonitorFields(map[string]any{
+		ParsedFields: map[string]any{
 			"quota_limits": quotaLimits,
 			"status":       "available",
-		}, quotaLimits),
+		},
+		QuotaLimits: quotaLimits,
 	}
 	result := evaluateQuotaMonitorBindingRule(input)
 	assert.True(t, result.Effective)
 	assert.True(t, result.Matched, "maxUsageRatio >= 0.95 should match when max ratio is 0.98")
+}
+
+// ---------------------------------------------------------------------------
+// buildEvalFields
+// ---------------------------------------------------------------------------
+
+func TestBuildEvalFields_ParsedFieldsWinsOverLastPollData(t *testing.T) {
+	fields := buildEvalFields(
+		map[string]any{"key": "parsed", "onlyInParsed": true},
+		nil,
+		map[string]any{"key": "poll", "onlyInPoll": true},
+	)
+	assert.Equal(t, "parsed", fields["key"], "ParsedFields should win on key collision")
+	assert.Equal(t, true, fields["onlyInParsed"], "ParsedFields-only key should be present")
+	assert.Equal(t, true, fields["onlyInPoll"], "LastPollData-only key should be present")
+}
+
+func TestBuildEvalFields_MaxUsageRatioComputed(t *testing.T) {
+	fields := buildEvalFields(
+		map[string]any{"status": "available"},
+		[]map[string]any{{"usageRatio": 0.8}},
+		nil,
+	)
+	ratio, ok := fields["maxUsageRatio"]
+	assert.True(t, ok)
+	assert.InDelta(t, 0.8, ratio, 0.001)
 }
 
 // ---------------------------------------------------------------------------
