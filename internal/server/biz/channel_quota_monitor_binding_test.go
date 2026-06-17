@@ -273,6 +273,45 @@ func TestSaveChannelQuotaMonitorBindings_FieldCondition(t *testing.T) {
 
 // TestSaveChannelQuotaMonitorBindings_DisabledBindingsDoNotDisable verifies
 // that disabled or empty bindings do not disable a channel if feasible.
+func TestSaveChannelQuotaMonitorBindings_ErrorMonitorKeepsLastQuotaBindingEffective(t *testing.T) {
+	svc, ctx := setupTestBindingService(t, "any")
+
+	ch := createTestChannelForBinding(t, svc, ctx, "ch-error-monitor", nil)
+	monitor := createTestMonitorForBinding(t, svc, ctx, "Error-Quota-Monitor", usagemonitorchannel.QuotaStatusExhausted, nil)
+
+	_, err := svc.db.UsageMonitorChannel.UpdateOneID(monitor.ID).
+		SetStatus(usagemonitorchannel.StatusError).
+		SetLastPollError("HTTP request failed").
+		SetQuotaLimits([]map[string]any{
+			{"type": "token", "usageRatio": 0.91, "status": "exhausted", "ready": false},
+		}).
+		SetLastPollData(map[string]any{
+			"remaining": 0,
+		}).
+		Save(ctx)
+	require.NoError(t, err)
+
+	err = svc.SaveChannelQuotaMonitorBindingsAndEvaluate(ctx, ch.ID, SaveChannelQuotaMonitorBindingsInput{
+		Strategy: "any",
+		Bindings: []SaveChannelQuotaMonitorBindingInput{
+			{
+				UsageMonitorChannelID: monitor.ID,
+				Enabled:               true,
+				Conditions: []objects.QuotaMonitorBindingCondition{
+					{Field: "maxUsageRatio", Operator: objects.QuotaMonitorOperatorGTE, Value: "0.8"},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	updated, err := svc.db.Channel.Get(ctx, ch.ID)
+	require.NoError(t, err)
+	assert.False(t, updated.QuotaBindingReady, "error-state monitors must still enforce preserved quota data")
+	require.NotNil(t, updated.ErrorMessage)
+	assert.Contains(t, *updated.ErrorMessage, "maxUsageRatio")
+}
+
 func TestSaveChannelQuotaMonitorBindings_DisabledBindingsDoNotDisable(t *testing.T) {
 	svc, ctx := setupTestBindingService(t, "any")
 
