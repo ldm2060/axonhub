@@ -189,11 +189,11 @@ func (r *queryResolver) getTopModelsForAPIKeys(ctx context.Context, apiKeyIDs []
 		Where(usagelog.APIKeyIDIn(apiKeyIDs...))
 
 	if input != nil {
-		if input.CreatedAtGte != nil {
-			query = query.Where(usagelog.CreatedAtGTE(*input.CreatedAtGte))
+		if input.CreatedAtGTE != nil {
+			query = query.Where(usagelog.CreatedAtGTE(*input.CreatedAtGTE))
 		}
-		if input.CreatedAtLte != nil {
-			query = query.Where(usagelog.CreatedAtLTE(*input.CreatedAtLte))
+		if input.CreatedAtLTE != nil {
+			query = query.Where(usagelog.CreatedAtLTE(*input.CreatedAtLTE))
 		}
 	}
 
