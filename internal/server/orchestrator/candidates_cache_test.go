@@ -120,7 +120,7 @@ func TestDefaultSelector_SelectModelCandidates_Cache(t *testing.T) {
 		selector.cacheMu.RUnlock()
 
 		// Update a channel's timestamp
-		updatedChannel, err := client.Channel.UpdateOneID(channels[0].ID).
+		_, err := client.Channel.UpdateOneID(channels[0].ID).
 			SetUpdatedAt(now.Add(1 * time.Hour)).
 			Save(ctx)
 		require.NoError(t, err)

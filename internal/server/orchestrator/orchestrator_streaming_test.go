@@ -867,7 +867,8 @@ func TestChatCompletionOrchestrator_Process_RPMAdmissionBlocksBeforeUpstream(t *
 			Credentials:      ch.Credentials,
 			SupportedModels:  ch.SupportedModels,
 			DefaultTestModel: ch.DefaultTestModel,
-			Status:           ch.Status,
+			Status:            ch.Status,
+			QuotaBindingReady: true,
 			Settings: &objects.ChannelSettings{
 				RateLimit: &objects.ChannelRateLimit{RPM: &rpm},
 			},
