@@ -102,12 +102,12 @@ export function UserUsageStatsSection() {
   // Compute page info from data
   const pageInfo: PageInfo = useMemo(
     () => ({
-      hasNextPage: (data?.stats.length ?? 0) === pageSize,
+      hasNextPage: page * pageSize < (data?.totalUsers ?? 0),
       hasPreviousPage: page > 1,
       startCursor: null,
       endCursor: null,
     }),
-    [data?.stats.length, page, pageSize],
+    [data?.totalUsers, page, pageSize],
   );
 
   // Columns

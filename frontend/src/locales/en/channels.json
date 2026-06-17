@@ -45,6 +45,7 @@
   "channels.status.enabled": "Enabled",
   "channels.status.disabled": "Disabled",
   "channels.status.archived": "Archived",
+  "channels.status.auto_disabled": "Auto Disabled",
   "channels.types.openai": "OpenAI",
   "channels.types.openai_responses": "OpenAI (Responses)",
   "channels.types.atlascloud": "AtlasCloud",

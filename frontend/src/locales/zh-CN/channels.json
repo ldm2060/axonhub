@@ -45,6 +45,7 @@
   "channels.status.enabled": "启用",
   "channels.status.disabled": "禁用",
   "channels.status.archived": "已归档",
+  "channels.status.auto_disabled": "自动禁用",
   "channels.types.openai": "OpenAI",
   "channels.types.openai_responses": "OpenAI (Responses)",
   "channels.types.atlascloud": "AtlasCloud",
