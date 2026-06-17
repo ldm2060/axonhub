@@ -153,6 +153,7 @@ type CreateChannelInput struct {
 	QuotaBindingReady         *bool
 	QuotaMultiMonitorStrategy *channel.QuotaMultiMonitorStrategy
 	UsageMonitorChannelIDs    []int
+	QuotaMonitorBindingIDs    []int
 }
 
 // Mutate applies the CreateChannelInput on the ChannelMutation builder.
@@ -206,6 +207,9 @@ func (i *CreateChannelInput) Mutate(m *ChannelMutation) {
 	if v := i.UsageMonitorChannelIDs; len(v) > 0 {
 		m.AddUsageMonitorChannelIDs(v...)
 	}
+	if v := i.QuotaMonitorBindingIDs; len(v) > 0 {
+		m.AddQuotaMonitorBindingIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the CreateChannelInput on the ChannelCreate builder.
@@ -257,6 +261,9 @@ type UpdateChannelInput struct {
 	ClearUsageMonitorChannels      bool
 	AddUsageMonitorChannelIDs      []int
 	RemoveUsageMonitorChannelIDs   []int
+	ClearQuotaMonitorBindings      bool
+	AddQuotaMonitorBindingIDs      []int
+	RemoveQuotaMonitorBindingIDs   []int
 }
 
 // Mutate applies the UpdateChannelInput on the ChannelMutation builder.
@@ -384,6 +391,15 @@ func (i *UpdateChannelInput) Mutate(m *ChannelMutation) {
 	if v := i.RemoveUsageMonitorChannelIDs; len(v) > 0 {
 		m.RemoveUsageMonitorChannelIDs(v...)
 	}
+	if i.ClearQuotaMonitorBindings {
+		m.ClearQuotaMonitorBindings()
+	}
+	if v := i.AddQuotaMonitorBindingIDs; len(v) > 0 {
+		m.AddQuotaMonitorBindingIDs(v...)
+	}
+	if v := i.RemoveQuotaMonitorBindingIDs; len(v) > 0 {
+		m.RemoveQuotaMonitorBindingIDs(v...)
+	}
 }
 
 // SetInput applies the change-set in the UpdateChannelInput on the ChannelUpdate builder.
@@ -478,6 +494,100 @@ func (c *ChannelOverrideTemplateUpdate) SetInput(i UpdateChannelOverrideTemplate
 
 // SetInput applies the change-set in the UpdateChannelOverrideTemplateInput on the ChannelOverrideTemplateUpdateOne builder.
 func (c *ChannelOverrideTemplateUpdateOne) SetInput(i UpdateChannelOverrideTemplateInput) *ChannelOverrideTemplateUpdateOne {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// CreateChannelUsageMonitorBindingInput represents a mutation input for creating channelusagemonitorbindings.
+type CreateChannelUsageMonitorBindingInput struct {
+	Enabled               *bool
+	TriggerStatuses       []string
+	Conditions            []objects.QuotaMonitorBindingCondition
+	LastTriggeredAt       *time.Time
+	LastTriggerReason     *string
+	ChannelID             int
+	UsageMonitorChannelID int
+}
+
+// Mutate applies the CreateChannelUsageMonitorBindingInput on the ChannelUsageMonitorBindingMutation builder.
+func (i *CreateChannelUsageMonitorBindingInput) Mutate(m *ChannelUsageMonitorBindingMutation) {
+	if v := i.Enabled; v != nil {
+		m.SetEnabled(*v)
+	}
+	if v := i.TriggerStatuses; v != nil {
+		m.SetTriggerStatuses(v)
+	}
+	if v := i.Conditions; v != nil {
+		m.SetConditions(v)
+	}
+	if v := i.LastTriggeredAt; v != nil {
+		m.SetLastTriggeredAt(*v)
+	}
+	if v := i.LastTriggerReason; v != nil {
+		m.SetLastTriggerReason(*v)
+	}
+	m.SetChannelID(i.ChannelID)
+	m.SetUsageMonitorChannelID(i.UsageMonitorChannelID)
+}
+
+// SetInput applies the change-set in the CreateChannelUsageMonitorBindingInput on the ChannelUsageMonitorBindingCreate builder.
+func (c *ChannelUsageMonitorBindingCreate) SetInput(i CreateChannelUsageMonitorBindingInput) *ChannelUsageMonitorBindingCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// UpdateChannelUsageMonitorBindingInput represents a mutation input for updating channelusagemonitorbindings.
+type UpdateChannelUsageMonitorBindingInput struct {
+	Enabled                *bool
+	TriggerStatuses        []string
+	AppendTriggerStatuses  []string
+	Conditions             []objects.QuotaMonitorBindingCondition
+	AppendConditions       []objects.QuotaMonitorBindingCondition
+	ClearLastTriggeredAt   bool
+	LastTriggeredAt        *time.Time
+	ClearLastTriggerReason bool
+	LastTriggerReason      *string
+}
+
+// Mutate applies the UpdateChannelUsageMonitorBindingInput on the ChannelUsageMonitorBindingMutation builder.
+func (i *UpdateChannelUsageMonitorBindingInput) Mutate(m *ChannelUsageMonitorBindingMutation) {
+	if v := i.Enabled; v != nil {
+		m.SetEnabled(*v)
+	}
+	if v := i.TriggerStatuses; v != nil {
+		m.SetTriggerStatuses(v)
+	}
+	if i.AppendTriggerStatuses != nil {
+		m.AppendTriggerStatuses(i.TriggerStatuses)
+	}
+	if v := i.Conditions; v != nil {
+		m.SetConditions(v)
+	}
+	if i.AppendConditions != nil {
+		m.AppendConditions(i.Conditions)
+	}
+	if i.ClearLastTriggeredAt {
+		m.ClearLastTriggeredAt()
+	}
+	if v := i.LastTriggeredAt; v != nil {
+		m.SetLastTriggeredAt(*v)
+	}
+	if i.ClearLastTriggerReason {
+		m.ClearLastTriggerReason()
+	}
+	if v := i.LastTriggerReason; v != nil {
+		m.SetLastTriggerReason(*v)
+	}
+}
+
+// SetInput applies the change-set in the UpdateChannelUsageMonitorBindingInput on the ChannelUsageMonitorBindingUpdate builder.
+func (c *ChannelUsageMonitorBindingUpdate) SetInput(i UpdateChannelUsageMonitorBindingInput) *ChannelUsageMonitorBindingUpdate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// SetInput applies the change-set in the UpdateChannelUsageMonitorBindingInput on the ChannelUsageMonitorBindingUpdateOne builder.
+func (c *ChannelUsageMonitorBindingUpdateOne) SetInput(i UpdateChannelUsageMonitorBindingInput) *ChannelUsageMonitorBindingUpdateOne {
 	i.Mutate(c.Mutation())
 	return c
 }

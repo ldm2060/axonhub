@@ -9,6 +9,7 @@ import { useUpdateUsageMonitorChannel, useRefreshUsageMonitorChannel, useSilentR
 import type { UsageMonitorChannel } from '../data/schema';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import { SharedFieldRenderer } from './shared-field-renderer';
+import { MonitorBindingSummary } from './monitor-binding-summary';
 
 function StatusBadge({ status }: { status: UsageMonitorChannel['status'] }) {
   const { t } = useTranslation();
@@ -123,6 +124,9 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
           displayFields={channel.displayFields ?? undefined}
         />
       )}
+
+      {/* Binding summary */}
+      <MonitorBindingSummary monitorID={channel.id} />
 
       {/* Footer */}
       <div className="space-y-1.5">

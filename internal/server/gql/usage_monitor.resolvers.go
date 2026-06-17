@@ -13,9 +13,25 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
 	"github.com/samber/lo"
 )
+
+// ID is the resolver for the id field.
+func (r *channelQuotaMonitorBindingResolver) ID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannelUsageMonitorBinding, ID: obj.ID}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *channelQuotaMonitorBindingResolver) ChannelID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
+}
+
+// UsageMonitorChannelID is the resolver for the usageMonitorChannelID field.
+func (r *channelQuotaMonitorBindingResolver) UsageMonitorChannelID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUsageMonitorChannel, ID: obj.UsageMonitorChannelID}, nil
+}
 
 // CreateUsageMonitorChannel is the resolver for the createUsageMonitorChannel field.
 func (r *mutationResolver) CreateUsageMonitorChannel(ctx context.Context, input usage_monitor.CreateUsageMonitorChannelInput) (*ent.UsageMonitorChannel, error) {
@@ -43,6 +59,22 @@ func (r *mutationResolver) TestUsageMonitorChannel(ctx context.Context, input us
 // RefreshUsageMonitorChannel is the resolver for the refreshUsageMonitorChannel field.
 func (r *mutationResolver) RefreshUsageMonitorChannel(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error) {
 	return r.usageMonitorService.RefreshChannel(ctx, id.ID)
+}
+
+// SaveChannelQuotaMonitorBindings is the resolver for the saveChannelQuotaMonitorBindings field.
+func (r *mutationResolver) SaveChannelQuotaMonitorBindings(ctx context.Context, channelID objects.GUID, input biz.SaveChannelQuotaMonitorBindingsInput) ([]*biz.ChannelQuotaMonitorBindingView, error) {
+	if err := r.usageMonitorService.SaveChannelQuotaMonitorBindingsAndEvaluate(ctx, channelID.ID, input); err != nil {
+		return nil, err
+	}
+	views, err := r.usageMonitorService.ListChannelQuotaMonitorBindings(ctx, channelID.ID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*biz.ChannelQuotaMonitorBindingView, len(views))
+	for i := range views {
+		result[i] = &views[i]
+	}
+	return result, nil
 }
 
 // Value is the resolver for the value field.
@@ -83,6 +115,32 @@ func (r *queryResolver) QuotaMonitorTemplates(ctx context.Context) ([]*usage_mon
 	return result, nil
 }
 
+// ChannelQuotaMonitorBindings is the resolver for the channelQuotaMonitorBindings field.
+func (r *queryResolver) ChannelQuotaMonitorBindings(ctx context.Context, channelID objects.GUID) ([]*biz.ChannelQuotaMonitorBindingView, error) {
+	views, err := r.usageMonitorService.ListChannelQuotaMonitorBindings(ctx, channelID.ID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*biz.ChannelQuotaMonitorBindingView, len(views))
+	for i := range views {
+		result[i] = &views[i]
+	}
+	return result, nil
+}
+
+// UsageMonitorBindingSummaries is the resolver for the usageMonitorBindingSummaries field.
+func (r *queryResolver) UsageMonitorBindingSummaries(ctx context.Context) ([]*biz.UsageMonitorBindingSummary, error) {
+	summaries, err := r.usageMonitorService.ListUsageMonitorBindingSummaries(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*biz.UsageMonitorBindingSummary, len(summaries))
+	for i := range summaries {
+		result[i] = &summaries[i]
+	}
+	return result, nil
+}
+
 // APIMethod is the resolver for the apiMethod field.
 func (r *quotaMonitorTemplateResolver) APIMethod(ctx context.Context, obj *usage_monitor.ChannelTemplate) (usagemonitorchannel.APIMethod, error) {
 	return usagemonitorchannel.APIMethod(obj.ApiMethod), nil
@@ -93,15 +151,19 @@ func (r *quotaMonitorTemplateResolver) Fields(ctx context.Context, obj *usage_mo
 	vars := obj.Variables
 	result := make([]*usage_monitor.FieldConfig, len(vars))
 	for i, v := range vars {
-		result[i] = &usage_monitor.FieldConfig{
-			Key:          v.Key,
-			Path:         v.Path,
-			Type:         v.Type,
-			GroupIndex:   v.GroupIndex,
-			Label:        obj.DisplayFields[i].Label,
-			Format:       obj.DisplayFields[i].Format,
-			DisplayOrder: obj.DisplayFields[i].DisplayOrder,
+		fc := &usage_monitor.FieldConfig{
+			Key:        v.Key,
+			Path:       v.Path,
+			Type:       v.Type,
+			GroupIndex: v.GroupIndex,
 		}
+		// DisplayFields may be shorter than Variables; guard against out-of-bounds.
+		if i < len(obj.DisplayFields) {
+			fc.Label = obj.DisplayFields[i].Label
+			fc.Format = obj.DisplayFields[i].Format
+			fc.DisplayOrder = obj.DisplayFields[i].DisplayOrder
+		}
+		result[i] = fc
 	}
 	return result, nil
 }
@@ -152,6 +214,16 @@ func (r *quotaMonitorTemplateResolver) DisplayFields(ctx context.Context, obj *u
 		}
 	}
 	return result, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *usageMonitorBindingSummaryResolver) ChannelID(ctx context.Context, obj *biz.UsageMonitorBindingSummary) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
+}
+
+// UsageMonitorChannelID is the resolver for the usageMonitorChannelID field.
+func (r *usageMonitorBindingSummaryResolver) UsageMonitorChannelID(ctx context.Context, obj *biz.UsageMonitorBindingSummary) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUsageMonitorChannel, ID: obj.UsageMonitorChannelID}, nil
 }
 
 // APIHeadersString is the resolver for the apiHeadersString field.
@@ -445,12 +517,22 @@ func (r *updateUsageMonitorChannelInputResolver) Status(ctx context.Context, obj
 	return nil
 }
 
+// ChannelQuotaMonitorBinding returns ChannelQuotaMonitorBindingResolver implementation.
+func (r *Resolver) ChannelQuotaMonitorBinding() ChannelQuotaMonitorBindingResolver {
+	return &channelQuotaMonitorBindingResolver{r}
+}
+
 // ParsedFieldValue returns ParsedFieldValueResolver implementation.
 func (r *Resolver) ParsedFieldValue() ParsedFieldValueResolver { return &parsedFieldValueResolver{r} }
 
 // QuotaMonitorTemplate returns QuotaMonitorTemplateResolver implementation.
 func (r *Resolver) QuotaMonitorTemplate() QuotaMonitorTemplateResolver {
 	return &quotaMonitorTemplateResolver{r}
+}
+
+// UsageMonitorBindingSummary returns UsageMonitorBindingSummaryResolver implementation.
+func (r *Resolver) UsageMonitorBindingSummary() UsageMonitorBindingSummaryResolver {
+	return &usageMonitorBindingSummaryResolver{r}
 }
 
 // CreateUsageMonitorChannelInput returns CreateUsageMonitorChannelInputResolver implementation.
@@ -468,8 +550,10 @@ func (r *Resolver) UpdateUsageMonitorChannelInput() UpdateUsageMonitorChannelInp
 	return &updateUsageMonitorChannelInputResolver{r}
 }
 
+type channelQuotaMonitorBindingResolver struct{ *Resolver }
 type parsedFieldValueResolver struct{ *Resolver }
 type quotaMonitorTemplateResolver struct{ *Resolver }
+type usageMonitorBindingSummaryResolver struct{ *Resolver }
 type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }

@@ -36,6 +36,8 @@ import {
   useAllChannelTags,
   useChannelDisabledAPIKeys,
   useSyncChannelModels,
+  useChannelQuotaMonitorBindings,
+  useSaveChannelQuotaMonitorBindings,
 } from '../data/channels';
 import { claudecodeOAuthExchange, claudecodeOAuthStart } from '../data/claudecode';
 import { codexDecodeAuthJSON, codexOAuthExchange, codexOAuthStart } from '../data/codex';
@@ -54,7 +56,7 @@ import {
   getApiFormatsForProvider,
   getChannelTypeForApiFormat,
 } from '../data/config_providers';
-import { Channel, ChannelType, ApiFormat, RetryableErrorPattern, createChannelInputSchema, updateChannelInputSchema } from '../data/schema';
+import { Channel, ChannelType, ApiFormat, RetryableErrorPattern, createChannelInputSchema, updateChannelInputSchema, SaveChannelQuotaMonitorBindingInput } from '../data/schema';
 import { ProxyConfig, useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
@@ -63,6 +65,7 @@ import { CopilotDeviceFlow } from './copilot-device-flow';
 import { ManualModelBadge } from './manual-model-badge';
 import { ChannelClientRestriction } from './channel-client-restriction';
 import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
+import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
 
 interface Props {
   currentRow?: Channel;
@@ -389,6 +392,15 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
     formatRetryableErrorPatterns(initialRow?.settings?.retryableErrorPatterns)
   );
 
+  // Quota monitor binding state (edit mode only)
+  const saveQuotaBindings = useSaveChannelQuotaMonitorBindings();
+  const { data: existingQuotaBindings } = useChannelQuotaMonitorBindings(currentRow?.id ?? '', { enabled: isEdit && open });
+  const [quotaBindingEnabled, setQuotaBindingEnabled] = useState(false);
+  const [quotaBindingStrategy, setQuotaBindingStrategy] = useState<'any' | 'all'>(
+    currentRow?.quotaMultiMonitorStrategy ?? 'any'
+  );
+  const [quotaBindings, setQuotaBindings] = useState<SaveChannelQuotaMonitorBindingInput[]>([]);
+
   // Memoized proxy config for OAuth exchange
   const proxyConfig: ProxyConfig | undefined = useMemo(() => {
     if (proxyType === ProxyType.URL && proxyUrl) {
@@ -553,6 +565,45 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       setManualModels(initialRow.manualModels || []);
     }
   }, [open, initialRow]);
+
+  // Track whether quota bindings have been loaded at least once per dialog open
+  // so we always persist them on save (even when disabled/empty, to clear server state).
+  // Also used to gate the hydration effect so refetches don't overwrite dirty edits.
+  const quotaBindingsLoadedRef = useRef(false);
+  // Tracks which channel ID was last hydrated, so switching rows re-hydrates
+  const quotaBindingsHydratedChannelRef = useRef<string | null>(null);
+
+  // Load quota monitor bindings when editing
+  useEffect(() => {
+    if (isEdit && open && existingQuotaBindings) {
+      // Only hydrate local state on the first load per dialog open / currentRow change,
+      // not on subsequent refetches that would overwrite user edits.
+      const channelKey = currentRow?.id ?? '';
+      if (quotaBindingsHydratedChannelRef.current !== channelKey) {
+        quotaBindingsHydratedChannelRef.current = channelKey;
+        quotaBindingsLoadedRef.current = true;
+        const hasAny = existingQuotaBindings.length > 0;
+        const anyEnabled = hasAny && existingQuotaBindings.some((b) => b.enabled);
+        setQuotaBindingEnabled(anyEnabled);
+        setQuotaBindingStrategy(currentRow?.quotaMultiMonitorStrategy ?? 'any');
+        setQuotaBindings(
+          existingQuotaBindings.map((b) => ({
+            usageMonitorChannelID: b.usageMonitorChannelID,
+            enabled: b.enabled,
+            triggerStatuses: b.triggerStatuses,
+            conditions: b.conditions,
+          }))
+        );
+      }
+    }
+    if (!isEdit || !open) {
+      quotaBindingsLoadedRef.current = false;
+      quotaBindingsHydratedChannelRef.current = null;
+      setQuotaBindingEnabled(false);
+      setQuotaBindingStrategy('any');
+      setQuotaBindings([]);
+    }
+  }, [isEdit, open, existingQuotaBindings, currentRow?.quotaMultiMonitorStrategy, currentRow?.id]);
 
   // Get available providers (excluding fake types)
   const availableProviders = useMemo(
@@ -1196,10 +1247,47 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           delete updateInput.credentials;
         }
 
+        // Include quota monitor strategy in the channel update
+        updateInput.quotaMultiMonitorStrategy = quotaBindingEnabled ? quotaBindingStrategy : null;
+
         await updateChannel.mutateAsync({
           id: currentRow.id,
           input: updateInput,
         });
+
+        // Save quota monitor bindings (edit mode only).
+        // Always persist when bindings have been loaded so that disabling the
+        // toggle or removing all bindings correctly clears server-side state.
+        if (isEdit && quotaBindingsLoadedRef.current) {
+          // Filter out bindings with empty monitor ID to avoid sending invalid data
+          const validBindings = quotaBindings.filter(
+            (b) => b.usageMonitorChannelID.trim() !== ''
+          );
+
+          // If enabled and any binding row has an empty monitor but has
+          // conditions/statuses configured, abort and show an error.
+          if (quotaBindingEnabled) {
+            const incompleteBinding = quotaBindings.find(
+              (b) => b.usageMonitorChannelID.trim() === '' &&
+                ((b.conditions?.length ?? 0) > 0 || (b.triggerStatuses?.length ?? 0) > 0)
+            );
+            if (incompleteBinding) {
+              toast.error(t('channels.quotaMonitorBinding.messages.emptyMonitor'));
+              return;
+            }
+          }
+
+          await saveQuotaBindings.mutateAsync({
+            channelID: currentRow.id,
+            input: {
+              strategy: quotaBindingStrategy,
+              bindings: validBindings.map((b) => ({
+                ...b,
+                enabled: quotaBindingEnabled ? b.enabled : false,
+              })),
+            },
+          });
+        }
       } else {
         const proxyConfig = {
           type: proxyType as 'disabled' | 'environment' | 'url',
@@ -2869,6 +2957,23 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           />
                         </div>
                       </div>
+
+                      {/* Quota Monitor Binding (edit mode only) */}
+                      {isEdit && (
+                        <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                          <div className='pt-2 md:col-span-2' />
+                          <div className='md:col-span-6'>
+                            <ChannelQuotaMonitorBinding
+                              enabled={quotaBindingEnabled}
+                              strategy={quotaBindingStrategy}
+                              bindings={quotaBindings}
+                              onEnabledChange={setQuotaBindingEnabled}
+                              onStrategyChange={setQuotaBindingStrategy}
+                              onBindingsChange={setQuotaBindings}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </form>

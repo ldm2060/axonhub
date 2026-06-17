@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -100,34 +101,35 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			apikey.Table:                   apikey.ValidColumn,
-			apikeyprofiletemplate.Table:    apikeyprofiletemplate.ValidColumn,
-			channel.Table:                  channel.ValidColumn,
-			channelmodelprice.Table:        channelmodelprice.ValidColumn,
-			channelmodelpriceversion.Table: channelmodelpriceversion.ValidColumn,
-			channeloverridetemplate.Table:  channeloverridetemplate.ValidColumn,
-			channelprobe.Table:             channelprobe.ValidColumn,
-			datastorage.Table:              datastorage.ValidColumn,
-			emailtoken.Table:               emailtoken.ValidColumn,
-			model.Table:                    model.ValidColumn,
-			oidcidentity.Table:             oidcidentity.ValidColumn,
-			project.Table:                  project.ValidColumn,
-			prompt.Table:                   prompt.ValidColumn,
-			promptprotectionrule.Table:     promptprotectionrule.ValidColumn,
-			providerquotastatus.Table:      providerquotastatus.ValidColumn,
-			publishrequest.Table:           publishrequest.ValidColumn,
-			request.Table:                  request.ValidColumn,
-			requestexecution.Table:         requestexecution.ValidColumn,
-			role.Table:                     role.ValidColumn,
-			system.Table:                   system.ValidColumn,
-			thread.Table:                   thread.ValidColumn,
-			trace.Table:                    trace.ValidColumn,
-			usagelog.Table:                 usagelog.ValidColumn,
-			usagemonitorchannel.Table:      usagemonitorchannel.ValidColumn,
-			user.Table:                     user.ValidColumn,
-			userproject.Table:              userproject.ValidColumn,
-			userrole.Table:                 userrole.ValidColumn,
-			userusagestats.Table:           userusagestats.ValidColumn,
+			apikey.Table:                     apikey.ValidColumn,
+			apikeyprofiletemplate.Table:      apikeyprofiletemplate.ValidColumn,
+			channel.Table:                    channel.ValidColumn,
+			channelmodelprice.Table:          channelmodelprice.ValidColumn,
+			channelmodelpriceversion.Table:   channelmodelpriceversion.ValidColumn,
+			channeloverridetemplate.Table:    channeloverridetemplate.ValidColumn,
+			channelprobe.Table:               channelprobe.ValidColumn,
+			channelusagemonitorbinding.Table: channelusagemonitorbinding.ValidColumn,
+			datastorage.Table:                datastorage.ValidColumn,
+			emailtoken.Table:                 emailtoken.ValidColumn,
+			model.Table:                      model.ValidColumn,
+			oidcidentity.Table:               oidcidentity.ValidColumn,
+			project.Table:                    project.ValidColumn,
+			prompt.Table:                     prompt.ValidColumn,
+			promptprotectionrule.Table:       promptprotectionrule.ValidColumn,
+			providerquotastatus.Table:        providerquotastatus.ValidColumn,
+			publishrequest.Table:             publishrequest.ValidColumn,
+			request.Table:                    request.ValidColumn,
+			requestexecution.Table:           requestexecution.ValidColumn,
+			role.Table:                       role.ValidColumn,
+			system.Table:                     system.ValidColumn,
+			thread.Table:                     thread.ValidColumn,
+			trace.Table:                      trace.ValidColumn,
+			usagelog.Table:                   usagelog.ValidColumn,
+			usagemonitorchannel.Table:        usagemonitorchannel.ValidColumn,
+			user.Table:                       user.ValidColumn,
+			userproject.Table:                userproject.ValidColumn,
+			userrole.Table:                   userrole.ValidColumn,
+			userusagestats.Table:             userusagestats.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

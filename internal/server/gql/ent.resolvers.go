@@ -259,6 +259,21 @@ func (r *channelProbeResolver) ChannelID(ctx context.Context, obj *ent.ChannelPr
 }
 
 // ID is the resolver for the id field.
+func (r *channelUsageMonitorBindingResolver) ID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannelUsageMonitorBinding, ID: obj.ID}, nil
+}
+
+// ChannelID is the resolver for the channelID field.
+func (r *channelUsageMonitorBindingResolver) ChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeChannel, ID: obj.ChannelID}, nil
+}
+
+// UsageMonitorChannelID is the resolver for the usageMonitorChannelID field.
+func (r *channelUsageMonitorBindingResolver) UsageMonitorChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error) {
+	return &objects.GUID{Type: ent.TypeUsageMonitorChannel, ID: obj.UsageMonitorChannelID}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *dataStorageResolver) ID(ctx context.Context, obj *ent.DataStorage) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeDataStorage,
@@ -487,6 +502,11 @@ func (r *queryResolver) ChannelOverrideTemplates(ctx context.Context, after *ent
 		ent.WithChannelOverrideTemplateOrder(orderBy),
 		ent.WithChannelOverrideTemplateFilter(where.Filter),
 	)
+}
+
+// ChannelUsageMonitorBindings is the resolver for the channelUsageMonitorBindings field.
+func (r *queryResolver) ChannelUsageMonitorBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelUsageMonitorBindingOrder, where *ent.ChannelUsageMonitorBindingWhereInput) (*ent.ChannelUsageMonitorBindingConnection, error) {
+	panic(fmt.Errorf("not implemented: ChannelUsageMonitorBindings - channelUsageMonitorBindings"))
 }
 
 // DataStorages is the resolver for the dataStorages field.
@@ -1142,6 +1162,11 @@ func (r *Resolver) ChannelOverrideTemplate() ChannelOverrideTemplateResolver {
 // ChannelProbe returns ChannelProbeResolver implementation.
 func (r *Resolver) ChannelProbe() ChannelProbeResolver { return &channelProbeResolver{r} }
 
+// ChannelUsageMonitorBinding returns ChannelUsageMonitorBindingResolver implementation.
+func (r *Resolver) ChannelUsageMonitorBinding() ChannelUsageMonitorBindingResolver {
+	return &channelUsageMonitorBindingResolver{r}
+}
+
 // DataStorage returns DataStorageResolver implementation.
 func (r *Resolver) DataStorage() DataStorageResolver { return &dataStorageResolver{r} }
 
@@ -1221,6 +1246,7 @@ type channelModelPriceResolver struct{ *Resolver }
 type channelModelPriceVersionResolver struct{ *Resolver }
 type channelOverrideTemplateResolver struct{ *Resolver }
 type channelProbeResolver struct{ *Resolver }
+type channelUsageMonitorBindingResolver struct{ *Resolver }
 type dataStorageResolver struct{ *Resolver }
 type emailTokenResolver struct{ *Resolver }
 type modelResolver struct{ *Resolver }

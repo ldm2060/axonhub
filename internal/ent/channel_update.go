@@ -15,6 +15,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/request"
@@ -573,6 +574,21 @@ func (_u *ChannelUpdate) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *Cha
 	return _u.AddUsageMonitorChannelIDs(ids...)
 }
 
+// AddQuotaMonitorBindingIDs adds the "quota_monitor_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_u *ChannelUpdate) AddQuotaMonitorBindingIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.AddQuotaMonitorBindingIDs(ids...)
+	return _u
+}
+
+// AddQuotaMonitorBindings adds the "quota_monitor_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *ChannelUpdate) AddQuotaMonitorBindings(v ...*ChannelUsageMonitorBinding) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddQuotaMonitorBindingIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdate) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -708,6 +724,27 @@ func (_u *ChannelUpdate) RemoveUsageMonitorChannels(v ...*UsageMonitorChannel) *
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageMonitorChannelIDs(ids...)
+}
+
+// ClearQuotaMonitorBindings clears all "quota_monitor_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *ChannelUpdate) ClearQuotaMonitorBindings() *ChannelUpdate {
+	_u.mutation.ClearQuotaMonitorBindings()
+	return _u
+}
+
+// RemoveQuotaMonitorBindingIDs removes the "quota_monitor_bindings" edge to ChannelUsageMonitorBinding entities by IDs.
+func (_u *ChannelUpdate) RemoveQuotaMonitorBindingIDs(ids ...int) *ChannelUpdate {
+	_u.mutation.RemoveQuotaMonitorBindingIDs(ids...)
+	return _u
+}
+
+// RemoveQuotaMonitorBindings removes "quota_monitor_bindings" edges to ChannelUsageMonitorBinding entities.
+func (_u *ChannelUpdate) RemoveQuotaMonitorBindings(v ...*ChannelUsageMonitorBinding) *ChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveQuotaMonitorBindingIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1248,6 +1285,51 @@ func (_u *ChannelUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.QuotaMonitorBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedQuotaMonitorBindingsIDs(); len(nodes) > 0 && !_u.mutation.QuotaMonitorBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.QuotaMonitorBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1812,6 +1894,21 @@ func (_u *ChannelUpdateOne) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *
 	return _u.AddUsageMonitorChannelIDs(ids...)
 }
 
+// AddQuotaMonitorBindingIDs adds the "quota_monitor_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_u *ChannelUpdateOne) AddQuotaMonitorBindingIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.AddQuotaMonitorBindingIDs(ids...)
+	return _u
+}
+
+// AddQuotaMonitorBindings adds the "quota_monitor_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *ChannelUpdateOne) AddQuotaMonitorBindings(v ...*ChannelUsageMonitorBinding) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddQuotaMonitorBindingIDs(ids...)
+}
+
 // Mutation returns the ChannelMutation object of the builder.
 func (_u *ChannelUpdateOne) Mutation() *ChannelMutation {
 	return _u.mutation
@@ -1947,6 +2044,27 @@ func (_u *ChannelUpdateOne) RemoveUsageMonitorChannels(v ...*UsageMonitorChannel
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveUsageMonitorChannelIDs(ids...)
+}
+
+// ClearQuotaMonitorBindings clears all "quota_monitor_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *ChannelUpdateOne) ClearQuotaMonitorBindings() *ChannelUpdateOne {
+	_u.mutation.ClearQuotaMonitorBindings()
+	return _u
+}
+
+// RemoveQuotaMonitorBindingIDs removes the "quota_monitor_bindings" edge to ChannelUsageMonitorBinding entities by IDs.
+func (_u *ChannelUpdateOne) RemoveQuotaMonitorBindingIDs(ids ...int) *ChannelUpdateOne {
+	_u.mutation.RemoveQuotaMonitorBindingIDs(ids...)
+	return _u
+}
+
+// RemoveQuotaMonitorBindings removes "quota_monitor_bindings" edges to ChannelUsageMonitorBinding entities.
+func (_u *ChannelUpdateOne) RemoveQuotaMonitorBindings(v ...*ChannelUsageMonitorBinding) *ChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveQuotaMonitorBindingIDs(ids...)
 }
 
 // Where appends a list predicates to the ChannelUpdate builder.
@@ -2517,6 +2635,51 @@ func (_u *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.QuotaMonitorBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedQuotaMonitorBindingsIDs(); len(nodes) > 0 && !_u.mutation.QuotaMonitorBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.QuotaMonitorBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -101,11 +101,13 @@ type ChannelEdges struct {
 	ProviderQuotaStatus *ProviderQuotaStatus `json:"provider_quota_status,omitempty"`
 	// UsageMonitorChannels holds the value of the usage_monitor_channels edge.
 	UsageMonitorChannels []*UsageMonitorChannel `json:"usage_monitor_channels,omitempty"`
+	// QuotaMonitorBindings holds the value of the quota_monitor_bindings edge.
+	QuotaMonitorBindings []*ChannelUsageMonitorBinding `json:"quota_monitor_bindings,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 	// totalCount holds the count of the edges above.
-	totalCount [8]map[string]int
+	totalCount [9]map[string]int
 
 	namedRequests             map[string][]*Request
 	namedExecutions           map[string][]*RequestExecution
@@ -113,6 +115,7 @@ type ChannelEdges struct {
 	namedChannelProbes        map[string][]*ChannelProbe
 	namedChannelModelPrices   map[string][]*ChannelModelPrice
 	namedUsageMonitorChannels map[string][]*UsageMonitorChannel
+	namedQuotaMonitorBindings map[string][]*ChannelUsageMonitorBinding
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -189,6 +192,15 @@ func (e ChannelEdges) UsageMonitorChannelsOrErr() ([]*UsageMonitorChannel, error
 		return e.UsageMonitorChannels, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_monitor_channels"}
+}
+
+// QuotaMonitorBindingsOrErr returns the QuotaMonitorBindings value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChannelEdges) QuotaMonitorBindingsOrErr() ([]*ChannelUsageMonitorBinding, error) {
+	if e.loadedTypes[8] {
+		return e.QuotaMonitorBindings, nil
+	}
+	return nil, &NotLoadedError{edge: "quota_monitor_bindings"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -472,6 +484,11 @@ func (_m *Channel) QueryUsageMonitorChannels() *UsageMonitorChannelQuery {
 	return NewChannelClient(_m.config).QueryUsageMonitorChannels(_m)
 }
 
+// QueryQuotaMonitorBindings queries the "quota_monitor_bindings" edge of the Channel entity.
+func (_m *Channel) QueryQuotaMonitorBindings() *ChannelUsageMonitorBindingQuery {
+	return NewChannelClient(_m.config).QueryQuotaMonitorBindings(_m)
+}
+
 // Update returns a builder for updating this Channel.
 // Note that you need to call Channel.Unwrap() before calling this method if this Channel
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -729,6 +746,30 @@ func (_m *Channel) appendNamedUsageMonitorChannels(name string, edges ...*UsageM
 		_m.Edges.namedUsageMonitorChannels[name] = []*UsageMonitorChannel{}
 	} else {
 		_m.Edges.namedUsageMonitorChannels[name] = append(_m.Edges.namedUsageMonitorChannels[name], edges...)
+	}
+}
+
+// NamedQuotaMonitorBindings returns the QuotaMonitorBindings named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *Channel) NamedQuotaMonitorBindings(name string) ([]*ChannelUsageMonitorBinding, error) {
+	if _m.Edges.namedQuotaMonitorBindings == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedQuotaMonitorBindings[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *Channel) appendNamedQuotaMonitorBindings(name string, edges ...*ChannelUsageMonitorBinding) {
+	if _m.Edges.namedQuotaMonitorBindings == nil {
+		_m.Edges.namedQuotaMonitorBindings = make(map[string][]*ChannelUsageMonitorBinding)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedQuotaMonitorBindings[name] = []*ChannelUsageMonitorBinding{}
+	} else {
+		_m.Edges.namedQuotaMonitorBindings[name] = append(_m.Edges.namedQuotaMonitorBindings[name], edges...)
 	}
 }
 

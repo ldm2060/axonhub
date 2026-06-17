@@ -54,7 +54,7 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
 
   if (isLoading) {
     return (
-      <div className='flex-1 space-y-4 p-8 pt-6'>
+      <div className='w-full space-y-4 p-8 pt-6'>
         <div className='flex items-center justify-between space-y-2'>
           <Skeleton className='h-8 w-[200px]' />
         </div>
@@ -76,7 +76,7 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
 
   if (error) {
     return (
-      <div className='flex-1 space-y-4 p-8 pt-6'>
+      <div className='w-full space-y-4 p-8 pt-6'>
         <div className='text-red-500'>
           {t('common.loadError')} {error.message}
         </div>
@@ -85,7 +85,7 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
   }
 
   return (
-    <div className='flex-1 space-y-6 p-8 pt-6'>
+    <div className='w-full space-y-6 p-8 pt-6'>
       <Header />
 
       <DashboardContent

@@ -87,11 +87,15 @@ type UsageMonitorChannelEdges struct {
 	Channel *Channel `json:"channel,omitempty"`
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// ChannelBindings holds the value of the channel_bindings edge.
+	ChannelBindings []*ChannelUsageMonitorBinding `json:"channel_bindings,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
+
+	namedChannelBindings map[string][]*ChannelUsageMonitorBinding
 }
 
 // ChannelOrErr returns the Channel value or an error if the edge
@@ -114,6 +118,15 @@ func (e UsageMonitorChannelEdges) OwnerOrErr() (*User, error) {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "owner"}
+}
+
+// ChannelBindingsOrErr returns the ChannelBindings value or an error if the edge
+// was not loaded in eager-loading.
+func (e UsageMonitorChannelEdges) ChannelBindingsOrErr() ([]*ChannelUsageMonitorBinding, error) {
+	if e.loadedTypes[2] {
+		return e.ChannelBindings, nil
+	}
+	return nil, &NotLoadedError{edge: "channel_bindings"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -365,6 +378,11 @@ func (_m *UsageMonitorChannel) QueryOwner() *UserQuery {
 	return NewUsageMonitorChannelClient(_m.config).QueryOwner(_m)
 }
 
+// QueryChannelBindings queries the "channel_bindings" edge of the UsageMonitorChannel entity.
+func (_m *UsageMonitorChannel) QueryChannelBindings() *ChannelUsageMonitorBindingQuery {
+	return NewUsageMonitorChannelClient(_m.config).QueryChannelBindings(_m)
+}
+
 // Update returns a builder for updating this UsageMonitorChannel.
 // Note that you need to call UsageMonitorChannel.Unwrap() before calling this method if this UsageMonitorChannel
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -479,6 +497,30 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString(fmt.Sprintf("%v", _m.AutoEnableThreshold))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedChannelBindings returns the ChannelBindings named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *UsageMonitorChannel) NamedChannelBindings(name string) ([]*ChannelUsageMonitorBinding, error) {
+	if _m.Edges.namedChannelBindings == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedChannelBindings[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *UsageMonitorChannel) appendNamedChannelBindings(name string, edges ...*ChannelUsageMonitorBinding) {
+	if _m.Edges.namedChannelBindings == nil {
+		_m.Edges.namedChannelBindings = make(map[string][]*ChannelUsageMonitorBinding)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedChannelBindings[name] = []*ChannelUsageMonitorBinding{}
+	} else {
+		_m.Edges.namedChannelBindings[name] = append(_m.Edges.namedChannelBindings[name], edges...)
+	}
 }
 
 // UsageMonitorChannels is a parsable slice of UsageMonitorChannel.

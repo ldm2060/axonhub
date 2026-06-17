@@ -21,6 +21,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -85,6 +86,11 @@ var channelprobeImplementors = []string{"ChannelProbe", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*ChannelProbe) IsNode() {}
+
+var channelusagemonitorbindingImplementors = []string{"ChannelUsageMonitorBinding", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*ChannelUsageMonitorBinding) IsNode() {}
 
 var datastorageImplementors = []string{"DataStorage", "Node"}
 
@@ -308,6 +314,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(channelprobe.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, channelprobeImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case channelusagemonitorbinding.Table:
+		query := c.ChannelUsageMonitorBinding.Query().
+			Where(channelusagemonitorbinding.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, channelusagemonitorbindingImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -674,6 +689,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.ChannelProbe.Query().
 			Where(channelprobe.IDIn(ids...))
 		query, err := query.CollectFields(ctx, channelprobeImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case channelusagemonitorbinding.Table:
+		query := c.ChannelUsageMonitorBinding.Query().
+			Where(channelusagemonitorbinding.IDIn(ids...))
+		query, err := query.CollectFields(ctx, channelusagemonitorbindingImplementors...)
 		if err != nil {
 			return nil, err
 		}

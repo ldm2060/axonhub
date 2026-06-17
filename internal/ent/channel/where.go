@@ -1144,6 +1144,29 @@ func HasUsageMonitorChannelsWith(preds ...predicate.UsageMonitorChannel) predica
 	})
 }
 
+// HasQuotaMonitorBindings applies the HasEdge predicate on the "quota_monitor_bindings" edge.
+func HasQuotaMonitorBindings() predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, QuotaMonitorBindingsTable, QuotaMonitorBindingsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasQuotaMonitorBindingsWith applies the HasEdge predicate on the "quota_monitor_bindings" edge with a given conditions (other predicates).
+func HasQuotaMonitorBindingsWith(preds ...predicate.ChannelUsageMonitorBinding) predicate.Channel {
+	return predicate.Channel(func(s *sql.Selector) {
+		step := newQuotaMonitorBindingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Channel) predicate.Channel {
 	return predicate.Channel(sql.AndPredicates(predicates...))

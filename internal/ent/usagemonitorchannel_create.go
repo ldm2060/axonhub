@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 )
@@ -346,6 +347,21 @@ func (_c *UsageMonitorChannelCreate) SetOwner(v *User) *UsageMonitorChannelCreat
 	return _c.SetOwnerID(v.ID)
 }
 
+// AddChannelBindingIDs adds the "channel_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_c *UsageMonitorChannelCreate) AddChannelBindingIDs(ids ...int) *UsageMonitorChannelCreate {
+	_c.mutation.AddChannelBindingIDs(ids...)
+	return _c
+}
+
+// AddChannelBindings adds the "channel_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_c *UsageMonitorChannelCreate) AddChannelBindings(v ...*ChannelUsageMonitorBinding) *UsageMonitorChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddChannelBindingIDs(ids...)
+}
+
 // Mutation returns the UsageMonitorChannelMutation object of the builder.
 func (_c *UsageMonitorChannelCreate) Mutation() *UsageMonitorChannelMutation {
 	return _c.mutation
@@ -673,6 +689,22 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_usage_monitor_channels = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ChannelBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

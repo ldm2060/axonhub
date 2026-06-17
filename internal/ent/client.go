@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -64,6 +65,8 @@ type Client struct {
 	ChannelOverrideTemplate *ChannelOverrideTemplateClient
 	// ChannelProbe is the client for interacting with the ChannelProbe builders.
 	ChannelProbe *ChannelProbeClient
+	// ChannelUsageMonitorBinding is the client for interacting with the ChannelUsageMonitorBinding builders.
+	ChannelUsageMonitorBinding *ChannelUsageMonitorBindingClient
 	// DataStorage is the client for interacting with the DataStorage builders.
 	DataStorage *DataStorageClient
 	// EmailToken is the client for interacting with the EmailToken builders.
@@ -126,6 +129,7 @@ func (c *Client) init() {
 	c.ChannelModelPriceVersion = NewChannelModelPriceVersionClient(c.config)
 	c.ChannelOverrideTemplate = NewChannelOverrideTemplateClient(c.config)
 	c.ChannelProbe = NewChannelProbeClient(c.config)
+	c.ChannelUsageMonitorBinding = NewChannelUsageMonitorBindingClient(c.config)
 	c.DataStorage = NewDataStorageClient(c.config)
 	c.EmailToken = NewEmailTokenClient(c.config)
 	c.Model = NewModelClient(c.config)
@@ -237,36 +241,37 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
-		Channel:                  NewChannelClient(cfg),
-		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
-		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
-		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
-		ChannelProbe:             NewChannelProbeClient(cfg),
-		DataStorage:              NewDataStorageClient(cfg),
-		EmailToken:               NewEmailTokenClient(cfg),
-		Model:                    NewModelClient(cfg),
-		OIDCIdentity:             NewOIDCIdentityClient(cfg),
-		Project:                  NewProjectClient(cfg),
-		Prompt:                   NewPromptClient(cfg),
-		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
-		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
-		PublishRequest:           NewPublishRequestClient(cfg),
-		Request:                  NewRequestClient(cfg),
-		RequestExecution:         NewRequestExecutionClient(cfg),
-		Role:                     NewRoleClient(cfg),
-		System:                   NewSystemClient(cfg),
-		Thread:                   NewThreadClient(cfg),
-		Trace:                    NewTraceClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		UsageMonitorChannel:      NewUsageMonitorChannelClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserProject:              NewUserProjectClient(cfg),
-		UserRole:                 NewUserRoleClient(cfg),
-		UserUsageStats:           NewUserUsageStatsClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		APIKey:                     NewAPIKeyClient(cfg),
+		APIKeyProfileTemplate:      NewAPIKeyProfileTemplateClient(cfg),
+		Channel:                    NewChannelClient(cfg),
+		ChannelModelPrice:          NewChannelModelPriceClient(cfg),
+		ChannelModelPriceVersion:   NewChannelModelPriceVersionClient(cfg),
+		ChannelOverrideTemplate:    NewChannelOverrideTemplateClient(cfg),
+		ChannelProbe:               NewChannelProbeClient(cfg),
+		ChannelUsageMonitorBinding: NewChannelUsageMonitorBindingClient(cfg),
+		DataStorage:                NewDataStorageClient(cfg),
+		EmailToken:                 NewEmailTokenClient(cfg),
+		Model:                      NewModelClient(cfg),
+		OIDCIdentity:               NewOIDCIdentityClient(cfg),
+		Project:                    NewProjectClient(cfg),
+		Prompt:                     NewPromptClient(cfg),
+		PromptProtectionRule:       NewPromptProtectionRuleClient(cfg),
+		ProviderQuotaStatus:        NewProviderQuotaStatusClient(cfg),
+		PublishRequest:             NewPublishRequestClient(cfg),
+		Request:                    NewRequestClient(cfg),
+		RequestExecution:           NewRequestExecutionClient(cfg),
+		Role:                       NewRoleClient(cfg),
+		System:                     NewSystemClient(cfg),
+		Thread:                     NewThreadClient(cfg),
+		Trace:                      NewTraceClient(cfg),
+		UsageLog:                   NewUsageLogClient(cfg),
+		UsageMonitorChannel:        NewUsageMonitorChannelClient(cfg),
+		User:                       NewUserClient(cfg),
+		UserProject:                NewUserProjectClient(cfg),
+		UserRole:                   NewUserRoleClient(cfg),
+		UserUsageStats:             NewUserUsageStatsClient(cfg),
 	}, nil
 }
 
@@ -284,36 +289,37 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                      ctx,
-		config:                   cfg,
-		APIKey:                   NewAPIKeyClient(cfg),
-		APIKeyProfileTemplate:    NewAPIKeyProfileTemplateClient(cfg),
-		Channel:                  NewChannelClient(cfg),
-		ChannelModelPrice:        NewChannelModelPriceClient(cfg),
-		ChannelModelPriceVersion: NewChannelModelPriceVersionClient(cfg),
-		ChannelOverrideTemplate:  NewChannelOverrideTemplateClient(cfg),
-		ChannelProbe:             NewChannelProbeClient(cfg),
-		DataStorage:              NewDataStorageClient(cfg),
-		EmailToken:               NewEmailTokenClient(cfg),
-		Model:                    NewModelClient(cfg),
-		OIDCIdentity:             NewOIDCIdentityClient(cfg),
-		Project:                  NewProjectClient(cfg),
-		Prompt:                   NewPromptClient(cfg),
-		PromptProtectionRule:     NewPromptProtectionRuleClient(cfg),
-		ProviderQuotaStatus:      NewProviderQuotaStatusClient(cfg),
-		PublishRequest:           NewPublishRequestClient(cfg),
-		Request:                  NewRequestClient(cfg),
-		RequestExecution:         NewRequestExecutionClient(cfg),
-		Role:                     NewRoleClient(cfg),
-		System:                   NewSystemClient(cfg),
-		Thread:                   NewThreadClient(cfg),
-		Trace:                    NewTraceClient(cfg),
-		UsageLog:                 NewUsageLogClient(cfg),
-		UsageMonitorChannel:      NewUsageMonitorChannelClient(cfg),
-		User:                     NewUserClient(cfg),
-		UserProject:              NewUserProjectClient(cfg),
-		UserRole:                 NewUserRoleClient(cfg),
-		UserUsageStats:           NewUserUsageStatsClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		APIKey:                     NewAPIKeyClient(cfg),
+		APIKeyProfileTemplate:      NewAPIKeyProfileTemplateClient(cfg),
+		Channel:                    NewChannelClient(cfg),
+		ChannelModelPrice:          NewChannelModelPriceClient(cfg),
+		ChannelModelPriceVersion:   NewChannelModelPriceVersionClient(cfg),
+		ChannelOverrideTemplate:    NewChannelOverrideTemplateClient(cfg),
+		ChannelProbe:               NewChannelProbeClient(cfg),
+		ChannelUsageMonitorBinding: NewChannelUsageMonitorBindingClient(cfg),
+		DataStorage:                NewDataStorageClient(cfg),
+		EmailToken:                 NewEmailTokenClient(cfg),
+		Model:                      NewModelClient(cfg),
+		OIDCIdentity:               NewOIDCIdentityClient(cfg),
+		Project:                    NewProjectClient(cfg),
+		Prompt:                     NewPromptClient(cfg),
+		PromptProtectionRule:       NewPromptProtectionRuleClient(cfg),
+		ProviderQuotaStatus:        NewProviderQuotaStatusClient(cfg),
+		PublishRequest:             NewPublishRequestClient(cfg),
+		Request:                    NewRequestClient(cfg),
+		RequestExecution:           NewRequestExecutionClient(cfg),
+		Role:                       NewRoleClient(cfg),
+		System:                     NewSystemClient(cfg),
+		Thread:                     NewThreadClient(cfg),
+		Trace:                      NewTraceClient(cfg),
+		UsageLog:                   NewUsageLogClient(cfg),
+		UsageMonitorChannel:        NewUsageMonitorChannelClient(cfg),
+		User:                       NewUserClient(cfg),
+		UserProject:                NewUserProjectClient(cfg),
+		UserRole:                   NewUserRoleClient(cfg),
+		UserUsageStats:             NewUserUsageStatsClient(cfg),
 	}, nil
 }
 
@@ -345,10 +351,11 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog,
-		c.UsageMonitorChannel, c.User, c.UserProject, c.UserRole, c.UserUsageStats,
+		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Model,
+		c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
+		c.ProviderQuotaStatus, c.PublishRequest, c.Request, c.RequestExecution, c.Role,
+		c.System, c.Thread, c.Trace, c.UsageLog, c.UsageMonitorChannel, c.User,
+		c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Use(hooks...)
 	}
@@ -360,10 +367,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.DataStorage, c.EmailToken, c.Model, c.OIDCIdentity, c.Project, c.Prompt,
-		c.PromptProtectionRule, c.ProviderQuotaStatus, c.PublishRequest, c.Request,
-		c.RequestExecution, c.Role, c.System, c.Thread, c.Trace, c.UsageLog,
-		c.UsageMonitorChannel, c.User, c.UserProject, c.UserRole, c.UserUsageStats,
+		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Model,
+		c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
+		c.ProviderQuotaStatus, c.PublishRequest, c.Request, c.RequestExecution, c.Role,
+		c.System, c.Thread, c.Trace, c.UsageLog, c.UsageMonitorChannel, c.User,
+		c.UserProject, c.UserRole, c.UserUsageStats,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -386,6 +394,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ChannelOverrideTemplate.mutate(ctx, m)
 	case *ChannelProbeMutation:
 		return c.ChannelProbe.mutate(ctx, m)
+	case *ChannelUsageMonitorBindingMutation:
+		return c.ChannelUsageMonitorBinding.mutate(ctx, m)
 	case *DataStorageMutation:
 		return c.DataStorage.mutate(ctx, m)
 	case *EmailTokenMutation:
@@ -996,6 +1006,22 @@ func (c *ChannelClient) QueryUsageMonitorChannels(_m *Channel) *UsageMonitorChan
 			sqlgraph.From(channel.Table, channel.FieldID, id),
 			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, channel.UsageMonitorChannelsTable, channel.UsageMonitorChannelsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryQuotaMonitorBindings queries the quota_monitor_bindings edge of a Channel.
+func (c *ChannelClient) QueryQuotaMonitorBindings(_m *Channel) *ChannelUsageMonitorBindingQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.QuotaMonitorBindingsTable, channel.QuotaMonitorBindingsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1644,6 +1670,173 @@ func (c *ChannelProbeClient) mutate(ctx context.Context, m *ChannelProbeMutation
 		return (&ChannelProbeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ChannelProbe mutation op: %q", m.Op())
+	}
+}
+
+// ChannelUsageMonitorBindingClient is a client for the ChannelUsageMonitorBinding schema.
+type ChannelUsageMonitorBindingClient struct {
+	config
+}
+
+// NewChannelUsageMonitorBindingClient returns a client for the ChannelUsageMonitorBinding from the given config.
+func NewChannelUsageMonitorBindingClient(c config) *ChannelUsageMonitorBindingClient {
+	return &ChannelUsageMonitorBindingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `channelusagemonitorbinding.Hooks(f(g(h())))`.
+func (c *ChannelUsageMonitorBindingClient) Use(hooks ...Hook) {
+	c.hooks.ChannelUsageMonitorBinding = append(c.hooks.ChannelUsageMonitorBinding, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `channelusagemonitorbinding.Intercept(f(g(h())))`.
+func (c *ChannelUsageMonitorBindingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ChannelUsageMonitorBinding = append(c.inters.ChannelUsageMonitorBinding, interceptors...)
+}
+
+// Create returns a builder for creating a ChannelUsageMonitorBinding entity.
+func (c *ChannelUsageMonitorBindingClient) Create() *ChannelUsageMonitorBindingCreate {
+	mutation := newChannelUsageMonitorBindingMutation(c.config, OpCreate)
+	return &ChannelUsageMonitorBindingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ChannelUsageMonitorBinding entities.
+func (c *ChannelUsageMonitorBindingClient) CreateBulk(builders ...*ChannelUsageMonitorBindingCreate) *ChannelUsageMonitorBindingCreateBulk {
+	return &ChannelUsageMonitorBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ChannelUsageMonitorBindingClient) MapCreateBulk(slice any, setFunc func(*ChannelUsageMonitorBindingCreate, int)) *ChannelUsageMonitorBindingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ChannelUsageMonitorBindingCreateBulk{err: fmt.Errorf("calling to ChannelUsageMonitorBindingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ChannelUsageMonitorBindingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ChannelUsageMonitorBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ChannelUsageMonitorBinding.
+func (c *ChannelUsageMonitorBindingClient) Update() *ChannelUsageMonitorBindingUpdate {
+	mutation := newChannelUsageMonitorBindingMutation(c.config, OpUpdate)
+	return &ChannelUsageMonitorBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChannelUsageMonitorBindingClient) UpdateOne(_m *ChannelUsageMonitorBinding) *ChannelUsageMonitorBindingUpdateOne {
+	mutation := newChannelUsageMonitorBindingMutation(c.config, OpUpdateOne, withChannelUsageMonitorBinding(_m))
+	return &ChannelUsageMonitorBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChannelUsageMonitorBindingClient) UpdateOneID(id int) *ChannelUsageMonitorBindingUpdateOne {
+	mutation := newChannelUsageMonitorBindingMutation(c.config, OpUpdateOne, withChannelUsageMonitorBindingID(id))
+	return &ChannelUsageMonitorBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ChannelUsageMonitorBinding.
+func (c *ChannelUsageMonitorBindingClient) Delete() *ChannelUsageMonitorBindingDelete {
+	mutation := newChannelUsageMonitorBindingMutation(c.config, OpDelete)
+	return &ChannelUsageMonitorBindingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChannelUsageMonitorBindingClient) DeleteOne(_m *ChannelUsageMonitorBinding) *ChannelUsageMonitorBindingDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ChannelUsageMonitorBindingClient) DeleteOneID(id int) *ChannelUsageMonitorBindingDeleteOne {
+	builder := c.Delete().Where(channelusagemonitorbinding.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChannelUsageMonitorBindingDeleteOne{builder}
+}
+
+// Query returns a query builder for ChannelUsageMonitorBinding.
+func (c *ChannelUsageMonitorBindingClient) Query() *ChannelUsageMonitorBindingQuery {
+	return &ChannelUsageMonitorBindingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeChannelUsageMonitorBinding},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ChannelUsageMonitorBinding entity by its id.
+func (c *ChannelUsageMonitorBindingClient) Get(ctx context.Context, id int) (*ChannelUsageMonitorBinding, error) {
+	return c.Query().Where(channelusagemonitorbinding.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChannelUsageMonitorBindingClient) GetX(ctx context.Context, id int) *ChannelUsageMonitorBinding {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryChannel queries the channel edge of a ChannelUsageMonitorBinding.
+func (c *ChannelUsageMonitorBindingClient) QueryChannel(_m *ChannelUsageMonitorBinding) *ChannelQuery {
+	query := (&ChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, channelusagemonitorbinding.ChannelTable, channelusagemonitorbinding.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsageMonitorChannel queries the usage_monitor_channel edge of a ChannelUsageMonitorBinding.
+func (c *ChannelUsageMonitorBindingClient) QueryUsageMonitorChannel(_m *ChannelUsageMonitorBinding) *UsageMonitorChannelQuery {
+	query := (&UsageMonitorChannelClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID, id),
+			sqlgraph.To(usagemonitorchannel.Table, usagemonitorchannel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, channelusagemonitorbinding.UsageMonitorChannelTable, channelusagemonitorbinding.UsageMonitorChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ChannelUsageMonitorBindingClient) Hooks() []Hook {
+	hooks := c.hooks.ChannelUsageMonitorBinding
+	return append(hooks[:len(hooks):len(hooks)], channelusagemonitorbinding.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *ChannelUsageMonitorBindingClient) Interceptors() []Interceptor {
+	inters := c.inters.ChannelUsageMonitorBinding
+	return append(inters[:len(inters):len(inters)], channelusagemonitorbinding.Interceptors[:]...)
+}
+
+func (c *ChannelUsageMonitorBindingClient) mutate(ctx context.Context, m *ChannelUsageMonitorBindingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ChannelUsageMonitorBindingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ChannelUsageMonitorBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ChannelUsageMonitorBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ChannelUsageMonitorBindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ChannelUsageMonitorBinding mutation op: %q", m.Op())
 	}
 }
 
@@ -4579,6 +4772,22 @@ func (c *UsageMonitorChannelClient) QueryOwner(_m *UsageMonitorChannel) *UserQue
 	return query
 }
 
+// QueryChannelBindings queries the channel_bindings edge of a UsageMonitorChannel.
+func (c *UsageMonitorChannelClient) QueryChannelBindings(_m *UsageMonitorChannel) *ChannelUsageMonitorBindingQuery {
+	query := (&ChannelUsageMonitorBindingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usagemonitorchannel.Table, usagemonitorchannel.FieldID, id),
+			sqlgraph.To(channelusagemonitorbinding.Table, channelusagemonitorbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, usagemonitorchannel.ChannelBindingsTable, usagemonitorchannel.ChannelBindingsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UsageMonitorChannelClient) Hooks() []Hook {
 	hooks := c.hooks.UsageMonitorChannel
@@ -5465,18 +5674,19 @@ func (c *UserUsageStatsClient) mutate(ctx context.Context, m *UserUsageStatsMuta
 type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
-		UserUsageStats []ent.Hook
+		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe,
+		ChannelUsageMonitorBinding, DataStorage, EmailToken, Model, OIDCIdentity,
+		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, PublishRequest,
+		Request, RequestExecution, Role, System, Thread, Trace, UsageLog,
+		UsageMonitorChannel, User, UserProject, UserRole, UserUsageStats []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
-		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe, DataStorage,
-		EmailToken, Model, OIDCIdentity, Project, Prompt, PromptProtectionRule,
-		ProviderQuotaStatus, PublishRequest, Request, RequestExecution, Role, System,
-		Thread, Trace, UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
+		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe,
+		ChannelUsageMonitorBinding, DataStorage, EmailToken, Model, OIDCIdentity,
+		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, PublishRequest,
+		Request, RequestExecution, Role, System, Thread, Trace, UsageLog,
+		UsageMonitorChannel, User, UserProject, UserRole,
 		UserUsageStats []ent.Interceptor
 	}
 )

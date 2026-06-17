@@ -30,6 +30,7 @@ func NewMigrator(client *ent.Client) *Migrator {
 	migrator := NewMigratorWithoutRegistrations(client)
 	migrator.Register(NewV0_1_10())
 	migrator.Register(NewV0_1_34())
+	migrator.Register(NewV0_1_35())
 
 	return migrator
 }

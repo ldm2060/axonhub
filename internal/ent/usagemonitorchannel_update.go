@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/ent/user"
@@ -498,6 +499,21 @@ func (_u *UsageMonitorChannelUpdate) SetOwner(v *User) *UsageMonitorChannelUpdat
 	return _u.SetOwnerID(v.ID)
 }
 
+// AddChannelBindingIDs adds the "channel_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_u *UsageMonitorChannelUpdate) AddChannelBindingIDs(ids ...int) *UsageMonitorChannelUpdate {
+	_u.mutation.AddChannelBindingIDs(ids...)
+	return _u
+}
+
+// AddChannelBindings adds the "channel_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *UsageMonitorChannelUpdate) AddChannelBindings(v ...*ChannelUsageMonitorBinding) *UsageMonitorChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChannelBindingIDs(ids...)
+}
+
 // Mutation returns the UsageMonitorChannelMutation object of the builder.
 func (_u *UsageMonitorChannelUpdate) Mutation() *UsageMonitorChannelMutation {
 	return _u.mutation
@@ -513,6 +529,27 @@ func (_u *UsageMonitorChannelUpdate) ClearChannel() *UsageMonitorChannelUpdate {
 func (_u *UsageMonitorChannelUpdate) ClearOwner() *UsageMonitorChannelUpdate {
 	_u.mutation.ClearOwner()
 	return _u
+}
+
+// ClearChannelBindings clears all "channel_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *UsageMonitorChannelUpdate) ClearChannelBindings() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearChannelBindings()
+	return _u
+}
+
+// RemoveChannelBindingIDs removes the "channel_bindings" edge to ChannelUsageMonitorBinding entities by IDs.
+func (_u *UsageMonitorChannelUpdate) RemoveChannelBindingIDs(ids ...int) *UsageMonitorChannelUpdate {
+	_u.mutation.RemoveChannelBindingIDs(ids...)
+	return _u
+}
+
+// RemoveChannelBindings removes "channel_bindings" edges to ChannelUsageMonitorBinding entities.
+func (_u *UsageMonitorChannelUpdate) RemoveChannelBindings(v ...*ChannelUsageMonitorBinding) *UsageMonitorChannelUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChannelBindingIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -818,6 +855,51 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChannelBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChannelBindingsIDs(); len(nodes) > 0 && !_u.mutation.ChannelBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChannelBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1313,6 +1395,21 @@ func (_u *UsageMonitorChannelUpdateOne) SetOwner(v *User) *UsageMonitorChannelUp
 	return _u.SetOwnerID(v.ID)
 }
 
+// AddChannelBindingIDs adds the "channel_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_u *UsageMonitorChannelUpdateOne) AddChannelBindingIDs(ids ...int) *UsageMonitorChannelUpdateOne {
+	_u.mutation.AddChannelBindingIDs(ids...)
+	return _u
+}
+
+// AddChannelBindings adds the "channel_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *UsageMonitorChannelUpdateOne) AddChannelBindings(v ...*ChannelUsageMonitorBinding) *UsageMonitorChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChannelBindingIDs(ids...)
+}
+
 // Mutation returns the UsageMonitorChannelMutation object of the builder.
 func (_u *UsageMonitorChannelUpdateOne) Mutation() *UsageMonitorChannelMutation {
 	return _u.mutation
@@ -1328,6 +1425,27 @@ func (_u *UsageMonitorChannelUpdateOne) ClearChannel() *UsageMonitorChannelUpdat
 func (_u *UsageMonitorChannelUpdateOne) ClearOwner() *UsageMonitorChannelUpdateOne {
 	_u.mutation.ClearOwner()
 	return _u
+}
+
+// ClearChannelBindings clears all "channel_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_u *UsageMonitorChannelUpdateOne) ClearChannelBindings() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearChannelBindings()
+	return _u
+}
+
+// RemoveChannelBindingIDs removes the "channel_bindings" edge to ChannelUsageMonitorBinding entities by IDs.
+func (_u *UsageMonitorChannelUpdateOne) RemoveChannelBindingIDs(ids ...int) *UsageMonitorChannelUpdateOne {
+	_u.mutation.RemoveChannelBindingIDs(ids...)
+	return _u
+}
+
+// RemoveChannelBindings removes "channel_bindings" edges to ChannelUsageMonitorBinding entities.
+func (_u *UsageMonitorChannelUpdateOne) RemoveChannelBindings(v ...*ChannelUsageMonitorBinding) *UsageMonitorChannelUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChannelBindingIDs(ids...)
 }
 
 // Where appends a list predicates to the UsageMonitorChannelUpdate builder.
@@ -1663,6 +1781,51 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChannelBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChannelBindingsIDs(); len(nodes) > 0 && !_u.mutation.ChannelBindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChannelBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   usagemonitorchannel.ChannelBindingsTable,
+			Columns: []string{usagemonitorchannel.ChannelBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

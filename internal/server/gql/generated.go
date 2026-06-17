@@ -75,7 +75,9 @@ type ResolverRoot interface {
 	ChannelOverrideTemplate() ChannelOverrideTemplateResolver
 	ChannelProbe() ChannelProbeResolver
 	ChannelProbeData() ChannelProbeDataResolver
+	ChannelQuotaMonitorBinding() ChannelQuotaMonitorBindingResolver
 	ChannelSettings() ChannelSettingsResolver
+	ChannelUsageMonitorBinding() ChannelUsageMonitorBindingResolver
 	DataStorage() DataStorageResolver
 	EmailSettings() EmailSettingsResolver
 	EmailToken() EmailTokenResolver
@@ -89,6 +91,7 @@ type ResolverRoot interface {
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
 	PublishRequest() PublishRequestResolver
 	Query() QueryResolver
+	QuotaMonitorBindingCondition() QuotaMonitorBindingConditionResolver
 	QuotaMonitorTemplate() QuotaMonitorTemplateResolver
 	Request() RequestResolver
 	RequestExecution() RequestExecutionResolver
@@ -98,6 +101,7 @@ type ResolverRoot interface {
 	Thread() ThreadResolver
 	Trace() TraceResolver
 	UsageLog() UsageLogResolver
+	UsageMonitorBindingSummary() UsageMonitorBindingSummaryResolver
 	UsageMonitorChannel() UsageMonitorChannelResolver
 	User() UserResolver
 	UserInfo() UserInfoResolver
@@ -105,6 +109,7 @@ type ResolverRoot interface {
 	UserRole() UserRoleResolver
 	UserUsageStats() UserUsageStatsResolver
 	CreateUsageMonitorChannelInput() CreateUsageMonitorChannelInputResolver
+	QuotaMonitorBindingConditionInput() QuotaMonitorBindingConditionInputResolver
 	TestUsageMonitorChannelInput() TestUsageMonitorChannelInputResolver
 	UpdateUsageMonitorChannelInput() UpdateUsageMonitorChannelInputResolver
 }
@@ -327,6 +332,7 @@ type ComplexityRoot struct {
 		Policies                  func(childComplexity int) int
 		ProviderQuotaStatus       func(childComplexity int) int
 		QuotaBindingReady         func(childComplexity int) int
+		QuotaMonitorBindings      func(childComplexity int) int
 		QuotaMultiMonitorStrategy func(childComplexity int) int
 		Remark                    func(childComplexity int) int
 		Requests                  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.RequestOrder, where *ent.RequestWhereInput) int
@@ -524,6 +530,18 @@ type ComplexityRoot struct {
 		Frequency func(childComplexity int) int
 	}
 
+	ChannelQuotaMonitorBinding struct {
+		ChannelID             func(childComplexity int) int
+		Conditions            func(childComplexity int) int
+		Enabled               func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		LastTriggerReason     func(childComplexity int) int
+		LastTriggeredAt       func(childComplexity int) int
+		TriggerStatuses       func(childComplexity int) int
+		UsageMonitorChannelID func(childComplexity int) int
+		UsageMonitorName      func(childComplexity int) int
+	}
+
 	ChannelRateLimit struct {
 		MaxConcurrent  func(childComplexity int) int
 		QueueSize      func(childComplexity int) int
@@ -580,6 +598,32 @@ type ComplexityRoot struct {
 	ChannelTypeCount struct {
 		Count func(childComplexity int) int
 		Type  func(childComplexity int) int
+	}
+
+	ChannelUsageMonitorBinding struct {
+		Channel               func(childComplexity int) int
+		ChannelID             func(childComplexity int) int
+		Conditions            func(childComplexity int) int
+		CreatedAt             func(childComplexity int) int
+		Enabled               func(childComplexity int) int
+		ID                    func(childComplexity int) int
+		LastTriggerReason     func(childComplexity int) int
+		LastTriggeredAt       func(childComplexity int) int
+		TriggerStatuses       func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+		UsageMonitorChannel   func(childComplexity int) int
+		UsageMonitorChannelID func(childComplexity int) int
+	}
+
+	ChannelUsageMonitorBindingConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	ChannelUsageMonitorBindingEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	CleanupOption struct {
@@ -1038,6 +1082,7 @@ type ComplexityRoot struct {
 		RotateAPIKey                         func(childComplexity int, id objects.GUID) int
 		SaveChannelEndpoints                 func(childComplexity int, input biz.SaveChannelEndpointsInput) int
 		SaveChannelModelPrices               func(childComplexity int, channelID objects.GUID, input []*biz.SaveChannelModelPriceInput) int
+		SaveChannelQuotaMonitorBindings      func(childComplexity int, channelID objects.GUID, input biz.SaveChannelQuotaMonitorBindingsInput) int
 		SaveProxyPreset                      func(childComplexity int, input biz.ProxyPreset) int
 		ShareChannel                         func(childComplexity int, id objects.GUID, userIDs []*objects.GUID) int
 		SyncChannelModels                    func(childComplexity int, channelID objects.GUID, pattern *string) int
@@ -1380,7 +1425,9 @@ type ComplexityRoot struct {
 		ChannelOverrideTemplates     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
 		ChannelPerformanceStats      func(childComplexity int) int
 		ChannelProbeData             func(childComplexity int, input biz.GetChannelProbeDataInput) int
+		ChannelQuotaMonitorBindings  func(childComplexity int, channelID objects.GUID) int
 		ChannelSuccessRates          func(childComplexity int, timeWindow *string, limit *int) int
+		ChannelUsageMonitorBindings  func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelUsageMonitorBindingOrder, where *ent.ChannelUsageMonitorBindingWhereInput) int
 		Channels                     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) int
 		CheckForUpdate               func(childComplexity int) int
 		CostStatsByAPIKey            func(childComplexity int, timeWindow *string) int
@@ -1462,6 +1509,7 @@ type ComplexityRoot struct {
 		TopRequestsProjects          func(childComplexity int) int
 		Traces                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
 		UsageLogs                    func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
+		UsageMonitorBindingSummaries func(childComplexity int) int
 		UsageMonitorChannelByID      func(childComplexity int, id objects.GUID) int
 		UsageMonitorChannelsList     func(childComplexity int) int
 		UserAgentPassThroughSettings func(childComplexity int) int
@@ -1474,6 +1522,12 @@ type ComplexityRoot struct {
 	QuotaEnforcementSettings struct {
 		Enabled func(childComplexity int) int
 		Mode    func(childComplexity int) int
+	}
+
+	QuotaMonitorBindingCondition struct {
+		Field    func(childComplexity int) int
+		Operator func(childComplexity int) int
+		Value    func(childComplexity int) int
 	}
 
 	QuotaMonitorTemplate struct {
@@ -2054,6 +2108,18 @@ type ComplexityRoot struct {
 		TotalTokens            func(childComplexity int) int
 	}
 
+	UsageMonitorBindingSummary struct {
+		ChannelID             func(childComplexity int) int
+		ChannelName           func(childComplexity int) int
+		Conditions            func(childComplexity int) int
+		Enabled               func(childComplexity int) int
+		Matched               func(childComplexity int) int
+		Reason                func(childComplexity int) int
+		Strategy              func(childComplexity int) int
+		TriggerStatuses       func(childComplexity int) int
+		UsageMonitorChannelID func(childComplexity int) int
+	}
+
 	UsageMonitorChannel struct {
 		APIBody              func(childComplexity int) int
 		APIHeaders           func(childComplexity int) int
@@ -2065,6 +2131,7 @@ type ComplexityRoot struct {
 		AutoDisableThreshold func(childComplexity int) int
 		AutoEnableThreshold  func(childComplexity int) int
 		Channel              func(childComplexity int) int
+		ChannelBindings      func(childComplexity int) int
 		ChannelID            func(childComplexity int) int
 		CreatedAt            func(childComplexity int) int
 		DisplayFields        func(childComplexity int) int
@@ -2319,9 +2386,20 @@ type ChannelProbeResolver interface {
 type ChannelProbeDataResolver interface {
 	ChannelID(ctx context.Context, obj *biz.ChannelProbeData) (*objects.GUID, error)
 }
+type ChannelQuotaMonitorBindingResolver interface {
+	ID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error)
+	ChannelID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error)
+	UsageMonitorChannelID(ctx context.Context, obj *biz.ChannelQuotaMonitorBindingView) (*objects.GUID, error)
+}
 type ChannelSettingsResolver interface {
 	HeaderOverrideOperations(ctx context.Context, obj *objects.ChannelSettings) ([]*objects.OverrideOperation, error)
 	BodyOverrideOperations(ctx context.Context, obj *objects.ChannelSettings) ([]*objects.OverrideOperation, error)
+}
+type ChannelUsageMonitorBindingResolver interface {
+	ID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error)
+
+	ChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error)
+	UsageMonitorChannelID(ctx context.Context, obj *ent.ChannelUsageMonitorBinding) (*objects.GUID, error)
 }
 type DataStorageResolver interface {
 	ID(ctx context.Context, obj *ent.DataStorage) (*objects.GUID, error)
@@ -2468,6 +2546,7 @@ type MutationResolver interface {
 	DeleteUsageMonitorChannel(ctx context.Context, id objects.GUID) (bool, error)
 	TestUsageMonitorChannel(ctx context.Context, input usage_monitor.TestUsageMonitorChannelInput) (*usage_monitor.TestResult, error)
 	RefreshUsageMonitorChannel(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
+	SaveChannelQuotaMonitorBindings(ctx context.Context, channelID objects.GUID, input biz.SaveChannelQuotaMonitorBindingsInput) ([]*biz.ChannelQuotaMonitorBindingView, error)
 }
 type OIDCIdentityResolver interface {
 	ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error)
@@ -2508,6 +2587,7 @@ type QueryResolver interface {
 	APIKeyProfileTemplates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.APIKeyProfileTemplateOrder, where *ent.APIKeyProfileTemplateWhereInput) (*ent.APIKeyProfileTemplateConnection, error)
 	Channels(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) (*ent.ChannelConnection, error)
 	ChannelOverrideTemplates(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) (*ent.ChannelOverrideTemplateConnection, error)
+	ChannelUsageMonitorBindings(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelUsageMonitorBindingOrder, where *ent.ChannelUsageMonitorBindingWhereInput) (*ent.ChannelUsageMonitorBindingConnection, error)
 	DataStorages(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.DataStorageOrder, where *ent.DataStorageWhereInput) (*ent.DataStorageConnection, error)
 	Models(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ModelOrder, where *ent.ModelWhereInput) (*ent.ModelConnection, error)
 	OidcIdentities(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) (*ent.OIDCIdentityConnection, error)
@@ -2603,6 +2683,11 @@ type QueryResolver interface {
 	UsageMonitorChannelsList(ctx context.Context) ([]*ent.UsageMonitorChannel, error)
 	UsageMonitorChannelByID(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
 	QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.ChannelTemplate, error)
+	ChannelQuotaMonitorBindings(ctx context.Context, channelID objects.GUID) ([]*biz.ChannelQuotaMonitorBindingView, error)
+	UsageMonitorBindingSummaries(ctx context.Context) ([]*biz.UsageMonitorBindingSummary, error)
+}
+type QuotaMonitorBindingConditionResolver interface {
+	Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition) (string, error)
 }
 type QuotaMonitorTemplateResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.ChannelTemplate) (usagemonitorchannel.APIMethod, error)
@@ -2684,6 +2769,11 @@ type UsageLogResolver interface {
 
 	Channel(ctx context.Context, obj *ent.UsageLog) (*ent.Channel, error)
 }
+type UsageMonitorBindingSummaryResolver interface {
+	ChannelID(ctx context.Context, obj *biz.UsageMonitorBindingSummary) (*objects.GUID, error)
+
+	UsageMonitorChannelID(ctx context.Context, obj *biz.UsageMonitorBindingSummary) (*objects.GUID, error)
+}
 type UsageMonitorChannelResolver interface {
 	ID(ctx context.Context, obj *ent.UsageMonitorChannel) (*objects.GUID, error)
 
@@ -2738,6 +2828,9 @@ type CreateUsageMonitorChannelInputResolver interface {
 
 	Variables(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*VariableInput) error
 	DisplayFields(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*DisplayFieldInput) error
+}
+type QuotaMonitorBindingConditionInputResolver interface {
+	Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition, data string) error
 }
 type TestUsageMonitorChannelInputResolver interface {
 	APIMethod(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error
@@ -3601,6 +3694,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.QuotaBindingReady(childComplexity), true
+	case "Channel.quotaMonitorBindings":
+		if e.complexity.Channel.QuotaMonitorBindings == nil {
+			break
+		}
+
+		return e.complexity.Channel.QuotaMonitorBindings(childComplexity), true
 	case "Channel.quotaMultiMonitorStrategy":
 		if e.complexity.Channel.QuotaMultiMonitorStrategy == nil {
 			break
@@ -4340,6 +4439,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ChannelProbeSetting.Frequency(childComplexity), true
 
+	case "ChannelQuotaMonitorBinding.channelID":
+		if e.complexity.ChannelQuotaMonitorBinding.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.ChannelID(childComplexity), true
+	case "ChannelQuotaMonitorBinding.conditions":
+		if e.complexity.ChannelQuotaMonitorBinding.Conditions == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.Conditions(childComplexity), true
+	case "ChannelQuotaMonitorBinding.enabled":
+		if e.complexity.ChannelQuotaMonitorBinding.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.Enabled(childComplexity), true
+	case "ChannelQuotaMonitorBinding.id":
+		if e.complexity.ChannelQuotaMonitorBinding.ID == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.ID(childComplexity), true
+	case "ChannelQuotaMonitorBinding.lastTriggerReason":
+		if e.complexity.ChannelQuotaMonitorBinding.LastTriggerReason == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.LastTriggerReason(childComplexity), true
+	case "ChannelQuotaMonitorBinding.lastTriggeredAt":
+		if e.complexity.ChannelQuotaMonitorBinding.LastTriggeredAt == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.LastTriggeredAt(childComplexity), true
+	case "ChannelQuotaMonitorBinding.triggerStatuses":
+		if e.complexity.ChannelQuotaMonitorBinding.TriggerStatuses == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.TriggerStatuses(childComplexity), true
+	case "ChannelQuotaMonitorBinding.usageMonitorChannelID":
+		if e.complexity.ChannelQuotaMonitorBinding.UsageMonitorChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.UsageMonitorChannelID(childComplexity), true
+	case "ChannelQuotaMonitorBinding.usageMonitorName":
+		if e.complexity.ChannelQuotaMonitorBinding.UsageMonitorName == nil {
+			break
+		}
+
+		return e.complexity.ChannelQuotaMonitorBinding.UsageMonitorName(childComplexity), true
+
 	case "ChannelRateLimit.maxConcurrent":
 		if e.complexity.ChannelRateLimit.MaxConcurrent == nil {
 			break
@@ -4568,6 +4722,111 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelTypeCount.Type(childComplexity), true
+
+	case "ChannelUsageMonitorBinding.channel":
+		if e.complexity.ChannelUsageMonitorBinding.Channel == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.Channel(childComplexity), true
+	case "ChannelUsageMonitorBinding.channelID":
+		if e.complexity.ChannelUsageMonitorBinding.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.ChannelID(childComplexity), true
+	case "ChannelUsageMonitorBinding.conditions":
+		if e.complexity.ChannelUsageMonitorBinding.Conditions == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.Conditions(childComplexity), true
+	case "ChannelUsageMonitorBinding.createdAt":
+		if e.complexity.ChannelUsageMonitorBinding.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.CreatedAt(childComplexity), true
+	case "ChannelUsageMonitorBinding.enabled":
+		if e.complexity.ChannelUsageMonitorBinding.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.Enabled(childComplexity), true
+	case "ChannelUsageMonitorBinding.id":
+		if e.complexity.ChannelUsageMonitorBinding.ID == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.ID(childComplexity), true
+	case "ChannelUsageMonitorBinding.lastTriggerReason":
+		if e.complexity.ChannelUsageMonitorBinding.LastTriggerReason == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.LastTriggerReason(childComplexity), true
+	case "ChannelUsageMonitorBinding.lastTriggeredAt":
+		if e.complexity.ChannelUsageMonitorBinding.LastTriggeredAt == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.LastTriggeredAt(childComplexity), true
+	case "ChannelUsageMonitorBinding.triggerStatuses":
+		if e.complexity.ChannelUsageMonitorBinding.TriggerStatuses == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.TriggerStatuses(childComplexity), true
+	case "ChannelUsageMonitorBinding.updatedAt":
+		if e.complexity.ChannelUsageMonitorBinding.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.UpdatedAt(childComplexity), true
+	case "ChannelUsageMonitorBinding.usageMonitorChannel":
+		if e.complexity.ChannelUsageMonitorBinding.UsageMonitorChannel == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.UsageMonitorChannel(childComplexity), true
+	case "ChannelUsageMonitorBinding.usageMonitorChannelID":
+		if e.complexity.ChannelUsageMonitorBinding.UsageMonitorChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBinding.UsageMonitorChannelID(childComplexity), true
+
+	case "ChannelUsageMonitorBindingConnection.edges":
+		if e.complexity.ChannelUsageMonitorBindingConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBindingConnection.Edges(childComplexity), true
+	case "ChannelUsageMonitorBindingConnection.pageInfo":
+		if e.complexity.ChannelUsageMonitorBindingConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBindingConnection.PageInfo(childComplexity), true
+	case "ChannelUsageMonitorBindingConnection.totalCount":
+		if e.complexity.ChannelUsageMonitorBindingConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBindingConnection.TotalCount(childComplexity), true
+
+	case "ChannelUsageMonitorBindingEdge.cursor":
+		if e.complexity.ChannelUsageMonitorBindingEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBindingEdge.Cursor(childComplexity), true
+	case "ChannelUsageMonitorBindingEdge.node":
+		if e.complexity.ChannelUsageMonitorBindingEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.ChannelUsageMonitorBindingEdge.Node(childComplexity), true
 
 	case "CleanupOption.cleanupDays":
 		if e.complexity.CleanupOption.CleanupDays == nil {
@@ -6795,6 +7054,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SaveChannelModelPrices(childComplexity, args["channelId"].(objects.GUID), args["input"].([]*biz.SaveChannelModelPriceInput)), true
+	case "Mutation.saveChannelQuotaMonitorBindings":
+		if e.complexity.Mutation.SaveChannelQuotaMonitorBindings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveChannelQuotaMonitorBindings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveChannelQuotaMonitorBindings(childComplexity, args["channelID"].(objects.GUID), args["input"].(biz.SaveChannelQuotaMonitorBindingsInput)), true
 	case "Mutation.saveProxyPreset":
 		if e.complexity.Mutation.SaveProxyPreset == nil {
 			break
@@ -8553,6 +8823,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ChannelProbeData(childComplexity, args["input"].(biz.GetChannelProbeDataInput)), true
+	case "Query.channelQuotaMonitorBindings":
+		if e.complexity.Query.ChannelQuotaMonitorBindings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_channelQuotaMonitorBindings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ChannelQuotaMonitorBindings(childComplexity, args["channelID"].(objects.GUID)), true
 	case "Query.channelSuccessRates":
 		if e.complexity.Query.ChannelSuccessRates == nil {
 			break
@@ -8564,6 +8845,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ChannelSuccessRates(childComplexity, args["timeWindow"].(*string), args["limit"].(*int)), true
+	case "Query.channelUsageMonitorBindings":
+		if e.complexity.Query.ChannelUsageMonitorBindings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_channelUsageMonitorBindings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ChannelUsageMonitorBindings(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.ChannelUsageMonitorBindingOrder), args["where"].(*ent.ChannelUsageMonitorBindingWhereInput)), true
 	case "Query.channels":
 		if e.complexity.Query.Channels == nil {
 			break
@@ -9285,6 +9577,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.UsageLogs(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.UsageLogOrder), args["where"].(*ent.UsageLogWhereInput)), true
+	case "Query.usageMonitorBindingSummaries":
+		if e.complexity.Query.UsageMonitorBindingSummaries == nil {
+			break
+		}
+
+		return e.complexity.Query.UsageMonitorBindingSummaries(childComplexity), true
 	case "Query.usageMonitorChannelById":
 		if e.complexity.Query.UsageMonitorChannelByID == nil {
 			break
@@ -9355,6 +9653,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaEnforcementSettings.Mode(childComplexity), true
+
+	case "QuotaMonitorBindingCondition.field":
+		if e.complexity.QuotaMonitorBindingCondition.Field == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorBindingCondition.Field(childComplexity), true
+	case "QuotaMonitorBindingCondition.operator":
+		if e.complexity.QuotaMonitorBindingCondition.Operator == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorBindingCondition.Operator(childComplexity), true
+	case "QuotaMonitorBindingCondition.value":
+		if e.complexity.QuotaMonitorBindingCondition.Value == nil {
+			break
+		}
+
+		return e.complexity.QuotaMonitorBindingCondition.Value(childComplexity), true
 
 	case "QuotaMonitorTemplate.apiMethod":
 		if e.complexity.QuotaMonitorTemplate.APIMethod == nil {
@@ -11608,6 +11925,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.UsageMetadata.TotalTokens(childComplexity), true
 
+	case "UsageMonitorBindingSummary.channelID":
+		if e.complexity.UsageMonitorBindingSummary.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.ChannelID(childComplexity), true
+	case "UsageMonitorBindingSummary.channelName":
+		if e.complexity.UsageMonitorBindingSummary.ChannelName == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.ChannelName(childComplexity), true
+	case "UsageMonitorBindingSummary.conditions":
+		if e.complexity.UsageMonitorBindingSummary.Conditions == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.Conditions(childComplexity), true
+	case "UsageMonitorBindingSummary.enabled":
+		if e.complexity.UsageMonitorBindingSummary.Enabled == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.Enabled(childComplexity), true
+	case "UsageMonitorBindingSummary.matched":
+		if e.complexity.UsageMonitorBindingSummary.Matched == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.Matched(childComplexity), true
+	case "UsageMonitorBindingSummary.reason":
+		if e.complexity.UsageMonitorBindingSummary.Reason == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.Reason(childComplexity), true
+	case "UsageMonitorBindingSummary.strategy":
+		if e.complexity.UsageMonitorBindingSummary.Strategy == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.Strategy(childComplexity), true
+	case "UsageMonitorBindingSummary.triggerStatuses":
+		if e.complexity.UsageMonitorBindingSummary.TriggerStatuses == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.TriggerStatuses(childComplexity), true
+	case "UsageMonitorBindingSummary.usageMonitorChannelID":
+		if e.complexity.UsageMonitorBindingSummary.UsageMonitorChannelID == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorBindingSummary.UsageMonitorChannelID(childComplexity), true
+
 	case "UsageMonitorChannel.apiBody":
 		if e.complexity.UsageMonitorChannel.APIBody == nil {
 			break
@@ -11668,6 +12040,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.Channel(childComplexity), true
+	case "UsageMonitorChannel.channelBindings":
+		if e.complexity.UsageMonitorChannel.ChannelBindings == nil {
+			break
+		}
+
+		return e.complexity.UsageMonitorChannel.ChannelBindings(childComplexity), true
 	case "UsageMonitorChannel.channelID":
 		if e.complexity.UsageMonitorChannel.ChannelID == nil {
 			break
@@ -12612,6 +12990,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputChannelSettingsInput,
 		ec.unmarshalInputChannelTagsModelAssociationInput,
 		ec.unmarshalInputChannelTagsRegexAssociationInput,
+		ec.unmarshalInputChannelUsageMonitorBindingOrder,
+		ec.unmarshalInputChannelUsageMonitorBindingWhereInput,
 		ec.unmarshalInputChannelWhereInput,
 		ec.unmarshalInputCleanupOptionInput,
 		ec.unmarshalInputClearCacheInput,
@@ -12625,6 +13005,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateAPIKeyProfileTemplateInput,
 		ec.unmarshalInputCreateChannelInput,
 		ec.unmarshalInputCreateChannelOverrideTemplateInput,
+		ec.unmarshalInputCreateChannelUsageMonitorBindingInput,
 		ec.unmarshalInputCreateDataStorageInput,
 		ec.unmarshalInputCreateModelInput,
 		ec.unmarshalInputCreateOIDCIdentityInput,
@@ -12700,6 +13081,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPublishRequestWhereInput,
 		ec.unmarshalInputQueryChannelInput,
 		ec.unmarshalInputQueryModelsInput,
+		ec.unmarshalInputQuotaMonitorBindingConditionInput,
 		ec.unmarshalInputRegexAssociationInput,
 		ec.unmarshalInputRemoveUserFromProjectInput,
 		ec.unmarshalInputRequestExecutionOrder,
@@ -12713,6 +13095,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputS3Input,
 		ec.unmarshalInputSaveChannelEndpointsInput,
 		ec.unmarshalInputSaveChannelModelPriceInput,
+		ec.unmarshalInputSaveChannelQuotaMonitorBindingInput,
+		ec.unmarshalInputSaveChannelQuotaMonitorBindingsInput,
 		ec.unmarshalInputSaveProxyPresetInput,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputSystemOrder,
@@ -12737,6 +13121,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateChannelModelAutoSyncSettingInput,
 		ec.unmarshalInputUpdateChannelOverrideTemplateInput,
 		ec.unmarshalInputUpdateChannelProbeSettingInput,
+		ec.unmarshalInputUpdateChannelUsageMonitorBindingInput,
 		ec.unmarshalInputUpdateDataStorageInput,
 		ec.unmarshalInputUpdateDefaultDataStorageInput,
 		ec.unmarshalInputUpdateEmailSettingsInput,
@@ -14008,6 +14393,22 @@ func (ec *executionContext) field_Mutation_saveChannelModelPrices_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_saveChannelQuotaMonitorBindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["channelID"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNSaveChannelQuotaMonitorBindingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_saveProxyPreset_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15211,6 +15612,17 @@ func (ec *executionContext) field_Query_channelProbeData_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_channelQuotaMonitorBindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["channelID"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_channelSuccessRates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -15224,6 +15636,42 @@ func (ec *executionContext) field_Query_channelSuccessRates_args(ctx context.Con
 		return nil, err
 	}
 	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_channelUsageMonitorBindings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "after", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "first", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "last", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "orderBy", ec.unmarshalOChannelUsageMonitorBindingOrder2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingOrder)
+	if err != nil {
+		return nil, err
+	}
+	args["orderBy"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "where", ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInput)
+	if err != nil {
+		return nil, err
+	}
+	args["where"] = arg5
 	return args, nil
 }
 
@@ -19029,6 +19477,8 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -20078,6 +20528,8 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -20245,6 +20697,8 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -21533,6 +21987,8 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -21545,6 +22001,61 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_quotaMonitorBindings(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_quotaMonitorBindings,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaMonitorBindings(ctx)
+		},
+		nil,
+		ec.marshalOChannelUsageMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_quotaMonitorBindings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelUsageMonitorBinding_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channelID(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannelID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelUsageMonitorBinding_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_ChannelUsageMonitorBinding_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_ChannelUsageMonitorBinding_conditions(ctx, field)
+			case "lastTriggeredAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggeredAt(ctx, field)
+			case "lastTriggerReason":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggerReason(ctx, field)
+			case "channel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channel(ctx, field)
+			case "usageMonitorChannel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannel(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelUsageMonitorBinding", field.Name)
 		},
 	}
 	return fc, nil
@@ -22355,6 +22866,8 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -23106,6 +23619,8 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -25053,6 +25568,8 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -25338,6 +25855,275 @@ func (ec *executionContext) fieldContext_ChannelProbeSetting_frequency(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ProbeFrequency does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_id(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelQuotaMonitorBinding().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_channelID(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_channelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelQuotaMonitorBinding().ChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_channelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_usageMonitorChannelID(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorChannelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelQuotaMonitorBinding().UsageMonitorChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_usageMonitorChannelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_usageMonitorName(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorName,
+		func(ctx context.Context) (any, error) {
+			return obj.UsageMonitorName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_usageMonitorName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_enabled(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_triggerStatuses(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_triggerStatuses,
+		func(ctx context.Context) (any, error) {
+			return obj.TriggerStatuses, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_triggerStatuses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_conditions(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_conditions,
+		func(ctx context.Context) (any, error) {
+			return obj.Conditions, nil
+		},
+		nil,
+		ec.marshalNQuotaMonitorBindingCondition2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_conditions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "field":
+				return ec.fieldContext_QuotaMonitorBindingCondition_field(ctx, field)
+			case "operator":
+				return ec.fieldContext_QuotaMonitorBindingCondition_operator(ctx, field)
+			case "value":
+				return ec.fieldContext_QuotaMonitorBindingCondition_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorBindingCondition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_lastTriggeredAt(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggeredAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastTriggeredAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_lastTriggeredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding_lastTriggerReason(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelQuotaMonitorBindingView) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggerReason,
+		func(ctx context.Context) (any, error) {
+			return obj.LastTriggerReason, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelQuotaMonitorBinding_lastTriggerReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelQuotaMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -26494,6 +27280,697 @@ func (ec *executionContext) fieldContext_ChannelTypeCount_count(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelUsageMonitorBinding_id(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_id,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelUsageMonitorBinding().ID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_createdAt(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_updatedAt(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_updatedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_channelID(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_channelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelUsageMonitorBinding().ChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_channelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_usageMonitorChannelID(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.ChannelUsageMonitorBinding().UsageMonitorChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_usageMonitorChannelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_enabled(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_triggerStatuses(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_triggerStatuses,
+		func(ctx context.Context) (any, error) {
+			return obj.TriggerStatuses, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_triggerStatuses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_conditions(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_conditions,
+		func(ctx context.Context) (any, error) {
+			return obj.Conditions, nil
+		},
+		nil,
+		ec.marshalNQuotaMonitorBindingCondition2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_conditions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "field":
+				return ec.fieldContext_QuotaMonitorBindingCondition_field(ctx, field)
+			case "operator":
+				return ec.fieldContext_QuotaMonitorBindingCondition_operator(ctx, field)
+			case "value":
+				return ec.fieldContext_QuotaMonitorBindingCondition_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorBindingCondition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_lastTriggeredAt(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_lastTriggeredAt,
+		func(ctx context.Context) (any, error) {
+			return obj.LastTriggeredAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_lastTriggeredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_lastTriggerReason(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_lastTriggerReason,
+		func(ctx context.Context) (any, error) {
+			return obj.LastTriggerReason, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_lastTriggerReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_channel(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_channel,
+		func(ctx context.Context) (any, error) {
+			return obj.Channel(ctx)
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_channel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "usageMonitorChannels":
+				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding_usageMonitorChannel(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBinding) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannel,
+		func(ctx context.Context) (any, error) {
+			return obj.UsageMonitorChannel(ctx)
+		},
+		nil,
+		ec.marshalNUsageMonitorChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUsageMonitorChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_usageMonitorChannel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBinding",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UsageMonitorChannel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_UsageMonitorChannel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_UsageMonitorChannel_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_UsageMonitorChannel_name(ctx, field)
+			case "source":
+				return ec.fieldContext_UsageMonitorChannel_source(ctx, field)
+			case "providerType":
+				return ec.fieldContext_UsageMonitorChannel_providerType(ctx, field)
+			case "channelID":
+				return ec.fieldContext_UsageMonitorChannel_channelID(ctx, field)
+			case "apiURL":
+				return ec.fieldContext_UsageMonitorChannel_apiURL(ctx, field)
+			case "apiMethod":
+				return ec.fieldContext_UsageMonitorChannel_apiMethod(ctx, field)
+			case "apiHeaders":
+				return ec.fieldContext_UsageMonitorChannel_apiHeaders(ctx, field)
+			case "apiBody":
+				return ec.fieldContext_UsageMonitorChannel_apiBody(ctx, field)
+			case "pollInterval":
+				return ec.fieldContext_UsageMonitorChannel_pollInterval(ctx, field)
+			case "fields":
+				return ec.fieldContext_UsageMonitorChannel_fields(ctx, field)
+			case "lastPollAt":
+				return ec.fieldContext_UsageMonitorChannel_lastPollAt(ctx, field)
+			case "lastPollData":
+				return ec.fieldContext_UsageMonitorChannel_lastPollData(ctx, field)
+			case "lastPollError":
+				return ec.fieldContext_UsageMonitorChannel_lastPollError(ctx, field)
+			case "status":
+				return ec.fieldContext_UsageMonitorChannel_status(ctx, field)
+			case "quotaStatus":
+				return ec.fieldContext_UsageMonitorChannel_quotaStatus(ctx, field)
+			case "quotaReady":
+				return ec.fieldContext_UsageMonitorChannel_quotaReady(ctx, field)
+			case "quotaLimits":
+				return ec.fieldContext_UsageMonitorChannel_quotaLimits(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_UsageMonitorChannel_nextResetAt(ctx, field)
+			case "autoDisableEnabled":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableEnabled(ctx, field)
+			case "autoDisableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoDisableThreshold(ctx, field)
+			case "autoEnableThreshold":
+				return ec.fieldContext_UsageMonitorChannel_autoEnableThreshold(ctx, field)
+			case "channel":
+				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
+			case "owner":
+				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
+			case "apiHeadersString":
+				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
+			case "parsedData":
+				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
+			case "apiKey":
+				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
+			case "variables":
+				return ec.fieldContext_UsageMonitorChannel_variables(ctx, field)
+			case "displayFields":
+				return ec.fieldContext_UsageMonitorChannel_displayFields(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorChannel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBindingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBindingConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalOChannelUsageMonitorBindingEdge2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingEdge,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBindingConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBindingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_ChannelUsageMonitorBindingEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_ChannelUsageMonitorBindingEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelUsageMonitorBindingEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBindingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBindingConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBindingConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBindingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBindingConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBindingConnection_totalCount,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBindingConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBindingConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBindingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBindingEdge_node,
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		ec.marshalOChannelUsageMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBinding,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBindingEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBindingEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelUsageMonitorBinding_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channelID(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannelID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelUsageMonitorBinding_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_ChannelUsageMonitorBinding_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_ChannelUsageMonitorBinding_conditions(ctx, field)
+			case "lastTriggeredAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggeredAt(ctx, field)
+			case "lastTriggerReason":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggerReason(ctx, field)
+			case "channel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channel(ctx, field)
+			case "usageMonitorChannel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannel(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelUsageMonitorBinding", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelUsageMonitorBindingEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelUsageMonitorBindingEdge_cursor,
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelUsageMonitorBindingEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelUsageMonitorBindingEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CleanupOption_resourceType(ctx context.Context, field graphql.CollectedField, obj *biz.CleanupOption) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -26818,6 +28295,8 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -32725,6 +34204,8 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -33821,6 +35302,8 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -33942,6 +35425,8 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -34063,6 +35548,8 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -34184,6 +35671,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -34305,6 +35794,8 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -34426,6 +35917,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -40382,6 +41875,8 @@ func (ec *executionContext) fieldContext_Mutation_shareChannel(ctx context.Conte
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -40503,6 +41998,8 @@ func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Con
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -40608,6 +42105,8 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -40713,6 +42212,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -40910,6 +42411,8 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -40932,6 +42435,67 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_refreshUsageMonitorChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveChannelQuotaMonitorBindings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_saveChannelQuotaMonitorBindings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SaveChannelQuotaMonitorBindings(ctx, fc.Args["channelID"].(objects.GUID), fc.Args["input"].(biz.SaveChannelQuotaMonitorBindingsInput))
+		},
+		nil,
+		ec.marshalNChannelQuotaMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelQuotaMonitorBindingViewᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveChannelQuotaMonitorBindings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_id(ctx, field)
+			case "channelID":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_channelID(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorChannelID(ctx, field)
+			case "usageMonitorName":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorName(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_conditions(ctx, field)
+			case "lastTriggeredAt":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggeredAt(ctx, field)
+			case "lastTriggerReason":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggerReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelQuotaMonitorBinding", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveChannelQuotaMonitorBindings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -45666,6 +47230,8 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -46844,6 +48410,55 @@ func (ec *executionContext) fieldContext_Query_channelOverrideTemplates(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_channelUsageMonitorBindings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_channelUsageMonitorBindings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ChannelUsageMonitorBindings(ctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int), fc.Args["orderBy"].(*ent.ChannelUsageMonitorBindingOrder), fc.Args["where"].(*ent.ChannelUsageMonitorBindingWhereInput))
+		},
+		nil,
+		ec.marshalNChannelUsageMonitorBindingConnection2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingConnection,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_channelUsageMonitorBindings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_ChannelUsageMonitorBindingConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_ChannelUsageMonitorBindingConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_ChannelUsageMonitorBindingConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelUsageMonitorBindingConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_channelUsageMonitorBindings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dataStorages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -47623,6 +49238,8 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -50304,6 +51921,8 @@ func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Contex
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -51336,6 +52955,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -51430,6 +53051,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -51510,6 +53133,116 @@ func (ec *executionContext) fieldContext_Query_quotaMonitorTemplates(_ context.C
 				return ec.fieldContext_QuotaMonitorTemplate_displayFields(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_channelQuotaMonitorBindings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_channelQuotaMonitorBindings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ChannelQuotaMonitorBindings(ctx, fc.Args["channelID"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNChannelQuotaMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelQuotaMonitorBindingViewᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_channelQuotaMonitorBindings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_id(ctx, field)
+			case "channelID":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_channelID(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorChannelID(ctx, field)
+			case "usageMonitorName":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_usageMonitorName(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_conditions(ctx, field)
+			case "lastTriggeredAt":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggeredAt(ctx, field)
+			case "lastTriggerReason":
+				return ec.fieldContext_ChannelQuotaMonitorBinding_lastTriggerReason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelQuotaMonitorBinding", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_channelQuotaMonitorBindings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_usageMonitorBindingSummaries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_usageMonitorBindingSummaries,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().UsageMonitorBindingSummaries(ctx)
+		},
+		nil,
+		ec.marshalNUsageMonitorBindingSummary2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUsageMonitorBindingSummaryᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_usageMonitorBindingSummaries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelID":
+				return ec.fieldContext_UsageMonitorBindingSummary_channelID(ctx, field)
+			case "channelName":
+				return ec.fieldContext_UsageMonitorBindingSummary_channelName(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_UsageMonitorBindingSummary_usageMonitorChannelID(ctx, field)
+			case "strategy":
+				return ec.fieldContext_UsageMonitorBindingSummary_strategy(ctx, field)
+			case "enabled":
+				return ec.fieldContext_UsageMonitorBindingSummary_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_UsageMonitorBindingSummary_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_UsageMonitorBindingSummary_conditions(ctx, field)
+			case "matched":
+				return ec.fieldContext_UsageMonitorBindingSummary_matched(ctx, field)
+			case "reason":
+				return ec.fieldContext_UsageMonitorBindingSummary_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UsageMonitorBindingSummary", field.Name)
 		},
 	}
 	return fc, nil
@@ -51676,6 +53409,93 @@ func (ec *executionContext) fieldContext_QuotaEnforcementSettings_mode(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type QuotaEnforcementMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorBindingCondition_field(ctx context.Context, field graphql.CollectedField, obj *objects.QuotaMonitorBindingCondition) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorBindingCondition_field,
+		func(ctx context.Context) (any, error) {
+			return obj.Field, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorBindingCondition_field(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorBindingCondition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorBindingCondition_operator(ctx context.Context, field graphql.CollectedField, obj *objects.QuotaMonitorBindingCondition) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorBindingCondition_operator,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.QuotaMonitorBindingCondition().Operator(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorBindingCondition_operator(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorBindingCondition",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaMonitorBindingCondition_value(ctx context.Context, field graphql.CollectedField, obj *objects.QuotaMonitorBindingCondition) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaMonitorBindingCondition_value,
+		func(ctx context.Context) (any, error) {
+			return obj.Value, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaMonitorBindingCondition_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaMonitorBindingCondition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -53485,6 +55305,8 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -54611,6 +56433,8 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -62221,6 +64045,8 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -63316,6 +65142,8 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -63721,6 +65549,275 @@ func (ec *executionContext) fieldContext_UsageMetadata_totalCost(_ context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Decimal does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_channelID(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_channelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorBindingSummary().ChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_channelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_channelName(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_channelName,
+		func(ctx context.Context) (any, error) {
+			return obj.ChannelName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_channelName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_usageMonitorChannelID(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_usageMonitorChannelID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.UsageMonitorBindingSummary().UsageMonitorChannelID(ctx, obj)
+		},
+		nil,
+		ec.marshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_usageMonitorChannelID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_strategy(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_strategy,
+		func(ctx context.Context) (any, error) {
+			return obj.Strategy, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_strategy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_enabled(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_triggerStatuses(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_triggerStatuses,
+		func(ctx context.Context) (any, error) {
+			return obj.TriggerStatuses, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_triggerStatuses(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_conditions(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_conditions,
+		func(ctx context.Context) (any, error) {
+			return obj.Conditions, nil
+		},
+		nil,
+		ec.marshalNQuotaMonitorBindingCondition2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_conditions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "field":
+				return ec.fieldContext_QuotaMonitorBindingCondition_field(ctx, field)
+			case "operator":
+				return ec.fieldContext_QuotaMonitorBindingCondition_operator(ctx, field)
+			case "value":
+				return ec.fieldContext_QuotaMonitorBindingCondition_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type QuotaMonitorBindingCondition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_matched(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_matched,
+		func(ctx context.Context) (any, error) {
+			return obj.Matched, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_matched(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorBindingSummary_reason(ctx context.Context, field graphql.CollectedField, obj *biz.UsageMonitorBindingSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorBindingSummary_reason,
+		func(ctx context.Context) (any, error) {
+			return obj.Reason, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorBindingSummary_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorBindingSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64514,6 +66611,8 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_channel(_ context.C
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -64613,6 +66712,61 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_owner(_ context.Con
 				return ec.fieldContext_User_userRoles(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UsageMonitorChannel_channelBindings(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UsageMonitorChannel_channelBindings,
+		func(ctx context.Context) (any, error) {
+			return obj.ChannelBindings(ctx)
+		},
+		nil,
+		ec.marshalOChannelUsageMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_UsageMonitorChannel_channelBindings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UsageMonitorChannel",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ChannelUsageMonitorBinding_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_updatedAt(ctx, field)
+			case "channelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channelID(ctx, field)
+			case "usageMonitorChannelID":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannelID(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelUsageMonitorBinding_enabled(ctx, field)
+			case "triggerStatuses":
+				return ec.fieldContext_ChannelUsageMonitorBinding_triggerStatuses(ctx, field)
+			case "conditions":
+				return ec.fieldContext_ChannelUsageMonitorBinding_conditions(ctx, field)
+			case "lastTriggeredAt":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggeredAt(ctx, field)
+			case "lastTriggerReason":
+				return ec.fieldContext_ChannelUsageMonitorBinding_lastTriggerReason(ctx, field)
+			case "channel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_channel(ctx, field)
+			case "usageMonitorChannel":
+				return ec.fieldContext_ChannelUsageMonitorBinding_usageMonitorChannel(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelUsageMonitorBinding", field.Name)
 		},
 	}
 	return fc, nil
@@ -65337,6 +67491,8 @@ func (ec *executionContext) fieldContext_User_ownedChannels(_ context.Context, f
 				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
 			case "usageMonitorChannels":
 				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
 			case "defaultEndpoints":
 				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
 			case "allModelEntries":
@@ -65974,6 +68130,8 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_channel(ctx, field)
 			case "owner":
 				return ec.fieldContext_UsageMonitorChannel_owner(ctx, field)
+			case "channelBindings":
+				return ec.fieldContext_UsageMonitorChannel_channelBindings(ctx, field)
 			case "apiHeadersString":
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
@@ -75576,6 +77734,590 @@ func (ec *executionContext) unmarshalInputChannelTagsRegexAssociationInput(ctx c
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputChannelUsageMonitorBindingOrder(ctx context.Context, obj any) (ent.ChannelUsageMonitorBindingOrder, error) {
+	var it ent.ChannelUsageMonitorBindingOrder
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["direction"]; !present {
+		asMap["direction"] = "ASC"
+	}
+
+	fieldsInOrder := [...]string{"direction", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "direction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			data, err := ec.unmarshalNOrderDirection2entgoᚗioᚋcontribᚋentgqlᚐOrderDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Direction = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNChannelUsageMonitorBindingOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingOrderField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChannelUsageMonitorBindingWhereInput(ctx context.Context, obj any) (ent.ChannelUsageMonitorBindingWhereInput, error) {
+	var it ent.ChannelUsageMonitorBindingWhereInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "usageMonitorChannelID", "usageMonitorChannelIDNEQ", "usageMonitorChannelIDIn", "usageMonitorChannelIDNotIn", "enabled", "enabledNEQ", "lastTriggeredAt", "lastTriggeredAtNEQ", "lastTriggeredAtIn", "lastTriggeredAtNotIn", "lastTriggeredAtGT", "lastTriggeredAtGTE", "lastTriggeredAtLT", "lastTriggeredAtLTE", "lastTriggeredAtIsNil", "lastTriggeredAtNotNil", "lastTriggerReason", "lastTriggerReasonNEQ", "lastTriggerReasonIn", "lastTriggerReasonNotIn", "lastTriggerReasonGT", "lastTriggerReasonGTE", "lastTriggerReasonLT", "lastTriggerReasonLTE", "lastTriggerReasonContains", "lastTriggerReasonHasPrefix", "lastTriggerReasonHasSuffix", "lastTriggerReasonIsNil", "lastTriggerReasonNotNil", "lastTriggerReasonEqualFold", "lastTriggerReasonContainsFold", "hasChannel", "hasChannelWith", "hasUsageMonitorChannel", "hasUsageMonitorChannelWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			data, err := ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Not = data
+		case "and":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			data, err := ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.And = data
+		case "or":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			data, err := ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Or = data
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ID = converted
+		case "idNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNEQ = converted
+		case "idIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDIn = converted
+		case "idNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDNotIn = converted
+		case "idGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGT = converted
+		case "idGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDGTE = converted
+		case "idLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLT = converted
+		case "idLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.IDLTE = converted
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "createdAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNEQ = data
+		case "createdAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtIn = data
+		case "createdAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtNotIn = data
+		case "createdAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGT = data
+		case "createdAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtGTE = data
+		case "createdAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLT = data
+		case "createdAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAtLTE = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "updatedAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNEQ = data
+		case "updatedAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtIn = data
+		case "updatedAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtNotIn = data
+		case "updatedAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGT = data
+		case "updatedAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtGTE = data
+		case "updatedAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLT = data
+		case "updatedAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAtLTE = data
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelID = converted
+		case "channelIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNEQ = converted
+		case "channelIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDIn = converted
+		case "channelIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelIDNotIn = converted
+		case "usageMonitorChannelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelID"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelID = converted
+		case "usageMonitorChannelIDNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelIDNEQ"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToIntPtr(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelIDNEQ = converted
+		case "usageMonitorChannelIDIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelIDIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelIDIn = converted
+		case "usageMonitorChannelIDNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelIDNotIn"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelIDNotIn = converted
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "enabledNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabledNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EnabledNEQ = data
+		case "lastTriggeredAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAt = data
+		case "lastTriggeredAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtNEQ = data
+		case "lastTriggeredAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtIn = data
+		case "lastTriggeredAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtNotIn = data
+		case "lastTriggeredAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtGT = data
+		case "lastTriggeredAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtGTE = data
+		case "lastTriggeredAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtLT = data
+		case "lastTriggeredAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtLTE = data
+		case "lastTriggeredAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtIsNil = data
+		case "lastTriggeredAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAtNotNil = data
+		case "lastTriggerReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReason = data
+		case "lastTriggerReasonNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonNEQ = data
+		case "lastTriggerReasonIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonIn = data
+		case "lastTriggerReasonNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonNotIn = data
+		case "lastTriggerReasonGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonGT = data
+		case "lastTriggerReasonGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonGTE = data
+		case "lastTriggerReasonLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonLT = data
+		case "lastTriggerReasonLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonLTE = data
+		case "lastTriggerReasonContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonContains = data
+		case "lastTriggerReasonHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonHasPrefix = data
+		case "lastTriggerReasonHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonHasSuffix = data
+		case "lastTriggerReasonIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonIsNil = data
+		case "lastTriggerReasonNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonNotNil = data
+		case "lastTriggerReasonEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonEqualFold = data
+		case "lastTriggerReasonContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReasonContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReasonContainsFold = data
+		case "hasChannel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannel"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannel = data
+		case "hasChannelWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannelWith"))
+			data, err := ec.unmarshalOChannelWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannelWith = data
+		case "hasUsageMonitorChannel":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageMonitorChannel"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageMonitorChannel = data
+		case "hasUsageMonitorChannelWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasUsageMonitorChannelWith"))
+			data, err := ec.unmarshalOUsageMonitorChannelWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUsageMonitorChannelWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasUsageMonitorChannelWith = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context, obj any) (ent.ChannelWhereInput, error) {
 	var it ent.ChannelWhereInput
 	asMap := map[string]any{}
@@ -75583,7 +78325,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "quotaBindingReady", "quotaBindingReadyNEQ", "quotaMultiMonitorStrategy", "quotaMultiMonitorStrategyNEQ", "quotaMultiMonitorStrategyIn", "quotaMultiMonitorStrategyNotIn", "quotaMultiMonitorStrategyIsNil", "quotaMultiMonitorStrategyNotNil", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "quotaBindingReady", "quotaBindingReadyNEQ", "quotaMultiMonitorStrategy", "quotaMultiMonitorStrategyNEQ", "quotaMultiMonitorStrategyIn", "quotaMultiMonitorStrategyNotIn", "quotaMultiMonitorStrategyIsNil", "quotaMultiMonitorStrategyNotNil", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith", "hasQuotaMonitorBindings", "hasQuotaMonitorBindingsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -76835,6 +79577,20 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.HasUsageMonitorChannelsWith = data
+		case "hasQuotaMonitorBindings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasQuotaMonitorBindings"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasQuotaMonitorBindings = data
+		case "hasQuotaMonitorBindingsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasQuotaMonitorBindingsWith"))
+			data, err := ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasQuotaMonitorBindingsWith = data
 		}
 	}
 
@@ -77203,7 +79959,7 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "usageMonitorChannelIDs"}
+	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "usageMonitorChannelIDs", "quotaMonitorBindingIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -77347,6 +80103,17 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 				return it, graphql.ErrorOnPath(ctx, err)
 			}
 			it.UsageMonitorChannelIDs = converted
+		case "quotaMonitorBindingIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaMonitorBindingIDs"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.QuotaMonitorBindingIDs = converted
 		}
 	}
 
@@ -77395,6 +80162,83 @@ func (ec *executionContext) unmarshalInputCreateChannelOverrideTemplateInput(ctx
 				return it, err
 			}
 			it.BodyOverrideOperations = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateChannelUsageMonitorBindingInput(ctx context.Context, obj any) (ent.CreateChannelUsageMonitorBindingInput, error) {
+	var it ent.CreateChannelUsageMonitorBindingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "triggerStatuses", "conditions", "lastTriggeredAt", "lastTriggerReason", "channelID", "usageMonitorChannelID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "triggerStatuses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerStatuses"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TriggerStatuses = data
+		case "conditions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conditions"))
+			data, err := ec.unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Conditions = data
+		case "lastTriggeredAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAt = data
+		case "lastTriggerReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReason = data
+		case "channelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelID"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.ChannelID = converted
+		case "usageMonitorChannelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelID"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelID = converted
 		}
 	}
 
@@ -86950,6 +89794,49 @@ func (ec *executionContext) unmarshalInputQueryModelsInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputQuotaMonitorBindingConditionInput(ctx context.Context, obj any) (objects.QuotaMonitorBindingCondition, error) {
+	var it objects.QuotaMonitorBindingCondition
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"field", "operator", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
+		case "operator":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operator"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.QuotaMonitorBindingConditionInput().Operator(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "value":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Value = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRegexAssociationInput(ctx context.Context, obj any) (objects.RegexAssociation, error) {
 	var it objects.RegexAssociation
 	asMap := map[string]any{}
@@ -90811,6 +93698,92 @@ func (ec *executionContext) unmarshalInputSaveChannelModelPriceInput(ctx context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSaveChannelQuotaMonitorBindingInput(ctx context.Context, obj any) (biz.SaveChannelQuotaMonitorBindingInput, error) {
+	var it biz.SaveChannelQuotaMonitorBindingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"usageMonitorChannelID", "enabled", "triggerStatuses", "conditions"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "usageMonitorChannelID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("usageMonitorChannelID"))
+			data, err := ec.unmarshalNID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrToInt(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.UsageMonitorChannelID = converted
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "triggerStatuses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerStatuses"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TriggerStatuses = data
+		case "conditions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conditions"))
+			data, err := ec.unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Conditions = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSaveChannelQuotaMonitorBindingsInput(ctx context.Context, obj any) (biz.SaveChannelQuotaMonitorBindingsInput, error) {
+	var it biz.SaveChannelQuotaMonitorBindingsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"strategy", "bindings"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "strategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("strategy"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Strategy = data
+		case "bindings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bindings"))
+			data, err := ec.unmarshalNSaveChannelQuotaMonitorBindingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Bindings = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSaveProxyPresetInput(ctx context.Context, obj any) (biz.ProxyPreset, error) {
 	var it biz.ProxyPreset
 	asMap := map[string]any{}
@@ -92864,7 +95837,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "clientRestriction", "clearClientRestriction", "autoDisableConfig", "clearAutoDisableConfig", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "clearQuotaMultiMonitorStrategy", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
+	fieldsInOrder := [...]string{"type", "baseURL", "clearBaseURL", "name", "status", "credentials", "supportedModels", "appendSupportedModels", "manualModels", "appendManualModels", "clearManualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "clearAutoSyncModelPattern", "tags", "appendTags", "clearTags", "defaultTestModel", "policies", "clearPolicies", "settings", "clearSettings", "orderingWeight", "errorMessage", "clearErrorMessage", "remark", "clearRemark", "endpoints", "appendEndpoints", "clearEndpoints", "clientRestriction", "clearClientRestriction", "autoDisableConfig", "clearAutoDisableConfig", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "clearQuotaMultiMonitorStrategy", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels", "addQuotaMonitorBindingIDs", "removeQuotaMonitorBindingIDs", "clearQuotaMonitorBindings"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -93166,6 +96139,35 @@ func (ec *executionContext) unmarshalInputUpdateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.ClearUsageMonitorChannels = data
+		case "addQuotaMonitorBindingIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addQuotaMonitorBindingIDs"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.AddQuotaMonitorBindingIDs = converted
+		case "removeQuotaMonitorBindingIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeQuotaMonitorBindingIDs"))
+			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			converted, err := objects.ConvertGUIDPtrsToInts(data)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			it.RemoveQuotaMonitorBindingIDs = converted
+		case "clearQuotaMonitorBindings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearQuotaMonitorBindings"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearQuotaMonitorBindings = data
 		}
 	}
 
@@ -93310,6 +96312,89 @@ func (ec *executionContext) unmarshalInputUpdateChannelProbeSettingInput(ctx con
 				return it, err
 			}
 			it.Frequency = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateChannelUsageMonitorBindingInput(ctx context.Context, obj any) (ent.UpdateChannelUsageMonitorBindingInput, error) {
+	var it ent.UpdateChannelUsageMonitorBindingInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "triggerStatuses", "appendTriggerStatuses", "conditions", "appendConditions", "lastTriggeredAt", "clearLastTriggeredAt", "lastTriggerReason", "clearLastTriggerReason"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "triggerStatuses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("triggerStatuses"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TriggerStatuses = data
+		case "appendTriggerStatuses":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendTriggerStatuses"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppendTriggerStatuses = data
+		case "conditions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conditions"))
+			data, err := ec.unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Conditions = data
+		case "appendConditions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendConditions"))
+			data, err := ec.unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppendConditions = data
+		case "lastTriggeredAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggeredAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggeredAt = data
+		case "clearLastTriggeredAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearLastTriggeredAt"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearLastTriggeredAt = data
+		case "lastTriggerReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastTriggerReason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastTriggerReason = data
+		case "clearLastTriggerReason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearLastTriggerReason"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearLastTriggerReason = data
 		}
 	}
 
@@ -97389,7 +100474,7 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "quotaStatus", "quotaStatusNEQ", "quotaStatusIn", "quotaStatusNotIn", "quotaStatusIsNil", "quotaStatusNotNil", "quotaReady", "quotaReadyNEQ", "quotaReadyIsNil", "quotaReadyNotNil", "nextResetAt", "nextResetAtNEQ", "nextResetAtIn", "nextResetAtNotIn", "nextResetAtGT", "nextResetAtGTE", "nextResetAtLT", "nextResetAtLTE", "nextResetAtIsNil", "nextResetAtNotNil", "autoDisableEnabled", "autoDisableEnabledNEQ", "autoDisableThreshold", "autoDisableThresholdNEQ", "autoDisableThresholdIn", "autoDisableThresholdNotIn", "autoDisableThresholdGT", "autoDisableThresholdGTE", "autoDisableThresholdLT", "autoDisableThresholdLTE", "autoDisableThresholdIsNil", "autoDisableThresholdNotNil", "autoEnableThreshold", "autoEnableThresholdNEQ", "autoEnableThresholdIn", "autoEnableThresholdNotIn", "autoEnableThresholdGT", "autoEnableThresholdGTE", "autoEnableThresholdLT", "autoEnableThresholdLTE", "autoEnableThresholdIsNil", "autoEnableThresholdNotNil", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "source", "sourceNEQ", "sourceIn", "sourceNotIn", "providerType", "providerTypeNEQ", "providerTypeIn", "providerTypeNotIn", "providerTypeIsNil", "providerTypeNotNil", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "apiURL", "apiURLNEQ", "apiURLIn", "apiURLNotIn", "apiURLGT", "apiURLGTE", "apiURLLT", "apiURLLTE", "apiURLContains", "apiURLHasPrefix", "apiURLHasSuffix", "apiURLEqualFold", "apiURLContainsFold", "apiMethod", "apiMethodNEQ", "apiMethodIn", "apiMethodNotIn", "apiBody", "apiBodyNEQ", "apiBodyIn", "apiBodyNotIn", "apiBodyGT", "apiBodyGTE", "apiBodyLT", "apiBodyLTE", "apiBodyContains", "apiBodyHasPrefix", "apiBodyHasSuffix", "apiBodyIsNil", "apiBodyNotNil", "apiBodyEqualFold", "apiBodyContainsFold", "pollInterval", "pollIntervalNEQ", "pollIntervalIn", "pollIntervalNotIn", "pollIntervalGT", "pollIntervalGTE", "pollIntervalLT", "pollIntervalLTE", "lastPollAt", "lastPollAtNEQ", "lastPollAtIn", "lastPollAtNotIn", "lastPollAtGT", "lastPollAtGTE", "lastPollAtLT", "lastPollAtLTE", "lastPollAtIsNil", "lastPollAtNotNil", "lastPollError", "lastPollErrorNEQ", "lastPollErrorIn", "lastPollErrorNotIn", "lastPollErrorGT", "lastPollErrorGTE", "lastPollErrorLT", "lastPollErrorLTE", "lastPollErrorContains", "lastPollErrorHasPrefix", "lastPollErrorHasSuffix", "lastPollErrorIsNil", "lastPollErrorNotNil", "lastPollErrorEqualFold", "lastPollErrorContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "quotaStatus", "quotaStatusNEQ", "quotaStatusIn", "quotaStatusNotIn", "quotaStatusIsNil", "quotaStatusNotNil", "quotaReady", "quotaReadyNEQ", "quotaReadyIsNil", "quotaReadyNotNil", "nextResetAt", "nextResetAtNEQ", "nextResetAtIn", "nextResetAtNotIn", "nextResetAtGT", "nextResetAtGTE", "nextResetAtLT", "nextResetAtLTE", "nextResetAtIsNil", "nextResetAtNotNil", "autoDisableEnabled", "autoDisableEnabledNEQ", "autoDisableThreshold", "autoDisableThresholdNEQ", "autoDisableThresholdIn", "autoDisableThresholdNotIn", "autoDisableThresholdGT", "autoDisableThresholdGTE", "autoDisableThresholdLT", "autoDisableThresholdLTE", "autoDisableThresholdIsNil", "autoDisableThresholdNotNil", "autoEnableThreshold", "autoEnableThresholdNEQ", "autoEnableThresholdIn", "autoEnableThresholdNotIn", "autoEnableThresholdGT", "autoEnableThresholdGTE", "autoEnableThresholdLT", "autoEnableThresholdLTE", "autoEnableThresholdIsNil", "autoEnableThresholdNotNil", "hasChannel", "hasChannelWith", "hasOwner", "hasOwnerWith", "hasChannelBindings", "hasChannelBindingsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98641,6 +101726,20 @@ func (ec *executionContext) unmarshalInputUsageMonitorChannelWhereInput(ctx cont
 				return it, err
 			}
 			it.HasOwnerWith = data
+		case "hasChannelBindings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannelBindings"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannelBindings = data
+		case "hasChannelBindingsWith":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasChannelBindingsWith"))
+			data, err := ec.unmarshalOChannelUsageMonitorBindingWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HasChannelBindingsWith = data
 		}
 	}
 
@@ -101471,6 +104570,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._DataStorage(ctx, sel, obj)
+	case *ent.ChannelUsageMonitorBinding:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ChannelUsageMonitorBinding(ctx, sel, obj)
 	case *ent.ChannelProbe:
 		if obj == nil {
 			return graphql.Null
@@ -103639,6 +106743,39 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "quotaMonitorBindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Channel_quotaMonitorBindings(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "defaultEndpoints":
 			field := field
 
@@ -105640,6 +108777,172 @@ func (ec *executionContext) _ChannelProbeSetting(ctx context.Context, sel ast.Se
 	return out
 }
 
+var channelQuotaMonitorBindingImplementors = []string{"ChannelQuotaMonitorBinding"}
+
+func (ec *executionContext) _ChannelQuotaMonitorBinding(ctx context.Context, sel ast.SelectionSet, obj *biz.ChannelQuotaMonitorBindingView) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelQuotaMonitorBindingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelQuotaMonitorBinding")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelQuotaMonitorBinding_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "channelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelQuotaMonitorBinding_channelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageMonitorChannelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelQuotaMonitorBinding_usageMonitorChannelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageMonitorName":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_usageMonitorName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "enabled":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "triggerStatuses":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_triggerStatuses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "conditions":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_conditions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "lastTriggeredAt":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_lastTriggeredAt(ctx, field, obj)
+		case "lastTriggerReason":
+			out.Values[i] = ec._ChannelQuotaMonitorBinding_lastTriggerReason(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var channelRateLimitImplementors = []string{"ChannelRateLimit"}
 
 func (ec *executionContext) _ChannelRateLimit(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelRateLimit) graphql.Marshaler {
@@ -106042,6 +109345,336 @@ func (ec *executionContext) _ChannelTypeCount(ctx context.Context, sel ast.Selec
 			}
 		case "count":
 			out.Values[i] = ec._ChannelTypeCount_count(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelUsageMonitorBindingImplementors = []string{"ChannelUsageMonitorBinding", "Node"}
+
+func (ec *executionContext) _ChannelUsageMonitorBinding(ctx context.Context, sel ast.SelectionSet, obj *ent.ChannelUsageMonitorBinding) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelUsageMonitorBindingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelUsageMonitorBinding")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelUsageMonitorBinding_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdAt":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "channelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelUsageMonitorBinding_channelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageMonitorChannelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelUsageMonitorBinding_usageMonitorChannelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "enabled":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "triggerStatuses":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_triggerStatuses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "conditions":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_conditions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "lastTriggeredAt":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_lastTriggeredAt(ctx, field, obj)
+		case "lastTriggerReason":
+			out.Values[i] = ec._ChannelUsageMonitorBinding_lastTriggerReason(ctx, field, obj)
+		case "channel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelUsageMonitorBinding_channel(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "usageMonitorChannel":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ChannelUsageMonitorBinding_usageMonitorChannel(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelUsageMonitorBindingConnectionImplementors = []string{"ChannelUsageMonitorBindingConnection"}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.ChannelUsageMonitorBindingConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelUsageMonitorBindingConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelUsageMonitorBindingConnection")
+		case "edges":
+			out.Values[i] = ec._ChannelUsageMonitorBindingConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._ChannelUsageMonitorBindingConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._ChannelUsageMonitorBindingConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelUsageMonitorBindingEdgeImplementors = []string{"ChannelUsageMonitorBindingEdge"}
+
+func (ec *executionContext) _ChannelUsageMonitorBindingEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.ChannelUsageMonitorBindingEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelUsageMonitorBindingEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelUsageMonitorBindingEdge")
+		case "node":
+			out.Values[i] = ec._ChannelUsageMonitorBindingEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._ChannelUsageMonitorBindingEdge_cursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -110018,6 +113651,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "saveChannelQuotaMonitorBindings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveChannelQuotaMonitorBindings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -112895,6 +116535,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "channelUsageMonitorBindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_channelUsageMonitorBindings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "dataStorages":
 			field := field
 
@@ -114976,6 +118638,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "channelQuotaMonitorBindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_channelQuotaMonitorBindings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "usageMonitorBindingSummaries":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_usageMonitorBindingSummaries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -115027,6 +118733,86 @@ func (ec *executionContext) _QuotaEnforcementSettings(ctx context.Context, sel a
 			out.Values[i] = ec._QuotaEnforcementSettings_mode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var quotaMonitorBindingConditionImplementors = []string{"QuotaMonitorBindingCondition"}
+
+func (ec *executionContext) _QuotaMonitorBindingCondition(ctx context.Context, sel ast.SelectionSet, obj *objects.QuotaMonitorBindingCondition) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, quotaMonitorBindingConditionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QuotaMonitorBindingCondition")
+		case "field":
+			out.Values[i] = ec._QuotaMonitorBindingCondition_field(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "operator":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._QuotaMonitorBindingCondition_operator(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "value":
+			out.Values[i] = ec._QuotaMonitorBindingCondition_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -120884,6 +124670,147 @@ func (ec *executionContext) _UsageMetadata(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var usageMonitorBindingSummaryImplementors = []string{"UsageMonitorBindingSummary"}
+
+func (ec *executionContext) _UsageMonitorBindingSummary(ctx context.Context, sel ast.SelectionSet, obj *biz.UsageMonitorBindingSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, usageMonitorBindingSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UsageMonitorBindingSummary")
+		case "channelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorBindingSummary_channelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "channelName":
+			out.Values[i] = ec._UsageMonitorBindingSummary_channelName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "usageMonitorChannelID":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorBindingSummary_usageMonitorChannelID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "strategy":
+			out.Values[i] = ec._UsageMonitorBindingSummary_strategy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "enabled":
+			out.Values[i] = ec._UsageMonitorBindingSummary_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "triggerStatuses":
+			out.Values[i] = ec._UsageMonitorBindingSummary_triggerStatuses(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "conditions":
+			out.Values[i] = ec._UsageMonitorBindingSummary_conditions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "matched":
+			out.Values[i] = ec._UsageMonitorBindingSummary_matched(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "reason":
+			out.Values[i] = ec._UsageMonitorBindingSummary_reason(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var usageMonitorChannelImplementors = []string{"UsageMonitorChannel", "Node"}
 
 func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.SelectionSet, obj *ent.UsageMonitorChannel) graphql.Marshaler {
@@ -121149,6 +125076,39 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "channelBindings":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._UsageMonitorChannel_channelBindings(ctx, field, obj)
 				return res
 			}
 
@@ -125183,6 +129143,60 @@ func (ec *executionContext) unmarshalNChannelProbeWhereInput2ᚖgithubᚗcomᚋl
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNChannelQuotaMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelQuotaMonitorBindingViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*biz.ChannelQuotaMonitorBindingView) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelQuotaMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelQuotaMonitorBindingView(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNChannelQuotaMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelQuotaMonitorBindingView(ctx context.Context, sel ast.SelectionSet, v *biz.ChannelQuotaMonitorBindingView) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelQuotaMonitorBinding(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNChannelQuotaMultiMonitorStrategy2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐQuotaMultiMonitorStrategy(ctx context.Context, v any) (channel.QuotaMultiMonitorStrategy, error) {
 	var res channel.QuotaMultiMonitorStrategy
 	err := res.UnmarshalGQL(v)
@@ -125319,6 +129333,51 @@ func (ec *executionContext) marshalNChannelTypeCount2ᚖgithubᚗcomᚋldm2060�
 		return graphql.Null
 	}
 	return ec._ChannelTypeCount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelUsageMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBinding(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelUsageMonitorBinding) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelUsageMonitorBinding(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelUsageMonitorBindingConnection2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingConnection(ctx context.Context, sel ast.SelectionSet, v ent.ChannelUsageMonitorBindingConnection) graphql.Marshaler {
+	return ec._ChannelUsageMonitorBindingConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelUsageMonitorBindingConnection2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingConnection(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelUsageMonitorBindingConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelUsageMonitorBindingConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNChannelUsageMonitorBindingOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingOrderField(ctx context.Context, v any) (*ent.ChannelUsageMonitorBindingOrderField, error) {
+	var res = new(ent.ChannelUsageMonitorBindingOrderField)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChannelUsageMonitorBindingOrderField2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingOrderField(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelUsageMonitorBindingOrderField) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalNChannelUsageMonitorBindingWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInput(ctx context.Context, v any) (*ent.ChannelUsageMonitorBindingWhereInput, error) {
+	res, err := ec.unmarshalInputChannelUsageMonitorBindingWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNChannelVisibility2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx context.Context, v any) (channel.Visibility, error) {
@@ -128317,6 +132376,59 @@ func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋl
 	return ec._QuotaEnforcementSettings(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNQuotaMonitorBindingCondition2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingCondition(ctx context.Context, sel ast.SelectionSet, v objects.QuotaMonitorBindingCondition) graphql.Marshaler {
+	return ec._QuotaMonitorBindingCondition(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNQuotaMonitorBindingCondition2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.QuotaMonitorBindingCondition) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNQuotaMonitorBindingCondition2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingCondition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNQuotaMonitorBindingConditionInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingCondition(ctx context.Context, v any) (objects.QuotaMonitorBindingCondition, error) {
+	res, err := ec.unmarshalInputQuotaMonitorBindingConditionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚋusage_monitorᚐChannelTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*usage_monitor.ChannelTemplate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -128854,6 +132966,31 @@ func (ec *executionContext) unmarshalNSaveChannelModelPriceInput2ᚕᚖgithubᚗ
 func (ec *executionContext) unmarshalNSaveChannelModelPriceInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelModelPriceInput(ctx context.Context, v any) (*biz.SaveChannelModelPriceInput, error) {
 	res, err := ec.unmarshalInputSaveChannelModelPriceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSaveChannelQuotaMonitorBindingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingInput(ctx context.Context, v any) (biz.SaveChannelQuotaMonitorBindingInput, error) {
+	res, err := ec.unmarshalInputSaveChannelQuotaMonitorBindingInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSaveChannelQuotaMonitorBindingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingInputᚄ(ctx context.Context, v any) ([]biz.SaveChannelQuotaMonitorBindingInput, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]biz.SaveChannelQuotaMonitorBindingInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSaveChannelQuotaMonitorBindingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNSaveChannelQuotaMonitorBindingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSaveChannelQuotaMonitorBindingsInput(ctx context.Context, v any) (biz.SaveChannelQuotaMonitorBindingsInput, error) {
+	res, err := ec.unmarshalInputSaveChannelQuotaMonitorBindingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSaveProxyPresetInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐProxyPreset(ctx context.Context, v any) (biz.ProxyPreset, error) {
@@ -129880,6 +134017,60 @@ func (ec *executionContext) marshalNUsageLogSource2githubᚗcomᚋldm2060ᚋaxon
 func (ec *executionContext) unmarshalNUsageLogWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUsageLogWhereInput(ctx context.Context, v any) (*ent.UsageLogWhereInput, error) {
 	res, err := ec.unmarshalInputUsageLogWhereInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUsageMonitorBindingSummary2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUsageMonitorBindingSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*biz.UsageMonitorBindingSummary) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUsageMonitorBindingSummary2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUsageMonitorBindingSummary(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUsageMonitorBindingSummary2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUsageMonitorBindingSummary(ctx context.Context, sel ast.SelectionSet, v *biz.UsageMonitorBindingSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UsageMonitorBindingSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUsageMonitorChannel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUsageMonitorChannel(ctx context.Context, sel ast.SelectionSet, v ent.UsageMonitorChannel) graphql.Marshaler {
@@ -132542,6 +136733,142 @@ func (ec *executionContext) marshalOChannelType2ᚖgithubᚗcomᚋldm2060ᚋaxon
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOChannelUsageMonitorBinding2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.ChannelUsageMonitorBinding) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelUsageMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBinding(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOChannelUsageMonitorBinding2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBinding(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelUsageMonitorBinding) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChannelUsageMonitorBinding(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOChannelUsageMonitorBindingEdge2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.ChannelUsageMonitorBindingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOChannelUsageMonitorBindingEdge2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOChannelUsageMonitorBindingEdge2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingEdge(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelUsageMonitorBindingEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChannelUsageMonitorBindingEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOChannelUsageMonitorBindingOrder2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingOrder(ctx context.Context, v any) (*ent.ChannelUsageMonitorBindingOrder, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChannelUsageMonitorBindingOrder(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChannelUsageMonitorBindingWhereInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInputᚄ(ctx context.Context, v any) ([]*ent.ChannelUsageMonitorBindingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*ent.ChannelUsageMonitorBindingWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelUsageMonitorBindingWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOChannelUsageMonitorBindingWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelUsageMonitorBindingWhereInput(ctx context.Context, v any) (*ent.ChannelUsageMonitorBindingWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChannelUsageMonitorBindingWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOChannelVisibility2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibilityᚄ(ctx context.Context, v any) ([]channel.Visibility, error) {
@@ -136142,6 +140469,24 @@ func (ec *executionContext) marshalOQuotaEnforcementMode2ᚖgithubᚗcomᚋldm20
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx context.Context, v any) ([]objects.QuotaMonitorBindingCondition, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]objects.QuotaMonitorBindingCondition, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNQuotaMonitorBindingConditionInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingCondition(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalORegexAssociation2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRegexAssociation(ctx context.Context, sel ast.SelectionSet, v *objects.RegexAssociation) graphql.Marshaler {

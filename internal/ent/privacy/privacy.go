@@ -279,6 +279,30 @@ func (f ChannelProbeMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mu
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ChannelProbeMutation", m)
 }
 
+// The ChannelUsageMonitorBindingQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type ChannelUsageMonitorBindingQueryRuleFunc func(context.Context, *ent.ChannelUsageMonitorBindingQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f ChannelUsageMonitorBindingQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ChannelUsageMonitorBindingQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.ChannelUsageMonitorBindingQuery", q)
+}
+
+// The ChannelUsageMonitorBindingMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type ChannelUsageMonitorBindingMutationRuleFunc func(context.Context, *ent.ChannelUsageMonitorBindingMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f ChannelUsageMonitorBindingMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.ChannelUsageMonitorBindingMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ChannelUsageMonitorBindingMutation", m)
+}
+
 // The DataStorageQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type DataStorageQueryRuleFunc func(context.Context, *ent.DataStorageQuery) error
@@ -832,6 +856,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.ChannelProbeQuery:
 		return q.Filter(), nil
+	case *ent.ChannelUsageMonitorBindingQuery:
+		return q.Filter(), nil
 	case *ent.DataStorageQuery:
 		return q.Filter(), nil
 	case *ent.EmailTokenQuery:
@@ -894,6 +920,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.ChannelOverrideTemplateMutation:
 		return m.Filter(), nil
 	case *ent.ChannelProbeMutation:
+		return m.Filter(), nil
+	case *ent.ChannelUsageMonitorBindingMutation:
 		return m.Filter(), nil
 	case *ent.DataStorageMutation:
 		return m.Filter(), nil

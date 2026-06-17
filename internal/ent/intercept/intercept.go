@@ -15,6 +15,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -282,6 +283,33 @@ func (f TraverseChannelProbe) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ChannelProbeQuery", q)
+}
+
+// The ChannelUsageMonitorBindingFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ChannelUsageMonitorBindingFunc func(context.Context, *ent.ChannelUsageMonitorBindingQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ChannelUsageMonitorBindingFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ChannelUsageMonitorBindingQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ChannelUsageMonitorBindingQuery", q)
+}
+
+// The TraverseChannelUsageMonitorBinding type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseChannelUsageMonitorBinding func(context.Context, *ent.ChannelUsageMonitorBindingQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseChannelUsageMonitorBinding) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseChannelUsageMonitorBinding) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ChannelUsageMonitorBindingQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ChannelUsageMonitorBindingQuery", q)
 }
 
 // The DataStorageFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -868,6 +896,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.ChannelOverrideTemplateQuery, predicate.ChannelOverrideTemplate, channeloverridetemplate.OrderOption]{typ: ent.TypeChannelOverrideTemplate, tq: q}, nil
 	case *ent.ChannelProbeQuery:
 		return &query[*ent.ChannelProbeQuery, predicate.ChannelProbe, channelprobe.OrderOption]{typ: ent.TypeChannelProbe, tq: q}, nil
+	case *ent.ChannelUsageMonitorBindingQuery:
+		return &query[*ent.ChannelUsageMonitorBindingQuery, predicate.ChannelUsageMonitorBinding, channelusagemonitorbinding.OrderOption]{typ: ent.TypeChannelUsageMonitorBinding, tq: q}, nil
 	case *ent.DataStorageQuery:
 		return &query[*ent.DataStorageQuery, predicate.DataStorage, datastorage.OrderOption]{typ: ent.TypeDataStorage, tq: q}, nil
 	case *ent.EmailTokenQuery:

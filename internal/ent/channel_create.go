@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelprice"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
@@ -439,6 +440,21 @@ func (_c *ChannelCreate) AddUsageMonitorChannels(v ...*UsageMonitorChannel) *Cha
 		ids[i] = v[i].ID
 	}
 	return _c.AddUsageMonitorChannelIDs(ids...)
+}
+
+// AddQuotaMonitorBindingIDs adds the "quota_monitor_bindings" edge to the ChannelUsageMonitorBinding entity by IDs.
+func (_c *ChannelCreate) AddQuotaMonitorBindingIDs(ids ...int) *ChannelCreate {
+	_c.mutation.AddQuotaMonitorBindingIDs(ids...)
+	return _c
+}
+
+// AddQuotaMonitorBindings adds the "quota_monitor_bindings" edges to the ChannelUsageMonitorBinding entity.
+func (_c *ChannelCreate) AddQuotaMonitorBindings(v ...*ChannelUsageMonitorBinding) *ChannelCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddQuotaMonitorBindingIDs(ids...)
 }
 
 // Mutation returns the ChannelMutation object of the builder.
@@ -868,6 +884,22 @@ func (_c *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usagemonitorchannel.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.QuotaMonitorBindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   channel.QuotaMonitorBindingsTable,
+			Columns: []string{channel.QuotaMonitorBindingsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(channelusagemonitorbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

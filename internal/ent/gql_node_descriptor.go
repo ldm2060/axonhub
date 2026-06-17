@@ -13,6 +13,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelmodelpriceversion"
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/channelprobe"
+	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
@@ -254,7 +255,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "Channel",
 		Fields: make([]*Field, 27),
-		Edges:  make([]*Edge, 8),
+		Edges:  make([]*Edge, 9),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -550,6 +551,16 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryUsageMonitorChannels().
 		Select(usagemonitorchannel.FieldID).
 		Scan(ctx, &node.Edges[7].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[8] = &Edge{
+		Type: "ChannelUsageMonitorBinding",
+		Name: "quota_monitor_bindings",
+	}
+	err = _m.QueryQuotaMonitorBindings().
+		Select(channelusagemonitorbinding.FieldID).
+		Scan(ctx, &node.Edges[8].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -896,6 +907,110 @@ func (_m *ChannelProbe) Node(ctx context.Context) (node *Node, err error) {
 	err = _m.QueryChannel().
 		Select(channel.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *ChannelUsageMonitorBinding) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "ChannelUsageMonitorBinding",
+		Fields: make([]*Field, 9),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "int",
+		Name:  "channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UsageMonitorChannelID); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "int",
+		Name:  "usage_monitor_channel_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Enabled); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "bool",
+		Name:  "enabled",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.TriggerStatuses); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "[]string",
+		Name:  "trigger_statuses",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Conditions); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "[]objects.QuotaMonitorBindingCondition",
+		Name:  "conditions",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastTriggeredAt); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "time.Time",
+		Name:  "last_triggered_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastTriggerReason); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "string",
+		Name:  "last_trigger_reason",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Channel",
+		Name: "channel",
+	}
+	err = _m.QueryChannel().
+		Select(channel.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "UsageMonitorChannel",
+		Name: "usage_monitor_channel",
+	}
+	err = _m.QueryUsageMonitorChannel().
+		Select(usagemonitorchannel.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -2860,7 +2975,7 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 		ID:     _m.ID,
 		Type:   "UsageMonitorChannel",
 		Fields: make([]*Field, 24),
-		Edges:  make([]*Edge, 2),
+		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -3072,6 +3187,16 @@ func (_m *UsageMonitorChannel) Node(ctx context.Context) (node *Node, err error)
 	err = _m.QueryOwner().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "ChannelUsageMonitorBinding",
+		Name: "channel_bindings",
+	}
+	err = _m.QueryChannelBindings().
+		Select(channelusagemonitorbinding.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
 	}

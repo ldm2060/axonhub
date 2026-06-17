@@ -83,5 +83,17 @@
   "usageMonitor.displayFieldSection": "Display Fields",
   "usageMonitor.pollIntervalUnit": "minutes",
   "usageMonitor.templateVariablesHint": "Variables are pre-configured by the template and cannot be modified",
-  "usageMonitor.templateDisplayFieldsHint": "Display fields can be customized to change how data is shown"
+  "usageMonitor.templateDisplayFieldsHint": "Display fields can be customized to change how data is shown",
+  "usageMonitor.bindingSummary.title": "Binding Summary",
+  "usageMonitor.bindingSummary.none": "No channel bindings",
+  "usageMonitor.bindingSummary.strategyAny": "Any",
+  "usageMonitor.bindingSummary.strategyAll": "All",
+  "usageMonitor.bindingSummary.matched": "Matched",
+  "usageMonitor.bindingSummary.ready": "Ready",
+  "usageMonitor.bindingSummary.statusRule": "Status Rule",
+  "usageMonitor.bindingSummary.conditionRule": "Condition Rule",
+  "usageMonitor.bindingSummary.triggerStatus.available": "Available",
+  "usageMonitor.bindingSummary.triggerStatus.warning": "Warning",
+  "usageMonitor.bindingSummary.triggerStatus.exhausted": "Exhausted",
+  "usageMonitor.bindingSummary.triggerStatus.unknown": "Unknown"
 }
