@@ -482,8 +482,10 @@ func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReady(ctx context.C
 	for _, b := range bindings {
 		monitor := b.Edges.UsageMonitorChannel
 
-		// Skip nil or non-active monitors
-		if monitor == nil || monitor.Status != usagemonitorchannel.StatusActive {
+		// Skip nil or paused monitors. Error-state monitors still keep their
+		// last quota fields/status, so they must continue to enforce bindings
+		// until a later successful poll recovers them.
+		if monitor == nil || monitor.Status == usagemonitorchannel.StatusPaused {
 			continue
 		}
 
