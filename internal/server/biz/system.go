@@ -1645,6 +1645,7 @@ func (s *SystemService) SetQuotaEnforcementSettings(ctx context.Context, setting
 
 // SecuritySettings retrieves the security settings.
 func (s *SystemService) SecuritySettings(ctx context.Context) (*SecuritySettings, error) {
+	ctx = authz.WithSystemBypass(ctx, "system-security-settings")
 	value, err := s.getSystemValue(ctx, SystemKeySecuritySettings)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -1684,6 +1685,7 @@ func (s *SystemService) SecuritySettingsOrDefault(ctx context.Context) *Security
 
 // SetSecuritySettings sets the security settings.
 func (s *SystemService) SetSecuritySettings(ctx context.Context, settings SecuritySettings) error {
+	ctx = authz.WithSystemBypass(ctx, "system-security-settings")
 	normalizeSecuritySettings(&settings)
 
 	jsonBytes, err := json.Marshal(settings)
