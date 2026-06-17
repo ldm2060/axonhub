@@ -582,6 +582,12 @@ models:
   OverrideOperationInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.OverrideOperation
+  OverrideMatch:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OverrideMatch
+  OverrideMatchInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OverrideMatch
   TierCost:
     model:
       - github.com/ldm2060/axonhub/internal/objects.TierCost

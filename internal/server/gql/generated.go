@@ -73594,14 +73594,14 @@ func (ec *executionContext) unmarshalInputAPIKeyTokenUsageStatsInput(ctx context
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtGTE = data
+			it.CreatedAtGte = data
 		case "createdAtLTE":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtLTE = data
+			it.CreatedAtLte = data
 		}
 	}
 

@@ -54,6 +54,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
   const canManageSecuritySettings = hasScope('write_settings');
 
   const blockedIPs = securitySettings?.blockedIPs ?? [];
+  const showIPBanIcon = securitySettings?.showRequestLogIPBanIcon === true;
 
   const normalizeBlockedIPs = (ips: string[]) =>
     Array.from(
@@ -313,8 +314,9 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         return (
           <div className='flex items-center gap-2'>
             <span className='font-mono text-xs'>{normalizedIP}</span>
-            {canManageSecuritySettings && (
-              isBlocked ? (
+            {canManageSecuritySettings &&
+              showIPBanIcon &&
+              (isBlocked ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -354,8 +356,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
                   </TooltipTrigger>
                   <TooltipContent>{t('requests.actions.blockIP')}</TooltipContent>
                 </Tooltip>
-              )
-            )}
+              ))}
           </div>
         );
       },

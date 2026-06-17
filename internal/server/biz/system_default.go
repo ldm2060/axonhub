@@ -80,5 +80,6 @@ var defaultQuotaEnforcementSettings = QuotaEnforcementSettings{
 }
 
 var defaultSecuritySettings = SecuritySettings{
-	BlockedIPs: []string{},
+	BlockedIPs:              []string{},
+	ShowRequestLogIPBanIcon: true,
 }
