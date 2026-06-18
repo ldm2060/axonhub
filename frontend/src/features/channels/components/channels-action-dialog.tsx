@@ -706,7 +706,6 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             },
             settings: currentRow.settings ?? undefined,
             clientRestriction: currentRow.clientRestriction ?? null,
-            clearClientRestriction: false,
           }
         : duplicateFromRow
           ? {
@@ -732,7 +731,6 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                 },
               },
               clientRestriction: duplicateFromRow.clientRestriction ?? null,
-              clearClientRestriction: false,
             }
           : {
               type: derivedChannelType,

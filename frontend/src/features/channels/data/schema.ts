@@ -559,7 +559,6 @@ export const createChannelInputSchema = z
     remark: z.string().optional(),
     orderingWeight: z.number().int().optional(),
     clientRestriction: z.string().optional().nullable(),
-    clearClientRestriction: z.boolean().optional(),
     autoDisableConfig: z
       .object({
         mode: z.string(),
@@ -575,7 +574,6 @@ export const createChannelInputSchema = z
       })
       .optional()
       .nullable(),
-    clearAutoDisableConfig: z.boolean().optional(),
     settings: channelSettingsSchema.optional(),
     endpoints: z.array(channelEndpointSchema).optional(),
     credentials: z.object({
