@@ -567,7 +567,13 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 	if input.Policies != nil {
 		createBuilder.SetPolicies(*input.Policies)
 	}
+	if input.ClientRestriction != nil {
+		createBuilder.SetClientRestriction(*input.ClientRestriction)
+	}
 
+	if input.AutoDisableConfig != nil {
+		createBuilder.SetAutoDisableConfig(input.AutoDisableConfig)
+	}
 	if currentUser, ok := contexts.GetUser(ctx); ok && currentUser != nil {
 		createBuilder.SetOwnerID(currentUser.ID)
 	}

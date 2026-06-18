@@ -80124,7 +80124,7 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "usageMonitorChannelIDs", "quotaMonitorBindingIDs"}
+	fieldsInOrder := [...]string{"type", "baseURL", "name", "credentials", "supportedModels", "manualModels", "autoSyncSupportedModels", "autoSyncModelPattern", "tags", "defaultTestModel", "policies", "settings", "orderingWeight", "remark", "endpoints", "clientRestriction", "autoDisableConfig", "visibility", "quotaBindingReady", "quotaMultiMonitorStrategy", "usageMonitorChannelIDs", "quotaMonitorBindingIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -80236,6 +80236,20 @@ func (ec *executionContext) unmarshalInputCreateChannelInput(ctx context.Context
 				return it, err
 			}
 			it.Endpoints = data
+		case "clientRestriction":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientRestriction"))
+			data, err := ec.unmarshalOChannelClientRestriction2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐClientRestriction(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClientRestriction = data
+		case "autoDisableConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisableConfig"))
+			data, err := ec.unmarshalOChannelAutoDisableConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelAutoDisableConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisableConfig = data
 		case "visibility":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visibility"))
 			data, err := ec.unmarshalOChannelVisibility2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚋchannelᚐVisibility(ctx, v)

@@ -149,6 +149,8 @@ type CreateChannelInput struct {
 	OrderingWeight            *int
 	Remark                    *string
 	Endpoints                 []objects.ChannelEndpoint
+	ClientRestriction         *channel.ClientRestriction
+	AutoDisableConfig         *objects.ChannelAutoDisableConfig
 	Visibility                *channel.Visibility
 	QuotaBindingReady         *bool
 	QuotaMultiMonitorStrategy *channel.QuotaMultiMonitorStrategy
@@ -194,6 +196,12 @@ func (i *CreateChannelInput) Mutate(m *ChannelMutation) {
 	}
 	if v := i.Endpoints; v != nil {
 		m.SetEndpoints(v)
+	}
+	if v := i.ClientRestriction; v != nil {
+		m.SetClientRestriction(*v)
+	}
+	if v := i.AutoDisableConfig; v != nil {
+		m.SetAutoDisableConfig(v)
 	}
 	if v := i.Visibility; v != nil {
 		m.SetVisibility(*v)
