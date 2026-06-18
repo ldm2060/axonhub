@@ -14501,7 +14501,7 @@ func (ec *executionContext) field_Mutation_syncChannelModels_args(ctx context.Co
 func (ec *executionContext) field_Mutation_testChannelAPIKey_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋloopljᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
 	if err != nil {
 		return nil, err
 	}
@@ -36383,7 +36383,7 @@ func (ec *executionContext) _Mutation_testChannelAPIKey(ctx context.Context, fie
 			return ec.resolvers.Mutation().TestChannelAPIKey(ctx, fc.Args["channelID"].(objects.GUID), fc.Args["key"].(string), fc.Args["modelID"].(*string))
 		},
 		nil,
-		ec.marshalNTestAPIKeyResult2ᚖgithubᚗcomᚋloopljᚋaxonhubᚋinternalᚋserverᚋgqlᚐTestAPIKeyResult,
+		ec.marshalNTestAPIKeyResult2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTestAPIKeyResult,
 		true,
 		true,
 	)
