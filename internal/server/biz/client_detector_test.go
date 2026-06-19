@@ -16,36 +16,29 @@ func TestClientDetector_DetectClient(t *testing.T) {
 		{
 			name:      "Claude Code",
 			userAgent: "ClaudeCode/1.0.0",
-			want:      "claude-cli",
+			want:      "claude",
 		},
 		{
 			name:      "Claude Code - case insensitive",
 			userAgent: "claudecode/2.5.1 (Windows)",
-			want:      "claude-cli",
+			want:      "claude",
 		},
 		{
 			name:      "Claude CLI explicit",
 			userAgent: "claude-cli/1.0.0",
-			want:      "claude-cli",
+			want:      "claude",
 		},
 
 		// Codex
 		{
 			name:      "Codex",
 			userAgent: "Codex/1.0",
-			want:      "codex-cli",
+			want:      "codex",
 		},
 		{
 			name:      "Codex CLI",
 			userAgent: "codex-cli/1.0",
-			want:      "codex-cli",
-		},
-
-		// Cursor
-		{
-			name:      "Cursor",
-			userAgent: "Cursor/0.32.0",
-			want:      "cursor",
+			want:      "codex",
 		},
 
 		// Antigravity
@@ -62,55 +55,6 @@ func TestClientDetector_DetectClient(t *testing.T) {
 			want:      "opencode",
 		},
 
-		// Other coding agents
-		{
-			name:      "GitHub Copilot",
-			userAgent: "GitHub-Copilot/1.0",
-			want:      "github-copilot",
-		},
-		{
-			name:      "Copilot",
-			userAgent: "Copilot/1.0",
-			want:      "copilot",
-		},
-		{
-			name:      "Cline",
-			userAgent: "Cline/3.1.0",
-			want:      "cline",
-		},
-		{
-			name:      "Aider",
-			userAgent: "aider/0.45.0",
-			want:      "aider",
-		},
-		{
-			name:      "Continue",
-			userAgent: "Continue-VSCode/1.0",
-			want:      "continue",
-		},
-		{
-			name:      "Windsurf",
-			userAgent: "Windsurf/1.2.0",
-			want:      "windsurf",
-		},
-		{
-			name:      "Cody",
-			userAgent: "Cody/1.0",
-			want:      "cody",
-		},
-
-		// Moonshot CLI
-		{
-			name:      "Moonshot CLI",
-			userAgent: "moonshot-cli/1.0.0",
-			want:      "moonshot-cli",
-		},
-		{
-			name:      "Moonshot CLI - mixed case",
-			userAgent: "Moonshot-CLI/1.0.0",
-			want:      "moonshot-cli",
-		},
-
 		// Unknown clients
 		{
 			name:      "Standard browser",
@@ -125,6 +69,41 @@ func TestClientDetector_DetectClient(t *testing.T) {
 		{
 			name:      "Generic SDK",
 			userAgent: "MyApp/1.0.0",
+			want:      "",
+		},
+		{
+			name:      "Cursor - no longer supported",
+			userAgent: "Cursor/0.32.0",
+			want:      "",
+		},
+		{
+			name:      "Aider - no longer supported",
+			userAgent: "aider/0.45.0",
+			want:      "",
+		},
+		{
+			name:      "Windsurf - no longer supported",
+			userAgent: "Windsurf/1.2.0",
+			want:      "",
+		},
+		{
+			name:      "Cline - no longer supported",
+			userAgent: "Cline/3.1.0",
+			want:      "",
+		},
+		{
+			name:      "GitHub Copilot - no longer supported",
+			userAgent: "GitHub-Copilot/1.0",
+			want:      "",
+		},
+		{
+			name:      "Cody - no longer supported",
+			userAgent: "Cody/1.0",
+			want:      "",
+		},
+		{
+			name:      "Moonshot CLI - no longer supported",
+			userAgent: "moonshot-cli/1.0.0",
 			want:      "",
 		},
 	}
@@ -144,44 +123,49 @@ func TestClientDetector_IsLenientClientAllowed(t *testing.T) {
 		userAgent string
 		want      bool
 	}{
-		// Should allow all coding agents
+		// Should allow supported clients
 		{
 			name:      "Claude Code",
 			userAgent: "ClaudeCode/1.0.0",
 			want:      true,
 		},
 		{
-			name:      "Cursor",
-			userAgent: "Cursor/0.32.0",
+			name:      "Codex",
+			userAgent: "Codex/1.0",
 			want:      true,
 		},
 		{
-			name:      "Windsurf",
-			userAgent: "Windsurf/1.2.0",
+			name:      "Antigravity",
+			userAgent: "Antigravity/1.0",
 			want:      true,
 		},
 		{
-			name:      "GitHub Copilot",
-			userAgent: "GitHub-Copilot/1.0",
-			want:      true,
-		},
-		{
-			name:      "Cline",
-			userAgent: "Cline/3.1.0",
-			want:      true,
-		},
-		{
-			name:      "Aider",
-			userAgent: "aider/0.45.0",
-			want:      true,
-		},
-		{
-			name:      "Moonshot CLI",
-			userAgent: "moonshot-cli/1.0.0",
+			name:      "OpenCode",
+			userAgent: "OpenCode/1.0",
 			want:      true,
 		},
 
-		// Should reject non-coding-agent clients
+		// Should reject unsupported clients
+		{
+			name:      "Cursor - not supported",
+			userAgent: "Cursor/0.32.0",
+			want:      false,
+		},
+		{
+			name:      "Windsurf - not supported",
+			userAgent: "Windsurf/1.2.0",
+			want:      false,
+		},
+		{
+			name:      "Aider - not supported",
+			userAgent: "aider/0.45.0",
+			want:      false,
+		},
+		{
+			name:      "GitHub Copilot - not supported",
+			userAgent: "GitHub-Copilot/1.0",
+			want:      false,
+		},
 		{
 			name:      "Standard browser",
 			userAgent: "Mozilla/5.0",
@@ -223,8 +207,8 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 			want:        true,
 		},
 		{
-			name:        "Cursor not allowed for claudecode channel",
-			userAgent:   "Cursor/0.32.0",
+			name:        "Codex not allowed for claudecode channel",
+			userAgent:   "Codex/1.0",
 			channelType: "claudecode",
 			want:        false,
 		},
@@ -245,14 +229,8 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 
 		// GitHub Copilot channel tests
 		{
-			name:        "GitHub Copilot allowed for github_copilot channel",
-			userAgent:   "GitHub-Copilot/1.0",
-			channelType: "github_copilot",
-			want:        true,
-		},
-		{
-			name:        "Copilot allowed for github_copilot channel",
-			userAgent:   "Copilot/1.0",
+			name:        "Codex allowed for github_copilot channel",
+			userAgent:   "Codex/1.0",
 			channelType: "github_copilot",
 			want:        true,
 		},
@@ -287,8 +265,8 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 
 		// Moonshot coding channel tests
 		{
-			name:        "Moonshot CLI allowed for moonshot_coding channel",
-			userAgent:   "moonshot-cli/1.0.0",
+			name:        "OpenCode allowed for moonshot_coding channel",
+			userAgent:   "OpenCode/1.0",
 			channelType: "moonshot_coding",
 			want:        true,
 		},
@@ -326,7 +304,7 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := detector.IsStrictClientAllowed(tt.userAgent, tt.channelType)
-			assert.Equal(t, tt.want, got, "IsStrictClientAllowed(%q, %q) = %v, want %v", tt.userAgent, tt.channelType, got, tt.want)
+			assert.Equal(t, tt.want, got, "IsStrictClientAllowed(%q, %q) = %v, want %v", tt.userAgent, got, tt.want, tt.channelType)
 		})
 	}
 }
@@ -342,7 +320,7 @@ func TestClientDetector_EdgeCases(t *testing.T) {
 		}
 		for _, ua := range userAgents {
 			got := detector.DetectClient(ua)
-			assert.Equal(t, "claude-cli", got, "Should detect regardless of case: %s", ua)
+			assert.Equal(t, "claude", got, "Should detect regardless of case: %s", ua)
 		}
 	})
 
@@ -354,27 +332,17 @@ func TestClientDetector_EdgeCases(t *testing.T) {
 		}
 		for _, ua := range userAgents {
 			got := detector.DetectClient(ua)
-			assert.Equal(t, "claude-cli", got, "Should detect substring: %s", ua)
+			assert.Equal(t, "claude", got, "Should detect substring: %s", ua)
 		}
 	})
 }
 
 func TestSupportedCodingClients(t *testing.T) {
-	// Verify all supported clients are present
 	expectedClients := []string{
-		"claude-cli",
-		"codex-cli",
-		"cursor",
+		"claude",
+		"codex",
 		"antigravity",
 		"opencode",
-		"aider",
-		"cline",
-		"continue",
-		"copilot",
-		"github-copilot",
-		"windsurf",
-		"cody",
-		"moonshot-cli",
 	}
 
 	assert.Equal(t, len(expectedClients), len(SupportedCodingClients), "Should have correct number of supported clients")
@@ -392,18 +360,17 @@ func TestSupportedCodingClients(t *testing.T) {
 }
 
 func TestChannelClientMapping(t *testing.T) {
-	// Verify channel mappings
 	tests := []struct {
 		channel string
 		clients []string
 	}{
-		{"claudecode", []string{"claude-cli"}},
-		{"codex", []string{"codex-cli"}},
-		{"github_copilot", []string{"copilot", "github-copilot"}},
+		{"claudecode", []string{"claude"}},
+		{"codex", []string{"codex"}},
+		{"github_copilot", []string{"codex"}},
 		{"antigravity", []string{"antigravity"}},
 		{"opencode_go", []string{"opencode"}},
 		{"opencode_go_anthropic", []string{"opencode"}},
-		{"moonshot_coding", []string{"moonshot-cli"}},
+		{"moonshot_coding", []string{"opencode"}},
 	}
 
 	for _, tt := range tests {

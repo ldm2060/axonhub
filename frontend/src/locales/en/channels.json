@@ -740,7 +740,7 @@
   "channels.endpoints.baseURLPlaceholder": "Optional base URL override (e.g. https://api.deepseek.com/v1)",
   "channels.endpoints.invalidBaseURL": "Invalid base URL format",
   "channels.clientRestriction.title": "Client Access Restriction",
-  "channels.clientRestriction.description": "Override the global client restriction policy for this channel. Only effective for coding channels.",
+  "channels.clientRestriction.description": "Override the global client restriction policy for this channel. Applies to all channels when enabled globally.",
   "channels.clientRestriction.inheritGlobal": "Inherit Global",
   "channels.clientRestriction.off": "Off",
   "channels.clientRestriction.lenient": "Lenient",

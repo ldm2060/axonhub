@@ -18,29 +18,36 @@ func TestClientRestrictionChecker_CheckClientRestriction(t *testing.T) {
 		expected           bool
 	}{
 		{
-			name:              "Non-coding channel always allowed",
-			userAgent:         "Mozilla/5.0",
-			channelType:       "openai",
-			globalRestriction: ClientRestrictionStrict,
-			expected:          true,
-		},
-		{
 			name:              "Off mode allows all",
 			userAgent:         "Mozilla/5.0",
-			channelType:       "claudecode",
+			channelType:       "openai",
 			globalRestriction: ClientRestrictionOff,
 			expected:          true,
 		},
 		{
-			name:              "Lenient allows any coding client",
-			userAgent:         "cursor/0.41.0",
-			channelType:       "claudecode",
+			name:              "Lenient allows any supported client",
+			userAgent:         "claude-cli/2.1.158",
+			channelType:       "openai",
+			globalRestriction: ClientRestrictionLenient,
+			expected:          true,
+		},
+		{
+			name:              "Lenient allows codex client on openai channel",
+			userAgent:         "codex-cli/1.0",
+			channelType:       "openai",
 			globalRestriction: ClientRestrictionLenient,
 			expected:          true,
 		},
 		{
 			name:              "Lenient rejects non-coding client",
 			userAgent:         "Mozilla/5.0 Chrome",
+			channelType:       "claudecode",
+			globalRestriction: ClientRestrictionLenient,
+			expected:          false,
+		},
+		{
+			name:              "Lenient rejects unsupported coding client",
+			userAgent:         "cursor/0.41.0",
 			channelType:       "claudecode",
 			globalRestriction: ClientRestrictionLenient,
 			expected:          false,
@@ -54,7 +61,7 @@ func TestClientRestrictionChecker_CheckClientRestriction(t *testing.T) {
 		},
 		{
 			name:              "Strict rejects mismatched client",
-			userAgent:         "cursor/0.41.0",
+			userAgent:         "codex-cli/1.0",
 			channelType:       "claudecode",
 			globalRestriction: ClientRestrictionStrict,
 			expected:          false,
@@ -62,10 +69,17 @@ func TestClientRestrictionChecker_CheckClientRestriction(t *testing.T) {
 		{
 			name:               "Channel restriction overrides global",
 			userAgent:          "Mozilla/5.0",
-			channelType:        "claudecode",
+			channelType:        "openai",
 			channelRestriction: ptr(ClientRestrictionOff),
 			globalRestriction:  ClientRestrictionStrict,
 			expected:           true,
+		},
+		{
+			name:              "Restriction applies to non-coding channels too",
+			userAgent:         "Mozilla/5.0",
+			channelType:       "openai",
+			globalRestriction: ClientRestrictionLenient,
+			expected:          false,
 		},
 	}
 
@@ -95,19 +109,19 @@ func TestClientRestrictionChecker_GetRejectionReason(t *testing.T) {
 			name:        "Lenient restriction message",
 			channelType: "claudecode",
 			restriction: ClientRestrictionLenient,
-			expected:    "This channel requires requests from supported coding agent clients (Claude Code, Codex, Cursor, Aider, etc.)",
+			expected:    "This channel requires requests from supported coding agent clients (Claude, Codex, Antigravity, OpenCode)",
 		},
 		{
 			name:        "Strict restriction with valid channel",
 			channelType: "claudecode",
 			restriction: ClientRestrictionStrict,
-			expected:    "This channel only accepts requests from: claude-cli",
+			expected:    "This channel only accepts requests from: claude",
 		},
 		{
 			name:        "Strict restriction with multiple allowed clients",
 			channelType: "github_copilot",
 			restriction: ClientRestrictionStrict,
-			expected:    "This channel only accepts requests from: copilot, github-copilot",
+			expected:    "This channel only accepts requests from: codex",
 		},
 		{
 			name:        "Strict restriction with unknown channel type",

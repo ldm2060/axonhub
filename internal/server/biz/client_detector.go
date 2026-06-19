@@ -5,29 +5,20 @@ import "strings"
 type ClientDetector struct{}
 
 var SupportedCodingClients = []string{
-	"claude-cli",
-	"codex-cli",
-	"cursor",
+	"claude",
+	"codex",
 	"antigravity",
 	"opencode",
-	"aider",
-	"cline",
-	"continue",
-	"copilot",
-	"github-copilot",
-	"windsurf",
-	"cody",
-	"moonshot-cli",
 }
 
 var ChannelClientMapping = map[string][]string{
-	"claudecode":             {"claude-cli"},
-	"codex":                  {"codex-cli"},
-	"github_copilot":         {"copilot", "github-copilot"},
-	"antigravity":            {"antigravity"},
-	"opencode_go":            {"opencode"},
-	"opencode_go_anthropic":  {"opencode"},
-	"moonshot_coding":        {"moonshot-cli"},
+	"claudecode":            {"claude"},
+	"codex":                 {"codex"},
+	"github_copilot":        {"codex"},
+	"antigravity":           {"antigravity"},
+	"opencode_go":           {"opencode"},
+	"opencode_go_anthropic": {"opencode"},
+	"moonshot_coding":       {"opencode"},
 }
 
 func (d *ClientDetector) DetectClient(userAgent string) string {
@@ -37,35 +28,19 @@ func (d *ClientDetector) DetectClient(userAgent string) string {
 
 	ua := strings.ToLower(userAgent)
 
-	// Check for each supported client in order
-	// More specific patterns should be checked first
 	patterns := map[string]string{
-		"claude-cli":     "claude-cli",
-		"claudecode":     "claude-cli",
-		"codex-cli":      "codex-cli",
-		"codex":          "codex-cli",
-		"cursor":         "cursor",
-		"antigravity":    "antigravity",
-		"opencode":       "opencode",
-		"aider":          "aider",
-		"cline":          "cline",
-		"continue":       "continue",
-		"github-copilot": "github-copilot",
-		"copilot":        "copilot",
-		"windsurf":       "windsurf",
-		"cody":           "cody",
-		"moonshot-cli":   "moonshot-cli",
+		"claude-cli":  "claude",
+		"claudecode":  "claude",
+		"codex-cli":   "codex",
+		"codex":       "codex",
+		"antigravity": "antigravity",
+		"opencode":    "opencode",
 	}
 
-	// Check in order of specificity
 	orderedPatterns := []string{
 		"claude-cli", "claudecode",
 		"codex-cli", "codex",
-		"github-copilot", "copilot",
 		"antigravity", "opencode",
-		"moonshot-cli",
-		"cursor", "windsurf", "cody",
-		"aider", "cline", "continue",
 	}
 
 	for _, pattern := range orderedPatterns {

@@ -1,10 +1,6 @@
 package biz
 
-import (
-	"strings"
-
-	"github.com/ldm2060/axonhub/internal/objects"
-)
+import "strings"
 
 // ClientRestrictionChecker evaluates client restriction rules
 type ClientRestrictionChecker struct {
@@ -26,11 +22,6 @@ func (c *ClientRestrictionChecker) CheckClientRestriction(
 	channelRestriction *ClientRestrictionLevel,
 	globalRestriction ClientRestrictionLevel,
 ) bool {
-	// Non-coding channels are not subject to client restrictions
-	if !objects.IsCodingChannel(channelType) {
-		return true
-	}
-
 	// Determine effective restriction (channel overrides global)
 	effectiveRestriction := globalRestriction
 	if channelRestriction != nil {
@@ -57,7 +48,7 @@ func (c *ClientRestrictionChecker) GetRejectionReason(
 ) string {
 	switch restriction {
 	case ClientRestrictionLenient:
-		return "This channel requires requests from supported coding agent clients (Claude Code, Codex, Cursor, Aider, etc.)"
+		return "This channel requires requests from supported coding agent clients (Claude, Codex, Antigravity, OpenCode)"
 	case ClientRestrictionStrict:
 		allowedClients := ChannelClientMapping[channelType]
 		if len(allowedClients) == 0 {

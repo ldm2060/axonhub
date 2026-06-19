@@ -377,7 +377,6 @@ type RetryPolicy struct {
 	UpstreamErrorPolicy UpstreamErrorPolicy `json:"upstream_error_policy"`
 
 	// ClientRestriction defines the global client access restriction level
-	// Only applies to coding channels (claudecode, codex, etc.)
 	ClientRestriction ClientRestrictionLevel `json:"client_restriction"`
 }
 
