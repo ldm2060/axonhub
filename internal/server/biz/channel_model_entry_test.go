@@ -120,6 +120,17 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 		},
 		{
+			name: "nil settings",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4"},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "direct"},
+			},
+		},
+		{
 			name: "hideOriginalModels: keeps same-name mapping",
 			channel: &Channel{
 				Channel: &ent.Channel{
@@ -134,17 +145,6 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 			expected: []ChannelModelEntry{
 				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "mapping"},
-			},
-		},
-		{
-			name: "nil settings",
-			channel: &Channel{
-				Channel: &ent.Channel{
-					SupportedModels: []string{"gpt-4"},
-				},
-			},
-			expected: []ChannelModelEntry{
-				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "direct"},
 			},
 		},
 		{
@@ -269,23 +269,7 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 		},
 		{
-			name: "hideOriginalModels: hides only models with transforms, keeps others",
-			channel: &Channel{
-				Channel: &ent.Channel{
-					SupportedModels: []string{"gpt-4", "deepseek-chat"},
-					Settings: &objects.ChannelSettings{
-						ExtraModelPrefix:  "deepseek",
-						HideOriginalModels: true,
-					},
-				},
-			},
-			expected: []ChannelModelEntry{
-				{RequestModel: "deepseek/gpt-4", ActualModel: "gpt-4", Source: "prefix"},
-				{RequestModel: "deepseek/deepseek-chat", ActualModel: "deepseek-chat", Source: "prefix"},
-			},
-		},
-			{
-				name: "hideOriginalModels: prefix overrides same-name direct model",
+			name: "hideOriginalModels: prefix overrides same-name direct model",
 			channel: &Channel{
 				Channel: &ent.Channel{
 					SupportedModels: []string{"custom/gpt-4", "custom/custom/gpt-4"},
@@ -298,6 +282,100 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			expected: []ChannelModelEntry{
 				{RequestModel: "custom/custom/gpt-4", ActualModel: "custom/gpt-4", Source: "prefix"},
 				{RequestModel: "custom/custom/custom/gpt-4", ActualModel: "custom/custom/gpt-4", Source: "prefix"},
+			},
+		},
+		{
+			name: "hideMappedModels: with model mappings only",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4-turbo"},
+					Settings: &objects.ChannelSettings{
+						ModelMappings: []objects.ModelMapping{
+							{From: "gpt-4", To: "gpt-4-turbo"},
+						},
+						HideMappedModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4-turbo", Source: "mapping"},
+			},
+		},
+		{
+			name: "hideMappedModels: with extra prefix hides prefixed target too",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"deep-deepseek-v4-pro"},
+					Settings: &objects.ChannelSettings{
+						ExtraModelPrefix: "AIHubMix",
+						ModelMappings: []objects.ModelMapping{
+							{From: "deepseek-v4-pro", To: "deep-deepseek-v4-pro"},
+						},
+						HideMappedModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "deepseek-v4-pro", ActualModel: "deep-deepseek-v4-pro", Source: "mapping"},
+			},
+		},
+		{
+			name: "hideMappedModels: with extra prefix and multiple models",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4-turbo", "claude-3"},
+					Settings: &objects.ChannelSettings{
+						ExtraModelPrefix: "proxy",
+						ModelMappings: []objects.ModelMapping{
+							{From: "gpt-4", To: "gpt-4-turbo"},
+						},
+						HideMappedModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "claude-3", ActualModel: "claude-3", Source: "direct"},
+				{RequestModel: "proxy/claude-3", ActualModel: "claude-3", Source: "prefix"},
+				{RequestModel: "gpt-4", ActualModel: "gpt-4-turbo", Source: "mapping"},
+			},
+		},
+		{
+			name: "hideMappedModels: with auto-trim hides trimmed target too",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"openai/gpt-4-turbo"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"openai"},
+						ModelMappings: []objects.ModelMapping{
+							{From: "gpt-4", To: "openai/gpt-4-turbo"},
+						},
+						HideMappedModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-turbo", Source: "mapping"},
+			},
+		},
+		{
+			name: "hideMappedModels: with prefix and auto-trim combined",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"openai/gpt-4-turbo", "claude-3"},
+					Settings: &objects.ChannelSettings{
+						ExtraModelPrefix:        "proxy",
+						AutoTrimedModelPrefixes: []string{"openai"},
+						ModelMappings: []objects.ModelMapping{
+							{From: "gpt-4", To: "openai/gpt-4-turbo"},
+						},
+						HideMappedModels: true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "claude-3", ActualModel: "claude-3", Source: "direct"},
+				{RequestModel: "proxy/claude-3", ActualModel: "claude-3", Source: "prefix"},
+				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-turbo", Source: "mapping"},
 			},
 		},
 	}
