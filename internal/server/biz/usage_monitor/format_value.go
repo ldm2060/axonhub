@@ -2,12 +2,17 @@ package usage_monitor
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
 // FormatFieldValue converts a parsed field value to a string, handling
-// datetime fields specially: large float64 values are treated as millisecond
-// timestamps and converted to ISO 8601, avoiding scientific notation output.
+// datetime fields specially. Numeric values and numeric strings are treated
+// as Unix timestamps: values larger than year-2000-in-milliseconds are read as
+// millisecond timestamps, otherwise as second timestamps. RFC 3339 strings
+// pass through unchanged. This avoids scientific notation and raw-timestamp
+// output (e.g. "1782357029") for datetime fields whose value was extracted as
+// a numeric string, such as a regex-parsed or JSON-quoted timestamp.
 func FormatFieldValue(v any, format string) string {
 	if format == "datetime" {
 		if f, ok := toFloat64Val(v); ok {
@@ -29,6 +34,10 @@ func FormatFieldValue(v any, format string) string {
 	return fmt.Sprintf("%v", v)
 }
 
+// toFloat64Val extracts a float64 from numeric values or numeric strings.
+// Numeric strings are parsed so datetime fields whose value was extracted as a
+// string (e.g. via regex, or a JSON-quoted number) can still be interpreted as
+// Unix timestamps.
 func toFloat64Val(v any) (float64, bool) {
 	switch val := v.(type) {
 	case float64:
@@ -37,6 +46,12 @@ func toFloat64Val(v any) (float64, bool) {
 		return float64(val), true
 	case int64:
 		return float64(val), true
+	case string:
+		f, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0, false
+		}
+		return f, true
 	default:
 		return 0, false
 	}
