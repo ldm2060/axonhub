@@ -91,7 +91,8 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
                 node {
                   modelID
                   reasoningEffort
-                  status${executionChannelFields}
+                  status
+                  passThroughApplied${executionChannelFields}
                 }
                 cursor
               }
@@ -306,6 +307,8 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
                 status
                 format
                 stream
+                requestURL
+                passThroughApplied
                 metricsFirstTokenLatencyMs
                 metricsReasoningDurationMs
               }

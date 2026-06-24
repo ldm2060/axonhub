@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
 	transformer "github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 const (
@@ -517,7 +518,9 @@ func buildMultipartJSONBody(fields map[string]string, images []multipartFile, ma
 }
 
 func multipartFileToDataURL(f multipartFile) string {
-	return fmt.Sprintf("data:%s;base64,%s", f.ContentType, base64.StdEncoding.EncodeToString(f.Data))
+	// Use xurl.BuildDataURL (single exact-size concat) instead of fmt.Sprintf to
+	// avoid the printer's doubling-growth buffer churn on large base64 data.
+	return xurl.BuildDataURL(f.ContentType, base64.StdEncoding.EncodeToString(f.Data), true)
 }
 
 func isAllowedImageType(contentType string) bool {

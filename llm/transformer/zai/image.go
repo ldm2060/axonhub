@@ -15,6 +15,7 @@ import (
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 // buildImageGenerationAPIRequest builds the HTTP request to call the ZAI Image Generation API.
@@ -218,9 +219,11 @@ func downloadImageToDataURL(ctx context.Context, imageURL string) (string, error
 		contentType = "image/png"
 	}
 
-	// Convert to base64 data URL
+	// Convert to base64 data URL.
+	// Use xurl.BuildDataURL (single exact-size concat) instead of fmt.Sprintf to
+	// avoid the printer's doubling-growth buffer churn on large base64 data.
 	base64Data := base64.StdEncoding.EncodeToString(imageData)
-	dataURL := fmt.Sprintf("data:%s;base64,%s", contentType, base64Data)
+	dataURL := xurl.BuildDataURL(contentType, base64Data, true)
 
 	return dataURL, nil
 }

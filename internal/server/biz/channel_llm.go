@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
 	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 	"github.com/ldm2060/axonhub/llm/transformer/bailian"
+	"github.com/ldm2060/axonhub/llm/transformer/cerebras"
 	"github.com/ldm2060/axonhub/llm/transformer/deepseek"
 	"github.com/ldm2060/axonhub/llm/transformer/doubao"
 	"github.com/ldm2060/axonhub/llm/transformer/fireworks"
@@ -502,8 +503,20 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = transformer
 
 		return ch, nil
-	case channel.TypeOpenrouter, channel.TypeCerebras:
+	case channel.TypeOpenrouter:
 		transformer, err := openrouter.NewOutboundTransformerWithConfig(&openrouter.Config{
+			BaseURL:        c.BaseURL,
+			APIKeyProvider: getAPIKeyProvider(ch),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
+		}
+
+		ch.Outbound = transformer
+
+		return ch, nil
+	case channel.TypeCerebras:
+		transformer, err := cerebras.NewOutboundTransformerWithConfig(&cerebras.Config{
 			BaseURL:        c.BaseURL,
 			APIKeyProvider: getAPIKeyProvider(ch),
 		})

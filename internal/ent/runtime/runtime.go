@@ -757,6 +757,10 @@ func init() {
 	requestexecutionDescStream := requestexecutionFields[14].Descriptor()
 	// requestexecution.DefaultStream holds the default value on creation for the stream field.
 	requestexecution.DefaultStream = requestexecutionDescStream.Default.(bool)
+	// requestexecutionDescPassThroughApplied is the schema descriptor for pass_through_applied field.
+	requestexecutionDescPassThroughApplied := requestexecutionFields[20].Descriptor()
+	// requestexecution.DefaultPassThroughApplied holds the default value on creation for the pass_through_applied field.
+	requestexecution.DefaultPassThroughApplied = requestexecutionDescPassThroughApplied.Default.(bool)
 	roleMixin := schema.Role{}.Mixin()
 	role.Policy = privacy.NewPolicies(schema.Role{})
 	role.Hooks[0] = func(next ent.Mutator) ent.Mutator {
