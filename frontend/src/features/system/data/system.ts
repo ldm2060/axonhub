@@ -110,6 +110,7 @@ const RETRY_POLICY_QUERY = `
       nonStreamResponseTimeoutSeconds
       loadBalancerStrategy
       enabled
+      clientRestriction
       emptyResponseDetection
       upstreamErrorPolicy {
         mode

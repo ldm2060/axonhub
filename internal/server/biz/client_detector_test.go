@@ -277,10 +277,16 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 			want:        false,
 		},
 
-		// Unknown channel type
+		// Unknown channel type falls back to lenient supported-client check
 		{
-			name:        "Unknown channel type",
+			name:        "Unknown channel type with supported client falls back to lenient",
 			userAgent:   "ClaudeCode/1.0.0",
+			channelType: "unknown_channel",
+			want:        true,
+		},
+		{
+			name:        "Unknown channel type with unsupported client still rejected",
+			userAgent:   "Mozilla/5.0",
 			channelType: "unknown_channel",
 			want:        false,
 		},

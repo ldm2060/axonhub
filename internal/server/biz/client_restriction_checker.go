@@ -1,6 +1,8 @@
 package biz
 
-import "strings"
+import (
+	"strings"
+)
 
 // ClientRestrictionChecker evaluates client restriction rules
 type ClientRestrictionChecker struct {
@@ -15,7 +17,9 @@ func NewClientRestrictionChecker() *ClientRestrictionChecker {
 }
 
 // CheckClientRestriction checks if client satisfies channel's access restriction
-// Returns true if allowed, false if rejected
+// Returns true if allowed, false if rejected.
+// Restrictions apply to all channel types. For strict mode on unmapped channel types,
+// the check falls back to the lenient supported-client check.
 func (c *ClientRestrictionChecker) CheckClientRestriction(
 	userAgent string,
 	channelType string,
@@ -52,7 +56,7 @@ func (c *ClientRestrictionChecker) GetRejectionReason(
 	case ClientRestrictionStrict:
 		allowedClients := ChannelClientMapping[channelType]
 		if len(allowedClients) == 0 {
-			return "This channel has strict client restriction but no allowed clients are defined"
+			return "This channel requires requests from supported coding agent clients (Claude, Codex, Antigravity, OpenCode)"
 		}
 		return "This channel only accepts requests from: " + strings.Join(allowedClients, ", ")
 	default:

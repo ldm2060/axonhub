@@ -75,7 +75,8 @@ func (d *ClientDetector) IsStrictClientAllowed(userAgent string, channelType str
 
 	allowedClients, exists := ChannelClientMapping[channelType]
 	if !exists {
-		return false
+		// Unmapped channel types fall back to lenient supported-client check
+		return d.IsLenientClientAllowed(userAgent)
 	}
 
 	for _, allowedClient := range allowedClients {

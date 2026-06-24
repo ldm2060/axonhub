@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -1070,4 +1071,92 @@ func TestSystemService_UserAgentPassThrough_WithCache(t *testing.T) {
 	uaPassThrough3, err := service.UserAgentPassThrough(ctx)
 	require.NoError(t, err)
 	require.False(t, uaPassThrough3)
+}
+
+func TestClientRestrictionLevel_MarshalGQL(t *testing.T) {
+	tests := []struct {
+		input    ClientRestrictionLevel
+		expected string
+	}{
+		{ClientRestrictionOff, `"OFF"`},
+		{ClientRestrictionLenient, `"LENIENT"`},
+		{ClientRestrictionStrict, `"STRICT"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.input), func(t *testing.T) {
+			var buf bytes.Buffer
+			tt.input.MarshalGQL(&buf)
+			require.Equal(t, tt.expected, buf.String())
+		})
+	}
+}
+
+func TestClientRestrictionLevel_UnmarshalGQL(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected ClientRestrictionLevel
+		wantErr  bool
+	}{
+		{"OFF", ClientRestrictionOff, false},
+		{"LENIENT", ClientRestrictionLenient, false},
+		{"STRICT", ClientRestrictionStrict, false},
+		{"off", ClientRestrictionOff, false},
+		{"lenient", ClientRestrictionLenient, false},
+		{"strict", ClientRestrictionStrict, false},
+		{"INVALID", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			var level ClientRestrictionLevel
+			err := level.UnmarshalGQL(tt.input)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "invalid ClientRestrictionLevel")
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, level)
+			}
+		})
+	}
+}
+
+func TestClientRestrictionLevel_UnmarshalGQL_NonString(t *testing.T) {
+	var level ClientRestrictionLevel
+	err := level.UnmarshalGQL(123)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "must be a string")
+}
+
+func TestClientRestrictionLevel_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		jsonStr  string
+		expected ClientRestrictionLevel
+	}{
+		{`"off"`, ClientRestrictionOff},
+		{`"lenient"`, ClientRestrictionLenient},
+		{`"strict"`, ClientRestrictionStrict},
+		{`"OFF"`, ClientRestrictionOff},
+		{`"LENIENT"`, ClientRestrictionLenient},
+		{`"STRICT"`, ClientRestrictionStrict},
+		{`""`, ""},
+		{`"invalid"`, "invalid"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.jsonStr, func(t *testing.T) {
+			var level ClientRestrictionLevel
+			err := json.Unmarshal([]byte(tt.jsonStr), &level)
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, level)
+		})
+	}
+}
+
+func TestClientRestrictionLevel_UnmarshalJSON_NonString(t *testing.T) {
+	var level ClientRestrictionLevel
+	err := json.Unmarshal([]byte(`123`), &level)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid ClientRestrictionLevel")
 }

@@ -129859,20 +129859,13 @@ func (ec *executionContext) marshalNClearChannelOverrideTemplatesPayload2ᚖgith
 }
 
 func (ec *executionContext) unmarshalNClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, v any) (biz.ClientRestrictionLevel, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := biz.ClientRestrictionLevel(tmp)
+	var res biz.ClientRestrictionLevel
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, sel ast.SelectionSet, v biz.ClientRestrictionLevel) graphql.Marshaler {
-	_ = sel
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNCompleteAutoDisableChannelOnboardingInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCompleteAutoDisableChannelOnboardingInput(ctx context.Context, v any) (CompleteAutoDisableChannelOnboardingInput, error) {
@@ -137373,16 +137366,13 @@ func (ec *executionContext) unmarshalOCleanupOptionInput2ᚕgithubᚗcomᚋldm20
 }
 
 func (ec *executionContext) unmarshalOClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, v any) (biz.ClientRestrictionLevel, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	res := biz.ClientRestrictionLevel(tmp)
+	var res biz.ClientRestrictionLevel
+	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOClientRestrictionLevel2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐClientRestrictionLevel(ctx context.Context, sel ast.SelectionSet, v biz.ClientRestrictionLevel) graphql.Marshaler {
-	_ = sel
-	_ = ctx
-	res := graphql.MarshalString(string(v))
-	return res
+	return v
 }
 
 func (ec *executionContext) marshalOCostItem2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐCostItemᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.CostItem) graphql.Marshaler {

@@ -131,7 +131,6 @@ const (
 	// SystemKeySecuritySettings is the key used to store security settings.
 	// The value is JSON-encoded SecuritySettings struct.
 	SystemKeySecuritySettings = "security_settings"
-
 )
 
 // RegistrationSettings represents consolidated registration configuration settings.
@@ -145,15 +144,15 @@ type RegistrationSettings struct {
 
 // EmailSettings represents email/SMTP configuration settings.
 type EmailSettings struct {
-	SMTPHost       string `json:"smtp_host"`
-	SMTPPort       int    `json:"smtp_port"`
-	SMTPUser       string `json:"smtp_user"`
-	SMTPPassword   string `json:"smtp_password"`
-	Encryption     string `json:"encryption"` // "ssl" | "starttls" | "none"
-	SkipTLSVerify  bool   `json:"skip_tls_verify"`
-	FromName       string `json:"from_name"`
-	FromAddress    string `json:"from_address"`
-	PublicURL      string `json:"public_url"`
+	SMTPHost      string `json:"smtp_host"`
+	SMTPPort      int    `json:"smtp_port"`
+	SMTPUser      string `json:"smtp_user"`
+	SMTPPassword  string `json:"smtp_password"`
+	Encryption    string `json:"encryption"` // "ssl" | "starttls" | "none"
+	SkipTLSVerify bool   `json:"skip_tls_verify"`
+	FromName      string `json:"from_name"`
+	FromAddress   string `json:"from_address"`
+	PublicURL     string `json:"public_url"`
 }
 
 // SystemGeneralSettings represents general system configuration settings.
@@ -391,6 +390,67 @@ const (
 	// ClientRestrictionStrict allows only same-family clients
 	ClientRestrictionStrict ClientRestrictionLevel = "strict"
 )
+
+// MarshalGQL implements the graphql.Marshaler interface for ClientRestrictionLevel.
+func (c ClientRestrictionLevel) MarshalGQL(w io.Writer) {
+	var s string
+
+	switch c {
+	case ClientRestrictionOff:
+		s = "OFF"
+	case ClientRestrictionLenient:
+		s = "LENIENT"
+	case ClientRestrictionStrict:
+		s = "STRICT"
+	default:
+		s = "OFF"
+	}
+
+	_, _ = io.WriteString(w, `"`+s+`"`)
+}
+
+// UnmarshalGQL implements the graphql.Unmarshaler interface for ClientRestrictionLevel.
+func (c *ClientRestrictionLevel) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("ClientRestrictionLevel must be a string")
+	}
+
+	switch str {
+	case "OFF", "off":
+		*c = ClientRestrictionOff
+	case "LENIENT", "lenient":
+		*c = ClientRestrictionLenient
+	case "STRICT", "strict":
+		*c = ClientRestrictionStrict
+	default:
+		return fmt.Errorf("invalid ClientRestrictionLevel: %s", str)
+	}
+
+	return nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler for ClientRestrictionLevel.
+// Accepts both lowercase (internal storage) and uppercase (GQL) forms for backward compatibility.
+func (c *ClientRestrictionLevel) UnmarshalJSON(data []byte) error {
+	var raw string
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("invalid ClientRestrictionLevel: %w", err)
+	}
+
+	switch raw {
+	case "off", "OFF":
+		*c = ClientRestrictionOff
+	case "lenient", "LENIENT":
+		*c = ClientRestrictionLenient
+	case "strict", "STRICT":
+		*c = ClientRestrictionStrict
+	default:
+		*c = ClientRestrictionLevel(raw)
+	}
+
+	return nil
+}
 
 type UpstreamErrorPolicy struct {
 	// Mode controls whether provider errors are passed through, hidden, or replaced with a custom message.
