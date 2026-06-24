@@ -115,6 +115,7 @@ func TestRequestService_CreateRequestExecution_PersistsActualReasoningEffort(t *
 				storedRequest,
 				httpclient.Request{JSONBody: []byte(tt.jsonBody)},
 				tt.format,
+				false, // passThroughApplied is not relevant to reasoning-effort persistence
 			)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantEffort, execution.ReasoningEffort)
