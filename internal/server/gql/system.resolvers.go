@@ -72,6 +72,15 @@ func (r *mutationResolver) UpdateRetryPolicy(ctx context.Context, input biz.Retr
 	return true, nil
 }
 
+// UpdateStreamingSettings is the resolver for the updateStreamingSettings field.
+func (r *mutationResolver) UpdateStreamingSettings(ctx context.Context, input biz.StreamingSettings) (bool, error) {
+	if err := r.systemService.SetStreamingSettings(ctx, &input); err != nil {
+		return false, fmt.Errorf("failed to update streaming settings: %w", err)
+	}
+
+	return true, nil
+}
+
 // UpdateWebhookNotifierConfig is the resolver for the updateWebhookNotifierConfig field.
 func (r *mutationResolver) UpdateWebhookNotifierConfig(ctx context.Context, input biz.WebhookNotifierConfig) (bool, error) {
 	err := r.systemService.SetWebhookNotifierConfig(ctx, &input)
@@ -463,6 +472,11 @@ func (r *queryResolver) StoragePolicy(ctx context.Context) (*biz.StoragePolicy, 
 // RetryPolicy is the resolver for the retryPolicy field.
 func (r *queryResolver) RetryPolicy(ctx context.Context) (*biz.RetryPolicy, error) {
 	return r.systemService.RetryPolicy(ctx)
+}
+
+// StreamingSettings is the resolver for the streamingSettings field.
+func (r *queryResolver) StreamingSettings(ctx context.Context) (*biz.StreamingSettings, error) {
+	return r.systemService.StreamingSettings(ctx)
 }
 
 // WebhookNotifierConfig is the resolver for the webhookNotifierConfig field.

@@ -190,6 +190,14 @@ input UpdateRetryPolicyInput {
   clientRestriction: ClientRestrictionLevel
 }
 
+type StreamingSettings {
+  webSocketKeepaliveIntervalSeconds: Int!
+}
+
+input UpdateStreamingSettingsInput {
+  webSocketKeepaliveIntervalSeconds: Int
+}
+
 enum QuotaEnforcementMode {
   EXHAUSTED_ONLY
   DE_PRIORITIZE
@@ -433,6 +441,7 @@ extend type Mutation {
   updateBrandSettings(input: UpdateBrandSettingsInput!): Boolean!
   updateStoragePolicy(input: UpdateStoragePolicyInput!): Boolean!
   updateRetryPolicy(input: UpdateRetryPolicyInput!): Boolean!
+  updateStreamingSettings(input: UpdateStreamingSettingsInput!): Boolean!
   updateWebhookNotifierConfig(input: WebhookNotifierConfigInput!): Boolean!
   updateSystemModelSettings(input: UpdateSystemModelSettingsInput!): Boolean!
   updateDefaultDataStorage(input: UpdateDefaultDataStorageInput!): Boolean!
@@ -504,6 +513,7 @@ extend type Query {
   brandSettings: BrandSettings!
   storagePolicy: StoragePolicy!
   retryPolicy: RetryPolicy!
+  streamingSettings: StreamingSettings!
   webhookNotifierConfig: WebhookNotifierConfig!
   systemModelSettings: SystemModelSettings!
   defaultDataStorageID: ID

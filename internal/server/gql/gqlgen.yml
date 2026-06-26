@@ -207,6 +207,12 @@ models:
   UpdateRetryPolicyInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.RetryPolicy
+  StreamingSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.StreamingSettings
+  UpdateStreamingSettingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.StreamingSettings
   WebhookNotifierConfig:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.WebhookNotifierConfig
