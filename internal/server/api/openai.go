@@ -385,6 +385,21 @@ func (handlers *OpenAIHandlers) CreateTranslation(c *gin.Context) {
 	handlers.TranslationHandlers.ChatCompletion(c)
 }
 
+// ChatCompletionWebSocket handles GET /v1/chat/completions over WebSocket.
+func (handlers *OpenAIHandlers) ChatCompletionWebSocket(c *gin.Context) {
+	handlers.ChatCompletionHandlers.ChatCompletionWebSocket(c, WSFrameSSEBytes)
+}
+
+// CreateResponseWebSocket handles GET /v1/responses over WebSocket.
+func (handlers *OpenAIHandlers) CreateResponseWebSocket(c *gin.Context) {
+	handlers.ResponseCompletionHandlers.ChatCompletionWebSocket(c, WSFrameResponsesEvents)
+}
+
+// CompactResponseWebSocket handles GET /v1/responses/compact over WebSocket.
+func (handlers *OpenAIHandlers) CompactResponseWebSocket(c *gin.Context) {
+	handlers.CompactHandlers.ChatCompletionWebSocket(c, WSFrameResponsesEvents)
+}
+
 func (handlers *OpenAIHandlers) CreateImage(c *gin.Context) {
 	handlers.ImageGenerationHandlers.ChatCompletion(c)
 }

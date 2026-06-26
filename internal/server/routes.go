@@ -208,6 +208,12 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		// OpenAI-compatible Anthropic endpoint
 		openaiGroup.POST("/messages", handlers.Anthropic.CreateMessage)
 
+		// WebSocket upgrade routes (GET only â WS handshake is an HTTP Upgrade)
+		openaiGroup.GET("/chat/completions", handlers.OpenAI.ChatCompletionWebSocket)
+		openaiGroup.GET("/responses", handlers.OpenAI.CreateResponseWebSocket)
+		openaiGroup.GET("/responses/compact", handlers.OpenAI.CompactResponseWebSocket)
+		openaiGroup.GET("/messages", handlers.Anthropic.CreateMessageWebSocket)
+
 		// Compatible with OpenAI API
 		openaiGroup.POST("/rerank", handlers.Jina.Rerank)
 	}
@@ -221,6 +227,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	{
 		anthropicGroup := apiGroup.Group("/anthropic/v1")
 		anthropicGroup.POST("/messages", handlers.Anthropic.CreateMessage)
+		anthropicGroup.GET("/messages", handlers.Anthropic.CreateMessageWebSocket)
 		anthropicGroup.GET("/models", handlers.Anthropic.ListModels)
 	}
 
@@ -234,6 +241,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	{
 		registerGeminiRoutes := func(group *gin.RouterGroup) {
 			group.POST("/models/*action", handlers.Gemini.GenerateContent)
+			group.GET("/models/*action", handlers.Gemini.GenerateContentWebSocket)
 			group.GET("/models", handlers.Gemini.ListModels)
 		}
 

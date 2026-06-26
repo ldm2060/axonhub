@@ -76,6 +76,11 @@ func (handlers *GeminiHandlers) GenerateContent(c *gin.Context) {
 	}
 }
 
+// GenerateContentWebSocket handles GET .../models/*action over WebSocket.
+func (handlers *GeminiHandlers) GenerateContentWebSocket(c *gin.Context) {
+	handlers.ChatCompletionHandlers.ChatCompletionWebSocket(c, WSFrameSSEBytes)
+}
+
 func WriteGeminiStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
 	WriteGeminiStreamWithOptions(c, stream, StreamWriteOptions{})
 }
