@@ -66,6 +66,9 @@ const (
 	// The value is JSON-encoded RetryPolicy struct.
 	SystemKeyRetryPolicy = "retry_policy"
 
+	// SystemKeyStreamingSettings is the key used to store the streaming settings.
+	SystemKeyStreamingSettings = "streaming_settings"
+
 	// SystemKeyWebhookNotifierConfig is the key used to store the webhook notifier configuration.
 	// The value is JSON-encoded WebhookNotifierConfig struct.
 	SystemKeyWebhookNotifierConfig = "webhook_notifier_config"
@@ -458,6 +461,14 @@ type UpstreamErrorPolicy struct {
 
 	// CustomMessage is returned to API users when Mode is custom.
 	CustomMessage string `json:"custom_message"`
+}
+
+// StreamingSettings configures inbound WebSocket streaming behavior.
+type StreamingSettings struct {
+	// WebSocketKeepaliveIntervalSeconds controls how often a PING control frame is
+	// sent on an idle inbound WebSocket stream to prevent proxies / load balancers
+	// from closing long-running connections. 0 disables keepalive.
+	WebSocketKeepaliveIntervalSeconds int `json:"web_socket_keepalive_interval_seconds"`
 }
 
 type AutoDisableChannel struct {
@@ -1126,6 +1137,53 @@ func (s *SystemService) SetRetryPolicy(ctx context.Context, policy *RetryPolicy)
 	}
 
 	return s.setSystemValue(ctx, SystemKeyRetryPolicy, string(jsonBytes))
+}
+
+var defaultStreamingSettings = StreamingSettings{}
+
+// StreamingSettings retrieves the streaming settings configuration.
+func (s *SystemService) StreamingSettings(ctx context.Context) (*StreamingSettings, error) {
+	value, err := s.getSystemValue(ctx, SystemKeyStreamingSettings)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			settings := defaultStreamingSettings
+			normalizeStreamingSettings(&settings)
+			return &settings, nil
+		}
+
+		return nil, fmt.Errorf("failed to get streaming settings: %w", err)
+	}
+
+	var settings StreamingSettings
+	if err := json.Unmarshal([]byte(value), &settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal streaming settings: %w", err)
+	}
+
+	normalizeStreamingSettings(&settings)
+
+	return &settings, nil
+}
+
+// SetStreamingSettings sets the streaming settings configuration.
+func (s *SystemService) SetStreamingSettings(ctx context.Context, settings *StreamingSettings) error {
+	normalizeStreamingSettings(settings)
+
+	jsonBytes, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal streaming settings: %w", err)
+	}
+
+	return s.setSystemValue(ctx, SystemKeyStreamingSettings, string(jsonBytes))
+}
+
+func normalizeStreamingSettings(settings *StreamingSettings) {
+	if settings == nil {
+		return
+	}
+
+	if settings.WebSocketKeepaliveIntervalSeconds < 0 {
+		settings.WebSocketKeepaliveIntervalSeconds = 0
+	}
 }
 
 func normalizeRetryPolicy(policy *RetryPolicy) {

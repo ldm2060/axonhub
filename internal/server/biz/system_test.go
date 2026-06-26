@@ -1160,3 +1160,27 @@ func TestClientRestrictionLevel_UnmarshalJSON_NonString(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid ClientRestrictionLevel")
 }
+
+func TestStreamingSettings_Normalize(t *testing.T) {
+	t.Parallel()
+
+	settings := &StreamingSettings{WebSocketKeepaliveIntervalSeconds: -5}
+	normalizeStreamingSettings(settings)
+	require.Equal(t, 0, settings.WebSocketKeepaliveIntervalSeconds)
+
+	settings = &StreamingSettings{WebSocketKeepaliveIntervalSeconds: 15}
+	normalizeStreamingSettings(settings)
+	require.Equal(t, 15, settings.WebSocketKeepaliveIntervalSeconds)
+}
+
+func TestStreamingSettings_MarshalRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	settings := &StreamingSettings{WebSocketKeepaliveIntervalSeconds: 12}
+	data, err := json.Marshal(settings)
+	require.NoError(t, err)
+
+	var got StreamingSettings
+	require.NoError(t, json.Unmarshal(data, &got))
+	require.Equal(t, 12, got.WebSocketKeepaliveIntervalSeconds)
+}
