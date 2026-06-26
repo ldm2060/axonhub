@@ -11,6 +11,7 @@ import { GeneralSettings } from './general-settings';
 import { QuotaSettings } from './quota-settings';
 import { RegistrationSettingsTab } from './registration-settings';
 import { RetrySettings } from './retry-settings';
+import { StreamingSettings } from './streaming-settings';
 import { SecuritySettings } from './security-settings';
 import { StorageSettings } from './storage-settings';
 import { BackupSettings } from './backup-settings';
@@ -18,7 +19,7 @@ import { ProxyPresetsSettings } from './proxy-presets-settings';
 import { WebhookSettings } from './webhook-settings';
 import { usePermissions } from '@/hooks/usePermissions';
 
-type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
+type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'streaming' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
 
 interface SystemSettingsTabsProps {
   initialTab?: SystemTabKey;
@@ -78,6 +79,9 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         <TabsTrigger value='retry' data-value='retry'>
           {t('system.tabs.retry')}
         </TabsTrigger>
+        <TabsTrigger value='streaming' data-value='streaming'>
+          {t('system.tabs.streaming')}
+        </TabsTrigger>
         <TabsTrigger value='webhook' data-value='webhook'>
           {t('system.tabs.webhook')}
         </TabsTrigger>
@@ -129,6 +133,9 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         </TabsContent>
         <TabsContent value='retry' className='mt-0 p-0'>
           <RetrySettings />
+        </TabsContent>
+        <TabsContent value='streaming' className='mt-0 p-0'>
+          <StreamingSettings />
         </TabsContent>
         <TabsContent value='webhook' className='mt-0 p-0'>
           <WebhookSettings />

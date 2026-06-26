@@ -590,6 +590,63 @@ export function useUpdateRetryPolicy() {
   });
 }
 
+const STREAMING_SETTINGS_QUERY = `
+  query StreamingSettings {
+    streamingSettings {
+      webSocketKeepaliveIntervalSeconds
+    }
+  }
+`;
+
+const UPDATE_STREAMING_SETTINGS_MUTATION = `
+  mutation UpdateStreamingSettings($input: UpdateStreamingSettingsInput!) {
+    updateStreamingSettings(input: $input)
+  }
+`;
+
+export interface StreamingSettings {
+  webSocketKeepaliveIntervalSeconds: number;
+}
+
+export interface UpdateStreamingSettingsInput {
+  webSocketKeepaliveIntervalSeconds?: number;
+}
+
+export function useStreamingSettings() {
+  const { handleError } = useErrorHandler();
+
+  return useQuery({
+    queryKey: ['streamingSettings'],
+    queryFn: async () => {
+      try {
+        const data = await graphqlRequest<{ streamingSettings: StreamingSettings }>(STREAMING_SETTINGS_QUERY);
+        return data.streamingSettings;
+      } catch (error) {
+        handleError(error, i18n.t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+  });
+}
+
+export function useUpdateStreamingSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateStreamingSettingsInput) => {
+      const data = await graphqlRequest<{ updateStreamingSettings: boolean }>(UPDATE_STREAMING_SETTINGS_MUTATION, { input });
+      return data.updateStreamingSettings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['streamingSettings'] });
+      toast.success(i18n.t('common.success.systemUpdated'));
+    },
+    onError: () => {
+      toast.error(i18n.t('common.errors.systemUpdateFailed'));
+    },
+  });
+}
+
 export function useWebhookNotifierConfig() {
   const { handleError } = useErrorHandler();
 
