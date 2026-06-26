@@ -51,10 +51,11 @@ func prepareWSRequest(mode WSFrameMode, msg []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid request JSON: %w", err)
 	}
 
-	delete(payload, "type") // strip a response.create envelope if present
-
 	if mode == WSFrameResponsesEvents {
-		// Responses WS is inherently event-streamed; force streaming on.
+		// Strip the response.create envelope and force streaming on (Responses
+		// WS is inherently event-streamed). Non-Responses bodies pass through
+		// unchanged so provider-specific top-level fields are preserved.
+		delete(payload, "type")
 		payload["stream"] = true
 	}
 
@@ -304,7 +305,7 @@ func (h *ChatCompletionHandlers) writeWSRequestError(conn *websocket.Conn, ctx c
 		data = wsErrorEventData(ctx, mode, err)
 	}
 
-	if werr := conn.WriteMessage(websocket.TextMessage, data); werr != nil {
+	if werr := writeWSStreamEvent(conn, &httpclient.StreamEvent{Type: "error", Data: data}, mode); werr != nil {
 		return true
 	}
 
