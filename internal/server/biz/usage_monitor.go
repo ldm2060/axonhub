@@ -399,7 +399,20 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 }
 
 func (svc *UsageMonitorService) Start(ctx context.Context) error {
-	return svc.cache.Load(ctx)
+	if err := svc.cache.Load(ctx); err != nil {
+		return err
+	}
+
+	// One-time cleanup: remove orphan quota monitor bindings left behind by
+	// older versions that did not clean up bindings on channel/monitor delete.
+	// Logged, never fatal — a cleanup issue must not block startup.
+	if removed, err := svc.CleanupOrphanedBindings(ctx); err != nil {
+		log.Warn(ctx, "failed to clean orphaned quota monitor bindings", log.Cause(err))
+	} else if removed > 0 {
+		log.Info(ctx, "cleaned orphaned quota monitor bindings", log.Int("removed", removed))
+	}
+
+	return nil
 }
 
 func (svc *UsageMonitorService) Stop() {

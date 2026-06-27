@@ -180,6 +180,43 @@ func (svc *UsageMonitorService) softDeleteBindingsForMonitor(ctx context.Context
 	return nil
 }
 
+// CleanupOrphanedBindings soft-deletes active quota monitor bindings whose
+// channel no longer exists (hard-deleted) or whose monitor has been
+// soft-deleted. These orphans accumulate when upgrading from older versions
+// that did not clean up bindings on channel/monitor deletion. Returns the
+// number of bindings removed.
+func (svc *UsageMonitorService) CleanupOrphanedBindings(ctx context.Context) (int, error) {
+	client := svc.entFromContext(ctx)
+	bindings, err := client.ChannelUsageMonitorBinding.Query().
+		Where(channelusagemonitorbinding.DeletedAtEQ(0)).
+		WithChannel().
+		WithUsageMonitorChannel(func(q *ent.UsageMonitorChannelQuery) {
+			q.Where(usagemonitorchannel.DeletedAtEQ(0))
+		}).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query bindings for orphan cleanup: %w", err)
+	}
+
+	now := int(time.Now().Unix())
+	removed := 0
+	for _, b := range bindings {
+		// Valid binding: both the channel and an active monitor exist.
+		if b.Edges.Channel != nil && b.Edges.UsageMonitorChannel != nil {
+			continue
+		}
+
+		if _, err := client.ChannelUsageMonitorBinding.UpdateOneID(b.ID).
+			SetDeletedAt(now).
+			Save(ctx); err != nil {
+			return removed, fmt.Errorf("failed to soft-delete orphan binding %d: %w", b.ID, err)
+		}
+		removed++
+	}
+
+	return removed, nil
+}
+
 // SaveChannelQuotaMonitorBindingsAndEvaluate is like
 // SaveChannelQuotaMonitorBindings but also evaluates the channel's
 // quota-ready state after the transaction commits.
@@ -265,6 +302,12 @@ func (svc *UsageMonitorService) ListUsageMonitorBindingSummaries(
 
 	summaries := make([]UsageMonitorBindingSummary, 0, len(bindings))
 	for _, b := range bindings {
+		// Skip orphan bindings (their channel was hard-deleted). These are also
+		// cleaned up on startup by CleanupOrphanedBindings; filtering here is a
+		// guard so legacy orphans never surface with a blank channel name.
+		if b.Edges.Channel == nil {
+			continue
+		}
 		summary := UsageMonitorBindingSummary{
 			ChannelID:             b.ChannelID,
 			UsageMonitorChannelID: b.UsageMonitorChannelID,

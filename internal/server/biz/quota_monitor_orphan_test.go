@@ -62,22 +62,53 @@ func TestSoftDeleteBindingsForChannel(t *testing.T) {
 	assert.Equal(t, 0, activeBindingCount(t, svc, ctx), "soft-deleting a channel's bindings must remove them")
 }
 
-// TestListBindingSummaries_DefaultsStrategyWhenChannelMissing verifies the
-// defense-in-depth: even if an orphan binding (missing channel) exists, the
-// summary's strategy must default to a valid value instead of empty, so the
-// frontend zod schema (z.enum(['any','all'])) never rejects it.
-func TestListBindingSummaries_DefaultsStrategyWhenChannelMissing(t *testing.T) {
+// TestListBindingSummaries_SkipsOrphanChannelBinding verifies that an orphan
+// binding (its channel hard-deleted) is NOT surfaced in the summaries — so
+// upgraded deployments with legacy orphan rows don't show blank channel entries.
+func TestListBindingSummaries_SkipsOrphanChannelBinding(t *testing.T) {
 	svc, ctx := setupTestBindingService(t, "any")
 	any := channel.QuotaMultiMonitorStrategyAny
 	ch := createTestChannelForBinding(t, svc, ctx, "C", &any)
 	mon := createTestMonitorForBinding(t, svc, ctx, "M", usagemonitorchannel.QuotaStatusAvailable, nil)
 	saveTestBinding(t, svc, ctx, ch.ID, mon.ID)
 
-	// Simulate the pre-fix bug: channel hard-deleted while its binding remains.
+	// Simulate the legacy bug: channel hard-deleted while its binding remains.
 	require.NoError(t, svc.db.Channel.DeleteOneID(ch.ID).Exec(ctx))
 
 	summaries, err := svc.ListUsageMonitorBindingSummaries(ctx)
 	require.NoError(t, err)
-	require.Len(t, summaries, 1)
-	assert.Equal(t, "any", summaries[0].Strategy, "strategy must default to 'any' even when the channel edge is missing")
+	assert.Empty(t, summaries, "orphan binding (missing channel) must not be surfaced")
+}
+
+// TestCleanupOrphanedBindings_RemovesOrphans verifies the startup cleanup
+// soft-deletes bindings whose channel is missing.
+func TestCleanupOrphanedBindings_RemovesOrphans(t *testing.T) {
+	svc, ctx := setupTestBindingService(t, "any")
+	any := channel.QuotaMultiMonitorStrategyAny
+	ch := createTestChannelForBinding(t, svc, ctx, "C", &any)
+	mon := createTestMonitorForBinding(t, svc, ctx, "M", usagemonitorchannel.QuotaStatusAvailable, nil)
+	saveTestBinding(t, svc, ctx, ch.ID, mon.ID)
+	require.NoError(t, svc.db.Channel.DeleteOneID(ch.ID).Exec(ctx)) // orphan
+	require.Equal(t, 1, activeBindingCount(t, svc, ctx))
+
+	removed, err := svc.CleanupOrphanedBindings(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 1, removed)
+	assert.Equal(t, 0, activeBindingCount(t, svc, ctx), "orphan binding must be soft-deleted")
+}
+
+// TestCleanupOrphanedBindings_KeepsValidBindings verifies the startup cleanup
+// does not touch bindings whose channel and monitor both still exist.
+func TestCleanupOrphanedBindings_KeepsValidBindings(t *testing.T) {
+	svc, ctx := setupTestBindingService(t, "any")
+	any := channel.QuotaMultiMonitorStrategyAny
+	ch := createTestChannelForBinding(t, svc, ctx, "C", &any)
+	mon := createTestMonitorForBinding(t, svc, ctx, "M", usagemonitorchannel.QuotaStatusAvailable, nil)
+	saveTestBinding(t, svc, ctx, ch.ID, mon.ID)
+	require.Equal(t, 1, activeBindingCount(t, svc, ctx))
+
+	removed, err := svc.CleanupOrphanedBindings(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, removed)
+	assert.Equal(t, 1, activeBindingCount(t, svc, ctx), "valid binding must be kept")
 }
