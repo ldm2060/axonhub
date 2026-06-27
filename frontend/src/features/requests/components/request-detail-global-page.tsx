@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { useParams, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useParams, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { extractNumberID } from '@/lib/utils';
