@@ -143,6 +143,43 @@ func (svc *UsageMonitorService) SaveChannelQuotaMonitorBindings(
 	})
 }
 
+// SoftDeleteBindingsForChannel soft-deletes all active quota monitor bindings
+// for the given channel. Called when a channel is hard-deleted so it leaves no
+// orphan bindings, which would otherwise surface in binding summaries with an
+// empty strategy and break the frontend zod schema.
+func (svc *UsageMonitorService) SoftDeleteBindingsForChannel(ctx context.Context, channelID int) error {
+	_, err := svc.entFromContext(ctx).ChannelUsageMonitorBinding.Update().
+		Where(
+			channelusagemonitorbinding.ChannelIDEQ(channelID),
+			channelusagemonitorbinding.DeletedAtEQ(0),
+		).
+		SetDeletedAt(int(time.Now().Unix())).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to soft-delete quota monitor bindings for channel %d: %w", channelID, err)
+	}
+
+	return nil
+}
+
+// softDeleteBindingsForMonitor soft-deletes all active quota monitor bindings
+// that reference the given monitor. Called when a usage monitor channel is
+// deleted so its bindings don't linger as orphans.
+func (svc *UsageMonitorService) softDeleteBindingsForMonitor(ctx context.Context, monitorID int) error {
+	_, err := svc.entFromContext(ctx).ChannelUsageMonitorBinding.Update().
+		Where(
+			channelusagemonitorbinding.UsageMonitorChannelIDEQ(monitorID),
+			channelusagemonitorbinding.DeletedAtEQ(0),
+		).
+		SetDeletedAt(int(time.Now().Unix())).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to remove quota monitor bindings for monitor %d: %w", monitorID, err)
+	}
+
+	return nil
+}
+
 // SaveChannelQuotaMonitorBindingsAndEvaluate is like
 // SaveChannelQuotaMonitorBindings but also evaluates the channel's
 // quota-ready state after the transaction commits.
@@ -236,10 +273,15 @@ func (svc *UsageMonitorService) ListUsageMonitorBindingSummaries(
 			Conditions:            normalizeConditions(b.Conditions),
 		}
 
+		var chStrategy *channel.QuotaMultiMonitorStrategy
 		if b.Edges.Channel != nil {
 			summary.ChannelName = b.Edges.Channel.Name
-			summary.Strategy = resolveStrategy(b.Edges.Channel.QuotaMultiMonitorStrategy, svc.defaultMultiMonitorStrategy)
+			chStrategy = b.Edges.Channel.QuotaMultiMonitorStrategy
 		}
+		// Always set Strategy (defaulting to the configured default) so an
+		// orphan binding with a missing channel never yields an empty value,
+		// which the frontend zod schema (z.enum(['any','all'])) would reject.
+		summary.Strategy = resolveStrategy(chStrategy, svc.defaultMultiMonitorStrategy)
 
 		if b.Edges.UsageMonitorChannel != nil {
 			// Evaluate this single binding against the monitor's current state

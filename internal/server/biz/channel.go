@@ -877,6 +877,18 @@ func (svc *ChannelService) DeleteChannel(ctx context.Context, id int) error {
 		return fmt.Errorf("failed to delete channel: %w", err)
 	}
 
+	// Soft-delete quota monitor bindings that referenced this channel so they
+	// don't linger as orphans (orphan bindings surface in binding summaries
+	// with an empty strategy and break the frontend zod schema). Errors are
+	// logged, not fatal — matching autoDeleteUsageMonitorChannels below.
+	if svc.usageMonitor != nil {
+		if err := svc.usageMonitor.SoftDeleteBindingsForChannel(ctx, id); err != nil {
+			log.Warn(ctx, "failed to clean quota monitor bindings for deleted channel",
+				log.Int("channel_id", id),
+				log.Cause(err))
+		}
+	}
+
 	// Soft-delete corresponding usage_monitor_channels
 	svc.autoDeleteUsageMonitorChannels(ctx, id)
 
