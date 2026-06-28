@@ -13,6 +13,7 @@ import {
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
+import { extractNumberID } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { RequestsTable, type RequestTableFilters } from './components';
@@ -340,10 +341,11 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
 
   const handleViewDetail = useCallback(
     (requestId: string) => {
+      const numericId = extractNumberID(requestId) || requestId;
       if (isAdminScope) {
         navigate({
           to: '/admin/requests/$requestId',
-          params: { requestId },
+          params: { requestId: numericId },
           search: currentSearch,
         });
         return;
@@ -351,7 +353,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
 
       navigate({
         to: '/project/requests/$requestId',
-        params: { requestId },
+        params: { requestId: numericId },
         search: currentSearch,
       });
     },

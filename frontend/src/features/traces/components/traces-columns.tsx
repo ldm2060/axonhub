@@ -115,7 +115,7 @@ export function useTracesColumns(): ColumnDef<Trace>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('traces.columns.details')} />,
       cell: ({ row }) => {
         const handleViewDetails = () => {
-          navigateWithSearch({ to: '/project/traces/$traceId', params: { traceId: row.original.id } });
+          navigateWithSearch({ to: '/project/traces/$traceId', params: { traceId: extractNumberID(row.original.id) || row.original.id } });
         };
 
         return (

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { extractNumberID } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft,
@@ -238,17 +239,18 @@ export function RequestBodyDrawer({
 
   const handleViewDetail = useCallback(() => {
     if (currentRequestId) {
+      const numericId = extractNumberID(currentRequestId) || currentRequestId;
       if (onViewDetail) {
         onViewDetail(currentRequestId);
       } else if (effectiveProjectId) {
         navigateWithSearch({
           to: '/project/requests/$requestId',
-          params: { requestId: currentRequestId },
+          params: { requestId: numericId },
         });
       } else {
         navigate({
           to: '/requests/$requestId',
-          params: { requestId: currentRequestId },
+          params: { requestId: numericId },
         });
       }
       onOpenChange(false);

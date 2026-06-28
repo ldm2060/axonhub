@@ -4,7 +4,7 @@ import { useParams, useNavigate } from '@tanstack/react-router';
 import { zhCN, enUS } from 'date-fns/locale';
 import { ArrowLeft, FileText, Activity, RefreshCw, List, GitBranch, Waypoints, Maximize2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn, extractNumberID } from '@/lib/utils';
+import { cn, buildGUID, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { TraceTreeTimeline } from './trace-tree-view';
 export default function TraceDetailPage() {
   const { t, i18n } = useTranslation();
   const { traceId } = useParams({ from: '/_authenticated/project/traces/$traceId' });
+  const traceGUID = buildGUID('Trace', traceId);
   const navigate = useNavigate();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
   const [selectedTrace, setSelectedTrace] = useState<Segment | null>(null);
@@ -34,7 +35,7 @@ export default function TraceDetailPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { getSearchParams } = usePaginationSearch({ defaultPageSize: 20 });
 
-  const { data: trace, isLoading, refetch } = useTraceWithSegments(traceId);
+  const { data: trace, isLoading, refetch } = useTraceWithSegments(traceGUID);
   const { data: settings } = useGeneralSettings();
 
   // Parse rawRootSegment JSON once per trace

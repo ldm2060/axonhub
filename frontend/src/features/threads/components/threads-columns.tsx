@@ -25,7 +25,7 @@ export function useThreadsColumns(): ColumnDef<Thread>[] {
         const handleClick = () => {
           navigateWithSearch({
             to: '/project/threads/$threadId',
-            params: { threadId: row.original.id },
+            params: { threadId: extractNumberID(row.original.id) || row.original.id },
           });
         };
 
@@ -106,7 +106,7 @@ export function useThreadsColumns(): ColumnDef<Thread>[] {
         const handleViewDetails = () => {
           navigateWithSearch({
             to: '/project/threads/$threadId',
-            params: { threadId: row.original.id },
+            params: { threadId: extractNumberID(row.original.id) || row.original.id },
           });
         };
 

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from '@tanstack/react-router';
 import { zhCN, enUS } from 'date-fns/locale';
 import { ArrowLeft, Activity, RefreshCw, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { extractNumberID } from '@/lib/utils';
+import { buildGUID, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +30,7 @@ export default function ThreadDetailPage() {
   const { threadId } = useParams({ from: '/_authenticated/project/threads/$threadId' as any }) as {
     threadId: string;
   };
+  const threadGUID = buildGUID('Thread', threadId);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
@@ -55,7 +56,7 @@ export default function ThreadDetailPage() {
     isLoading,
     refetch,
   } = useThreadDetail({
-    id: threadId,
+    id: threadGUID,
     tracesFirst,
     tracesAfter,
     traceOrderBy: { field: 'CREATED_AT', direction: 'DESC' },

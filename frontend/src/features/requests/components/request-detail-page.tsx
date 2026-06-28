@@ -5,7 +5,7 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getTokenFromStorage } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
-import { extractNumberID } from '@/lib/utils';
+import { buildGUID, extractNumberID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
@@ -118,6 +118,7 @@ async function readPreviewStream(
 export default function RequestDetailPage() {
   const { t } = useTranslation();
   const { requestId } = useParams({ from: '/_authenticated/project/requests/$requestId' });
+  const requestGUID = buildGUID('Request', requestId);
   const navigate = useNavigate();
   const currentSearch = useRouterState({
     select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
@@ -131,7 +132,7 @@ export default function RequestDetailPage() {
   const previewCompletedRef = useRef(false);
   const previewChunkCountRef = useRef(0);
 
-  const { data: requestData, refetch: refetchRequest } = useRequest(requestId, {
+  const { data: requestData, refetch: refetchRequest } = useRequest(requestGUID, {
     projectId: selectedProjectId,
     disableAutoRefresh: isPreviewStreaming,
   });
@@ -362,7 +363,7 @@ export default function RequestDetailPage() {
             <div>
               <h1 className='text-lg leading-none font-semibold'>
                 {t('requests.detail.title')} #
-                {request ? extractNumberID(request.id) || request.id : extractNumberID(requestId) || requestId}
+                {request ? extractNumberID(request.id) || request.id : requestId}
               </h1>
               {request && (
                 <div className='mt-1 flex items-center gap-2'>
@@ -379,7 +380,7 @@ export default function RequestDetailPage() {
       <Main className='flex-1 overflow-auto'>
         <div className='container mx-auto max-w-7xl p-6'>
           <RequestDetailContent
-            requestId={requestId}
+            requestId={requestGUID}
             projectId={selectedProjectId}
             previewRequest={previewRequest}
             isPreviewStreaming={isPreviewStreaming}

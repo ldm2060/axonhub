@@ -722,7 +722,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
 
             navigateWithSearch({
               to: '/project/requests/$requestId',
-              params: { requestId: row.original.id },
+              params: { requestId: extractNumberID(row.original.id) || row.original.id },
             });
           }}
         >
