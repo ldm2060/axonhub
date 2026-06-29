@@ -408,3 +408,53 @@ func TestDeriveQuotaStatus_ApertisPaygExhausted(t *testing.T) {
 	assert.Len(t, result.Limits, 1)
 	assert.Equal(t, provider_quota.QuotaLimitTypeToken, result.Limits[0].Type)
 }
+
+func TestDeriveQuotaStatus_OpenCodeGo_AllAvailable(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "rolling_used_pct", Format: "percentage", Percent: 50},
+		{Key: "rolling_reset", Format: "datetime", Value: "2099-01-01T00:00:00Z"},
+		{Key: "weekly_used_pct", Format: "percentage", Percent: 30},
+		{Key: "weekly_reset", Format: "datetime", Value: "2099-01-08T00:00:00Z"},
+		{Key: "monthly_used_pct", Format: "percentage", Percent: 20},
+		{Key: "monthly_reset", Format: "datetime", Value: "2099-02-01T00:00:00Z"},
+	}
+	result := DeriveQuotaStatus("opencode_go", fields)
+	assert.Equal(t, "available", result.Status)
+	assert.True(t, result.Ready)
+	assert.Len(t, result.Limits, 3)
+	assert.NotNil(t, result.NextResetAt)
+}
+
+func TestDeriveQuotaStatus_OpenCodeGo_RollingExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "rolling_used_pct", Format: "percentage", Percent: 100},
+		{Key: "weekly_used_pct", Format: "percentage", Percent: 30},
+	}
+	result := DeriveQuotaStatus("opencode_go", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	if assert.Len(t, result.Limits, 2) {
+		assert.Equal(t, "exhausted", result.Limits[0].Status)
+		assert.False(t, result.Limits[0].Ready)
+		assert.InDelta(t, 1.0, result.Limits[0].UsageRatio, 0.001)
+	}
+}
+
+func TestDeriveQuotaStatus_OpenCodeGo_WeeklyWarning(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "rolling_used_pct", Format: "percentage", Percent: 10},
+		{Key: "weekly_used_pct", Format: "percentage", Percent: 85},
+		{Key: "weekly_reset", Format: "datetime", Value: "2099-01-08T00:00:00Z"},
+	}
+	result := DeriveQuotaStatus("opencode_go", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+	// rolling field absent for monthly; only 2 windows present -> 2 limits
+	assert.Len(t, result.Limits, 2)
+}
+
+func TestDeriveQuotaStatus_OpenCodeGo_NoWindows(t *testing.T) {
+	result := DeriveQuotaStatus("opencode_go", nil)
+	assert.Equal(t, "unknown", result.Status)
+	assert.Empty(t, result.Limits)
+}

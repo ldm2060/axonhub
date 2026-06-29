@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache/live"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -364,6 +365,7 @@ type UsageMonitorService struct {
 
 	cache                       *live.IndexedCache[int, *ent.UsageMonitorChannel]
 	genericChecker              *usage_monitor.GenericQuotaChecker
+	opencodeGoChecker           *provider_quota.OpenCodeGoQuotaChecker
 	httpClient                  *httpclient.HttpClient
 	defaultDisableThreshold     float64
 	defaultEnableThreshold      float64
@@ -377,6 +379,7 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 	svc := &UsageMonitorService{
 		AbstractService:             &AbstractService{db: params.Ent},
 		genericChecker:              usage_monitor.NewGenericQuotaChecker(params.HttpClient),
+		opencodeGoChecker:           provider_quota.NewOpenCodeGoQuotaChecker(params.HttpClient),
 		httpClient:                  params.HttpClient,
 		defaultDisableThreshold:     params.DefaultDisableThreshold,
 		defaultEnableThreshold:      params.DefaultEnableThreshold,
@@ -546,12 +549,15 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		if input.ProviderType == nil || *input.ProviderType == "" {
 			return nil, fmt.Errorf("providerType is required when source=template")
 		}
-		if input.ApiKey == nil || *input.ApiKey == "" {
-			return nil, fmt.Errorf("apiKey is required when source=template")
-		}
 		tmpl := usage_monitor.GetChannelTemplate(*input.ProviderType)
 		if tmpl == nil {
 			return nil, fmt.Errorf("unknown provider template: %s", *input.ProviderType)
+		}
+		// OpenCode Go reads credentials from the bound channel's settings at
+		// poll time (dedicated checker), so no apiKey is required.
+		isOpenCodeGo := *input.ProviderType == "opencode_go"
+		if !isOpenCodeGo && (input.ApiKey == nil || *input.ApiKey == "") {
+			return nil, fmt.Errorf("apiKey is required when source=template")
 		}
 		// Template provides API config
 		input.ApiURL = tmpl.ApiURL
@@ -569,7 +575,9 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		// Assemble headers from apiKey + template headerFormat
 		// Special case: Antigravity stores refreshToken|projectId, not a usable Bearer token.
 		// The pollChannel method will refresh the token before each poll, so store empty headers.
-		if *input.ProviderType == "antigravity" {
+		// Special case: OpenCode Go builds its own Cookie header at poll time from the bound
+		// channel's settings.providerQuota.opencodeGo, so store empty headers here.
+		if *input.ProviderType == "antigravity" || isOpenCodeGo {
 			apiHeaders = map[string]any{}
 		} else {
 			apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
@@ -954,8 +962,13 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var pollData *usage_monitor.PollData
 	var err error
 
-	// Prefer new columns (Variables + DisplayFields) if populated
-	if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
+	// OpenCode Go uses a dedicated dashboard-scraper checker that reads
+	// credentials from the bound channel's settings, bypassing the generic
+	// HTTP poller entirely.
+	if ch.ProviderType == usagemonitorchannel.ProviderTypeOpencodeGo {
+		pollData, err = svc.pollOpenCodeGo(ctx, ch)
+	} else if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
+		// Prefer new columns (Variables + DisplayFields) if populated
 		vars := convertMapSliceToVariables(ch.Variables)
 		dfs := convertMapSliceToDisplayFields(ch.DisplayFields)
 		enrichDisplayFieldsFromTemplate(ch, dfs)
@@ -1158,4 +1171,32 @@ func (svc *UsageMonitorService) refreshAntigravityToken(ctx context.Context, api
 	}
 
 	return map[string]any{"Authorization": "Bearer " + creds.AccessToken}, nil
+}
+
+// pollOpenCodeGo polls an OpenCode Go channel via the dedicated dashboard-scraper
+// checker. Credentials (workspaceId + authCookie) are read from the bound channel's
+// settings.providerQuota.opencodeGo, so the monitor must have a channel_id. The
+// returned QuotaData is converted to ParsedFields for the generic storage + display
+// path; DeriveQuotaStatus then derives routing status from those fields.
+func (svc *UsageMonitorService) pollOpenCodeGo(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
+	if mon.ChannelID == nil {
+		return nil, fmt.Errorf("opencode_go monitor %d has no bound channel_id", mon.ID)
+	}
+
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, *mon.ChannelID)
+	if err != nil {
+		return nil, fmt.Errorf("load bound channel %d for opencode_go monitor: %w", *mon.ChannelID, err)
+	}
+
+	quota, err := svc.opencodeGoChecker.CheckQuota(ctx, ch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage_monitor.PollData{
+		Raw:      usage_monitor.OpenCodeGoQuotaRawJSON(quota),
+		Fields:   usage_monitor.OpenCodeGoQuotaToParsedFields(quota),
+		PolledAt: time.Now(),
+	}, nil
 }

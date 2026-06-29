@@ -93,12 +93,12 @@ type Channel struct {
 type ChannelServiceParams struct {
 	fx.In
 
-	CacheConfig       xcache.Config
-	Ent               *ent.Client
-	SystemService     *SystemService
-	WebhookNotifier   *WebhookNotifier
-	HttpClient        *httpclient.HttpClient
-	UsageMonitor      *UsageMonitorService
+	CacheConfig     xcache.Config
+	Ent             *ent.Client
+	SystemService   *SystemService
+	WebhookNotifier *WebhookNotifier
+	HttpClient      *httpclient.HttpClient
+	UsageMonitor    *UsageMonitorService
 }
 
 func NewChannelService(params ChannelServiceParams) *ChannelService {
@@ -172,8 +172,8 @@ type ChannelService struct {
 	SystemService   *SystemService
 	WebhookNotifier *WebhookNotifier
 
-	httpClient    *httpclient.HttpClient
-	usageMonitor  *UsageMonitorService
+	httpClient   *httpclient.HttpClient
+	usageMonitor *UsageMonitorService
 
 	enabledChannelsCache *live.Cache[[]*Channel]
 	channelNotifier      watcher.Notifier[live.CacheEvent[struct{}]]
@@ -1002,6 +1002,8 @@ func providerTypeFromChannel(chType channel.Type, baseURL string) string {
 		return "nanogpt"
 	case channel.TypeZhipu, channel.TypeZhipuAnthropic, channel.TypeZai, channel.TypeZaiAnthropic:
 		return "zhipu"
+	case channel.TypeOpencodeGo, channel.TypeOpencodeGoAnthropic:
+		return "opencode_go"
 	case channel.TypeOpenai, channel.TypeOpenaiResponses:
 		return provider_quota.DetectProviderFromURL(baseURL)
 	default:
@@ -1041,13 +1043,44 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 		return
 	}
 
+	channelIDStr := strconv.Itoa(ch.ID)
+	providerTypeStr := providerType
+
+	// OpenCode Go reads its credentials (workspaceId + authCookie) from the
+	// channel's settings.providerQuota.opencodeGo at poll time, not from a single
+	// API key. Skip the apiKey requirement and let the dedicated checker load the
+	// bound channel in pollChannel. Auto-create only if the channel has the
+	// OpenCode quota settings configured.
+	if providerType == "opencode_go" {
+		if ch.Settings == nil || ch.Settings.ProviderQuota == nil ||
+			ch.Settings.ProviderQuota.OpencodeGo == nil {
+			return
+		}
+		monitorInput := usage_monitor.CreateUsageMonitorChannelInput{
+			Name:         ch.Name + " (Quota)",
+			Source:       "template",
+			ChannelID:    &channelIDStr,
+			ProviderType: &providerTypeStr,
+			ApiURL:       tmpl.ApiURL,
+			ApiMethod:    tmpl.ApiMethod,
+			PollInterval: 300,
+		}
+		if _, err := svc.usageMonitor.CreateChannel(ctx, monitorInput); err != nil {
+			log.Warn(ctx, "failed to auto-create usage monitor channel",
+				log.Int("channel_id", ch.ID),
+				log.String("channel_name", ch.Name),
+				log.String("provider_type", providerType),
+				log.Cause(err),
+			)
+		}
+		return
+	}
+
 	apiKey := apiKeyFromCredentials(input.Credentials)
 	if apiKey == "" {
 		return
 	}
 
-	channelIDStr := strconv.Itoa(ch.ID)
-	providerTypeStr := providerType
 	monitorInput := usage_monitor.CreateUsageMonitorChannelInput{
 		Name:         ch.Name + " (Quota)",
 		Source:       "template",

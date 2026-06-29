@@ -331,6 +331,31 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "bucket_0_model_id", Label: "Model", ValueRef: "bucket_0_model_id", Format: "text", DisplayOrder: 4},
 		},
 	},
+	{
+		ProviderType: "opencode_go",
+		Name:         "OpenCode Go",
+		Description:  "Monitor OpenCode Go usage by scraping the opencode.ai workspace dashboard (auth cookie)",
+		// ApiURL is a placeholder; the dedicated OpenCodeGoQuotaChecker builds the
+		// real URL from the channel's settings.providerQuota.opencodeGo.workspaceId
+		// at poll time. Required non-empty by schema.
+		ApiURL:                "https://opencode.ai/workspace/{workspaceId}/go",
+		ApiMethod:             "GET",
+		HeaderFormat:          "cookie",
+		AuthType:              "api_key",
+		CredentialLabel:       "Auth Cookie",
+		CredentialPlaceholder: "auth=...",
+		// Variables/DisplayFields are unused at poll time (the dedicated checker
+		// owns parsing), but DisplayFields mirror the converter's field keys so the
+		// degraded last_poll_data display path renders window usage and resets.
+		DisplayFields: []DisplayField{
+			{Key: "rolling_used_pct", Label: "Rolling Usage %", ValueRef: "rolling_used_pct", Format: "percentage", DisplayOrder: 0, Group: "rolling"},
+			{Key: "rolling_reset", Label: "Rolling Reset At", ValueRef: "rolling_reset", Format: "datetime", DisplayOrder: 1, Group: "rolling"},
+			{Key: "weekly_used_pct", Label: "Weekly Usage %", ValueRef: "weekly_used_pct", Format: "percentage", DisplayOrder: 2, Group: "weekly"},
+			{Key: "weekly_reset", Label: "Weekly Reset At", ValueRef: "weekly_reset", Format: "datetime", DisplayOrder: 3, Group: "weekly"},
+			{Key: "monthly_used_pct", Label: "Monthly Usage %", ValueRef: "monthly_used_pct", Format: "percentage", DisplayOrder: 4, Group: "monthly"},
+			{Key: "monthly_reset", Label: "Monthly Reset At", ValueRef: "monthly_reset", Format: "datetime", DisplayOrder: 5, Group: "monthly"},
+		},
+	},
 }
 
 // GetChannelTemplates returns all available channel templates.

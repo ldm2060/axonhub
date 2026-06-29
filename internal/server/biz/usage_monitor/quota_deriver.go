@@ -42,6 +42,8 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveZhipu(fields)
 	case "antigravity":
 		return deriveAntigravity(fields)
+	case "opencode_go":
+		return deriveOpenCodeGo(fields)
 	default:
 		return deriveGeneric(fields)
 	}
@@ -586,6 +588,54 @@ func deriveAntigravity(fields []ParsedField) QuotaDerivedStatus {
 	}
 }
 
+// deriveOpenCodeGo derives quota status from OpenCode Go dashboard usage windows
+// (rolling/weekly/monthly). Each window contributes a percentage field
+// (<window>_used_pct, 0-100) and a datetime reset field (<window>_reset).
+func deriveOpenCodeGo(fields []ParsedField) QuotaDerivedStatus {
+	var limits []provider_quota.QuotaLimitStatus
+	var worstStatus string
+
+	for _, key := range []string{"rolling", "weekly", "monthly"} {
+		if !hasField(fields, key+"_used_pct") {
+			// The converter only emits fields for windows present in the
+			// dashboard response, so absence means "no data for this window".
+			continue
+		}
+		ratio := findFieldPercent(fields, key+"_used_pct") / 100.0
+
+		status := "available"
+		if ratio >= 1.0 {
+			status = "exhausted"
+		} else if ratio >= warningThreshold {
+			status = "warning"
+		}
+
+		nextReset := findFieldTime(fields, key+"_reset")
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:        provider_quota.QuotaLimitTypeToken,
+			Status:      status,
+			UsageRatio:  ratio,
+			Ready:       status != "exhausted",
+			NextResetAt: nextReset,
+		})
+
+		if worstStatus == "" || quotaStatusRank(status) > quotaStatusRank(worstStatus) {
+			worstStatus = status
+		}
+	}
+
+	if worstStatus == "" {
+		worstStatus = "unknown"
+	}
+
+	return QuotaDerivedStatus{
+		Status:      worstStatus,
+		Ready:       worstStatus != "exhausted",
+		Limits:      limits,
+		NextResetAt: earliestDatetime(fields),
+	}
+}
+
 func quotaStatusRank(s string) int {
 	switch s {
 	case "available":
@@ -675,6 +725,15 @@ func findFieldString(fields []ParsedField, key string) string {
 		}
 	}
 	return ""
+}
+
+func hasField(fields []ParsedField, key string) bool {
+	for _, f := range fields {
+		if f.Key == key {
+			return true
+		}
+	}
+	return false
 }
 
 func earliestDatetime(fields []ParsedField) *time.Time {

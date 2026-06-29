@@ -1051,7 +1051,7 @@ var (
 		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
 		{Name: "name", Type: field.TypeString},
 		{Name: "source", Type: field.TypeEnum, Enums: []string{"builtin", "custom", "template"}},
-		{Name: "provider_type", Type: field.TypeEnum, Nullable: true, Enums: []string{"claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu", "antigravity", "apertis"}},
+		{Name: "provider_type", Type: field.TypeEnum, Nullable: true, Enums: []string{"claudecode", "codex", "github_copilot", "nanogpt", "wafer", "synthetic", "neuralwatt", "zhipu", "antigravity", "apertis", "opencode_go"}},
 		{Name: "api_url", Type: field.TypeString},
 		{Name: "api_method", Type: field.TypeEnum, Enums: []string{"GET", "POST"}, Default: "GET"},
 		{Name: "api_headers", Type: field.TypeJSON},
