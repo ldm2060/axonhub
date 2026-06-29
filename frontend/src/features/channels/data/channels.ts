@@ -123,7 +123,13 @@ const CREATE_CHANNEL_MUTATION = `
           pattern
           regex
         }
-        minInputTokens
+minInputTokens
+        providerQuota {
+          opencodeGo {
+            workspaceId
+            authCookie
+          }
+        }
       }
       orderingWeight
       clientRestriction
@@ -201,7 +207,13 @@ const DUPLICATE_CHANNEL_MUTATION = `
           pattern
           regex
         }
-        minInputTokens
+minInputTokens
+        providerQuota {
+          opencodeGo {
+            workspaceId
+            authCookie
+          }
+        }
       }
       orderingWeight
       clientRestriction
@@ -288,7 +300,13 @@ const BULK_CREATE_CHANNELS_MUTATION = `
           pattern
           regex
         }
-        minInputTokens
+minInputTokens
+        providerQuota {
+          opencodeGo {
+            workspaceId
+            authCookie
+          }
+        }
       }
       orderingWeight
       clientRestriction
@@ -375,7 +393,13 @@ const UPDATE_CHANNEL_MUTATION = `
           pattern
           regex
         }
-        minInputTokens
+minInputTokens
+        providerQuota {
+          opencodeGo {
+            workspaceId
+            authCookie
+          }
+        }
       }
       orderingWeight
       errorMessage
@@ -570,7 +594,13 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
             pattern
             regex
           }
-          minInputTokens
+minInputTokens
+          providerQuota {
+            opencodeGo {
+              workspaceId
+              authCookie
+            }
+          }
         }
       }
     }
@@ -762,7 +792,13 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
             pattern
             regex
           }
-          minInputTokens
+minInputTokens
+          providerQuota {
+            opencodeGo {
+              workspaceId
+              authCookie
+            }
+          }
         }
       }
     }
@@ -922,7 +958,13 @@ const QUERY_CHANNELS_QUERY = `
               pattern
               regex
             }
-            minInputTokens
+minInputTokens
+            providerQuota {
+              opencodeGo {
+                workspaceId
+                authCookie
+              }
+            }
           }
           orderingWeight
           errorMessage

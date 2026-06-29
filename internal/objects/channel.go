@@ -198,15 +198,28 @@ type ChannelSettings struct {
 	// case-sensitive substring of the error text.
 	RetryableErrorPatterns []RetryableErrorPattern `json:"retryableErrorPatterns,omitempty"`
 
-	// MinInputTokens sets the minimum estimated prompt tokens for a request to use this channel.
+// MinInputTokens sets the minimum estimated prompt tokens for a request to use this channel.
 	// When set, requests with fewer prompt tokens will be routed to other channels.
 	// nil means no minimum (default).
 	MinInputTokens *int `json:"minInputTokens,omitempty"`
+
+	// ProviderQuota stores provider-specific credentials used only for quota
+	// polling. Keep upstream request credentials in ChannelCredentials.
+	ProviderQuota *ChannelProviderQuotaSettings `json:"providerQuota,omitempty"`
 }
 
 type RetryableErrorPattern struct {
 	Pattern string `json:"pattern"`
 	Regex   bool   `json:"regex,omitempty"`
+}
+
+type ChannelProviderQuotaSettings struct {
+	OpencodeGo *OpenCodeGoQuotaSettings `json:"opencodeGo,omitempty"`
+}
+
+type OpenCodeGoQuotaSettings struct {
+	WorkspaceID string `json:"workspaceId,omitempty"`
+	AuthCookie  string `json:"authCookie,omitempty"`
 }
 
 type ChannelRateLimit struct {

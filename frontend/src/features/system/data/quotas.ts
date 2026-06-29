@@ -240,6 +240,22 @@ export type ProviderNeuralWattQuotaData = ProviderQuotaDataCommon & {
   } | null;
 };
 
+export type OpenCodeGoQuotaWindow = {
+  usage_percent?: number;
+  reset_in_seconds?: number;
+  reset_time?: string;
+  status?: string;
+  percent_remaining?: number;
+}
+
+export type ProviderOpenCodeGoQuotaData = ProviderQuotaDataCommon & {
+  windows?: {
+    rolling?: OpenCodeGoQuotaWindow;
+    weekly?: OpenCodeGoQuotaWindow;
+    monthly?: OpenCodeGoQuotaWindow;
+  };
+}
+
 export type ProviderQuotaChannel = {
   id: string;
   name: string;
@@ -277,6 +293,13 @@ export type ProviderQuotaChannel = {
       type: 'nanogpt_responses';
       quotaStatus?: {
         quotaData: ProviderNanoGPTQuotaData;
+      };
+    }
+  | {
+      type: 'opencode_go' | 'opencode_go_anthropic';
+      workspaceId?: string | null;
+      quotaStatus?: {
+        quotaData: ProviderOpenCodeGoQuotaData;
       };
     }
   | {
