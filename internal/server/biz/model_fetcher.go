@@ -617,6 +617,16 @@ func (f *ModelFetcher) prepareModelsEndpoint(channelType channel.Type, baseURL s
 
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
+	// Model listing is always a plain HTTP GET, even for channels whose streaming
+	// transport is WebSocket (ws:///wss://). Normalize the scheme so the HTTP
+	// client can reach the provider's /models endpoint.
+	switch lower := strings.ToLower(baseURL); {
+	case strings.HasPrefix(lower, "wss://"):
+		baseURL = "https://" + baseURL[len("wss://"):]
+	case strings.HasPrefix(lower, "ws://"):
+		baseURL = "http://" + baseURL[len("ws://"):]
+	}
+
 	useRawURL := false
 
 	if before, ok := strings.CutSuffix(baseURL, "#"); ok {

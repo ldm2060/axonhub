@@ -390,6 +390,27 @@ func TestPrepareModelsEndpoint(t *testing.T) {
 			baseURL:     "https://ark.cn-beijing.volces.com/api/compatible",
 			expectedURL: "https://ark.cn-beijing.volces.com/api/v3/models",
 		},
+		{
+			name:        "OpenAI with ws:// base URL (websocket transport)",
+			channelType: channel.TypeOpenai,
+			baseURL:     "ws://sub2api:8080",
+			expectedURL: "http://sub2api:8080/v1/models",
+		},
+		{
+			name:        "OpenAI with wss:// base URL (websocket transport)",
+			channelType: channel.TypeOpenai,
+			baseURL:     "wss://sub2api:8080/v1",
+			expectedURL: "https://sub2api:8080/v1/models",
+		},
+		{
+			name:        "Anthropic with wss:// base URL",
+			channelType: channel.TypeAnthropic,
+			baseURL:     "wss://example.com/anthropic",
+			expectedURL: "https://example.com/v1/models",
+			checkHeader: true,
+			headerKey:   "Anthropic-Version",
+			headerValue: "2023-06-01",
+		},
 	}
 
 	for _, tt := range tests {
