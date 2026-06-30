@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 
+	entprivacy "github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
@@ -155,11 +156,18 @@ func (handlers *GeminiHandlers) ListModels(c *gin.Context) {
 
 	models, err := handlers.ModelService.ListEnabledModels(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gemini.GeminiError{
+		status := http.StatusInternalServerError
+		errorStatus := "internal_server_error"
+		if errors.Is(err, entprivacy.Deny) {
+			status = http.StatusForbidden
+			errorStatus = "permission_error"
+		}
+		_ = c.Error(err)
+		c.JSON(status, gemini.GeminiError{
 			Error: gemini.ErrorDetail{
 				Message: err.Error(),
-				Code:    http.StatusInternalServerError,
-				Status:  "internal_server_error",
+				Code:    status,
+				Status:  errorStatus,
 			},
 		})
 

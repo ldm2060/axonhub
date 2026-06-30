@@ -14,6 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	entprivacy "github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
@@ -670,12 +671,28 @@ func convertModelToOpenAIExtended(m *ent.Model, include map[string]bool) OpenAIM
 }
 
 func (handlers *OpenAIHandlers) writeOpenAIInternalError(c *gin.Context, requestID string, err error) {
+	_ = c.Error(err)
+
 	c.JSON(http.StatusInternalServerError, openai.OpenAIError{
 		StatusCode: http.StatusInternalServerError,
 		Detail: llm.ErrorDetail{
 			Code:      openAIErrorCodeInternalServer,
 			Message:   err.Error(),
 			Type:      openAIErrorTypeServer,
+			RequestID: requestID,
+		},
+	})
+}
+
+func (handlers *OpenAIHandlers) writeOpenAIPermissionDeniedError(c *gin.Context, requestID string, err error) {
+	_ = c.Error(err)
+
+	c.JSON(http.StatusForbidden, openai.OpenAIError{
+		StatusCode: http.StatusForbidden,
+		Detail: llm.ErrorDetail{
+			Code:      "permission_denied",
+			Message:   "insufficient permissions to access this resource",
+			Type:      "authentication_error",
 			RequestID: requestID,
 		},
 	})
@@ -715,7 +732,11 @@ func (handlers *OpenAIHandlers) RetrieveModel(c *gin.Context) {
 
 	models, err := handlers.ModelService.ListEnabledModels(ctx)
 	if err != nil {
-		handlers.writeOpenAIInternalError(c, requestID, err)
+		if errors.Is(err, entprivacy.Deny) {
+			handlers.writeOpenAIPermissionDeniedError(c, requestID, err)
+		} else {
+			handlers.writeOpenAIInternalError(c, requestID, err)
+		}
 		return
 	}
 
@@ -765,7 +786,11 @@ func (handlers *OpenAIHandlers) ListModels(c *gin.Context) {
 
 	visibleModels, err := handlers.ModelService.ListEnabledModels(ctx)
 	if err != nil {
-		handlers.writeOpenAIInternalError(c, requestID, err)
+		if errors.Is(err, entprivacy.Deny) {
+			handlers.writeOpenAIPermissionDeniedError(c, requestID, err)
+		} else {
+			handlers.writeOpenAIInternalError(c, requestID, err)
+		}
 		return
 	}
 
