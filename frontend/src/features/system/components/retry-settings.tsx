@@ -259,11 +259,11 @@ export function RetrySettings() {
                   <Input
                     id='retry-delay'
                     type='number'
-                    min='100'
+                    min='0'
                     max='10000'
                     step='100'
                     value={formData.retryDelayMs}
-                    onChange={(e) => handleInputChange('retryDelayMs', parseInt(e.target.value) || 1000)}
+                    onChange={(e) => handleInputChange('retryDelayMs', parseInt(e.target.value) || 0)}
                     className='w-32'
                   />
                   <span className='text-muted-foreground text-sm'>ms</span>
@@ -330,7 +330,14 @@ export function RetrySettings() {
                 <div className='text-muted-foreground mb-2 text-sm'>{t('system.retry.clientRestriction.description')}</div>
                 <Select
                   value={formData.clientRestriction || 'OFF'}
-                  onValueChange={(value) => handleInputChange('clientRestriction', value)}
+                  onValueChange={(value) => {
+                    // Radix Select's hidden BubbleInput can fire onChange with a stale/empty
+                    // value during mount and after programmatic value changes, which would
+                    // otherwise wipe the form state. Ignore anything that isn't a valid enum.
+                    if (value === 'OFF' || value === 'LENIENT' || value === 'STRICT') {
+                      handleInputChange('clientRestriction', value);
+                    }
+                  }}
                 >
                   <SelectTrigger id='client-restriction' className='w-56'>
                     <SelectValue />
