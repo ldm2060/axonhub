@@ -123,8 +123,8 @@ func (UsageLog) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadRequests),
-			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
+			scopes.UserProjectScopeReadRequestsRule(scopes.ScopeReadRequests),
+			scopes.UserReadScopeRule(scopes.ScopeReadRequests), // requires requests read permission
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),

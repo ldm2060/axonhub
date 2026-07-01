@@ -41,6 +41,7 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedRequestsRequestIdRouteImport } from './routes/_authenticated/requests/$requestId'
 import { Route as AuthenticatedProjectUsersIndexRouteImport } from './routes/_authenticated/project/users/index'
+import { Route as AuthenticatedProjectUsageStatsIndexRouteImport } from './routes/_authenticated/project/usage-stats/index'
 import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_authenticated/project/traces/index'
 import { Route as AuthenticatedProjectThreadsIndexRouteImport } from './routes/_authenticated/project/threads/index'
 import { Route as AuthenticatedProjectRolesIndexRouteImport } from './routes/_authenticated/project/roles/index'
@@ -237,6 +238,12 @@ const AuthenticatedProjectUsersIndexRoute =
     path: '/project/users/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProjectUsageStatsIndexRoute =
+  AuthenticatedProjectUsageStatsIndexRouteImport.update({
+    id: '/project/usage-stats/',
+    path: '/project/usage-stats/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjectTracesIndexRoute =
   AuthenticatedProjectTracesIndexRouteImport.update({
     id: '/project/traces/',
@@ -423,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
   '/project/threads/': typeof AuthenticatedProjectThreadsIndexRoute
   '/project/traces/': typeof AuthenticatedProjectTracesIndexRoute
+  '/project/usage-stats/': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/project/users/': typeof AuthenticatedProjectUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -476,6 +484,7 @@ export interface FileRoutesByTo {
   '/project/roles': typeof AuthenticatedProjectRolesIndexRoute
   '/project/threads': typeof AuthenticatedProjectThreadsIndexRoute
   '/project/traces': typeof AuthenticatedProjectTracesIndexRoute
+  '/project/usage-stats': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/project/users': typeof AuthenticatedProjectUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -533,6 +542,7 @@ export interface FileRoutesById {
   '/_authenticated/project/roles/': typeof AuthenticatedProjectRolesIndexRoute
   '/_authenticated/project/threads/': typeof AuthenticatedProjectThreadsIndexRoute
   '/_authenticated/project/traces/': typeof AuthenticatedProjectTracesIndexRoute
+  '/_authenticated/project/usage-stats/': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/_authenticated/project/users/': typeof AuthenticatedProjectUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
     | '/project/roles/'
     | '/project/threads/'
     | '/project/traces/'
+    | '/project/usage-stats/'
     | '/project/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -643,6 +654,7 @@ export interface FileRouteTypes {
     | '/project/roles'
     | '/project/threads'
     | '/project/traces'
+    | '/project/usage-stats'
     | '/project/users'
   id:
     | '__root__'
@@ -699,6 +711,7 @@ export interface FileRouteTypes {
     | '/_authenticated/project/roles/'
     | '/_authenticated/project/threads/'
     | '/_authenticated/project/traces/'
+    | '/_authenticated/project/usage-stats/'
     | '/_authenticated/project/users/'
   fileRoutesById: FileRoutesById
 }
@@ -942,6 +955,13 @@ declare module '@tanstack/react-router' {
       path: '/project/users'
       fullPath: '/project/users/'
       preLoaderRoute: typeof AuthenticatedProjectUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/usage-stats/': {
+      id: '/_authenticated/project/usage-stats/'
+      path: '/project/usage-stats'
+      fullPath: '/project/usage-stats/'
+      preLoaderRoute: typeof AuthenticatedProjectUsageStatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/project/traces/': {
@@ -1191,6 +1211,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProjectRolesIndexRoute: typeof AuthenticatedProjectRolesIndexRoute
   AuthenticatedProjectThreadsIndexRoute: typeof AuthenticatedProjectThreadsIndexRoute
   AuthenticatedProjectTracesIndexRoute: typeof AuthenticatedProjectTracesIndexRoute
+  AuthenticatedProjectUsageStatsIndexRoute: typeof AuthenticatedProjectUsageStatsIndexRoute
   AuthenticatedProjectUsersIndexRoute: typeof AuthenticatedProjectUsersIndexRoute
 }
 
@@ -1222,6 +1243,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectRolesIndexRoute: AuthenticatedProjectRolesIndexRoute,
   AuthenticatedProjectThreadsIndexRoute: AuthenticatedProjectThreadsIndexRoute,
   AuthenticatedProjectTracesIndexRoute: AuthenticatedProjectTracesIndexRoute,
+  AuthenticatedProjectUsageStatsIndexRoute:
+    AuthenticatedProjectUsageStatsIndexRoute,
   AuthenticatedProjectUsersIndexRoute: AuthenticatedProjectUsersIndexRoute,
 }
 

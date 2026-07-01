@@ -55,9 +55,9 @@ func (APIKey) Fields() []ent.Field {
 			),
 		field.String("name"),
 		field.Enum("type").
-			Values("user", "service_account", "noauth").
+			Values("user", "service_account", "noauth", "personal").
 			Default("user").
-			Comment("API Key type: user, service_account, or noauth").Annotations(
+			Comment("API Key type: user, service_account, noauth, or personal").Annotations(
 			entgql.Skip(entgql.SkipMutationUpdateInput),
 		),
 		field.Enum("status").Values("enabled", "disabled", "archived").Default("enabled").Annotations(
@@ -115,8 +115,8 @@ func (APIKey) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadAPIKeys),
-			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys),
+			scopes.UserPersonalAPIKeyReadRule(scopes.ScopeReadAPIKeys),  // User 主体：project_id 过滤 + personal key 仅创建者可见
+			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys), // API key 主体：用于 OpenAPI 走 service account 读 APIKey
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),

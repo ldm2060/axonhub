@@ -176,7 +176,7 @@ func (Request) Policy() ent.Policy {
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
 			scopes.APIKeyScopeQueryRule(scopes.ScopeWriteRequests),
-			scopes.UserProjectScopeReadRule(scopes.ScopeReadRequests),
+			scopes.UserProjectScopeReadRequestsRule(scopes.ScopeReadRequests),
 			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
 		},
 		Mutation: scopes.MutationPolicy{

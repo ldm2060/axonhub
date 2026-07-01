@@ -27,7 +27,7 @@ func channelVisibilityFilter(readScope ScopeSlug) func(ctx context.Context, f pr
 			return err
 		}
 
-		if userHasSystemScope(user, readScope) {
+		if HasSystemScope(user, readScope) {
 			return privacy.Allow
 		}
 
@@ -56,7 +56,7 @@ func ChannelManageOwnMutationRule(manageScope ScopeSlug) privacy.MutationRule {
 			return err
 		}
 
-		if !userHasSystemScope(user, manageScope) {
+		if !HasSystemScope(user, manageScope) {
 			return privacy.Skipf("User %d does not have scope %s", user.ID, manageScope)
 		}
 

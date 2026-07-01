@@ -405,14 +405,24 @@ func (s *APIKeyService) UpdateAPIKey(ctx context.Context, id int, input ent.Upda
 			return fmt.Errorf("failed to get API key: %w", err)
 		}
 
-		if apiKey.Type == apikey.TypeUser {
+		if apiKey.Type == apikey.TypeUser || apiKey.Type == apikey.TypePersonal {
 			if len(input.Scopes) > 0 || len(input.AppendScopes) > 0 || input.ClearScopes {
-				return fmt.Errorf("user type API key cannot update scopes")
+				return fmt.Errorf("%s type API key cannot update scopes", apiKey.Type)
 			}
 		}
 
 		if apiKey.Type == apikey.TypeNoauth {
 			return fmt.Errorf("noauth type API key cannot be updated")
+		}
+
+		if apiKey.Type == apikey.TypePersonal {
+			user, ok := contexts.GetUser(ctx)
+			if !ok {
+				return fmt.Errorf("user not found in context")
+			}
+			if apiKey.UserID != user.ID {
+				return fmt.Errorf("personal API key can only be modified by its creator")
+			}
 		}
 
 		// Renaming: serialize same-project name operations and reject a duplicate
@@ -487,6 +497,16 @@ func (s *APIKeyService) UpdateAPIKeyStatus(ctx context.Context, id int, status a
 		return nil, fmt.Errorf("noauth type API key status cannot be updated")
 	}
 
+	if existing.Type == apikey.TypePersonal {
+		user, ok := contexts.GetUser(ctx)
+		if !ok {
+			return nil, fmt.Errorf("user not found in context")
+		}
+		if existing.UserID != user.ID {
+			return nil, fmt.Errorf("personal API key can only be modified by its creator")
+		}
+	}
+
 	apiKey, err := client.APIKey.UpdateOneID(id).
 		SetStatus(status).
 		Save(ctx)
@@ -511,6 +531,16 @@ func (s *APIKeyService) UpdateAPIKeyProfiles(ctx context.Context, id int, profil
 
 	if existing.Type == apikey.TypeNoauth {
 		return nil, fmt.Errorf("noauth type API key profiles cannot be updated")
+	}
+
+	if existing.Type == apikey.TypePersonal {
+		user, ok := contexts.GetUser(ctx)
+		if !ok {
+			return nil, fmt.Errorf("user not found in context")
+		}
+		if existing.UserID != user.ID {
+			return nil, fmt.Errorf("personal API key can only be modified by its creator")
+		}
 	}
 
 	// Validate that profile names are unique (case-insensitive)
@@ -783,6 +813,26 @@ func (s *APIKeyService) bulkUpdateAPIKeyStatus(ctx context.Context, ids []int, s
 		return fmt.Errorf("noauth type API key cannot be bulk %sd", action)
 	}
 
+	// Personal API keys can only be managed by their creator
+	personalKeys, err := client.APIKey.Query().
+		Where(apikey.IDIn(ids...), apikey.TypeEQ(apikey.TypePersonal)).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to query personal API keys: %w", err)
+	}
+
+	if len(personalKeys) > 0 {
+		user, ok := contexts.GetUser(ctx)
+		if !ok {
+			return fmt.Errorf("user not found in context")
+		}
+		for _, k := range personalKeys {
+			if k.UserID != user.ID {
+				return fmt.Errorf("personal API key %q can only be %sd by its creator", k.Name, action)
+			}
+		}
+	}
+
 	apiKeys, err := client.APIKey.Query().
 		Where(apikey.IDIn(ids...)).
 		All(ctx)
@@ -832,6 +882,17 @@ func (s *APIKeyService) RotateAPIKey(ctx context.Context, id int) (*ent.APIKey, 
 		return nil, fmt.Errorf("noauth type API key cannot be rotated")
 	}
 
+	if existing.Type == apikey.TypePersonal {
+		user, ok := contexts.GetUser(ctx)
+		if !ok {
+			return nil, fmt.Errorf("user not found in context")
+		}
+		if existing.UserID != user.ID {
+			return nil, fmt.Errorf("personal API key can only be rotated by its creator")
+		}
+	}
+
+	// Generate a new API key
 	newKey, err := GenerateAPIKey(s.keyPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate new API key: %w", err)

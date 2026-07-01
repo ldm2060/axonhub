@@ -151,6 +151,11 @@ export function useSidebarData(): SidebarData {
           icon: IconActivity,
         } as NavLink,
         {
+          title: t('sidebar.items.usageStats'),
+          url: '/project/usage-stats',
+          icon: IconChartBar,
+        } as NavLink,
+        {
           title: t('sidebar.items.traces'),
           url: '/project/traces',
           icon: IconAB2,
