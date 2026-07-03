@@ -176,6 +176,7 @@ func TestClientRestrictionChecker_CheckClientRestriction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := checker.CheckClientRestriction(
 				tt.userAgent,
+				"",
 				tt.channelType,
 				tt.channelRestriction,
 				tt.globalRestriction,

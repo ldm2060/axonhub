@@ -111,8 +111,56 @@ func TestClientDetector_DetectClient(t *testing.T) {
 	detector := &ClientDetector{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := detector.DetectClient(tt.userAgent)
+			got := detector.DetectClient(tt.userAgent, "")
 			assert.Equal(t, tt.want, got, "DetectClient(%q) = %v, want %v", tt.userAgent, got, tt.want)
+		})
+	}
+}
+
+func TestClientDetector_DetectClient_ClaudeOffice(t *testing.T) {
+	tests := []struct {
+		name      string
+		userAgent string
+		referer   string
+		want      string
+	}{
+		{
+			name:      "Claude Office - claude.ai referer with Mozilla UA",
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+			referer:   "https://claude.ai/chat/abc-123",
+			want:      "claude",
+		},
+		{
+			name:      "Claude Office - bare Mozilla/5.0 UA",
+			userAgent: "Mozilla/5.0",
+			referer:   "https://claude.ai",
+			want:      "claude",
+		},
+		{
+			name:      "Mozilla UA without claude.ai referer is not detected",
+			userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+			referer:   "https://example.com",
+			want:      "",
+		},
+		{
+			name:      "claude.ai referer without Mozilla UA is not detected",
+			userAgent: "curl/8.0",
+			referer:   "https://claude.ai",
+			want:      "",
+		},
+		{
+			name:      "empty referer not detected",
+			userAgent: "Mozilla/5.0",
+			referer:   "",
+			want:      "",
+		},
+	}
+
+	detector := &ClientDetector{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := detector.DetectClient(tt.userAgent, tt.referer)
+			assert.Equal(t, tt.want, got, "DetectClient(%q, %q) = %v, want %v", tt.userAgent, tt.referer, got, tt.want)
 		})
 	}
 }
@@ -186,7 +234,7 @@ func TestClientDetector_IsLenientClientAllowed(t *testing.T) {
 	detector := &ClientDetector{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := detector.IsLenientClientAllowed(tt.userAgent)
+			got := detector.IsLenientClientAllowed(tt.userAgent, "")
 			assert.Equal(t, tt.want, got, "IsLenientClientAllowed(%q) = %v, want %v", tt.userAgent, got, tt.want)
 		})
 	}
@@ -309,7 +357,7 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 	detector := &ClientDetector{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := detector.IsStrictClientAllowed(tt.userAgent, tt.channelType)
+			got := detector.IsStrictClientAllowed(tt.userAgent, "", tt.channelType)
 			assert.Equal(t, tt.want, got, "IsStrictClientAllowed(%q, %q) = %v, want %v", tt.userAgent, got, tt.want, tt.channelType)
 		})
 	}
@@ -325,7 +373,7 @@ func TestClientDetector_EdgeCases(t *testing.T) {
 			"ClAuDeCoDe/1.0",
 		}
 		for _, ua := range userAgents {
-			got := detector.DetectClient(ua)
+			got := detector.DetectClient(ua, "")
 			assert.Equal(t, "claude", got, "Should detect regardless of case: %s", ua)
 		}
 	})
@@ -337,7 +385,7 @@ func TestClientDetector_EdgeCases(t *testing.T) {
 			"App/1.0 (ClaudeCode)",
 		}
 		for _, ua := range userAgents {
-			got := detector.DetectClient(ua)
+			got := detector.DetectClient(ua, "")
 			assert.Equal(t, "claude", got, "Should detect substring: %s", ua)
 		}
 	})

@@ -22,6 +22,7 @@ func NewClientRestrictionChecker() *ClientRestrictionChecker {
 // the check falls back to the lenient supported-client check.
 func (c *ClientRestrictionChecker) CheckClientRestriction(
 	userAgent string,
+	referer string,
 	channelType string,
 	channelRestriction *ClientRestrictionLevel,
 	globalRestriction ClientRestrictionLevel,
@@ -37,9 +38,9 @@ func (c *ClientRestrictionChecker) CheckClientRestriction(
 	case ClientRestrictionOff:
 		return true
 	case ClientRestrictionLenient:
-		return c.detector.IsLenientClientAllowed(userAgent)
+		return c.detector.IsLenientClientAllowed(userAgent, referer)
 	case ClientRestrictionStrict:
-		return c.detector.IsStrictClientAllowed(userAgent, channelType)
+		return c.detector.IsStrictClientAllowed(userAgent, referer, channelType)
 	default:
 		return false
 	}

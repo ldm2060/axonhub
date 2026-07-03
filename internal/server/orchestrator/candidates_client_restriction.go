@@ -35,10 +35,12 @@ func (s *ClientRestrictionSelector) Select(ctx context.Context, req *llm.Request
 		return candidates, nil
 	}
 
-	// Get User-Agent from raw request headers
+	// Get User-Agent and Referer from raw request headers
 	userAgent := ""
+	referer := ""
 	if req.RawRequest != nil && req.RawRequest.Headers != nil {
 		userAgent = req.RawRequest.Headers.Get("User-Agent")
+		referer = req.RawRequest.Headers.Get("Referer")
 	}
 
 	// Get global client restriction setting
@@ -55,6 +57,7 @@ func (s *ClientRestrictionSelector) Select(ctx context.Context, req *llm.Request
 
 		allowed := s.checker.CheckClientRestriction(
 			userAgent,
+			referer,
 			c.Channel.Type.String(),
 			channelRestriction,
 			retryPolicy.ClientRestriction,
