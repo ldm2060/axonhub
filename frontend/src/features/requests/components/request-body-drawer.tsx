@@ -15,7 +15,6 @@ import {
   Terminal,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { Badge } from '@/components/ui/badge';
