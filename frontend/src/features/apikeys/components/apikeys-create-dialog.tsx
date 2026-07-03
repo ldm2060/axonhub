@@ -24,7 +24,7 @@ export function ApiKeysCreateDialog() {
     resolver: zodResolver(createApiKeyInputSchema),
     defaultValues: {
       name: '',
-      type: 'user',
+      type: 'personal',
       scopes: undefined,
     },
   });
@@ -86,12 +86,6 @@ export function ApiKeysCreateDialog() {
                     <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className='flex flex-col space-y-1'>
                       <FormItem className='flex items-center space-y-0 space-x-3'>
                         <FormControl>
-                          <RadioGroupItem value='user' />
-                        </FormControl>
-                        <FormLabel className='font-normal'>{t('apikeys.dialogs.fields.type.user')}</FormLabel>
-                      </FormItem>
-                      <FormItem className='flex items-center space-y-0 space-x-3'>
-                        <FormControl>
                           <RadioGroupItem value='personal' />
                         </FormControl>
                         <FormLabel className='font-normal'>{t('apikeys.dialogs.fields.type.personal')}</FormLabel>
@@ -105,7 +99,6 @@ export function ApiKeysCreateDialog() {
                     </RadioGroup>
                   </FormControl>
                   <FormDescription>
-                    {apiKeyType === 'user' && t('apikeys.dialogs.fields.type.userDescription')}
                     {apiKeyType === 'personal' && t('apikeys.dialogs.fields.type.personalDescription')}
                     {apiKeyType === 'service_account' && t('apikeys.dialogs.fields.type.serviceAccountDescription')}
                   </FormDescription>
