@@ -769,6 +769,51 @@ func TestModelService_ListEnabledModels(t *testing.T) {
 		require.True(t, resultMap["claude-3-opus-20240229"], "claude-3-opus-20240229 should be in result")
 	})
 
+	t.Run("API key profile model mappings expose From aliases in listing", func(t *testing.T) {
+		// API key with a profile that maps a virtual model alias onto a real model.
+		// The alias "claude-sonnet-alias" is not a real channel/model id, but it
+		// must still appear in /v1/models so model-discovering clients can use it.
+		apiKey := &ent.APIKey{
+			ID:   4,
+			Name: "test-api-key-alias",
+			Profiles: &objects.APIKeyProfiles{
+				ActiveProfile: "aliased",
+				Profiles: []objects.APIKeyProfile{
+					{
+						Name: "aliased",
+						ModelMappings: []objects.ModelMapping{
+							{From: "claude-sonnet-alias", To: "claude-3-opus-20240229"},
+							// Alias colliding with a real model id should be deduplicated.
+							{From: "gpt-4", To: "gpt-4"},
+						},
+					},
+				},
+			},
+		}
+
+		ctx := contexts.WithAPIKey(ctx, apiKey)
+
+		result, err := modelSvc.ListEnabledModels(ctx)
+		require.NoError(t, err)
+
+		resultMap := make(map[string]bool)
+		for _, model := range result {
+			resultMap[model.ID] = true
+		}
+
+		require.True(t, resultMap["claude-sonnet-alias"], "model mapping From alias should be in result")
+		require.True(t, resultMap["gpt-4"], "gpt-4 should still be in result")
+
+		// The colliding alias must not produce a duplicate entry.
+		count := 0
+		for _, model := range result {
+			if model.ID == "gpt-4" {
+				count++
+			}
+		}
+		require.Equal(t, 1, count, "alias colliding with a real model id must be deduplicated")
+	})
+
 	t.Run("API key without profiles returns all models", func(t *testing.T) {
 		// Create API key without profiles
 		apiKey := &ent.APIKey{

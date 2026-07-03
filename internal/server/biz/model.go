@@ -647,7 +647,7 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 
 	settings := svc.systemService.ModelSettingsOrDefault(ctx)
 	if !settings.QueryAllChannelModels {
-		return configuredModels, nil
+		return appendProfileMappingAliases(configuredModels, profile), nil
 	}
 
 	// QueryAllChannelModels=true: merge configured models (higher priority) with channel models
@@ -697,7 +697,39 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 		})
 	}
 
-	return models, nil
+	return appendProfileMappingAliases(models, profile), nil
+}
+
+// appendProfileMappingAliases appends the "From" IDs of the active key profile's
+// model mappings to the model list. These are the virtual model names a client
+// can send; the orchestrator maps them to the configured "To" models at request
+// time, so they must appear in the /v1/models list for model-discovering
+// clients (e.g. Claude Code, Codex) to use them. Aliases are deduplicated
+// against existing models and each other, and bypass the profile's ModelIDs
+// whitelist since they are explicitly configured mappings.
+func appendProfileMappingAliases(models []ModelFacade, profile *objects.APIKeyProfile) []ModelFacade {
+	if profile == nil || len(profile.ModelMappings) == 0 {
+		return models
+	}
+
+	seen := make(map[string]bool, len(models)+len(profile.ModelMappings))
+	for _, m := range models {
+		seen[m.ID] = true
+	}
+
+	for _, mm := range profile.ModelMappings {
+		if mm.From == "" || seen[mm.From] {
+			continue
+		}
+		seen[mm.From] = true
+		models = append(models, ModelFacade{
+			ID:          mm.From,
+			DisplayName: mm.From,
+			OwnedBy:     "alias",
+		})
+	}
+
+	return models
 }
 
 // queryConfiguredModelFacades queries enabled Model entities and returns them as ModelFacades
