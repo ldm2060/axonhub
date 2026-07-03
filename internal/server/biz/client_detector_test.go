@@ -137,6 +137,12 @@ func TestClientDetector_DetectClient_ClaudeOffice(t *testing.T) {
 			want:      "claude",
 		},
 		{
+			name:      "Claude Office plugin - pivot.claude.ai referer",
+			userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+			referer:   "https://pivot.claude.ai/",
+			want:      "claude",
+		},
+		{
 			name:      "Mozilla UA without claude.ai referer is not detected",
 			userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
 			referer:   "https://example.com",
