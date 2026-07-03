@@ -516,6 +516,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
 
         const promptTokens = usageLog.promptTokens || 0;
         const completionTokens = usageLog.completionTokens || 0;
+        const reasoningTokens = usageLog.completionReasoningTokens || 0;
         const totalTokens = promptTokens + completionTokens;
 
         return (
@@ -528,6 +529,11 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               {t('requests.columns.input')}: {promptTokens.toLocaleString()} | {t('requests.columns.output')}:{' '}
               {completionTokens.toLocaleString()}
             </div>
+            {reasoningTokens > 0 && (
+              <div className='text-muted-foreground'>
+                {t('requests.columns.reasoning')}: {reasoningTokens.toLocaleString()}
+              </div>
+            )}
           </div>
         );
       },

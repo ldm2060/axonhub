@@ -110,6 +110,7 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
                   id
                   promptTokens
                   completionTokens
+                  completionReasoningTokens
                   totalTokens
                   promptCachedTokens
                   promptWriteCachedTokens
@@ -195,6 +196,7 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
                   id
                   promptTokens
                   completionTokens
+                  completionReasoningTokens
                   totalTokens
                   promptCachedTokens
                   promptWriteCachedTokens
