@@ -36,7 +36,6 @@ interface DashboardPageProps {
 export default function DashboardPage({ mode }: DashboardPageProps) {
   const { t } = useTranslation();
   const { isLoading, error } = useDashboardStats(mode);
-  const { isProjectOwner } = useRoutePermissions();
   const [modelTotalRequests, setModelTotalRequests] = useState(0);
   const [channelTotalRequests, setChannelTotalRequests] = useState(0);
 
@@ -108,6 +107,8 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
         setApiKeyTimePeriod={setApiKeyTimePeriod}
         apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
         setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
+        userTokensTimePeriod={userTokensTimePeriod}
+        setUserTokensTimePeriod={setUserTokensTimePeriod}
         modelTotalRequests={modelTotalRequests}
         setModelTotalRequests={setModelTotalRequests}
         channelTotalRequests={channelTotalRequests}
@@ -134,6 +135,8 @@ interface DashboardContentProps {
   setApiKeyTimePeriod: (v: TimePeriod) => void;
   apiKeyTokensTimePeriod: TimePeriod;
   setApiKeyTokensTimePeriod: (v: TimePeriod) => void;
+  userTokensTimePeriod: TimePeriod;
+  setUserTokensTimePeriod: (v: TimePeriod) => void;
   modelTotalRequests: number;
   setModelTotalRequests: (v: number) => void;
   channelTotalRequests: number;
@@ -156,12 +159,15 @@ function DashboardContent({
   setApiKeyTimePeriod,
   apiKeyTokensTimePeriod,
   setApiKeyTokensTimePeriod,
+  userTokensTimePeriod,
+  setUserTokensTimePeriod,
   modelTotalRequests: _modelTotalRequests,
   setModelTotalRequests,
   channelTotalRequests: _channelTotalRequests,
   setChannelTotalRequests,
 }: DashboardContentProps) {
   const { t } = useTranslation();
+  const { isProjectOwner } = useRoutePermissions();
 
   return (
     <div className='space-y-6 pt-2'>
