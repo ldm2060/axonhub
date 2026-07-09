@@ -100,6 +100,7 @@ export function mergeChannelSettingsForUpdate(
     extraModelPrefix: pick('extraModelPrefix', existing?.extraModelPrefix ?? ''),
     modelMappings: pick('modelMappings', existing?.modelMappings ?? []),
     autoTrimedModelPrefixes: pick('autoTrimedModelPrefixes', existing?.autoTrimedModelPrefixes ?? []),
+    autoTrimedModelSuffixes: pick('autoTrimedModelSuffixes', existing?.autoTrimedModelSuffixes ?? []),
     hideOriginalModels: pick('hideOriginalModels', existing?.hideOriginalModels ?? false),
     hideMappedModels: pick('hideMappedModels', existing?.hideMappedModels ?? false),
     lowercaseModelId: pick('lowercaseModelId', existing?.lowercaseModelId ?? false),

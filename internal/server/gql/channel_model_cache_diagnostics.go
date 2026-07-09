@@ -88,6 +88,7 @@ type channelModelCacheDiagnosticsChannelCached struct {
 type channelModelCacheDiagnosticsSettings struct {
 	ExtraModelPrefix        string                                     `json:"extraModelPrefix,omitempty"`
 	AutoTrimedModelPrefixes []string                                   `json:"autoTrimedModelPrefixes,omitempty"`
+	AutoTrimedModelSuffixes []string                                   `json:"autoTrimedModelSuffixes,omitempty"`
 	HideMappedModels        bool                                       `json:"hideMappedModels"`
 	HideOriginalModels      bool                                       `json:"hideOriginalModels"`
 	LowercaseModelID        bool                                       `json:"lowercaseModelId"`
@@ -256,6 +257,7 @@ func buildSettingsSnapshot(settings *objects.ChannelSettings) channelModelCacheD
 	return channelModelCacheDiagnosticsSettings{
 		ExtraModelPrefix:        settings.ExtraModelPrefix,
 		AutoTrimedModelPrefixes: append([]string(nil), settings.AutoTrimedModelPrefixes...),
+		AutoTrimedModelSuffixes: append([]string(nil), settings.AutoTrimedModelSuffixes...),
 		HideMappedModels:        settings.HideMappedModels,
 		HideOriginalModels:      settings.HideOriginalModels,
 		LowercaseModelID:        settings.LowercaseModelID,

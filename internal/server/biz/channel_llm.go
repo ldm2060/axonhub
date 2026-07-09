@@ -1144,6 +1144,7 @@ func (svc *ChannelService) refreshOAuthToken(ctx context.Context, ch *ent.Channe
 // - SupportedModels (direct models)
 // - ExtraModelPrefix (prefixed models)
 // - AutoTrimedModelPrefixes (auto-trimmed models)
+// - AutoTrimedModelSuffixes (auto-trimmed models)
 // - ModelMappings (mapped models)
 // The result is cached for performance.
 //
@@ -1213,7 +1214,28 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 		}
 	}
 
-	// 4. Model mappings
+	// 4. Auto-trimmed model suffixes (AutoTrimedModelSuffixes)
+	for _, suffix := range ch.Settings.AutoTrimedModelSuffixes {
+		if suffix == "" {
+			continue
+		}
+
+		for _, model := range ch.SupportedModels {
+			// Only process models that end with the suffix and would not be trimmed to empty
+			if trimmedModel, ok := strings.CutSuffix(model, suffix); ok && trimmedModel != "" {
+				existing, exists := entries[trimmedModel]
+				if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
+					entries[trimmedModel] = ChannelModelEntry{
+						RequestModel: trimmedModel,
+						ActualModel:  model,
+						Source:       "auto_trim",
+					}
+				}
+			}
+		}
+	}
+
+	// 5. Model mappings
 	for _, mapping := range ch.Settings.ModelMappings {
 		// Only add if the target model is supported
 		if slices.Contains(ch.SupportedModels, mapping.To) {
@@ -1239,7 +1261,7 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 		}
 	}
 
-	// 5. Hide original models if configured
+	// 6. Hide original models if configured
 	// When hideOriginalModels is enabled, remove direct models that have
 	// a corresponding transformed entry (prefix, auto_trim, or mapping).
 	// Direct models without any transform are kept so they aren't hidden entirely.
@@ -1260,7 +1282,7 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 		}
 	}
 
-	// 6. Lowercase model IDs if configured
+	// 7. Lowercase model IDs if configured
 	// When enabled, the matching keys (RequestModel) are lowercased so that
 	// models with different casing can match across channels for failover.
 	// ActualModel is NOT changed — the provider must receive the original casing.

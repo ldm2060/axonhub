@@ -62,6 +62,86 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 			},
 		},
 		{
+			name: "with auto-trimmed suffixes",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"deepseek-v4-pro-free"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelSuffixes: []string{"-free"},
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "deepseek-v4-pro-free", ActualModel: "deepseek-v4-pro-free", Source: "direct"},
+				{RequestModel: "deepseek-v4-pro", ActualModel: "deepseek-v4-pro-free", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "auto-trimmed suffixes: multiple suffixes, model without suffix unaffected",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4", "claude-3-free", "gpt-5-preview"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelSuffixes: []string{"-free", "-preview"},
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "direct"},
+				{RequestModel: "claude-3-free", ActualModel: "claude-3-free", Source: "direct"},
+				{RequestModel: "gpt-5-preview", ActualModel: "gpt-5-preview", Source: "direct"},
+				{RequestModel: "claude-3", ActualModel: "claude-3-free", Source: "auto_trim"},
+				{RequestModel: "gpt-5", ActualModel: "gpt-5-preview", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "auto-trimmed suffixes: model equal to suffix produces no auto_trim entry",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"-free", "deepseek-v4-pro-free"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelSuffixes: []string{"-free"},
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "-free", ActualModel: "-free", Source: "direct"},
+				{RequestModel: "deepseek-v4-pro-free", ActualModel: "deepseek-v4-pro-free", Source: "direct"},
+				{RequestModel: "deepseek-v4-pro", ActualModel: "deepseek-v4-pro-free", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "hideOriginalModels: with auto-trimmed suffixes hides suffixed original",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"deepseek-v4-pro-free"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelSuffixes: []string{"-free"},
+						HideOriginalModels:     true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "deepseek-v4-pro", ActualModel: "deepseek-v4-pro-free", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "hideOriginalModels: auto-trimmed suffix keeps unrelated direct model",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"gpt-4", "deepseek-v4-pro-free"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelSuffixes: []string{"-free"},
+						HideOriginalModels:     true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "gpt-4", Source: "direct"},
+				{RequestModel: "deepseek-v4-pro", ActualModel: "deepseek-v4-pro-free", Source: "auto_trim"},
+			},
+		},
+		{
 			name: "with model mappings",
 			channel: &Channel{
 				Channel: &ent.Channel{

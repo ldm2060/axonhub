@@ -57,6 +57,7 @@ const createModelMappingFormSchema = (supportedModels: string[]) =>
         }
       ),
     autoTrimedModelPrefixes: z.array(z.string()).optional(),
+    autoTrimedModelSuffixes: z.array(z.string()).optional(),
     hideOriginalModels: z.boolean().optional(),
     hideMappedModels: z.boolean().optional(),
     lowercaseModelId: z.boolean().optional(),
@@ -109,6 +110,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
       extraModelPrefix: currentRow.settings?.extraModelPrefix || '',
       modelMappings: currentRow.settings?.modelMappings || [],
       autoTrimedModelPrefixes: currentRow.settings?.autoTrimedModelPrefixes || [],
+      autoTrimedModelSuffixes: currentRow.settings?.autoTrimedModelSuffixes || [],
       hideOriginalModels: currentRow.settings?.hideOriginalModels || false,
       hideMappedModels: currentRow.settings?.hideMappedModels || false,
       lowercaseModelId: currentRow.settings?.lowercaseModelId || false,
@@ -208,6 +210,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
       extraModelPrefix: nextExtraModelPrefix,
       modelMappings: nextMappings,
       autoTrimedModelPrefixes: currentRow.settings?.autoTrimedModelPrefixes || [],
+      autoTrimedModelSuffixes: currentRow.settings?.autoTrimedModelSuffixes || [],
       hideOriginalModels: currentRow.settings?.hideOriginalModels || false,
       hideMappedModels: currentRow.settings?.hideMappedModels || false,
       lowercaseModelId: currentRow.settings?.lowercaseModelId || false,
@@ -291,6 +294,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
         extraModelPrefix: values.extraModelPrefix,
         modelMappings: values.modelMappings,
         autoTrimedModelPrefixes: values.autoTrimedModelPrefixes || [],
+        autoTrimedModelSuffixes: values.autoTrimedModelSuffixes || [],
         hideOriginalModels: values.hideOriginalModels,
         hideMappedModels: values.hideMappedModels,
         lowercaseModelId: values.lowercaseModelId,
@@ -435,6 +439,31 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
                       </div>
                     )}
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-lg'>{t('channels.dialogs.settings.autoTrimedModelSuffixes.title')}</CardTitle>
+                  <CardDescription>{t('channels.dialogs.settings.autoTrimedModelSuffixes.description')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name='autoTrimedModelSuffixes'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <TagsAutocompleteInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            placeholder={t('channels.dialogs.settings.autoTrimedModelSuffixes.placeholder')}
+                            className='h-auto min-h-9 py-1'
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 
