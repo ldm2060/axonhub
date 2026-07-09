@@ -331,6 +331,28 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "bucket_0_model_id", Label: "Model", ValueRef: "bucket_0_model_id", Format: "text", DisplayOrder: 4},
 		},
 	},
+	// #nosec G101 -- The Cline endpoint is public; credentials are read from the bound channel.
+	{
+		ProviderType:          "cline",
+		Name:                  "Cline",
+		Description:           "Monitor ClinePass usage through the bound Cline channel",
+		ApiURL:                "https://api.cline.bot/api/v1/users/me",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "Stored on the bound channel",
+		DisplayFields: []DisplayField{
+			{Key: "model_scope", Label: "Model Scope", ValueRef: "model_scope", Format: "text", DisplayOrder: 0, Badge: "scope", BadgePresets: `{"cline_pass_only":"freshgreen","mixed":"champagne","direct_only":"sapphire","unknown":"rosegold"}`},
+			{Key: "last5h_used_pct", Label: "5h Window Used %", ValueRef: "last5h_used_pct", Format: "percentage", DisplayOrder: 1, Group: "last5h"},
+			{Key: "last5h_reset", Label: "5h Reset At", ValueRef: "last5h_reset", Format: "datetime", DisplayOrder: 2, Group: "last5h"},
+			{Key: "last7d_used_pct", Label: "7d Window Used %", ValueRef: "last7d_used_pct", Format: "percentage", DisplayOrder: 3, Group: "last7d"},
+			{Key: "last7d_reset", Label: "7d Reset At", ValueRef: "last7d_reset", Format: "datetime", DisplayOrder: 4, Group: "last7d"},
+			{Key: "last30d_used_pct", Label: "30d Window Used %", ValueRef: "last30d_used_pct", Format: "percentage", DisplayOrder: 5, Group: "last30d"},
+			{Key: "last30d_reset", Label: "30d Reset At", ValueRef: "last30d_reset", Format: "datetime", DisplayOrder: 6, Group: "last30d"},
+			{Key: "balance", Label: "Balance", ValueRef: "balance", Format: "number", DisplayOrder: 7},
+		},
+	},
 	{
 		ProviderType: "opencode_go",
 		Name:         "OpenCode Go",

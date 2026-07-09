@@ -44,6 +44,8 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveAntigravity(fields)
 	case "opencode_go":
 		return deriveOpenCodeGo(fields)
+	case "cline":
+		return deriveCline(fields)
 	default:
 		return deriveGeneric(fields)
 	}
@@ -626,6 +628,54 @@ func deriveOpenCodeGo(fields []ParsedField) QuotaDerivedStatus {
 
 	if worstStatus == "" {
 		worstStatus = "unknown"
+	}
+
+	return QuotaDerivedStatus{
+		Status:      worstStatus,
+		Ready:       worstStatus != "exhausted",
+		Limits:      limits,
+		NextResetAt: earliestDatetime(fields),
+	}
+}
+
+func deriveCline(fields []ParsedField) QuotaDerivedStatus {
+	scope := findFieldString(fields, "model_scope")
+	var limits []provider_quota.QuotaLimitStatus
+	worstStatus := "unknown"
+
+	for _, key := range []string{"last5h", "last7d", "last30d"} {
+		if !hasField(fields, key+"_used_pct") {
+			continue
+		}
+		ratio := findFieldPercent(fields, key+"_used_pct") / 100.0
+		status := "available"
+		if ratio >= 1.0 {
+			status = "exhausted"
+		} else if ratio >= warningThreshold {
+			status = "warning"
+		}
+
+		// Pass exhaustion must not disable channels which can still route direct
+		// credit models. Unknown scope is deliberately treated the same way.
+		if scope != "cline_pass_only" && status == "exhausted" {
+			status = "warning"
+		}
+
+		nextReset := findFieldTime(fields, key+"_reset")
+		limits = append(limits, provider_quota.QuotaLimitStatus{
+			Type:        provider_quota.QuotaLimitTypeToken,
+			Status:      status,
+			UsageRatio:  ratio,
+			Ready:       status != "exhausted",
+			NextResetAt: nextReset,
+		})
+		if quotaStatusRank(status) > quotaStatusRank(worstStatus) {
+			worstStatus = status
+		}
+	}
+
+	if scope == "direct_only" || len(limits) == 0 {
+		return QuotaDerivedStatus{Status: "available", Ready: true, NextResetAt: earliestDatetime(fields)}
 	}
 
 	return QuotaDerivedStatus{

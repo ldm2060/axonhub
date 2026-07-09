@@ -1000,6 +1000,8 @@ func providerTypeFromChannel(chType channel.Type, baseURL string) string {
 		return "github_copilot"
 	case channel.TypeNanogpt, channel.TypeNanogptResponses:
 		return "nanogpt"
+	case channel.TypeCline:
+		return "cline"
 	case channel.TypeZhipu, channel.TypeZhipuAnthropic, channel.TypeZai, channel.TypeZaiAnthropic:
 		return "zhipu"
 	case channel.TypeOpencodeGo, channel.TypeOpencodeGoAnthropic:
@@ -1051,9 +1053,9 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 	// API key. Skip the apiKey requirement and let the dedicated checker load the
 	// bound channel in pollChannel. Auto-create only if the channel has the
 	// OpenCode quota settings configured.
-	if providerType == "opencode_go" {
-		if ch.Settings == nil || ch.Settings.ProviderQuota == nil ||
-			ch.Settings.ProviderQuota.OpencodeGo == nil {
+	if providerType == "opencode_go" || providerType == "cline" {
+		if providerType == "opencode_go" && (ch.Settings == nil || ch.Settings.ProviderQuota == nil ||
+			ch.Settings.ProviderQuota.OpencodeGo == nil) {
 			return
 		}
 		monitorInput := usage_monitor.CreateUsageMonitorChannelInput{

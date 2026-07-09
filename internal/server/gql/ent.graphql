@@ -7915,6 +7915,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   codex
   github_copilot
   nanogpt
+  cline
   wafer
   synthetic
   neuralwatt

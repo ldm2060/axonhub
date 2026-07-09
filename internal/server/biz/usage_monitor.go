@@ -365,6 +365,7 @@ type UsageMonitorService struct {
 
 	cache                       *live.IndexedCache[int, *ent.UsageMonitorChannel]
 	genericChecker              *usage_monitor.GenericQuotaChecker
+	clineChecker                *provider_quota.ClineQuotaChecker
 	opencodeGoChecker           *provider_quota.OpenCodeGoQuotaChecker
 	httpClient                  *httpclient.HttpClient
 	defaultDisableThreshold     float64
@@ -379,6 +380,7 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 	svc := &UsageMonitorService{
 		AbstractService:             &AbstractService{db: params.Ent},
 		genericChecker:              usage_monitor.NewGenericQuotaChecker(params.HttpClient),
+		clineChecker:                provider_quota.NewClineQuotaChecker(params.HttpClient),
 		opencodeGoChecker:           provider_quota.NewOpenCodeGoQuotaChecker(params.HttpClient),
 		httpClient:                  params.HttpClient,
 		defaultDisableThreshold:     params.DefaultDisableThreshold,
@@ -553,10 +555,12 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		if tmpl == nil {
 			return nil, fmt.Errorf("unknown provider template: %s", *input.ProviderType)
 		}
-		// OpenCode Go reads credentials from the bound channel's settings at
-		// poll time (dedicated checker), so no apiKey is required.
-		isOpenCodeGo := *input.ProviderType == "opencode_go"
-		if !isOpenCodeGo && (input.ApiKey == nil || *input.ApiKey == "") {
+		if *input.ProviderType == "cline" && (input.ChannelID == nil || *input.ChannelID == "") {
+			return nil, fmt.Errorf("channelId is required for the cline template")
+		}
+		// Dedicated checkers read credentials from the bound channel at poll time.
+		isBoundChannelProvider := *input.ProviderType == "opencode_go" || *input.ProviderType == "cline"
+		if !isBoundChannelProvider && (input.ApiKey == nil || *input.ApiKey == "") {
 			return nil, fmt.Errorf("apiKey is required when source=template")
 		}
 		// Template provides API config
@@ -575,9 +579,9 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		// Assemble headers from apiKey + template headerFormat
 		// Special case: Antigravity stores refreshToken|projectId, not a usable Bearer token.
 		// The pollChannel method will refresh the token before each poll, so store empty headers.
-		// Special case: OpenCode Go builds its own Cookie header at poll time from the bound
-		// channel's settings.providerQuota.opencodeGo, so store empty headers here.
-		if *input.ProviderType == "antigravity" || isOpenCodeGo {
+		// Special case: OpenCode Go and Cline build credentials from their bound
+		// channels at poll time, so store empty headers here.
+		if *input.ProviderType == "antigravity" || isBoundChannelProvider {
 			apiHeaders = map[string]any{}
 		} else {
 			apiHeaders = assembleHeadersFromAPIKey(*input.ApiKey, tmpl.HeaderFormat)
@@ -962,10 +966,11 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var pollData *usage_monitor.PollData
 	var err error
 
-	// OpenCode Go uses a dedicated dashboard-scraper checker that reads
-	// credentials from the bound channel's settings, bypassing the generic
-	// HTTP poller entirely.
-	if ch.ProviderType == usagemonitorchannel.ProviderTypeOpencodeGo {
+	// Cline and OpenCode Go use dedicated checkers that read credentials from the
+	// bound channel, bypassing the generic HTTP poller entirely.
+	if ch.ProviderType == usagemonitorchannel.ProviderTypeCline {
+		pollData, err = svc.pollCline(ctx, ch)
+	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeOpencodeGo {
 		pollData, err = svc.pollOpenCodeGo(ctx, ch)
 	} else if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
 		// Prefer new columns (Variables + DisplayFields) if populated
@@ -1171,6 +1176,32 @@ func (svc *UsageMonitorService) refreshAntigravityToken(ctx context.Context, api
 	}
 
 	return map[string]any{"Authorization": "Bearer " + creds.AccessToken}, nil
+}
+
+// pollCline polls a Cline channel via its dedicated API checker. Credentials,
+// model scope, and proxy configuration come from the bound channel rather than
+// the monitor's API key, preserving the channel as the single source of truth.
+func (svc *UsageMonitorService) pollCline(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
+	if mon.ChannelID == nil {
+		return nil, fmt.Errorf("cline monitor %d has no bound channel_id", mon.ID)
+	}
+
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, *mon.ChannelID)
+	if err != nil {
+		return nil, fmt.Errorf("load bound channel %d for cline monitor: %w", *mon.ChannelID, err)
+	}
+
+	quota, err := svc.clineChecker.CheckQuota(ctx, ch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage_monitor.PollData{
+		Raw:      usage_monitor.ClineQuotaRawJSON(quota),
+		Fields:   usage_monitor.ClineQuotaToParsedFields(quota),
+		PolledAt: time.Now(),
+	}, nil
 }
 
 // pollOpenCodeGo polls an OpenCode Go channel via the dedicated dashboard-scraper
