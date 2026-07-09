@@ -117,7 +117,7 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 					SupportedModels: []string{"deepseek-v4-pro-free"},
 					Settings: &objects.ChannelSettings{
 						AutoTrimedModelSuffixes: []string{"-free"},
-						HideOriginalModels:     true,
+						HideOriginalModels:      true,
 					},
 				},
 			},
@@ -132,7 +132,7 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 					SupportedModels: []string{"gpt-4", "deepseek-v4-pro-free"},
 					Settings: &objects.ChannelSettings{
 						AutoTrimedModelSuffixes: []string{"-free"},
-						HideOriginalModels:     true,
+						HideOriginalModels:      true,
 					},
 				},
 			},
