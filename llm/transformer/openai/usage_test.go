@@ -1,6 +1,7 @@
 package openai
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -367,9 +368,9 @@ func TestUsageFromLLM(t *testing.T) {
 				CompletionTokens: 50,
 				TotalTokens:      150,
 				PromptTokensDetails: PromptTokensDetails{
-					AudioTokens:       10,
-					CachedTokens:      20,
-					WriteCachedTokens: 5,
+					AudioTokens:      10,
+					CachedTokens:     20,
+					CacheWriteTokens: 5,
 				},
 			},
 		},
@@ -423,4 +424,103 @@ func TestUsage_RoundTrip(t *testing.T) {
 			require.Equal(t, tt.usage, result)
 		})
 	}
+}
+
+// TestUsage_CacheTokenParsing verifies that cache-read and cache-write token
+// counts are parsed from the official OpenAI detail fields and, when absent,
+// from the alias field names emitted by various OpenAI-compatible providers and
+// middlewares. The official nested field always takes precedence over aliases.
+func TestUsage_CacheTokenParsing(t *testing.T) {
+	tests := []struct {
+		name    string
+		payload string
+		read    int64
+		write   int64
+	}{
+		{
+			name:    "official nested cache_write_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"prompt_tokens_details":{"cache_write_tokens":7}}`,
+			write:   7,
+		},
+		{
+			name:    "alias cache_creation_input_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_creation_input_tokens":9}`,
+			write:   9,
+		},
+		{
+			name:    "alias cache_write_input_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_write_input_tokens":11}`,
+			write:   11,
+		},
+		{
+			name:    "alias cache_creation_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_creation_tokens":13}`,
+			write:   13,
+		},
+		{
+			name:    "alias cache_write_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_write_tokens":15}`,
+			write:   15,
+		},
+		{
+			name:    "official write beats aliases",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"prompt_tokens_details":{"cache_write_tokens":21},"cache_creation_input_tokens":99,"cache_write_tokens":88}`,
+			write:   21,
+		},
+		{
+			name:    "read alias cache_read_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_read_tokens":5}`,
+			read:    5,
+		},
+		{
+			name:    "read alias cache_read_input_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_read_input_tokens":6}`,
+			read:    6,
+		},
+		{
+			name:    "read top-level cached_tokens",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cached_tokens":8}`,
+			read:    8,
+		},
+		{
+			name:    "official read beats aliases",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"prompt_tokens_details":{"cached_tokens":3},"cached_tokens":80,"cache_read_tokens":70}`,
+			read:    3,
+		},
+		{
+			name:    "combined read and write from aliases",
+			payload: `{"prompt_tokens":100,"completion_tokens":50,"total_tokens":150,"cache_creation_input_tokens":12,"cache_read_tokens":4}`,
+			read:    4,
+			write:   12,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var u Usage
+			require.NoError(t, json.Unmarshal([]byte(tt.payload), &u))
+
+			llmUsage := u.ToLLMUsage()
+			require.NotNil(t, llmUsage.PromptTokensDetails)
+			require.Equal(t, tt.read, llmUsage.PromptTokensDetails.CachedTokens, "cache-read mismatch")
+			require.Equal(t, tt.write, llmUsage.PromptTokensDetails.WriteCachedTokens, "cache-write mismatch")
+		})
+	}
+}
+
+// TestUsage_CacheWriteRoundTrip ensures cache-write survives llm.Usage →
+// UsageFromLLM → ToLLMUsage, which is what protocol conversion relies on.
+func TestUsage_CacheWriteRoundTrip(t *testing.T) {
+	src := &llm.Usage{
+		PromptTokens:     100,
+		CompletionTokens: 50,
+		TotalTokens:      150,
+		PromptTokensDetails: &llm.PromptTokensDetails{
+			CachedTokens:      20,
+			WriteCachedTokens: 7,
+		},
+	}
+
+	result := UsageFromLLM(src).ToLLMUsage()
+	require.Equal(t, src, result)
 }

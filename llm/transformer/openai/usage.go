@@ -6,7 +6,14 @@ import "github.com/ldm2060/axonhub/llm"
 type PromptTokensDetails struct {
 	AudioTokens  int64 `json:"audio_tokens"`
 	CachedTokens int64 `json:"cached_tokens"`
-	// hidden field, used for internal calculation.
+
+	// CacheWriteTokens is the official OpenAI prompt cache-write token count
+	// (prompt_tokens_details.cache_write_tokens), billed independently.
+	CacheWriteTokens int64 `json:"cache_write_tokens,omitempty"`
+
+	// WriteCachedTokens is a legacy internal alias for cache-write tokens kept
+	// for backward compatibility with older axonhub peers. New output uses
+	// CacheWriteTokens; this field is tolerated as input only.
 	WriteCachedTokens int64 `json:"write_cached_tokens,omitempty"`
 }
 
@@ -20,6 +27,11 @@ type CompletionTokensDetails struct {
 
 // Usage represents the usage response from OpenAI compatible format.
 // Difference provider may have different format, so we use this to convert to unified format.
+//
+// In addition to the official OpenAI fields, the top-level cache* fields below capture
+// cache-read/write token counts emitted at the usage-object root by various
+// OpenAI-compatible providers and middlewares. They are used as fallbacks when the
+// official nested detail fields are absent. Unset values are omitted on marshal.
 type Usage struct {
 	PromptTokens            int64                   `json:"prompt_tokens"`
 	CompletionTokens        int64                   `json:"completion_tokens"`
@@ -27,8 +39,24 @@ type Usage struct {
 	PromptTokensDetails     PromptTokensDetails     `json:"prompt_tokens_details"`
 	CompletionTokensDetails CompletionTokensDetails `json:"completion_tokens_details"`
 
-	// CachedTokens is the number of tokens that were cached for Moonshot.
-	CachedTokens int64 `json:"cached_tokens,omitempty"`
+	// Top-level cache fields emitted by some providers/middlewares.
+	CachedTokens             int64 `json:"cached_tokens,omitempty"`
+	CacheReadTokens          int64 `json:"cache_read_tokens,omitempty"`
+	CacheReadInputTokens     int64 `json:"cache_read_input_tokens,omitempty"`
+	CacheCreationTokens      int64 `json:"cache_creation_tokens,omitempty"`
+	CacheWriteTokens         int64 `json:"cache_write_tokens,omitempty"`
+	CacheCreationInputTokens int64 `json:"cache_creation_input_tokens,omitempty"`
+	CacheWriteInputTokens    int64 `json:"cache_write_input_tokens,omitempty"`
+}
+
+func firstNonZero(values ...int64) int64 {
+	for _, v := range values {
+		if v != 0 {
+			return v
+		}
+	}
+
+	return 0
 }
 
 func (u *Usage) ToLLMUsage() *llm.Usage {
@@ -42,11 +70,30 @@ func (u *Usage) ToLLMUsage() *llm.Usage {
 		TotalTokens:      u.TotalTokens,
 	}
 
-	if u.PromptTokensDetails != (PromptTokensDetails{}) {
+	// Resolve cache-read and cache-write counts with official-field-first precedence,
+	// falling back to provider/middleware alias field names. OpenAI's prompt_tokens
+	// already includes cached tokens, so these are recorded in details only (never
+	// added to PromptTokens) — matching how ComputeUsageCost subtracts them.
+	cachedRead := firstNonZero(
+		u.PromptTokensDetails.CachedTokens, // official nested
+		u.CachedTokens,                     // top-level (Moonshot, etc.)
+		u.CacheReadTokens,
+		u.CacheReadInputTokens,
+	)
+	writeCached := firstNonZero(
+		u.PromptTokensDetails.CacheWriteTokens,  // official nested
+		u.PromptTokensDetails.WriteCachedTokens, // legacy internal alias
+		u.CacheCreationInputTokens,              // top-level aliases
+		u.CacheWriteInputTokens,
+		u.CacheCreationTokens,
+		u.CacheWriteTokens,
+	)
+
+	if u.PromptTokensDetails != (PromptTokensDetails{}) || cachedRead != 0 || writeCached != 0 {
 		usage.PromptTokensDetails = &llm.PromptTokensDetails{
 			AudioTokens:       u.PromptTokensDetails.AudioTokens,
-			CachedTokens:      u.PromptTokensDetails.CachedTokens,
-			WriteCachedTokens: u.PromptTokensDetails.WriteCachedTokens,
+			CachedTokens:      cachedRead,
+			WriteCachedTokens: writeCached,
 		}
 	}
 
@@ -57,14 +104,6 @@ func (u *Usage) ToLLMUsage() *llm.Usage {
 			AcceptedPredictionTokens: u.CompletionTokensDetails.AcceptedPredictionTokens,
 			RejectedPredictionTokens: u.CompletionTokensDetails.RejectedPredictionTokens,
 		}
-	}
-
-	if (usage.PromptTokensDetails == nil || usage.PromptTokensDetails.CachedTokens == 0) && u.CachedTokens > 0 {
-		if usage.PromptTokensDetails == nil {
-			usage.PromptTokensDetails = &llm.PromptTokensDetails{}
-		}
-
-		usage.PromptTokensDetails.CachedTokens = u.CachedTokens
 	}
 
 	return usage
@@ -84,9 +123,9 @@ func UsageFromLLM(u *llm.Usage) *Usage {
 
 	if u.PromptTokensDetails != nil {
 		usage.PromptTokensDetails = PromptTokensDetails{
-			AudioTokens:       u.PromptTokensDetails.AudioTokens,
-			CachedTokens:      u.PromptTokensDetails.CachedTokens,
-			WriteCachedTokens: u.PromptTokensDetails.WriteCachedTokens,
+			AudioTokens:      u.PromptTokensDetails.AudioTokens,
+			CachedTokens:     u.PromptTokensDetails.CachedTokens,
+			CacheWriteTokens: u.PromptTokensDetails.WriteCachedTokens,
 		}
 	}
 
