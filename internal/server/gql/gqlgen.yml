@@ -105,6 +105,12 @@ models:
   ModelMappingInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ModelMapping
+  ReasoningEffortMapping:
+    model:
+      - github.com/ldm2060/axonhub/llm.ReasoningEffortMapping
+  ReasoningEffortMappingInput:
+    model:
+      - github.com/ldm2060/axonhub/llm.ReasoningEffortMapping
   ProxyType:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ProxyType
