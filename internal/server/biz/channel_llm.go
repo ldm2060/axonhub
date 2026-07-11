@@ -1196,45 +1196,71 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 		}
 	}
 
-	// 3. Auto-trimmed models (AutoTrimedModelPrefixes)
-	for _, prefix := range ch.Settings.AutoTrimedModelPrefixes {
-		if prefix == "" {
-			continue
-		}
+	// 3. Auto-trimmed model prefixes and suffixes.
+	//
+	// When only one side is configured, trim that side. When both are configured,
+	// prefer the combined form (prefix stripped from the head AND suffix stripped
+	// from the tail of the same model, e.g. openai/gpt-4-free -> gpt-4); a model
+	// that matches one side but not the other still gets that single side trimmed
+	// (e.g. openai/gpt-4o -> gpt-4o when only the prefix matches).
+	prefixes := slices.DeleteFunc(slices.Clone(ch.Settings.AutoTrimedModelPrefixes), func(s string) bool { return s == "" })
+	suffixes := slices.DeleteFunc(slices.Clone(ch.Settings.AutoTrimedModelSuffixes), func(s string) bool { return s == "" })
 
-		prefix += "/"
-		for _, model := range ch.SupportedModels {
-			// Only process models that have the prefix
-			if after, ok := strings.CutPrefix(model, prefix); ok {
-				trimmedModel := after
-				existing, exists := entries[trimmedModel]
-				if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
-					entries[trimmedModel] = ChannelModelEntry{
-						RequestModel: trimmedModel,
-						ActualModel:  model,
-						Source:       "auto_trim",
+	for _, model := range ch.SupportedModels {
+		var candidates []string
+		switch {
+		case len(prefixes) > 0 && len(suffixes) > 0:
+			// Both sides configured: for each prefix that matches, require the suffix
+			// to match too (combined trim); if the prefix matches but no suffix does,
+			// fall back to prefix-only trim for this model.
+			hasPrefix := false
+			for _, prefix := range prefixes {
+				after, ok := strings.CutPrefix(model, prefix+"/")
+				if !ok {
+					continue
+				}
+				hasPrefix = true
+				matched := false
+				for _, suffix := range suffixes {
+					if trimmed, ok := strings.CutSuffix(after, suffix); ok && trimmed != "" {
+						candidates = append(candidates, trimmed)
+						matched = true
+					}
+				}
+				if !matched && after != "" {
+					candidates = append(candidates, after)
+				}
+			}
+			// A model with no matching prefix but a matching suffix still gets
+			// suffix-only trimmed.
+			if !hasPrefix {
+				for _, suffix := range suffixes {
+					if trimmed, ok := strings.CutSuffix(model, suffix); ok && trimmed != "" {
+						candidates = append(candidates, trimmed)
 					}
 				}
 			}
+		case len(prefixes) > 0:
+			for _, prefix := range prefixes {
+				if after, ok := strings.CutPrefix(model, prefix+"/"); ok && after != "" {
+					candidates = append(candidates, after)
+				}
+			}
+		case len(suffixes) > 0:
+			for _, suffix := range suffixes {
+				if trimmed, ok := strings.CutSuffix(model, suffix); ok && trimmed != "" {
+					candidates = append(candidates, trimmed)
+				}
+			}
 		}
-	}
 
-	// 4. Auto-trimmed model suffixes (AutoTrimedModelSuffixes)
-	for _, suffix := range ch.Settings.AutoTrimedModelSuffixes {
-		if suffix == "" {
-			continue
-		}
-
-		for _, model := range ch.SupportedModels {
-			// Only process models that end with the suffix and would not be trimmed to empty
-			if trimmedModel, ok := strings.CutSuffix(model, suffix); ok && trimmedModel != "" {
-				existing, exists := entries[trimmedModel]
-				if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
-					entries[trimmedModel] = ChannelModelEntry{
-						RequestModel: trimmedModel,
-						ActualModel:  model,
-						Source:       "auto_trim",
-					}
+		for _, trimmedModel := range candidates {
+			existing, exists := entries[trimmedModel]
+			if !exists || (ch.Settings.HideOriginalModels && existing.Source == "direct") {
+				entries[trimmedModel] = ChannelModelEntry{
+					RequestModel: trimmedModel,
+					ActualModel:  model,
+					Source:       "auto_trim",
 				}
 			}
 		}

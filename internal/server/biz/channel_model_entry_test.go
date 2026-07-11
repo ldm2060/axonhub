@@ -458,6 +458,57 @@ func TestChannel_GetUnifiedModels(t *testing.T) {
 				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-turbo", Source: "mapping"},
 			},
 		},
+		{
+			name: "combined prefix and suffix trim: only doubly-trimmed form is exposed",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"openai/gpt-4-free"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"openai"},
+						AutoTrimedModelSuffixes: []string{"-free"},
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "openai/gpt-4-free", ActualModel: "openai/gpt-4-free", Source: "direct"},
+				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-free", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "combined prefix and suffix trim with hideOriginalModels",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"openai/gpt-4-free", "anthropic/claude-3"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"openai", "anthropic"},
+						AutoTrimedModelSuffixes: []string{"-free"},
+						HideOriginalModels:      true,
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-free", Source: "auto_trim"},
+				{RequestModel: "claude-3", ActualModel: "anthropic/claude-3", Source: "auto_trim"},
+			},
+		},
+		{
+			name: "combined trim: model without the suffix still gets prefix-only trim",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					SupportedModels: []string{"openai/gpt-4-free", "openai/gpt-4o"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"openai"},
+						AutoTrimedModelSuffixes: []string{"-free"},
+					},
+				},
+			},
+			expected: []ChannelModelEntry{
+				{RequestModel: "openai/gpt-4-free", ActualModel: "openai/gpt-4-free", Source: "direct"},
+				{RequestModel: "openai/gpt-4o", ActualModel: "openai/gpt-4o", Source: "direct"},
+				{RequestModel: "gpt-4", ActualModel: "openai/gpt-4-free", Source: "auto_trim"},
+				{RequestModel: "gpt-4o", ActualModel: "openai/gpt-4o", Source: "auto_trim"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
