@@ -90,6 +90,66 @@ const extractAllPrefixes = (models: string[]): string[] => {
   return Array.from(prefixes).sort();
 };
 
+// extractAllSuffixes detects trailing substrings shared by 2+ leaf model names.
+// Unlike prefixes (which split cleanly on '/'), suffixes have no structural
+// separator, so we anchor candidates at separator characters (- . _) within the
+// leaf name and keep only those recurring across multiple distinct leaves.
+const extractAllSuffixes = (models: string[]): string[] => {
+  if (!models || models.length === 0) {
+    return [];
+  }
+
+  const leafNames = new Set<string>();
+  models.forEach((model) => {
+    const trimmed = model.trim();
+    if (!trimmed) {
+      return;
+    }
+    const segments = trimmed.split('/');
+    const leaf = segments[segments.length - 1];
+    if (leaf) {
+      leafNames.add(leaf);
+    }
+  });
+
+  // Common tails require at least two distinct leaf names to be meaningful.
+  if (leafNames.size < 2) {
+    return [];
+  }
+
+  const SEPARATORS = new Set(['-', '.', '_']);
+  const supportingLeaves = new Map<string, Set<string>>();
+
+  leafNames.forEach((leaf) => {
+    const candidates = new Set<string>();
+    for (let i = 0; i < leaf.length; i++) {
+      if (SEPARATORS.has(leaf[i])) {
+        const candidate = leaf.slice(i);
+        if (candidate.length > 1) {
+          candidates.add(candidate);
+        }
+      }
+    }
+    candidates.forEach((candidate) => {
+      const set = supportingLeaves.get(candidate);
+      if (set) {
+        set.add(leaf);
+      } else {
+        supportingLeaves.set(candidate, new Set([leaf]));
+      }
+    });
+  });
+
+  const commonSuffixes: string[] = [];
+  for (const [candidate, leaves] of supportingLeaves) {
+    if (leaves.size >= 2) {
+      commonSuffixes.push(candidate);
+    }
+  }
+
+  return Array.from(new Set(commonSuffixes)).sort();
+};
+
 export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: Props) {
   const { t } = useTranslation();
   const updateChannel = useUpdateChannel();
@@ -101,6 +161,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
   const [editingError, setEditingError] = useState<string | null>(null);
 
   const prefixSuggestions = useMemo(() => extractAllPrefixes(currentRow.supportedModels), [currentRow.supportedModels]);
+  const suffixSuggestions = useMemo(() => extractAllSuffixes(currentRow.supportedModels), [currentRow.supportedModels]);
 
   const modelMappingFormSchema = createModelMappingFormSchema(currentRow.supportedModels);
 
@@ -165,6 +226,58 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
       t('channels.dialogs.settings.autoTrimedModelPrefixes.prefixesCleared', {
         count: currentPrefixes.length,
         defaultValue: `${currentPrefixes.length} prefix(es) cleared successfully`,
+      })
+    );
+  }, [form, t]);
+
+  const handleAutoExtractAllSuffixes = useCallback(() => {
+    if (suffixSuggestions.length === 0) {
+      toast.warning(
+        t('channels.dialogs.settings.autoTrimedModelSuffixes.noSuffixesFound', {
+          defaultValue: 'No common suffixes found in supported models',
+        })
+      );
+      return;
+    }
+
+    const currentSuffixes = form.getValues('autoTrimedModelSuffixes') || [];
+    const currentSuffixesSet = new Set(currentSuffixes);
+    const newSuffixes = suffixSuggestions.filter((suffix) => !currentSuffixesSet.has(suffix));
+
+    if (newSuffixes.length === 0) {
+      toast.warning(
+        t('channels.dialogs.settings.autoTrimedModelSuffixes.allSuffixesAlreadyAdded', {
+          defaultValue: 'All suffixes have already been added',
+        })
+      );
+      return;
+    }
+
+    form.setValue('autoTrimedModelSuffixes', [...currentSuffixes, ...newSuffixes]);
+    toast.success(
+      t('channels.dialogs.settings.autoTrimedModelSuffixes.suffixesAdded', {
+        count: newSuffixes.length,
+        defaultValue: `${newSuffixes.length} suffix(es) added successfully`,
+      })
+    );
+  }, [form, suffixSuggestions, t]);
+
+  const handleClearAllSuffixes = useCallback(() => {
+    const currentSuffixes = form.getValues('autoTrimedModelSuffixes') || [];
+    if (currentSuffixes.length === 0) {
+      toast.warning(
+        t('channels.dialogs.settings.autoTrimedModelSuffixes.noSuffixesToClear', {
+          defaultValue: 'No suffixes to clear',
+        })
+      );
+      return;
+    }
+
+    form.setValue('autoTrimedModelSuffixes', []);
+    toast.success(
+      t('channels.dialogs.settings.autoTrimedModelSuffixes.suffixesCleared', {
+        count: currentSuffixes.length,
+        defaultValue: `${currentSuffixes.length} suffix(es) cleared successfully`,
       })
     );
   }, [form, t]);
@@ -448,22 +561,47 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
                   <CardDescription>{t('channels.dialogs.settings.autoTrimedModelSuffixes.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <FormField
-                    control={form.control}
-                    name='autoTrimedModelSuffixes'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <TagsAutocompleteInput
-                            value={field.value || []}
-                            onChange={field.onChange}
-                            placeholder={t('channels.dialogs.settings.autoTrimedModelSuffixes.placeholder')}
-                            className='h-auto min-h-9 py-1'
-                          />
-                        </FormControl>
-                      </FormItem>
+                  <div className='space-y-2'>
+                    <FormField
+                      control={form.control}
+                      name='autoTrimedModelSuffixes'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <TagsAutocompleteInput
+                              value={field.value || []}
+                              onChange={field.onChange}
+                              placeholder={t('channels.dialogs.settings.autoTrimedModelSuffixes.placeholder')}
+                              suggestions={suffixSuggestions}
+                              className='h-auto min-h-9 py-1'
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* 自动提取公共后缀 */}
+                    {suffixSuggestions.length > 0 && (
+                      <div className='flex items-center gap-2 pt-2'>
+                        <Button type='button' variant='outline' size='sm' onClick={handleAutoExtractAllSuffixes} className='text-xs'>
+                          {t('channels.dialogs.settings.autoTrimedModelSuffixes.autoExtractAll', {
+                            defaultValue: 'Auto-extract common suffixes',
+                          })}
+                        </Button>
+                        <Button type='button' variant='outline' size='sm' onClick={handleClearAllSuffixes} className='text-xs'>
+                          {t('channels.dialogs.settings.autoTrimedModelSuffixes.clearAll', {
+                            defaultValue: 'Clear all',
+                          })}
+                        </Button>
+                        <span className='text-muted-foreground text-xs'>
+                          {t('channels.dialogs.settings.autoTrimedModelSuffixes.suffixesDetected', {
+                            count: suffixSuggestions.length,
+                            defaultValue: `Detected ${suffixSuggestions.length} common suffix(es)`,
+                          })}
+                        </span>
+                      </div>
                     )}
-                  />
+                  </div>
                 </CardContent>
               </Card>
 
