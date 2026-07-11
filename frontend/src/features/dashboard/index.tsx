@@ -12,7 +12,6 @@ import { DailyRequestStats } from './components/daily-requests-stats';
 import { RequestsByChannelChart } from './components/requests-by-channel-chart';
 import { RequestsByModelChart } from './components/requests-by-model-chart';
 import { RequestsByAPIKeyChart } from './components/requests-by-api-key-chart';
-import { TokensByUserChart } from './components/tokens-by-user-chart';
 import { TokensByAPIKeyChart } from './components/tokens-by-api-key-chart';
 import { TokensByChannelChart } from './components/tokens-by-channel-chart';
 import { TokensByModelChart } from './components/tokens-by-model-chart';
@@ -25,7 +24,7 @@ import { FastestModelsCard } from './components/fastest-models-card';
 import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { CollapsibleSection } from './components/collapsible-section';
-import { UserUsageStatsSection } from './components/user-usage-stats-section';
+import { UserUsageBarChart } from './components/user-usage-bar-chart';
 import { useDashboardStats, type DashboardMode } from './data/dashboard';
 import { useRoutePermissions } from '@/hooks/useRoutePermissions';
 
@@ -45,7 +44,7 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
   const [modelTokensTimePeriod, setModelTokensTimePeriod] = useState<TimePeriod>('allTime');
   const [apiKeyTimePeriod, setApiKeyTimePeriod] = useState<TimePeriod>('allTime');
   const [apiKeyTokensTimePeriod, setApiKeyTokensTimePeriod] = useState<TimePeriod>('allTime');
-  const [userTokensTimePeriod, setUserTokensTimePeriod] = useState<TimePeriod>('day');
+  const [userTimePeriod, setUserTimePeriod] = useState<TimePeriod>('month');
 
   const modelPerformanceDescription = useMemo(() => {
     return t('dashboard.charts.performanceDescription', { count: formatNumber(modelTotalRequests) });
@@ -107,8 +106,8 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
         setApiKeyTimePeriod={setApiKeyTimePeriod}
         apiKeyTokensTimePeriod={apiKeyTokensTimePeriod}
         setApiKeyTokensTimePeriod={setApiKeyTokensTimePeriod}
-        userTokensTimePeriod={userTokensTimePeriod}
-        setUserTokensTimePeriod={setUserTokensTimePeriod}
+        userTimePeriod={userTimePeriod}
+        setUserTimePeriod={setUserTimePeriod}
         modelTotalRequests={modelTotalRequests}
         setModelTotalRequests={setModelTotalRequests}
         channelTotalRequests={channelTotalRequests}
@@ -135,8 +134,8 @@ interface DashboardContentProps {
   setApiKeyTimePeriod: (v: TimePeriod) => void;
   apiKeyTokensTimePeriod: TimePeriod;
   setApiKeyTokensTimePeriod: (v: TimePeriod) => void;
-  userTokensTimePeriod: TimePeriod;
-  setUserTokensTimePeriod: (v: TimePeriod) => void;
+  userTimePeriod: TimePeriod;
+  setUserTimePeriod: (v: TimePeriod) => void;
   modelTotalRequests: number;
   setModelTotalRequests: (v: number) => void;
   channelTotalRequests: number;
@@ -159,8 +158,8 @@ function DashboardContent({
   setApiKeyTimePeriod,
   apiKeyTokensTimePeriod,
   setApiKeyTokensTimePeriod,
-  userTokensTimePeriod,
-  setUserTokensTimePeriod,
+  userTimePeriod,
+  setUserTimePeriod,
   modelTotalRequests: _modelTotalRequests,
   setModelTotalRequests,
   channelTotalRequests: _channelTotalRequests,
@@ -316,19 +315,13 @@ function DashboardContent({
           icon={<Users className='h-4 w-4 text-primary' />}
           storageKey='users'
         >
-          <div className='grid gap-4 md:grid-cols-1 lg:grid-cols-7'>
-            <Card className='hover-card col-span-1 lg:col-span-4'>
-              <CardHeader>
-                <CardTitle>{t('dashboard.charts.tokensByUser')}</CardTitle>
-                <CardDescription>{t('dashboard.charts.tokensByUserDescription')}</CardDescription>
-                <CardAction>
-                  <TimePeriodSelector value={userTokensTimePeriod} onChange={setUserTokensTimePeriod} />
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <TokensByUserChart timePeriod={userTokensTimePeriod} />
-              </CardContent>
-            </Card>
+          <div className='flex justify-end'>
+            <TimePeriodSelector value={userTimePeriod} onChange={setUserTimePeriod} />
+          </div>
+          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+            <UserUsageBarChart timePeriod={userTimePeriod} metric='requests' />
+            <UserUsageBarChart timePeriod={userTimePeriod} metric='tokens' />
+            <UserUsageBarChart timePeriod={userTimePeriod} metric='cost' />
           </div>
         </CollapsibleSection>
       )}
@@ -368,9 +361,6 @@ function DashboardContent({
           </div>
         </div>
       </CollapsibleSection>
-
-      {/* User Statistics - admin only */}
-      {mode === 'project' && <UserUsageStatsSection />}
     </div>
   );
 }
