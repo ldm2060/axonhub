@@ -1769,16 +1769,16 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 		return nil, fmt.Errorf("user not found in context")
 	}
 
-	projectID, ok := contexts.GetProjectID(ctx)
-	if !ok {
-		return nil, fmt.Errorf("project ID not found in context")
-	}
+	// projectID is optional: dashboard stats are aggregated system-wide (matching
+	// DashboardOverview, RequestStatsByChannel, etc.). It is only used to verify
+	// project ownership for non-system-owner callers.
+	projectID, hasProjectID := contexts.GetProjectID(ctx)
 
 	// Only allow project owners or system owners to view usage stats by user
 	isProjectOwner := false
 	if currentUser.IsOwner {
 		isProjectOwner = true
-	} else {
+	} else if hasProjectID {
 		for _, up := range currentUser.Edges.ProjectUsers {
 			if up.ProjectID == projectID && up.IsOwner {
 				isProjectOwner = true
@@ -1791,7 +1791,9 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 		return nil, fmt.Errorf("permission denied: only project owners can view usage statistics")
 	}
 
-	// For owners/system owners, we allow querying all logs within the project
+	// Owners see usage across all projects — the dashboard is system-wide, so we
+	// do not filter by project here (otherwise an owner whose selected project
+	// only contains themselves sees only their own stats).
 	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	var since time.Time
@@ -1832,8 +1834,7 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 	var results []userUsageStats
 
 	query := r.client.UsageLog.Query().
-		Where(usagelog.APIKeyIDNotNil()).
-		Where(usagelog.ProjectIDEQ(projectID))
+		Where(usagelog.APIKeyIDNotNil())
 
 	if applyGTE {
 		query = query.Where(usagelog.CreatedAtGTE(since))

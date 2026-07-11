@@ -1,10 +1,27 @@
 package gql
 
 import (
+	"context"
+	"fmt"
 	"testing"
+	"time"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/project"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/ent/user"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 )
 
 // testStats is a test struct that implements the statsItem constraint
@@ -327,5 +344,140 @@ func TestCalculateConfidenceAndSort_LargeDataset(t *testing.T) {
 			assert.True(t, got[i].score > got[i+1].score,
 				"items should be sorted by confidence score descending")
 		}
+	}
+}
+
+// TestUsageStatsByUser_IncludesAllUsersInProject reproduces the report that the
+// admin dashboard's user-usage chart only shows the admin's own stats. It seeds
+// an owner plus two extra users (one using a personal API key, one using a
+// project/user API key), each with recent usage in the same project, then calls
+// the resolver as the owner and asserts every user with usage appears.
+func TestUsageStatsByUser_IncludesAllUsersInProject(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	defer client.Close()
+
+	systemService := biz.NewSystemService(biz.SystemServiceParams{
+		Ent:         client,
+		CacheConfig: xcache.Config{Mode: xcache.ModeMemory},
+	})
+
+	seedCtx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
+
+	proj, err := client.Project.Create().
+		SetName("P").
+		SetStatus(project.StatusActive).
+		Save(seedCtx)
+	require.NoError(t, err)
+
+	// A second project: usage here must still surface to an owner because the
+	// dashboard aggregates system-wide (like DashboardOverview).
+	proj2, err := client.Project.Create().
+		SetName("P2").
+		SetStatus(project.StatusActive).
+		Save(seedCtx)
+	require.NoError(t, err)
+
+	mustUser := func(email, first string, owner bool) *ent.User {
+		u, e := client.User.Create().
+			SetEmail(email).
+			SetPassword("x").
+			SetFirstName(first).
+			SetLastName("U").
+			SetStatus(user.StatusActivated).
+			SetIsOwner(owner).
+			Save(seedCtx)
+		require.NoError(t, e)
+		return u
+	}
+	admin := mustUser("admin@example.com", "Admin", true)
+	userA := mustUser("a@example.com", "UserA", false)
+	userB := mustUser("b@example.com", "UserB", false)
+	userC := mustUser("c@example.com", "UserC", false)
+
+	mustKey := func(name string, u *ent.User, typ apikey.Type, projID int) *ent.APIKey {
+		k, e := client.APIKey.Create().
+			SetName(name).
+			SetKey(fmt.Sprintf("key-%s-%d", name, time.Now().UnixNano())).
+			SetUserID(u.ID).
+			SetProjectID(projID).
+			SetType(typ).
+			SetStatus(apikey.StatusEnabled).
+			Save(seedCtx)
+		require.NoError(t, e)
+		return k
+	}
+	adminKey := mustKey("admin-key", admin, apikey.TypePersonal, proj.ID)
+	userAKey := mustKey("a-key", userA, apikey.TypePersonal, proj.ID) // personal key
+	userBKey := mustKey("b-key", userB, apikey.TypeUser, proj.ID)     // non-personal key
+	userCKey := mustKey("c-key", userC, apikey.TypeUser, proj2.ID)    // different project
+
+	addUsage := func(k *ent.APIKey, projID int, when time.Time) {
+		req, e := client.Request.Create().
+			SetProjectID(projID).
+			SetAPIKeyID(k.ID).
+			SetModelID("m").
+			SetFormat("openai/chat_completions").
+			SetStatus(request.StatusCompleted).
+			SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+			SetCreatedAt(when).
+			Save(seedCtx)
+		require.NoError(t, e)
+		_, e = client.UsageLog.Create().
+			SetRequestID(req.ID).
+			SetAPIKeyID(k.ID).
+			SetProjectID(projID).
+			SetChannelID(0).
+			SetModelID("m").
+			SetSource(usagelog.SourceAPI).
+			SetFormat("openai/chat_completions").
+			SetPromptTokens(1).
+			SetCompletionTokens(1).
+			SetTotalTokens(2).
+			SetTotalCost(0.01).
+			SetCreatedAt(when).
+			Save(seedCtx)
+		require.NoError(t, e)
+	}
+
+	now := time.Now()
+	addUsage(adminKey, proj.ID, now.Add(-1*time.Hour))
+	addUsage(userAKey, proj.ID, now.Add(-2*time.Hour))
+	addUsage(userBKey, proj.ID, now.Add(-3*time.Hour))
+	addUsage(userCKey, proj2.ID, now.Add(-4*time.Hour)) // other project
+
+	// Resolver call context: admin user + selected project (proj). Even though
+	// userC is in proj2, the owner must see them — the dashboard is system-wide.
+	callCtx := ent.NewContext(context.Background(), client)
+	callCtx = contexts.WithUser(callCtx, admin)
+	callCtx = contexts.WithProjectID(callCtx, proj.ID)
+	callCtx = authz.WithTestBypass(callCtx)
+
+	resolver := &queryResolver{&Resolver{client: client, systemService: systemService}}
+
+	names := func(stats []*UsageStatsByUser) []string {
+		out := make([]string, 0, len(stats))
+		for _, s := range stats {
+			out = append(out, s.UserName)
+		}
+		return out
+	}
+
+	for _, tc := range []struct {
+		name   string
+		window *string
+	}{
+		{"allTime", nil},
+		{"month", lo.ToPtr("month")},
+		{"allTimeToken", lo.ToPtr("allTime")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stats, err := resolver.UsageStatsByUser(callCtx, tc.window)
+			require.NoError(t, err)
+			got := names(stats)
+			t.Logf("window=%v -> %v", tc.window, got)
+			assert.ElementsMatch(t,
+				[]string{"Admin U", "UserA U", "UserB U", "UserC U"}, got,
+				"owner should see every user with usage system-wide, including other projects")
+		})
 	}
 }
