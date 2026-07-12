@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
-  Line,
-  LineChart,
+  Area,
+  AreaChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -183,8 +183,16 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
             </div>
           ) : (
             <>
-              <ResponsiveContainer width='100%' height={300}>
-                <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <ResponsiveContainer width='100%' height={350}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    {users.map((u, index) => (
+                      <linearGradient key={`${u.name}-fill`} id={`weeklyUsage-${index}`} x1='0' y1='0' x2='0' y2='1'>
+                        <stop offset='5%' stopColor={COLORS[index % COLORS.length]} stopOpacity={0.3} />
+                        <stop offset='95%' stopColor={COLORS[index % COLORS.length]} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
+                  </defs>
                   <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
                   <XAxis
                     dataKey='name'
@@ -192,9 +200,10 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
                     fontSize={12}
                     tickLine
                     axisLine
+                    padding={{ right: 24 }}
                   />
                   <YAxis
-                    stroke='var(--chart-1)'
+                    stroke='var(--muted-foreground)'
                     fontSize={12}
                     tickLine
                     axisLine
@@ -202,21 +211,24 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
                     tickFormatter={(value) => formatNumber(value)}
                     width={40}
                     tickMargin={8}
+                    tickCount={6}
                   />
                   <Tooltip content={tooltipContent} cursor={{ stroke: 'var(--muted)' }} />
                   {users.map((u, index) => (
-                    <Line
+                    <Area
                       key={u.name}
                       type='monotone'
                       dataKey={u.name}
                       stroke={COLORS[index % COLORS.length]}
                       strokeWidth={2}
-                      dot={{ r: 3 }}
-                      activeDot={{ r: 5 }}
+                      fill={`url(#weeklyUsage-${index})`}
+                      fillOpacity={1}
+                      dot={false}
+                      activeDot={{ r: 4 }}
                       isAnimationActive={false}
                     />
                   ))}
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
               <ChartLegend items={legendItems} />
             </>

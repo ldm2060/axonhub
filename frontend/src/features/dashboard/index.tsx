@@ -167,7 +167,8 @@ function DashboardContent({
   setChannelTotalRequests,
 }: DashboardContentProps) {
   const { t } = useTranslation();
-  const { isProjectOwner } = useRoutePermissions();
+  const { isProjectOwner, checkRouteAccess } = useRoutePermissions();
+  const canAccessAnalytics = mode === 'project' && checkRouteAccess('/analytics').hasAccess;
 
   return (
     <div className='space-y-6 pt-2'>
@@ -208,6 +209,7 @@ function DashboardContent({
       </section>
 
       {/* 使用详情分析 - 导航卡片 */}
+      {canAccessAnalytics && (
       <Link
         to='/analytics'
         className='flex w-full items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent/50'
@@ -223,6 +225,7 @@ function DashboardContent({
         </div>
         <ChevronRight className='h-5 w-5 text-muted-foreground' />
       </Link>
+      )}
 
       {/* 渠道分析 - 可折叠 */}
       <CollapsibleSection
