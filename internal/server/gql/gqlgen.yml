@@ -18,6 +18,7 @@ schema:
   - cost.graphql
   - publish_request.graphql
   - usage_monitor.graphql
+  - analytics.graphql
 
 omit_gqlgen_version_in_file_notice: true
 
