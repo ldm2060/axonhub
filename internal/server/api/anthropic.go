@@ -75,7 +75,7 @@ func (handlers *AnthropicHandlers) CreateMessage(c *gin.Context) {
 
 // CreateMessageWebSocket handles GET /v1/messages and /anthropic/v1/messages over WebSocket.
 func (handlers *AnthropicHandlers) CreateMessageWebSocket(c *gin.Context) {
-	handlers.ChatCompletionHandlers.ChatCompletionWebSocket(c, WSFrameSSEBytes)
+	handlers.ChatCompletionHandlers.ChatCompletionWebSocket(c, WSFrameJSONEvents)
 }
 
 type AnthropicModel struct {

@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -36,7 +37,7 @@ func (s *fakeStream) Current() *httpclient.StreamEvent {
 	return nil
 }
 
-func (s *fakeStream) Err() error  { return nil }
+func (s *fakeStream) Err() error   { return nil }
 func (s *fakeStream) Close() error { return nil }
 
 func wsURL(server *httptest.Server, path string) string {
@@ -226,4 +227,41 @@ func TestChatCompletionWebSocket_HappyPath(t *testing.T) {
 	_, msg, err := conn.ReadMessage()
 	require.NoError(t, err)
 	require.Contains(t, string(msg), `"x":1`)
+}
+
+// TestChatCompletionWebSocket_JSONFrameSendsPureJSON verifies that
+// WSFrameJSONEvents (used by Anthropic /v1/messages) emits each event as a bare
+// JSON object per WS message, so a relay that JSON-parses each frame (e.g. a
+// Claude Code WebSocket bridge) does not fail with "Failed to parse JSON".
+func TestChatCompletionWebSocket_JSONFrameSendsPureJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	handlers := &ChatCompletionHandlers{
+		Processor: fakeProcessor{result: orchestrator.ChatCompletionResult{
+			ChatCompletionStream: &fakeStream{events: []*httpclient.StreamEvent{
+				{Type: "message_start", Data: []byte(`{"type":"message_start","message":{"id":"m1"}}`)},
+				{Type: "content_block_delta", Data: []byte(`{"type":"content_block_delta","index":0,"delta":{"text":"hi"}}`)},
+			}},
+		}},
+	}
+
+	r := gin.New()
+	r.GET("/ws", func(c *gin.Context) { handlers.ChatCompletionWebSocket(c, WSFrameJSONEvents) })
+	server := httptest.NewServer(r)
+	defer server.Close()
+
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL(server, "/ws"), nil)
+	require.NoError(t, err)
+	defer conn.Close()
+
+	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"model":"claude","stream":true}`)))
+
+	for i := range 2 {
+		_, msg, err := conn.ReadMessage()
+		require.NoError(t, err)
+		// Each frame must be a standalone JSON object — no SSE "event:"/"data:" wrapping.
+		var obj map[string]any
+		require.NoErrorf(t, json.Unmarshal(msg, &obj), "frame %d is not valid JSON: %s", i, msg)
+		_, hasType := obj["type"]
+		require.Truef(t, hasType, "frame %d missing top-level \"type\" field: %s", i, msg)
+	}
 }

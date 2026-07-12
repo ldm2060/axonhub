@@ -25,11 +25,16 @@ type WSFrameMode int
 
 const (
 	// WSFrameSSEBytes sends each stream event as one WS text message containing
-	// the exact SSE event bytes (event:/data:). Used by chat / Anthropic / Gemini.
+	// the exact SSE event bytes (event:/data:). Used by chat / Gemini.
 	WSFrameSSEBytes WSFrameMode = iota
 	// WSFrameResponsesEvents sends each event's JSON object (with its top-level
 	// "type" field) as one WS text message, mirroring the outbound Responses WS.
 	WSFrameResponsesEvents
+	// WSFrameJSONEvents sends each event's JSON object as one WS text message,
+	// without touching the inbound request body. Used by Anthropic /v1/messages
+	// so WS clients (e.g. a Claude Code relay) receive one JSON event per frame
+	// instead of SSE-framed bytes.
+	WSFrameJSONEvents
 )
 
 // inboundWSUpgrader upgrades inbound model-endpoint WebSocket connections.
@@ -131,7 +136,7 @@ func writeWSStreamEvent(conn *websocket.Conn, ev *httpclient.StreamEvent, mode W
 	}
 
 	switch mode {
-	case WSFrameResponsesEvents:
+	case WSFrameResponsesEvents, WSFrameJSONEvents:
 		if len(ev.Data) == 0 {
 			return nil
 		}
