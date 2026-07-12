@@ -127,6 +127,79 @@ type usageAggregation struct {
 	LastActiveAt     *time.Time `json:"last_active_at"`
 }
 
+// scanLastActiveAt scans the result of MAX(created_at) into *time.Time.
+//
+// Raw SQL aggregation bypasses ent's (de)serialization, so the driver returns
+// the timestamp in whatever form it stores: modernc/sqlite returns a Go
+// time.String() like "2006-01-02 15:04:05.999999999 +0000 UTC" (and may append a
+// monotonic " m=-..." suffix); Postgres/MySQL typically return time.Time or
+// RFC3339 text. time.Time's standard layouts do not cover the sqlite form, so
+// scan into any and coerce.
+func scanLastActiveAt(src any, dst **time.Time) error {
+	if src == nil {
+		return nil
+	}
+	switch v := src.(type) {
+	case time.Time:
+		t := v
+		*dst = &t
+		return nil
+	case *time.Time:
+		if v != nil {
+			*dst = v
+		}
+		return nil
+	case string:
+		t, err := parseAggregatedTime(v)
+		if err != nil {
+			return err
+		}
+		*dst = &t
+		return nil
+	case []byte:
+		t, err := parseAggregatedTime(string(v))
+		if err != nil {
+			return err
+		}
+		*dst = &t
+		return nil
+	}
+	return fmt.Errorf("unsupported last_active_at scan source type %T", src)
+}
+
+// parseAggregatedTime parses a timestamp produced by MAX(created_at).
+//
+// Layouts cover RFC3339 (Postgres/MySQL text) and Go time.String() (modernc
+// sqlite), including the optional monotonic " m=-..." suffix which is stripped
+// first since time.Parse has no layout token for it.
+func parseAggregatedTime(s string) (time.Time, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return time.Time{}, fmt.Errorf("empty timestamp")
+	}
+	if i := strings.Index(s, " m="); i >= 0 {
+		s = s[:i]
+	}
+	layouts := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05.999999999 -0700 MST",
+		"2006-01-02 15:04:05.999999 -0700 MST",
+		"2006-01-02 15:04:05 -0700 MST",
+		"2006-01-02 15:04:05.999999999",
+		"2006-01-02 15:04:05",
+	}
+	var lastErr error
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, nil
+		} else {
+			lastErr = err
+		}
+	}
+	return time.Time{}, fmt.Errorf("unrecognized timestamp format %q: %w", s, lastErr)
+}
+
 // recalculateAllStats aggregates UsageLog by api_key_id joined with APIKey to group by user_id,
 // then upserts the results into UserUsageStats.
 func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error {
@@ -182,7 +255,10 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 
 	var aggregations []usageAggregation
 	for rows.Next() {
-		var agg usageAggregation
+		var (
+			agg          usageAggregation
+			lastActiveAt any
+		)
 		if err := rows.Scan(
 			&agg.UserID,
 			&agg.RequestCount,
@@ -191,9 +267,12 @@ func (svc *UserUsageStatsService) recalculateAllStats(ctx context.Context) error
 			&agg.CompletionTokens,
 			&agg.TotalTokens,
 			&agg.TotalCost,
-			&agg.LastActiveAt,
+			&lastActiveAt,
 		); err != nil {
 			return fmt.Errorf("failed to scan usage aggregation: %w", err)
+		}
+		if err := scanLastActiveAt(lastActiveAt, &agg.LastActiveAt); err != nil {
+			return fmt.Errorf("failed to scan usage aggregation last_active_at: %w", err)
 		}
 		aggregations = append(aggregations, agg)
 	}
