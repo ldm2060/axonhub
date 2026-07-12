@@ -327,7 +327,7 @@ function DashboardContent({
       </CollapsibleSection>
 
       {/* 用户分析 - 可折叠 */}
-      {isProjectOwner && (
+      {(mode === 'personal' || isProjectOwner) && (
         <CollapsibleSection
           title={t('dashboard.sections.users')}
           icon={<Users className='h-4 w-4 text-primary' />}
@@ -337,8 +337,8 @@ function DashboardContent({
             <TimePeriodSelector value={userTimePeriod} onChange={setUserTimePeriod} />
           </div>
           <div className='grid gap-4 md:grid-cols-2'>
-            <UserUsageBarChart timePeriod={userTimePeriod} metric='requests' />
-            <WeeklyUsageLineChart />
+            <UserUsageBarChart timePeriod={userTimePeriod} metric='requests' mode={mode} />
+            <WeeklyUsageLineChart mode={mode} />
           </div>
         </CollapsibleSection>
       )}

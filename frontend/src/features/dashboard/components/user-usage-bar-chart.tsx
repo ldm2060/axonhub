@@ -17,7 +17,7 @@ import { type TimePeriod } from '@/components/time-period-selector';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGeneralSettings } from '../../system/data/system';
-import { useUsageStatsByUser } from '../data/dashboard';
+import { useUsageStatsByUser, type DashboardMode } from '../data/dashboard';
 import { ChartLegend } from './chart-legend';
 
 const COLORS = [
@@ -34,6 +34,7 @@ export type UserUsageMetric = 'requests' | 'tokens' | 'cost';
 interface UserUsageBarChartProps {
   timePeriod: TimePeriod;
   metric: UserUsageMetric;
+  mode: DashboardMode;
 }
 
 const DATA_KEY: Record<UserUsageMetric, 'requestCount' | 'totalTokens' | 'totalCost'> = {
@@ -49,10 +50,10 @@ function formatCompactNumber(value: number): string {
   return `${value}`;
 }
 
-export function UserUsageBarChart({ timePeriod, metric }: UserUsageBarChartProps) {
+export function UserUsageBarChart({ timePeriod, metric, mode }: UserUsageBarChartProps) {
   const { t, i18n } = useTranslation();
 
-  const { data, isLoading, isFetching, error } = useUsageStatsByUser(timePeriod);
+  const { data, isLoading, isFetching, error } = useUsageStatsByUser(timePeriod, mode);
   const { data: generalSettings } = useGeneralSettings();
 
   const currencyCode = generalSettings?.currencyCode || 'USD';

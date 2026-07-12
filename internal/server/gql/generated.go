@@ -1527,6 +1527,7 @@ type ComplexityRoot struct {
 		MyCostStatsByChannel         func(childComplexity int, timeWindow *string) int
 		MyCostStatsByModel           func(childComplexity int, timeWindow *string) int
 		MyDailyRequestStats          func(childComplexity int) int
+		MyDailyUsageStatsByUser      func(childComplexity int, days *int) int
 		MyDashboard                  func(childComplexity int) int
 		MyFastestChannels            func(childComplexity int, input FastestChannelsInput) int
 		MyFastestModels              func(childComplexity int, input FastestChannelsInput) int
@@ -1542,6 +1543,7 @@ type ComplexityRoot struct {
 		MyTokenStatsByChannel        func(childComplexity int, timeWindow *string) int
 		MyTokenStatsByModel          func(childComplexity int, timeWindow *string) int
 		MyTopRequestsProjects        func(childComplexity int) int
+		MyUsageStatsByUser           func(childComplexity int, timeWindow *string) int
 		Node                         func(childComplexity int, id objects.GUID) int
 		Nodes                        func(childComplexity int, ids []*objects.GUID) int
 		OidcIdentities               func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OIDCIdentityOrder, where *ent.OIDCIdentityWhereInput) int
@@ -2781,7 +2783,9 @@ type QueryResolver interface {
 	MyCostStatsByChannel(ctx context.Context, timeWindow *string) ([]*CostStatsByChannel, error)
 	MyCostStatsByModel(ctx context.Context, timeWindow *string) ([]*CostStatsByModel, error)
 	MyCostStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*CostStatsByAPIKey, error)
+	MyDailyUsageStatsByUser(ctx context.Context, days *int) ([]*DailyUsageStatsByUser, error)
 	MyTopRequestsProjects(ctx context.Context) ([]*TopRequestsProjects, error)
+	MyUsageStatsByUser(ctx context.Context, timeWindow *string) ([]*UsageStatsByUser, error)
 	UsageMonitorChannelsList(ctx context.Context) ([]*ent.UsageMonitorChannel, error)
 	UsageMonitorChannelByID(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
 	QuotaMonitorTemplates(ctx context.Context) ([]*usage_monitor.ChannelTemplate, error)
@@ -9502,6 +9506,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyDailyRequestStats(childComplexity), true
+	case "Query.myDailyUsageStatsByUser":
+		if e.complexity.Query.MyDailyUsageStatsByUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myDailyUsageStatsByUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyDailyUsageStatsByUser(childComplexity, args["days"].(*int)), true
 	case "Query.myDashboard":
 		if e.complexity.Query.MyDashboard == nil {
 			break
@@ -9637,6 +9652,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyTopRequestsProjects(childComplexity), true
+	case "Query.myUsageStatsByUser":
+		if e.complexity.Query.MyUsageStatsByUser == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myUsageStatsByUser_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyUsageStatsByUser(childComplexity, args["timeWindow"].(*string)), true
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
 			break
@@ -17167,6 +17193,28 @@ func (ec *executionContext) field_Query_dailyUsageStatsByUser_args(ctx context.C
 		return nil, err
 	}
 	args["days"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myDailyUsageStatsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "days", ec.unmarshalOInt2ᚖint)
+	if err != nil {
+		return nil, err
+	}
+	args["days"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myUsageStatsByUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeWindow", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["timeWindow"] = arg0
 	return args, nil
 }
 
@@ -52184,6 +52232,108 @@ func (ec *executionContext) fieldContext_Query_usageStatsByUser(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_usageStatsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myUsageStatsByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myUsageStatsByUser,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyUsageStatsByUser(ctx, fc.Args["timeWindow"].(*string))
+		},
+		nil,
+		ec.marshalNUsageStatsByUser2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUsageStatsByUserᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myUsageStatsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_UsageStatsByUser_userId(ctx, field)
+			case "userName":
+				return ec.fieldContext_UsageStatsByUser_userName(ctx, field)
+			case "requestCount":
+				return ec.fieldContext_UsageStatsByUser_requestCount(ctx, field)
+			case "totalTokens":
+				return ec.fieldContext_UsageStatsByUser_totalTokens(ctx, field)
+			case "totalCost":
+				return ec.fieldContext_UsageStatsByUser_totalCost(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UsageStatsByUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myUsageStatsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myDailyUsageStatsByUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myDailyUsageStatsByUser,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().MyDailyUsageStatsByUser(ctx, fc.Args["days"].(*int))
+		},
+		nil,
+		ec.marshalNDailyUsageStatsByUser2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐDailyUsageStatsByUserᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myDailyUsageStatsByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_DailyUsageStatsByUser_userId(ctx, field)
+			case "userName":
+				return ec.fieldContext_DailyUsageStatsByUser_userName(ctx, field)
+			case "daily":
+				return ec.fieldContext_DailyUsageStatsByUser_daily(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DailyUsageStatsByUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_myDailyUsageStatsByUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -121715,6 +121865,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myDailyUsageStatsByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myDailyUsageStatsByUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "myTokenStats":
 			field := field
 
@@ -121967,6 +122139,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_myTopRequestsProjects(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myUsageStatsByUser":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myUsageStatsByUser(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

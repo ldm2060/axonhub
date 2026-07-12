@@ -343,41 +343,76 @@ const DAILY_USAGE_STATS_BY_USER_QUERY = `
   }
 `;
 
-export function useDailyUsageStatsByUser(days?: number) {
+const MY_USAGE_STATS_BY_USER_QUERY = `
+  query GetMyUsageStatsByUser($timeWindow: String) {
+    myUsageStatsByUser(timeWindow: $timeWindow) {
+      userId
+      userName
+      requestCount
+      totalTokens
+      totalCost
+    }
+  }
+`;
+
+const MY_DAILY_USAGE_STATS_BY_USER_QUERY = `
+  query GetMyDailyUsageStatsByUser($days: Int) {
+    myDailyUsageStatsByUser(days: $days) {
+      userId
+      userName
+      daily {
+        date
+        count
+        tokens
+        cost
+      }
+    }
+  }
+`;
+
+export function useDailyUsageStatsByUser(days?: number, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
-    queryKey: ['dailyUsageStatsByUser', days, selectedProjectId],
+    queryKey: ['dailyUsageStatsByUser', days, isPersonal, selectedProjectId],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ dailyUsageStatsByUser: DailyUsageStatsByUser[] }>(
-        DAILY_USAGE_STATS_BY_USER_QUERY,
+      const query = isPersonal ? MY_DAILY_USAGE_STATS_BY_USER_QUERY : DAILY_USAGE_STATS_BY_USER_QUERY;
+      const fieldName = isPersonal ? 'myDailyUsageStatsByUser' : 'dailyUsageStatsByUser';
+      // The personal query is user-scoped (no project header); the system query
+      // reads the project header for owner verification.
+      const headers = !isPersonal && selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ [key: string]: DailyUsageStatsByUser[] }>(
+        query,
         { days },
         headers
       );
-      return data.dailyUsageStatsByUser.map((item) => dailyUsageStatsByUserSchema.parse(item));
+      return data[fieldName].map((item) => dailyUsageStatsByUserSchema.parse(item));
     },
-    enabled: !!selectedProjectId,
+    enabled: isPersonal || !!selectedProjectId,
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });
 }
 
-export function useUsageStatsByUser(timeWindow?: string) {
+export function useUsageStatsByUser(timeWindow?: string, mode: DashboardMode = 'project') {
+  const isPersonal = mode === 'personal';
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
-    queryKey: ['usageStatsByUser', timeWindow, selectedProjectId],
+    queryKey: ['usageStatsByUser', timeWindow, isPersonal, selectedProjectId],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ usageStatsByUser: UsageStatsByUser[] }>(
-        USAGE_STATS_BY_USER_QUERY,
+      const query = isPersonal ? MY_USAGE_STATS_BY_USER_QUERY : USAGE_STATS_BY_USER_QUERY;
+      const fieldName = isPersonal ? 'myUsageStatsByUser' : 'usageStatsByUser';
+      const headers = !isPersonal && selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ [key: string]: UsageStatsByUser[] }>(
+        query,
         { timeWindow },
         headers
       );
-      return data.usageStatsByUser.map((item) => usageStatsByUserSchema.parse(item));
+      return data[fieldName].map((item) => usageStatsByUserSchema.parse(item));
     },
-    enabled: !!selectedProjectId,
+    enabled: isPersonal || !!selectedProjectId,
     refetchInterval: 60000,
     placeholderData: (previousData) => previousData,
   });

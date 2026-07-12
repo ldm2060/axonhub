@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatNumber } from '@/utils/format-number';
 import { useGeneralSettings } from '../../system/data/system';
-import { useDailyUsageStatsByUser } from '../data/dashboard';
+import { useDailyUsageStatsByUser, type DashboardMode } from '../data/dashboard';
 import { ChartLegend } from './chart-legend';
 
 const COLORS = [
@@ -37,9 +37,9 @@ interface ChartRow {
   [key: string]: string | number;
 }
 
-export function WeeklyUsageLineChart() {
+export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
   const { t, i18n } = useTranslation();
-  const { data, isLoading, isFetching, error } = useDailyUsageStatsByUser(WEEK_DAYS);
+  const { data, isLoading, isFetching, error } = useDailyUsageStatsByUser(WEEK_DAYS, mode);
   const { data: generalSettings } = useGeneralSettings();
 
   const currencyCode = generalSettings?.currencyCode || 'USD';

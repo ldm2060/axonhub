@@ -27,6 +27,8 @@ extend type Query {
   myCostStatsByModel(timeWindow: String): [CostStatsByModel!]!
   myCostStatsByAPIKey(timeWindow: String): [CostStatsByAPIKey!]!
   myTopRequestsProjects: [TopRequestsProjects!]!
+  myUsageStatsByUser(timeWindow: String): [UsageStatsByUser!]!
+  myDailyUsageStatsByUser(days: Int): [DailyUsageStatsByUser!]!
 }
 
 enum ReviewAction {

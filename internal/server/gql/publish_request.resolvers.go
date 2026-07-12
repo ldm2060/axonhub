@@ -28,6 +28,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/samber/lo"
+	"strings"
 )
 
 // RequestPublish is the resolver for the requestPublish field.
@@ -1313,5 +1314,284 @@ func (r *queryResolver) MyTopRequestsProjects(ctx context.Context) ([]*TopReques
 			})
 		}
 	}
+	return response, nil
+}
+
+// MyUsageStatsByUser is the resolver for the myUsageStatsByUser field.
+// It returns the current user's own usage stats (request count / tokens / cost),
+// scoped to their API keys. Unlike the system-wide UsageStatsByUser, this is the
+// user's own data and requires no owner/permission gate.
+func (r *queryResolver) MyUsageStatsByUser(ctx context.Context, timeWindow *string) ([]*UsageStatsByUser, error) {
+	currentUser, ok := contexts.GetUser(ctx)
+	if !ok || currentUser == nil {
+		return nil, fmt.Errorf("user not found in context")
+	}
+
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
+
+	var since time.Time
+	var until time.Time
+	applyGTE := false
+	applyLTE := false
+
+	if timeWindow != nil && *timeWindow != "" {
+		if val, cut := strings.CutPrefix(*timeWindow, "custom:"); cut {
+			parts := strings.Split(val, ",")
+			if len(parts) == 2 {
+				if t1, err := time.Parse(time.RFC3339, parts[0]); err == nil {
+					since = t1
+					applyGTE = true
+				}
+				if t2, err := time.Parse(time.RFC3339, parts[1]); err == nil {
+					until = t2
+					applyLTE = true
+				}
+			}
+		} else {
+			var applyFilter bool
+			since, applyFilter = r.parseTimeWindow(ctx, timeWindow)
+			applyGTE = applyFilter
+		}
+	}
+
+	type userUsageStats struct {
+		UserID      int     `json:"user_id"`
+		FirstName   string  `json:"first_name"`
+		LastName    string  `json:"last_name"`
+		Email       string  `json:"email"`
+		Count       int     `json:"request_count"`
+		TotalTokens int64   `json:"total_tokens"`
+		TotalCost   float64 `json:"total_cost"`
+	}
+
+	var results []userUsageStats
+
+	query := r.client.UsageLog.Query().
+		Where(usagelog.APIKeyIDNotNil())
+
+	if applyGTE {
+		query = query.Where(usagelog.CreatedAtGTE(since))
+	}
+	if applyLTE {
+		query = query.Where(usagelog.CreatedAtLTE(until))
+	}
+
+	err := query.Modify(func(s *sql.Selector) {
+		apiKeyTable := sql.Table(apikey.Table)
+		userTable := sql.Table("users")
+
+		s.Join(apiKeyTable).On(
+			s.C(usagelog.FieldAPIKeyID),
+			apiKeyTable.C(apikey.FieldID),
+		)
+		s.Join(userTable).On(
+			apiKeyTable.C(apikey.FieldUserID),
+			userTable.C("id"),
+		)
+
+		// Scope to the current user's own API keys.
+		s.Where(sql.EQ(apiKeyTable.C(apikey.FieldUserID), currentUser.ID))
+		s.Where(sql.EQ(apiKeyTable.C(apikey.FieldDeletedAt), 0))
+
+		s.Select(
+			sql.As(userTable.C("id"), "user_id"),
+			sql.As(userTable.C("first_name"), "first_name"),
+			sql.As(userTable.C("last_name"), "last_name"),
+			sql.As(userTable.C("email"), "email"),
+			sql.As(sql.Count(s.C(usagelog.FieldID)), "request_count"),
+			sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalTokens)), "total_tokens"),
+			sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+		).
+			GroupBy(
+				userTable.C("id"),
+				userTable.C("first_name"),
+				userTable.C("last_name"),
+				userTable.C("email"),
+			).
+			OrderBy(sql.Desc("request_count"))
+	}).Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my usage stats by user: %w", err)
+	}
+
+	return lo.Map(results, func(item userUsageStats, _ int) *UsageStatsByUser {
+		userName := fmt.Sprintf("%s %s", item.FirstName, item.LastName)
+		userName = strings.TrimSpace(userName)
+		if userName == "" {
+			userName = item.Email
+		}
+		return &UsageStatsByUser{
+			UserID:       objects.GUID{Type: ent.TypeUser, ID: item.UserID},
+			UserName:     userName,
+			RequestCount: item.Count,
+			TotalTokens:  int(item.TotalTokens),
+			TotalCost:    item.TotalCost,
+		}
+	}), nil
+}
+
+// MyDailyUsageStatsByUser is the resolver for the myDailyUsageStatsByUser field.
+// It returns the current user's own per-day usage for the last N days, scoped to
+// their API keys. Used by the personal dashboard's weekly trend line chart.
+func (r *queryResolver) MyDailyUsageStatsByUser(ctx context.Context, days *int) ([]*DailyUsageStatsByUser, error) {
+	currentUser, ok := contexts.GetUser(ctx)
+	if !ok || currentUser == nil {
+		return nil, fmt.Errorf("user not found in context")
+	}
+
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
+
+	daysCount := 7
+	if days != nil && *days > 0 && *days <= 90 {
+		daysCount = *days
+	}
+
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	type userDailyStat struct {
+		UserID      int     `json:"user_id"`
+		FirstName   string  `json:"first_name"`
+		LastName    string  `json:"last_name"`
+		Email       string  `json:"email"`
+		Date        string  `json:"date"`
+		Count       int     `json:"request_count"`
+		TotalTokens int64   `json:"total_tokens"`
+		TotalCost   float64 `json:"total_cost"`
+	}
+
+	var results []userDailyStat
+
+	err := r.client.UsageLog.Query().
+		Where(
+			usagelog.APIKeyIDNotNil(),
+			usagelog.CreatedAtGTE(startDateUTC),
+			usagelog.CreatedAtLT(nowUTC),
+		).
+		Modify(func(s *sql.Selector) {
+			apiKeyTable := sql.Table(apikey.Table)
+			userTable := sql.Table("users")
+
+			s.Join(apiKeyTable).On(
+				s.C(usagelog.FieldAPIKeyID),
+				apiKeyTable.C(apikey.FieldID),
+			)
+			s.Join(userTable).On(
+				apiKeyTable.C(apikey.FieldUserID),
+				userTable.C("id"),
+			)
+
+			// Scope to the current user's own API keys.
+			s.Where(sql.EQ(apiKeyTable.C(apikey.FieldUserID), currentUser.ID))
+			s.Where(sql.EQ(apiKeyTable.C(apikey.FieldDeletedAt), 0))
+
+			createdAtCol := s.C(usagelog.FieldCreatedAt)
+			var dateExpr string
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+
+			s.Select(
+				sql.As(userTable.C("id"), "user_id"),
+				sql.As(userTable.C("first_name"), "first_name"),
+				sql.As(userTable.C("last_name"), "last_name"),
+				sql.As(userTable.C("email"), "email"),
+				sql.As(dateExpr, "date"),
+				sql.As(sql.Count(s.C(usagelog.FieldID)), "request_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalTokens)), "total_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			).
+				GroupBy(
+					userTable.C("id"),
+					userTable.C("first_name"),
+					userTable.C("last_name"),
+					userTable.C("email"),
+					dateExpr,
+				)
+		}).Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get my daily usage stats by user: %w", err)
+	}
+
+	// Build the ordered list of date strings for the window (for zero-fill).
+	dates := make([]string, 0, daysCount)
+	for i := range daysCount {
+		dates = append(dates, startDateLocal.AddDate(0, 0, i).Format("2006-01-02"))
+	}
+
+	type userBucket struct {
+		userName string
+		daily    map[string]userDailyStat
+		total    int
+	}
+
+	buckets := make(map[int]*userBucket)
+	for _, row := range results {
+		b, exists := buckets[row.UserID]
+		if !exists {
+			b = &userBucket{daily: make(map[string]userDailyStat)}
+			buckets[row.UserID] = b
+		}
+		b.daily[row.Date] = row
+		b.total += row.Count
+	}
+
+	sortedIDs := make([]int, 0, len(buckets))
+	for id := range buckets {
+		sortedIDs = append(sortedIDs, id)
+	}
+	sort.Slice(sortedIDs, func(i, j int) bool {
+		return buckets[sortedIDs[i]].total > buckets[sortedIDs[j]].total
+	})
+	if len(sortedIDs) > 10 {
+		sortedIDs = sortedIDs[:10]
+	}
+
+	response := make([]*DailyUsageStatsByUser, 0, len(sortedIDs))
+	for _, uid := range sortedIDs {
+		b := buckets[uid]
+		var firstName, lastName, email string
+		for _, row := range b.daily {
+			firstName, lastName, email = row.FirstName, row.LastName, row.Email
+			break
+		}
+		userName := strings.TrimSpace(fmt.Sprintf("%s %s", firstName, lastName))
+		if userName == "" {
+			userName = email
+		}
+
+		daily := make([]*DailyUsageStat, 0, daysCount)
+		for _, d := range dates {
+			if row, ok := b.daily[d]; ok {
+				daily = append(daily, &DailyUsageStat{
+					Date:   d,
+					Count:  row.Count,
+					Tokens: int(row.TotalTokens),
+					Cost:   row.TotalCost,
+				})
+			} else {
+				daily = append(daily, &DailyUsageStat{Date: d, Count: 0, Tokens: 0, Cost: 0})
+			}
+		}
+
+		response = append(response, &DailyUsageStatsByUser{
+			UserID:   objects.GUID{Type: ent.TypeUser, ID: uid},
+			UserName: userName,
+			Daily:    daily,
+		})
+	}
+
 	return response, nil
 }
