@@ -270,7 +270,7 @@ extend type Query {
   costStatsByChannel(timeWindow: String): [CostStatsByChannel!]!
   costStatsByModel(timeWindow: String): [CostStatsByModel!]!
   costStatsByAPIKey(timeWindow: String): [CostStatsByAPIKey!]!
-  usageStatsByUser(timeWindow: String): [UsageStatsByUser!]!
+  usageStatsByUser(timeWindow: String, projectID: ID): [UsageStatsByUser!]!
   """
   Daily usage breakdown per user for the last N days (default 7), top users by request count
   """

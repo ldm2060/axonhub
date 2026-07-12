@@ -31,6 +31,8 @@ declare module '@tanstack/react-table' {
   }
 }
 
+const MotionTableRow = motion.create(TableRow);
+
 interface TracesTableProps {
   data: Trace[];
   loading?: boolean;

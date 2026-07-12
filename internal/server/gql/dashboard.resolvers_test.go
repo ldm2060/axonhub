@@ -471,7 +471,7 @@ func TestUsageStatsByUser_IncludesAllUsersInProject(t *testing.T) {
 		{"allTimeToken", lo.ToPtr("allTime")},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			stats, err := resolver.UsageStatsByUser(callCtx, tc.window)
+			stats, err := resolver.UsageStatsByUser(callCtx, tc.window, nil)
 			require.NoError(t, err)
 			got := names(stats)
 			t.Logf("window=%v -> %v", tc.window, got)

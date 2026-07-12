@@ -1589,7 +1589,7 @@ type ComplexityRoot struct {
 		UsageMonitorBindingSummaries func(childComplexity int) int
 		UsageMonitorChannelByID      func(childComplexity int, id objects.GUID) int
 		UsageMonitorChannelsList     func(childComplexity int) int
-		UsageStatsByUser             func(childComplexity int, timeWindow *string) int
+		UsageStatsByUser             func(childComplexity int, timeWindow *string, projectID *objects.GUID) int
 		UserAgentPassThroughSettings func(childComplexity int) int
 		UserUsageStats               func(childComplexity int, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) int
 		Users                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) int
@@ -2729,7 +2729,7 @@ type QueryResolver interface {
 	CostStatsByChannel(ctx context.Context, timeWindow *string) ([]*CostStatsByChannel, error)
 	CostStatsByModel(ctx context.Context, timeWindow *string) ([]*CostStatsByModel, error)
 	CostStatsByAPIKey(ctx context.Context, timeWindow *string) ([]*CostStatsByAPIKey, error)
-	UsageStatsByUser(ctx context.Context, timeWindow *string) ([]*UsageStatsByUser, error)
+	UsageStatsByUser(ctx context.Context, timeWindow *string, projectID *objects.GUID) ([]*UsageStatsByUser, error)
 	UserUsageStats(ctx context.Context, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) (*UserUsageStatsPayload, error)
 	AllScopes(ctx context.Context, level *string) ([]*ScopeInfo, error)
 	Me(ctx context.Context) (*objects.UserInfo, error)
@@ -10063,7 +10063,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.UsageStatsByUser(childComplexity, args["timeWindow"].(*string)), true
+		return e.complexity.Query.UsageStatsByUser(childComplexity, args["timeWindow"].(*string), args["projectID"].(*objects.GUID)), true
 	case "Query.userAgentPassThroughSettings":
 		if e.complexity.Query.UserAgentPassThroughSettings == nil {
 			break
@@ -17182,6 +17182,11 @@ func (ec *executionContext) field_Query_usageStatsByUser_args(ctx context.Contex
 		return nil, err
 	}
 	args["timeWindow"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "projectID", ec.unmarshalOID2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["projectID"] = arg1
 	return args, nil
 }
 
@@ -52193,7 +52198,7 @@ func (ec *executionContext) _Query_usageStatsByUser(ctx context.Context, field g
 		ec.fieldContext_Query_usageStatsByUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().UsageStatsByUser(ctx, fc.Args["timeWindow"].(*string))
+			return ec.resolvers.Query().UsageStatsByUser(ctx, fc.Args["timeWindow"].(*string), fc.Args["projectID"].(*objects.GUID))
 		},
 		nil,
 		ec.marshalNUsageStatsByUser2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUsageStatsByUserᚄ,

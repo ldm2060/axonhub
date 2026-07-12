@@ -1763,16 +1763,17 @@ func (r *queryResolver) CostStatsByAPIKey(ctx context.Context, timeWindow *strin
 }
 
 // UsageStatsByUser is the resolver for the usageStatsByUser field.
-func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string) ([]*UsageStatsByUser, error) {
+func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string, projectID *objects.GUID) ([]*UsageStatsByUser, error) {
 	currentUser, ok := contexts.GetUser(ctx)
 	if !ok || currentUser == nil {
 		return nil, fmt.Errorf("user not found in context")
 	}
 
-	// projectID is optional: dashboard stats are aggregated system-wide (matching
-	// DashboardOverview, RequestStatsByChannel, etc.). It is only used to verify
-	// project ownership for non-system-owner callers.
-	projectID, hasProjectID := contexts.GetProjectID(ctx)
+	// projectID (from X-Project-ID header) is optional: dashboard stats are
+	// aggregated system-wide (matching DashboardOverview, RequestStatsByChannel,
+	// etc.). It is only used to verify project ownership for non-system-owner
+	// callers.
+	headerProjectID, hasProjectID := contexts.GetProjectID(ctx)
 
 	// Only allow project owners or system owners to view usage stats by user
 	isProjectOwner := false
@@ -1780,7 +1781,7 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 		isProjectOwner = true
 	} else if hasProjectID {
 		for _, up := range currentUser.Edges.ProjectUsers {
-			if up.ProjectID == projectID && up.IsOwner {
+			if up.ProjectID == headerProjectID && up.IsOwner {
 				isProjectOwner = true
 				break
 			}
@@ -1789,6 +1790,17 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 
 	if !isProjectOwner {
 		return nil, fmt.Errorf("permission denied: only project owners can view usage statistics")
+	}
+
+	// When an explicit projectID argument is provided (e.g. the project usage-stats
+	// page), scope the aggregation to that single project. Otherwise (dashboard)
+	// owners see usage across all projects — the dashboard is system-wide.
+	filterProjectID := 0
+	if projectID != nil {
+		if projectID.Type != ent.TypeProject {
+			return nil, fmt.Errorf("invalid GUID type: expected %s, got %s", ent.TypeProject, projectID.Type)
+		}
+		filterProjectID = projectID.ID
 	}
 
 	// Owners see usage across all projects — the dashboard is system-wide, so we
@@ -1835,6 +1847,10 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 
 	query := r.client.UsageLog.Query().
 		Where(usagelog.APIKeyIDNotNil())
+
+	if filterProjectID != 0 {
+		query = query.Where(usagelog.ProjectIDEQ(filterProjectID))
+	}
 
 	if applyGTE {
 		query = query.Where(usagelog.CreatedAtGTE(since))
