@@ -110,6 +110,8 @@
   "dashboard.charts.costByUser": "Cost by User",
   "dashboard.charts.costByUserDescription": "Cost distribution across users.",
   "dashboard.charts.noUserData": "No user usage data available",
+  "dashboard.charts.weeklyUsageTrend": "Last 7 Days Trend",
+  "dashboard.charts.weeklyUsageTrendDescription": "Daily requests, tokens, and cost over the last 7 days.",
   "dashboard.stats.user": "User",
   "dashboard.stats.requestCount": "Requests",
   "dashboard.stats.tokenCount": "Tokens",

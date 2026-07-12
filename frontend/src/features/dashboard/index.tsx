@@ -25,6 +25,7 @@ import { ModelPerformanceStats } from './components/model-performance-stats';
 import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { CollapsibleSection } from './components/collapsible-section';
 import { UserUsageBarChart } from './components/user-usage-bar-chart';
+import { WeeklyUsageLineChart } from './components/weekly-usage-line-chart';
 import { useDashboardStats, type DashboardMode } from './data/dashboard';
 import { useRoutePermissions } from '@/hooks/useRoutePermissions';
 
@@ -318,10 +319,9 @@ function DashboardContent({
           <div className='flex justify-end'>
             <TimePeriodSelector value={userTimePeriod} onChange={setUserTimePeriod} />
           </div>
-          <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+          <div className='grid gap-4 md:grid-cols-2'>
             <UserUsageBarChart timePeriod={userTimePeriod} metric='requests' />
-            <UserUsageBarChart timePeriod={userTimePeriod} metric='tokens' />
-            <UserUsageBarChart timePeriod={userTimePeriod} metric='cost' />
+            <WeeklyUsageLineChart mode={mode} />
           </div>
         </CollapsibleSection>
       )}
