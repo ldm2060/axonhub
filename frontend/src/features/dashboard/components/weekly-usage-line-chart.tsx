@@ -1,94 +1,163 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipProps,
 } from 'recharts';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatNumber } from '@/utils/format-number';
 import { useGeneralSettings } from '../../system/data/system';
-import { useDailyRequestStats, type DashboardMode } from '../data/dashboard';
+import { useDailyUsageStatsByUser } from '../data/dashboard';
+import { ChartLegend } from './chart-legend';
 
-interface WeeklyUsageLineChartProps {
-  mode: DashboardMode;
-}
+const COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--chart-6)',
+];
 
 const WEEK_DAYS = 7;
+const TOP_USERS = 10;
 
-export function WeeklyUsageLineChart({ mode }: WeeklyUsageLineChartProps) {
+interface ChartRow {
+  name: string;
+  [key: string]: string | number;
+}
+
+export function WeeklyUsageLineChart() {
   const { t, i18n } = useTranslation();
-  const { data, isLoading, isFetching, error } = useDailyRequestStats(mode);
+  const { data, isLoading, isFetching, error } = useDailyUsageStatsByUser(WEEK_DAYS);
   const { data: generalSettings } = useGeneralSettings();
 
   const currencyCode = generalSettings?.currencyCode || 'USD';
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
 
-  const formatCurrency = useCallback(
-    (val: number, fractionDigits: number) =>
-      t('currencies.format', {
-        val,
-        currency: currencyCode,
-        locale,
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits,
-      }),
-    [currencyCode, locale, t]
-  );
-
-  const formatCostTick = useCallback(
-    (value: number | string) => formatCurrency(Number(value), 0),
-    [formatCurrency]
-  );
-
-  const tooltipFormatter = useCallback(
-    (value: number | string, name: string) => {
-      if (name === t('dashboard.stats.totalCost')) {
-        return [formatCurrency(Number(value), 2), name];
-      }
-      return [formatNumber(Number(value)), name];
-    },
-    [formatCurrency, t]
-  );
-
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) return [];
-    const recent = data.slice(-WEEK_DAYS);
-    return recent.map((stat) => {
-      const [year, month, day] = stat.date.split('-').map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day));
-      return {
-        name: date.toLocaleDateString(locale, {
-          month: '2-digit',
-          day: '2-digit',
-          timeZone: 'UTC',
-        }),
-        requests: stat.count,
-        tokens: stat.tokens,
-        cost: stat.cost,
-      };
+  const formatCurrency = (val: number) =>
+    t('currencies.format', {
+      val,
+      currency: currencyCode,
+      locale,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
+
+  const { chartData, users } = useMemo(() => {
+    if (!data || data.length === 0) return { chartData: [] as ChartRow[], users: [] as { name: string; total: number }[] };
+
+    const top = data.slice(0, TOP_USERS);
+
+    // Collect the ordered set of dates from the first user's daily array
+    // (the backend zero-fills every user to the same date range).
+    const dates = top[0]?.daily.map((d) => d.date) ?? [];
+
+    const rows: ChartRow[] = dates.map((dateStr) => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const row: ChartRow = {
+        name: date.toLocaleDateString(locale, { month: '2-digit', day: '2-digit', timeZone: 'UTC' }),
+      };
+      return row;
+    });
+
+    top.forEach((user) => {
+      user.daily.forEach((d, idx) => {
+        if (rows[idx]) rows[idx][user.userName] = d.count;
+      });
+    });
+
+    const userTotals = top.map((user) => ({
+      name: user.userName,
+      total: user.daily.reduce((s, d) => s + d.count, 0),
+    }));
+
+    return { chartData: rows, users: userTotals };
   }, [data, locale]);
 
-  const domains = useMemo(() => {
-    const maxRequests = Math.max(...chartData.map((d) => d.requests), 0);
-    const maxTokens = Math.max(...chartData.map((d) => d.tokens), 0);
-    const maxCost = Math.max(...chartData.map((d) => d.cost), 0);
-    return {
-      requests: [0, Math.max(10, Math.ceil(maxRequests * 1.1))] as [number, number],
-      tokens: [0, Math.max(1000, Math.ceil(maxTokens * 1.1))] as [number, number],
-      cost: [0, Math.max(0.1, maxCost * 1.1)] as [number, number],
-    };
-  }, [chartData]);
+  const maxValue = useMemo(
+    () => Math.max(...chartData.flatMap((row) => users.map((u) => Number(row[u.name] ?? 0))), 0),
+    [chartData, users]
+  );
+  const yDomain = [0, Math.max(10, Math.ceil(maxValue * 1.1))] as [number, number];
+
+  const legendItems = users.map((u, index) => ({
+    name: u.name,
+    index: index + 1,
+    color: COLORS[index % COLORS.length],
+    primaryValue: formatNumber(u.total),
+  }));
+
+  type Payload = {
+    name?: string;
+    value?: number;
+    color?: string;
+    payload?: ChartRow;
+  };
+
+  type CombinedTooltipProps = TooltipProps<number, string> & {
+    payload?: Payload[];
+  };
+
+  const tooltipContent = (props: CombinedTooltipProps) => {
+    if (!props.active || !props.payload?.length) return null;
+    const row = props.payload[0]?.payload;
+    if (!row) return null;
+    const dateLabel = String(row.name);
+
+    // Pull token/cost for the hovered day from the raw data (top users only).
+    const dayEntries = (data ?? [])
+      .slice(0, TOP_USERS)
+      .map((user) => {
+        const idx = user.daily.findIndex((d) => {
+          const [y, m, d2] = d.date.split('-').map(Number);
+          return (
+            dateLabel ===
+            new Date(Date.UTC(y, m - 1, d2)).toLocaleDateString(locale, {
+              month: '2-digit',
+              day: '2-digit',
+              timeZone: 'UTC',
+            })
+          );
+        });
+        if (idx < 0) return null;
+        const stat = user.daily[idx];
+        return { name: user.userName, stat };
+      })
+      .filter((e): e is { name: string; stat: { count: number; tokens: number; cost: number } } => e !== null)
+      .sort((a, b) => b.stat.count - a.stat.count);
+
+    return (
+      <div className='bg-background/90 rounded-md border px-3 py-2 text-xs shadow-sm backdrop-blur'>
+        <div className='text-foreground text-sm font-medium mb-1'>{dateLabel}</div>
+        <div className='space-y-1 max-h-48 overflow-auto'>
+          {dayEntries.length === 0 ? (
+            <div className='text-muted-foreground'>{t('dashboard.charts.noUserData')}</div>
+          ) : (
+            dayEntries.map((e) => (
+              <div key={e.name} className='flex justify-between gap-4'>
+                <span className='text-muted-foreground'>{e.name}</span>
+                <span className='font-medium tabular-nums'>
+                  {formatNumber(e.stat.count)} · {formatNumber(e.stat.tokens)} · {formatCurrency(e.stat.cost)}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Card className='hover-card'>
@@ -108,102 +177,49 @@ export function WeeklyUsageLineChart({ mode }: WeeklyUsageLineChartProps) {
                 {t('dashboard.charts.errorLoadingChart')} {error.message}
               </div>
             </div>
-          ) : chartData.length === 0 ? (
+          ) : chartData.length === 0 || users.length === 0 ? (
             <div className='flex h-[300px] items-center justify-center'>
               <div className='text-muted-foreground text-sm'>{t('dashboard.charts.noUserData')}</div>
             </div>
           ) : (
-            <ResponsiveContainer width='100%' height={300}>
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
-                <XAxis
-                  dataKey='name'
-                  stroke='var(--muted-foreground)'
-                  fontSize={12}
-                  tickLine
-                  axisLine
-                />
-                <YAxis
-                  yAxisId='requests'
-                  stroke='var(--chart-1)'
-                  fontSize={12}
-                  tickLine
-                  axisLine
-                  domain={domains.requests}
-                  tickFormatter={(value) => formatNumber(value)}
-                  width={40}
-                  tickMargin={8}
-                />
-                <YAxis
-                  yAxisId='tokens'
-                  orientation='right'
-                  stroke='var(--chart-2)'
-                  fontSize={12}
-                  tickLine
-                  axisLine
-                  domain={domains.tokens}
-                  tickFormatter={(value) => formatNumber(value)}
-                  width={40}
-                  tickMargin={8}
-                />
-                <YAxis
-                  yAxisId='cost'
-                  orientation='right'
-                  stroke='var(--chart-3)'
-                  fontSize={12}
-                  tickLine
-                  axisLine
-                  domain={domains.cost}
-                  tickFormatter={formatCostTick}
-                  width={60}
-                  tickMargin={8}
-                />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  contentStyle={{
-                    backgroundColor: 'var(--background)',
-                    borderColor: 'var(--border)',
-                    borderRadius: 'var(--radius)',
-                    fontSize: '12px',
-                  }}
-                  itemStyle={{ padding: '2px 0' }}
-                />
-                <Legend verticalAlign='top' height={36} />
-                <Line
-                  yAxisId='requests'
-                  type='monotone'
-                  dataKey='requests'
-                  name={t('dashboard.stats.requests')}
-                  stroke='var(--chart-1)'
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  isAnimationActive={false}
-                />
-                <Line
-                  yAxisId='tokens'
-                  type='monotone'
-                  dataKey='tokens'
-                  name={t('dashboard.stats.totalTokens')}
-                  stroke='var(--chart-2)'
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 4 }}
-                  isAnimationActive={false}
-                />
-                <Line
-                  yAxisId='cost'
-                  type='monotone'
-                  dataKey='cost'
-                  name={t('dashboard.stats.totalCost')}
-                  stroke='var(--chart-3)'
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 4 }}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width='100%' height={300}>
+                <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
+                  <XAxis
+                    dataKey='name'
+                    stroke='var(--muted-foreground)'
+                    fontSize={12}
+                    tickLine
+                    axisLine
+                  />
+                  <YAxis
+                    stroke='var(--chart-1)'
+                    fontSize={12}
+                    tickLine
+                    axisLine
+                    domain={yDomain}
+                    tickFormatter={(value) => formatNumber(value)}
+                    width={40}
+                    tickMargin={8}
+                  />
+                  <Tooltip content={tooltipContent} cursor={{ stroke: 'var(--muted)' }} />
+                  {users.map((u, index) => (
+                    <Line
+                      key={u.name}
+                      type='monotone'
+                      dataKey={u.name}
+                      stroke={COLORS[index % COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 5 }}
+                      isAnimationActive={false}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+              <ChartLegend items={legendItems} />
+            </>
           )}
           {isFetching && !isLoading && (
             <div className='absolute inset-0 flex items-center justify-center bg-background/50'>

@@ -300,6 +300,22 @@ export const usageStatsByUserSchema = z.object({
 
 export type UsageStatsByUser = z.infer<typeof usageStatsByUserSchema>;
 
+export const dailyUsageStatSchema = z.object({
+  date: z.string(),
+  count: z.number(),
+  tokens: z.number(),
+  cost: z.number(),
+});
+
+export const dailyUsageStatsByUserSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  daily: z.array(dailyUsageStatSchema),
+});
+
+export type DailyUsageStat = z.infer<typeof dailyUsageStatSchema>;
+export type DailyUsageStatsByUser = z.infer<typeof dailyUsageStatsByUserSchema>;
+
 const USAGE_STATS_BY_USER_QUERY = `
   query GetUsageStatsByUser($timeWindow: String) {
     usageStatsByUser(timeWindow: $timeWindow) {
@@ -311,6 +327,41 @@ const USAGE_STATS_BY_USER_QUERY = `
     }
   }
 `;
+
+const DAILY_USAGE_STATS_BY_USER_QUERY = `
+  query GetDailyUsageStatsByUser($days: Int) {
+    dailyUsageStatsByUser(days: $days) {
+      userId
+      userName
+      daily {
+        date
+        count
+        tokens
+        cost
+      }
+    }
+  }
+`;
+
+export function useDailyUsageStatsByUser(days?: number) {
+  const selectedProjectId = useSelectedProjectId();
+
+  return useQuery({
+    queryKey: ['dailyUsageStatsByUser', days, selectedProjectId],
+    queryFn: async () => {
+      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ dailyUsageStatsByUser: DailyUsageStatsByUser[] }>(
+        DAILY_USAGE_STATS_BY_USER_QUERY,
+        { days },
+        headers
+      );
+      return data.dailyUsageStatsByUser.map((item) => dailyUsageStatsByUserSchema.parse(item));
+    },
+    enabled: !!selectedProjectId,
+    refetchInterval: 60000,
+    placeholderData: (previousData) => previousData,
+  });
+}
 
 export function useUsageStatsByUser(timeWindow?: string) {
   const selectedProjectId = useSelectedProjectId();

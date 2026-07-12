@@ -1895,7 +1895,192 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 	}), nil
 }
 
-// UserUsageStats is the resolver for the userUsageStats field.
+// DailyUsageStatsByUser is the resolver for the dailyUsageStatsByUser field.
+// It returns per-user daily usage (count/tokens/cost) for the last N days,
+// limited to the top users by total request count. Used by the user-analytics
+// weekly trend line chart. Permission/scope rules match UsageStatsByUser.
+func (r *queryResolver) DailyUsageStatsByUser(ctx context.Context, days *int) ([]*DailyUsageStatsByUser, error) {
+	currentUser, ok := contexts.GetUser(ctx)
+	if !ok || currentUser == nil {
+		return nil, fmt.Errorf("user not found in context")
+	}
+
+	projectID, hasProjectID := contexts.GetProjectID(ctx)
+
+	isProjectOwner := false
+	if currentUser.IsOwner {
+		isProjectOwner = true
+	} else if hasProjectID {
+		for _, up := range currentUser.Edges.ProjectUsers {
+			if up.ProjectID == projectID && up.IsOwner {
+				isProjectOwner = true
+				break
+			}
+		}
+	}
+
+	if !isProjectOwner {
+		return nil, fmt.Errorf("permission denied: only project owners can view usage statistics")
+	}
+
+	ctx = privacy.DecisionContext(ctx, privacy.Allow)
+
+	daysCount := 7
+	if days != nil && *days > 0 && *days <= 90 {
+		daysCount = *days
+	}
+
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	type userDailyStat struct {
+		UserID      int     `json:"user_id"`
+		FirstName   string  `json:"first_name"`
+		LastName    string  `json:"last_name"`
+		Email       string  `json:"email"`
+		Date        string  `json:"date"`
+		Count       int     `json:"request_count"`
+		TotalTokens int64   `json:"total_tokens"`
+		TotalCost   float64 `json:"total_cost"`
+	}
+
+	var results []userDailyStat
+
+	err := r.client.UsageLog.Query().
+		Where(
+			usagelog.APIKeyIDNotNil(),
+			usagelog.CreatedAtGTE(startDateUTC),
+			usagelog.CreatedAtLT(nowUTC),
+		).
+		Modify(func(s *sql.Selector) {
+			apiKeyTable := sql.Table(apikey.Table)
+			userTable := sql.Table("users")
+
+			s.Join(apiKeyTable).On(
+				s.C(usagelog.FieldAPIKeyID),
+				apiKeyTable.C(apikey.FieldID),
+			)
+			s.Join(userTable).On(
+				apiKeyTable.C(apikey.FieldUserID),
+				userTable.C("id"),
+			)
+
+			s.Where(sql.EQ(apiKeyTable.C(apikey.FieldDeletedAt), 0))
+
+			createdAtCol := s.C(usagelog.FieldCreatedAt)
+			var dateExpr string
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+
+			s.Select(
+				sql.As(userTable.C("id"), "user_id"),
+				sql.As(userTable.C("first_name"), "first_name"),
+				sql.As(userTable.C("last_name"), "last_name"),
+				sql.As(userTable.C("email"), "email"),
+				sql.As(dateExpr, "date"),
+				sql.As(sql.Count(s.C(usagelog.FieldID)), "request_count"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalTokens)), "total_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			).
+				GroupBy(
+					userTable.C("id"),
+					userTable.C("first_name"),
+					userTable.C("last_name"),
+					userTable.C("email"),
+					dateExpr,
+				)
+		}).Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get daily usage stats by user: %w", err)
+	}
+
+	// Build the ordered list of date strings for the window (for zero-fill).
+	dates := make([]string, 0, daysCount)
+	for i := range daysCount {
+		dates = append(dates, startDateLocal.AddDate(0, 0, i).Format("2006-01-02"))
+	}
+
+	type userBucket struct {
+		userName string
+		daily    map[string]userDailyStat
+		total    int
+	}
+
+	buckets := make(map[int]*userBucket)
+	for _, row := range results {
+		b, exists := buckets[row.UserID]
+		if !exists {
+			b = &userBucket{daily: make(map[string]userDailyStat)}
+			buckets[row.UserID] = b
+		}
+		b.daily[row.Date] = row
+		b.total += row.Count
+	}
+
+	// Sort users by total request count desc, take top 10.
+	sortedIDs := make([]int, 0, len(buckets))
+	for id := range buckets {
+		sortedIDs = append(sortedIDs, id)
+	}
+	sort.Slice(sortedIDs, func(i, j int) bool {
+		return buckets[sortedIDs[i]].total > buckets[sortedIDs[j]].total
+	})
+	if len(sortedIDs) > 10 {
+		sortedIDs = sortedIDs[:10]
+	}
+
+	response := make([]*DailyUsageStatsByUser, 0, len(sortedIDs))
+	for _, uid := range sortedIDs {
+		b := buckets[uid]
+		// first_name/last_name/email are identical across all rows for a user;
+		// pull from any present row.
+		var firstName, lastName, email string
+		for _, row := range b.daily {
+			firstName, lastName, email = row.FirstName, row.LastName, row.Email
+			break
+		}
+		userName := strings.TrimSpace(fmt.Sprintf("%s %s", firstName, lastName))
+		if userName == "" {
+			userName = email
+		}
+
+		daily := make([]*DailyUsageStat, 0, daysCount)
+		for _, d := range dates {
+			if row, ok := b.daily[d]; ok {
+				daily = append(daily, &DailyUsageStat{
+					Date:   d,
+					Count:  row.Count,
+					Tokens: int(row.TotalTokens),
+					Cost:   row.TotalCost,
+				})
+			} else {
+				daily = append(daily, &DailyUsageStat{Date: d, Count: 0, Tokens: 0, Cost: 0})
+			}
+		}
+
+		response = append(response, &DailyUsageStatsByUser{
+			UserID:   objects.GUID{Type: ent.TypeUser, ID: uid},
+			UserName: userName,
+			Daily:    daily,
+		})
+	}
+
+	return response, nil
+}
+
 func (r *queryResolver) UserUsageStats(ctx context.Context, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) (*UserUsageStatsPayload, error) {
 	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
 

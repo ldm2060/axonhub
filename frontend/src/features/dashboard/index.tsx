@@ -321,7 +321,7 @@ function DashboardContent({
           </div>
           <div className='grid gap-4 md:grid-cols-2'>
             <UserUsageBarChart timePeriod={userTimePeriod} metric='requests' />
-            <WeeklyUsageLineChart mode={mode} />
+            <WeeklyUsageLineChart />
           </div>
         </CollapsibleSection>
       )}

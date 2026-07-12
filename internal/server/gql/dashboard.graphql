@@ -222,6 +222,25 @@ type UsageStatsByUser {
   totalCost: Float!
 }
 
+"""
+Daily usage breakdown for a single user
+"""
+type DailyUsageStat {
+  date: String!
+  count: Int!
+  tokens: Int!
+  cost: Float!
+}
+
+"""
+Daily usage breakdown per user, used by the user-analytics weekly trend chart
+"""
+type DailyUsageStatsByUser {
+  userId: ID!
+  userName: String!
+  daily: [DailyUsageStat!]!
+}
+
 extend type Query {
   dashboardOverview: DashboardOverview!
   requestStats: RequestStats!
@@ -252,6 +271,10 @@ extend type Query {
   costStatsByModel(timeWindow: String): [CostStatsByModel!]!
   costStatsByAPIKey(timeWindow: String): [CostStatsByAPIKey!]!
   usageStatsByUser(timeWindow: String): [UsageStatsByUser!]!
+  """
+  Daily usage breakdown per user for the last N days (default 7), top users by request count
+  """
+  dailyUsageStatsByUser(days: Int): [DailyUsageStatsByUser!]!
   """
   Get user usage statistics with pagination, search, and sorting
   """

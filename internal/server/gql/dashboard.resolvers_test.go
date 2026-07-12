@@ -481,3 +481,151 @@ func TestUsageStatsByUser_IncludesAllUsersInProject(t *testing.T) {
 		})
 	}
 }
+
+// TestDailyUsageStatsByUser verifies the per-user weekly trend resolver: each
+// returned user has a 7-day daily array (zero-filled), dates are ordered, and
+// users are sorted by total request count desc.
+func TestDailyUsageStatsByUser(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	defer client.Close()
+
+	systemService := biz.NewSystemService(biz.SystemServiceParams{
+		Ent:         client,
+		CacheConfig: xcache.Config{Mode: xcache.ModeMemory},
+	})
+
+	seedCtx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
+
+	proj, err := client.Project.Create().
+		SetName("P").
+		SetStatus(project.StatusActive).
+		Save(seedCtx)
+	require.NoError(t, err)
+
+	mustUser := func(email, first string, owner bool) *ent.User {
+		u, e := client.User.Create().
+			SetEmail(email).
+			SetPassword("x").
+			SetFirstName(first).
+			SetLastName("U").
+			SetStatus(user.StatusActivated).
+			SetIsOwner(owner).
+			Save(seedCtx)
+		require.NoError(t, e)
+		return u
+	}
+	admin := mustUser("admin@example.com", "Admin", true)
+	userA := mustUser("a@example.com", "UserA", false)
+	userB := mustUser("b@example.com", "UserB", false)
+
+	mustKey := func(name string, u *ent.User) *ent.APIKey {
+		k, e := client.APIKey.Create().
+			SetName(name).
+			SetKey(fmt.Sprintf("key-%s-%d", name, time.Now().UnixNano())).
+			SetUserID(u.ID).
+			SetProjectID(proj.ID).
+			SetType(apikey.TypePersonal).
+			SetStatus(apikey.StatusEnabled).
+			Save(seedCtx)
+		require.NoError(t, e)
+		return k
+	}
+	adminKey := mustKey("admin-key", admin)
+	userAKey := mustKey("a-key", userA)
+	userBKey := mustKey("b-key", userB)
+
+	addUsage := func(k *ent.APIKey, when time.Time) {
+		req, e := client.Request.Create().
+			SetProjectID(proj.ID).
+			SetAPIKeyID(k.ID).
+			SetModelID("m").
+			SetFormat("openai/chat_completions").
+			SetStatus(request.StatusCompleted).
+			SetRequestBody(objects.JSONRawMessage([]byte(`{}`))).
+			SetCreatedAt(when).
+			Save(seedCtx)
+		require.NoError(t, e)
+		_, e = client.UsageLog.Create().
+			SetRequestID(req.ID).
+			SetAPIKeyID(k.ID).
+			SetProjectID(proj.ID).
+			SetChannelID(0).
+			SetModelID("m").
+			SetSource(usagelog.SourceAPI).
+			SetFormat("openai/chat_completions").
+			SetPromptTokens(1).
+			SetCompletionTokens(1).
+			SetTotalTokens(2).
+			SetTotalCost(0.01).
+			SetCreatedAt(when).
+			Save(seedCtx)
+		require.NoError(t, e)
+	}
+
+	now := time.Now().UTC()
+	// admin: 3 requests today; userA: 1 yesterday; userB: 2 today.
+	addUsage(adminKey, now.Add(-1*time.Hour))
+	addUsage(adminKey, now.Add(-2*time.Hour))
+	addUsage(adminKey, now.Add(-3*time.Hour))
+	addUsage(userAKey, now.Add(-26*time.Hour))
+	addUsage(userBKey, now.Add(-4*time.Hour))
+	addUsage(userBKey, now.Add(-5*time.Hour))
+
+	callCtx := ent.NewContext(context.Background(), client)
+	callCtx = contexts.WithUser(callCtx, admin)
+	callCtx = contexts.WithProjectID(callCtx, proj.ID)
+	callCtx = authz.WithTestBypass(callCtx)
+
+	resolver := &queryResolver{&Resolver{client: client, systemService: systemService}}
+
+	days := 7
+	stats, err := resolver.DailyUsageStatsByUser(callCtx, lo.ToPtr(days))
+	require.NoError(t, err)
+
+	// Every user with usage is returned (3 < top-10 limit).
+	names := func() []string {
+		out := make([]string, 0, len(stats))
+		for _, s := range stats {
+			out = append(out, s.UserName)
+		}
+		return out
+	}
+	assert.ElementsMatch(t, []string{"Admin U", "UserA U", "UserB U"}, names())
+
+	// Each user has a full 7-day window, dates ordered ascending.
+	for _, s := range stats {
+		require.Len(t, s.Daily, days)
+		for i := 1; i < len(s.Daily); i++ {
+			assert.True(t, s.Daily[i].Date >= s.Daily[i-1].Date, "dates must be ordered: %v", s.Daily)
+		}
+	}
+
+	// Total counts per user match the seed, and ordering is desc by total.
+	require.GreaterOrEqual(t, len(stats), 3)
+	assert.Equal(t, "Admin U", stats[0].UserName)
+	sum := func(s *DailyUsageStatsByUser) int {
+		n := 0
+		for _, d := range s.Daily {
+			n += d.Count
+		}
+		return n
+	}
+	assert.Equal(t, 3, sum(stats[0]))
+	// userB (2) before userA (1).
+	assert.Equal(t, "UserB U", stats[1].UserName)
+	assert.Equal(t, 2, sum(stats[1]))
+	assert.Equal(t, "UserA U", stats[2].UserName)
+	assert.Equal(t, 1, sum(stats[2]))
+
+	// Zero-fill: at least one day per user has count 0.
+	for _, s := range stats {
+		hasZero := false
+		for _, d := range s.Daily {
+			if d.Count == 0 {
+				hasZero = true
+				break
+			}
+		}
+		assert.True(t, hasZero, "user %s should have a zero-fill day", s.UserName)
+	}
+}

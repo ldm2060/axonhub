@@ -111,7 +111,7 @@
   "dashboard.charts.costByUserDescription": "各用户的费用分布。",
   "dashboard.charts.noUserData": "暂无用户使用数据",
   "dashboard.charts.weeklyUsageTrend": "最近一周趋势",
-  "dashboard.charts.weeklyUsageTrendDescription": "最近7天按日的请求、Token与费用趋势。",
+  "dashboard.charts.weeklyUsageTrendDescription": "最近7天各用户的每日请求数趋势。",
   "dashboard.stats.user": "用户",
   "dashboard.stats.requestCount": "请求数",
   "dashboard.stats.tokenCount": "Token数",

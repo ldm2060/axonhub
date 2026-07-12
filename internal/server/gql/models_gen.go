@@ -214,6 +214,21 @@ type DailyRequestStats struct {
 	Cost   float64 `json:"cost"`
 }
 
+// Daily usage breakdown for a single user
+type DailyUsageStat struct {
+	Date   string  `json:"date"`
+	Count  int     `json:"count"`
+	Tokens int     `json:"tokens"`
+	Cost   float64 `json:"cost"`
+}
+
+// Daily usage breakdown per user, used by the user-analytics weekly trend chart
+type DailyUsageStatsByUser struct {
+	UserID   objects.GUID      `json:"userId"`
+	UserName string            `json:"userName"`
+	Daily    []*DailyUsageStat `json:"daily"`
+}
+
 type DashboardOverview struct {
 	TotalRequests       int           `json:"totalRequests"`
 	RequestStats        *RequestStats `json:"requestStats"`
