@@ -18,7 +18,6 @@ import {
   useRequestContent,
   useRequestExecutions,
 } from '../data';
-import { useUsageLogs } from '../data/usage-logs';
 import { generateRequestCurl } from '../utils/curl-generator';
 import { parseResponse } from '../utils/response-parser';
 import { ChunksDialog } from './chunks-dialog';
@@ -333,14 +332,10 @@ function ResponseContentPanel({
   );
 }
 
-function OverviewPanel({ request, requestId, projectId }: { request: RequestMetadata; requestId: string; projectId?: string | null }) {
+function OverviewPanel({ request }: { request: RequestMetadata }) {
   const { t, i18n } = useTranslation();
   const { data: settings } = useGeneralSettings();
-  const { data: usageLogs } = useUsageLogs(
-    { first: 1, where: { requestID: requestId }, orderBy: { field: 'CREATED_AT', direction: 'DESC' } },
-    { projectId, enabled: true }
-  );
-  const usage = usageLogs?.edges[0]?.node;
+  const usage = request.usageLogs?.edges?.[0]?.node;
 
   return (
     <div className='space-y-6'>
@@ -465,7 +460,7 @@ export function RequestDetailContent({
           </div>
 
           <TabsContent value='overview' className='p-6'>
-            {activeTab === 'overview' && <OverviewPanel request={request} requestId={requestId} projectId={projectId} />}
+            {activeTab === 'overview' && <OverviewPanel request={request} />}
           </TabsContent>
           <TabsContent value='request' className='p-6'>
             {activeTab === 'request' && <RequestContentPanel request={request} requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />}

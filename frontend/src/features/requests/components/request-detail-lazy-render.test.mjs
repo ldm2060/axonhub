@@ -27,6 +27,11 @@ test('response preview is gated by the active response tab', () => {
   assert.match(projectPageSource, /!isLivePreviewEnabled \|\| !isResponseActive/);
 });
 
+test('overview reuses the metadata usage summary', () => {
+  assert.doesNotMatch(detailSource, /useUsageLogs\(/);
+  assert.match(detailSource, /request\.usageLogs\?\.edges/);
+});
+
 test('execution summaries mount one node-scoped content panel at a time', () => {
   assert.match(detailSource, /expandedExecutionId/);
   assert.match(detailSource, /nextExpandedExecution/);
