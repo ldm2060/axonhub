@@ -205,12 +205,23 @@ func WriteSSEStreamWithOptionsAndErrorFormatter(c *gin.Context, stream streams.S
 
 	// Set SSE headers
 	c.Header("Content-Type", sse.ContentType)
-	c.Header("Cache-Control", "no-cache")
+	c.Header("Cache-Control", "no-cache, no-transform")
 	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
 	c.Writer.Flush()
 
+	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
 	for {
-		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		result := waiter.Next()
+		if result.heartbeat {
+			if _, err := c.Writer.Write([]byte(": keepalive\n\n")); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write SSE keepalive", log.Cause(err))
+				return
+			}
+			c.Writer.Flush()
+			continue
+		}
 		if result.ok {
 			cur := result.event
 			c.SSEvent(cur.Type, cur.Data)

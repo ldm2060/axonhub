@@ -97,13 +97,25 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 	}()
 
 	c.Header("Content-Type", "application/json; charset=UTF-8")
+	c.Header("Cache-Control", "no-cache, no-transform")
+	c.Header("X-Accel-Buffering", "no")
 
 	_, _ = c.Writer.Write([]byte("["))
 
 	first := true
+	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
 
 	for {
-		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		result := waiter.Next()
+		if result.heartbeat {
+			if _, err := c.Writer.Write([]byte("\n")); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write Gemini keepalive", log.Cause(err))
+				return
+			}
+			c.Writer.Flush()
+			continue
+		}
 		if result.ok {
 			cur := result.event
 

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -88,6 +89,114 @@ func TestNextStreamEventReturnsUpstreamErrorAtEOF(t *testing.T) {
 
 	require.False(t, result.ok)
 	require.EqualError(t, result.err, "upstream failed")
+}
+
+func TestStreamEventWaiterReturnsHeartbeatBeforeDelayedEvent(t *testing.T) {
+	stream := newBlockingTestStream()
+	waiter := newStreamEventWaiter(t.Context(), stream, time.Second, 10*time.Millisecond)
+
+	result := waiter.Next()
+	require.True(t, result.heartbeat)
+	require.False(t, result.ok)
+
+	want := &httpclient.StreamEvent{Type: "message", Data: []byte(`{"ok":true}`)}
+	go func() {
+		stream.nextCh <- want
+	}()
+
+	result = waiter.Next()
+	require.True(t, result.ok)
+	require.False(t, result.heartbeat)
+	require.Equal(t, want, result.event)
+}
+
+func TestStreamEventWaiterHeartbeatDoesNotResetIdleTimeout(t *testing.T) {
+	stream := newBlockingTestStream()
+	waiter := newStreamEventWaiter(t.Context(), stream, 35*time.Millisecond, 5*time.Millisecond)
+	started := time.Now()
+	heartbeats := 0
+
+	for {
+		result := waiter.Next()
+		if result.heartbeat {
+			heartbeats++
+			continue
+		}
+
+		require.ErrorIs(t, result.err, ErrStreamIdleTimeout)
+		break
+	}
+
+	require.GreaterOrEqual(t, heartbeats, 2)
+	require.Less(t, time.Since(started), 150*time.Millisecond)
+}
+
+func TestWriteSSEStreamWithOptionsEmitsCommentHeartbeat(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	stream := newBlockingTestStream()
+
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		stream.nextCh <- &httpclient.StreamEvent{Type: "message", Data: []byte(`{"ok":true}`)}
+		close(stream.nextCh)
+	}()
+
+	WriteSSEStreamWithOptions(c, stream, StreamWriteOptions{
+		IdleTimeout:       time.Second,
+		KeepaliveInterval: 5 * time.Millisecond,
+	})
+
+	body := w.Body.String()
+	require.Contains(t, body, ": keepalive\n\n")
+	require.Contains(t, body, `event:message`)
+	require.Contains(t, body, `data: {"ok":true}`)
+}
+
+func TestWriteSSEStreamWithOptionsDoesNotEmitHeartbeatWhenDisabled(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	stream := newBlockingTestStream()
+
+	go func() {
+		stream.nextCh <- &httpclient.StreamEvent{Data: []byte(`{"ok":true}`)}
+		close(stream.nextCh)
+	}()
+
+	WriteSSEStreamWithOptions(c, stream, StreamWriteOptions{IdleTimeout: time.Second})
+
+	require.NotContains(t, w.Body.String(), ": keepalive")
+}
+
+func TestWriteGeminiStreamWithOptionsKeepsJSONValidWithHeartbeat(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	stream := newBlockingTestStream()
+
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		stream.nextCh <- &httpclient.StreamEvent{Data: []byte(`{"step":1}`)}
+		close(stream.nextCh)
+	}()
+
+	WriteGeminiStreamWithOptions(c, stream, StreamWriteOptions{
+		IdleTimeout:       time.Second,
+		KeepaliveInterval: 5 * time.Millisecond,
+	})
+
+	var body []map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.Equal(t, float64(1), body[0]["step"])
+	require.Contains(t, w.Body.String(), "\n")
 }
 
 func TestWriteSSEStreamWithOptionsEmitsErrorOnIdleTimeout(t *testing.T) {
