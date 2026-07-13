@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import useInterval from './useInterval';
+import { reconcileAnimatedQueue } from './animated-list-state';
 
 const MAX_ITEMS = 50;
 const parsedInterval = parseInt(import.meta.env.VITE_REQUESTS_ANIMATION_INTERVAL, 10);
@@ -51,26 +52,12 @@ export function useAnimatedList<T extends { id: string; createdAt: Date | string
         return newItem ? newItem : item;
       });
 
-      const newestCurrentTime = currentDisplayed.length > 0 ? getTimestamp(currentDisplayed[0].createdAt) : 0;
-
-      const newItems = data.filter((item) => {
-        const isNew = !currentIds.has(item.id);
-        const isNewer = getTimestamp(item.createdAt) > newestCurrentTime;
-        return isNew && isNewer;
-      });
-
-      const sortedNewItems = newItems.sort((a, b) => getTimestamp(a.createdAt) - getTimestamp(b.createdAt));
-
-      sortedNewItems.forEach((item) => {
-        if (!queueRef.current.some((q) => q.id === item.id)) {
-          queueRef.current.push(item);
-        }
-      });
+      queueRef.current = reconcileAnimatedQueue(queueRef.current, data, currentDisplayed, pageSize);
 
       prevDataLengthRef.current = data.length;
       return updatedDisplayed;
     });
-  }, [data, autoRefresh]);
+  }, [data, autoRefresh, pageSize]);
 
   useInterval(
     () => {
