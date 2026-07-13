@@ -1914,7 +1914,8 @@ type ComplexityRoot struct {
 	}
 
 	StreamingSettings struct {
-		WebSocketKeepaliveIntervalSeconds func(childComplexity int) int
+		HTTPStreamKeepaliveIntervalSeconds func(childComplexity int) int
+		WebSocketKeepaliveIntervalSeconds  func(childComplexity int) int
 	}
 
 	SyncChannelModelsPayload struct {
@@ -11335,6 +11336,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.StoragePolicy.StoreResponseBody(childComplexity), true
+
+	case "StreamingSettings.httpStreamKeepaliveIntervalSeconds":
+		if e.complexity.StreamingSettings.HTTPStreamKeepaliveIntervalSeconds == nil {
+			break
+		}
+
+		return e.complexity.StreamingSettings.HTTPStreamKeepaliveIntervalSeconds(childComplexity), true
 
 	case "StreamingSettings.webSocketKeepaliveIntervalSeconds":
 		if e.complexity.StreamingSettings.WebSocketKeepaliveIntervalSeconds == nil {
@@ -52806,6 +52814,8 @@ func (ec *executionContext) fieldContext_Query_streamingSettings(_ context.Conte
 			switch field.Name {
 			case "webSocketKeepaliveIntervalSeconds":
 				return ec.fieldContext_StreamingSettings_webSocketKeepaliveIntervalSeconds(ctx, field)
+			case "httpStreamKeepaliveIntervalSeconds":
+				return ec.fieldContext_StreamingSettings_httpStreamKeepaliveIntervalSeconds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type StreamingSettings", field.Name)
 		},
@@ -62083,6 +62093,35 @@ func (ec *executionContext) fieldContext_StoragePolicy_cleanupOptions(_ context.
 				return ec.fieldContext_CleanupOption_cleanupDays(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CleanupOption", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StreamingSettings_httpStreamKeepaliveIntervalSeconds(ctx context.Context, field graphql.CollectedField, obj *biz.StreamingSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_StreamingSettings_httpStreamKeepaliveIntervalSeconds,
+		func(ctx context.Context) (any, error) {
+			return obj.HTTPStreamKeepaliveIntervalSeconds, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_StreamingSettings_httpStreamKeepaliveIntervalSeconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StreamingSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -100777,7 +100816,7 @@ func (ec *executionContext) unmarshalInputUpdateStreamingSettingsInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"webSocketKeepaliveIntervalSeconds"}
+	fieldsInOrder := [...]string{"webSocketKeepaliveIntervalSeconds", "httpStreamKeepaliveIntervalSeconds"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -100791,6 +100830,13 @@ func (ec *executionContext) unmarshalInputUpdateStreamingSettingsInput(ctx conte
 				return it, err
 			}
 			it.WebSocketKeepaliveIntervalSeconds = data
+		case "httpStreamKeepaliveIntervalSeconds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("httpStreamKeepaliveIntervalSeconds"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HTTPStreamKeepaliveIntervalSeconds = data
 		}
 	}
 
@@ -125648,6 +125694,11 @@ func (ec *executionContext) _StreamingSettings(ctx context.Context, sel ast.Sele
 			out.Values[i] = graphql.MarshalString("StreamingSettings")
 		case "webSocketKeepaliveIntervalSeconds":
 			out.Values[i] = ec._StreamingSettings_webSocketKeepaliveIntervalSeconds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "httpStreamKeepaliveIntervalSeconds":
+			out.Values[i] = ec._StreamingSettings_httpStreamKeepaliveIntervalSeconds(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

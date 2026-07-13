@@ -466,12 +466,16 @@ type UpstreamErrorPolicy struct {
 	CustomMessage string `json:"custom_message"`
 }
 
-// StreamingSettings configures inbound WebSocket streaming behavior.
+// StreamingSettings configures inbound streaming behavior.
 type StreamingSettings struct {
 	// WebSocketKeepaliveIntervalSeconds controls how often a PING control frame is
 	// sent on an idle inbound WebSocket stream to prevent proxies / load balancers
 	// from closing long-running connections. 0 disables keepalive.
 	WebSocketKeepaliveIntervalSeconds int `json:"web_socket_keepalive_interval_seconds"`
+
+	// HTTPStreamKeepaliveIntervalSeconds controls how often protocol-safe heartbeat
+	// bytes are sent on idle compatible HTTP text streams. 0 disables keepalive.
+	HTTPStreamKeepaliveIntervalSeconds int `json:"http_stream_keepalive_interval_seconds"`
 }
 
 type AutoDisableChannel struct {
@@ -1186,6 +1190,9 @@ func normalizeStreamingSettings(settings *StreamingSettings) {
 
 	if settings.WebSocketKeepaliveIntervalSeconds < 0 {
 		settings.WebSocketKeepaliveIntervalSeconds = 0
+	}
+	if settings.HTTPStreamKeepaliveIntervalSeconds < 0 {
+		settings.HTTPStreamKeepaliveIntervalSeconds = 0
 	}
 }
 

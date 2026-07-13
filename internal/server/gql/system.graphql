@@ -192,10 +192,12 @@ input UpdateRetryPolicyInput {
 
 type StreamingSettings {
   webSocketKeepaliveIntervalSeconds: Int!
+  httpStreamKeepaliveIntervalSeconds: Int!
 }
 
 input UpdateStreamingSettingsInput {
   webSocketKeepaliveIntervalSeconds: Int
+  httpStreamKeepaliveIntervalSeconds: Int
 }
 
 enum QuotaEnforcementMode {

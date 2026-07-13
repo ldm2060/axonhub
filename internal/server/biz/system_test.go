@@ -1164,23 +1164,44 @@ func TestClientRestrictionLevel_UnmarshalJSON_NonString(t *testing.T) {
 func TestStreamingSettings_Normalize(t *testing.T) {
 	t.Parallel()
 
-	settings := &StreamingSettings{WebSocketKeepaliveIntervalSeconds: -5}
+	settings := &StreamingSettings{
+		WebSocketKeepaliveIntervalSeconds:  -5,
+		HTTPStreamKeepaliveIntervalSeconds: -7,
+	}
 	normalizeStreamingSettings(settings)
 	require.Equal(t, 0, settings.WebSocketKeepaliveIntervalSeconds)
+	require.Equal(t, 0, settings.HTTPStreamKeepaliveIntervalSeconds)
 
-	settings = &StreamingSettings{WebSocketKeepaliveIntervalSeconds: 15}
+	settings = &StreamingSettings{
+		WebSocketKeepaliveIntervalSeconds:  15,
+		HTTPStreamKeepaliveIntervalSeconds: 20,
+	}
 	normalizeStreamingSettings(settings)
 	require.Equal(t, 15, settings.WebSocketKeepaliveIntervalSeconds)
+	require.Equal(t, 20, settings.HTTPStreamKeepaliveIntervalSeconds)
+}
+
+func TestStreamingSettings_LegacyJSONDefaultsHTTPKeepaliveToDisabled(t *testing.T) {
+	t.Parallel()
+
+	var got StreamingSettings
+	require.NoError(t, json.Unmarshal([]byte(`{"web_socket_keepalive_interval_seconds":12}`), &got))
+	require.Equal(t, 12, got.WebSocketKeepaliveIntervalSeconds)
+	require.Zero(t, got.HTTPStreamKeepaliveIntervalSeconds)
 }
 
 func TestStreamingSettings_MarshalRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	settings := &StreamingSettings{WebSocketKeepaliveIntervalSeconds: 12}
+	settings := &StreamingSettings{
+		WebSocketKeepaliveIntervalSeconds:  12,
+		HTTPStreamKeepaliveIntervalSeconds: 25,
+	}
 	data, err := json.Marshal(settings)
 	require.NoError(t, err)
 
 	var got StreamingSettings
 	require.NoError(t, json.Unmarshal(data, &got))
 	require.Equal(t, 12, got.WebSocketKeepaliveIntervalSeconds)
+	require.Equal(t, 25, got.HTTPStreamKeepaliveIntervalSeconds)
 }

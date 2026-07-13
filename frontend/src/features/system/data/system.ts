@@ -594,6 +594,7 @@ const STREAMING_SETTINGS_QUERY = `
   query StreamingSettings {
     streamingSettings {
       webSocketKeepaliveIntervalSeconds
+      httpStreamKeepaliveIntervalSeconds
     }
   }
 `;
@@ -606,10 +607,12 @@ const UPDATE_STREAMING_SETTINGS_MUTATION = `
 
 export interface StreamingSettings {
   webSocketKeepaliveIntervalSeconds: number;
+  httpStreamKeepaliveIntervalSeconds: number;
 }
 
 export interface UpdateStreamingSettingsInput {
   webSocketKeepaliveIntervalSeconds?: number;
+  httpStreamKeepaliveIntervalSeconds?: number;
 }
 
 export function useStreamingSettings() {
