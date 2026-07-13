@@ -32,6 +32,13 @@ test('overview reuses the metadata usage summary', () => {
   assert.match(detailSource, /request\.usageLogs\?\.edges/);
 });
 
+test('overview preserves detailed usage metrics from the metadata summary', () => {
+  assert.match(detailSource, /completionReasoningTokens/);
+  assert.match(detailSource, /promptWriteCachedTokens/);
+  assert.match(detailSource, /cacheHitRate/);
+  assert.match(detailSource, /writeCacheRate/);
+});
+
 test('execution summaries mount one node-scoped content panel at a time', () => {
   assert.match(detailSource, /expandedExecutionId/);
   assert.match(detailSource, /nextExpandedExecution/);

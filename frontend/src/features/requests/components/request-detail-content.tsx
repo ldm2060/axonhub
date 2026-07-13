@@ -336,6 +336,19 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
   const { t, i18n } = useTranslation();
   const { data: settings } = useGeneralSettings();
   const usage = request.usageLogs?.edges?.[0]?.node;
+  const promptTokens = usage?.promptTokens || 0;
+  const cachedTokens = usage?.promptCachedTokens || 0;
+  const writeCachedTokens = usage?.promptWriteCachedTokens || 0;
+  const reasoningTokens = usage?.completionReasoningTokens || 0;
+  const cacheHitRate = promptTokens > 0 && cachedTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
+  const writeCacheRate = promptTokens > 0 && writeCachedTokens > 0 ? ((writeCachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
+  const formatCurrency = (value: number) =>
+    t('currencies.format', {
+      val: value,
+      currency: settings?.currencyCode,
+      locale: i18n.language === 'zh' ? 'zh-CN' : 'en-US',
+      minimumFractionDigits: 6,
+    });
 
   return (
     <div className='space-y-6'>
@@ -360,10 +373,25 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
           <CardHeader className='pb-2'><CardTitle className='text-base'>{t('requests.detail.tabs.usage')}</CardTitle></CardHeader>
           <CardContent>
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
-              <div className='bg-muted/30 rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('usageLogs.columns.inputLabel')}</p><p className='font-semibold'>{usage.promptTokens.toLocaleString()}</p></div>
-              <div className='bg-muted/30 rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('usageLogs.columns.outputLabel')}</p><p className='font-semibold'>{usage.completionTokens.toLocaleString()}</p></div>
-              <div className='bg-muted/30 rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('usageLogs.columns.promptCachedTokens')}</p><p className='font-semibold'>{(usage.promptCachedTokens || 0).toLocaleString()}</p></div>
-              <div className='bg-muted/30 rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('requests.columns.cost')}</p><p className='font-semibold'>{t('currencies.format', { val: usage.totalCost ?? 0, currency: settings?.currencyCode, locale: i18n.language === 'zh' ? 'zh-CN' : 'en-US', minimumFractionDigits: 6 })}</p></div>
+              <div className='bg-muted/30 rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.inputLabel')}</p>
+                <p className='font-semibold'>{usage.promptTokens.toLocaleString()}</p>
+              </div>
+              <div className='bg-muted/30 rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.outputLabel')}</p>
+                <p className='font-semibold'>{usage.completionTokens.toLocaleString()}</p>
+                {reasoningTokens > 0 && <p className='text-muted-foreground text-xs'>{t('requests.columns.reasoning')}: {reasoningTokens.toLocaleString()}</p>}
+              </div>
+              <div className='bg-muted/30 rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.promptCachedTokens')}</p>
+                <p className='font-semibold'>{cachedTokens.toLocaleString()}</p>
+                {cachedTokens > 0 && <p className='text-muted-foreground text-xs'>{cacheHitRate}%</p>}
+                {writeCachedTokens > 0 && <p className='text-muted-foreground text-xs'>{t('requests.columns.writeCache')}: {writeCachedTokens.toLocaleString()} ({writeCacheRate}%)</p>}
+              </div>
+              <div className='bg-muted/30 rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('requests.columns.cost')}</p>
+                <p className='font-semibold'>{formatCurrency(usage.totalCost ?? 0)}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
