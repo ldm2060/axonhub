@@ -13,6 +13,7 @@ import { Main } from '@/components/layout/main';
 import { useStoragePolicy } from '@/features/system/data/system';
 import { type Request, useRequest } from '../data';
 import { RequestDetailContent } from './request-detail-content';
+import { createPreviewChunkBatcher } from './preview-chunk-batcher';
 
 type PreviewFallbackResponse = {
   mode?: string;
@@ -127,10 +128,12 @@ export default function RequestDetailPage() {
   const { data: storagePolicy } = useStoragePolicy();
   const isLivePreviewEnabled = storagePolicy?.livePreview ?? false;
   const [previewRequest, setPreviewRequest] = useState<Request | null>(null);
+  const [previewVersion, setPreviewVersion] = useState(0);
   const [isPreviewStreaming, setIsPreviewStreaming] = useState(false);
   const [previewFallbackActive, setPreviewFallbackActive] = useState(false);
   const previewCompletedRef = useRef(false);
   const previewChunkCountRef = useRef(0);
+  const previewChunksRef = useRef<any[]>([]);
 
   const { data: requestData, refetch: refetchRequest } = useRequest(requestGUID, {
     projectId: selectedProjectId,
@@ -152,6 +155,7 @@ export default function RequestDetailPage() {
       setPreviewFallbackActive(false);
       previewCompletedRef.current = false;
       previewChunkCountRef.current = 0;
+      previewChunksRef.current = [];
     }
   }, [requestData]);
 
@@ -162,6 +166,7 @@ export default function RequestDetailPage() {
       setPreviewFallbackActive(false);
       previewCompletedRef.current = false;
       previewChunkCountRef.current = 0;
+      previewChunksRef.current = [];
       return;
     }
 
@@ -187,9 +192,11 @@ export default function RequestDetailPage() {
       return;
     }
 
+    const activeRequest = requestData;
+    const activeProjectId = selectedProjectId;
     const controller = new AbortController();
     let isDisposed = false;
-    let reconnectTimer: ReturnType<typeof window.setTimeout> | null = null;
+    let reconnectTimer: number | null = null;
     let reconnectAttempt = 0;
 
     previewCompletedRef.current = false;
@@ -200,6 +207,13 @@ export default function RequestDetailPage() {
       responseChunks: [],
     });
     previewChunkCountRef.current = 0;
+    previewChunksRef.current = [];
+
+    const chunkBatcher = createPreviewChunkBatcher<any>((batch) => {
+      if (isDisposed) return;
+      previewChunksRef.current.push(...batch);
+      setPreviewVersion((version) => version + 1);
+    });
 
     const clearReconnectTimer = () => {
       if (reconnectTimer !== null) {
@@ -212,7 +226,7 @@ export default function RequestDetailPage() {
       if (isDisposed || controller.signal.aborted) {
         return;
       }
-      if (requestData.status !== 'processing' || !requestData.stream || previewCompletedRef.current) {
+      if (activeRequest.status !== 'processing' || !activeRequest.stream || previewCompletedRef.current) {
         return;
       }
       if (reconnectTimer !== null) {
@@ -235,7 +249,7 @@ export default function RequestDetailPage() {
         const response = await fetch(`/admin/requests/${encodeURIComponent(requestIdNumber)}/preview`, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'X-Project-ID': selectedProjectId,
+            'X-Project-ID': activeProjectId,
           },
           signal: controller.signal,
         });
@@ -248,14 +262,17 @@ export default function RequestDetailPage() {
         if (!contentType.includes('text/event-stream')) {
           const fallbackResponse = (await response.json()) as PreviewFallbackResponse;
           if (!isDisposed && fallbackResponse.mode === 'static-fetch') {
+            chunkBatcher.dispose();
+            previewChunksRef.current = fallbackResponse.responseChunks ?? previewChunksRef.current;
             setPreviewRequest((currentRequest) =>
               currentRequest
                 ? {
                     ...currentRequest,
-                    responseChunks: fallbackResponse.responseChunks ?? currentRequest.responseChunks,
+                    responseChunks: previewChunksRef.current,
                   }
                 : currentRequest
             );
+            setPreviewVersion((version) => version + 1);
             setIsPreviewStreaming(false);
             setPreviewFallbackActive(true);
           } else if (!isDisposed) {
@@ -282,18 +299,12 @@ export default function RequestDetailPage() {
 
               const nextChunk = parsePreviewChunk(data);
               previewChunkCountRef.current += 1;
-              setPreviewRequest((currentRequest) =>
-                currentRequest
-                  ? {
-                      ...currentRequest,
-                      responseChunks: [...(currentRequest.responseChunks ?? []), nextChunk],
-                    }
-                  : currentRequest
-              );
+              chunkBatcher.push(nextChunk);
               return;
             }
 
             if (event === 'preview.completed') {
+              chunkBatcher.flush();
               setIsPreviewStreaming(false);
               setPreviewFallbackActive(false);
 
@@ -319,7 +330,7 @@ export default function RequestDetailPage() {
           return;
         }
 
-        if (requestData.status === 'processing' && requestData.stream) {
+        if (activeRequest.status === 'processing' && activeRequest.stream) {
           setIsPreviewStreaming(false);
           scheduleReconnect();
         } else {
@@ -334,6 +345,8 @@ export default function RequestDetailPage() {
 
     return () => {
       isDisposed = true;
+      chunkBatcher.dispose();
+      previewChunksRef.current = [];
       setIsPreviewStreaming(false);
       clearReconnectTimer();
       controller.abort();
@@ -383,6 +396,8 @@ export default function RequestDetailPage() {
             requestId={requestGUID}
             projectId={selectedProjectId}
             previewRequest={previewRequest}
+            previewChunks={previewChunksRef.current}
+            previewVersion={previewVersion}
             isPreviewStreaming={isPreviewStreaming}
           />
         </div>

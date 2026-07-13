@@ -26,10 +26,19 @@ interface RequestDetailContentProps {
   requestId: string;
   projectId?: string | null;
   previewRequest?: Request | null;
+  previewChunks?: any[];
+  previewVersion?: number;
   isPreviewStreaming?: boolean;
 }
 
-export function RequestDetailContent({ requestId, projectId, previewRequest, isPreviewStreaming = false }: RequestDetailContentProps) {
+export function RequestDetailContent({
+  requestId,
+  projectId,
+  previewRequest,
+  previewChunks,
+  previewVersion = 0,
+  isPreviewStreaming = false,
+}: RequestDetailContentProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
 
@@ -72,15 +81,16 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
   const parsedResponse = useMemo(() => {
     if (!request) return { content: '', reasoning: '', toolCalls: [] };
     if (previewRequest) {
-      return parseResponse(undefined, previewRequest.responseChunks);
+      return parseResponse(undefined, previewChunks ?? previewRequest.responseChunks);
     }
     return parseResponse(request.responseBody, request.responseChunks);
-  }, [previewRequest, request]);
+  }, [previewRequest, previewChunks, previewVersion, request]);
 
   const hasPreviewData = !!(parsedResponse.content || parsedResponse.reasoning || parsedResponse.toolCalls.length > 0);
   const isLive = isPreviewStreaming || !!(request?.status === 'processing' && request?.stream);
   const hasResponseBody = !!(request?.responseBody && Object.keys(request.responseBody).length > 0);
-  const hasResponseChunks = !!(request?.responseChunks && request.responseChunks.length > 0);
+  const responseChunks = previewRequest ? previewChunks : request?.responseChunks;
+  const hasResponseChunks = !!(responseChunks && responseChunks.length > 0);
 
   const extractResponseText = useCallback(() => {
     if (!request) return '';
@@ -259,11 +269,11 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
   }, [isSpeechRequest, hasStoredContent, request?.id]);
 
   const showResponseChunksModal = useCallback(() => {
-    if (request?.responseChunks) {
-      setSelectedResponseChunks(request.responseChunks);
+    if (responseChunks) {
+      setSelectedResponseChunks(responseChunks);
       setShowResponseChunks(true);
     }
-  }, [request]);
+  }, [responseChunks]);
 
   const showExecutionChunksModal = useCallback((chunks: any[]) => {
     if (chunks && chunks.length > 0) {
@@ -662,7 +672,8 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
                       </div>
                     ) : hasPreviewData || isLive ? (
                       <ResponseFlow
-                        chunks={request.responseChunks}
+                        chunks={previewRequest ? previewChunks : request.responseChunks}
+                        version={previewVersion}
                         body={request.responseBody}
                         isLive={isLive}
                         reasoningDurationMs={request.metricsReasoningDurationMs}
@@ -919,7 +930,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
       <ChunksDialog
         open={showResponseChunks}
         onOpenChange={setShowResponseChunks}
-        chunks={request?.responseChunks ?? []}
+        chunks={responseChunks ?? []}
         isLive={request?.stream === true && request?.status === 'processing'}
         title={t('requests.dialogs.jsonViewer.responseChunks')}
       />

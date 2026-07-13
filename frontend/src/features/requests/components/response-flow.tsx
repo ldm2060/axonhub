@@ -13,16 +13,17 @@ import { parseResponse } from '../utils/response-parser';
 interface ResponseFlowProps {
   chunks?: any[] | null;
   body?: any;
+  version?: number;
   isLive?: boolean;
   reasoningDurationMs?: number | null;
 }
 
-export function ResponseFlow({ chunks, body, isLive, reasoningDurationMs }: ResponseFlowProps) {
+export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurationMs }: ResponseFlowProps) {
   const { t } = useTranslation();
 
   const { content, reasoning, toolCalls } = useMemo(
     () => parseResponse(body, chunks),
-    [chunks, body]
+    [chunks, body, version]
   );
 
   if (!content && !reasoning && toolCalls.length === 0) {
