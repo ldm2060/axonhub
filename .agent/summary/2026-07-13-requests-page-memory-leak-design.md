@@ -61,7 +61,7 @@ The page-deque logic will be extracted into a pure helper and covered by tests f
 
 ### 3. Drawer close cleanup and ephemeral detail query
 
-The heavy drawer body will be conditionally mounted only while the sheet is open or completing its close animation. After close:
+The heavy drawer body will be conditionally mounted only while the sheet is open and ready to render. Closing the sheet immediately unmounts the heavy subtree while the lightweight Radix shell completes its exit animation. After close:
 
 - Reset navigation records to the current table page rather than retaining fetched adjacent pages.
 - Clear the displayed detailed request reference.
