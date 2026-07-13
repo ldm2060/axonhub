@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -27,6 +29,159 @@ func (p *timeoutSelectionProcessor) Process(ctx context.Context, _ *httpclient.R
 	p.lastDeadline = deadline
 
 	return p.result, nil
+}
+
+type delayedTimeoutSelectionProcessor struct {
+	delay  time.Duration
+	result orchestrator.ChatCompletionResult
+	err    error
+}
+
+func (p *delayedTimeoutSelectionProcessor) Process(ctx context.Context, _ *httpclient.Request) (orchestrator.ChatCompletionResult, error) {
+	select {
+	case <-time.After(p.delay):
+		return p.result, p.err
+	case <-ctx.Done():
+		return orchestrator.ChatCompletionResult{}, ctx.Err()
+	}
+}
+
+func TestChatCompletionWithRequestEmitsKeepaliveBeforeProcessReturns(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	processor := &delayedTimeoutSelectionProcessor{
+		delay: 25 * time.Millisecond,
+		result: orchestrator.ChatCompletionResult{
+			ChatCompletionStream: streams.SliceStream([]*httpclient.StreamEvent{{Type: "message", Data: []byte(`{"ok":true}`)}}),
+		},
+	}
+	handler := &ChatCompletionHandlers{
+		Processor:             processor,
+		StreamWriter:          WriteSSEStreamWithOptions,
+		StreamIdleTimeout:     time.Second,
+		HTTPKeepaliveInterval: 5 * time.Millisecond,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)})
+
+	require.Contains(t, w.Body.String(), ": keepalive\n\n")
+	require.Contains(t, w.Body.String(), `{"ok":true}`)
+}
+
+func TestChatCompletionWithRequestKeepsGeminiJSONValidBeforeProcessReturns(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1beta/models/test:streamGenerateContent", nil)
+
+	handler := &ChatCompletionHandlers{
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: 20 * time.Millisecond,
+			result: orchestrator.ChatCompletionResult{
+				ChatCompletionStream: streams.SliceStream([]*httpclient.StreamEvent{{Data: []byte(`{"step":1}`)}}),
+			},
+		},
+		StreamWriter:          WriteGeminiStreamWithOptions,
+		StreamIdleTimeout:     time.Second,
+		HTTPKeepaliveInterval: 5 * time.Millisecond,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{
+		Path: "/v1beta/models/test:streamGenerateContent",
+		Body: []byte(`{"contents":[{"parts":[{"text":"hi"}]}]}`),
+	})
+
+	var body []map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.Equal(t, float64(1), body[0]["step"])
+}
+
+func TestChatCompletionWithRequestWritesValidGeminiErrorAfterKeepalive(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1beta/models/test:streamGenerateContent", nil)
+
+	handler := &ChatCompletionHandlers{
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: 20 * time.Millisecond,
+			err:   errors.New("process failed"),
+		},
+		StreamWriter:          WriteGeminiStreamWithOptions,
+		HTTPKeepaliveInterval: 5 * time.Millisecond,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{
+		Path: "/v1beta/models/test:streamGenerateContent",
+		Body: []byte(`{"contents":[{"parts":[{"text":"hi"}]}]}`),
+	})
+
+	var body []map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	require.NotEmpty(t, body[0]["error"])
+}
+
+func TestChatCompletionWithRequestDoesNotInjectKeepaliveIntoBinaryStream(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/audio/speech", nil)
+
+	handler := &ChatCompletionHandlers{
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: 20 * time.Millisecond,
+			result: orchestrator.ChatCompletionResult{
+				ChatCompletionStream: streams.SliceStream([]*httpclient.StreamEvent{{Type: "audio/mpeg", Data: []byte{0x01, 0x02, 0x03}}}),
+			},
+		},
+		StreamWriter:          WriteBinaryStreamWithOptions,
+		StreamIdleTimeout:     time.Second,
+		HTTPKeepaliveInterval: 5 * time.Millisecond,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"tts","input":"hi","stream_format":"mp3"}`)})
+
+	require.Equal(t, []byte{0x01, 0x02, 0x03}, w.Body.Bytes())
+}
+
+func TestChatCompletionWithRequestWritesStreamErrorAfterKeepaliveCommitsResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	handler := &ChatCompletionHandlers{
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: 20 * time.Millisecond,
+			err:   errors.New("process failed"),
+		},
+		StreamWriter:          WriteSSEStreamWithOptions,
+		HTTPKeepaliveInterval: 5 * time.Millisecond,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)})
+
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Contains(t, w.Body.String(), ": keepalive\n\n")
+	require.Contains(t, w.Body.String(), "event:error")
+}
+
+func TestChatCompletionWithRequestKeepsHTTPStatusBeforeFirstKeepalive(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+
+	handler := &ChatCompletionHandlers{
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: time.Millisecond,
+			err:   errors.New("process failed"),
+		},
+		StreamWriter:          WriteSSEStreamWithOptions,
+		HTTPKeepaliveInterval: time.Second,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)})
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	require.NotContains(t, w.Body.String(), ": keepalive")
 }
 
 func TestChatCompletionWithRequestAppliesTotalDeadlineToNonStreamingRequest(t *testing.T) {

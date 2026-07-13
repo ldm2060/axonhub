@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,12 +35,24 @@ type ChatCompletionProcessor interface {
 	Process(ctx context.Context, genericReq *httpclient.Request) (orchestrator.ChatCompletionResult, error)
 }
 
+type HTTPStreamKeepaliveMode uint8
+
+const (
+	httpStreamKeepaliveDefault HTTPStreamKeepaliveMode = iota
+	httpStreamKeepaliveSSE
+	httpStreamKeepaliveJSONWhitespace
+	httpStreamKeepaliveTextWhitespace
+	httpStreamKeepaliveDisabled
+)
+
 type ChatCompletionHandlers struct {
 	ChatCompletionOrchestrator *orchestrator.ChatCompletionOrchestrator
 	Processor                  ChatCompletionProcessor
 	StreamWriter               StreamWriter
 	RequestTimeout             time.Duration
 	StreamIdleTimeout          time.Duration
+	HTTPKeepaliveInterval      time.Duration
+	HTTPKeepaliveMode          HTTPStreamKeepaliveMode
 }
 
 func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestrator) *ChatCompletionHandlers {
@@ -45,6 +60,7 @@ func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestr
 		ChatCompletionOrchestrator: orchestrator,
 		Processor:                  orchestrator,
 		StreamWriter:               WriteSSEStreamWithOptions,
+		HTTPKeepaliveMode:          httpStreamKeepaliveSSE,
 	}
 }
 
@@ -64,6 +80,26 @@ func (handlers *ChatCompletionHandlers) systemService() *biz.SystemService {
 	return handlers.ChatCompletionOrchestrator.SystemService
 }
 
+func keepaliveModeForWriter(writer StreamWriter) HTTPStreamKeepaliveMode {
+	if writer == nil {
+		return httpStreamKeepaliveSSE
+	}
+
+	pointer := reflect.ValueOf(writer).Pointer()
+	switch pointer {
+	case reflect.ValueOf(WriteSSEStreamWithOptions).Pointer():
+		return httpStreamKeepaliveSSE
+	case reflect.ValueOf(WriteGeminiStreamWithOptions).Pointer():
+		return httpStreamKeepaliveJSONWhitespace
+	case reflect.ValueOf(WriteJSONStreamWithOptions).Pointer():
+		return httpStreamKeepaliveTextWhitespace
+	case reflect.ValueOf(WriteBinaryStreamWithOptions).Pointer():
+		return httpStreamKeepaliveDisabled
+	default:
+		return httpStreamKeepaliveDisabled
+	}
+}
+
 // WithStreamWriter returns a new ChatCompletionHandlers with the specified stream writer.
 func (handlers *ChatCompletionHandlers) WithStreamWriter(writer StreamWriter) *ChatCompletionHandlers {
 	return &ChatCompletionHandlers{
@@ -72,6 +108,8 @@ func (handlers *ChatCompletionHandlers) WithStreamWriter(writer StreamWriter) *C
 		StreamWriter:               writer,
 		RequestTimeout:             handlers.RequestTimeout,
 		StreamIdleTimeout:          handlers.StreamIdleTimeout,
+		HTTPKeepaliveInterval:      handlers.HTTPKeepaliveInterval,
+		HTTPKeepaliveMode:          keepaliveModeForWriter(writer),
 	}
 }
 
@@ -110,6 +148,129 @@ func requestBodyWantsStream(genericReq *httpclient.Request) bool {
 	return strings.TrimSpace(gjson.GetBytes(genericReq.Body, "stream_format").String()) != ""
 }
 
+type processResult struct {
+	result orchestrator.ChatCompletionResult
+	err    error
+}
+
+func (handlers *ChatCompletionHandlers) effectiveHTTPKeepaliveMode() HTTPStreamKeepaliveMode {
+	if handlers.HTTPKeepaliveMode != httpStreamKeepaliveDefault {
+		return handlers.HTTPKeepaliveMode
+	}
+
+	return keepaliveModeForWriter(handlers.StreamWriter)
+}
+
+func keepalivePayload(mode HTTPStreamKeepaliveMode) ([]byte, string) {
+	switch mode {
+	case httpStreamKeepaliveSSE:
+		return []byte(": keepalive\n\n"), sse.ContentType
+	case httpStreamKeepaliveJSONWhitespace:
+		return []byte("[\n"), "application/json; charset=UTF-8"
+	case httpStreamKeepaliveTextWhitespace:
+		return []byte("\n"), "text/plain; charset=utf-8"
+	default:
+		return nil, ""
+	}
+}
+
+func (handlers *ChatCompletionHandlers) configuredHTTPKeepaliveInterval(ctx context.Context) time.Duration {
+	if handlers.HTTPKeepaliveInterval > 0 {
+		return handlers.HTTPKeepaliveInterval
+	}
+
+	svc := handlers.systemService()
+	if svc == nil {
+		return 0
+	}
+	settings, err := svc.StreamingSettings(ctx)
+	if err != nil || settings == nil || settings.HTTPStreamKeepaliveIntervalSeconds <= 0 {
+		return 0
+	}
+
+	return time.Duration(settings.HTTPStreamKeepaliveIntervalSeconds) * time.Second
+}
+
+func (handlers *ChatCompletionHandlers) processWithHTTPKeepalive(
+	c *gin.Context,
+	ctx context.Context,
+	genericReq *httpclient.Request,
+	interval time.Duration,
+	mode HTTPStreamKeepaliveMode,
+	payload []byte,
+	contentType string,
+) (orchestrator.ChatCompletionResult, error) {
+	resultCh := make(chan processResult, 1)
+	go func() {
+		defer func() {
+			if cause := recover(); cause != nil {
+				log.Warn(ctx, "Chat completion process panic recovered", log.Any("panic", cause))
+				resultCh <- processResult{err: fmt.Errorf("chat completion process panic: %v", cause)}
+			}
+		}()
+
+		result, err := handlers.processor().Process(ctx, genericReq)
+		resultCh <- processResult{result: result, err: err}
+	}()
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	wroteKeepalive := false
+
+	for {
+		select {
+		case <-ctx.Done():
+			return orchestrator.ChatCompletionResult{}, ctx.Err()
+		case processed := <-resultCh:
+			return processed.result, processed.err
+		case <-ticker.C:
+			if contentType != "" {
+				c.Header("Content-Type", contentType)
+			}
+			c.Header("Cache-Control", "no-cache, no-transform")
+			c.Header("Connection", "keep-alive")
+			c.Header("X-Accel-Buffering", "no")
+			if mode == httpStreamKeepaliveJSONWhitespace && wroteKeepalive {
+				payload = []byte("\n")
+			}
+			if _, err := c.Writer.Write(payload); err != nil {
+				return orchestrator.ChatCompletionResult{}, err
+			}
+			wroteKeepalive = true
+			c.Writer.Flush()
+		}
+	}
+}
+
+func (handlers *ChatCompletionHandlers) writeCommittedProcessError(c *gin.Context, ctx context.Context, err error, mode HTTPStreamKeepaliveMode) {
+	switch mode {
+	case httpStreamKeepaliveSSE:
+		c.SSEvent("error", FormatStreamError(ctx, err))
+		c.Writer.Flush()
+	case httpStreamKeepaliveJSONWhitespace:
+		body, marshalErr := json.Marshal(FormatStreamError(ctx, err))
+		if marshalErr != nil {
+			log.Warn(ctx, "Failed to marshal committed stream error", log.Cause(marshalErr))
+			return
+		}
+		if _, writeErr := c.Writer.Write(body); writeErr != nil {
+			log.Warn(ctx, "Failed to write committed stream error", log.Cause(writeErr))
+			return
+		}
+		if _, writeErr := c.Writer.Write([]byte("]")); writeErr != nil {
+			log.Warn(ctx, "Failed to close committed Gemini stream", log.Cause(writeErr))
+			return
+		}
+		c.Writer.Flush()
+	case httpStreamKeepaliveTextWhitespace:
+		if _, writeErr := c.Writer.Write([]byte("3:" + strconv.Quote(err.Error()) + "\n")); writeErr != nil {
+			log.Warn(ctx, "Failed to write committed stream error", log.Cause(writeErr))
+			return
+		}
+		c.Writer.Flush()
+	}
+}
+
 func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context, genericReq *httpclient.Request) {
 	ctx := c.Request.Context()
 
@@ -128,9 +289,38 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 
 	// log.Debug(ctx, "Chat completion request", log.Any("request", genericReq))
 
-	result, err := handlers.processor().Process(ctx, genericReq)
+	keepaliveMode := handlers.effectiveHTTPKeepaliveMode()
+	keepalivePayload, keepaliveContentType := keepalivePayload(keepaliveMode)
+	keepaliveInterval := time.Duration(0)
+	responseCommittedByKeepalive := false
+	if streaming && len(keepalivePayload) > 0 {
+		keepaliveInterval = handlers.configuredHTTPKeepaliveInterval(ctx)
+	}
+
+	var (
+		result orchestrator.ChatCompletionResult
+		err    error
+	)
+	if keepaliveInterval > 0 {
+		result, err = handlers.processWithHTTPKeepalive(
+			c,
+			ctx,
+			genericReq,
+			keepaliveInterval,
+			keepaliveMode,
+			keepalivePayload,
+			keepaliveContentType,
+		)
+		responseCommittedByKeepalive = c.Writer.Written()
+	} else {
+		result, err = handlers.processor().Process(ctx, genericReq)
+	}
 	if err != nil {
 		log.Error(ctx, "Error processing chat completion", log.Cause(err))
+		if c.Writer.Written() {
+			handlers.writeCommittedProcessError(c, ctx, err, keepaliveMode)
+			return
+		}
 
 		httpErr := transformOrchestratorError(ctx, err, handlers.ChatCompletionOrchestrator)
 		c.JSON(httpErr.StatusCode, json.RawMessage(httpErr.Body))
@@ -168,7 +358,11 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 			streamWriter = WriteSSEStreamWithOptions
 		}
 
-		streamWriter(c, newUpstreamErrorStream(ctx, result.ChatCompletionStream, handlers.systemService()), StreamWriteOptions{IdleTimeout: handlers.StreamIdleTimeout})
+		streamWriter(c, newUpstreamErrorStream(ctx, result.ChatCompletionStream, handlers.systemService()), StreamWriteOptions{
+			IdleTimeout:              handlers.StreamIdleTimeout,
+			KeepaliveInterval:        keepaliveInterval,
+			ResponseAlreadyCommitted: responseCommittedByKeepalive,
+		})
 	}
 }
 

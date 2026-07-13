@@ -100,7 +100,9 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 	c.Header("Cache-Control", "no-cache, no-transform")
 	c.Header("X-Accel-Buffering", "no")
 
-	_, _ = c.Writer.Write([]byte("["))
+	if !opts.ResponseAlreadyCommitted {
+		_, _ = c.Writer.Write([]byte("["))
+	}
 
 	first := true
 	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)

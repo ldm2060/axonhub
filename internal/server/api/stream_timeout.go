@@ -14,8 +14,9 @@ import (
 var ErrStreamIdleTimeout = errors.New("stream idle timeout")
 
 type StreamWriteOptions struct {
-	IdleTimeout       time.Duration
-	KeepaliveInterval time.Duration
+	IdleTimeout              time.Duration
+	KeepaliveInterval        time.Duration
+	ResponseAlreadyCommitted bool
 }
 
 type TimeoutConfig struct {

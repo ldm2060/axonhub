@@ -42,7 +42,7 @@ func TestRequestPreviewHandlers_ReplayOnConnect(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.Contains(t, resp.Header.Get("Content-Type"), "text/event-stream")
-	require.Equal(t, "no-cache", resp.Header.Get("Cache-Control"))
+	require.Equal(t, "no-cache, no-transform", resp.Header.Get("Cache-Control"))
 	require.Equal(t, "keep-alive", resp.Header.Get("Connection"))
 
 	reader := bufio.NewReader(resp.Body)
@@ -158,7 +158,7 @@ func TestRequestPreviewHandlers_CorrectHeaders(t *testing.T) {
 	defer resp.Body.Close()
 
 	require.Contains(t, resp.Header.Get("Content-Type"), "text/event-stream")
-	require.Equal(t, "no-cache", resp.Header.Get("Cache-Control"))
+	require.Equal(t, "no-cache, no-transform", resp.Header.Get("Cache-Control"))
 	require.Equal(t, "keep-alive", resp.Header.Get("Connection"))
 }
 
