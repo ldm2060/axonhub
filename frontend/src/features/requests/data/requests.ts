@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
+import { buildRequestQueryKey } from './request-query-key';
 import {
   Request,
   RequestConnection,
@@ -391,6 +392,8 @@ export function useRequest(
     enabled?: boolean;
     disableAutoRefresh?: boolean;
     includeAdminFields?: boolean;
+    gcTime?: number;
+    queryScope?: 'detail' | 'quick-view';
   }
 ) {
   const { handleError } = useErrorHandler();
@@ -401,7 +404,13 @@ export function useRequest(
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
   const enabled = options?.enabled ?? true;
 
-  const queryKey = ['request', id, permissions, projectId, options?.includeAdminFields] as const;
+  const queryKey = buildRequestQueryKey({
+    id,
+    permissions,
+    projectId,
+    includeAdminFields: options?.includeAdminFields,
+    scope: options?.queryScope,
+  });
 
   return useQuery({
     queryKey,
@@ -449,6 +458,7 @@ export function useRequest(
       }
     },
     enabled: enabled && !!id,
+    gcTime: options?.gcTime,
     refetchInterval: (query) => {
       if (options?.disableAutoRefresh) {
         return false;

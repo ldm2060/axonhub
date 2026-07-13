@@ -29,6 +29,12 @@ import { useRequest, fetchAdjacentRequestPage } from '../data';
 import { Request, RequestConnection } from '../data/schema';
 import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
+import {
+  createNavigationState,
+  flattenNavigationPages,
+  mergeNavigationPage,
+  type NavigationState,
+} from './request-navigation-state';
 import { generateRequestCurl } from '../utils/curl-generator';
 
 interface RequestBodyDrawerProps {
@@ -48,7 +54,168 @@ interface RequestBodyDrawerProps {
   onViewDetail?: (requestId: string) => void;
 }
 
+interface RequestBodyDrawerContentProps {
+  currentRequestId: string;
+  projectId?: string | null;
+  includeAdminFields: boolean;
+}
+
+type RequestPageInfo = RequestConnection['pageInfo'];
+
 const OPEN_ANIMATION_DELAY_MS = 520;
+const MAX_NAVIGATION_PAGES = 3;
+const EMPTY_PAGE_INFO: RequestPageInfo = {
+  hasNextPage: false,
+  hasPreviousPage: false,
+};
+
+function RequestBodyDrawerContent({
+  currentRequestId,
+  projectId,
+  includeAdminFields,
+}: RequestBodyDrawerContentProps) {
+  const { t } = useTranslation();
+  const { data: request, isLoading, isFetching } = useRequest(currentRequestId, {
+    projectId,
+    enabled: true,
+    includeAdminFields,
+    gcTime: 0,
+    queryScope: 'quick-view',
+  });
+  const displayedRequestRef = useRef<Request | null>(null);
+  const [globalExpanded, setGlobalExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('request');
+  const [showCurlPreview, setShowCurlPreview] = useState(false);
+  const [curlCommand, setCurlCommand] = useState('');
+
+  if (request) displayedRequestRef.current = request;
+  const displayedRequest = displayedRequestRef.current;
+
+  const copyBody = useCallback(
+    (data: any) => {
+      try {
+        navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      } catch {
+        navigator.clipboard.writeText(String(data));
+      }
+      toast.success(t('requests.actions.copy'));
+    },
+    [t]
+  );
+
+  const handleCurlPreview = useCallback(() => {
+    if (!displayedRequest) return;
+    const curl = generateRequestCurl(
+      displayedRequest.requestHeaders,
+      displayedRequest.requestBody,
+      displayedRequest.format as any
+    );
+    setCurlCommand(curl);
+    setShowCurlPreview(true);
+  }, [displayedRequest]);
+
+  if (!displayedRequest && isLoading) {
+    return (
+      <div className='space-y-4 p-6'>
+        <Skeleton className='h-8 w-full' />
+        <Skeleton className='h-64 w-full' />
+        <Skeleton className='h-32 w-full' />
+      </div>
+    );
+  }
+
+  if (!displayedRequest) return null;
+
+  return (
+    <>
+      <div className='relative flex min-h-0 flex-1 flex-col'>
+        {isFetching && <div className='absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary/40' />}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='flex h-full flex-col'>
+          <div className='mx-6 mt-4 flex flex-shrink-0 items-center gap-2'>
+            <TabsList className='grid flex-1 grid-cols-2'>
+              <TabsTrigger value='request'>{t('requests.detail.tabs.request')}</TabsTrigger>
+              <TabsTrigger value='response'>{t('requests.detail.tabs.response')}</TabsTrigger>
+            </TabsList>
+            <Button
+              variant='outline'
+              size='icon'
+              className='h-9 w-9 flex-shrink-0'
+              onClick={() => setGlobalExpanded((value) => !value)}
+              title={globalExpanded ? t('requests.drawer.collapseAll') : t('requests.drawer.expandAll')}
+            >
+              {globalExpanded ? <ChevronsDownUp className='h-4 w-4' /> : <ChevronsUpDown className='h-4 w-4' />}
+            </Button>
+            <Button
+              variant='outline'
+              size='icon'
+              className='h-9 w-9 flex-shrink-0'
+              onClick={() =>
+                copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)
+              }
+              title={t('requests.actions.copy')}
+            >
+              <Copy className='h-4 w-4' />
+            </Button>
+            {activeTab === 'request' && (
+              <Button
+                variant='outline'
+                size='icon'
+                className='h-9 w-9 flex-shrink-0'
+                onClick={handleCurlPreview}
+                title={t('requests.actions.copyCurl')}
+              >
+                <Terminal className='h-4 w-4' />
+              </Button>
+            )}
+          </div>
+
+          <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+            <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
+              {displayedRequest.requestBody ? (
+                <JsonViewer
+                  key={`req-${currentRequestId}`}
+                  data={displayedRequest.requestBody}
+                  rootName=''
+                  defaultExpanded={true}
+                  expandDepth='all'
+                  hideArrayIndices={true}
+                  globalStringExpanded={globalExpanded}
+                  className='text-sm'
+                />
+              ) : (
+                <div className='flex h-32 items-center justify-center'>
+                  <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+            <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
+              {displayedRequest.responseBody ? (
+                <JsonViewer
+                  key={`res-${currentRequestId}`}
+                  data={displayedRequest.responseBody}
+                  rootName=''
+                  defaultExpanded={true}
+                  expandDepth='all'
+                  hideArrayIndices={true}
+                  globalStringExpanded={globalExpanded}
+                  className='text-sm'
+                />
+              ) : (
+                <div className='flex h-32 items-center justify-center'>
+                  <p className='text-muted-foreground text-sm'>{t('requests.detail.noResponse')}</p>
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </div>
+      <CurlPreviewDialog open={showCurlPreview} onOpenChange={setShowCurlPreview} curlCommand={curlCommand} />
+    </>
+  );
+}
 
 export function RequestBodyDrawer({
   open,
@@ -68,42 +235,54 @@ export function RequestBodyDrawer({
   const permissions = useRequestPermissions({ systemOnly: projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const effectiveProjectId = projectId !== undefined ? projectId : selectedProjectId;
-
-  // ── internal navigation state ──────────────────────────────────────────────
-  // The drawer manages its own growing list so it can cross page boundaries.
-  const [allRequests, setAllRequests] = useState<Request[]>(initialRequests);
-  const [navPageInfo, setNavPageInfo] = useState(initialPageInfo);
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [navigation, setNavigation] = useState<NavigationState<Request, RequestPageInfo>>({
+    pages: [],
+    currentIndex: 0,
+  });
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Reset when the drawer is (re)opened for a different request.
   const prevOpenRef = useRef(false);
+  const navigationGenerationRef = useRef(0);
+
   const isOpeningBeforeStateSync = open && !prevOpenRef.current;
+  const visibleNavigation = isOpeningBeforeStateSync
+    ? createNavigationState(
+        { items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO },
+        initialIndex
+      )
+    : navigation;
+  const visibleRequests = flattenNavigationPages(visibleNavigation.pages);
+  const currentIndex = visibleNavigation.currentIndex;
+  const currentRequestId = visibleRequests[currentIndex]?.id ?? initialRequestId;
+  const listRequest = visibleRequests[currentIndex];
+  const firstPageInfo = visibleNavigation.pages[0]?.pageInfo;
+  const lastPageInfo = visibleNavigation.pages.at(-1)?.pageInfo;
+
   useEffect(() => {
     const justOpened = open && !prevOpenRef.current;
     prevOpenRef.current = open;
+
     if (justOpened) {
-      setAllRequests(initialRequests);
-      setNavPageInfo(initialPageInfo);
-      setCurrentIndex(initialIndex);
+      navigationGenerationRef.current += 1;
+      setNavigation(
+        createNavigationState(
+          { items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO },
+          initialIndex
+        )
+      );
+      return;
+    }
+
+    if (!open) {
+      navigationGenerationRef.current += 1;
+      setNavigation({ pages: [], currentIndex: 0 });
+      setIsLoadingMore(false);
     }
   }, [open, initialRequests, initialPageInfo, initialIndex]);
 
-  const visibleRequests = isOpeningBeforeStateSync ? initialRequests : allRequests;
-  const visibleCurrentIndex = isOpeningBeforeStateSync ? initialIndex : currentIndex;
-  const currentRequestId = visibleRequests[visibleCurrentIndex]?.id ?? initialRequestId;
-
-  // ── toggle for expanding/collapsing all string values ────────────────────
-  const [globalExpanded, setGlobalExpanded] = useState(false);
-
-  // Let the Radix sheet finish its enter animation before fetching and mounting
-  // large request bodies. Query parsing and JSON tree rendering can both block
-  // the main thread enough to make the slide-in animation stutter.
   const [canRenderBody, setCanRenderBody] = useState(false);
   useEffect(() => {
     if (!open) {
       setCanRenderBody(false);
-      setGlobalExpanded(false);
       return;
     }
 
@@ -115,70 +294,21 @@ export function RequestBodyDrawer({
     };
   }, [open, initialRequestId]);
 
-  // ── fetch detail for current request ──────────────────────────────────────
-  const { data: request, isLoading, isFetching } = useRequest(currentRequestId ?? '', {
-    projectId: effectiveProjectId,
-    enabled: open && canRenderBody && !!currentRequestId,
-    includeAdminFields,
-  });
-
-  // Keep previous request data visible while loading the next one.
-  const displayedRequestRef = useRef<Request | null>(null);
-  useEffect(() => {
-    if (!open) {
-      displayedRequestRef.current = null;
-    }
-  }, [open]);
-  if (request) displayedRequestRef.current = request;
-  const displayedRequest = displayedRequestRef.current;
-
-  // ── active tab ─────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState('request');
-
-  // ── copy / curl ───────────────────────────────────────────────────────────
-  const [showCurlPreview, setShowCurlPreview] = useState(false);
-  const [curlCommand, setCurlCommand] = useState('');
-
-  const copyBody = useCallback(
-    (data: any) => {
-      try {
-        navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-      } catch {
-        navigator.clipboard.writeText(String(data));
-      }
-      toast.success(t('requests.actions.copy'));
-    },
-    [t]
-  );
-
-  const handleCurlPreview = useCallback(() => {
-    if (!displayedRequest) return;
-    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format as any);
-    setCurlCommand(curl);
-    setShowCurlPreview(true);
-  }, [displayedRequest]);
-
-  // List-level data (always available, no loading flash).
-  const listRequest = visibleRequests[visibleCurrentIndex];
-
-  // ── navigation ─────────────────────────────────────────────────────────────
-  // The list is DESC (newest first).
-  // → right arrow = "next" = newer = smaller index.
-  // ← left  arrow = "prev" = older = larger index.
-  const canGoPrev = currentIndex < allRequests.length - 1 || !!navPageInfo?.hasNextPage;
-  const canGoNext = currentIndex > 0 || !!navPageInfo?.hasPreviousPage;
+  const canGoPrev = currentIndex < visibleRequests.length - 1 || !!lastPageInfo?.hasNextPage;
+  const canGoNext = currentIndex > 0 || !!firstPageInfo?.hasPreviousPage;
 
   const handlePrev = useCallback(async () => {
-    if (currentIndex < allRequests.length - 1) {
-      setCurrentIndex((i) => i + 1);
+    if (currentIndex < visibleRequests.length - 1) {
+      setNavigation((current) => ({ ...current, currentIndex: current.currentIndex + 1 }));
       return;
     }
-    // Need to load the next (older) page.
-    if (!navPageInfo?.hasNextPage || !navPageInfo.endCursor || isLoadingMore) return;
+    if (!lastPageInfo?.hasNextPage || !lastPageInfo.endCursor || isLoadingMore) return;
+
+    const generation = navigationGenerationRef.current;
     setIsLoadingMore(true);
     try {
       const result = await fetchAdjacentRequestPage({
-        cursor: navPageInfo.endCursor,
+        cursor: lastPageInfo.endCursor,
         direction: 'older',
         pageSize: initialRequests.length || 20,
         where: queryWhere,
@@ -186,32 +316,43 @@ export function RequestBodyDrawer({
         projectId: effectiveProjectId,
         includeAdminFields,
       });
-      setAllRequests((prev) => {
-        const merged = [...prev, ...result.requests];
-        setCurrentIndex(prev.length); // first item of the new batch
-        return merged;
-      });
-      setNavPageInfo((p) =>
-        p
-          ? { ...p, hasNextPage: result.pageInfo.hasNextPage, endCursor: result.pageInfo.endCursor }
-          : result.pageInfo
+      if (generation !== navigationGenerationRef.current) return;
+
+      setNavigation((current) =>
+        mergeNavigationPage(
+          current,
+          { items: result.requests, pageInfo: result.pageInfo },
+          'older',
+          MAX_NAVIGATION_PAGES
+        )
       );
     } finally {
-      setIsLoadingMore(false);
+      if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
     }
-  }, [currentIndex, allRequests.length, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length, includeAdminFields]);
+  }, [
+    currentIndex,
+    visibleRequests.length,
+    lastPageInfo,
+    isLoadingMore,
+    initialRequests.length,
+    queryWhere,
+    permissions,
+    effectiveProjectId,
+    includeAdminFields,
+  ]);
 
   const handleNext = useCallback(async () => {
     if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
+      setNavigation((current) => ({ ...current, currentIndex: current.currentIndex - 1 }));
       return;
     }
-    // Need to load the previous (newer) page.
-    if (!navPageInfo?.hasPreviousPage || !navPageInfo.startCursor || isLoadingMore) return;
+    if (!firstPageInfo?.hasPreviousPage || !firstPageInfo.startCursor || isLoadingMore) return;
+
+    const generation = navigationGenerationRef.current;
     setIsLoadingMore(true);
     try {
       const result = await fetchAdjacentRequestPage({
-        cursor: navPageInfo.startCursor,
+        cursor: firstPageInfo.startCursor,
         direction: 'newer',
         pageSize: initialRequests.length || 20,
         where: queryWhere,
@@ -219,51 +360,56 @@ export function RequestBodyDrawer({
         projectId: effectiveProjectId,
         includeAdminFields,
       });
-      // Prepend newer items; adjust index for shift.
-      setAllRequests((prev) => {
-        const merged = [...result.requests, ...prev];
-        // Navigate to the newest item in the just-fetched batch.
-        setCurrentIndex(result.requests.length - 1);
-        return merged;
-      });
-      setNavPageInfo((p) =>
-        p
-          ? { ...p, hasPreviousPage: result.pageInfo.hasPreviousPage, startCursor: result.pageInfo.startCursor }
-          : result.pageInfo
+      if (generation !== navigationGenerationRef.current) return;
+
+      setNavigation((current) =>
+        mergeNavigationPage(
+          current,
+          { items: result.requests, pageInfo: result.pageInfo },
+          'newer',
+          MAX_NAVIGATION_PAGES
+        )
       );
     } finally {
-      setIsLoadingMore(false);
+      if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
     }
-  }, [currentIndex, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length, includeAdminFields]);
+  }, [
+    currentIndex,
+    firstPageInfo,
+    isLoadingMore,
+    initialRequests.length,
+    queryWhere,
+    permissions,
+    effectiveProjectId,
+    includeAdminFields,
+  ]);
 
   const handleViewDetail = useCallback(() => {
-    if (currentRequestId) {
-      const numericId = extractNumberID(currentRequestId) || currentRequestId;
-      if (onViewDetail) {
-        onViewDetail(currentRequestId);
-      } else if (effectiveProjectId) {
-        navigateWithSearch({
-          to: '/project/requests/$requestId',
-          params: { requestId: numericId },
-        });
-      } else {
-        navigate({
-          to: '/requests/$requestId',
-          params: { requestId: numericId },
-        });
-      }
-      onOpenChange(false);
+    if (!currentRequestId) return;
+
+    const numericId = extractNumberID(currentRequestId) || currentRequestId;
+    if (onViewDetail) {
+      onViewDetail(currentRequestId);
+    } else if (effectiveProjectId) {
+      navigateWithSearch({
+        to: '/project/requests/$requestId',
+        params: { requestId: numericId },
+      });
+    } else {
+      navigate({
+        to: '/requests/$requestId',
+        params: { requestId: numericId },
+      });
     }
+    onOpenChange(false);
   }, [currentRequestId, onViewDetail, effectiveProjectId, navigateWithSearch, navigate, onOpenChange]);
 
-  // ── render ─────────────────────────────────────────────────────────────────
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='right'
         className='flex w-[50vw] min-w-[500px] max-w-[800px] flex-col gap-0 p-0 sm:max-w-[800px]'
       >
-        {/* Header */}
         <SheetHeader className='flex-shrink-0 border-b px-6 py-4'>
           <div className='flex items-center justify-between pr-6'>
             <SheetTitle className='flex items-center gap-2 text-base'>
@@ -275,8 +421,6 @@ export function RequestBodyDrawer({
                     {t(`requests.status.${listRequest.status}`)}
                   </Badge>
                 </>
-              ) : isLoading ? (
-                <Skeleton className='h-4 w-16' />
               ) : null}
             </SheetTitle>
 
@@ -301,12 +445,7 @@ export function RequestBodyDrawer({
               >
                 <ChevronRight className='h-4 w-4' />
               </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleViewDetail}
-                className='ml-1 h-7 text-xs'
-              >
+              <Button variant='outline' size='sm' onClick={handleViewDetail} className='ml-1 h-7 text-xs'>
                 <ExternalLink className='mr-1 h-3.5 w-3.5' />
                 {t('requests.drawer.viewDetail')}
               </Button>
@@ -314,101 +453,14 @@ export function RequestBodyDrawer({
           </div>
         </SheetHeader>
 
-        {/* Body */}
         <div className='flex min-h-0 flex-1 flex-col'>
-          {displayedRequest && canRenderBody ? (
-            <div className='relative flex min-h-0 flex-1 flex-col'>
-              {isFetching && (
-                <div className='absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary/40' />
-              )}
-              <Tabs value={activeTab} onValueChange={setActiveTab} className='flex h-full flex-col'>
-                {/* Tab bar + action buttons */}
-                <div className='mx-6 mt-4 flex flex-shrink-0 items-center gap-2'>
-                  <TabsList className='grid flex-1 grid-cols-2'>
-                    <TabsTrigger value='request'>{t('requests.detail.tabs.request')}</TabsTrigger>
-                    <TabsTrigger value='response'>{t('requests.detail.tabs.response')}</TabsTrigger>
-                  </TabsList>
-                  <Button
-                    variant='outline'
-                    size='icon'
-                    className='h-9 w-9 flex-shrink-0'
-                    onClick={() => setGlobalExpanded((v) => !v)}
-                    title={globalExpanded ? t('requests.drawer.collapseAll') : t('requests.drawer.expandAll')}
-                  >
-                    {globalExpanded ? (
-                      <ChevronsDownUp className='h-4 w-4' />
-                    ) : (
-                      <ChevronsUpDown className='h-4 w-4' />
-                    )}
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='icon'
-                    className='h-9 w-9 flex-shrink-0'
-                    onClick={() =>
-                      copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)
-                    }
-                    title={t('requests.actions.copy')}
-                  >
-                    <Copy className='h-4 w-4' />
-                  </Button>
-                  {activeTab === 'request' && (
-                    <Button
-                      variant='outline'
-                      size='icon'
-                      className='h-9 w-9 flex-shrink-0'
-                      onClick={handleCurlPreview}
-                      title={t('requests.actions.copyCurl')}
-                    >
-                      <Terminal className='h-4 w-4' />
-                    </Button>
-                  )}
-                </div>
-
-                <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
-                  <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
-                    {displayedRequest.requestBody ? (
-                      <JsonViewer
-                        key={`req-${currentRequestId}`}
-                        data={displayedRequest.requestBody}
-                        rootName=''
-                        defaultExpanded={true}
-                        expandDepth='all'
-                        hideArrayIndices={true}
-                        globalStringExpanded={globalExpanded}
-                        className='text-sm'
-                      />
-                    ) : (
-                      <div className='flex h-32 items-center justify-center'>
-                        <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
-                      </div>
-                    )}
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
-                  <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
-                    {displayedRequest.responseBody ? (
-                      <JsonViewer
-                        key={`res-${currentRequestId}`}
-                        data={displayedRequest.responseBody}
-                        rootName=''
-                        defaultExpanded={true}
-                        expandDepth='all'
-                        hideArrayIndices={true}
-                        globalStringExpanded={globalExpanded}
-                        className='text-sm'
-                      />
-                    ) : (
-                      <div className='flex h-32 items-center justify-center'>
-                        <p className='text-muted-foreground text-sm'>{t('requests.detail.noResponse')}</p>
-                      </div>
-                    )}
-                  </ScrollArea>
-                </TabsContent>
-              </Tabs>
-            </div>
-          ) : isLoading || !canRenderBody ? (
+          {open && canRenderBody && currentRequestId ? (
+            <RequestBodyDrawerContent
+              currentRequestId={currentRequestId}
+              projectId={effectiveProjectId}
+              includeAdminFields={includeAdminFields}
+            />
+          ) : open ? (
             <div className='space-y-4 p-6'>
               <Skeleton className='h-8 w-full' />
               <Skeleton className='h-64 w-full' />
@@ -417,7 +469,6 @@ export function RequestBodyDrawer({
           ) : null}
         </div>
       </SheetContent>
-      <CurlPreviewDialog open={showCurlPreview} onOpenChange={setShowCurlPreview} curlCommand={curlCommand} />
     </Sheet>
   );
 }
