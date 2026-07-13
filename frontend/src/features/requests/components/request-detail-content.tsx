@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
 import { enUS, zhCN } from 'date-fns/locale';
-import { ChevronRight, Copy, Database, Download, FileText, Key, Layers, Terminal } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Database, Download, FileText, Key, Layers, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { extractNumberID } from '@/lib/utils';
@@ -24,7 +24,8 @@ import { parseResponse } from '../utils/response-parser';
 import { ChunksDialog } from './chunks-dialog';
 import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
-import { type RequestDetailTab } from './request-content-state';
+import { nextExpandedExecution, type RequestDetailTab } from './request-content-state';
+import { RequestExecutionContentPanel } from './request-execution-content';
 import { ResponseFlow } from './response-flow';
 
 interface RequestDetailContentProps {
@@ -376,9 +377,10 @@ function OverviewPanel({ request, requestId, projectId }: { request: RequestMeta
   );
 }
 
-function ExecutionSummariesPanel({ requestId, projectId }: { requestId: string; projectId?: string | null }) {
+function ExecutionSummariesPanel({ requestId, projectId, includeAdminFields }: { requestId: string; projectId?: string | null; includeAdminFields?: boolean }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
+  const [expandedExecutionId, setExpandedExecutionId] = useState<string | null>(null);
   const { data, isLoading, isError, refetch } = useRequestExecutions(
     requestId,
     { first: 10, orderBy: { field: 'CREATED_AT', direction: 'DESC' } },
@@ -406,7 +408,26 @@ function ExecutionSummariesPanel({ requestId, projectId }: { requestId: string; 
               <div className='bg-background rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('requests.columns.firstTokenLatency')}</p><p className='font-mono text-sm'>{execution.metricsFirstTokenLatencyMs == null ? '-' : `${execution.metricsFirstTokenLatencyMs}ms`}</p></div>
             </div>
             {execution.errorMessage && <p className='text-destructive bg-destructive/10 rounded border p-3 text-sm'>{execution.errorMessage}</p>}
-            <Button variant='outline' size='sm' disabled><ChevronRight className='mr-2 h-4 w-4' />{t('requests.detail.execution.showContent')}</Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setExpandedExecutionId((current) => nextExpandedExecution(current, execution.id))}
+            >
+              {expandedExecutionId === execution.id
+                ? <ChevronDown className='mr-2 h-4 w-4' />
+                : <ChevronRight className='mr-2 h-4 w-4' />}
+              {expandedExecutionId === execution.id
+                ? t('requests.detail.execution.hideContent')
+                : t('requests.detail.execution.showContent')}
+            </Button>
+            {expandedExecutionId === execution.id && (
+              <RequestExecutionContentPanel
+                requestId={requestId}
+                executionId={execution.id}
+                projectId={projectId}
+                includeAdminFields={includeAdminFields}
+              />
+            )}
           </CardContent>
         </Card>
       ))}
@@ -464,7 +485,7 @@ export function RequestDetailContent({
             )}
           </TabsContent>
           <TabsContent value='executions' className='p-6'>
-            {activeTab === 'executions' && <ExecutionSummariesPanel requestId={requestId} projectId={projectId} />}
+            {activeTab === 'executions' && <ExecutionSummariesPanel requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />}
           </TabsContent>
         </Tabs>
       </CardContent>

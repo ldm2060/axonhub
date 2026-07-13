@@ -6,6 +6,7 @@ import { join } from 'node:path';
 const detailSource = readFileSync(join(import.meta.dirname, 'request-detail-content.tsx'), 'utf8');
 const projectPageSource = readFileSync(join(import.meta.dirname, 'request-detail-page.tsx'), 'utf8');
 const globalPageSource = readFileSync(join(import.meta.dirname, 'request-detail-global-page.tsx'), 'utf8');
+const executionContentSource = readFileSync(join(import.meta.dirname, 'request-execution-content.tsx'), 'utf8');
 
 test('detail routes fetch metadata and default to overview', () => {
   assert.match(projectPageSource, /useRequestMetadata\(/);
@@ -24,4 +25,11 @@ test('main payload hooks live in tab-owned panels', () => {
 test('response preview is gated by the active response tab', () => {
   assert.match(projectPageSource, /isResponseActive/);
   assert.match(projectPageSource, /!isLivePreviewEnabled \|\| !isResponseActive/);
+});
+
+test('execution summaries mount one node-scoped content panel at a time', () => {
+  assert.match(detailSource, /expandedExecutionId/);
+  assert.match(detailSource, /nextExpandedExecution/);
+  assert.match(detailSource, /expandedExecutionId === execution\.id && \(/);
+  assert.match(executionContentSource, /useRequestExecutionContent\(/);
 });
