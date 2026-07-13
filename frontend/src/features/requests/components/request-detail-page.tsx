@@ -11,8 +11,9 @@ import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { useStoragePolicy } from '@/features/system/data/system';
-import { type Request, useRequest } from '../data';
+import { type RequestMetadata, useRequestMetadata } from '../data';
 import { RequestDetailContent } from './request-detail-content';
+import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
 import { createPreviewChunkBatcher } from './preview-chunk-batcher';
 
 type PreviewFallbackResponse = {
@@ -127,7 +128,8 @@ export default function RequestDetailPage() {
   const selectedProjectId = useSelectedProjectId();
   const { data: storagePolicy } = useStoragePolicy();
   const isLivePreviewEnabled = storagePolicy?.livePreview ?? false;
-  const [previewRequest, setPreviewRequest] = useState<Request | null>(null);
+  const [activeTab, setActiveTab] = useState<RequestDetailTab>(DEFAULT_REQUEST_DETAIL_TAB);
+  const [previewRequest, setPreviewRequest] = useState<RequestMetadata | null>(null);
   const [previewVersion, setPreviewVersion] = useState(0);
   const [isPreviewStreaming, setIsPreviewStreaming] = useState(false);
   const [previewFallbackActive, setPreviewFallbackActive] = useState(false);
@@ -135,7 +137,8 @@ export default function RequestDetailPage() {
   const previewChunkCountRef = useRef(0);
   const previewChunksRef = useRef<any[]>([]);
 
-  const { data: requestData, refetch: refetchRequest } = useRequest(requestGUID, {
+  const isResponseActive = activeTab === 'response';
+  const { data: requestData, refetch: refetchRequest } = useRequestMetadata(requestGUID, {
     projectId: selectedProjectId,
     disableAutoRefresh: isPreviewStreaming,
   });
@@ -160,7 +163,7 @@ export default function RequestDetailPage() {
   }, [requestData]);
 
   useEffect(() => {
-    if (!isLivePreviewEnabled) {
+    if (!isLivePreviewEnabled || !isResponseActive) {
       setPreviewRequest(null);
       setIsPreviewStreaming(false);
       setPreviewFallbackActive(false);
@@ -204,7 +207,6 @@ export default function RequestDetailPage() {
     setPreviewFallbackActive(false);
     setPreviewRequest({
       ...requestData,
-      responseChunks: [],
     });
     previewChunkCountRef.current = 0;
     previewChunksRef.current = [];
@@ -264,14 +266,7 @@ export default function RequestDetailPage() {
           if (!isDisposed && fallbackResponse.mode === 'static-fetch') {
             chunkBatcher.dispose();
             previewChunksRef.current = fallbackResponse.responseChunks ?? previewChunksRef.current;
-            setPreviewRequest((currentRequest) =>
-              currentRequest
-                ? {
-                    ...currentRequest,
-                    responseChunks: previewChunksRef.current,
-                  }
-                : currentRequest
-            );
+            setPreviewRequest((currentRequest) => currentRequest);
             setPreviewVersion((version) => version + 1);
             setIsPreviewStreaming(false);
             setPreviewFallbackActive(true);
@@ -351,7 +346,7 @@ export default function RequestDetailPage() {
       clearReconnectTimer();
       controller.abort();
     };
-  }, [isLivePreviewEnabled, previewFallbackActive, requestData, refetchRequest, selectedProjectId]);
+  }, [isLivePreviewEnabled, isResponseActive, previewFallbackActive, requestData, refetchRequest, selectedProjectId]);
 
   const handleBack = () => {
     navigate({
@@ -393,8 +388,11 @@ export default function RequestDetailPage() {
       <Main className='flex-1 overflow-auto'>
         <div className='container mx-auto max-w-7xl p-6'>
           <RequestDetailContent
+            request={request}
             requestId={requestGUID}
             projectId={selectedProjectId}
+            activeTab={activeTab}
+            onActiveTabChange={setActiveTab}
             previewRequest={previewRequest}
             previewChunks={previewChunksRef.current}
             previewVersion={previewVersion}

@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const detailSource = readFileSync(join(import.meta.dirname, 'request-detail-content.tsx'), 'utf8');
+const projectPageSource = readFileSync(join(import.meta.dirname, 'request-detail-page.tsx'), 'utf8');
+const globalPageSource = readFileSync(join(import.meta.dirname, 'request-detail-global-page.tsx'), 'utf8');
+
+test('detail routes fetch metadata and default to overview', () => {
+  assert.match(projectPageSource, /useRequestMetadata\(/);
+  assert.match(globalPageSource, /useRequestMetadata\(/);
+  assert.match(projectPageSource, /DEFAULT_REQUEST_DETAIL_TAB/);
+  assert.match(globalPageSource, /DEFAULT_REQUEST_DETAIL_TAB/);
+});
+
+test('main payload hooks live in tab-owned panels', () => {
+  assert.match(detailSource, /function RequestContentPanel[\s\S]*useRequestContent\(/);
+  assert.match(detailSource, /function ResponseContentPanel[\s\S]*useRequestContent\(/);
+  assert.match(detailSource, /<Tabs value=\{activeTab\}/);
+  assert.match(detailSource, /<TabsTrigger value='overview'/);
+});
+
+test('response preview is gated by the active response tab', () => {
+  assert.match(projectPageSource, /isResponseActive/);
+  assert.match(projectPageSource, /!isLivePreviewEnabled \|\| !isResponseActive/);
+});

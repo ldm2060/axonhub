@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
-import { useParams, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
+import { useParams, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { buildGUID, extractNumberID } from '@/lib/utils';
@@ -7,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { useRequest } from '../data';
+import { useRequestMetadata } from '../data';
 import { RequestDetailContent } from './request-detail-content';
+import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
 
 interface RequestDetailGlobalPageProps {
   backTo?: '/admin/channels' | '/admin/requests';
@@ -22,7 +24,8 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
   const currentSearch = useRouterState({
     select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
   });
-  const { data: request } = useRequest(requestGUID, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
+  const [activeTab, setActiveTab] = useState<RequestDetailTab>(DEFAULT_REQUEST_DETAIL_TAB);
+  const { data: request } = useRequestMetadata(requestGUID, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
 
   const handleBack = () => {
     if (backTo === '/admin/requests') {
@@ -64,7 +67,14 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
 
       <Main className='flex-1 overflow-auto'>
         <div className='container mx-auto max-w-7xl p-6'>
-          <RequestDetailContent requestId={requestGUID} projectId={null} />
+          <RequestDetailContent
+            request={request}
+            requestId={requestGUID}
+            projectId={null}
+            activeTab={activeTab}
+            onActiveTabChange={setActiveTab}
+            includeAdminFields={backTo === '/admin/requests'}
+          />
         </div>
       </Main>
     </div>
