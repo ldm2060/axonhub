@@ -14,11 +14,13 @@ export function StreamingSettings() {
   const { data: streamingSettings, isLoading } = useStreamingSettings();
   const updateStreamingSettings = useUpdateStreamingSettings();
 
-  const [keepalive, setKeepalive] = useState<number>(0);
+  const [webSocketKeepalive, setWebSocketKeepalive] = useState<number>(0);
+  const [httpStreamKeepalive, setHTTPStreamKeepalive] = useState<number>(0);
 
   useEffect(() => {
     if (streamingSettings) {
-      setKeepalive(streamingSettings.webSocketKeepaliveIntervalSeconds ?? 0);
+      setWebSocketKeepalive(streamingSettings.webSocketKeepaliveIntervalSeconds ?? 0);
+      setHTTPStreamKeepalive(streamingSettings.httpStreamKeepaliveIntervalSeconds ?? 0);
     }
   }, [streamingSettings]);
 
@@ -26,11 +28,14 @@ export function StreamingSettings() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const input: UpdateStreamingSettingsInput = {
-        webSocketKeepaliveIntervalSeconds: Number.isFinite(keepalive) && keepalive > 0 ? Math.floor(keepalive) : 0,
+        webSocketKeepaliveIntervalSeconds:
+          Number.isFinite(webSocketKeepalive) && webSocketKeepalive > 0 ? Math.floor(webSocketKeepalive) : 0,
+        httpStreamKeepaliveIntervalSeconds:
+          Number.isFinite(httpStreamKeepalive) && httpStreamKeepalive > 0 ? Math.floor(httpStreamKeepalive) : 0,
       };
       await updateStreamingSettings.mutateAsync(input);
     },
-    [updateStreamingSettings, keepalive]
+    [updateStreamingSettings, webSocketKeepalive, httpStreamKeepalive]
   );
 
   if (isLoading) {
@@ -58,8 +63,25 @@ export function StreamingSettings() {
                 type='number'
                 min='0'
                 max='3600'
-                value={keepalive}
-                onChange={(e) => setKeepalive(Number(e.target.value) || 0)}
+                value={webSocketKeepalive}
+                onChange={(e) => setWebSocketKeepalive(Number(e.target.value) || 0)}
+                className='w-32'
+              />
+              <span className='text-muted-foreground text-sm'>s</span>
+            </div>
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='http-stream-keepalive'>{t('system.streaming.httpKeepalive.label')}</Label>
+            <div className='text-muted-foreground mb-2 text-sm'>{t('system.streaming.httpKeepalive.description')}</div>
+            <div className='flex items-center space-x-2'>
+              <Input
+                id='http-stream-keepalive'
+                type='number'
+                min='0'
+                max='3600'
+                value={httpStreamKeepalive}
+                onChange={(e) => setHTTPStreamKeepalive(Number(e.target.value) || 0)}
                 className='w-32'
               />
               <span className='text-muted-foreground text-sm'>s</span>
