@@ -85,7 +85,10 @@ export async function graphqlRequest<T>(
         operationName, // Add operation name for tracing
       }),
     });
-  } catch (_error) {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error;
+    }
     throw new GraphQLRequestError('Network error', { status: undefined, isAuthError: false });
   }
 

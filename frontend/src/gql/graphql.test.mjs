@@ -17,7 +17,7 @@ const transpiled = ts.transpileModule(source, {
   .replaceAll("import i18n from '@/lib/i18n';", 'const i18n = { t: (key) => key };');
 
 const moduleUrl = `data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`;
-const { isUnauthorizedGraphQLError } = await import(moduleUrl);
+const { graphqlRequest, isUnauthorizedGraphQLError } = await import(moduleUrl);
 
 test('does not classify upstream unauthorized provider failures as login expiration', () => {
   const error = {
@@ -30,4 +30,20 @@ test('does not classify upstream unauthorized provider failures as login expirat
 
 test('classifies explicit GraphQL authentication codes as login expiration', () => {
   assert.equal(isUnauthorizedGraphQLError({ extensions: { code: 'UNAUTHENTICATED' } }), true);
+});
+
+test('preserves AbortError when a request is canceled', async () => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new DOMException('The operation was aborted.', 'AbortError');
+  };
+
+  try {
+    await assert.rejects(
+      graphqlRequest('query Test { __typename }', undefined, undefined, new AbortController().signal),
+      (error) => error?.name === 'AbortError'
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
 });
