@@ -25,6 +25,7 @@ import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
 import { nextExpandedExecution, type RequestDetailTab } from './request-content-state';
 import { RequestExecutionContentPanel } from './request-execution-content';
+import { formatRequestUsageCost } from './request-usage-format';
 import { ResponseFlow } from './response-flow';
 
 interface RequestDetailContentProps {
@@ -342,13 +343,15 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
   const reasoningTokens = usage?.completionReasoningTokens || 0;
   const cacheHitRate = promptTokens > 0 && cachedTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
   const writeCacheRate = promptTokens > 0 && writeCachedTokens > 0 ? ((writeCachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
-  const formatCurrency = (value: number) =>
-    t('currencies.format', {
-      val: value,
-      currency: settings?.currencyCode,
-      locale: i18n.language === 'zh' ? 'zh-CN' : 'en-US',
-      minimumFractionDigits: 6,
-    });
+  const formatCurrency = (value: number | null | undefined) =>
+    formatRequestUsageCost(value, settings?.currencyCode, (amount, currencyCode) =>
+      t('currencies.format', {
+        val: amount,
+        currency: currencyCode,
+        locale: i18n.language === 'zh' ? 'zh-CN' : 'en-US',
+        minimumFractionDigits: 6,
+      })
+    );
 
   return (
     <div className='space-y-6'>
@@ -390,7 +393,7 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
               </div>
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('requests.columns.cost')}</p>
-                <p className='font-semibold'>{formatCurrency(usage.totalCost ?? 0)}</p>
+                <p className='font-semibold'>{formatCurrency(usage.totalCost)}</p>
               </div>
             </div>
           </CardContent>
