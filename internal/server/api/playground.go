@@ -270,7 +270,8 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 		c.Request = c.Request.WithContext(ctx)
 	}
 
-	if !requestBodyWantsStream(genericReq) && handlers.RequestTimeout > 0 {
+	streaming := requestBodyWantsStream(genericReq)
+	if !streaming && handlers.RequestTimeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, handlers.RequestTimeout)
 		defer cancel()
@@ -301,9 +302,38 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 		processor = processor.WithChannelSelector(orchestrator.NewSpecifiedChannelSelector(handlers.ChannelService, channelID))
 	}
 
-	result, err := processor.Process(ctx, genericReq)
+	keepaliveInterval := time.Duration(0)
+	if streaming {
+		settings, settingsErr := handlers.ChatCompletionOrchestrator.SystemService.StreamingSettings(ctx)
+		if settingsErr == nil && settings != nil && settings.HTTPStreamKeepaliveIntervalSeconds > 0 {
+			keepaliveInterval = time.Duration(settings.HTTPStreamKeepaliveIntervalSeconds) * time.Second
+		}
+	}
+
+	var result orchestrator.ChatCompletionResult
+	if keepaliveInterval > 0 {
+		result, err = processWithHTTPKeepalive(
+			c,
+			ctx,
+			processor,
+			genericReq,
+			keepaliveInterval,
+			httpStreamKeepaliveTextWhitespace,
+			[]byte("\n"),
+			"text/plain; charset=utf-8",
+		)
+	} else {
+		result, err = processor.Process(ctx, genericReq)
+	}
 	if err != nil {
 		log.Error(ctx, "Error processing chat completion", log.Cause(err))
+		if c.Writer.Written() {
+			if _, writeErr := c.Writer.Write([]byte("3:" + strconv.Quote(err.Error()) + "\n")); writeErr != nil {
+				log.Warn(ctx, "Failed to write committed playground error", log.Cause(writeErr))
+			}
+			c.Writer.Flush()
+			return
+		}
 		errResponse := handlers.HandleError(err)
 		c.JSON(errResponse.Status, errResponse)
 
@@ -331,6 +361,9 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 			}
 		}()
 
-		WriteJSONStreamWithOptions(c, result.ChatCompletionStream, StreamWriteOptions{IdleTimeout: handlers.StreamIdleTimeout})
+		WriteJSONStreamWithOptions(c, result.ChatCompletionStream, StreamWriteOptions{
+			IdleTimeout:       handlers.StreamIdleTimeout,
+			KeepaliveInterval: keepaliveInterval,
+		})
 	}
 }

@@ -191,9 +191,10 @@ func (handlers *ChatCompletionHandlers) configuredHTTPKeepaliveInterval(ctx cont
 	return time.Duration(settings.HTTPStreamKeepaliveIntervalSeconds) * time.Second
 }
 
-func (handlers *ChatCompletionHandlers) processWithHTTPKeepalive(
+func processWithHTTPKeepalive(
 	c *gin.Context,
 	ctx context.Context,
+	processor ChatCompletionProcessor,
 	genericReq *httpclient.Request,
 	interval time.Duration,
 	mode HTTPStreamKeepaliveMode,
@@ -209,7 +210,7 @@ func (handlers *ChatCompletionHandlers) processWithHTTPKeepalive(
 			}
 		}()
 
-		result, err := handlers.processor().Process(ctx, genericReq)
+		result, err := processor.Process(ctx, genericReq)
 		resultCh <- processResult{result: result, err: err}
 	}()
 
@@ -302,9 +303,10 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		err    error
 	)
 	if keepaliveInterval > 0 {
-		result, err = handlers.processWithHTTPKeepalive(
+		result, err = processWithHTTPKeepalive(
 			c,
 			ctx,
+			handlers.processor(),
 			genericReq,
 			keepaliveInterval,
 			keepaliveMode,
