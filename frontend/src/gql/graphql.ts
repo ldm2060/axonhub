@@ -49,7 +49,8 @@ export function isUnauthorizedGraphQLError(error: any): boolean {
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, any>,
-  customHeaders?: Record<string, string>
+  customHeaders?: Record<string, string>,
+  signal?: AbortSignal
 ): Promise<T> {
   // Get token from localStorage
   const token = getTokenFromStorage();
@@ -77,6 +78,7 @@ export async function graphqlRequest<T>(
     response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers,
+      signal,
       body: JSON.stringify({
         query,
         variables,

@@ -4,13 +4,24 @@ import { useTranslation } from 'react-i18next';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
-import { buildRequestQueryKey } from './request-query-key';
+import {
+  buildRequestContentQueryKey,
+  buildRequestExecutionContentQueryKey,
+  buildRequestMetadataQueryKey,
+  buildRequestQueryKey,
+} from './request-query-key';
 import {
   Request,
   RequestConnection,
-  RequestExecutionConnection,
+  RequestContent,
+  RequestExecutionContent,
+  RequestExecutionSummaryConnection,
+  RequestMetadata,
   requestConnectionSchema,
-  requestExecutionConnectionSchema,
+  requestContentSchema,
+  requestExecutionContentSchema,
+  requestExecutionSummaryConnectionSchema,
+  requestMetadataSchema,
   requestSchema,
 } from './schema';
 
@@ -211,7 +222,7 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
   `;
 }
 
-function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
+function buildRequestMetadataQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
   const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
     ? `
             project {
@@ -247,7 +258,7 @@ function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; 
     : '';
 
   return `
-    query GetRequestDetailPolling($id: ID!) {
+    query GetRequestMetadata($id: ID!) {
       node(id: $id) {
         ... on Request {
           id
@@ -264,13 +275,55 @@ function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; 
           status
           format
           metricsReasoningDurationMs
+          usageLogs(first: 1) {
+            edges {
+              node {
+                id
+                promptTokens
+                completionTokens
+                completionReasoningTokens
+                totalTokens
+                promptCachedTokens
+                promptWriteCachedTokens
+                totalCost
+              }
+            }
+          }
         }
       }
     }
   `;
 }
 
-function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) {
+function buildRequestContentQuery() {
+  return `
+    query GetRequestContent($id: ID!) {
+      node(id: $id) {
+        ... on Request {
+          id
+          requestHeaders
+          requestBody
+        }
+      }
+    }
+  `;
+}
+
+function buildResponseContentQuery() {
+  return `
+    query GetResponseContent($id: ID!) {
+      node(id: $id) {
+        ... on Request {
+          id
+          responseBody
+          responseChunks
+        }
+      }
+    }
+  `;
+}
+
+function buildRequestExecutionSummariesQuery(permissions: { canViewChannels: boolean }) {
   const channelFields = permissions.canViewChannels
     ? `
               channel {
@@ -301,10 +354,6 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
                 modelID
                 projectID
                 dataStorageID
-                requestHeaders
-                requestBody
-                responseBody
-                responseChunks
                 errorMessage
                 responseStatusCode
                 status
@@ -325,6 +374,34 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
             }
             totalCount
           }
+        }
+      }
+    }
+  `;
+}
+
+function buildRequestExecutionContentQuery(permissions: { canViewChannels: boolean }) {
+  const channelFields = permissions.canViewChannels
+    ? `
+          channel {
+            id
+            name
+            type
+            baseURL
+          }`
+    : '';
+
+  return `
+    query GetRequestExecutionContent($id: ID!) {
+      node(id: $id) {
+        ... on RequestExecution {
+          id${channelFields}
+          format
+          requestURL
+          requestHeaders
+          requestBody
+          responseBody
+          responseChunks
         }
       }
     }
@@ -385,6 +462,94 @@ export function useRequests(variables?: {
   });
 }
 
+export function useRequestMetadata(
+  id: string,
+  options?: {
+    projectId?: string | null;
+    enabled?: boolean;
+    disableAutoRefresh?: boolean;
+    includeAdminFields?: boolean;
+  }
+) {
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+  const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
+  const queryKey = buildRequestMetadataQueryKey({
+    id,
+    permissions,
+    projectId,
+    includeAdminFields: options?.includeAdminFields,
+  });
+
+  return useQuery<RequestMetadata>({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      try {
+        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+        const data = await graphqlRequest<{ node: RequestMetadata }>(
+          buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields }),
+          { id },
+          headers,
+          signal
+        );
+        if (!data.node) throw new Error('Request not found');
+        return requestMetadataSchema.parse(data.node);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: (options?.enabled ?? true) && !!id,
+    refetchInterval: (query) => {
+      if (options?.disableAutoRefresh) return false;
+      return query.state.data?.status === 'processing' ? 2000 : false;
+    },
+  });
+}
+
+export function useRequestContent(
+  id: string,
+  options: {
+    kind: 'request' | 'response';
+    projectId?: string | null;
+    enabled?: boolean;
+    includeAdminFields?: boolean;
+  }
+) {
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+  const permissions = useRequestPermissions({ systemOnly: options.projectId === null });
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = options.projectId !== undefined ? options.projectId : selectedProjectId;
+  const queryKey = buildRequestContentQueryKey({
+    id,
+    permissions,
+    projectId,
+    includeAdminFields: options.includeAdminFields,
+    content: options.kind,
+  });
+
+  return useQuery<RequestContent>({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      try {
+        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+        const query = options.kind === 'request' ? buildRequestContentQuery() : buildResponseContentQuery();
+        const data = await graphqlRequest<{ node: RequestContent }>(query, { id }, headers, signal);
+        if (!data.node) throw new Error('Request not found');
+        return requestContentSchema.parse(data.node);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: (options.enabled ?? true) && !!id,
+    gcTime: 0,
+  });
+}
+
 export function useRequest(
   id: string,
   options?: {
@@ -421,7 +586,7 @@ export function useRequest(
         const shouldUseLightweightPolling = previousRequest?.status === 'processing';
 
         const query = shouldUseLightweightPolling
-          ? buildRequestDetailPollingQuery(permissions, { includeAdminFields: options?.includeAdminFields })
+          ? buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields })
           : buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields });
 
         const data = await graphqlRequest<{ node: Request }>(query, { id }, headers);
@@ -510,7 +675,7 @@ export function useRequestExecutions(
     orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
     where?: Record<string, any>;
   },
-  options?: { projectId?: string | null }
+  options?: { projectId?: string | null; enabled?: boolean }
 ) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
@@ -518,23 +683,64 @@ export function useRequestExecutions(
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
 
-  return useQuery({
+  return useQuery<RequestExecutionSummaryConnection>({
     queryKey: ['request-executions', requestID, variables, permissions, projectId],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       try {
-        const query = buildRequestExecutionsQuery(permissions);
+        const query = buildRequestExecutionSummariesQuery(permissions);
         const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
         const finalVariables = {
           requestID,
           ...variables,
         };
-        const data = await graphqlRequest<{ node: { executions: RequestExecutionConnection } }>(query, finalVariables, headers);
-        return requestExecutionConnectionSchema.parse(data?.node?.executions);
+        const data = await graphqlRequest<{ node: { executions: RequestExecutionSummaryConnection } }>(query, finalVariables, headers, signal);
+        return requestExecutionSummaryConnectionSchema.parse(data?.node?.executions);
       } catch (error) {
         handleError(error, t('common.errors.internalServerError'));
         throw error;
       }
     },
-    enabled: !!requestID,
+    enabled: (options?.enabled ?? true) && !!requestID,
+  });
+}
+
+export function useRequestExecutionContent(
+  requestID: string,
+  executionID: string,
+  options?: { projectId?: string | null; enabled?: boolean; includeAdminFields?: boolean }
+) {
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+  const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
+  const queryKey = buildRequestExecutionContentQueryKey({
+    id: requestID,
+    executionId: executionID,
+    permissions,
+    projectId,
+    includeAdminFields: options?.includeAdminFields,
+  });
+
+  return useQuery<RequestExecutionContent>({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      try {
+        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+        const data = await graphqlRequest<{ node: RequestExecutionContent }>(
+          buildRequestExecutionContentQuery(permissions),
+          { id: executionID },
+          headers,
+          signal
+        );
+        if (!data.node) throw new Error('Request execution not found');
+        return requestExecutionContentSchema.parse(data.node);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
+    },
+    enabled: (options?.enabled ?? true) && !!requestID && !!executionID,
+    gcTime: 0,
   });
 }

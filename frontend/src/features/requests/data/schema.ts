@@ -100,6 +100,44 @@ export const requestSchema = z.object({
 
 export type Request = z.infer<typeof requestSchema>;
 
+export const requestMetadataSchema = requestSchema.omit({
+  requestHeaders: true,
+  requestBody: true,
+  responseBody: true,
+  responseChunks: true,
+  executions: true,
+});
+export type RequestMetadata = z.infer<typeof requestMetadataSchema>;
+
+export const requestContentSchema = z.object({
+  id: z.string(),
+  requestHeaders: z.any().nullable().optional(),
+  requestBody: z.any().nullable().optional(),
+  responseBody: z.any().nullable().optional(),
+  responseChunks: z.array(z.any()).nullable().optional(),
+});
+export type RequestContent = z.infer<typeof requestContentSchema>;
+
+export const requestExecutionSummarySchema = requestExecutionSchema.omit({
+  requestHeaders: true,
+  requestBody: true,
+  responseBody: true,
+  responseChunks: true,
+});
+export type RequestExecutionSummary = z.infer<typeof requestExecutionSummarySchema>;
+
+export const requestExecutionContentSchema = requestExecutionSchema.pick({
+  id: true,
+  channel: true,
+  format: true,
+  requestURL: true,
+  requestHeaders: true,
+  requestBody: true,
+  responseBody: true,
+  responseChunks: true,
+});
+export type RequestExecutionContent = z.infer<typeof requestExecutionContentSchema>;
+
 // Request Connection (for pagination)
 export const requestConnectionSchema = z.object({
   edges: z.array(
@@ -125,3 +163,15 @@ export const requestExecutionConnectionSchema = z.object({
   totalCount: z.number(),
 });
 export type RequestExecutionConnection = z.infer<typeof requestExecutionConnectionSchema>;
+
+export const requestExecutionSummaryConnectionSchema = z.object({
+  edges: z.array(
+    z.object({
+      node: requestExecutionSummarySchema,
+      cursor: z.string(),
+    })
+  ),
+  pageInfo: pageInfoSchema,
+  totalCount: z.number(),
+});
+export type RequestExecutionSummaryConnection = z.infer<typeof requestExecutionSummaryConnectionSchema>;
