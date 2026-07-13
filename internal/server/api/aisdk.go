@@ -82,13 +82,24 @@ func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclien
 
 	// Set text stream headers
 	c.Header("Content-Type", "text/plain; charset=utf-8")
-	c.Header("Cache-Control", "no-cache")
+	c.Header("Cache-Control", "no-cache, no-transform")
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("X-Accel-Buffering", "no")
 	c.Header("X-Vercel-AI-Data-Stream", "v1")
 
+	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
 	for {
-		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		result := waiter.Next()
+		if result.heartbeat {
+			if _, err := c.Writer.Write([]byte("\n")); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write AI SDK keepalive", log.Cause(err))
+				return
+			}
+			c.Writer.Flush()
+			continue
+		}
 		if result.ok {
 			cur := result.event
 			_, _ = c.Writer.Write(cur.Data)

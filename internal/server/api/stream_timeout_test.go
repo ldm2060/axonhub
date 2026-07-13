@@ -199,6 +199,29 @@ func TestWriteGeminiStreamWithOptionsKeepsJSONValidWithHeartbeat(t *testing.T) {
 	require.Contains(t, w.Body.String(), "\n")
 }
 
+func TestWriteJSONStreamWithOptionsEmitsWhitespaceHeartbeat(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	stream := newBlockingTestStream()
+
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		stream.nextCh <- &httpclient.StreamEvent{Data: []byte(`{"type":"start"}`)}
+		close(stream.nextCh)
+	}()
+
+	WriteJSONStreamWithOptions(c, stream, StreamWriteOptions{
+		IdleTimeout:       time.Second,
+		KeepaliveInterval: 5 * time.Millisecond,
+	})
+
+	require.Contains(t, w.Body.String(), "\n")
+	require.Contains(t, w.Body.String(), `{"type":"start"}`)
+}
+
 func TestWriteSSEStreamWithOptionsEmitsErrorOnIdleTimeout(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
