@@ -92,7 +92,7 @@ func TestWriteWSStream_SSEBytesMirrorsSSE(t *testing.T) {
 		stream := &fakeStream{events: []*httpclient.StreamEvent{
 			{Type: "data", Data: []byte(`{"foo":"bar"}`)},
 		}}
-		writeWSStream(r.Context(), conn, stream, WSFrameSSEBytes, 0)
+		writeWSStream(r.Context(), conn, stream, WSFrameSSEBytes, 0, nil)
 	}))
 	defer server.Close()
 
@@ -118,7 +118,7 @@ func TestWriteWSStream_ResponsesEventsSendsTypedJSON(t *testing.T) {
 		stream := &fakeStream{events: []*httpclient.StreamEvent{
 			{Type: "response.output_text.delta", Data: []byte(`{"type":"response.output_text.delta","delta":"hi"}`)},
 		}}
-		writeWSStream(r.Context(), conn, stream, WSFrameResponsesEvents, 0)
+		writeWSStream(r.Context(), conn, stream, WSFrameResponsesEvents, 0, nil)
 	}))
 	defer server.Close()
 

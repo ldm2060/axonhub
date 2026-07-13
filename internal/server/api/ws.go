@@ -13,11 +13,13 @@ import (
 	"github.com/gin-contrib/sse"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 // WSFrameMode selects how stream events are framed on an inbound WebSocket.
@@ -93,8 +95,10 @@ func writeWSResponse(conn *websocket.Conn, resp *httpclient.Response) error {
 
 // writeWSStream drains the stream and writes each event to the WS connection
 // according to mode. It returns when the stream ends, errors out, or the
-// connection is no longer writable. The stream is always closed.
-func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Stream[*httpclient.StreamEvent], mode WSFrameMode, idleTimeout time.Duration) {
+// connection is no longer writable. The stream is always closed. errData, when
+// non-nil, formats a mid-stream upstream error into the endpoint-native error
+// frame; otherwise wsErrorEventData is used.
+func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Stream[*httpclient.StreamEvent], mode WSFrameMode, idleTimeout time.Duration, errData func(error) []byte) {
 	defer func() {
 		if err := stream.Close(); err != nil {
 			log.Debug(ctx, "close ws stream", log.Cause(err))
@@ -119,9 +123,13 @@ func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Str
 			}
 
 			log.Warn(ctx, "ws stream error", log.Cause(result.err))
+			data := wsErrorEventData(ctx, mode, result.err)
+			if errData != nil {
+				data = errData(result.err)
+			}
 			_ = writeWSStreamEvent(conn, &httpclient.StreamEvent{
 				Type: "error",
-				Data: wsErrorEventData(ctx, mode, result.err),
+				Data: data,
 			}, mode)
 		}
 
@@ -272,6 +280,12 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 		return h.writeWSRequestError(conn, ctx, mode, err)
 	}
 
+	log.Info(ctx, "ws request dispatched",
+		log.Any("mode", mode),
+		log.Any("has_response", result.ChatCompletion != nil),
+		log.Any("has_stream", result.ChatCompletionStream != nil),
+	)
+
 	if result.ChatCompletion != nil {
 		if werr := writeWSResponse(conn, result.ChatCompletion); werr != nil {
 			return true
@@ -282,7 +296,7 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 
 	if result.ChatCompletionStream != nil {
 		stream := newUpstreamErrorStream(ctx, result.ChatCompletionStream, h.systemService())
-		writeWSStream(ctx, conn, stream, mode, h.StreamIdleTimeout)
+		writeWSStream(ctx, conn, stream, mode, h.StreamIdleTimeout, func(e error) []byte { return h.wsErrorData(ctx, mode, e) })
 		return false
 	}
 
@@ -293,26 +307,81 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 // writeWSRequestError sends a single error frame for a failed request.
 // Returns true if the write failed (caller should close the connection).
 func (h *ChatCompletionHandlers) writeWSRequestError(conn *websocket.Conn, ctx context.Context, mode WSFrameMode, err error) bool {
-	var data []byte
-	if h.ChatCompletionOrchestrator != nil {
-		httpErr := transformOrchestratorError(ctx, err, h.ChatCompletionOrchestrator)
-		if mode == WSFrameResponsesEvents {
-			obj := map[string]any{
-				"type":    "error",
-				"code":    "server_error",
-				"message": orchestrator.ExtractErrorMessage(err),
-			}
-			data, _ = json.Marshal(obj)
-		} else {
-			data = httpErr.Body
-		}
-	} else {
-		data = wsErrorEventData(ctx, mode, err)
-	}
+	data := h.wsErrorData(ctx, mode, err)
 
 	if werr := writeWSStreamEvent(conn, &httpclient.StreamEvent{Type: "error", Data: data}, mode); werr != nil {
 		return true
 	}
 
 	return false
+}
+
+// wsErrorData returns the WS error-frame payload for err, shaped per the
+// endpoint's native protocol so each client terminates correctly:
+//   - Responses (Codex /v1/responses): a `response.failed` terminal event
+//     carrying the real error fields.
+//   - Anthropic / OpenAI Chat / Gemini: the endpoint-native error body produced
+//     by the inbound transformer's TransformError — i.e. exactly the bytes the
+//     HTTP endpoint would return. The mode-specific WS framing (SSE wrap vs
+//     raw JSON) is applied later by writeWSStreamEvent.
+func (h *ChatCompletionHandlers) wsErrorData(ctx context.Context, mode WSFrameMode, err error) []byte {
+	if h.ChatCompletionOrchestrator != nil {
+		httpErr := transformOrchestratorError(ctx, err, h.ChatCompletionOrchestrator)
+		if mode == WSFrameResponsesEvents {
+			return responsesFailedEventData(httpErr, err)
+		}
+
+		return httpErr.Body
+	}
+
+	return wsErrorEventData(ctx, mode, err)
+}
+
+// responsesFailedEventData builds a standard Responses API `response.failed`
+// terminal event whose error fields are taken from httpErr.Body (the
+// endpoint-native error returned by TransformError). Responses WS clients such
+// as Codex wait for a terminal event (response.completed / response.failed); a
+// bare error object leaves them hanging.
+func responsesFailedEventData(httpErr *httpclient.Error, err error) []byte {
+	message := orchestrator.ExtractErrorMessage(err)
+	errType := ""
+	errCode := ""
+
+	if len(httpErr.Body) > 0 {
+		if m := gjson.GetBytes(httpErr.Body, "error.message"); m.Type == gjson.String && m.String() != "" {
+			message = m.String()
+		}
+
+		if t := gjson.GetBytes(httpErr.Body, "error.type"); t.Type == gjson.String {
+			errType = t.String()
+		}
+
+		if c := gjson.GetBytes(httpErr.Body, "error.code"); c.Type == gjson.String {
+			errCode = c.String()
+		}
+	}
+
+	now := time.Now()
+	status := "failed"
+	ev := responses.StreamEvent{
+		Type: responses.StreamEventTypeResponseFailed,
+		Response: &responses.Response{
+			Object:    "response",
+			ID:        fmt.Sprintf("resp_%d", now.UnixNano()),
+			CreatedAt: now.Unix(),
+			Output:    []responses.Item{},
+			Status:    &status,
+			Error: &responses.Error{
+				Type:    errType,
+				Code:    errCode,
+				Message: message,
+			},
+		},
+	}
+
+	if data, mErr := json.Marshal(ev); mErr == nil {
+		return data
+	}
+
+	return httpErr.Body
 }
