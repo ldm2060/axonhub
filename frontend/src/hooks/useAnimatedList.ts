@@ -24,7 +24,6 @@ export function useAnimatedList<T extends { id: string; createdAt: Date | string
     }
 
     setDisplayedData((currentDisplayed) => {
-      const currentIds = new Set(currentDisplayed.map((r) => r.id));
       const newDataMap = new Map(data.map((r) => [r.id, r]));
 
       // Compute the minimum timestamp from incoming data to establish the time window
