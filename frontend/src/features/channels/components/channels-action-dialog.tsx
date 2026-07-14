@@ -393,6 +393,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const [passThroughBody, setPassThroughBody] = useState<boolean | null>(() => {
     return initialRow?.settings?.passThroughBody ?? null;
   });
+  const [enableSameChannelRetry, setEnableSameChannelRetry] = useState(() => {
+    return initialRow?.settings?.enableSameChannelRetry ?? true;
+  });
   const [retryableStatusCodesText, setRetryableStatusCodesText] = useState(() =>
     formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes)
   );
@@ -1274,6 +1277,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         const nextSettings = mergeChannelSettingsForUpdate(settingsForSubmit, {
           passThroughUserAgent,
           passThroughBody,
+          enableSameChannelRetry,
           retryableStatusCodes,
           retryableErrorPatterns,
         });
@@ -1355,6 +1359,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           proxy: proxyConfig,
           passThroughUserAgent,
           passThroughBody,
+          enableSameChannelRetry,
           retryableStatusCodes,
           retryableErrorPatterns,
         });
@@ -1786,6 +1791,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             setProxyPassword(initialRow?.settings?.proxy?.password || '');
             setPassThroughUserAgent(initialRow?.settings?.passThroughUserAgent ?? null);
             setPassThroughBody(initialRow?.settings?.passThroughBody ?? null);
+            setEnableSameChannelRetry(initialRow?.settings?.enableSameChannelRetry ?? true);
             setRetryableStatusCodesText(formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes));
             setRetryableErrorPatternsText(formatRetryableErrorPatterns(initialRow?.settings?.retryableErrorPatterns));
             // Reset provider and API format state
@@ -2951,6 +2957,20 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           {passThroughBody === true && (
                             <p className='text-xs text-amber-600 dark:text-amber-400'>{t('channels.dialogs.bodyPassThrough.warning')}</p>
                           )}
+                        </div>
+                      </FormItem>
+
+                      <FormItem className='grid grid-cols-1 items-center gap-x-6 gap-y-2 md:grid-cols-8'>
+                        <div className='md:col-span-2 md:text-right'>
+                          <FormLabel className='font-medium'>{t('channels.dialogs.sameChannelRetry.label')}</FormLabel>
+                        </div>
+                        <div className='flex items-center justify-between gap-4 md:col-span-6'>
+                          <p className='text-muted-foreground text-sm'>{t('channels.dialogs.sameChannelRetry.description')}</p>
+                          <Switch
+                            checked={enableSameChannelRetry}
+                            onCheckedChange={setEnableSameChannelRetry}
+                            aria-label={t('channels.dialogs.sameChannelRetry.label')}
+                          />
                         </div>
                       </FormItem>
 

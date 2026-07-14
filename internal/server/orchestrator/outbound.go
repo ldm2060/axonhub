@@ -572,6 +572,12 @@ func (p *PersistentOutboundTransformer) CanRetry(err error) bool {
 		return false
 	}
 
+	if p.state.CurrentCandidate.Channel.Settings != nil &&
+		p.state.CurrentCandidate.Channel.Settings.EnableSameChannelRetry != nil &&
+		!*p.state.CurrentCandidate.Channel.Settings.EnableSameChannelRetry {
+		return false
+	}
+
 	if errors.Is(err, errSkipCandidateByCircuitBreaker) {
 		return false
 	}

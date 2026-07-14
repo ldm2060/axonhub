@@ -283,9 +283,14 @@ func TestPipeline_Process_RetryLogic(t *testing.T) {
 			},
 		}
 
+		prepareCalls := 0
 		switchCalls := 0
 		outbound := &mockOutbound{
-			canRetry:        func(err error) bool { return false }, // No same channel retry
+			canRetry: func(err error) bool { return false }, // No same channel retry
+			prepareForRetry: func(ctx context.Context) error {
+				prepareCalls++
+				return nil
+			},
 			hasMoreChannels: func() bool { return true },
 			nextChannel: func(ctx context.Context) error {
 				switchCalls++
@@ -304,6 +309,7 @@ func TestPipeline_Process_RetryLogic(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 		require.Equal(t, 2, execCalls)
+		require.Zero(t, prepareCalls)
 		require.Equal(t, 1, switchCalls)
 	})
 

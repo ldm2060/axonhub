@@ -473,6 +473,74 @@ func TestPersistentOutboundTransformer_CanRetry(t *testing.T) {
 		require.False(t, outbound.CanRetry(nonRetryableErr))
 	})
 
+	t.Run("same-channel retry setting defaults to enabled", func(t *testing.T) {
+		outbound := &PersistentOutboundTransformer{
+			wrapped: &mockTransformer{},
+			state: &PersistenceState{
+				CurrentCandidate: &ChannelModelsCandidate{
+					Channel: channel,
+					Models:  []biz.ChannelModelEntry{{RequestModel: "gpt-4", ActualModel: "gpt-4"}},
+				},
+			},
+		}
+
+		require.True(t, outbound.CanRetry(&httpclient.Error{StatusCode: http.StatusInternalServerError}))
+	})
+
+	t.Run("same-channel retry can be disabled per channel", func(t *testing.T) {
+		disabled := false
+		disabledChannel := &biz.Channel{
+			Channel: &ent.Channel{
+				ID:   2,
+				Name: "retry-disabled-channel",
+				Settings: &objects.ChannelSettings{
+					EnableSameChannelRetry: &disabled,
+				},
+			},
+			Outbound: &mockTransformer{},
+		}
+		outbound := &PersistentOutboundTransformer{
+			wrapped: &mockTransformer{},
+			state: &PersistenceState{
+				CurrentCandidate: &ChannelModelsCandidate{
+					Channel: disabledChannel,
+					Models: []biz.ChannelModelEntry{
+						{RequestModel: "gpt-4", ActualModel: "gpt-4"},
+						{RequestModel: "gpt-4", ActualModel: "gpt-4-turbo"},
+					},
+				},
+			},
+		}
+
+		require.False(t, outbound.CanRetry(&httpclient.Error{StatusCode: http.StatusInternalServerError}))
+		require.False(t, outbound.CanRetry(pipeline.ErrEmptyResponse))
+	})
+
+	t.Run("same-channel retry can be explicitly enabled per channel", func(t *testing.T) {
+		enabled := true
+		enabledChannel := &biz.Channel{
+			Channel: &ent.Channel{
+				ID:   3,
+				Name: "retry-enabled-channel",
+				Settings: &objects.ChannelSettings{
+					EnableSameChannelRetry: &enabled,
+				},
+			},
+			Outbound: &mockTransformer{},
+		}
+		outbound := &PersistentOutboundTransformer{
+			wrapped: &mockTransformer{},
+			state: &PersistenceState{
+				CurrentCandidate: &ChannelModelsCandidate{
+					Channel: enabledChannel,
+					Models:  []biz.ChannelModelEntry{{RequestModel: "gpt-4", ActualModel: "gpt-4"}},
+				},
+			},
+		}
+
+		require.True(t, outbound.CanRetry(&httpclient.Error{StatusCode: http.StatusInternalServerError}))
+	})
+
 	t.Run("skip-by-circuit-breaker should not trigger same-channel retry", func(t *testing.T) {
 		outbound := &PersistentOutboundTransformer{
 			wrapped: &mockTransformer{},

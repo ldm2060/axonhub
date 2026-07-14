@@ -734,6 +734,8 @@
   "channels.dialogs.bodyPassThrough.enabled": "Enabled",
   "channels.dialogs.bodyPassThrough.disabled": "Disabled",
   "channels.dialogs.bodyPassThrough.warning": "When enabled, both the request and response will be passed through only when the client request format matches the channel format. Prompt injection and prompt protection will not take effect.",
+  "channels.dialogs.sameChannelRetry.label": "Same-Channel Retry",
+  "channels.dialogs.sameChannelRetry.description": "When disabled, failed requests skip retries on this channel but may still switch to the next channel according to the global retry policy.",
   "channels.dialogs.retryableStatusCodes.label": "Retry Status Codes",
   "channels.dialogs.retryableStatusCodes.placeholder": "400, 401, 403",
   "channels.dialogs.retryableStatusCodes.description": "Add HTTP error status codes that should trigger same-channel retry for this channel. Separate multiple codes with commas, spaces, or new lines. These are added to the default 429 and 5xx retry behavior.",

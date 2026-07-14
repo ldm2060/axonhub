@@ -206,6 +206,10 @@ type ChannelSettings struct {
 	// When configured, the load balancer will skip channels that have exceeded their rate limits.
 	RateLimit *ChannelRateLimit `json:"rateLimit,omitempty"`
 
+	// EnableSameChannelRetry controls whether failed requests may be retried on this channel.
+	// When nil, same-channel retry remains enabled for backward compatibility.
+	EnableSameChannelRetry *bool `json:"enableSameChannelRetry,omitempty"`
+
 	// RetryableStatusCodes configures additional HTTP status codes that should
 	// trigger retry for this channel. Default retryable codes (429 and 5xx) are
 	// always handled by the retry policy even when this list is empty.
@@ -216,7 +220,7 @@ type ChannelSettings struct {
 	// case-sensitive substring of the error text.
 	RetryableErrorPatterns []RetryableErrorPattern `json:"retryableErrorPatterns,omitempty"`
 
-// MinInputTokens sets the minimum estimated prompt tokens for a request to use this channel.
+	// MinInputTokens sets the minimum estimated prompt tokens for a request to use this channel.
 	// When set, requests with fewer prompt tokens will be routed to other channels.
 	// nil means no minimum (default).
 	MinInputTokens *int `json:"minInputTokens,omitempty"`
@@ -392,8 +396,8 @@ const (
 )
 
 type ChannelPolicies struct {
-	Stream       CapabilityPolicy      `json:"stream,omitempty"`
-	Availability *ChannelAvailability  `json:"availability,omitempty"`
+	Stream       CapabilityPolicy     `json:"stream,omitempty"`
+	Availability *ChannelAvailability `json:"availability,omitempty"`
 }
 
 type ChannelAvailabilityRuleType string
@@ -409,7 +413,7 @@ type ChannelAvailability struct {
 
 type ChannelAvailabilityRule struct {
 	Type      ChannelAvailabilityRuleType `json:"type"`
-	Days      []int                       `json:"days,omitempty"`  // 1=Mon ... 7=Sun; nil/empty = every day
+	Days      []int                       `json:"days,omitempty"` // 1=Mon ... 7=Sun; nil/empty = every day
 	StartTime string                      `json:"startTime"`      // "HH:MM" 24-hour
 	EndTime   string                      `json:"endTime"`        // "HH:MM" 24-hour
 	Enabled   bool                        `json:"enabled"`

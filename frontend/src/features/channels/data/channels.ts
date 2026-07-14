@@ -120,6 +120,7 @@ const CREATE_CHANNEL_MUTATION = `
         }
         passThroughUserAgent
         passThroughBody
+        enableSameChannelRetry
         retryableStatusCodes
         retryableErrorPatterns {
           pattern
@@ -206,6 +207,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
         }
         passThroughUserAgent
         passThroughBody
+        enableSameChannelRetry
         retryableStatusCodes
         retryableErrorPatterns {
           pattern
@@ -301,6 +303,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         }
         passThroughUserAgent
         passThroughBody
+        enableSameChannelRetry
         retryableStatusCodes
         retryableErrorPatterns {
           pattern
@@ -396,6 +399,7 @@ const UPDATE_CHANNEL_MUTATION = `
         }
         passThroughUserAgent
         passThroughBody
+        enableSameChannelRetry
         retryableStatusCodes
         retryableErrorPatterns {
           pattern
@@ -599,6 +603,7 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
           }
           passThroughUserAgent
           passThroughBody
+          enableSameChannelRetry
           retryableStatusCodes
           retryableErrorPatterns {
             pattern
@@ -799,6 +804,7 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
           }
           passThroughUserAgent
           passThroughBody
+          enableSameChannelRetry
           retryableStatusCodes
           retryableErrorPatterns {
             pattern
@@ -967,6 +973,7 @@ const QUERY_CHANNELS_QUERY = `
               queueSize
               queueTimeoutMs
             }
+            enableSameChannelRetry
             retryableStatusCodes
             retryableErrorPatterns {
               pattern

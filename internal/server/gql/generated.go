@@ -612,6 +612,7 @@ type ComplexityRoot struct {
 		ProviderQuota            func(childComplexity int) int
 		Proxy                    func(childComplexity int) int
 		RateLimit                func(childComplexity int) int
+		EnableSameChannelRetry   func(childComplexity int) int
 		RetryableErrorPatterns   func(childComplexity int) int
 		RetryableStatusCodes     func(childComplexity int) int
 		TransformOptions         func(childComplexity int) int
@@ -4894,6 +4895,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelSettings.RateLimit(childComplexity), true
+	case "ChannelSettings.enableSameChannelRetry":
+		if e.complexity.ChannelSettings.EnableSameChannelRetry == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.EnableSameChannelRetry(childComplexity), true
 	case "ChannelSettings.retryableErrorPatterns":
 		if e.complexity.ChannelSettings.RetryableErrorPatterns == nil {
 			break
@@ -22549,6 +22556,8 @@ func (ec *executionContext) fieldContext_Channel_settings(_ context.Context, fie
 				return ec.fieldContext_ChannelSettings_passThroughBody(ctx, field)
 			case "rateLimit":
 				return ec.fieldContext_ChannelSettings_rateLimit(ctx, field)
+			case "enableSameChannelRetry":
+				return ec.fieldContext_ChannelSettings_enableSameChannelRetry(ctx, field)
 			case "retryableStatusCodes":
 				return ec.fieldContext_ChannelSettings_retryableStatusCodes(ctx, field)
 			case "retryableErrorPatterns":
@@ -28221,6 +28230,35 @@ func (ec *executionContext) fieldContext_ChannelSettings_rateLimit(_ context.Con
 				return ec.fieldContext_ChannelRateLimit_queueTimeoutMs(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelRateLimit", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelSettings_enableSameChannelRetry(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_enableSameChannelRetry,
+		func(ctx context.Context) (any, error) {
+			return obj.EnableSameChannelRetry, nil
+		},
+		nil,
+		ec.marshalOBoolean2ᚖbool,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_enableSameChannelRetry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -80316,7 +80354,7 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "providerQuota"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "providerQuota"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -80421,6 +80459,13 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.RateLimit = data
+		case "enableSameChannelRetry":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enableSameChannelRetry"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EnableSameChannelRetry = data
 		case "retryableStatusCodes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("retryableStatusCodes"))
 			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
@@ -112472,6 +112517,8 @@ func (ec *executionContext) _ChannelSettings(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._ChannelSettings_passThroughBody(ctx, field, obj)
 		case "rateLimit":
 			out.Values[i] = ec._ChannelSettings_rateLimit(ctx, field, obj)
+		case "enableSameChannelRetry":
+			out.Values[i] = ec._ChannelSettings_enableSameChannelRetry(ctx, field, obj)
 		case "retryableStatusCodes":
 			out.Values[i] = ec._ChannelSettings_retryableStatusCodes(ctx, field, obj)
 		case "retryableErrorPatterns":
