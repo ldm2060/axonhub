@@ -183,7 +183,7 @@ func (handlers *ChatCompletionHandlers) configuredHTTPKeepaliveInterval(ctx cont
 	if svc == nil {
 		return 0
 	}
-	settings, err := svc.StreamingSettings(ctx)
+	settings, err := svc.StreamingSettingsForRuntime(ctx)
 	if err != nil || settings == nil || settings.HTTPStreamKeepaliveIntervalSeconds <= 0 {
 		return 0
 	}

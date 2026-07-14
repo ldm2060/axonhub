@@ -1171,6 +1171,13 @@ func (s *SystemService) StreamingSettings(ctx context.Context) (*StreamingSettin
 	return &settings, nil
 }
 
+// StreamingSettingsForRuntime retrieves streaming settings for internal request handling.
+func (s *SystemService) StreamingSettingsForRuntime(ctx context.Context) (*StreamingSettings, error) {
+	return authz.RunWithSystemBypass(ctx, "system-streaming-settings", func(bypassCtx context.Context) (*StreamingSettings, error) {
+		return s.StreamingSettings(bypassCtx)
+	})
+}
+
 // SetStreamingSettings sets the streaming settings configuration.
 func (s *SystemService) SetStreamingSettings(ctx context.Context, settings *StreamingSettings) error {
 	normalizeStreamingSettings(settings)

@@ -12,6 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
@@ -44,6 +48,39 @@ func (p *delayedTimeoutSelectionProcessor) Process(ctx context.Context, _ *httpc
 	case <-ctx.Done():
 		return orchestrator.ChatCompletionResult{}, ctx.Err()
 	}
+}
+
+func TestChatCompletionWithRequestLoadsConfiguredKeepaliveWithoutUser(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	defer client.Close()
+
+	systemService := biz.NewSystemService(biz.SystemServiceParams{})
+	setupCtx := ent.NewContext(authz.WithTestBypass(t.Context()), client)
+	require.NoError(t, systemService.SetStreamingSettings(setupCtx, &biz.StreamingSettings{
+		HTTPStreamKeepaliveIntervalSeconds: 1,
+	}))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	c.Request = c.Request.WithContext(ent.NewContext(c.Request.Context(), client))
+
+	handler := &ChatCompletionHandlers{
+		ChatCompletionOrchestrator: &orchestrator.ChatCompletionOrchestrator{SystemService: systemService},
+		Processor: &delayedTimeoutSelectionProcessor{
+			delay: 1100 * time.Millisecond,
+			result: orchestrator.ChatCompletionResult{
+				ChatCompletionStream: streams.SliceStream([]*httpclient.StreamEvent{{Type: "message", Data: []byte(`{"ok":true}`)}}),
+			},
+		},
+		StreamWriter:      WriteSSEStreamWithOptions,
+		StreamIdleTimeout: time.Second,
+	}
+
+	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)})
+
+	require.Contains(t, w.Body.String(), ": keepalive\n\n")
+	require.Contains(t, w.Body.String(), `{"ok":true}`)
 }
 
 func TestChatCompletionWithRequestEmitsKeepaliveBeforeProcessReturns(t *testing.T) {

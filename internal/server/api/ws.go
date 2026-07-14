@@ -219,7 +219,7 @@ func (h *ChatCompletionHandlers) keepaliveInterval(ctx context.Context) time.Dur
 		return 0
 	}
 
-	settings, err := svc.StreamingSettings(ctx)
+	settings, err := svc.StreamingSettingsForRuntime(ctx)
 	if err != nil || settings == nil {
 		return 0
 	}

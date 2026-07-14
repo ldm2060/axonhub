@@ -1161,6 +1161,25 @@ func TestClientRestrictionLevel_UnmarshalJSON_NonString(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid ClientRestrictionLevel")
 }
 
+func TestStreamingSettingsForRuntime_ReadsWithoutUser(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	defer client.Close()
+
+	service := NewSystemService(SystemServiceParams{})
+	setupCtx := ent.NewContext(authz.WithTestBypass(t.Context()), client)
+	require.NoError(t, service.SetStreamingSettings(setupCtx, &StreamingSettings{
+		HTTPStreamKeepaliveIntervalSeconds: 30,
+	}))
+
+	requestCtx := ent.NewContext(t.Context(), client)
+	_, err := service.StreamingSettings(requestCtx)
+	require.Error(t, err)
+
+	settings, err := service.StreamingSettingsForRuntime(requestCtx)
+	require.NoError(t, err)
+	require.Equal(t, 30, settings.HTTPStreamKeepaliveIntervalSeconds)
+}
+
 func TestStreamingSettings_Normalize(t *testing.T) {
 	t.Parallel()
 

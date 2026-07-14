@@ -304,7 +304,7 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 
 	keepaliveInterval := time.Duration(0)
 	if streaming {
-		settings, settingsErr := handlers.ChatCompletionOrchestrator.SystemService.StreamingSettings(ctx)
+		settings, settingsErr := handlers.ChatCompletionOrchestrator.SystemService.StreamingSettingsForRuntime(ctx)
 		if settingsErr == nil && settings != nil && settings.HTTPStreamKeepaliveIntervalSeconds > 0 {
 			keepaliveInterval = time.Duration(settings.HTTPStreamKeepaliveIntervalSeconds) * time.Second
 		}
