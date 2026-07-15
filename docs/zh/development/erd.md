@@ -36,7 +36,7 @@ AxonHub 采用多层级的权限管理架构，支持 Global（全局）和 Proj
 - `password`: 密码（敏感字段）
 - `first_name`: 名字
 - `last_name`: 姓氏
-- `avatar`: 用户头像 URL
+- 用户头像作为静态资源，通过 GraphQL `UserInfo.avatar` 字段下发。
 - `is_owner`: 是否为系统所有者
 - `scopes`: 用户特定权限范围（如 write_channels, read_channels, add_users, read_users 等）
 - `created_at`: 创建时间

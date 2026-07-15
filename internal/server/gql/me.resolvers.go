@@ -31,7 +31,6 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input UpdateMeInput) (*
 		FirstName:      input.FirstName,
 		LastName:       input.LastName,
 		PreferLanguage: input.PreferLanguage,
-		Avatar:         input.Avatar,
 	})
 }
 

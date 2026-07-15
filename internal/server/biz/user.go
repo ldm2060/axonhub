@@ -133,25 +133,18 @@ func (s *UserService) EnsurePrivateProject(ctx context.Context, u *ent.User) (in
 	return projectID, nil
 }
 
-// UpdateSelf updates the current user's own profile fields (firstName, lastName, preferLanguage, avatar).
+// UpdateSelf updates the current user's own profile fields (firstName, lastName, preferLanguage).
 // No permission check is needed since a user always has permission to update their own profile.
 // Bypasses Ent privacy layer since this is a validated self-service operation on safe fields only.
 func (s *UserService) UpdateSelf(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error) {
 	return authz.RunWithSystemBypass(ctx, "update-self-profile", func(bypassCtx context.Context) (*ent.User, error) {
 		client := s.entFromContext(bypassCtx)
 
-		mut := client.User.UpdateOneID(id).
+		user, err := client.User.UpdateOneID(id).
 			SetNillableFirstName(input.FirstName).
 			SetNillableLastName(input.LastName).
-			SetNillablePreferLanguage(input.PreferLanguage)
-
-		if input.ClearAvatar {
-			mut.ClearAvatar()
-		} else {
-			mut.SetNillableAvatar(input.Avatar)
-		}
-
-		user, err := mut.Save(bypassCtx)
+			SetNillablePreferLanguage(input.PreferLanguage).
+			Save(bypassCtx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update profile: %w", err)
 		}
@@ -220,12 +213,6 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUs
 		SetNillableIsOwner(input.IsOwner).
 		SetNillablePreferLanguage(input.PreferLanguage)
 
-	if input.ClearAvatar {
-		mut.ClearAvatar()
-	} else {
-		mut.SetNillableAvatar(input.Avatar)
-	}
-
 	if input.Password != nil {
 		hashedPassword, err := HashPassword(*input.Password)
 		if err != nil {
@@ -286,12 +273,6 @@ func (s *UserService) UpdateOwnProfile(ctx context.Context, input ent.UpdateUser
 			SetNillableFirstName(input.FirstName).
 			SetNillableLastName(input.LastName).
 			SetNillablePreferLanguage(input.PreferLanguage)
-
-		if input.ClearAvatar {
-			mut.ClearAvatar()
-		} else {
-			mut.SetNillableAvatar(input.Avatar)
-		}
 
 		if input.Password != nil {
 			hashedPassword, err := HashPassword(*input.Password)
@@ -462,7 +443,7 @@ func ConvertUserToUserInfo(ctx context.Context, u *ent.User) *objects.UserInfo {
 		LastName:       u.LastName,
 		IsOwner:        u.IsOwner,
 		PreferLanguage: u.PreferLanguage,
-		Avatar:         &u.Avatar,
+		Avatar:         lo.ToPtr(objects.DefaultUserAvatarURL),
 		Scopes:         lo.Keys(allScopes),
 		Roles:          userRoles,
 		Projects:       userProjects,

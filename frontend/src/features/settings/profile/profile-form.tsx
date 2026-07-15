@@ -1,15 +1,12 @@
-import { useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import { UPDATE_ME_MUTATION } from '@/gql/users';
-import { User, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -21,14 +18,12 @@ type ProfileFormValues = {
   lastName: string;
   email: string;
   preferLanguage: string;
-  avatar?: string;
 };
 
 export default function ProfileForm() {
   const { t } = useTranslation();
   const auth = useAuthStore((state) => state.auth);
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profileFormSchema = z.object({
     firstName: z
@@ -51,7 +46,6 @@ export default function ProfileForm() {
     preferLanguage: z.string().min(1, {
       message: t('profile.form.validation.languageRequired'),
     }),
-    avatar: z.string().optional(),
   });
 
   // Get current user data
@@ -64,7 +58,6 @@ export default function ProfileForm() {
       lastName: currentUser?.lastName || '',
       email: currentUser?.email || '',
       preferLanguage: currentUser?.preferLanguage || 'en',
-      avatar: currentUser?.avatar || '',
     },
     mode: 'onChange',
   });
@@ -77,7 +70,6 @@ export default function ProfileForm() {
           firstName: data.firstName,
           lastName: data.lastName,
           preferLanguage: data.preferLanguage,
-          avatar: data.avatar,
         },
       })) as { updateMe: any };
       return response.updateMe;
@@ -89,7 +81,6 @@ export default function ProfileForm() {
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         preferLanguage: updatedUser.preferLanguage,
-        avatar: updatedUser.avatar,
       });
 
       // Invalidate and refetch user data
@@ -102,20 +93,6 @@ export default function ProfileForm() {
     },
   });
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // For now, we'll use a simple file reader to convert to base64
-      // In a real app, you'd upload to a file storage service
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        form.setValue('avatar', result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const onSubmit = (data: ProfileFormValues) => {
     updateProfileMutation.mutate(data);
   };
@@ -127,36 +104,6 @@ export default function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        {/* Avatar Upload Section */}
-        <FormField
-          control={form.control}
-          name='avatar'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('profile.form.fields.avatar.label')}</FormLabel>
-              <FormControl>
-                <div className='flex items-center space-x-4'>
-                  <Avatar className='h-20 w-20'>
-                    <AvatarImage src={field.value} alt='Avatar' />
-                    <AvatarFallback>
-                      <User className='h-10 w-10' />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className='flex flex-col space-y-2'>
-                    <Button type='button' variant='outline' size='sm' onClick={() => fileInputRef.current?.click()}>
-                      <Upload className='mr-2 h-4 w-4' />
-                      {t('profile.form.fields.avatar.upload')}
-                    </Button>
-                    <input ref={fileInputRef} type='file' accept='image/*' onChange={handleAvatarUpload} className='hidden' />
-                  </div>
-                </div>
-              </FormControl>
-              <FormDescription>{t('profile.form.fields.avatar.description')}</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           <FormField
             control={form.control}

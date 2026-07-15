@@ -3224,7 +3224,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "User",
-		Fields: make([]*Field, 13),
+		Fields: make([]*Field, 12),
 		Edges:  make([]*Edge, 15),
 	}
 	var buf []byte
@@ -3292,18 +3292,10 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "last_name",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.Avatar); err != nil {
-		return nil, err
-	}
-	node.Fields[8] = &Field{
-		Type:  "string",
-		Name:  "avatar",
-		Value: string(buf),
-	}
 	if buf, err = json.Marshal(_m.IsOwner); err != nil {
 		return nil, err
 	}
-	node.Fields[9] = &Field{
+	node.Fields[8] = &Field{
 		Type:  "bool",
 		Name:  "is_owner",
 		Value: string(buf),
@@ -3311,7 +3303,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Scopes); err != nil {
 		return nil, err
 	}
-	node.Fields[10] = &Field{
+	node.Fields[9] = &Field{
 		Type:  "[]string",
 		Name:  "scopes",
 		Value: string(buf),
@@ -3319,7 +3311,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.EmailVerifiedAt); err != nil {
 		return nil, err
 	}
-	node.Fields[11] = &Field{
+	node.Fields[10] = &Field{
 		Type:  "time.Time",
 		Name:  "email_verified_at",
 		Value: string(buf),
@@ -3327,7 +3319,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.PrivateProjectID); err != nil {
 		return nil, err
 	}
-	node.Fields[12] = &Field{
+	node.Fields[11] = &Field{
 		Type:  "int",
 		Name:  "private_project_id",
 		Value: string(buf),

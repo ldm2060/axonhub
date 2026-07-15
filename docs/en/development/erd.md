@@ -36,7 +36,7 @@ AxonHub adopts a multi-level permission management architecture, supporting both
 - `password`: Password (sensitive field)
 - `first_name`: First name
 - `last_name`: Last name
-- `avatar`: User avatar URL
+- User avatars are served as a static asset through the GraphQL `UserInfo.avatar` field.
 - `is_owner`: Whether system owner
 - `scopes`: User-specific permission scopes (e.g., write_channels, read_channels, add_users, read_users, etc.)
 - `created_at`: Creation time

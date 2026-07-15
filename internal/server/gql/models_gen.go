@@ -631,7 +631,6 @@ type UpdateMeInput struct {
 	FirstName      *string `json:"firstName,omitempty"`
 	LastName       *string `json:"lastName,omitempty"`
 	PreferLanguage *string `json:"preferLanguage,omitempty"`
-	Avatar         *string `json:"avatar,omitempty"`
 }
 
 type UpdateMyPasswordInput struct {

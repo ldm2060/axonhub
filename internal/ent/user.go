@@ -37,8 +37,6 @@ type User struct {
 	FirstName string `json:"first_name,omitempty"`
 	// LastName holds the value of the "last_name" field.
 	LastName string `json:"last_name,omitempty"`
-	// 用户头像URL
-	Avatar string `json:"avatar,omitempty"`
 	// IsOwner holds the value of the "is_owner" field.
 	IsOwner bool `json:"is_owner,omitempty"`
 	// User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
@@ -255,7 +253,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldDeletedAt, user.FieldPrivateProjectID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldStatus, user.FieldPreferLanguage, user.FieldPassword, user.FieldFirstName, user.FieldLastName, user.FieldAvatar:
+		case user.FieldEmail, user.FieldStatus, user.FieldPreferLanguage, user.FieldPassword, user.FieldFirstName, user.FieldLastName:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldEmailVerifiedAt:
 			values[i] = new(sql.NullTime)
@@ -333,12 +331,6 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field last_name", values[i])
 			} else if value.Valid {
 				_m.LastName = value.String
-			}
-		case user.FieldAvatar:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field avatar", values[i])
-			} else if value.Valid {
-				_m.Avatar = value.String
 			}
 		case user.FieldIsOwner:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -504,9 +496,6 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_name=")
 	builder.WriteString(_m.LastName)
-	builder.WriteString(", ")
-	builder.WriteString("avatar=")
-	builder.WriteString(_m.Avatar)
 	builder.WriteString(", ")
 	builder.WriteString("is_owner=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsOwner))

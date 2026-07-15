@@ -216,7 +216,6 @@ export const UPDATE_ME_MUTATION = `
       lastName
       isOwner
       preferLanguage
-      avatar
     }
   }
 `;

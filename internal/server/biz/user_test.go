@@ -13,6 +13,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/ent/userproject"
+	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 )
 
@@ -61,7 +62,6 @@ func TestConvertUserToUserInfo_BasicUser(t *testing.T) {
 		SetFirstName("John").
 		SetLastName("Doe").
 		SetPreferLanguage("en").
-		SetAvatar("https://example.com/avatar.jpg").
 		SetIsOwner(false).
 		SetScopes([]string{"read_channels", "write_channels"}).
 		SetStatus(user.StatusActivated).
@@ -87,7 +87,7 @@ func TestConvertUserToUserInfo_BasicUser(t *testing.T) {
 	require.Equal(t, "en", userInfo.PreferLanguage)
 	require.Equal(t, false, userInfo.IsOwner)
 	require.NotNil(t, userInfo.Avatar)
-	require.Equal(t, "https://example.com/avatar.jpg", *userInfo.Avatar)
+	require.Equal(t, objects.DefaultUserAvatarURL, *userInfo.Avatar)
 
 	// Verify scopes
 	require.ElementsMatch(t, []string{"read_channels", "write_channels"}, userInfo.Scopes)

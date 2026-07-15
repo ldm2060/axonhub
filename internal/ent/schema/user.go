@@ -3,7 +3,6 @@ package schema
 import (
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
-	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -42,19 +41,13 @@ func (User) Fields() []ent.Field {
 		field.String("password").Sensitive(),
 		field.String("first_name").Default(""),
 		field.String("last_name").Default(""),
-		field.String("avatar").Optional().Comment("用户头像URL").SchemaType(
-			map[string]string{
-				// The avatar is stored as base64 image, it is too long to store in varchar, so we use mediumtext to store it.
-				dialect.MySQL: "mediumtext",
-			},
-		),
 		field.Bool("is_owner").Default(false),
 		field.Strings("scopes").
 			Comment("User scopes in system level: write_channels, read_channels, add_users, read_users, etc.").
 			Default([]string{}).
 			Optional(),
-			field.Time("email_verified_at").Optional().Nillable().Comment("When the user verified their email"),
-			field.Int("private_project_id").Optional().Nillable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		field.Time("email_verified_at").Optional().Nillable().Comment("When the user verified their email"),
+		field.Int("private_project_id").Optional().Nillable().Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
 	}
 }
 
@@ -68,11 +61,11 @@ func (User) Edges() []ent.Edge {
 				entgql.RelayConnection(),
 			),
 		edge.To("owned_channels", Channel.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			edge.To("owned_models", Model.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			edge.To("publish_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			edge.To("reviewed_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			edge.To("private_project", Project.Type).Unique().Field("private_project_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
-			edge.To("api_keys", APIKey.Type).
+		edge.To("owned_models", Model.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.To("publish_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.To("reviewed_requests", PublishRequest.Type).Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.To("private_project", Project.Type).Unique().Field("private_project_id").Annotations(entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput)),
+		edge.To("api_keys", APIKey.Type).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
 				entgql.RelayConnection(),
@@ -95,7 +88,7 @@ func (User) Edges() []ent.Edge {
 			),
 		edge.From("email_tokens", EmailToken.Type).Ref("user"),
 		edge.To("user_usage_stats", UserUsageStats.Type),
-			edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
+		edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
 	}
 }
 

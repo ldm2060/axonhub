@@ -90,6 +90,16 @@ func TestHandler_DoesNotFallbackMissingStaticAssetToSPAIndex(t *testing.T) {
 	require.NotContains(t, recorder.Header().Get("Content-Type"), "text/html")
 }
 
+func TestDefaultUserAvatarIsAvailableToFrontendBuild(t *testing.T) {
+	t.Helper()
+
+	avatar, err := os.ReadFile("../../../frontend/public/images/default-user-avatar.svg")
+	require.NoError(t, err)
+	require.Contains(t, string(avatar), "<svg")
+	require.Contains(t, string(avatar), "A neutral user silhouette")
+	require.True(t, isStaticAssetPath(objects.DefaultUserAvatarURL))
+}
+
 func TestFrontendBuildTargetsEmbeddedStaticDist(t *testing.T) {
 	t.Helper()
 

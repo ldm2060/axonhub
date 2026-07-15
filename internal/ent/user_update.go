@@ -154,26 +154,6 @@ func (_u *UserUpdate) SetNillableLastName(v *string) *UserUpdate {
 	return _u
 }
 
-// SetAvatar sets the "avatar" field.
-func (_u *UserUpdate) SetAvatar(v string) *UserUpdate {
-	_u.mutation.SetAvatar(v)
-	return _u
-}
-
-// SetNillableAvatar sets the "avatar" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableAvatar(v *string) *UserUpdate {
-	if v != nil {
-		_u.SetAvatar(*v)
-	}
-	return _u
-}
-
-// ClearAvatar clears the value of the "avatar" field.
-func (_u *UserUpdate) ClearAvatar() *UserUpdate {
-	_u.mutation.ClearAvatar()
-	return _u
-}
-
 // SetIsOwner sets the "is_owner" field.
 func (_u *UserUpdate) SetIsOwner(v bool) *UserUpdate {
 	_u.mutation.SetIsOwner(v)
@@ -862,12 +842,6 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.LastName(); ok {
 		_spec.SetField(user.FieldLastName, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.Avatar(); ok {
-		_spec.SetField(user.FieldAvatar, field.TypeString, value)
-	}
-	if _u.mutation.AvatarCleared() {
-		_spec.ClearField(user.FieldAvatar, field.TypeString)
 	}
 	if value, ok := _u.mutation.IsOwner(); ok {
 		_spec.SetField(user.FieldIsOwner, field.TypeBool, value)
@@ -1705,26 +1679,6 @@ func (_u *UserUpdateOne) SetNillableLastName(v *string) *UserUpdateOne {
 	return _u
 }
 
-// SetAvatar sets the "avatar" field.
-func (_u *UserUpdateOne) SetAvatar(v string) *UserUpdateOne {
-	_u.mutation.SetAvatar(v)
-	return _u
-}
-
-// SetNillableAvatar sets the "avatar" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableAvatar(v *string) *UserUpdateOne {
-	if v != nil {
-		_u.SetAvatar(*v)
-	}
-	return _u
-}
-
-// ClearAvatar clears the value of the "avatar" field.
-func (_u *UserUpdateOne) ClearAvatar() *UserUpdateOne {
-	_u.mutation.ClearAvatar()
-	return _u
-}
-
 // SetIsOwner sets the "is_owner" field.
 func (_u *UserUpdateOne) SetIsOwner(v bool) *UserUpdateOne {
 	_u.mutation.SetIsOwner(v)
@@ -2443,12 +2397,6 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.LastName(); ok {
 		_spec.SetField(user.FieldLastName, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.Avatar(); ok {
-		_spec.SetField(user.FieldAvatar, field.TypeString, value)
-	}
-	if _u.mutation.AvatarCleared() {
-		_spec.ClearField(user.FieldAvatar, field.TypeString)
 	}
 	if value, ok := _u.mutation.IsOwner(); ok {
 		_spec.SetField(user.FieldIsOwner, field.TypeBool, value)

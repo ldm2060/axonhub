@@ -52,7 +52,7 @@ func TestResolveUser_AccountFirstAndMultipleOIDC(t *testing.T) {
 	// 1. Test JIT Creation: Create user then link
 	email := "new-user@example.com"
 	subject := "sub-1"
-	u1, err := svc.resolveUser(ctx, p, subject, email, true, "New User", "", "", "", nil)
+	u1, err := svc.resolveUser(ctx, p, subject, email, true, "New User", "", "", nil)
 	require.NoError(t, err)
 	require.NotNil(t, u1)
 	require.Equal(t, email, u1.Email)
@@ -73,7 +73,7 @@ func TestResolveUser_AccountFirstAndMultipleOIDC(t *testing.T) {
 	}
 	subject2 := "sub-github-1"
 	// resolveUser should find u1 by email and link github identity
-	u2, err := svc.resolveUser(ctx, p2, subject2, email, true, "GitHub Name", "", "", "", nil)
+	u2, err := svc.resolveUser(ctx, p2, subject2, email, true, "GitHub Name", "", "", nil)
 	require.NoError(t, err)
 	require.Equal(t, u1.ID, u2.ID)
 
@@ -91,7 +91,7 @@ func TestResolveUser_AccountFirstAndMultipleOIDC(t *testing.T) {
 			JITEnabled: false,
 		},
 	}
-	_, err = svc.resolveUser(ctx, p3, "sub-3", "unknown@example.com", true, "", "", "", "", nil)
+	_, err = svc.resolveUser(ctx, p3, "sub-3", "unknown@example.com", true, "", "", "", nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "account not found")
 }

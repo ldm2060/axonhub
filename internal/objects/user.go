@@ -1,5 +1,7 @@
 package objects
 
+const DefaultUserAvatarURL = "/images/default-user-avatar.svg"
+
 type UserInfo struct {
 	ID             GUID               `json:"id"`
 	Email          string             `json:"email"`

@@ -42,7 +42,6 @@ input UpdateMeInput {
   firstName: String
   lastName: String
   preferLanguage: String
-  avatar: String
 }
 
 extend type Mutation {

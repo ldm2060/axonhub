@@ -1124,7 +1124,6 @@ var (
 		{Name: "password", Type: field.TypeString},
 		{Name: "first_name", Type: field.TypeString, Default: ""},
 		{Name: "last_name", Type: field.TypeString, Default: ""},
-		{Name: "avatar", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "mediumtext"}},
 		{Name: "is_owner", Type: field.TypeBool, Default: false},
 		{Name: "scopes", Type: field.TypeJSON, Nullable: true},
 		{Name: "email_verified_at", Type: field.TypeTime, Nullable: true},
@@ -1138,7 +1137,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_projects_private_project",
-				Columns:    []*schema.Column{UsersColumns[14]},
+				Columns:    []*schema.Column{UsersColumns[13]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

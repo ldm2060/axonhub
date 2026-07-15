@@ -1850,7 +1850,6 @@ type CreateUserInput struct {
 	Password               string
 	FirstName              *string
 	LastName               *string
-	Avatar                 *string
 	IsOwner                *bool
 	Scopes                 []string
 	EmailVerifiedAt        *time.Time
@@ -1876,9 +1875,6 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.LastName; v != nil {
 		m.SetLastName(*v)
-	}
-	if v := i.Avatar; v != nil {
-		m.SetAvatar(*v)
 	}
 	if v := i.IsOwner; v != nil {
 		m.SetIsOwner(*v)
@@ -1920,8 +1916,6 @@ type UpdateUserInput struct {
 	Password                     *string
 	FirstName                    *string
 	LastName                     *string
-	ClearAvatar                  bool
-	Avatar                       *string
 	IsOwner                      *bool
 	ClearScopes                  bool
 	Scopes                       []string
@@ -1964,12 +1958,6 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.LastName; v != nil {
 		m.SetLastName(*v)
-	}
-	if i.ClearAvatar {
-		m.ClearAvatar()
-	}
-	if v := i.Avatar; v != nil {
-		m.SetAvatar(*v)
 	}
 	if v := i.IsOwner; v != nil {
 		m.SetIsOwner(*v)

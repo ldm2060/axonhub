@@ -719,10 +719,6 @@ func (s *OIDCService) Callback(ctx context.Context, providerIdentifier, code, st
 				claims.FamilyName = userInfoClaims.FamilyName
 			}
 
-			if userInfoClaims.Picture != "" {
-				claims.Picture = userInfoClaims.Picture
-			}
-
 			if len(userInfoClaims.Groups) > 0 {
 				claims.Groups = userInfoClaims.Groups
 			}
@@ -752,7 +748,7 @@ func (s *OIDCService) Callback(ctx context.Context, providerIdentifier, code, st
 		return "", "link", nil
 	}
 
-	userEntity, err := s.resolveUser(ctx, p, subject, claims.Email, claims.EmailVerified, claims.Name, claims.GivenName, claims.FamilyName, claims.Picture, claims.Groups)
+	userEntity, err := s.resolveUser(ctx, p, subject, claims.Email, claims.EmailVerified, claims.Name, claims.GivenName, claims.FamilyName, claims.Groups)
 	if err != nil {
 		return "", "", err
 	}
@@ -783,7 +779,6 @@ type oidcClaims struct {
 	GivenName         string   `json:"given_name"`
 	FamilyName        string   `json:"family_name"`
 	PreferredUsername string   `json:"preferred_username"`
-	Picture           string   `json:"picture"`
 	Groups            []string `json:"-"` // Filled manually from GroupClaim
 }
 
@@ -928,7 +923,7 @@ func parseGroups(v any) []string {
 	return nil
 }
 
-func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject, email string, emailVerified bool, name, givenName, familyName, picture string, groups []string) (*ent.User, error) {
+func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject, email string, emailVerified bool, name, givenName, familyName string, groups []string) (*ent.User, error) {
 	// 1. Try to find existing OIDC identity by issuer and subject
 	identity, err := s.entFromContext(ctx).OIDCIdentity.Query().
 		Where(
@@ -943,7 +938,7 @@ func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject,
 
 		// Sync user info if enabled
 		if p.config.SyncUserInfo && identity.Edges.User != nil {
-			updatedUser, err := s.syncUserInfo(ctx, identity.Edges.User, name, givenName, familyName, picture, groups, p.config)
+			updatedUser, err := s.syncUserInfo(ctx, identity.Edges.User, name, givenName, familyName, groups, p.config)
 			if err != nil {
 				log.Warn(ctx, "Failed to sync user info during OIDC login", zap.Error(err), log.Int("user_id", identity.UserID))
 			} else {
@@ -973,7 +968,7 @@ func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject,
 
 			// Sync user info if enabled
 			if p.config.SyncUserInfo {
-				updatedUser, err := s.syncUserInfo(ctx, existingUser, name, givenName, familyName, picture, groups, p.config)
+				updatedUser, err := s.syncUserInfo(ctx, existingUser, name, givenName, familyName, groups, p.config)
 				if err != nil {
 					log.Warn(ctx, "Failed to sync user info during OIDC link", zap.Error(err), log.Int("user_id", existingUser.ID))
 				} else {
@@ -1029,10 +1024,6 @@ func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject,
 			SetPassword(password).
 			SetScopes(DefaultUserScopes)
 
-		if picture != "" {
-			userCreate.SetAvatar(picture)
-		}
-
 		// Apply role mappings to new user
 		if err := s.applyRoleMappings(ctx, userCreate.Mutation(), groups, p.config, true); err != nil {
 			return fmt.Errorf("failed to apply role mappings: %w", err)
@@ -1065,7 +1056,7 @@ func (s *OIDCService) resolveUser(ctx context.Context, p *oidcProvider, subject,
 	return createdUser, nil
 }
 
-func (s *OIDCService) syncUserInfo(ctx context.Context, u *ent.User, name, givenName, familyName, picture string, groups []string, cfg OIDCProvider) (*ent.User, error) {
+func (s *OIDCService) syncUserInfo(ctx context.Context, u *ent.User, name, givenName, familyName string, groups []string, cfg OIDCProvider) (*ent.User, error) {
 	firstName := givenName
 	lastName := familyName
 
@@ -1082,10 +1073,6 @@ func (s *OIDCService) syncUserInfo(ctx context.Context, u *ent.User, name, given
 
 	if firstName != "" || lastName != "" {
 		update.SetFirstName(firstName).SetLastName(lastName)
-	}
-
-	if picture != "" {
-		update.SetAvatar(picture)
 	}
 
 	// Sync roles/scopes

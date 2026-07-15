@@ -24,7 +24,7 @@ oidc:
       auto_link_by_email: true       # Link to existing user by verified email
       require_email_verified: true   # Only link if email is verified by IdP
       enable_pkce: true              # Recommended for enhanced security (RFC 7636)
-      sync_user_info: true           # Sync name and avatar on every login
+      sync_user_info: true           # Sync name on every login
       button_color: "#DB4437"        # UI Customization: Button color
       icon_url: "https://www.google.com/favicon.ico" # UI Customization: Icon URL
 ```
@@ -45,7 +45,7 @@ oidc:
 | `auto_link_by_email` | If true, matches existing users by email. |
 | `require_email_verified` | If true, only link if email is verified by IdP. |
 | `enable_pkce` | Enables Proof Key for Code Exchange (RFC 7636). Highly recommended. |
-| `sync_user_info` | Updates user profile (name, avatar) from IdP claims. |
+| `sync_user_info` | Updates the user's name from IdP claims. |
 | `button_color` | Hex color code for the login button. |
 | `icon_url` | Icon URL or local path for the login button (supports base64). |
 | `default_roles` | List of roles to assign to new JIT users (e.g., `["Viewer"]`). |
