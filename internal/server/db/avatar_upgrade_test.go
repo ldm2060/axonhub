@@ -2,7 +2,6 @@ package db
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"encoding/base64"
 	"image"
@@ -13,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/ldm2060/axonhub/internal/pkg/sqlite"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/avatar"
+	_ "github.com/ldm2060/axonhub/internal/pkg/sqlite"
 )
 
 func TestNewEntClientMigratesAvatarBeforeDroppingColumn(t *testing.T) {
@@ -25,6 +24,14 @@ func TestNewEntClientMigratesAvatarBeforeDroppingColumn(t *testing.T) {
 	dsn := "file:" + filepath.ToSlash(dbPath) + "?_fk=1"
 
 	db, err := sql.Open("sqlite3", dsn)
+	require.NoError(t, err)
+	_, err = db.Exec(`CREATE TABLE systems (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		key TEXT NOT NULL UNIQUE,
+		value TEXT NOT NULL
+	)`)
 	require.NoError(t, err)
 	_, err = db.Exec(`CREATE TABLE users (
 		id INTEGER PRIMARY KEY,
@@ -72,7 +79,13 @@ func TestNewEntClientMigratesAvatarBeforeDroppingColumn(t *testing.T) {
 	rawDB, err := sql.Open("sqlite3", dsn)
 	require.NoError(t, err)
 	defer rawDB.Close()
-	exists, err := legacyAvatarColumnExists(context.Background(), rawDB, "sqlite3")
+	var avatarColumns int
+	err = rawDB.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('users') WHERE name = 'avatar'`).Scan(&avatarColumns)
 	require.NoError(t, err)
-	require.False(t, exists)
+	require.Zero(t, avatarColumns)
+
+	var marker string
+	err = rawDB.QueryRow(`SELECT value FROM systems WHERE key = 'migration:predrop:v0.1.60:file-backed-user-avatars'`).Scan(&marker)
+	require.NoError(t, err)
+	require.Equal(t, "completed", marker)
 }

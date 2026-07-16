@@ -79,7 +79,7 @@ func (s *Service) SaveLegacyURL(userID int, value string) error {
 	if err := os.MkdirAll(s.config.Directory, 0o750); err != nil {
 		return fmt.Errorf("create avatar directory: %w", err)
 	}
-	return os.WriteFile(s.legacyURLPath(userID), []byte(parsed.String()), 0o644)
+	return os.WriteFile(s.legacyURLPath(userID), []byte(parsed.String()), 0o600)
 }
 
 func (s *Service) Save(userID int, src io.Reader) error {
@@ -146,7 +146,7 @@ func (s *Service) SaveLegacyDataURL(userID int, value string) error {
 		decoded = []byte(text)
 	}
 	if err != nil {
-		return fmt.Errorf("%w: decode legacy data URL: %v", ErrInvalidImage, err)
+		return fmt.Errorf("%w: decode legacy data URL: %w", ErrInvalidImage, err)
 	}
 	return s.Save(userID, bytes.NewReader(decoded))
 }

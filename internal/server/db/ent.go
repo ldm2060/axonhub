@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/migrate"
 	"github.com/ldm2060/axonhub/internal/ent/migrate/datamigrate"
+	"github.com/ldm2060/axonhub/internal/ent/migrate/predropmigrate"
 	"github.com/ldm2060/axonhub/internal/ent/migrate/schemahook"
 	_ "github.com/ldm2060/axonhub/internal/ent/runtime"
 	_ "github.com/ldm2060/axonhub/internal/pkg/sqlite"
@@ -65,7 +66,12 @@ func NewEntClient(cfg Config, avatarService *avatar.Service) *ent.Client {
 	client := ent.NewClient(opts...)
 
 	if !cfg.DisableAutoMigration {
-		if err := migrateLegacyAvatars(context.Background(), masterDB, cfg.Dialect, avatarService); err != nil {
+		preDropMigrator := predropmigrate.NewMigrator(
+			masterDB,
+			cfg.Dialect,
+			predropmigrate.NewAvatarMigration(avatarService),
+		)
+		if err := preDropMigrator.Run(context.Background()); err != nil {
 			panic(err)
 		}
 
