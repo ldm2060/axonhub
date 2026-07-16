@@ -21,6 +21,7 @@ axonhub:
     AXONHUB_DB_DIALECT: postgres
     # Full database connection string - customize this for your environment
     AXONHUB_DB_DSN: postgres://axonhub:axonhub_password@axonhub-postgresql:5432/axonhub?sslmode=disable
+    AXONHUB_AVATAR_DIRECTORY: /data/avatars
     # Read replica DSN - leave empty to disable read-write separation (env: AXONHUB_DB_READ_REPLICA_READ_DSN)
     # AXONHUB_DB_READ_REPLICA_READ_DSN: postgres://axonhub:axonhub_password@axonhub-postgresql:5432/axonhub?sslmode=disable
   
@@ -73,7 +74,7 @@ axonhub:
   
   # Persistent volume for data storage (optional)
   persistence:
-    enabled: false
+    enabled: true
     size: 10Gi
     storageClass: ""
     accessModes:

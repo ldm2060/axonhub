@@ -78,6 +78,12 @@ db:
     read_max_open_conns: 0      #   Max open connections for replica (env: AXONHUB_DB_READ_REPLICA_READ_MAX_OPEN_CONNS)
     read_max_idle_conns: 0      #   Max idle connections for replica (env: AXONHUB_DB_READ_REPLICA_READ_MAX_IDLE_CONNS)
 
+# Avatar file storage (env: AXONHUB_AVATAR_*)
+avatar:
+  directory: "data/avatars"       # Persistent local directory; mount this path in containers
+  max_bytes: 5242880              # Maximum uploaded image size (5 MiB)
+  max_pixels: 16000000            # Maximum decoded image pixel count
+
 # Cache configuration
 cache:
   # One of: memory, redis, two-level (memory + redis)

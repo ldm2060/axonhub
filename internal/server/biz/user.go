@@ -443,7 +443,7 @@ func ConvertUserToUserInfo(ctx context.Context, u *ent.User) *objects.UserInfo {
 		LastName:       u.LastName,
 		IsOwner:        u.IsOwner,
 		PreferLanguage: u.PreferLanguage,
-		Avatar:         lo.ToPtr(objects.DefaultUserAvatarURL),
+		Avatar:         lo.ToPtr(objects.UserAvatarURL(u.ID)),
 		Scopes:         lo.Keys(allScopes),
 		Roles:          userRoles,
 		Projects:       userProjects,

@@ -15,6 +15,7 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 
+	"github.com/ldm2060/axonhub/internal/avatar"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/migrate"
 	"github.com/ldm2060/axonhub/internal/ent/migrate/datamigrate"
@@ -28,7 +29,7 @@ const defaultSQLiteBusyTimeoutMs = 5000
 // NewEntClient creates an Ent client. When read_replica.read_dsn is configured,
 // SELECT/WITH queries are automatically routed to the replica; all writes go to master.
 // Transactions always run on master. If read_dsn is empty, all queries go to master.
-func NewEntClient(cfg Config) *ent.Client {
+func NewEntClient(cfg Config, avatarService *avatar.Service) *ent.Client {
 	var opts []ent.Option
 	if cfg.Debug {
 		opts = append(opts, ent.Debug())
@@ -64,6 +65,10 @@ func NewEntClient(cfg Config) *ent.Client {
 	client := ent.NewClient(opts...)
 
 	if !cfg.DisableAutoMigration {
+		if err := migrateLegacyAvatars(context.Background(), masterDB, cfg.Dialect, avatarService); err != nil {
+			panic(err)
+		}
+
 		err = client.Schema.Create(
 			context.Background(),
 			migrate.WithGlobalUniqueID(false),

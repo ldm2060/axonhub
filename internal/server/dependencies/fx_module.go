@@ -6,6 +6,7 @@ import (
 	"github.com/zhenzou/executors"
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/avatar"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/db"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -23,6 +24,7 @@ func NewHttpClient(params NewHttpClientParams) *httpclient.HttpClient {
 
 var Module = fx.Module("dependencies",
 	fx.Provide(log.New),
+	fx.Provide(avatar.NewService),
 	fx.Provide(db.NewEntClient),
 	fx.Provide(NewHttpClient),
 	fx.Provide(NewExecutors),

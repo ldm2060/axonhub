@@ -15,6 +15,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/ldm2060/axonhub/internal/avatar"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/metrics"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
@@ -27,18 +28,19 @@ import (
 type Config struct {
 	fx.Out `yaml:"-" json:"-"`
 
-	DB                  db.Config                  `conf:"db" yaml:"db" json:"db"`
-	Log                 log.Config                 `conf:"log" yaml:"log" json:"log"`
-	APIServer           server.Config              `conf:"server" yaml:"server" json:"server"`
-	Metrics             metrics.Config             `conf:"metrics" yaml:"metrics" json:"metrics"`
-	GC                  gc.Config                  `conf:"gc" yaml:"gc" json:"gc"`
-	Cache               xcache.Config              `conf:"cache" yaml:"cache" json:"cache"`
-	ProviderQuota       providerQuotaConfig        `conf:"provider_quota" yaml:"provider_quota" json:"provider_quota"`
-	QuotaChannelBinding QuotaChannelBindingConfig  `conf:"quota_channel_binding" yaml:"quota_channel_binding" json:"quota_channel_binding"`
-	OIDC                biz.OIDCConfig             `conf:"oidc" yaml:"oidc" json:"oidc"`
-	DisableSSLVerify    bool                       `name:"disable_ssl_verify" yaml:"-" json:"-"`
-	AllowNoAuth         bool                       `name:"allow_no_auth" yaml:"-" json:"-"`
-	APIKeyPrefix        string                     `name:"api_key_prefix" yaml:"-" json:"-"`
+	DB                  db.Config                 `conf:"db" yaml:"db" json:"db"`
+	Avatar              avatar.Config             `conf:"avatar" yaml:"avatar" json:"avatar"`
+	Log                 log.Config                `conf:"log" yaml:"log" json:"log"`
+	APIServer           server.Config             `conf:"server" yaml:"server" json:"server"`
+	Metrics             metrics.Config            `conf:"metrics" yaml:"metrics" json:"metrics"`
+	GC                  gc.Config                 `conf:"gc" yaml:"gc" json:"gc"`
+	Cache               xcache.Config             `conf:"cache" yaml:"cache" json:"cache"`
+	ProviderQuota       providerQuotaConfig       `conf:"provider_quota" yaml:"provider_quota" json:"provider_quota"`
+	QuotaChannelBinding QuotaChannelBindingConfig `conf:"quota_channel_binding" yaml:"quota_channel_binding" json:"quota_channel_binding"`
+	OIDC                biz.OIDCConfig            `conf:"oidc" yaml:"oidc" json:"oidc"`
+	DisableSSLVerify    bool                      `name:"disable_ssl_verify" yaml:"-" json:"-"`
+	AllowNoAuth         bool                      `name:"allow_no_auth" yaml:"-" json:"-"`
+	APIKeyPrefix        string                    `name:"api_key_prefix" yaml:"-" json:"-"`
 }
 
 type providerQuotaConfig struct {
@@ -214,6 +216,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("db.read_replica.read_dsn", "")
 	v.SetDefault("db.read_replica.read_max_open_conns", 0)
 	v.SetDefault("db.read_replica.read_max_idle_conns", 0)
+
+	// Avatar storage defaults
+	v.SetDefault("avatar.directory", avatar.DefaultDirectory)
+	v.SetDefault("avatar.max_bytes", avatar.DefaultMaxBytes)
+	v.SetDefault("avatar.max_pixels", avatar.DefaultMaxPixels)
 
 	// Log defaults
 	v.SetDefault("log.name", "axonhub")

@@ -87,7 +87,7 @@ func TestConvertUserToUserInfo_BasicUser(t *testing.T) {
 	require.Equal(t, "en", userInfo.PreferLanguage)
 	require.Equal(t, false, userInfo.IsOwner)
 	require.NotNil(t, userInfo.Avatar)
-	require.Equal(t, objects.DefaultUserAvatarURL, *userInfo.Avatar)
+	require.Equal(t, objects.UserAvatarURL(testUser.ID), *userInfo.Avatar)
 
 	// Verify scopes
 	require.ElementsMatch(t, []string{"read_channels", "write_channels"}, userInfo.Scopes)

@@ -28,6 +28,7 @@ type Handlers struct {
 	Playground     *api.PlaygroundHandlers
 	System         *api.SystemHandlers
 	Auth           *api.AuthHandlers
+	Avatar         *api.AvatarHandlers
 	Jina           *api.JinaHandlers
 	Codex          *api.CodexHandlers
 	ClaudeCode     *api.ClaudeCodeHandlers
@@ -86,6 +87,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		publicGroup.GET("/favicon", handlers.System.GetFavicon)
 		// Health check endpoint - no authentication required
 		publicGroup.GET("/health", handlers.System.Health)
+		publicGroup.GET("/avatars/:userID", handlers.Avatar.Serve)
 	}
 
 	// Auth routes (preferred, no /admin prefix)
@@ -125,6 +127,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	adminGroup := server.Group("/admin", middleware.WithJWTAuth(services.AuthService), middleware.WithProjectID())
 	// 管理员路由 - 使用 JWT 认证
 	{
+		adminGroup.POST("/me/avatar", handlers.Avatar.Upload)
 		adminGroup.GET("/playground", middleware.WithTimeout(server.Config.RequestTimeout), func(c *gin.Context) {
 			handlers.Graphql.Playground.ServeHTTP(c.Writer, c.Request)
 		})

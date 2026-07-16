@@ -15,11 +15,16 @@
   "profile.form.fields.preferLanguage.description": "Choose your preferred language for the interface.",
   "profile.form.fields.preferLanguage.options.en": "English",
   "profile.form.fields.preferLanguage.options.zh": "中文",
+  "profile.form.fields.avatar.label": "Avatar",
+  "profile.form.fields.avatar.upload": "Upload Avatar",
+  "profile.form.fields.avatar.uploading": "Uploading...",
+  "profile.form.fields.avatar.description": "Upload a PNG, JPEG, or GIF image up to 5 MB.",
   "profile.form.validation.firstNameRequired": "First name is required.",
   "profile.form.validation.firstNameTooLong": "First name must not be longer than 50 characters.",
   "profile.form.validation.lastNameRequired": "Last name is required.",
   "profile.form.validation.lastNameTooLong": "Last name must not be longer than 50 characters.",
   "profile.form.validation.emailInvalid": "Please enter a valid email address.",
   "profile.form.validation.languageRequired": "Please select a preferred language.",
-  "profile.form.messages.updateSuccess": "Profile updated successfully!"
+  "profile.form.messages.updateSuccess": "Profile updated successfully!",
+  "profile.form.messages.avatarUpdateSuccess": "Avatar updated successfully!"
 }

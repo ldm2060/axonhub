@@ -1,6 +1,12 @@
 package objects
 
+import "fmt"
+
 const DefaultUserAvatarURL = "/images/default-user-avatar.svg"
+
+func UserAvatarURL(userID int) string {
+	return fmt.Sprintf("/avatars/%d.png", userID)
+}
 
 type UserInfo struct {
 	ID             GUID               `json:"id"`

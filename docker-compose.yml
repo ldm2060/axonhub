@@ -41,13 +41,14 @@ services:
       # 数据库配置可以通过环境变量设置，优先级高于配置文件
       AXONHUB_DB_DIALECT: postgres
       AXONHUB_DB_DSN: postgres://axonhub:${DB_PASSWORD:-axonhub_password}@postgres:5432/axonhub?sslmode=disable
+      AXONHUB_AVATAR_DIRECTORY: /data/avatars
     ports:
       - "8090:8090"
     volumes:
       # 配置文件挂载 - 用于复杂配置，如缓存、日志、监控等
       # 参考: https://github.com/ldm2060/axonhub/blob/main/docs/deployment/configuration.md
       - ./config.yml:/app/config.yml:ro
-      # - axonhub_data:/data
+      - axonhub_data:/data
     networks:
       - axonhub-network
     depends_on:
@@ -166,6 +167,7 @@ services:
 volumes:
   postgres_data:
   mysql_data:
+  axonhub_data:
 
 networks:
   axonhub-network:

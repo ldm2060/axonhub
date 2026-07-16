@@ -1,17 +1,21 @@
+import { useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import { UPDATE_ME_MUTATION } from '@/gql/users';
+import { Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMe } from '@/features/auth/data/auth';
+import { uploadAvatar } from './avatar-api';
 
 type ProfileFormValues = {
   firstName: string;
@@ -24,6 +28,7 @@ export default function ProfileForm() {
   const { t } = useTranslation();
   const auth = useAuthStore((state) => state.auth);
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const profileFormSchema = z.object({
     firstName: z
@@ -93,6 +98,27 @@ export default function ProfileForm() {
     },
   });
 
+  const avatarMutation = useMutation({
+    mutationFn: uploadAvatar,
+    onSuccess: ({ avatar }) => {
+      const cacheBustedAvatar = `${avatar}?v=${Date.now()}`;
+      auth.setUser({ ...auth.user!, avatar: cacheBustedAvatar });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      toast.success(t('profile.form.messages.avatarUpdateSuccess'));
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) {
+      avatarMutation.mutate(file);
+    }
+  };
+
   const onSubmit = (data: ProfileFormValues) => {
     updateProfileMutation.mutate(data);
   };
@@ -104,6 +130,36 @@ export default function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+        <FormItem>
+          <FormLabel>{t('profile.form.fields.avatar.label')}</FormLabel>
+          <FormControl>
+            <div className='flex items-center space-x-4'>
+              <Avatar className='h-20 w-20'>
+                <AvatarImage src={auth.user?.avatar || currentUser?.avatar} alt={t('profile.form.fields.avatar.label')} />
+                <AvatarFallback>{currentUser?.firstName?.charAt(0) || currentUser?.email?.charAt(0) || '?'}</AvatarFallback>
+              </Avatar>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={avatarMutation.isPending}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className='mr-2 h-4 w-4' />
+                {avatarMutation.isPending ? t('profile.form.fields.avatar.uploading') : t('profile.form.fields.avatar.upload')}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/png,image/jpeg,image/gif'
+                onChange={handleAvatarUpload}
+                className='hidden'
+              />
+            </div>
+          </FormControl>
+          <FormDescription>{t('profile.form.fields.avatar.description')}</FormDescription>
+        </FormItem>
+
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           <FormField
             control={form.control}
