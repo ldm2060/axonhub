@@ -266,9 +266,9 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 		// applyPassThroughBody runs first so that override operations can still modify the pass-through body.
 		applyPassThroughRequestBody(outbound, processor.SystemService),
 		applyOverrideRequestBody(outbound),
-		// applyUserAgentPassThrough runs before header overrides to set the initial
-		// User-Agent value (either from client pass-through or default "axonhub/1.0").
-		// This allows override headers to modify the User-Agent if configured.
+		// applyUserAgentPassThrough runs before header overrides for regular
+		// channels. Kimi Code preserves the host identity installed by its
+		// transformer; explicit header overrides remain final.
 		applyUserAgentPassThrough(outbound, processor.SystemService),
 		applyOverrideRequestHeaders(outbound),
 

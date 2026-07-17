@@ -15,6 +15,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/internal/ent"
+	entchannel "github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/llm"
@@ -1425,6 +1426,7 @@ func TestApplyUserAgentPassThrough(t *testing.T) {
 				Channel: &ent.Channel{
 					ID:       1,
 					Name:     "test-channel",
+					Type:     entchannel.TypeOpenai,
 					Settings: channelSettings,
 				},
 				Outbound: &mockTransformer{},
@@ -1471,6 +1473,46 @@ func TestApplyUserAgentPassThrough(t *testing.T) {
 				// When no User-Agent expected, header should be empty
 				require.Empty(t, processedRequest.Headers.Get("User-Agent"))
 			}
+		})
+	}
+}
+
+func TestApplyUserAgentPassThroughPreservesKimiIdentity(t *testing.T) {
+	tests := []struct {
+		name             string
+		channelUASetting *bool
+		globalUAEnabled  bool
+	}{
+		{name: "channel disabled", channelUASetting: new(false), globalUAEnabled: true},
+		{name: "channel enabled", channelUASetting: new(true), globalUAEnabled: false},
+		{name: "global disabled", globalUAEnabled: false},
+		{name: "global enabled", globalUAEnabled: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, client := setupTest(t)
+			systemService := newTestSystemService(client)
+			require.NoError(t, systemService.SetUserAgentPassThrough(ctx, tt.globalUAEnabled))
+
+			settings := &objects.ChannelSettings{PassThroughUserAgent: tt.channelUASetting}
+			currentChannel := &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "kimi", Type: entchannel.TypeKimiCode, Settings: settings}, Outbound: &mockTransformer{}}
+			outbound := &PersistentOutboundTransformer{
+				wrapped: &mockTransformer{},
+				state: &PersistenceState{
+					CurrentCandidate: &ChannelModelsCandidate{Channel: currentChannel},
+					LlmRequest: &llm.Request{RawRequest: &httpclient.Request{Headers: http.Header{
+						"User-Agent": []string{"Client/1.0"},
+					}}},
+				},
+			}
+			rawRequest := &httpclient.Request{Headers: http.Header{
+				"User-Agent":    []string{"AxonHub/test"},
+				"X-Msh-Version": []string{"test"},
+			}}
+			processed, err := applyUserAgentPassThrough(outbound, systemService).OnOutboundRawRequest(ctx, rawRequest)
+			require.NoError(t, err)
+			require.Equal(t, "AxonHub/test", processed.Headers.Get("User-Agent"))
+			require.Equal(t, "test", processed.Headers.Get("X-Msh-Version"))
 		})
 	}
 }

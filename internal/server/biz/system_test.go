@@ -47,6 +47,25 @@ func setupTestSystemService(t *testing.T, cacheConfig xcache.Config) (*SystemSer
 	return systemService, client
 }
 
+func TestSystemService_KimiCodeIdentityIsStable(t *testing.T) {
+	service, client := setupTestSystemService(t, xcache.Config{Mode: xcache.ModeMemory})
+	defer client.Close()
+
+	ctx := ent.NewContext(authz.WithTestBypass(t.Context()), client)
+	first, err := service.KimiCodeIdentity(ctx)
+	require.NoError(t, err)
+	second, err := service.KimiCodeIdentity(ctx)
+	require.NoError(t, err)
+
+	require.Equal(t, "AxonHub", first.UserAgentProduct)
+	require.NotEmpty(t, first.Version)
+	require.NotEmpty(t, first.Hostname)
+	require.NotEmpty(t, first.DeviceModel)
+	require.NotEmpty(t, first.OSVersion)
+	require.NotEmpty(t, first.DeviceID)
+	require.Equal(t, first.DeviceID, second.DeviceID)
+}
+
 func TestSystemService_WithMemoryCache(t *testing.T) {
 	cacheConfig := xcache.Config{Mode: xcache.ModeMemory}
 

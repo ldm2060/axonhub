@@ -50,6 +50,9 @@ func NewOutboundTransformer(params Params) (*OutboundTransformer, error) {
 	if params.TokenProvider == nil {
 		return nil, errors.New("Kimi Code token provider is required")
 	}
+	if err := ValidateIdentity(params.Identity); err != nil {
+		return nil, err
+	}
 	baseURL := strings.TrimRight(strings.TrimSpace(params.BaseURL), "/")
 	if baseURL == "" {
 		baseURL = DefaultBaseURL
@@ -123,7 +126,9 @@ func (t *OutboundTransformer) transformKimiRequest(ctx context.Context, original
 	if err != nil {
 		return nil, err
 	}
-	t.applyKimiIdentity(result, token, ProtocolKimi)
+	if err := t.applyKimiIdentity(result, token, ProtocolKimi); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -152,7 +157,9 @@ func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, ori
 	if err != nil {
 		return nil, err
 	}
-	t.applyKimiIdentity(result, token, ProtocolAnthropic)
+	if err := t.applyKimiIdentity(result, token, ProtocolAnthropic); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -169,8 +176,11 @@ func putBetasInBody(raw []byte) ([]byte, error) {
 	return encoded, nil
 }
 
-func (t *OutboundTransformer) applyKimiIdentity(request *httpclient.Request, token, protocol string) {
-	identityHeaders := BuildIdentityHeaders(t.identity)
+func (t *OutboundTransformer) applyKimiIdentity(request *httpclient.Request, token, protocol string) error {
+	identityHeaders, err := BuildIdentityHeaders(t.identity)
+	if err != nil {
+		return err
+	}
 	maps.Copy(request.Headers, identityHeaders)
 	request.Auth = &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: token}
 	request.Headers.Del("Authorization")
@@ -178,6 +188,7 @@ func (t *OutboundTransformer) applyKimiIdentity(request *httpclient.Request, tok
 		request.Metadata = make(map[string]string)
 	}
 	request.Metadata[protocolMetadataKey] = protocol
+	return nil
 }
 
 func (t *OutboundTransformer) protocolForRequest(request *httpclient.Request) string {

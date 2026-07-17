@@ -57,11 +57,14 @@ func oauthURL(host, path string) string {
 	return host + path
 }
 
-func makeOAuthRequest(method, endpoint string, form url.Values, identity Identity) *httpclient.Request {
-	headers := BuildIdentityHeaders(identity)
+func makeOAuthRequest(method, endpoint string, form url.Values, identity Identity) (*httpclient.Request, error) {
+	headers, err := BuildIdentityHeaders(identity)
+	if err != nil {
+		return nil, err
+	}
 	headers.Set("Content-Type", "application/x-www-form-urlencoded")
 	headers.Set("Accept", "application/json")
-	return &httpclient.Request{Method: method, URL: endpoint, Headers: headers, Body: []byte(form.Encode())}
+	return &httpclient.Request{Method: method, URL: endpoint, Headers: headers, Body: []byte(form.Encode())}, nil
 }
 
 // RequestDeviceAuthorization initiates the Kimi Code RFC 8628 device flow.
@@ -70,7 +73,11 @@ func RequestDeviceAuthorization(ctx context.Context, httpClient *httpclient.Http
 		return nil, errors.New("http client is nil")
 	}
 	form := url.Values{"client_id": {ClientID}}
-	response, err := httpClient.Do(ctx, makeOAuthRequest(http.MethodPost, oauthURL(oauthHost, DeviceAuthorizationPath), form, identity))
+	request, err := makeOAuthRequest(http.MethodPost, oauthURL(oauthHost, DeviceAuthorizationPath), form, identity)
+	if err != nil {
+		return nil, fmt.Errorf("build device authorization request: %w", err)
+	}
+	response, err := httpClient.Do(ctx, request)
 	if err != nil {
 		return nil, fmt.Errorf("request device authorization: %w", err)
 	}
@@ -95,7 +102,11 @@ func PollDeviceToken(ctx context.Context, httpClient *httpclient.HttpClient, oau
 		return nil, errors.New("device_code is empty")
 	}
 	form := url.Values{"client_id": {ClientID}, "device_code": {deviceCode}, "grant_type": {DeviceGrantType}}
-	response, err := httpClient.Do(ctx, makeOAuthRequest(http.MethodPost, oauthURL(oauthHost, TokenPath), form, identity))
+	request, err := makeOAuthRequest(http.MethodPost, oauthURL(oauthHost, TokenPath), form, identity)
+	if err != nil {
+		return nil, fmt.Errorf("build device token request: %w", err)
+	}
+	response, err := httpClient.Do(ctx, request)
 	if err != nil {
 		var httpErr *httpclient.Error
 		if errors.As(err, &httpErr) {

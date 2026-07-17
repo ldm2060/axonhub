@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/ldm2060/axonhub/internal/build"
@@ -19,16 +18,24 @@ func (s *SystemService) KimiCodeIdentity(ctx context.Context) (kimicode.Identity
 		return kimicode.Identity{}, err
 	}
 	version := strings.TrimSpace(build.Version)
-	if version == "" || version == "dev" {
-		version = "development"
-	}
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
 	}
-	osVersion := runtime.GOOS + " " + runtime.GOARCH
-	return kimicode.Identity{
-		Version: version, Hostname: hostname, DeviceModel: osVersion,
-		OSVersion: osVersion, DeviceID: deviceID, UserAgent: fmt.Sprintf("AxonHub/%s", version),
-	}, nil
+	platform, err := resolveKimiCodePlatform(ctx)
+	if err != nil {
+		return kimicode.Identity{}, err
+	}
+	identity := kimicode.Identity{
+		UserAgentProduct: "AxonHub",
+		Version:          version,
+		Hostname:         hostname,
+		DeviceModel:      formatKimiCodeDeviceModel(platform),
+		OSVersion:        platform.OSRelease,
+		DeviceID:         deviceID,
+	}
+	if err := kimicode.ValidateIdentity(identity); err != nil {
+		return kimicode.Identity{}, fmt.Errorf("build Kimi Code identity: %w", err)
+	}
+	return identity, nil
 }

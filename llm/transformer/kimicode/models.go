@@ -36,7 +36,10 @@ func FetchModels(ctx context.Context, httpClient *httpclient.HttpClient, baseURL
 	if strings.TrimSpace(accessToken) == "" {
 		return nil, errors.New("Kimi Code access token is empty")
 	}
-	headers := BuildIdentityHeaders(identity)
+	headers, err := BuildIdentityHeaders(identity)
+	if err != nil {
+		return nil, fmt.Errorf("build Kimi Code model request: %w", err)
+	}
 	headers.Set("Accept", "application/json")
 	request := &httpclient.Request{
 		Method: http.MethodGet, URL: ModelsURL(baseURL), Headers: headers,

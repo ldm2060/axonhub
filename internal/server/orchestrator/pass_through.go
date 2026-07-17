@@ -8,6 +8,7 @@ import (
 
 	"github.com/tidwall/sjson"
 
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/llm"
@@ -170,14 +171,17 @@ func passThroughBodyNeedsModelPatch(apiFormat llm.APIFormat) bool {
 // applyUserAgentPassThrough creates a middleware that applies the User-Agent pass-through setting.
 func applyUserAgentPassThrough(outbound *PersistentOutboundTransformer, systemService *biz.SystemService) pipeline.Middleware {
 	return pipeline.OnRawRequest("user-agent-pass-through", func(ctx context.Context, request *httpclient.Request) (*httpclient.Request, error) {
-		channel := outbound.GetCurrentChannel()
-		if channel == nil {
+		currentChannel := outbound.GetCurrentChannel()
+		if currentChannel == nil {
+			return request, nil
+		}
+		if currentChannel.Type == channel.TypeKimiCode {
 			return request, nil
 		}
 
 		var passThroughEnabled bool
-		if channel.Settings != nil && channel.Settings.PassThroughUserAgent != nil {
-			passThroughEnabled = *channel.Settings.PassThroughUserAgent
+		if currentChannel.Settings != nil && currentChannel.Settings.PassThroughUserAgent != nil {
+			passThroughEnabled = *currentChannel.Settings.PassThroughUserAgent
 		} else {
 			globalPassThrough, err := systemService.UserAgentPassThrough(ctx)
 			if err != nil {

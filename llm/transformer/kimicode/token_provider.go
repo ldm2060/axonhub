@@ -49,6 +49,9 @@ func NewTokenProvider(params TokenProviderParams) (*TokenProvider, error) {
 	if params.HTTPClient == nil {
 		return nil, errors.New("http client is required")
 	}
+	if err := ValidateIdentity(params.Identity); err != nil {
+		return nil, err
+	}
 	return &TokenProvider{
 		httpClient: params.HTTPClient, oauthHost: params.OAuthHost, identity: params.Identity,
 		creds: params.Credentials, onRefreshed: params.OnRefreshed,
@@ -123,7 +126,11 @@ func (p *TokenProvider) refresh(ctx context.Context, current *oauth.OAuthCredent
 	var lastErr error
 	for attempt := range 3 {
 		form := url.Values{"client_id": {ClientID}, "grant_type": {"refresh_token"}, "refresh_token": {current.RefreshToken}}
-		response, err := p.httpClient.Do(ctx, makeOAuthRequest(http.MethodPost, oauthURL(p.oauthHost, TokenPath), form, p.identity))
+		request, err := makeOAuthRequest(http.MethodPost, oauthURL(p.oauthHost, TokenPath), form, p.identity)
+		if err != nil {
+			return nil, fmt.Errorf("build Kimi Code token refresh request: %w", err)
+		}
+		response, err := p.httpClient.Do(ctx, request)
 		if err == nil {
 			refreshed, parseErr := parseToken(response.Body)
 			if parseErr == nil {
