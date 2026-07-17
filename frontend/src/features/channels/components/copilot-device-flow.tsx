@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useDeviceFlow } from '../hooks/use-device-flow';
+import { copilotOAuthPoll, copilotOAuthStart } from '../data/copilot';
 
 interface CopilotDeviceFlowProps {
   onSuccess: (credentials: string) => void;
@@ -18,6 +19,13 @@ export function CopilotDeviceFlow({ onSuccess, onError, existingCredentials }: C
   const { t } = useTranslation();
   const hasExistingCredentials = existingCredentials && existingCredentials.trim().length > 0;
   const deviceFlow = useDeviceFlow({
+    start: copilotOAuthStart,
+    poll: async (input) => {
+      const result = await copilotOAuthPoll(input);
+      return result.access_token
+        ? { status: 'complete' as const, completion: result.access_token, message: result.message }
+        : result;
+    },
     onSuccess,
   });
   useEffect(() => {

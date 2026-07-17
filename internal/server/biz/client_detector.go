@@ -19,6 +19,7 @@ var ChannelClientMapping = map[string][]string{
 	"opencode_go":           {"opencode"},
 	"opencode_go_anthropic": {"opencode"},
 	"moonshot_coding":       {"opencode"},
+	"kimi_code":             {"claude", "codex", "opencode"},
 }
 
 func (d *ClientDetector) DetectClient(userAgent string, referer string) string {

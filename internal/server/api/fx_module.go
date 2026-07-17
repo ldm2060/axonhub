@@ -4,7 +4,8 @@ import (
 	"go.uber.org/fx"
 )
 
-var Module = fx.Module("api",
+var Module = fx.Module(
+	"api",
 	fx.Provide(NewOpenAIHandlers),
 	fx.Provide(NewAnthropicHandlers),
 	fx.Provide(NewGeminiHandlers),
@@ -20,6 +21,7 @@ var Module = fx.Module("api",
 	fx.Provide(NewClaudeCodeHandlers),
 	fx.Provide(NewAntigravityHandlers),
 	fx.Provide(NewCopilotHandlers),
+	fx.Provide(NewKimiCodeHandlers),
 	fx.Provide(NewRequestContentHandlers),
 	fx.Provide(NewOIDCHandlers),
 	fx.Provide(NewSignUpHandlers),

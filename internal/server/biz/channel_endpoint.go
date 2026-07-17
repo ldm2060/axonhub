@@ -177,11 +177,12 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 	channel.TypeBailian:             {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
 	channel.TypeBailianAnthropic:    {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeMoonshotCoding:      {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
+	channel.TypeKimiCode:            {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
 	channel.TypeJina: {
 		{APIFormat: llm.APIFormatJinaRerank.String()},
 		{APIFormat: llm.APIFormatJinaEmbedding.String()},
 	},
-	channel.TypeGithub:           openAICompatibleDefaultEndpoints,
+	channel.TypeGithub: openAICompatibleDefaultEndpoints,
 	channel.TypeGithubCopilot: {
 		{APIFormat: llm.APIFormatOpenAIChatCompletion.String()},
 		{APIFormat: llm.APIFormatAnthropicMessage.String()},

@@ -31,6 +31,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/gemini"
 	geminioai "github.com/ldm2060/axonhub/llm/transformer/gemini/openai"
 	"github.com/ldm2060/axonhub/llm/transformer/jina"
+	"github.com/ldm2060/axonhub/llm/transformer/kimicode"
 	"github.com/ldm2060/axonhub/llm/transformer/longcat"
 	"github.com/ldm2060/axonhub/llm/transformer/modelscope"
 	"github.com/ldm2060/axonhub/llm/transformer/moonshot"
@@ -136,7 +137,8 @@ func buildChannel(c *ent.Channel, httpClient *httpclient.HttpClient) *Channel {
 	params := ch.GetBodyOverrideOperations()
 
 	if log.DebugEnabled(context.Background()) {
-		log.Debug(context.Background(), "pre cached settings",
+		log.Debug(
+			context.Background(), "pre cached settings",
 			log.String("channel", ch.Name),
 			log.Int("entries", len(entries)),
 			log.Int("headers", len(headers)),
@@ -461,8 +463,8 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		if !c.Credentials.IsOAuth() && len(enabledKeys) == 0 {
 			return nil, fmt.Errorf("missing credentials: oauth or api key required for channel %s", c.Name)
 		}
-	case channel.TypeGithubCopilot:
-		// GitHub Copilot requires OAuth credentials with device flow (strict OAuth only)
+	case channel.TypeGithubCopilot, channel.TypeKimiCode:
+		// OAuth-only coding channels require a complete persisted OAuth bundle.
 		if !c.Credentials.IsOAuth() {
 			return nil, fmt.Errorf("missing oauth credentials for channel %s", c.Name)
 		}
@@ -915,6 +917,30 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = transformer
 
 		return ch, nil
+	case channel.TypeKimiCode:
+		creds, err := parseKimiCodeCredentials(c.Credentials)
+		if err != nil {
+			return nil, fmt.Errorf("kimi_code channel %s has invalid credentials: %w", c.Name, err)
+		}
+		identity, err := svc.SystemService.KimiCodeIdentity(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("resolve Kimi Code install identity: %w", err)
+		}
+		p, err := kimicode.NewTokenProvider(kimicode.TokenProviderParams{
+			Credentials: creds, HTTPClient: httpClient, Identity: identity, OnRefreshed: svc.onTokenRefreshed(c),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create Kimi Code token provider: %w", err)
+		}
+		transformer, err := kimicode.NewOutboundTransformer(kimicode.Params{
+			TokenProvider: p, BaseURL: c.BaseURL, Identity: identity, Models: creds.KimiCode.Models,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create Kimi Code outbound transformer: %w", err)
+		}
+		ch.Outbound = transformer
+		setupAutoRefresh(ch, p, oauth.AutoRefreshOptions{Interval: 5 * time.Minute, RefreshBefore: 5 * time.Minute})
+		return ch, nil
 	case channel.TypeGithubCopilot:
 		// GitHub Copilot requires OAuth credentials with device flow
 		if !c.Credentials.IsOAuth() {
@@ -1099,6 +1125,33 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 	}
 }
 
+func parseKimiCodeCredentials(channelCredentials objects.ChannelCredentials) (*oauth.OAuthCredentials, error) {
+	credsJSON := strings.TrimSpace(channelCredentials.APIKey)
+	if credsJSON == "" && channelCredentials.OAuth != nil {
+		encoded, err := channelCredentials.OAuth.ToJSON()
+		if err != nil {
+			return nil, fmt.Errorf("serialize OAuth credentials: %w", err)
+		}
+		credsJSON = encoded
+	}
+	creds, err := oauth.ParseCredentialsJSON(credsJSON)
+	if err != nil {
+		return nil, err
+	}
+	if creds.RefreshToken == "" || creds.ExpiresAt.IsZero() {
+		return nil, errors.New("access_token, refresh_token, and expires_at are required")
+	}
+	if creds.KimiCode == nil || len(creds.KimiCode.Models) == 0 {
+		return nil, errors.New("Kimi Code model metadata is required; sign in again")
+	}
+	for _, model := range creds.KimiCode.Models {
+		if err := kimicode.ValidateModel(model); err != nil {
+			return nil, err
+		}
+	}
+	return creds, nil
+}
+
 func isOAuthJSON(s string) bool {
 	trimmed := strings.TrimSpace(s)
 	return strings.HasPrefix(trimmed, "{") && strings.Contains(s, "access_token")
@@ -1115,6 +1168,10 @@ func extractProjectIDFromAntigravityCreds(apiKey string) (string, error) {
 func (svc *ChannelService) refreshOAuthToken(ctx context.Context, ch *ent.Channel, refreshed *oauth.OAuthCredentials) error {
 	if refreshed == nil {
 		return nil
+	}
+
+	if ch.Type == channel.TypeKimiCode && refreshed.KimiCode == nil && ch.Credentials.OAuth != nil {
+		refreshed.KimiCode = ch.Credentials.OAuth.KimiCode
 	}
 
 	updated := ch.Credentials

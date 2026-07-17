@@ -10,6 +10,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
+	"github.com/ldm2060/axonhub/llm/transformer/kimicode"
 )
 
 // syncChannelModels syncs supported models for all channels with auto_sync_supported_models enabled.
@@ -121,10 +122,26 @@ func (svc *ChannelService) syncChannelModelsForChannel(ctx context.Context, ch *
 
 	// Update channel's supported models with merged list
 	// Keep manual_models unchanged (preserve user's manually added models)
-	updatedCh, err := svc.entFromContext(ctx).Channel.
-		UpdateOneID(ch.ID).
-		SetSupportedModels(mergedModels).
-		Save(ctx)
+	update := svc.entFromContext(ctx).Channel.UpdateOneID(ch.ID).SetSupportedModels(mergedModels)
+	if ch.Type == channel.TypeKimiCode {
+		if len(result.KimiCodeModels) == 0 {
+			return nil, fmt.Errorf("Kimi Code model sync returned no protocol metadata")
+		}
+		creds, err := parseKimiCodeCredentials(ch.Credentials)
+		if err != nil {
+			return nil, fmt.Errorf("parse Kimi Code credentials for model sync: %w", err)
+		}
+		creds.KimiCode = kimicode.NewMetadata(result.KimiCodeModels)
+		canonical, err := creds.ToJSON()
+		if err != nil {
+			return nil, fmt.Errorf("serialize synced Kimi Code credentials: %w", err)
+		}
+		updatedCredentials := ch.Credentials
+		updatedCredentials.APIKey = canonical
+		updatedCredentials.OAuth = creds
+		update.SetCredentials(updatedCredentials)
+	}
+	updatedCh, err := update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update channel supported models: %w", err)
 	}

@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -134,6 +136,10 @@ const (
 	// SystemKeySecuritySettings is the key used to store security settings.
 	// The value is JSON-encoded SecuritySettings struct.
 	SystemKeySecuritySettings = "security_settings"
+
+	// SystemKeyKimiCodeDeviceID stores the stable AxonHub-install device
+	// identity required by Kimi Code OAuth and API requests.
+	SystemKeyKimiCodeDeviceID = "kimi_code_device_id"
 )
 
 // RegistrationSettings represents consolidated registration configuration settings.
@@ -899,6 +905,36 @@ func (s *SystemService) Initialize(ctx context.Context, params *InitializeSystem
 	}
 
 	return nil
+}
+
+func (s *SystemService) KimiCodeDeviceID(ctx context.Context) (string, error) {
+	ctx = authz.WithSystemBypass(ctx, "system-kimi-code-device-id")
+	if value, err := s.getSystemValue(ctx, SystemKeyKimiCodeDeviceID); err == nil && value != "" {
+		return value, nil
+	} else if err != nil && !ent.IsNotFound(err) {
+		return "", fmt.Errorf("get Kimi Code device ID: %w", err)
+	}
+
+	candidate := uuid.NewString()
+	if err := s.entFromContext(ctx).System.Create().
+		SetKey(SystemKeyKimiCodeDeviceID).
+		SetValue(candidate).
+		OnConflict(sql.ConflictColumns("key")).
+		DoNothing().
+		Exec(ctx); err != nil {
+		return "", fmt.Errorf("create Kimi Code device ID: %w", err)
+	}
+
+	// Always read after conflict-ignore so concurrent instances converge on the
+	// canonical device identifier rather than retaining their local candidate.
+	value, err := s.getSystemValue(ctx, SystemKeyKimiCodeDeviceID)
+	if err != nil {
+		return "", fmt.Errorf("read canonical Kimi Code device ID: %w", err)
+	}
+	if value == "" {
+		return "", errors.New("stored Kimi Code device ID is empty")
+	}
+	return value, nil
 }
 
 // SecretKey retrieves the JWT secret key from system settings.

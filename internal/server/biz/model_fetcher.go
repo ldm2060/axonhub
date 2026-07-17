@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 	"github.com/ldm2060/axonhub/llm/transformer/cline"
 	"github.com/ldm2060/axonhub/llm/transformer/gemini/vertex"
+	"github.com/ldm2060/axonhub/llm/transformer/kimicode"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/codex"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/copilot"
 )
@@ -196,6 +197,9 @@ type FetchModelsInput struct {
 type FetchModelsResult struct {
 	Models []ModelIdentify
 	Error  *string
+	// KimiCodeModels carries normalized protocol metadata for the channel sync
+	// persistence path. It remains internal to the service boundary.
+	KimiCodeModels []kimicode.Model
 }
 
 var qiniuFallbackModels = []ModelIdentify{{ID: "deepseek-v3"}}
@@ -334,6 +338,10 @@ func fetchModelsInputMatchesChannel(input FetchModelsInput, ch *ent.Channel) boo
 }
 
 func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) (*FetchModelsResult, error) {
+	if input.ChannelType == channel.TypeKimiCode.String() {
+		return f.fetchKimiCodeModels(ctx, input)
+	}
+
 	if input.ChannelType == channel.TypeVolcengine.String() {
 		return &FetchModelsResult{
 			Models: []ModelIdentify{},
@@ -531,6 +539,44 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 		Models: lo.Uniq(models),
 		Error:  nil,
 	}, nil
+}
+
+func (f *ModelFetcher) fetchKimiCodeModels(ctx context.Context, input FetchModelsInput) (*FetchModelsResult, error) {
+	if input.ChannelID == nil || f.channelService == nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr("Kimi Code model sync requires a saved OAuth channel")}, nil
+	}
+	ch, err := f.channelService.entFromContext(ctx).Channel.Get(ctx, *input.ChannelID)
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("failed to get channel: %v", err))}, nil
+	}
+	if ch.Type != channel.TypeKimiCode {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr("stored channel is not Kimi Code")}, nil
+	}
+	creds, err := parseKimiCodeCredentials(ch.Credentials)
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("Kimi Code login required: %v", err))}, nil
+	}
+	identity, err := f.channelService.SystemService.KimiCodeIdentity(ctx)
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("resolve Kimi Code identity: %v", err))}, nil
+	}
+	client := f.httpClient
+	if ch.Settings != nil && ch.Settings.Proxy != nil {
+		client = f.httpClient.WithProxy(ch.Settings.Proxy)
+	}
+	provider, err := kimicode.NewTokenProvider(kimicode.TokenProviderParams{Credentials: creds, HTTPClient: client, Identity: identity, OnRefreshed: f.channelService.onTokenRefreshed(ch)})
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(err.Error())}, nil
+	}
+	fresh, err := provider.Get(ctx)
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("Kimi Code login required: %v", err))}, nil
+	}
+	models, err := kimicode.FetchModels(ctx, client, ch.BaseURL, fresh.AccessToken, identity)
+	if err != nil {
+		return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("failed to fetch Kimi Code models: %v", err))}, nil
+	}
+	return &FetchModelsResult{Models: lo.Map(models, func(model kimicode.Model, _ int) ModelIdentify { return ModelIdentify{ID: model.ID} }), KimiCodeModels: models}, nil
 }
 
 type geminiListModelsResponse struct {

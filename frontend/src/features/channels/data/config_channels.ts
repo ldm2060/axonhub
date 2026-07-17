@@ -558,6 +558,14 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     color: 'bg-black-100 text-black-800 border-black-200',
     icon: Moonshot,
   },
+  kimi_code: {
+    channelType: 'kimi_code',
+    baseURL: 'https://api.kimi.com/coding/v1',
+    defaultModels: [],
+    apiFormat: OPENAI_CHAT_COMPLETIONS,
+    color: 'bg-black-100 text-black-800 border-black-200',
+    icon: Moonshot,
+  },
   anthropic_aws: {
     channelType: 'anthropic_aws',
     baseURL: 'https://bedrock-runtime.us-east-1.amazonaws.com',
@@ -766,6 +774,7 @@ export type Provider =
   | 'qiniu'
   | 'gemini'
   | 'moonshot'
+  | 'kimi_code'
   | 'zhipu'
   | 'zai'
   | 'doubao'
@@ -842,6 +851,7 @@ export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   bailian: 'bailian',
   bailian_anthropic: 'bailian',
   moonshot_coding: 'moonshot',
+  kimi_code: 'kimi_code',
   jina: 'jina',
   github: 'github',
   github_copilot: 'github_copilot',

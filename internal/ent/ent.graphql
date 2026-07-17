@@ -1338,6 +1338,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   bailian
   bailian_anthropic
   moonshot_coding
+  kimi_code
   jina
   github
   github_copilot

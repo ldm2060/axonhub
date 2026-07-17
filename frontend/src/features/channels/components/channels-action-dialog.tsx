@@ -64,6 +64,7 @@ import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
 import { ProxyType } from './channels-proxy-dialog';
 import { CopilotDeviceFlow } from './copilot-device-flow';
+import { KimiCodeDeviceFlow } from './kimi-code-device-flow';
 import { ManualModelBadge } from './manual-model-badge';
 import { ChannelClientRestriction } from './channel-client-restriction';
 import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
@@ -295,7 +296,7 @@ function getNextDuplicateName(name: string, existingNames: Set<string>) {
 }
 
 // Providers that are always OAuth (no third-party API key mode)
-const alwaysOAuthProviderKeys = ['antigravity', 'github_copilot'];
+const alwaysOAuthProviderKeys = ['antigravity', 'github_copilot', 'kimi_code'];
 
 function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string } }): boolean {
   try {
@@ -820,6 +821,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const isClineType = activeChannelType === 'cline';
   const isClaudeCodeType = activeChannelType === 'claudecode';
   const isCopilotType = activeChannelType === 'github_copilot';
+  const isKimiCodeType = activeChannelType === 'kimi_code';
   const isOpenCodeGoType = isOpenCodeGoChannelType(activeChannelType);
 
   // OAuth providers cannot have their provider/API format changed during edit.
@@ -2061,6 +2063,29 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                             </div>
                           </div>
                         </FormItem>
+                      )}
+
+                      {isKimiCodeType && (
+                        <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                          <div className='col-span-2' />
+                          <div className='space-y-4 md:col-span-6'>
+                            <KimiCodeDeviceFlow
+                              existingCredentials={form.watch('credentials.apiKey')}
+                              onSuccess={({ credentials, models }) => {
+                                const modelIDs = models.map((model) => model.id);
+                                const currentDefault = form.getValues('defaultTestModel');
+                                form.setValue('credentials.apiKey', credentials, { shouldDirty: true, shouldValidate: true });
+                                setFetchedModels(modelIDs);
+                                setSupportedModels(modelIDs);
+                                form.setValue('supportedModels', modelIDs, { shouldDirty: true, shouldValidate: true });
+                                if (!isEdit || !modelIDs.includes(currentDefault)) {
+                                  form.setValue('defaultTestModel', modelIDs[0] || '', { shouldDirty: true, shouldValidate: true });
+                                }
+                              }}
+                              onError={(error) => toast.error(error)}
+                            />
+                          </div>
+                        </div>
                       )}
 
                       {isCopilotType && (

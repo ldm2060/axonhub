@@ -83,6 +83,7 @@ func (Channel) Fields() []ent.Field {
 				"bailian",
 				"bailian_anthropic",
 				"moonshot_coding",
+				"kimi_code",
 				"jina",
 				"github",
 				"github_copilot",

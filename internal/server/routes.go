@@ -34,6 +34,7 @@ type Handlers struct {
 	ClaudeCode     *api.ClaudeCodeHandlers
 	Antigravity    *api.AntigravityHandlers
 	Copilot        *api.CopilotHandlers
+	KimiCode       *api.KimiCodeHandlers
 	RequestContent *api.RequestContentHandlers
 	OIDC           *api.OIDCHandlers
 	RequestPreview *api.RequestPreviewHandlers
@@ -148,6 +149,9 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.POST("/copilot/oauth/start", handlers.Copilot.StartOAuth)
 		adminGroup.POST("/copilot/oauth/poll", handlers.Copilot.PollOAuth)
 
+		adminGroup.POST("/kimicode/oauth/start", handlers.KimiCode.StartOAuth)
+		adminGroup.POST("/kimicode/oauth/poll", handlers.KimiCode.PollOAuth)
+
 		// OIDC Manual Linking
 		adminGroup.GET("/oidc/link/:provider", handlers.OIDC.GetLinkAuthorizeURL)
 
@@ -187,7 +191,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		openAPIGroup.POST("/webhook/echo", handlers.System.WebhookEcho)
 	}
 
-	apiGroup := server.Group("/",
+	apiGroup := server.Group(
+		"/",
 		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
 		middleware.WithSource(request.SourceAPI),
@@ -255,7 +260,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			group.GET("/models", handlers.Gemini.ListModels)
 		}
 
-		geminiGroup := server.Group("/gemini/:gemini-api-version",
+		geminiGroup := server.Group(
+			"/gemini/:gemini-api-version",
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
@@ -266,7 +272,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		registerGeminiRoutes(geminiGroup)
 
 		// Alias for Gemini API
-		geminiAliasGroup := server.Group("/v1beta",
+		geminiAliasGroup := server.Group(
+			"/v1beta",
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),

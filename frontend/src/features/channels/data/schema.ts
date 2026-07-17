@@ -99,6 +99,7 @@ export const channelTypeSchema = z.enum([
   'bailian',
   'bailian_anthropic',
   'moonshot_coding',
+  'kimi_code',
   'jina',
   'github',
   'github_copilot',
@@ -525,7 +526,8 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
 
   // For GitHub Copilot, enforce JSON format
   const isCopilot = type === 'github_copilot';
-  if (isCopilot && !apiKey.trim().startsWith('{')) {
+  const isKimiCode = type === 'kimi_code';
+  if ((isCopilot || isKimiCode) && !apiKey.trim().startsWith('{')) {
     ctx.addIssue({
       code: 'custom' as const,
       message: 'channels.dialogs.oauth.errors.copilotCredentialsInvalid',
@@ -556,6 +558,8 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
     .object({
       access_token: z.string().min(1),
       refresh_token: isCopilot ? z.string().optional() : z.string().min(1),
+      expires_at: isKimiCode ? z.string().min(1) : z.string().optional(),
+      kimi_code: isKimiCode ? z.object({ models: z.array(z.object({ id: z.string().min(1), context_length: z.number().positive() })).min(1) }) : z.unknown().optional(),
     })
     .safeParse(json);
 
@@ -615,12 +619,12 @@ export const createChannelInputSchema = z
   })
   .superRefine((data, ctx) => {
     const isOAuthType =
-      data.type === 'codex' || data.type === 'claudecode' || data.type === 'antigravity' || data.type === 'github_copilot';
+      data.type === 'codex' || data.type === 'claudecode' || data.type === 'antigravity' || data.type === 'github_copilot' || data.type === 'kimi_code';
     const hasApiKey = data.credentials.apiKey && data.credentials.apiKey.trim().length > 0;
     const hasApiKeys = data.credentials.apiKeys && data.credentials.apiKeys.some((k) => k.trim().length > 0);
 
-    // github_copilot requires credentials.apiKey (OAuth JSON with access_token)
-    if (data.type === 'github_copilot' && !hasApiKey) {
+    // github_copilot and kimi_code require credentials.apiKey OAuth JSON.
+    if ((data.type === 'github_copilot' || data.type === 'kimi_code') && !hasApiKey) {
       ctx.addIssue({
         code: 'custom' as const,
         message: 'channels.dialogs.oauth.errors.copilotCredentialsRequired',

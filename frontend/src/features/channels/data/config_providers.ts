@@ -87,6 +87,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     color: 'bg-black-100 text-black-800 border-black-200',
     channelTypes: ['moonshot_anthropic', 'moonshot', 'moonshot_coding'],
   },
+  kimi_code: {
+    provider: 'kimi_code',
+    icon: Moonshot,
+    color: 'bg-black-100 text-black-800 border-black-200',
+    channelTypes: ['kimi_code'],
+  },
   zhipu: {
     provider: 'zhipu',
     icon: Zhipu,

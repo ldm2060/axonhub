@@ -257,7 +257,8 @@ func (svc *ChannelService) reloadEnabledChannels(ctx context.Context, current []
 	for _, c := range entities {
 		channel, err := svc.buildChannelWithOutbounds(c)
 		if err != nil {
-			log.Warn(ctx, "failed to build channel",
+			log.Warn(
+				ctx, "failed to build channel",
 				log.String("channel", c.Name),
 				log.String("type", c.Type.String()),
 				log.Cause(err),
@@ -269,7 +270,8 @@ func (svc *ChannelService) reloadEnabledChannels(ctx context.Context, current []
 		// Preload override parameters
 		overrideParams := channel.GetBodyOverrideOperations()
 		if log.DebugEnabled(ctx) {
-			log.Debug(ctx, "created outbound transformer",
+			log.Debug(
+				ctx, "created outbound transformer",
 				log.String("channel", c.Name),
 				log.String("type", c.Type.String()),
 				log.Any("override_params", overrideParams),
@@ -523,9 +525,31 @@ func (svc *ChannelService) ListModels(ctx context.Context, input ListModelsInput
 	return models, nil
 }
 
+func (svc *ChannelService) canonicalizeKimiCodeCredentials(typ channel.Type, credentials *objects.ChannelCredentials) error {
+	if typ != channel.TypeKimiCode || credentials == nil {
+		return nil
+	}
+	creds, err := parseKimiCodeCredentials(*credentials)
+	if err != nil {
+		return fmt.Errorf("invalid Kimi Code OAuth credentials: %w", err)
+	}
+	canonical, err := creds.ToJSON()
+	if err != nil {
+		return fmt.Errorf("serialize Kimi Code OAuth credentials: %w", err)
+	}
+	credentials.APIKey = canonical
+	credentials.APIKeys = nil
+	credentials.OAuth = creds
+	return nil
+}
+
 // createChannel creates a new channel without triggering a reload.
 // This is useful for batch operations where reload should happen once at the end.
 func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateChannelInput) (*ent.Channel, error) {
+	if err := svc.canonicalizeKimiCodeCredentials(input.Type, &input.Credentials); err != nil {
+		return nil, err
+	}
+
 	if input.Settings != nil {
 		if input.Settings.BodyOverrideOperations != nil {
 			if err := ValidateBodyOverrideOperations(input.Settings.BodyOverrideOperations); err != nil {
@@ -759,7 +783,21 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 	}
 
 	if input.Credentials != nil {
-		mut.SetCredentials(*input.Credentials)
+		var typ channel.Type
+		if input.Type != nil {
+			typ = *input.Type
+		} else {
+			existing, err := svc.entFromContext(ctx).Channel.Get(ctx, id)
+			if err != nil {
+				return nil, fmt.Errorf("get channel for credential validation: %w", err)
+			}
+			typ = existing.Type
+		}
+		credentials := *input.Credentials
+		if err := svc.canonicalizeKimiCodeCredentials(typ, &credentials); err != nil {
+			return nil, err
+		}
+		mut.SetCredentials(credentials)
 	}
 
 	if input.Remark != nil {
@@ -1068,7 +1106,8 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 			PollInterval: 300,
 		}
 		if _, err := svc.usageMonitor.CreateChannel(ctx, monitorInput); err != nil {
-			log.Warn(ctx, "failed to auto-create usage monitor channel",
+			log.Warn(
+				ctx, "failed to auto-create usage monitor channel",
 				log.Int("channel_id", ch.ID),
 				log.String("channel_name", ch.Name),
 				log.String("provider_type", providerType),
@@ -1093,7 +1132,8 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 	}
 
 	if _, err := svc.usageMonitor.CreateChannel(ctx, monitorInput); err != nil {
-		log.Warn(ctx, "failed to auto-create usage monitor channel",
+		log.Warn(
+			ctx, "failed to auto-create usage monitor channel",
 			log.Int("channel_id", ch.ID),
 			log.String("channel_name", ch.Name),
 			log.String("provider_type", providerType),
@@ -1117,7 +1157,8 @@ func (svc *ChannelService) autoDeleteUsageMonitorChannels(ctx context.Context, c
 		).
 		All(ctx)
 	if err != nil {
-		log.Warn(ctx, "failed to query usage monitor channels for auto-delete",
+		log.Warn(
+			ctx, "failed to query usage monitor channels for auto-delete",
 			log.Int("channel_id", channelID),
 			log.Cause(err),
 		)
@@ -1126,7 +1167,8 @@ func (svc *ChannelService) autoDeleteUsageMonitorChannels(ctx context.Context, c
 
 	for _, m := range monitors {
 		if err := svc.usageMonitor.DeleteChannel(ctx, m.ID); err != nil {
-			log.Warn(ctx, "failed to auto-delete usage monitor channel",
+			log.Warn(
+				ctx, "failed to auto-delete usage monitor channel",
 				log.Int("monitor_id", m.ID),
 				log.Int("channel_id", channelID),
 				log.Cause(err),
