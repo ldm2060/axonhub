@@ -1506,13 +1506,13 @@ func TestApplyUserAgentPassThroughPreservesKimiIdentity(t *testing.T) {
 				},
 			}
 			rawRequest := &httpclient.Request{Headers: http.Header{
-				"User-Agent":    []string{"AxonHub/test"},
-				"X-Msh-Version": []string{"test"},
+				"User-Agent":    []string{"kimi-code-cli/0.26.0"},
+				"X-Msh-Version": []string{"0.26.0"},
 			}}
 			processed, err := applyUserAgentPassThrough(outbound, systemService).OnOutboundRawRequest(ctx, rawRequest)
 			require.NoError(t, err)
-			require.Equal(t, "AxonHub/test", processed.Headers.Get("User-Agent"))
-			require.Equal(t, "test", processed.Headers.Get("X-Msh-Version"))
+			require.Equal(t, "kimi-code-cli/0.26.0", processed.Headers.Get("User-Agent"))
+			require.Equal(t, "0.26.0", processed.Headers.Get("X-Msh-Version"))
 		})
 	}
 }

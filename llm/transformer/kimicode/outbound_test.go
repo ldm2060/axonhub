@@ -17,8 +17,8 @@ import (
 
 func TestBuildIdentityHeadersSanitizesValues(t *testing.T) {
 	headers, err := BuildIdentityHeaders(Identity{
-		UserAgentProduct: "Axon\x01Hub",
-		Version:          "v1\n",
+		UserAgentProduct: CLIUserAgentProduct,
+		Version:          CLIVersion + "\n",
 		UserAgentSuffix:  "wire\t1.0",
 		Hostname:         "host\x00name",
 		DeviceModel:      "Windows 10.0.26200 x64",
@@ -31,7 +31,7 @@ func TestBuildIdentityHeadersSanitizesValues(t *testing.T) {
 	if got, want := headers.Get("X-Msh-Platform"), "kimi_code_cli"; got != want {
 		t.Fatalf("platform = %q, want %q", got, want)
 	}
-	if got, want := headers.Get("X-Msh-Version"), "v1"; got != want {
+	if got, want := headers.Get("X-Msh-Version"), CLIVersion; got != want {
 		t.Fatalf("version = %q, want %q", got, want)
 	}
 	if got, want := headers.Get("X-Msh-Device-Name"), "hostname"; got != want {
@@ -46,7 +46,7 @@ func TestBuildIdentityHeadersSanitizesValues(t *testing.T) {
 	if got, want := headers.Get("X-Msh-Device-Id"), "device"; got != want {
 		t.Fatalf("device ID = %q, want %q", got, want)
 	}
-	if got, want := headers.Get("User-Agent"), "AxonHub/v1 (wire1.0)"; got != want {
+	if got, want := headers.Get("User-Agent"), CLIUserAgentProduct+"/"+CLIVersion+" (wire1.0)"; got != want {
 		t.Fatalf("user agent = %q, want %q", got, want)
 	}
 }
@@ -64,7 +64,7 @@ func TestFetchModelsRejectsIncompleteMetadata(t *testing.T) {
 }
 
 func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
-	identity := Identity{UserAgentProduct: "AxonHub", Version: "test", Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
 	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
 	if err != nil {
 		t.Fatal(err)
@@ -126,7 +126,7 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 }
 
 func TestKimiStreamingUsageDoesNotMutateOriginalRequest(t *testing.T) {
-	identity := Identity{UserAgentProduct: "AxonHub", Version: "test", Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
 	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
 	if err != nil {
 		t.Fatal(err)
@@ -161,7 +161,7 @@ func TestKimiStreamingUsageDoesNotMutateOriginalRequest(t *testing.T) {
 }
 
 func TestKimiNonStreamingRequestDoesNotInjectStreamOptions(t *testing.T) {
-	identity := Identity{UserAgentProduct: "AxonHub", Version: "test", Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
 	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +184,7 @@ func TestKimiNonStreamingRequestDoesNotInjectStreamOptions(t *testing.T) {
 }
 
 func TestKimiRequestPreservesExplicitThinkingDisabled(t *testing.T) {
-	identity := Identity{UserAgentProduct: "AxonHub", Version: "test", Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
 	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
 	if err != nil {
 		t.Fatal(err)

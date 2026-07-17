@@ -4,6 +4,11 @@ const (
 	DefaultOAuthHost = "https://auth.kimi.com"
 	DefaultBaseURL   = "https://api.kimi.com/coding/v1"
 
+	// CLIUserAgentProduct and CLIVersion match the official @moonshot-ai/kimi-code
+	// package identity used by the Kimi Code CLI.
+	CLIUserAgentProduct = "kimi-code-cli"
+	CLIVersion          = "0.26.0"
+
 	DeviceAuthorizationPath = "/api/oauth/device_authorization"
 	// TokenPath is the Kimi Code public OAuth token endpoint.
 	TokenPath    = "/api/oauth/token" //nolint:gosec // URL path, not a credential.

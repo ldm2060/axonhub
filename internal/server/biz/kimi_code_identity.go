@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
-	"github.com/ldm2060/axonhub/internal/build"
 	"github.com/ldm2060/axonhub/llm/transformer/kimicode"
 )
 
@@ -17,7 +15,6 @@ func (s *SystemService) KimiCodeIdentity(ctx context.Context) (kimicode.Identity
 	if err != nil {
 		return kimicode.Identity{}, err
 	}
-	version := strings.TrimSpace(build.Version)
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
@@ -27,8 +24,8 @@ func (s *SystemService) KimiCodeIdentity(ctx context.Context) (kimicode.Identity
 		return kimicode.Identity{}, err
 	}
 	identity := kimicode.Identity{
-		UserAgentProduct: "AxonHub",
-		Version:          version,
+		UserAgentProduct: kimicode.CLIUserAgentProduct,
+		Version:          kimicode.CLIVersion,
 		Hostname:         hostname,
 		DeviceModel:      formatKimiCodeDeviceModel(platform),
 		OSVersion:        platform.OSRelease,

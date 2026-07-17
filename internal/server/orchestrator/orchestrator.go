@@ -267,7 +267,7 @@ func (processor *ChatCompletionOrchestrator) Process(ctx context.Context, reques
 		applyPassThroughRequestBody(outbound, processor.SystemService),
 		applyOverrideRequestBody(outbound),
 		// applyUserAgentPassThrough runs before header overrides for regular
-		// channels. Kimi Code preserves the host identity installed by its
+		// channels. Kimi Code preserves the official CLI identity installed by its
 		// transformer; explicit header overrides remain final.
 		applyUserAgentPassThrough(outbound, processor.SystemService),
 		applyOverrideRequestHeaders(outbound),
