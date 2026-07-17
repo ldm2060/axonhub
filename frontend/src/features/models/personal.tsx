@@ -22,7 +22,7 @@ function PersonalModelsContent() {
   const { modelPermissions } = usePermissions();
   const { user: authUser } = useAuthStore((state) => state.auth);
   const { data: meData } = useMe();
-  const currentUser = meData || authUser;
+  const _currentUser = meData || authUser;
 
   const [nameFilter, setNameFilter] = useState<string>('');
   const [sorting, setSorting] = useState<SortingState>(() => {

@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PermissionGuard } from '@/components/permission-guard';
 import { useModels } from '../context/models-context';
 import { Model } from '../data/schema';
 

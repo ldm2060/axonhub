@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuotaChannels, type QuotaChannel } from '@/features/system/data/quotas';
-import type { ParsedField } from '@/features/usage-monitor/data/schema';
 import { useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
+import type { ParsedField } from '@/features/usage-monitor/data/schema';
 
 const BADGE_COLOR_CLASSES: Record<string, string> = {
   green: 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20',
@@ -109,20 +109,14 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
       )}
 
       {channel.parsedData && channel.parsedData.length > 0 && (
-        <SharedFieldRenderer
-          fields={channel.parsedData}
-          displayFields={channel.displayFields}
-        />
+        <SharedFieldRenderer fields={channel.parsedData} displayFields={channel.displayFields} />
       )}
     </div>
   );
 }
 
 function QuotaBadgeTrigger({ channels }: { channels: QuotaChannel[] }) {
-  const highestUsed = Math.max(
-    ...channels.map((c) => getOverallPercentage(c.parsedData)),
-    0,
-  );
+  const highestUsed = Math.max(...channels.map((c) => getOverallPercentage(c.parsedData)), 0);
 
   const hasExhausted = channels.some((c) => c.quotaStatus === 'exhausted');
   const hasWarning = channels.some((c) => c.quotaStatus === 'warning');
@@ -167,9 +161,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
               {isRefreshing ? <Loader2 className='h-4 w-4 animate-spin' /> : <RefreshCw className='h-4 w-4' />}
             </button>
           </div>
-          <div
-            className={`max-h-[60vh] overflow-y-auto pr-1 pl-1 ${channels.length > 4 ? 'grid grid-cols-1 gap-x-4 sm:grid-cols-2' : ''}`}
-          >
+          <div className={`max-h-[60vh] overflow-y-auto pr-1 pl-1 ${channels.length > 4 ? 'grid grid-cols-1 gap-x-4 sm:grid-cols-2' : ''}`}>
             {channels.map((channel) => (
               <QuotaRow key={channel.id} channel={channel} enforcementMode={enforcementMode} />
             ))}

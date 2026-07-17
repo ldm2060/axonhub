@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import { toast } from 'sonner';
 import i18n from '@/lib/i18n';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 
 // Registration Settings
 const REGISTRATION_SETTINGS_QUERY = `
@@ -46,18 +45,11 @@ export interface UpdateRegistrationSettingsInput {
 }
 
 export function useRegistrationSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['registrationSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ registrationSettings: RegistrationSettings }>(REGISTRATION_SETTINGS_QUERY);
-        return data.registrationSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ registrationSettings: RegistrationSettings }>(REGISTRATION_SETTINGS_QUERY);
+      return data.registrationSettings;
     },
   });
 }
@@ -143,18 +135,11 @@ export interface UpdateEmailSettingsInput {
 }
 
 export function useEmailSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['emailSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ emailSettings: EmailSettings }>(EMAIL_SETTINGS_QUERY);
-        return data.emailSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ emailSettings: EmailSettings }>(EMAIL_SETTINGS_QUERY);
+      return data.emailSettings;
     },
   });
 }

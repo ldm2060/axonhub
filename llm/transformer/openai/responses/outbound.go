@@ -10,8 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/samber/lo"
-
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/auth"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -19,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/shared"
+	"github.com/samber/lo"
 )
 
 var (
@@ -28,8 +27,9 @@ var (
 
 // Config holds all configuration for the OpenAI Responses outbound transformer.
 const (
-	TransportHTTP      = "http"
-	TransportWebSocket = "websocket"
+	TransportHTTP       = "http"
+	TransportWebSocket  = "websocket"
+	ResponsesLiteHeader = "X-Openai-Internal-Codex-Responses-Lite"
 )
 
 type Config struct {
@@ -277,8 +277,11 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 		}
 	}
 
-	// Clear `parallel_tool_calls` when no tools are sent (Responses API compatibility).
-	if len(payload.Tools) == 0 {
+	// Responses Lite requires an explicit false value, even when no top-level tools are sent.
+	if llmReq.RawRequest != nil && strings.EqualFold(strings.TrimSpace(llmReq.RawRequest.Headers.Get(ResponsesLiteHeader)), "true") {
+		payload.ParallelToolCalls = lo.ToPtr(false)
+	} else if len(payload.Tools) == 0 {
+		// Other Responses providers may reject parallel_tool_calls when tools are absent.
 		payload.ParallelToolCalls = nil
 	}
 

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { graphqlRequest } from './graphql';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useErrorHandler } from '@/hooks/use-error-handler';
+import { graphqlRequest } from './graphql';
 
 // Share/Unshare Channel Mutations
 
@@ -169,15 +169,7 @@ export function useReviewPublishRequest() {
   const { handleError } = useErrorHandler();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      action,
-      comment,
-    }: {
-      id: string;
-      action: 'approve' | 'reject';
-      comment?: string;
-    }) => {
+    mutationFn: async ({ id, action, comment }: { id: string; action: 'approve' | 'reject'; comment?: string }) => {
       const data = await graphqlRequest<{
         reviewPublishRequest: {
           id: string;
@@ -294,19 +286,11 @@ export function usePublishRequests(variables?: {
   where?: Record<string, unknown>;
   orderBy?: { field: 'CREATED_AT' | 'UPDATED_AT'; direction: 'ASC' | 'DESC' };
 }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['publishRequests', variables],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ publishRequests: PublishRequestConnection }>(PUBLISH_REQUESTS_QUERY, variables);
-        return data.publishRequests;
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ publishRequests: PublishRequestConnection }>(PUBLISH_REQUESTS_QUERY, variables);
+      return data.publishRequests;
     },
   });
 }

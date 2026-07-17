@@ -194,7 +194,7 @@ export function ChannelQuotaMonitorBinding({
             )}
 
             {keyedBindings.map((binding, bindingIndex) => {
-              const selectedMonitor = monitorMap.get(binding.usageMonitorChannelID);
+              const _selectedMonitor = monitorMap.get(binding.usageMonitorChannelID);
               const fieldSuggestions = getFieldSuggestions(binding.usageMonitorChannelID);
 
               return (

@@ -3,7 +3,6 @@ import { graphqlRequest } from '@/gql/graphql';
 import { USERS_QUERY, CREATE_USER_MUTATION, UPDATE_USER_MUTATION, UPDATE_USER_STATUS_MUTATION, DELETE_USER_MUTATION } from '@/gql/users';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 import { User, UserConnection, CreateUserInput, UpdateUserInput, type UserStatus, userConnectionSchema, userSchema } from './schema';
 
 // Query hooks
@@ -18,9 +17,6 @@ export function useUsers(
     disableAutoFetch?: boolean;
   }
 ) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
-
   const queryVariables = {
     ...variables,
     orderBy: variables?.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
@@ -29,36 +25,23 @@ export function useUsers(
   return useQuery({
     queryKey: ['users', queryVariables],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, queryVariables);
-        return userConnectionSchema.parse(data?.users);
-      } catch (error) {
-        handleError(error, t('common.errors.loadFailed'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, queryVariables);
+      return userConnectionSchema.parse(data?.users);
     },
     enabled: !options?.disableAutoFetch,
   });
 }
 
 export function useUser(id: string) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['user', id],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } });
-        const user = data.users.edges[0]?.node;
-        if (!user) {
-          throw new Error(t('users.messages.userNotFound'));
-        }
-        return userSchema.parse(user);
-      } catch (error) {
-        handleError(error, t('common.errors.loadFailed'));
-        throw error;
+      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } });
+      const user = data.users.edges[0]?.node;
+      if (!user) {
+        throw new Error('User not found');
       }
+      return userSchema.parse(user);
     },
     enabled: !!id,
   });

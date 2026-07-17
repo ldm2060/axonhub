@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { graphqlRequest } from '@/gql/graphql';
 import { useSelectedProjectId } from '@/stores/projectStore';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useUsageLogPermissions } from '../../../gql/useUsageLogPermissions';
 import { UsageLog, UsageLogConnection, usageLogConnectionSchema, usageLogSchema } from './usage-logs-schema';
 
@@ -104,21 +102,22 @@ function buildUsageLogDetailQuery(permissions: { canViewChannels: boolean }) {
 }
 
 // Query hooks
-export function useUsageLogs(variables?: {
-  first?: number;
-  after?: string;
-  orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
-  where?: {
-    source?: string;
-    modelID?: string;
-    channelID?: string;
-    projectID?: string;
-    requestID?: string;
-    [key: string]: any;
-  };
-}, options?: { projectId?: string | null; enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
+export function useUsageLogs(
+  variables?: {
+    first?: number;
+    after?: string;
+    orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
+    where?: {
+      source?: string;
+      modelID?: string;
+      channelID?: string;
+      projectID?: string;
+      requestID?: string;
+      [key: string]: any;
+    };
+  },
+  options?: { projectId?: string | null; enabled?: boolean }
+) {
   const permissions = useUsageLogPermissions();
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -127,41 +126,29 @@ export function useUsageLogs(variables?: {
   return useQuery({
     queryKey: ['usageLogs', variables, permissions, projectId],
     queryFn: async () => {
-      try {
-        const query = buildUsageLogsQuery(permissions);
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const data = await graphqlRequest<{ usageLogs: UsageLogConnection }>(query, variables, headers);
-        return usageLogConnectionSchema.parse(data?.usageLogs);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const query = buildUsageLogsQuery(permissions);
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const data = await graphqlRequest<{ usageLogs: UsageLogConnection }>(query, variables, headers);
+      return usageLogConnectionSchema.parse(data?.usageLogs);
     },
     enabled,
   });
 }
 
 export function useUsageLog(id: string) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useUsageLogPermissions();
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
     queryKey: ['usageLog', id, permissions, selectedProjectId],
     queryFn: async () => {
-      try {
-        const query = buildUsageLogDetailQuery(permissions);
-        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-        const data = await graphqlRequest<{ node: UsageLog }>(query, { id }, headers);
-        if (!data.node) {
-          throw new Error('Usage log not found');
-        }
-        return usageLogSchema.parse(data.node);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      const query = buildUsageLogDetailQuery(permissions);
+      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ node: UsageLog }>(query, { id }, headers);
+      if (!data.node) {
+        throw new Error('Usage log not found');
       }
+      return usageLogSchema.parse(data.node);
     },
     enabled: !!id,
   });

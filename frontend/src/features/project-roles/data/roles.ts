@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { graphqlRequest } from '@/gql/graphql';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import i18n from '@/lib/i18n';
@@ -84,22 +84,22 @@ export function useRoles(
     orderBy: variables.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
   };
 
+  const errorContext = t('common.errors.internalServerError');
+
   return useQuery({
     queryKey: ['project-roles', queryVariables, selectedProjectId],
     queryFn: async () => {
-      try {
-        if (!selectedProjectId) {
-          throw new Error('Project ID is required');
-        }
-        const data = await graphqlRequest<{ node: { roles: RoleConnection } }>(PROJECT_ROLES_QUERY, {
-          projectId: selectedProjectId,
-          ...queryVariables,
-        });
-        return roleConnectionSchema.parse(data?.node?.roles);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      if (!selectedProjectId) {
+        throw new Error('Project ID is required');
       }
+      const data = await graphqlRequest<{ node: { roles: RoleConnection } }>(PROJECT_ROLES_QUERY, {
+        projectId: selectedProjectId,
+        ...queryVariables,
+      });
+      return roleConnectionSchema.parse(data?.node?.roles);
+    },
+    onError: (error) => {
+      handleError(error, errorContext);
     },
     enabled: !!selectedProjectId,
   });
@@ -109,27 +109,26 @@ export function useRole(id: string) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
   const selectedProjectId = useSelectedProjectId();
+  const errorContext = t('common.errors.internalServerError');
 
   return useQuery({
     queryKey: ['project-role', id, selectedProjectId],
     queryFn: async () => {
-      try {
-        if (!selectedProjectId) {
-          throw new Error('Project ID is required');
-        }
-        const data = await graphqlRequest<{ node: { roles: RoleConnection } }>(PROJECT_ROLES_QUERY, {
-          projectId: selectedProjectId,
-          where: { id },
-        });
-        const role = data.node?.roles?.edges[0]?.node;
-        if (!role) {
-          throw new Error('Role not found');
-        }
-        return roleSchema.parse(role);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      if (!selectedProjectId) {
+        throw new Error('Project ID is required');
       }
+      const data = await graphqlRequest<{ node: { roles: RoleConnection } }>(PROJECT_ROLES_QUERY, {
+        projectId: selectedProjectId,
+        where: { id },
+      });
+      const role = data.node?.roles?.edges[0]?.node;
+      if (!role) {
+        throw new Error('Role not found');
+      }
+      return roleSchema.parse(role);
+    },
+    onError: (error) => {
+      handleError(error, errorContext);
     },
     enabled: !!id && !!selectedProjectId,
   });

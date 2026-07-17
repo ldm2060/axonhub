@@ -262,7 +262,12 @@ func (w *Worker) cleanupOldRequestExecutions(ctx context.Context, cutoffTime tim
 				requestexecution.FieldDataStorageID,
 				requestexecution.FieldRequestID,
 			).
-			Where(requestexecution.CreatedAtLT(cutoffTime)).
+			Where(
+				requestexecution.CreatedAtLT(cutoffTime),
+				requestexecution.Not(requestexecution.HasRequestWith(
+					request.HasTraceWith(trace.StatusEQ(trace.StatusRetained)),
+				)),
+			).
 			Order(ent.Asc(requestexecution.FieldID)).
 			Limit(batchSize).
 			All(ctx)
@@ -310,7 +315,10 @@ func (w *Worker) cleanupOldRequestsRecords(ctx context.Context, cutoffTime time.
 				request.FieldProjectID,
 				request.FieldDataStorageID,
 			).
-			Where(request.CreatedAtLT(cutoffTime)).
+			Where(
+				request.CreatedAtLT(cutoffTime),
+				request.Not(request.HasTraceWith(trace.StatusEQ(trace.StatusRetained))),
+			).
 			Order(ent.Asc(request.FieldID)).
 			Limit(batchSize).
 			All(ctx)
@@ -464,7 +472,12 @@ func (w *Worker) cleanupUsageLogs(ctx context.Context, cleanupDays int, manual b
 
 	result, err := w.deleteInBatches(ctx, func() (int, error) {
 		ids, err := w.Ent.UsageLog.Query().
-			Where(usagelog.CreatedAtLT(cutoffTime)).
+			Where(
+				usagelog.CreatedAtLT(cutoffTime),
+				usagelog.Not(usagelog.HasRequestWith(
+					request.HasTraceWith(trace.StatusEQ(trace.StatusRetained)),
+				)),
+			).
 			Order(ent.Asc(usagelog.FieldID)).
 			Limit(batchSize).
 			IDs(ctx)
@@ -500,7 +513,10 @@ func (w *Worker) cleanupThreads(ctx context.Context, cleanupDays int, manual boo
 
 	result, err := w.deleteInBatches(ctx, func() (int, error) {
 		ids, err := w.Ent.Thread.Query().
-			Where(thread.CreatedAtLT(cutoffTime)).
+			Where(
+				thread.CreatedAtLT(cutoffTime),
+				thread.StatusNEQ(thread.StatusRetained),
+			).
 			Order(ent.Asc(thread.FieldID)).
 			Limit(batchSize).
 			IDs(ctx)
@@ -536,7 +552,10 @@ func (w *Worker) cleanupTraces(ctx context.Context, cleanupDays int, manual bool
 
 	result, err := w.deleteInBatches(ctx, func() (int, error) {
 		ids, err := w.Ent.Trace.Query().
-			Where(trace.CreatedAtLT(cutoffTime)).
+			Where(
+				trace.CreatedAtLT(cutoffTime),
+				trace.StatusNEQ(trace.StatusRetained),
+			).
 			Order(ent.Asc(trace.FieldID)).
 			Limit(batchSize).
 			IDs(ctx)
@@ -673,7 +692,10 @@ func (w *Worker) PreviewCleanup(ctx context.Context, input TriggerGcCleanupInput
 
 	if input.RequestsCleanupDays > 0 {
 		cutoff := time.Now().AddDate(0, 0, -input.RequestsCleanupDays)
-		count, err := w.Ent.Request.Query().Where(request.CreatedAtLT(cutoff)).Count(ctx)
+		count, err := w.Ent.Request.Query().Where(
+			request.CreatedAtLT(cutoff),
+			request.Not(request.HasTraceWith(trace.StatusEQ(trace.StatusRetained))),
+		).Count(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to count requests for preview: %w", err)
 		}
@@ -687,7 +709,12 @@ func (w *Worker) PreviewCleanup(ctx context.Context, input TriggerGcCleanupInput
 
 	if input.UsageLogsCleanupDays > 0 {
 		cutoff := time.Now().AddDate(0, 0, -input.UsageLogsCleanupDays)
-		count, err := w.Ent.UsageLog.Query().Where(usagelog.CreatedAtLT(cutoff)).Count(ctx)
+		count, err := w.Ent.UsageLog.Query().Where(
+			usagelog.CreatedAtLT(cutoff),
+			usagelog.Not(usagelog.HasRequestWith(
+				request.HasTraceWith(trace.StatusEQ(trace.StatusRetained)),
+			)),
+		).Count(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to count usage logs for preview: %w", err)
 		}

@@ -130,19 +130,11 @@ const UPDATE_DATA_STORAGE_STATUS_MUTATION = `
 
 // Hooks
 export function useDataStorages(variables?: Record<string, any>) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['dataStorages', variables],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ dataStorages: DataStoragesConnection }>(DATA_STORAGES_QUERY, variables);
-        return dataStoragesConnectionSchema.parse(data.dataStorages);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ dataStorages: DataStoragesConnection }>(DATA_STORAGES_QUERY, variables);
+      return dataStoragesConnectionSchema.parse(data.dataStorages);
     },
   });
 }

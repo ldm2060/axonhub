@@ -8,12 +8,9 @@ import {
   testResultSchema,
   usageMonitorBindingSummarySchema,
   type FieldConfig,
-  type Variable,
-  type DisplayField,
   type VariableInput,
   type DisplayFieldInput,
   type UsageMonitorChannel,
-  type TestResult,
   type UsageMonitorBindingSummary,
 } from './schema';
 
@@ -323,9 +320,7 @@ export function useUsageMonitorChannels() {
       const data = await graphqlRequest<{
         usageMonitorChannelsList: unknown[];
       }>(USAGE_MONITOR_CHANNELS_QUERY);
-      return (data.usageMonitorChannelsList ?? []).map((raw: any) =>
-        normalizeChannel(raw),
-      );
+      return (data.usageMonitorChannelsList ?? []).map((raw: any) => normalizeChannel(raw));
     },
     refetchInterval: false,
   });
@@ -391,13 +386,7 @@ export function useUpdateUsageMonitorChannel() {
   const { handleError } = useErrorHandler();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: UpdateUsageMonitorChannelInput;
-    }) => {
+    mutationFn: async ({ id, input }: { id: string; input: UpdateUsageMonitorChannelInput }) => {
       const data = await graphqlRequest<{
         updateUsageMonitorChannel: any;
       }>(UPDATE_USAGE_MONITOR_CHANNEL_MUTATION, { id, input });
@@ -539,21 +528,13 @@ const USAGE_MONITOR_BINDING_SUMMARIES_QUERY = `
 `;
 
 export function useUsageMonitorBindingSummaries(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['usageMonitorBindingSummaries'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ usageMonitorBindingSummaries: UsageMonitorBindingSummary[] }>(
-          USAGE_MONITOR_BINDING_SUMMARIES_QUERY
-        );
-        return (data.usageMonitorBindingSummaries || []).map((s) => usageMonitorBindingSummarySchema.parse(s));
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ usageMonitorBindingSummaries: UsageMonitorBindingSummary[] }>(
+        USAGE_MONITOR_BINDING_SUMMARIES_QUERY
+      );
+      return (data.usageMonitorBindingSummaries || []).map((s) => usageMonitorBindingSummarySchema.parse(s));
     },
     enabled: options?.enabled !== false,
   });

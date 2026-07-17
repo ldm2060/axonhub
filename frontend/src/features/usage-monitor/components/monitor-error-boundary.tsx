@@ -21,8 +21,8 @@ export class MonitorErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`MonitorCard error for "${this.props.channelName}":`, error, info);
+  componentDidCatch(_error: Error, _info: ErrorInfo) {
+    // Error already captured in state; no logger available in class component
   }
 
   render() {

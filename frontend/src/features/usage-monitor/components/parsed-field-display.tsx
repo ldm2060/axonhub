@@ -19,7 +19,7 @@ function findDisplayField(displayFields: DisplayField[] | undefined, key: string
   return displayFields?.find((df) => df.key === key);
 }
 
-function PercentageDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
+function PercentageDisplay({ field, badgeMeta: _badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const pct = field.percent ?? 0;
   const clamped = Math.min(Math.max(pct, 0), 100);
   const valueStr = field.value != null ? formatCompactNumber(Number(field.value)) : null;
@@ -47,7 +47,7 @@ function PercentageDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta
   );
 }
 
-function FractionDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
+function FractionDisplay({ field, badgeMeta: _badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const valueStr = field.value != null ? Number(field.value).toLocaleString() : '--';
   const totalStr = field.total != null ? Number(field.total).toLocaleString() : null;
   const unit = field.unit ?? '';
@@ -63,7 +63,7 @@ function FractionDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?:
   );
 }
 
-function NumberDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
+function NumberDisplay({ field, badgeMeta: _badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const valueStr = field.value != null ? Number(field.value).toLocaleString() : '?';
   const unit = field.unit ?? '';
 
@@ -74,7 +74,7 @@ function NumberDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: D
   );
 }
 
-function DatetimeDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
+function DatetimeDisplay({ field, badgeMeta: _badgeMeta }: { field: ParsedField; badgeMeta?: DisplayField }) {
   const { t } = useTranslation();
 
   if (field.value == null) {

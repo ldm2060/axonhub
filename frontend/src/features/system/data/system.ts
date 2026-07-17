@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { graphqlRequest, GraphQLRequestError } from '@/gql/graphql';
+import { graphqlRequest } from '@/gql/graphql';
 import { toast } from 'sonner';
 import { getTokenFromStorage } from '@/stores/authStore';
 import i18n from '@/lib/i18n';
@@ -461,36 +461,22 @@ export interface ClearCachePayload {
 
 // Hooks
 export function useBrandSettings(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['brandSettings'],
     enabled: options?.enabled,
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ brandSettings: BrandSettings }>(BRAND_SETTINGS_QUERY);
-        return data.brandSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ brandSettings: BrandSettings }>(BRAND_SETTINGS_QUERY);
+      return data.brandSettings;
     },
   });
 }
 
 export function useStoragePolicy() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['storagePolicy'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ storagePolicy: StoragePolicy }>(STORAGE_POLICY_QUERY);
-        return data.storagePolicy;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ storagePolicy: StoragePolicy }>(STORAGE_POLICY_QUERY);
+      return data.storagePolicy;
     },
   });
 }
@@ -556,18 +542,11 @@ export function usePreviewGcCleanup() {
 }
 
 export function useRetryPolicy() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['retryPolicy'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ retryPolicy: RetryPolicy }>(RETRY_POLICY_QUERY);
-        return data.retryPolicy;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ retryPolicy: RetryPolicy }>(RETRY_POLICY_QUERY);
+      return data.retryPolicy;
     },
   });
 }
@@ -616,18 +595,11 @@ export interface UpdateStreamingSettingsInput {
 }
 
 export function useStreamingSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['streamingSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ streamingSettings: StreamingSettings }>(STREAMING_SETTINGS_QUERY);
-        return data.streamingSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ streamingSettings: StreamingSettings }>(STREAMING_SETTINGS_QUERY);
+      return data.streamingSettings;
     },
   });
 }
@@ -651,18 +623,11 @@ export function useUpdateStreamingSettings() {
 }
 
 export function useWebhookNotifierConfig() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['webhookNotifierConfig'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ webhookNotifierConfig: WebhookNotifierConfig }>(WEBHOOK_NOTIFIER_CONFIG_QUERY);
-        return data.webhookNotifierConfig;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ webhookNotifierConfig: WebhookNotifierConfig }>(WEBHOOK_NOTIFIER_CONFIG_QUERY);
+      return data.webhookNotifierConfig;
     },
   });
 }
@@ -686,18 +651,11 @@ export function useUpdateWebhookNotifierConfig() {
 }
 
 export function useDefaultDataStorageID() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['defaultDataStorageID'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ defaultDataStorageID: string | null }>(DEFAULT_DATA_STORAGE_QUERY);
-        return data.defaultDataStorageID;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ defaultDataStorageID: string | null }>(DEFAULT_DATA_STORAGE_QUERY);
+      return data.defaultDataStorageID;
     },
   });
 }
@@ -841,10 +799,9 @@ export function useExportCacheDiagnostics() {
 
   return useMutation({
     mutationFn: async () => {
-      const data = await graphqlRequest<{ getCacheDiagnostics: GetCacheDiagnosticsPayload }>(
-        GET_CACHE_DIAGNOSTICS_QUERY,
-        { input: { targets: ['CHANNEL_CACHE'] } }
-      );
+      const data = await graphqlRequest<{ getCacheDiagnostics: GetCacheDiagnosticsPayload }>(GET_CACHE_DIAGNOSTICS_QUERY, {
+        input: { targets: ['CHANNEL_CACHE'] },
+      });
       return data.getCacheDiagnostics;
     },
     onSuccess: (data) => {
@@ -863,9 +820,7 @@ export function useExportMemoryDiagnostics() {
 
   return useMutation({
     mutationFn: async () => {
-      const data = await graphqlRequest<{ getMemoryDiagnostics: GetCacheDiagnosticsPayload }>(
-        GET_MEMORY_DIAGNOSTICS_QUERY
-      );
+      const data = await graphqlRequest<{ getMemoryDiagnostics: GetCacheDiagnosticsPayload }>(GET_MEMORY_DIAGNOSTICS_QUERY);
       return data.getMemoryDiagnostics;
     },
     onSuccess: (data) => {
@@ -1077,18 +1032,11 @@ export interface DeveloperModelSettings {
 }
 
 export function useModelSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['modelSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ systemModelSettings: ModelSettings }>(MODEL_SETTINGS_QUERY);
-        return data.systemModelSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ systemModelSettings: ModelSettings }>(MODEL_SETTINGS_QUERY);
+      return data.systemModelSettings;
     },
   });
 }
@@ -1145,18 +1093,11 @@ export interface UpdateSystemChannelSettingsInput {
 }
 
 export function useChannelSetting() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['channelSetting'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ systemChannelSettings: ChannelSetting }>(CHANNEL_SETTINGS_QUERY);
-        return data.systemChannelSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ systemChannelSettings: ChannelSetting }>(CHANNEL_SETTINGS_QUERY);
+      return data.systemChannelSettings;
     },
   });
 }
@@ -1181,22 +1122,11 @@ export function useUpdateChannelSetting() {
 }
 
 export function useGeneralSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['generalSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ systemGeneralSettings: SystemGeneralSettings }>(SYSTEM_GENERAL_SETTINGS_QUERY);
-        return data.systemGeneralSettings;
-      } catch (error) {
-        // Only suppress permission errors (403) — surface 500, network, etc. as toasts
-        if (error instanceof GraphQLRequestError && error.status === 403) {
-          throw error;
-        }
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ systemGeneralSettings: SystemGeneralSettings }>(SYSTEM_GENERAL_SETTINGS_QUERY);
+      return data.systemGeneralSettings;
     },
     placeholderData: (previousData) => previousData,
     retry: false,
@@ -1222,18 +1152,11 @@ export function useUpdateGeneralSettings() {
 }
 
 export function useVideoStorageSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['videoStorageSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ videoStorageSettings: VideoStorageSettings }>(VIDEO_STORAGE_SETTINGS_QUERY);
-        return data.videoStorageSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ videoStorageSettings: VideoStorageSettings }>(VIDEO_STORAGE_SETTINGS_QUERY);
+      return data.videoStorageSettings;
     },
   });
 }
@@ -1257,18 +1180,11 @@ export function useUpdateVideoStorageSettings() {
 }
 
 export function useSecuritySettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['securitySettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ securitySettings: SecuritySettings }>(SECURITY_SETTINGS_QUERY);
-        return data.securitySettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ securitySettings: SecuritySettings }>(SECURITY_SETTINGS_QUERY);
+      return data.securitySettings;
     },
   });
 }
@@ -1484,18 +1400,11 @@ export interface UpdateAutoBackupSettingsInput {
 }
 
 export function useAutoBackupSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['autoBackupSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ autoBackupSettings: AutoBackupSettings }>(AUTO_BACKUP_SETTINGS_QUERY);
-        return data.autoBackupSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ autoBackupSettings: AutoBackupSettings }>(AUTO_BACKUP_SETTINGS_QUERY);
+      return data.autoBackupSettings;
     },
   });
 }
@@ -1579,18 +1488,11 @@ export interface SaveProxyPresetInput {
 }
 
 export function useProxyPresets() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['proxyPresets'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ proxyPresets: ProxyPreset[] }>(PROXY_PRESETS_QUERY);
-        return data.proxyPresets;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ proxyPresets: ProxyPreset[] }>(PROXY_PRESETS_QUERY);
+      return data.proxyPresets;
     },
   });
 }
@@ -1630,7 +1532,6 @@ export function useDeleteProxyPreset() {
   });
 }
 
-
 // User-Agent Pass-Through Settings
 const USER_AGENT_PASS_THROUGH_SETTINGS_QUERY = `
   query UserAgentPassThroughSettings {
@@ -1655,18 +1556,13 @@ export interface UpdateUserAgentPassThroughSettingsInput {
 }
 
 export function useUserAgentPassThroughSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['userAgentPassThroughSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ userAgentPassThroughSettings: UserAgentPassThroughSettings }>(USER_AGENT_PASS_THROUGH_SETTINGS_QUERY);
-        return data.userAgentPassThroughSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ userAgentPassThroughSettings: UserAgentPassThroughSettings }>(
+        USER_AGENT_PASS_THROUGH_SETTINGS_QUERY
+      );
+      return data.userAgentPassThroughSettings;
     },
   });
 }
@@ -1676,7 +1572,9 @@ export function useUpdateUserAgentPassThroughSettings() {
 
   return useMutation({
     mutationFn: async (input: UpdateUserAgentPassThroughSettingsInput) => {
-      const data = await graphqlRequest<{ updateUserAgentPassThroughSettings: boolean }>(UPDATE_USER_AGENT_PASS_THROUGH_SETTINGS_MUTATION, { input });
+      const data = await graphqlRequest<{ updateUserAgentPassThroughSettings: boolean }>(UPDATE_USER_AGENT_PASS_THROUGH_SETTINGS_MUTATION, {
+        input,
+      });
       return data.updateUserAgentPassThroughSettings;
     },
     onSuccess: () => {
@@ -1713,18 +1611,11 @@ export interface UpdatePassThroughSettingsInput {
 }
 
 export function usePassThroughSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['passThroughSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ passThroughSettings: PassThroughSettings }>(PASS_THROUGH_SETTINGS_QUERY);
-        return data.passThroughSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ passThroughSettings: PassThroughSettings }>(PASS_THROUGH_SETTINGS_QUERY);
+      return data.passThroughSettings;
     },
   });
 }
@@ -1775,18 +1666,11 @@ export interface UpdateQuotaEnforcementSettingsInput {
 }
 
 export function useQuotaEnforcementSettings() {
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['quotaEnforcementSettings'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ quotaEnforcementSettings: QuotaEnforcementSettings }>(QUOTA_ENFORCEMENT_SETTINGS_QUERY);
-        return data.quotaEnforcementSettings;
-      } catch (error) {
-        handleError(error, { showToast: false });
-        throw error;
-      }
+      const data = await graphqlRequest<{ quotaEnforcementSettings: QuotaEnforcementSettings }>(QUOTA_ENFORCEMENT_SETTINGS_QUERY);
+      return data.quotaEnforcementSettings;
     },
     retry: false,
   });

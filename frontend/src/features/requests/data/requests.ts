@@ -30,24 +30,29 @@ interface RequestQueryOptions {
 }
 
 // Dynamic GraphQL query builder
-function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
-    ? `
+function buildRequestsQuery(
+  permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean },
+  options: RequestQueryOptions = {}
+) {
+  const adminProjectFields =
+    options.includeAdminFields && permissions.canViewProjects
+      ? `
             project {
               id
               name
             }`
-    : '';
+      : '';
 
-  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
-    ? `
+  const apiKeyUserFields =
+    options.includeAdminFields && permissions.canViewUsers
+      ? `
             user {
               id
               email
               firstName
               lastName
             }`
-    : '';
+      : '';
 
   const apiKeyFields = permissions.canViewApiKeys
     ? `
@@ -145,24 +150,29 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
   `;
 }
 
-function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
-    ? `
+function buildRequestDetailQuery(
+  permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean },
+  options: RequestQueryOptions = {}
+) {
+  const adminProjectFields =
+    options.includeAdminFields && permissions.canViewProjects
+      ? `
             project {
               id
               name
             }`
-    : '';
+      : '';
 
-  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
-    ? `
+  const apiKeyUserFields =
+    options.includeAdminFields && permissions.canViewUsers
+      ? `
             user {
               id
               email
               firstName
               lastName
             }`
-    : '';
+      : '';
 
   const apiKeyFields = permissions.canViewApiKeys
     ? `
@@ -222,24 +232,29 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
   `;
 }
 
-function buildRequestMetadataQuery(permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean }, options: RequestQueryOptions = {}) {
-  const adminProjectFields = options.includeAdminFields && permissions.canViewProjects
-    ? `
+function buildRequestMetadataQuery(
+  permissions: { canViewApiKeys: boolean; canViewChannels: boolean; canViewProjects: boolean; canViewUsers: boolean },
+  options: RequestQueryOptions = {}
+) {
+  const adminProjectFields =
+    options.includeAdminFields && permissions.canViewProjects
+      ? `
             project {
               id
               name
             }`
-    : '';
+      : '';
 
-  const apiKeyUserFields = options.includeAdminFields && permissions.canViewUsers
-    ? `
+  const apiKeyUserFields =
+    options.includeAdminFields && permissions.canViewUsers
+      ? `
             user {
               id
               email
               firstName
               lastName
             }`
-    : '';
+      : '';
 
   const apiKeyFields = permissions.canViewApiKeys
     ? `
@@ -409,25 +424,26 @@ function buildRequestExecutionContentQuery(permissions: { canViewChannels: boole
 }
 
 // Query hooks
-export function useRequests(variables?: {
-  first?: number;
-  after?: string;
-  last?: number;
-  before?: string;
-  orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
-  where?: {
-    status?: string;
-    source?: string;
-    channelID?: string;
-    channelIDIn?: string[];
-    statusIn?: string[];
-    sourceIn?: string[];
-    projectID?: string;
-    [key: string]: any;
-  };
-}, options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean; includeAdminFields?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
+export function useRequests(
+  variables?: {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
+    where?: {
+      status?: string;
+      source?: string;
+      channelID?: string;
+      channelIDIn?: string[];
+      statusIn?: string[];
+      sourceIn?: string[];
+      projectID?: string;
+      [key: string]: any;
+    };
+  },
+  options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean; includeAdminFields?: boolean }
+) {
   const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const scopeToSelectedProject = options?.scopeToSelectedProject ?? true;
@@ -437,25 +453,20 @@ export function useRequests(variables?: {
   return useQuery({
     queryKey: ['requests', variables, permissions, projectId, scopeToSelectedProject, options?.includeAdminFields],
     queryFn: async () => {
-      try {
-        const query = buildRequestsQuery(permissions, { includeAdminFields: options?.includeAdminFields });
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const query = buildRequestsQuery(permissions, { includeAdminFields: options?.includeAdminFields });
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
 
-        // Add project filter if project scoping is enabled
-        const finalVariables = {
-          ...variables,
-          where: {
-            ...variables?.where,
-            ...(scopeToSelectedProject && projectId && { projectID: projectId }),
-          },
-        };
+      // Add project filter if project scoping is enabled
+      const finalVariables = {
+        ...variables,
+        where: {
+          ...variables?.where,
+          ...(scopeToSelectedProject && projectId && { projectID: projectId }),
+        },
+      };
 
-        const data = await graphqlRequest<{ requests: RequestConnection }>(query, finalVariables, headers);
-        return requestConnectionSchema.parse(data?.requests);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ requests: RequestConnection }>(query, finalVariables, headers);
+      return requestConnectionSchema.parse(data?.requests);
     },
     enabled,
     refetchOnWindowFocus: false,
@@ -471,8 +482,6 @@ export function useRequestMetadata(
     includeAdminFields?: boolean;
   }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -484,22 +493,17 @@ export function useRequestMetadata(
   });
 
   return useQuery<RequestMetadata>({
-    queryKey,
+    queryKey: [...queryKey, id, permissions, projectId, options?.includeAdminFields],
     queryFn: async ({ signal }) => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const data = await graphqlRequest<{ node: RequestMetadata }>(
-          buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields }),
-          { id },
-          headers,
-          signal
-        );
-        if (!data.node) throw new Error('Request not found');
-        return requestMetadataSchema.parse(data.node);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const data = await graphqlRequest<{ node: RequestMetadata }>(
+        buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields }),
+        { id },
+        headers,
+        signal
+      );
+      if (!data.node) throw new Error('Request not found');
+      return requestMetadataSchema.parse(data.node);
     },
     enabled: (options?.enabled ?? true) && !!id,
     refetchInterval: (query) => {
@@ -518,8 +522,6 @@ export function useRequestContent(
     includeAdminFields?: boolean;
   }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useRequestPermissions({ systemOnly: options.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const projectId = options.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -532,18 +534,13 @@ export function useRequestContent(
   });
 
   return useQuery<RequestContent>({
-    queryKey,
+    queryKey: [...queryKey, id, permissions, projectId, options?.includeAdminFields, options.kind],
     queryFn: async ({ signal }) => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const query = options.kind === 'request' ? buildRequestContentQuery() : buildResponseContentQuery();
-        const data = await graphqlRequest<{ node: RequestContent }>(query, { id }, headers, signal);
-        if (!data.node) throw new Error('Request not found');
-        return requestContentSchema.parse(data.node);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const query = options.kind === 'request' ? buildRequestContentQuery() : buildResponseContentQuery();
+      const data = await graphqlRequest<{ node: RequestContent }>(query, { id }, headers, signal);
+      if (!data.node) throw new Error('Request not found');
+      return requestContentSchema.parse(data.node);
     },
     enabled: (options.enabled ?? true) && !!id,
     gcTime: 0,
@@ -561,8 +558,6 @@ export function useRequest(
     queryScope?: 'detail' | 'quick-view';
   }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const queryClient = useQueryClient();
@@ -578,49 +573,48 @@ export function useRequest(
   });
 
   return useQuery({
-    queryKey,
+    queryKey: [...queryKey, id, permissions, projectId, options?.includeAdminFields, queryClient],
     queryFn: async () => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const previousRequest = queryClient.getQueryData<Request>(queryKey);
-        const shouldUseLightweightPolling = previousRequest?.status === 'processing';
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const previousRequest = queryClient.getQueryData<Request>(queryKey);
+      const shouldUseLightweightPolling = previousRequest?.status === 'processing';
 
-        const query = shouldUseLightweightPolling
-          ? buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields })
-          : buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields });
+      const query = shouldUseLightweightPolling
+        ? buildRequestMetadataQuery(permissions, { includeAdminFields: options?.includeAdminFields })
+        : buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields });
 
-        const data = await graphqlRequest<{ node: Request }>(query, { id }, headers);
-        if (!data.node) {
+      const data = await graphqlRequest<{ node: Request }>(query, { id }, headers);
+      if (!data.node) {
+        throw new Error('Request not found');
+      }
+
+      const parsedRequest = requestSchema.parse(data.node);
+
+      if (!shouldUseLightweightPolling) {
+        return parsedRequest;
+      }
+
+      if (parsedRequest.status !== 'processing') {
+        const fullData = await graphqlRequest<{ node: Request }>(
+          buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields }),
+          { id },
+          headers
+        );
+        if (!fullData.node) {
           throw new Error('Request not found');
         }
-
-        const parsedRequest = requestSchema.parse(data.node);
-
-        if (!shouldUseLightweightPolling) {
-          return parsedRequest;
-        }
-
-        if (parsedRequest.status !== 'processing') {
-          const fullData = await graphqlRequest<{ node: Request }>(buildRequestDetailQuery(permissions, { includeAdminFields: options?.includeAdminFields }), { id }, headers);
-          if (!fullData.node) {
-            throw new Error('Request not found');
-          }
-          return requestSchema.parse(fullData.node);
-        }
-
-        return requestSchema.parse({
-          ...previousRequest,
-          ...parsedRequest,
-          requestHeaders: previousRequest?.requestHeaders,
-          requestBody: previousRequest?.requestBody,
-          responseBody: previousRequest?.responseBody,
-          responseChunks: previousRequest?.responseChunks,
-          usageLogs: previousRequest?.usageLogs,
-        });
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+        return requestSchema.parse(fullData.node);
       }
+
+      return requestSchema.parse({
+        ...previousRequest,
+        ...parsedRequest,
+        requestHeaders: previousRequest?.requestHeaders,
+        requestBody: previousRequest?.requestBody,
+        responseBody: previousRequest?.responseBody,
+        responseChunks: previousRequest?.responseChunks,
+        usageLogs: previousRequest?.usageLogs,
+      });
     },
     enabled: enabled && !!id,
     gcTime: options?.gcTime,
@@ -650,9 +644,7 @@ export async function fetchAdjacentRequestPage(params: {
 }): Promise<{ requests: Request[]; pageInfo: RequestConnection['pageInfo'] }> {
   const query = buildRequestsQuery(params.permissions, { includeAdminFields: params.includeAdminFields });
   const variables =
-    params.direction === 'older'
-      ? { first: params.pageSize, after: params.cursor }
-      : { last: params.pageSize, before: params.cursor };
+    params.direction === 'older' ? { first: params.pageSize, after: params.cursor } : { last: params.pageSize, before: params.cursor };
 
   const where: Record<string, any> = { ...params.where };
   if (params.projectId) where.projectID = params.projectId;
@@ -683,8 +675,8 @@ export function useRequestExecutions(
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
 
-  return useQuery<RequestExecutionSummaryConnection>({
-    queryKey: ['request-executions', requestID, variables, permissions, projectId],
+  return useQuery({
+    queryKey: ['request-executions', requestID, variables, permissions, projectId, handleError, t],
     queryFn: async ({ signal }) => {
       try {
         const query = buildRequestExecutionSummariesQuery(permissions);
@@ -693,7 +685,12 @@ export function useRequestExecutions(
           requestID,
           ...variables,
         };
-        const data = await graphqlRequest<{ node: { executions: RequestExecutionSummaryConnection } }>(query, finalVariables, headers, signal);
+        const data = await graphqlRequest<{ node: { executions: RequestExecutionSummaryConnection } }>(
+          query,
+          finalVariables,
+          headers,
+          signal
+        );
         return requestExecutionSummaryConnectionSchema.parse(data?.node?.executions);
       } catch (error) {
         handleError(error, t('common.errors.internalServerError'));
@@ -723,7 +720,7 @@ export function useRequestExecutionContent(
   });
 
   return useQuery<RequestExecutionContent>({
-    queryKey,
+    queryKey: [...queryKey, projectId, permissions, executionID, handleError, t],
     queryFn: async ({ signal }) => {
       try {
         const headers = projectId ? { 'X-Project-ID': projectId } : undefined;

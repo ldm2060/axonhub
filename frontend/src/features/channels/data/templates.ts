@@ -13,11 +13,14 @@ export const channelOverrideTemplateSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   userID: z.string(),
-  user: z.object({
-    id: z.string(),
-    firstName: z.string(),
-    lastName: z.string(),
-  }).nullable().optional(),
+  user: z
+    .object({
+      id: z.string(),
+      firstName: z.string(),
+      lastName: z.string(),
+    })
+    .nullable()
+    .optional(),
   name: z.string(),
   description: z.string().optional().nullable(),
   headerOverrideOperations: z.array(overrideOperationSchema),
@@ -225,31 +228,20 @@ export function useChannelOverrideTemplates(
     enabled?: boolean;
   }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     enabled: options?.enabled !== false,
-    queryKey: ['channelOverrideTemplates', variables?.search, variables?.after],
+    queryKey: ['channelOverrideTemplates', variables?.search, variables?.first, variables?.after],
     queryFn: async () => {
-      try {
-        const where: Record<string, unknown> = {};
-        if (variables?.search) {
-          where.nameContainsFold = variables.search;
-        }
-        const data = await graphqlRequest<{ channelOverrideTemplates: ChannelOverrideTemplateConnection }>(
-          QUERY_CHANNEL_OVERRIDE_TEMPLATES,
-          {
-            first: variables?.first,
-            after: variables?.after,
-            where: Object.keys(where).length > 0 ? where : undefined,
-          }
-        );
-        return channelOverrideTemplateConnectionSchema.parse(data?.channelOverrideTemplates);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      const where: Record<string, unknown> = {};
+      if (variables?.search) {
+        where.nameContainsFold = variables.search;
       }
+      const data = await graphqlRequest<{ channelOverrideTemplates: ChannelOverrideTemplateConnection }>(QUERY_CHANNEL_OVERRIDE_TEMPLATES, {
+        first: variables?.first,
+        after: variables?.after,
+        where: Object.keys(where).length > 0 ? where : undefined,
+      });
+      return channelOverrideTemplateConnectionSchema.parse(data?.channelOverrideTemplates);
     },
   });
 }

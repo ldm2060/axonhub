@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/scopes"
@@ -420,8 +421,7 @@ func (r *mutationResolver) RotateAPIKey(ctx context.Context, id objects.GUID) (*
 func (r *mutationResolver) BulkDisableAPIKeys(ctx context.Context, ids []*objects.GUID) (bool, error) {
 	apiKeyIDs := objects.IntGuids(ids)
 
-	err := r.apiKeyService.BulkDisableAPIKeys(ctx, apiKeyIDs)
-	if err != nil {
+	if err := r.apiKeyService.BulkDisableAPIKeys(ctx, apiKeyIDs); err != nil {
 		return false, err
 	}
 
@@ -432,8 +432,7 @@ func (r *mutationResolver) BulkDisableAPIKeys(ctx context.Context, ids []*object
 func (r *mutationResolver) BulkEnableAPIKeys(ctx context.Context, ids []*objects.GUID) (bool, error) {
 	apiKeyIDs := objects.IntGuids(ids)
 
-	err := r.apiKeyService.BulkEnableAPIKeys(ctx, apiKeyIDs)
-	if err != nil {
+	if err := r.apiKeyService.BulkEnableAPIKeys(ctx, apiKeyIDs); err != nil {
 		return false, err
 	}
 
@@ -444,8 +443,7 @@ func (r *mutationResolver) BulkEnableAPIKeys(ctx context.Context, ids []*objects
 func (r *mutationResolver) BulkArchiveAPIKeys(ctx context.Context, ids []*objects.GUID) (bool, error) {
 	apiKeyIDs := objects.IntGuids(ids)
 
-	err := r.apiKeyService.BulkArchiveAPIKeys(ctx, apiKeyIDs)
-	if err != nil {
+	if err := r.apiKeyService.BulkArchiveAPIKeys(ctx, apiKeyIDs); err != nil {
 		return false, err
 	}
 
@@ -493,8 +491,7 @@ func (r *mutationResolver) UpdateRole(ctx context.Context, id objects.GUID, inpu
 
 // DeleteRole is the resolver for the deleteRole field.
 func (r *mutationResolver) DeleteRole(ctx context.Context, id objects.GUID) (bool, error) {
-	err := r.roleService.DeleteRole(ctx, id.ID)
-	if err != nil {
+	if err := r.roleService.DeleteRole(ctx, id.ID); err != nil {
 		return false, err
 	}
 
@@ -505,8 +502,7 @@ func (r *mutationResolver) DeleteRole(ctx context.Context, id objects.GUID) (boo
 func (r *mutationResolver) BulkDeleteRoles(ctx context.Context, ids []*objects.GUID) (bool, error) {
 	roleIDs := objects.IntGuids(ids)
 
-	err := r.roleService.BulkDeleteRoles(ctx, roleIDs)
-	if err != nil {
+	if err := r.roleService.BulkDeleteRoles(ctx, roleIDs); err != nil {
 		return false, err
 	}
 
@@ -675,6 +671,78 @@ func (r *mutationResolver) LoadAPIKeyProfileTemplate(ctx context.Context, input 
 	return r.apiKeyProfileTemplateService.LoadTemplate(ctx, input.TemplateID.ID, input.APIKeyID.ID)
 }
 
+// ArchiveTrace is the resolver for the archiveTrace field.
+func (r *mutationResolver) ArchiveTrace(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.traceService.Archive(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// UnarchiveTrace is the resolver for the unarchiveTrace field.
+func (r *mutationResolver) UnarchiveTrace(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.traceService.Unarchive(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// RetainTrace is the resolver for the retainTrace field.
+func (r *mutationResolver) RetainTrace(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.traceService.Retain(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// UnretainTrace is the resolver for the unretainTrace field.
+func (r *mutationResolver) UnretainTrace(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.traceService.Unretain(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// ArchiveThread is the resolver for the archiveThread field.
+func (r *mutationResolver) ArchiveThread(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.threadService.Archive(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// UnarchiveThread is the resolver for the unarchiveThread field.
+func (r *mutationResolver) UnarchiveThread(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.threadService.Unarchive(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// RetainThread is the resolver for the retainThread field.
+func (r *mutationResolver) RetainThread(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.threadService.Retain(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// UnretainThread is the resolver for the unretainThread field.
+func (r *mutationResolver) UnretainThread(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := r.threadService.Unretain(ctx, id.ID); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // AllChannelSummarys is the resolver for the allChannelSummarys field.
 func (r *queryResolver) AllChannelSummarys(ctx context.Context, includeArchived *bool) ([]*ent.Channel, error) {
 	statusFilter := []channel.Status{channel.StatusEnabled, channel.StatusDisabled}
@@ -728,6 +796,9 @@ func (r *queryResolver) AllChannelTags(ctx context.Context) ([]string, error) {
 	}
 
 	tags := lo.Reduce(channels, func(acc []string, ch *ent.Channel, _ int) []string {
+		if acc == nil {
+			acc = []string{}
+		}
 		return append(acc, ch.Tags...)
 	}, []string{})
 
@@ -836,6 +907,19 @@ func (r *threadResolver) FirstUserQuery(ctx context.Context, obj *ent.Thread) (*
 // UsageMetadata is the resolver for the usageMetadata field.
 func (r *threadResolver) UsageMetadata(ctx context.Context, obj *ent.Thread) (*biz.UsageMetadata, error) {
 	return r.threadService.UsageMetadata(ctx, obj.ID)
+}
+
+// ArchivedTracesCount is the resolver for the archivedTracesCount field.
+func (r *threadResolver) ArchivedTracesCount(ctx context.Context, obj *ent.Thread) (int, error) {
+	count, err := r.client.Trace.Query().Where(
+		trace.ThreadIDEQ(obj.ID),
+		trace.StatusEQ(trace.StatusArchived),
+	).Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count archived traces: %w", err)
+	}
+
+	return count, nil
 }
 
 // RootSegment is the resolver for the rootSegment field.

@@ -1043,22 +1043,14 @@ minInputTokens
 `;
 
 export function useChannelModelPrices(channelId: string) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['channelModelPrices', channelId],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ node: { channelModelPrices: ChannelModelPrice[] } }>(GET_CHANNEL_MODEL_PRICES_QUERY, {
-          id: channelId,
-        });
-        const node = data.node as { channelModelPrices: ChannelModelPrice[] };
-        return (node?.channelModelPrices || []).map((p) => channelModelPriceSchema.parse(p));
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ node: { channelModelPrices: ChannelModelPrice[] } }>(GET_CHANNEL_MODEL_PRICES_QUERY, {
+        id: channelId,
+      });
+      const node = data.node as { channelModelPrices: ChannelModelPrice[] };
+      return (node?.channelModelPrices || []).map((p) => channelModelPriceSchema.parse(p));
     },
     enabled: !!channelId,
   });
@@ -1110,9 +1102,6 @@ export function useQueryChannels(
     disableAutoFetch?: boolean;
   }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     enabled: !options?.disableAutoFetch,
     queryKey: [
@@ -1126,15 +1115,12 @@ export function useQueryChannels(
       variables?.last,
       variables?.after,
       variables?.before,
+      variables,
     ],
-    queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ queryChannels: ChannelConnection }>(QUERY_CHANNELS_QUERY, { input: variables });
-        return channelConnectionSchema.parse(data?.queryChannels);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+    queryFn: async ({ queryKey }) => {
+      const vars = queryKey[queryKey.length - 1] as typeof variables;
+      const data = await graphqlRequest<{ queryChannels: ChannelConnection }>(QUERY_CHANNELS_QUERY, { input: vars });
+      return channelConnectionSchema.parse(data?.queryChannels);
     },
     // Poll so the live limiter snapshot (in-flight / queue) stays roughly fresh.
     // 5s is light traffic; pause when the tab is hidden.
@@ -1144,43 +1130,35 @@ export function useQueryChannels(
 }
 
 export function useAllChannelNames(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     enabled: options?.enabled ?? true,
     queryKey: ['channels', 'names'],
     queryFn: async () => {
-      try {
-        const names: string[] = [];
-        let after: string | undefined;
+      const names: string[] = [];
+      let after: string | undefined;
 
-        for (;;) {
-          const data = await graphqlRequest<{ queryChannels: unknown }>(QUERY_CHANNEL_NAMES_QUERY, {
-            input: {
-              first: 200,
-              after,
-              where: {
-                statusIn: ['enabled', 'disabled', 'archived'],
-              },
+      for (;;) {
+        const data = await graphqlRequest<{ queryChannels: unknown }>(QUERY_CHANNEL_NAMES_QUERY, {
+          input: {
+            first: 200,
+            after,
+            where: {
+              statusIn: ['enabled', 'disabled', 'archived'],
             },
-          });
+          },
+        });
 
-          const parsed = channelNamesConnectionSchema.parse(data?.queryChannels);
-          names.push(...parsed.edges.map((e) => e.node.name));
+        const parsed = channelNamesConnectionSchema.parse(data?.queryChannels);
+        names.push(...parsed.edges.map((e) => e.node.name));
 
-          if (!parsed.pageInfo.hasNextPage || !parsed.pageInfo.endCursor) {
-            break;
-          }
-
-          after = parsed.pageInfo.endCursor;
+        if (!parsed.pageInfo.hasNextPage || !parsed.pageInfo.endCursor) {
+          break;
         }
 
-        return names;
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+        after = parsed.pageInfo.endCursor;
       }
+
+      return names;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -1364,18 +1342,13 @@ export function useUpdateChannelStatus() {
       const previousQueries = queryClient.getQueriesData({ queryKey: ['channels'] });
 
       // Optimistically update all channel queries
-      queryClient.setQueriesData<{ edges: Array<{ node: any }>; totalCount?: number } | undefined>(
-        { queryKey: ['channels'] },
-        (old) => {
-          if (!old?.edges) return old;
-          return {
-            ...old,
-            edges: old.edges.map((edge) =>
-              edge.node.id === id ? { ...edge, node: { ...edge.node, status } } : edge
-            ),
-          };
-        }
-      );
+      queryClient.setQueriesData<{ edges: Array<{ node: any }>; totalCount?: number } | undefined>({ queryKey: ['channels'] }, (old) => {
+        if (!old?.edges) return old;
+        return {
+          ...old,
+          edges: old.edges.map((edge) => (edge.node.id === id ? { ...edge, node: { ...edge.node, status } } : edge)),
+        };
+      });
 
       return { previousQueries };
     },
@@ -1677,27 +1650,19 @@ export function useBulkImportChannels() {
 }
 
 export function useAllChannelSummarys(projectId?: string | null, options?: { enabled?: boolean; includeArchived?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['allChannelSummarys', projectId, options?.includeArchived],
     queryFn: async () => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const data = await graphqlRequest<{ allChannelSummarys: ChannelSummaryConnection['edges'][number]['node'][] }>(
-          ALL_CHANNEL_SUMMARYS_QUERY,
-          { includeArchived: options?.includeArchived },
-          headers
-        );
-        return channelSummaryConnectionSchema.parse({
-          edges: (data?.allChannelSummarys || []).map((node) => ({ node })),
-          totalCount: data?.allChannelSummarys?.length || 0,
-        });
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const data = await graphqlRequest<{ allChannelSummarys: ChannelSummaryConnection['edges'][number]['node'][] }>(
+        ALL_CHANNEL_SUMMARYS_QUERY,
+        { includeArchived: options?.includeArchived },
+        headers
+      );
+      return channelSummaryConnectionSchema.parse({
+        edges: (data?.allChannelSummarys || []).map((node) => ({ node })),
+        totalCount: data?.allChannelSummarys?.length || 0,
+      });
     },
     enabled: options?.enabled !== false,
   });
@@ -1809,26 +1774,18 @@ export interface ChannelTypeCount {
 }
 
 export function useChannelTypes(statusIn?: string[], ownerID?: number) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['channelTypes', statusIn, ownerID],
     queryFn: async () => {
-      try {
-        const input: { statusIn?: string[]; ownerID?: number } = {};
-        if (statusIn && statusIn.length > 0) {
-          input.statusIn = statusIn;
-        }
-        if (ownerID !== undefined) {
-          input.ownerID = ownerID;
-        }
-        const data = await graphqlRequest<{ countChannelsByType: ChannelTypeCount[] }>(CHANNEL_TYPES_QUERY, { input });
-        return data.countChannelsByType || [];
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      const input: { statusIn?: string[]; ownerID?: number } = {};
+      if (statusIn && statusIn.length > 0) {
+        input.statusIn = statusIn;
       }
+      if (ownerID !== undefined) {
+        input.ownerID = ownerID;
+      }
+      const data = await graphqlRequest<{ countChannelsByType: ChannelTypeCount[] }>(CHANNEL_TYPES_QUERY, { input });
+      return data.countChannelsByType || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -1846,44 +1803,27 @@ const ERROR_CHANNELS_COUNT_QUERY = `
 `;
 
 export function useErrorChannelsCount(ownerID?: number) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
-  const where: Record<string, unknown> = { errorMessageNotNil: true };
-  if (ownerID !== undefined) {
-    where.ownerID = ownerID;
-  }
-
   return useQuery({
     queryKey: ['errorChannelsCount', ownerID],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ channels: { totalCount: number } }>(ERROR_CHANNELS_COUNT_QUERY, { where });
-        return data.channels.totalCount;
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      const where: Record<string, unknown> = { errorMessageNotNil: true };
+      if (ownerID !== undefined) {
+        where.ownerID = ownerID;
       }
+      const data = await graphqlRequest<{ channels: { totalCount: number } }>(ERROR_CHANNELS_COUNT_QUERY, { where });
+      return data.channels.totalCount;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 }
 
 export function useAllChannelTags(projectId?: string | null) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['allChannelTags', projectId],
     queryFn: async () => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const data = await graphqlRequest<{ allChannelTags: string[] }>(ALL_CHANNEL_TAGS_QUERY, undefined, headers);
-        return data.allChannelTags || [];
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const data = await graphqlRequest<{ allChannelTags: string[] }>(ALL_CHANNEL_TAGS_QUERY, undefined, headers);
+      return data.allChannelTags || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -1905,21 +1845,13 @@ const CHANNEL_PROBE_DATA_QUERY = `
 `;
 
 export function useChannelProbeData(channelIDs: string[], options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['channelProbeData', channelIDs],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ channelProbeData: any[] }>(CHANNEL_PROBE_DATA_QUERY, {
-          input: { channelIDs },
-        });
-        return data.channelProbeData || [];
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        return [];
-      }
+      const data = await graphqlRequest<{ channelProbeData: any[] }>(CHANNEL_PROBE_DATA_QUERY, {
+        input: { channelIDs },
+      });
+      return data.channelProbeData || [];
     },
     enabled: channelIDs.length > 0 && options?.enabled !== false,
     staleTime: 1 * 60 * 1000, // 1 minute
@@ -1928,29 +1860,21 @@ export function useChannelProbeData(channelIDs: string[], options?: { enabled?: 
 
 // Channel Disabled API Keys Hooks
 export function useChannelDisabledAPIKeys(channelId: string, options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['channelDisabledAPIKeys', channelId],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{
-          node: {
-            id: string;
-            disabledAPIKeys: Array<{
-              key: string;
-              disabledAt: string;
-              errorCode: number;
-              reason?: string | null;
-            }>;
-          };
-        }>(GET_CHANNEL_DISABLED_API_KEYS_QUERY, { id: channelId });
-        return data.node?.disabledAPIKeys || [];
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        return [];
-      }
+      const data = await graphqlRequest<{
+        node: {
+          id: string;
+          disabledAPIKeys: Array<{
+            key: string;
+            disabledAt: string;
+            errorCode: number;
+            reason?: string | null;
+          }>;
+        };
+      }>(GET_CHANNEL_DISABLED_API_KEYS_QUERY, { id: channelId });
+      return data.node?.disabledAPIKeys || [];
     },
     enabled: !!channelId && options?.enabled !== false,
   });
@@ -2134,22 +2058,14 @@ const SAVE_CHANNEL_QUOTA_MONITOR_BINDINGS_MUTATION = `
 `;
 
 export function useChannelQuotaMonitorBindings(channelID: string, options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['channelQuotaMonitorBindings', channelID],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ channelQuotaMonitorBindings: ChannelQuotaMonitorBinding[] }>(
-          CHANNEL_QUOTA_MONITOR_BINDINGS_QUERY,
-          { channelID }
-        );
-        return (data.channelQuotaMonitorBindings || []).map((b) => channelQuotaMonitorBindingSchema.parse(b));
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ channelQuotaMonitorBindings: ChannelQuotaMonitorBinding[] }>(
+        CHANNEL_QUOTA_MONITOR_BINDINGS_QUERY,
+        { channelID }
+      );
+      return (data.channelQuotaMonitorBindings || []).map((b) => channelQuotaMonitorBindingSchema.parse(b));
     },
     enabled: !!channelID && options?.enabled !== false,
     staleTime: 5 * 60 * 1000, // 5 minutes — prevent refetch from overwriting in-progress edits

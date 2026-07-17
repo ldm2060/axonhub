@@ -1,14 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGeneralSettings } from '@/features/system/data/system';
+import type { AnalyticsDimensionStat } from '../data/analytics';
+
 function formatExactNumber(value: number): string {
   return Math.round(value).toLocaleString();
 }
-import { useGeneralSettings } from '@/features/system/data/system';
-import type { AnalyticsDimensionStat } from '../data/analytics';
 
 type Dimension = 'channel' | 'model' | 'apiKey' | 'user';
 
@@ -20,13 +20,7 @@ interface DimensionDetailTableProps {
   isLoading: boolean;
 }
 
-export function DimensionDetailTable({
-  channelStats,
-  modelStats,
-  apiKeyStats,
-  userStats,
-  isLoading,
-}: DimensionDetailTableProps) {
+export function DimensionDetailTable({ channelStats, modelStats, apiKeyStats, userStats, isLoading }: DimensionDetailTableProps) {
   const { t, i18n } = useTranslation();
   const [dimension, setDimension] = useState<Dimension>('channel');
   const { data: generalSettings } = useGeneralSettings();
@@ -91,9 +85,7 @@ export function DimensionDetailTable({
       </CardHeader>
       <CardContent>
         {currentData.length === 0 ? (
-          <div className='flex h-[200px] items-center justify-center text-sm text-muted-foreground'>
-            {t('analytics.table.noData')}
-          </div>
+          <div className='text-muted-foreground flex h-[200px] items-center justify-center text-sm'>{t('analytics.table.noData')}</div>
         ) : (
           <div className='overflow-x-auto'>
             <table className='w-full min-w-[800px] table-fixed caption-bottom text-sm'>
@@ -109,32 +101,36 @@ export function DimensionDetailTable({
                 <col className='w-[10%]' />
               </colgroup>
               <thead className='[&_tr]:border-b'>
-                <tr className='border-b transition-colors hover:bg-muted/50'>
-                  <th className='sticky left-0 z-10 bg-card px-4 py-2 text-left text-xs font-medium text-muted-foreground'>{t('analytics.table.name')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.totalTokens')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.inputTokens')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.cachedTokens')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.uncachedTokens')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.outputTokens')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.cacheHitRate')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.requests')}</th>
-                  <th className='px-4 py-2 text-right text-xs font-medium text-muted-foreground'>{t('analytics.table.cost')}</th>
+                <tr className='hover:bg-muted/50 border-b transition-colors'>
+                  <th className='bg-card text-muted-foreground sticky left-0 z-10 px-4 py-2 text-left text-xs font-medium'>
+                    {t('analytics.table.name')}
+                  </th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.totalTokens')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.inputTokens')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.cachedTokens')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.uncachedTokens')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.outputTokens')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.cacheHitRate')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.requests')}</th>
+                  <th className='text-muted-foreground px-4 py-2 text-right text-xs font-medium'>{t('analytics.table.cost')}</th>
                 </tr>
               </thead>
               <tbody className='[&_tr:last-child]:border-0'>
                 {currentData.map((item) => (
-                  <tr key={item.id} className='border-b transition-colors hover:bg-muted/50'>
-                    <td className='sticky left-0 z-10 truncate bg-card px-4 py-2 text-sm font-medium'>{item.name}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm font-medium'>{formatExactNumber(item.totalTokens)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatExactNumber(item.inputTokens)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatExactNumber(item.cachedInputTokens)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatExactNumber(item.inputTokens - item.cachedInputTokens)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatExactNumber(item.outputTokens)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>
+                  <tr key={item.id} className='hover:bg-muted/50 border-b transition-colors'>
+                    <td className='bg-card sticky left-0 z-10 truncate px-4 py-2 text-sm font-medium'>{item.name}</td>
+                    <td className='px-4 py-2 text-right text-sm font-medium whitespace-nowrap'>{formatExactNumber(item.totalTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.inputTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.cachedInputTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
+                      {formatExactNumber(item.inputTokens - item.cachedInputTokens)}
+                    </td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.outputTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
                       {item.inputTokens > 0 ? ((item.cachedInputTokens / item.inputTokens) * 100).toFixed(1) : '0'}%
                     </td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatExactNumber(item.requestCount)}</td>
-                    <td className='whitespace-nowrap px-4 py-2 text-right text-sm'>{formatCurrency(item.cost)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.requestCount)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatCurrency(item.cost)}</td>
                   </tr>
                 ))}
               </tbody>

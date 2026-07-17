@@ -105,7 +105,7 @@ export function useQuotaChannels(): QuotaChannel[] {
         parsedData: (ch.parsedData ?? []) as ParsedField[],
         displayFields: (ch.displayFields ?? []) as DisplayField[],
         lastPollError: ch.lastPollError ?? null,
-      }),
+      })
     );
 }
 
@@ -246,7 +246,7 @@ export type OpenCodeGoQuotaWindow = {
   reset_time?: string;
   status?: string;
   percent_remaining?: number;
-}
+};
 
 export type ProviderOpenCodeGoQuotaData = ProviderQuotaDataCommon & {
   windows?: {
@@ -254,7 +254,7 @@ export type ProviderOpenCodeGoQuotaData = ProviderQuotaDataCommon & {
     weekly?: OpenCodeGoQuotaWindow;
     monthly?: OpenCodeGoQuotaWindow;
   };
-}
+};
 
 export type ProviderQuotaChannel = {
   id: string;

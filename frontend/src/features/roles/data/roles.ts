@@ -77,7 +77,7 @@ export function useRoles(
   } = {}
 ) {
   const { handleError } = useErrorHandler();
-  const { t: _t } = useTranslation();
+  const _t = useTranslation();
 
   // Always filter for system-level roles only (not project-specific)
   const queryVariables = {
@@ -89,16 +89,16 @@ export function useRoles(
     orderBy: variables.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
   };
 
+  const queryContext = 'Load Roles';
+
   return useQuery({
-    queryKey: ['roles', queryVariables],
+    queryKey: ['roles', queryVariables, queryContext, handleError],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, queryVariables);
-        return roleConnectionSchema.parse(data?.roles);
-      } catch (error) {
-        handleError(error, { context: 'Load Roles' });
-        throw error;
-      }
+      const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, queryVariables);
+      return roleConnectionSchema.parse(data?.roles);
+    },
+    onError: (error) => {
+      handleError(error, { context: queryContext });
     },
   });
 }
@@ -108,19 +108,17 @@ export function useRole(id: string) {
   const { t: _t } = useTranslation();
 
   return useQuery({
-    queryKey: ['role', id],
+    queryKey: ['role', id, handleError],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, { where: { id } });
-        const role = data.roles.edges[0]?.node;
-        if (!role) {
-          throw new Error('Role not found');
-        }
-        return roleSchema.parse(role);
-      } catch (error) {
-        handleError(error, { context: 'Load Role Detail' });
-        throw error;
+      const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, { where: { id } });
+      const role = data.roles.edges[0]?.node;
+      if (!role) {
+        throw new Error('Role not found');
       }
+      return roleSchema.parse(role);
+    },
+    onError: (error) => {
+      handleError(error, { context: 'Load Role Detail' });
     },
     enabled: !!id,
   });

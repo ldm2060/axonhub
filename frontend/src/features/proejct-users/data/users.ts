@@ -6,7 +6,16 @@ import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useRequestPermissions } from '@/hooks/useRequestPermissions';
-import { User, UserConnection, ProjectUser, CreateUserInput, UpdateUserInput, type UserStatus, userSchema, projectUserSchema } from './schema';
+import {
+  User,
+  UserConnection,
+  ProjectUser,
+  CreateUserInput,
+  UpdateUserInput,
+  type UserStatus,
+  userSchema,
+  projectUserSchema,
+} from './schema';
 
 // Dynamic GraphQL query builder for project-level users
 // This query fetches users with their project-specific information (owner status and scopes)
@@ -122,91 +131,77 @@ export function useUsers(
     disableAutoFetch?: boolean;
   }
 ) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
   const permissions = useRequestPermissions();
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
     queryKey: ['project-users', selectedProjectId, variables, permissions],
     queryFn: async () => {
-      try {
-        if (!selectedProjectId) {
-          throw new Error('No project selected');
-        }
+      if (!selectedProjectId) {
+        throw new Error('No project selected');
+      }
 
-        const query = buildProjectUsersQuery(permissions);
-        const headers = { 'X-Project-ID': selectedProjectId };
-        const data = await graphqlRequest<{
-          node: {
-            id: string;
-            name: string;
-            projectUsers: ProjectUser[];
-          };
-        }>(query, { projectId: selectedProjectId }, headers);
+      const query = buildProjectUsersQuery(permissions);
+      const headers = { 'X-Project-ID': selectedProjectId };
+      const data = await graphqlRequest<{
+        node: {
+          id: string;
+          name: string;
+          projectUsers: ProjectUser[];
+        };
+      }>(query, { projectId: selectedProjectId }, headers);
 
-        // Transform projectUsers to User format for display
-        const projectUsers = data.node.projectUsers || [];
-        const transformedUsers = projectUsers.map((pu) => {
-          const parsedPU = projectUserSchema.parse(pu);
-          return {
-            id: parsedPU.user.id,
-            createdAt: parsedPU.user.createdAt,
-            updatedAt: parsedPU.user.updatedAt,
-            email: parsedPU.user.email,
-            status: parsedPU.user.status,
-            firstName: parsedPU.user.firstName,
-            lastName: parsedPU.user.lastName,
-            preferLanguage: parsedPU.user.preferLanguage,
-            isOwner: parsedPU.isOwner,
-            scopes: parsedPU.scopes,
-            roles: parsedPU.user.roles,
-            projectUserId: parsedPU.id, // Store the project_user ID for removal
-          };
-        });
-
-        // Sort by createdAt DESC (newest first)
-        transformedUsers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        // Return in UserConnection format for compatibility
+      // Transform projectUsers to User format for display
+      const projectUsers = data.node.projectUsers || [];
+      const transformedUsers = projectUsers.map((pu) => {
+        const parsedPU = projectUserSchema.parse(pu);
         return {
-          edges: transformedUsers.map((user) => ({ node: user })),
-          pageInfo: {
-hasNextPage: false,
+          id: parsedPU.user.id,
+          createdAt: parsedPU.user.createdAt,
+          updatedAt: parsedPU.user.updatedAt,
+          email: parsedPU.user.email,
+          status: parsedPU.user.status,
+          firstName: parsedPU.user.firstName,
+          lastName: parsedPU.user.lastName,
+          preferLanguage: parsedPU.user.preferLanguage,
+          isOwner: parsedPU.isOwner,
+          scopes: parsedPU.scopes,
+          roles: parsedPU.user.roles,
+          projectUserId: parsedPU.id, // Store the project_user ID for removal
+        };
+      });
+
+      // Sort by createdAt DESC (newest first)
+      transformedUsers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Return in UserConnection format for compatibility
+      return {
+        edges: transformedUsers.map((user) => ({ node: user })),
+        pageInfo: {
+          hasNextPage: false,
           hasPreviousPage: false,
           startCursor: null,
           endCursor: null,
         },
       };
-    } catch (error) {
-      handleError(error, t('common.errors.loadFailed'));
-      throw error;
-    }
-  },
-  enabled: !options?.disableAutoFetch && !!selectedProjectId,
+    },
+    enabled: !options?.disableAutoFetch && !!selectedProjectId,
   });
 }
 
 export function useUser(id: string) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
   const selectedProjectId = useSelectedProjectId();
 
   return useQuery({
     queryKey: ['user', id, selectedProjectId],
     queryFn: async () => {
-      try {
-        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } }, headers);
-        const user = data.users.edges[0]?.node;
-        if (!user) {
-          throw new Error(t('users.messages.userNotFound'));
-        }
-        return userSchema.parse(user);
-      } catch (error) {
-        handleError(error, t('common.errors.loadFailed'));
-        throw error;
+      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } }, headers);
+      const user = data.users.edges[0]?.node;
+      if (!user) {
+        throw new Error('User not found');
       }
+      return userSchema.parse(user);
     },
     enabled: !!id,
   });
@@ -435,19 +430,11 @@ export function useUpdateProjectUser() {
 
 // Get all users (for adding to project)
 export function useAllUsers(variables?: { first?: number; after?: string; where?: Record<string, any> }, options?: { enabled?: boolean }) {
-  const { t } = useTranslation();
-  const { handleError } = useErrorHandler();
-
   return useQuery({
     queryKey: ['all-users', variables],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ users: UserConnection }>(ALL_USERS_QUERY, variables);
-        return data.users;
-      } catch (error) {
-        handleError(error, t('common.errors.loadFailed'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ users: UserConnection }>(ALL_USERS_QUERY, variables);
+      return data.users;
     },
     enabled: options?.enabled ?? true,
   });

@@ -82,25 +82,15 @@ const REVIEW_PUBLISH_REQUEST_MUTATION = `
 `;
 
 export function usePendingPublishRequests(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   return useQuery({
     queryKey: ['pendingPublishRequests'],
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{
-          publishRequests: {
-            edges: Array<{ node: unknown }>;
-          };
-        }>(PENDING_PUBLISH_REQUESTS_QUERY);
-        return (data.publishRequests?.edges || []).map((edge) =>
-          publishRequestSchema.parse(edge.node)
-        );
-      } catch (error) {
-        handleError(error, t('common.errors.loadFailed'));
-        throw error;
-      }
+      const data = await graphqlRequest<{
+        publishRequests: {
+          edges: Array<{ node: unknown }>;
+        };
+      }>(PENDING_PUBLISH_REQUESTS_QUERY);
+      return (data.publishRequests?.edges || []).map((edge) => publishRequestSchema.parse(edge.node));
     },
     refetchInterval: 30000,
     enabled: options?.enabled !== false,
@@ -113,15 +103,7 @@ export function useReviewPublishRequest() {
   const { handleError } = useErrorHandler();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      action,
-      comment,
-    }: {
-      id: string;
-      action: 'approve' | 'reject';
-      comment?: string;
-    }) => {
+    mutationFn: async ({ id, action, comment }: { id: string; action: 'approve' | 'reject'; comment?: string }) => {
       try {
         const data = await graphqlRequest<{
           reviewPublishRequest: { id: string; status: string };
@@ -138,10 +120,7 @@ export function useReviewPublishRequest() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pendingPublishRequests'] });
-      const messageKey =
-        variables.action === 'approve'
-          ? 'publish.approveSuccess'
-          : 'publish.rejectSuccess';
+      const messageKey = variables.action === 'approve' ? 'publish.approveSuccess' : 'publish.rejectSuccess';
       toast.success(t(messageKey));
     },
   });

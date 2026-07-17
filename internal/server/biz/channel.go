@@ -639,17 +639,35 @@ func (svc *ChannelService) CreateChannel(ctx context.Context, input ent.CreateCh
 		return nil, xerrors.DuplicateNameError("channel", input.Name)
 	}
 
-	channel, err := svc.createChannel(ctx, input)
+	var created *ent.Channel
+	err = svc.RunInTransaction(ctx, func(ctx context.Context) error {
+		channel, err := svc.createChannel(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		if _, err := svc.ensureChannelModelPrices(ctx, channel.ID, input.SupportedModels); err != nil {
+			return err
+		}
+
+		created = channel
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	svc.asyncReloadChannels()
+	if ent.TxFromContext(ctx) == nil {
+		created.Unwrap()
+	}
+
+	svc.reloadChannelsAfterCommit(ctx)
 
 	// Auto-create usage_monitor_channel if the channel's provider type has a quota monitor template
-	svc.autoCreateUsageMonitorChannel(ctx, channel, input)
+	svc.autoCreateUsageMonitorChannel(ctx, created, input)
 
-	return channel, nil
+	return created, nil
 }
 
 // NormalizeRetryableStatusCodes validates, deduplicates, and sorts additional
@@ -729,122 +747,137 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 		}
 	}
 
-	mut := svc.entFromContext(ctx).Channel.UpdateOneID(id).
-		SetNillableType(input.Type).
-		SetNillableBaseURL(input.BaseURL).
-		SetNillableName(input.Name).
-		SetNillableDefaultTestModel(input.DefaultTestModel).
-		SetNillableOrderingWeight(input.OrderingWeight).
-		SetNillableAutoSyncSupportedModels(input.AutoSyncSupportedModels)
+	var updated *ent.Channel
+	err := svc.RunInTransaction(ctx, func(ctx context.Context) error {
+		db := svc.entFromContext(ctx)
+		mut := db.Channel.UpdateOneID(id).
+			SetNillableType(input.Type).
+			SetNillableBaseURL(input.BaseURL).
+			SetNillableName(input.Name).
+			SetNillableDefaultTestModel(input.DefaultTestModel).
+			SetNillableOrderingWeight(input.OrderingWeight).
+			SetNillableAutoSyncSupportedModels(input.AutoSyncSupportedModels)
 
-	if input.SupportedModels != nil {
-		mut.SetSupportedModels(input.SupportedModels)
-	}
+		if input.SupportedModels != nil {
+			mut.SetSupportedModels(input.SupportedModels)
+		}
 
-	if input.ManualModels != nil {
-		mut.SetManualModels(input.ManualModels)
-	}
+		if input.ManualModels != nil {
+			mut.SetManualModels(input.ManualModels)
+		}
 
-	if input.Tags != nil {
-		mut.SetTags(input.Tags)
-	}
+		if input.Tags != nil {
+			mut.SetTags(input.Tags)
+		}
 
-	if input.Settings != nil {
-		// Always normalize and validate override settings.
-		if input.Settings.BodyOverrideOperations != nil {
-			if err := ValidateBodyOverrideOperations(input.Settings.BodyOverrideOperations); err != nil {
-				return nil, fmt.Errorf("invalid body override operations: %w", err)
+		if input.Settings != nil {
+			// Always normalize and validate override settings.
+			if input.Settings.BodyOverrideOperations != nil {
+				if err := ValidateBodyOverrideOperations(input.Settings.BodyOverrideOperations); err != nil {
+					return fmt.Errorf("invalid body override operations: %w", err)
+				}
+			}
+
+			if input.Settings.HeaderOverrideOperations != nil {
+				if err := ValidateOverrideHeaders(input.Settings.HeaderOverrideOperations); err != nil {
+					return fmt.Errorf("invalid header override operations: %w", err)
+				}
+			}
+
+			if err := ValidateRateLimit(input.Settings.RateLimit); err != nil {
+				return fmt.Errorf("invalid rate limit: %w", err)
+			}
+
+			if err := NormalizeRetryableStatusCodes(input.Settings); err != nil {
+				return err
+			}
+
+			if err := NormalizeRetryableErrorPatterns(input.Settings); err != nil {
+				return err
+			}
+
+			mut.SetSettings(input.Settings)
+		}
+
+		if input.Policies != nil {
+			mut.SetPolicies(*input.Policies)
+		}
+
+		if input.Credentials != nil {
+			var typ channel.Type
+			if input.Type != nil {
+				typ = *input.Type
+			} else {
+				existing, err := db.Channel.Get(ctx, id)
+				if err != nil {
+					return fmt.Errorf("get channel for credential validation: %w", err)
+				}
+				typ = existing.Type
+			}
+			credentials := *input.Credentials
+			if err := svc.canonicalizeKimiCodeCredentials(typ, &credentials); err != nil {
+				return err
+			}
+			mut.SetCredentials(credentials)
+		}
+
+		if input.Remark != nil {
+			mut.SetRemark(*input.Remark)
+		}
+
+		if input.ClearRemark {
+			mut.ClearRemark()
+		}
+
+		if input.ClearAutoSyncModelPattern {
+			mut.ClearAutoSyncModelPattern()
+		} else if input.AutoSyncModelPattern != nil {
+			mut.SetAutoSyncModelPattern(*input.AutoSyncModelPattern)
+		}
+
+		if input.Endpoints != nil {
+			if err := ValidateEndpoints(input.Endpoints); err != nil {
+				return fmt.Errorf("invalid endpoints: %w", err)
+			}
+
+			mut.SetEndpoints(input.Endpoints)
+		}
+
+		if input.ClearErrorMessage {
+			mut.ClearErrorMessage()
+		}
+
+		if input.ClearClientRestriction {
+			mut.ClearClientRestriction()
+		} else if input.ClientRestriction != nil {
+			mut.SetClientRestriction(*input.ClientRestriction)
+		}
+
+		if input.ClearAutoDisableConfig {
+			mut.ClearAutoDisableConfig()
+		} else if input.AutoDisableConfig != nil {
+			mut.SetAutoDisableConfig(input.AutoDisableConfig)
+		}
+
+		channel, err := mut.Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update channel: %w", err)
+		}
+
+		if input.SupportedModels != nil {
+			if _, err := svc.ensureChannelModelPrices(ctx, id, input.SupportedModels); err != nil {
+				return err
 			}
 		}
 
-		if input.Settings.HeaderOverrideOperations != nil {
-			if err := ValidateOverrideHeaders(input.Settings.HeaderOverrideOperations); err != nil {
-				return nil, fmt.Errorf("invalid header override operations: %w", err)
-			}
-		}
-
-		if err := ValidateRateLimit(input.Settings.RateLimit); err != nil {
-			return nil, fmt.Errorf("invalid rate limit: %w", err)
-		}
-
-		if err := NormalizeRetryableStatusCodes(input.Settings); err != nil {
-			return nil, err
-		}
-
-		if err := NormalizeRetryableErrorPatterns(input.Settings); err != nil {
-			return nil, err
-		}
-
-		mut.SetSettings(input.Settings)
-	}
-
-	if input.Policies != nil {
-		mut.SetPolicies(*input.Policies)
-	}
-
-	if input.Credentials != nil {
-		var typ channel.Type
-		if input.Type != nil {
-			typ = *input.Type
-		} else {
-			existing, err := svc.entFromContext(ctx).Channel.Get(ctx, id)
-			if err != nil {
-				return nil, fmt.Errorf("get channel for credential validation: %w", err)
-			}
-			typ = existing.Type
-		}
-		credentials := *input.Credentials
-		if err := svc.canonicalizeKimiCodeCredentials(typ, &credentials); err != nil {
-			return nil, err
-		}
-		mut.SetCredentials(credentials)
-	}
-
-	if input.Remark != nil {
-		mut.SetRemark(*input.Remark)
-	}
-
-	if input.ClearRemark {
-		mut.ClearRemark()
-	}
-
-	if input.ClearAutoSyncModelPattern {
-		mut.ClearAutoSyncModelPattern()
-	} else if input.AutoSyncModelPattern != nil {
-		mut.SetAutoSyncModelPattern(*input.AutoSyncModelPattern)
-	}
-
-	if input.Endpoints != nil {
-		if err := ValidateEndpoints(input.Endpoints); err != nil {
-			return nil, fmt.Errorf("invalid endpoints: %w", err)
-		}
-
-		mut.SetEndpoints(input.Endpoints)
-	}
-
-	if input.ClearErrorMessage {
-		mut.ClearErrorMessage()
-	}
-
-	// client_restriction and auto_disable_config are SkipMutationCreateInput
-	// fields settable only via update. The manually-built mutation above does
-	// not delegate to input.Mutate(), so apply them explicitly here — matching
-	// the generated Mutate() semantics (clear takes precedence over set).
-	if input.ClearClientRestriction {
-		mut.ClearClientRestriction()
-	} else if input.ClientRestriction != nil {
-		mut.SetClientRestriction(*input.ClientRestriction)
-	}
-
-	if input.ClearAutoDisableConfig {
-		mut.ClearAutoDisableConfig()
-	} else if input.AutoDisableConfig != nil {
-		mut.SetAutoDisableConfig(input.AutoDisableConfig)
-	}
-
-	channel, err := mut.Save(ctx)
+		updated = channel
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to update channel: %w", err)
+		return nil, err
+	}
+	if ent.TxFromContext(ctx) == nil {
+		updated.Unwrap()
 	}
 
 	// Intentionally NO forgetLimiter call: ChannelLimiterManager.GetOrCreate
@@ -854,7 +887,7 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 	// requests transiently exceed MaxConcurrent.
 	svc.asyncReloadChannels()
 
-	return channel, nil
+	return updated, nil
 }
 
 // UpdateChannelStatus updates the status of a channel.
@@ -882,6 +915,28 @@ func (svc *ChannelService) asyncReloadChannels() {
 	if err := svc.channelNotifier.Notify(context.Background(), live.NewForceRefreshEvent[struct{}]()); err != nil {
 		log.Warn(context.Background(), "channel cache watcher notify failed", log.Cause(err))
 	}
+}
+
+// reloadChannelsAfterCommit waits for a caller-owned Ent transaction, including
+// the GraphQL Transactioner, before publishing the channel cache refresh.
+func (svc *ChannelService) reloadChannelsAfterCommit(ctx context.Context) {
+	tx := ent.TxFromContext(ctx)
+	if tx == nil {
+		svc.asyncReloadChannels()
+		return
+	}
+
+	tx.OnCommit(func(next ent.Committer) ent.Committer {
+		return ent.CommitFunc(func(ctx context.Context, tx *ent.Tx) error {
+			if err := next.Commit(ctx, tx); err != nil {
+				return err
+			}
+
+			svc.asyncReloadChannels()
+
+			return nil
+		})
+	})
 }
 
 // SaveChannelEndpoints updates the endpoints field for a channel.

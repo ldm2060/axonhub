@@ -3,8 +3,6 @@
 package ent
 
 import (
-	"time"
-
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
@@ -15,9 +13,12 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/role"
+	"github.com/ldm2060/axonhub/internal/ent/thread"
+	"github.com/ldm2060/axonhub/internal/ent/trace"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"time"
 )
 
 // CreateAPIKeyInput represents a mutation input for creating apikeys.
@@ -1529,12 +1530,16 @@ func (c *SystemUpdateOne) SetInput(i UpdateSystemInput) *SystemUpdateOne {
 // CreateThreadInput represents a mutation input for creating threads.
 type CreateThreadInput struct {
 	ThreadID  string
+	Status    *thread.Status
 	ProjectID int
 }
 
 // Mutate applies the CreateThreadInput on the ThreadMutation builder.
 func (i *CreateThreadInput) Mutate(m *ThreadMutation) {
 	m.SetThreadID(i.ThreadID)
+	if v := i.Status; v != nil {
+		m.SetStatus(*v)
+	}
 	m.SetProjectID(i.ProjectID)
 }
 
@@ -1547,12 +1552,16 @@ func (c *ThreadCreate) SetInput(i CreateThreadInput) *ThreadCreate {
 // UpdateThreadInput represents a mutation input for updating threads.
 type UpdateThreadInput struct {
 	ThreadID *string
+	Status   *thread.Status
 }
 
 // Mutate applies the UpdateThreadInput on the ThreadMutation builder.
 func (i *UpdateThreadInput) Mutate(m *ThreadMutation) {
 	if v := i.ThreadID; v != nil {
 		m.SetThreadID(*v)
+	}
+	if v := i.Status; v != nil {
+		m.SetStatus(*v)
 	}
 }
 
@@ -1571,6 +1580,7 @@ func (c *ThreadUpdateOne) SetInput(i UpdateThreadInput) *ThreadUpdateOne {
 // CreateTraceInput represents a mutation input for creating traces.
 type CreateTraceInput struct {
 	TraceID   string
+	Status    *trace.Status
 	ProjectID int
 	ThreadID  *int
 }
@@ -1578,6 +1588,9 @@ type CreateTraceInput struct {
 // Mutate applies the CreateTraceInput on the TraceMutation builder.
 func (i *CreateTraceInput) Mutate(m *TraceMutation) {
 	m.SetTraceID(i.TraceID)
+	if v := i.Status; v != nil {
+		m.SetStatus(*v)
+	}
 	m.SetProjectID(i.ProjectID)
 	if v := i.ThreadID; v != nil {
 		m.SetThreadID(*v)
@@ -1593,12 +1606,16 @@ func (c *TraceCreate) SetInput(i CreateTraceInput) *TraceCreate {
 // UpdateTraceInput represents a mutation input for updating traces.
 type UpdateTraceInput struct {
 	TraceID *string
+	Status  *trace.Status
 }
 
 // Mutate applies the UpdateTraceInput on the TraceMutation builder.
 func (i *UpdateTraceInput) Mutate(m *TraceMutation) {
 	if v := i.TraceID; v != nil {
 		m.SetTraceID(*v)
+	}
+	if v := i.Status; v != nil {
+		m.SetStatus(*v)
 	}
 }
 

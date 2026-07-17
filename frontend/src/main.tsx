@@ -15,7 +15,6 @@ import i18n from './lib/i18n';
 // Generated Routes
 import { routeTree } from './routeTree.gen';
 
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -60,11 +59,14 @@ const queryClient = new QueryClient({
         useAuthStore.getState().auth.reset();
         const redirect = `${router.history.location.href}`;
         router.navigate({ to: '/sign-in', search: { redirect } });
+        return;
       }
       if (status === 500) {
         toast.error(i18n.t('common.errors.internalServerError'));
-        // router.navigate({ to: '/500' })
+        return;
       }
+      // Delegate all other query errors to the shared server error handler
+      handleServerError(error);
     },
   }),
 });

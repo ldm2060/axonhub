@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { zhCN, enUS } from 'date-fns/locale';
-import { ArrowLeft, Activity, RefreshCw, FileText } from 'lucide-react';
+import { ArrowLeft, Activity, RefreshCw, FileText, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { buildGUID, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
@@ -41,6 +41,8 @@ export default function ThreadDetailPage() {
     traceId: string | null;
   }>({ open: false, traceId: null });
 
+  const [showArchivedTraces, setShowArchivedTraces] = useState(false);
+
   const { data: settings } = useGeneralSettings();
 
   const { pageSize, setCursors, setPageSize, resetCursor, paginationArgs, getSearchParams } = usePaginationSearch({
@@ -60,6 +62,7 @@ export default function ThreadDetailPage() {
     tracesFirst,
     tracesAfter,
     traceOrderBy: { field: 'CREATED_AT', direction: 'DESC' },
+    showArchivedTraces,
   });
 
   const traces: Trace[] = useMemo(() => {
@@ -214,6 +217,27 @@ export default function ThreadDetailPage() {
 
         {/* Traces List */}
         <div className='flex-1 overflow-auto p-3 sm:p-6'>
+          {(thread.archivedTracesCount ?? 0) > 0 && (
+            <div className='mb-3 sm:mb-4'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setShowArchivedTraces(!showArchivedTraces)}
+              >
+                {showArchivedTraces ? (
+                  <>
+                    <EyeOff className='mr-2 h-4 w-4' />
+                    {t('threads.detail.hideArchived', 'Hide archived')}
+                  </>
+                ) : (
+                  <>
+                    <Eye className='mr-2 h-4 w-4' />
+                    {t('threads.detail.showArchived', 'Show archived ({{count}})', { count: thread.archivedTracesCount })}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
           {traces.length > 0 ? (
             <div className='space-y-3 sm:space-y-4'>
               {traces.map((trace, index) => (
