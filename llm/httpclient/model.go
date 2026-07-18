@@ -56,6 +56,10 @@ type Request struct {
 	// SkipInboundQueryMerge when set to true, prevents query parameters from the original
 	// inbound request from being merged into this request during MergeInboundRequest.
 	SkipInboundQueryMerge bool `json:"-"`
+
+	// PreserveHeadersOnInboundMerge lists transformer-owned headers that must not be
+	// overwritten by values from the original inbound request.
+	PreserveHeadersOnInboundMerge []string `json:"-"`
 }
 
 // AuthConfig represents authentication configuration.

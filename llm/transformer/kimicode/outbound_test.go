@@ -74,7 +74,21 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 		t.Fatal(err)
 	}
 	request := func(model string) *llm.Request {
-		return &llm.Request{Model: model, Messages: []llm.Message{{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("hello")}}}, Stream: lo.ToPtr(true), ReasoningEffort: "high"}
+		return &llm.Request{
+			Model:           model,
+			Messages:        []llm.Message{{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("hello")}}},
+			Stream:          lo.ToPtr(true),
+			ReasoningEffort: "high",
+			RawRequest: &httpclient.Request{Headers: http.Header{
+				"User-Agent":         []string{"ClaudeCLI/1.2.3"},
+				"X-Msh-Platform":     []string{"attacker-platform"},
+				"X-Msh-Version":      []string{"attacker-version"},
+				"X-Msh-Device-Name":  []string{"attacker-host"},
+				"X-Msh-Device-Model": []string{"attacker-model"},
+				"X-Msh-Os-Version":   []string{"attacker-os"},
+				"X-Msh-Device-Id":    []string{"attacker-device"},
+			}},
+		}
 	}
 	kimiRequest, err := outbound.TransformRequest(context.Background(), request("kimi"))
 	if err != nil {
@@ -89,6 +103,8 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	if got := kimiRequest.Headers.Get("X-Msh-Device-Id"); got != "device" {
 		t.Fatalf("device header = %q", got)
 	}
+	kimiRequest = httpclient.MergeInboundRequest(kimiRequest, request("kimi").RawRequest)
+	assertKimiIdentityHeaders(t, kimiRequest.Headers)
 	if kimiRequest.Auth == nil || kimiRequest.Auth.APIKey != "access" {
 		t.Fatal("Kimi bearer auth was not configured")
 	}
@@ -113,6 +129,8 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	if got := anthropicRequest.Metadata[protocolMetadataKey]; got != ProtocolAnthropic {
 		t.Fatalf("Anthropic protocol = %q", got)
 	}
+	anthropicRequest = httpclient.MergeInboundRequest(anthropicRequest, request("claude").RawRequest)
+	assertKimiIdentityHeaders(t, anthropicRequest.Headers)
 	var body map[string]any
 	if err := json.Unmarshal(anthropicRequest.Body, &body); err != nil {
 		t.Fatal(err)
@@ -122,6 +140,24 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	}
 	if betas, ok := body["betas"].([]any); !ok || len(betas) != 1 {
 		t.Fatalf("betas body field missing: %#v", body["betas"])
+	}
+}
+
+func assertKimiIdentityHeaders(t *testing.T, headers http.Header) {
+	t.Helper()
+	want := map[string]string{
+		"User-Agent":         CLIUserAgentProduct + "/" + CLIVersion,
+		"X-Msh-Platform":     "kimi_code_cli",
+		"X-Msh-Version":      CLIVersion,
+		"X-Msh-Device-Name":  "host",
+		"X-Msh-Device-Model": "model",
+		"X-Msh-Os-Version":   "os",
+		"X-Msh-Device-Id":    "device",
+	}
+	for name, expected := range want {
+		if got := headers.Get(name); got != expected {
+			t.Fatalf("%s = %q, want %q", name, got, expected)
+		}
 	}
 }
 

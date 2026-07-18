@@ -349,3 +349,24 @@ func TestMergeHTTPHeaders_AcceptNotOverridden(t *testing.T) {
 	assert.Equal(t, "*/*", merged.Get("Accept"))
 	assert.Equal(t, "client-value", merged.Get("X-Custom"))
 }
+
+func TestMergeInboundRequestPreservesTransformerOwnedHeaders(t *testing.T) {
+	dest := &Request{
+		Headers: http.Header{
+			"User-Agent":    []string{"kimi-code-cli/0.27.0"},
+			"X-Msh-Version": []string{"0.27.0"},
+		},
+		PreserveHeadersOnInboundMerge: []string{"user-agent", "x-msh-version"},
+	}
+	src := &Request{Headers: http.Header{
+		"User-Agent":    []string{"ClaudeCLI/1.2.3"},
+		"X-Msh-Version": []string{"attacker-controlled"},
+		"X-Custom":      []string{"client-value"},
+	}}
+
+	merged := MergeInboundRequest(dest, src)
+
+	assert.Equal(t, "kimi-code-cli/0.27.0", merged.Headers.Get("User-Agent"))
+	assert.Equal(t, "0.27.0", merged.Headers.Get("X-Msh-Version"))
+	assert.Equal(t, "client-value", merged.Headers.Get("X-Custom"))
+}

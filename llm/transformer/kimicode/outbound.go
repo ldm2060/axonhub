@@ -182,6 +182,15 @@ func (t *OutboundTransformer) applyKimiIdentity(request *httpclient.Request, tok
 		return err
 	}
 	maps.Copy(request.Headers, identityHeaders)
+	request.PreserveHeadersOnInboundMerge = append(request.PreserveHeadersOnInboundMerge,
+		"User-Agent",
+		"X-Msh-Platform",
+		"X-Msh-Version",
+		"X-Msh-Device-Name",
+		"X-Msh-Device-Model",
+		"X-Msh-Os-Version",
+		"X-Msh-Device-Id",
+	)
 	request.Auth = &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: token}
 	request.Headers.Del("Authorization")
 	if request.Metadata == nil {

@@ -7,9 +7,11 @@ import (
 	"compress/zlib"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
@@ -269,7 +271,15 @@ func MergeInboundRequest(dest, src *Request) *Request {
 		return dest
 	}
 
+	preservedHeaders := make(http.Header, len(dest.PreserveHeadersOnInboundMerge))
+	for _, header := range dest.PreserveHeadersOnInboundMerge {
+		if values := dest.Headers.Values(header); len(values) > 0 {
+			preservedHeaders[http.CanonicalHeaderKey(header)] = slices.Clone(values)
+		}
+	}
+
 	dest.Headers = MergeHTTPHeaders(dest.Headers, src.Headers)
+	maps.Copy(dest.Headers, preservedHeaders)
 
 	if !dest.SkipInboundQueryMerge {
 		dest.Query = MergeHTTPQuery(dest.Query, src.Query)
