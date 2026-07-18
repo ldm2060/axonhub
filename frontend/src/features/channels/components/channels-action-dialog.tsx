@@ -1257,7 +1257,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
       const shouldUseProtocolDefaultBaseURL =
         (isCodexType && (!isEdit || authMode === 'official' || authMode === 'auth-json')) ||
-        (isClaudeCodeType && authMode === 'official' && !isDuplicate);
+        (isClaudeCodeType && authMode === 'official' && !isDuplicate) ||
+        isKimiCodeType;
       if (shouldUseProtocolDefaultBaseURL) {
         const currentType = selectedType || derivedChannelType;
         const baseURL =
@@ -2271,33 +2272,35 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         </div>
                       )}
 
-                      <FormField
-                        control={form.control}
-                        name='baseURL'
-                        render={({ field, fieldState }) => (
-                          <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                            <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
-                              {t('channels.dialogs.fields.baseURL.label')}
-                            </FormLabel>
-                            <div className='space-y-1 md:col-span-6'>
-                              <Input
-                                placeholder={baseURLPlaceholder}
-                                autoComplete='new-password'
-                                data-form-type='other'
-                                aria-invalid={!!fieldState.error}
-                                data-testid='channel-base-url-input'
-                                disabled={
-                                  (isCodexType && authMode !== 'third-party') || (isClaudeCodeType && authMode === 'official') || selectedProvider === 'antigravity'
-                                }
-                                {...field}
-                              />
-                              <FormMessage />
-                            </div>
-                          </FormItem>
-                        )}
-                      />
+                      {!isKimiCodeType && (
+                        <FormField
+                          control={form.control}
+                          name='baseURL'
+                          render={({ field, fieldState }) => (
+                            <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                              <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                                {t('channels.dialogs.fields.baseURL.label')}
+                              </FormLabel>
+                              <div className='space-y-1 md:col-span-6'>
+                                <Input
+                                  placeholder={baseURLPlaceholder}
+                                  autoComplete='new-password'
+                                  data-form-type='other'
+                                  aria-invalid={!!fieldState.error}
+                                  data-testid='channel-base-url-input'
+                                  disabled={
+                                    (isCodexType && authMode !== 'third-party') || (isClaudeCodeType && authMode === 'official') || selectedProvider === 'antigravity'
+                                  }
+                                  {...field}
+                                />
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                      )}
 
-                      {(!(isCodexType || isClaudeCodeType || isCopilotType) || authMode === 'third-party') &&
+                      {(!(isCodexType || isClaudeCodeType || isCopilotType || isKimiCodeType) || authMode === 'third-party') &&
                         selectedProvider !== 'antigravity' &&
                         selectedType !== 'anthropic_gcp' && (
                           <FormField
