@@ -46,6 +46,8 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveOpenCodeGo(fields)
 	case "cline":
 		return deriveCline(fields)
+	case "minimax":
+		return deriveMinimax(fields)
 	default:
 		return deriveGeneric(fields)
 	}
@@ -586,6 +588,38 @@ func deriveAntigravity(fields []ParsedField) QuotaDerivedStatus {
 		Limits: []provider_quota.QuotaLimitStatus{
 			provider_quota.NewTokenLimitStatus(status, used, nextReset),
 		},
+		NextResetAt: nextReset,
+	}
+}
+
+func deriveMinimax(fields []ParsedField) QuotaDerivedStatus {
+	var limits []provider_quota.QuotaLimitStatus
+	worstStatus := "available"
+
+	for _, key := range []string{"interval", "weekly"} {
+		if !hasField(fields, key+"_used_pct") {
+			continue
+		}
+
+		ratio := findFieldPercent(fields, key+"_used_pct") / 100.0
+		status := "available"
+		if ratio >= 1.0 {
+			status = "exhausted"
+		} else if ratio >= warningThreshold {
+			status = "warning"
+		}
+		reset := findFieldTime(fields, key+"_reset")
+		limits = append(limits, provider_quota.NewTokenLimitStatus(status, ratio, reset))
+		if quotaStatusRank(status) > quotaStatusRank(worstStatus) {
+			worstStatus = status
+		}
+	}
+
+	nextReset := earliestDatetime(fields)
+	return QuotaDerivedStatus{
+		Status:      worstStatus,
+		Ready:       worstStatus != "exhausted",
+		Limits:      limits,
 		NextResetAt: nextReset,
 	}
 }

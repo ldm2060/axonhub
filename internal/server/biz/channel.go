@@ -1099,6 +1099,8 @@ func providerTypeFromChannel(chType channel.Type, baseURL string) string {
 		return "zhipu"
 	case channel.TypeOpencodeGo, channel.TypeOpencodeGoAnthropic:
 		return "opencode_go"
+	case channel.TypeMinimax, channel.TypeMinimaxAnthropic:
+		return "minimax"
 	case channel.TypeOpenai, channel.TypeOpenaiResponses:
 		return provider_quota.DetectProviderFromURL(baseURL)
 	default:
@@ -1146,7 +1148,7 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 	// API key. Skip the apiKey requirement and let the dedicated checker load the
 	// bound channel in pollChannel. Auto-create only if the channel has the
 	// OpenCode quota settings configured.
-	if providerType == "opencode_go" || providerType == "cline" {
+	if providerType == "opencode_go" || providerType == "cline" || providerType == "minimax" {
 		if providerType == "opencode_go" && (ch.Settings == nil || ch.Settings.ProviderQuota == nil ||
 			ch.Settings.ProviderQuota.OpencodeGo == nil) {
 			return

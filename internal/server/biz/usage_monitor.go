@@ -367,6 +367,7 @@ type UsageMonitorService struct {
 	genericChecker              *usage_monitor.GenericQuotaChecker
 	clineChecker                *provider_quota.ClineQuotaChecker
 	opencodeGoChecker           *provider_quota.OpenCodeGoQuotaChecker
+	minimaxChecker              *provider_quota.MinimaxQuotaChecker
 	httpClient                  *httpclient.HttpClient
 	defaultDisableThreshold     float64
 	defaultEnableThreshold      float64
@@ -382,6 +383,7 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 		genericChecker:              usage_monitor.NewGenericQuotaChecker(params.HttpClient),
 		clineChecker:                provider_quota.NewClineQuotaChecker(params.HttpClient),
 		opencodeGoChecker:           provider_quota.NewOpenCodeGoQuotaChecker(params.HttpClient),
+		minimaxChecker:              provider_quota.NewMinimaxQuotaChecker(params.HttpClient),
 		httpClient:                  params.HttpClient,
 		defaultDisableThreshold:     params.DefaultDisableThreshold,
 		defaultEnableThreshold:      params.DefaultEnableThreshold,
@@ -559,7 +561,7 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 			return nil, fmt.Errorf("channelId is required for the cline template")
 		}
 		// Dedicated checkers read credentials from the bound channel at poll time.
-		isBoundChannelProvider := *input.ProviderType == "opencode_go" || *input.ProviderType == "cline"
+		isBoundChannelProvider := *input.ProviderType == "opencode_go" || *input.ProviderType == "cline" || *input.ProviderType == "minimax"
 		if !isBoundChannelProvider && (input.ApiKey == nil || *input.ApiKey == "") {
 			return nil, fmt.Errorf("apiKey is required when source=template")
 		}
@@ -966,12 +968,14 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var pollData *usage_monitor.PollData
 	var err error
 
-	// Cline and OpenCode Go use dedicated checkers that read credentials from the
+	// Cline, OpenCode Go, and Minimax use dedicated checkers that read credentials from the
 	// bound channel, bypassing the generic HTTP poller entirely.
 	if ch.ProviderType == usagemonitorchannel.ProviderTypeCline {
 		pollData, err = svc.pollCline(ctx, ch)
 	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeOpencodeGo {
 		pollData, err = svc.pollOpenCodeGo(ctx, ch)
+	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeMinimax {
+		pollData, err = svc.pollMinimax(ctx, ch)
 	} else if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
 		// Prefer new columns (Variables + DisplayFields) if populated
 		vars := convertMapSliceToVariables(ch.Variables)
@@ -1200,6 +1204,29 @@ func (svc *UsageMonitorService) pollCline(ctx context.Context, mon *ent.UsageMon
 	return &usage_monitor.PollData{
 		Raw:      usage_monitor.ClineQuotaRawJSON(quota),
 		Fields:   usage_monitor.ClineQuotaToParsedFields(quota),
+		PolledAt: time.Now(),
+	}, nil
+}
+
+func (svc *UsageMonitorService) pollMinimax(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
+	if mon.ChannelID == nil {
+		return nil, fmt.Errorf("minimax monitor %d has no bound channel_id", mon.ID)
+	}
+
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, *mon.ChannelID)
+	if err != nil {
+		return nil, fmt.Errorf("load bound channel %d for minimax monitor: %w", *mon.ChannelID, err)
+	}
+
+	quota, err := svc.minimaxChecker.CheckQuota(ctx, ch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage_monitor.PollData{
+		Raw:      usage_monitor.MinimaxQuotaRawJSON(quota),
+		Fields:   usage_monitor.MinimaxQuotaToParsedFields(quota),
 		PolledAt: time.Now(),
 	}, nil
 }

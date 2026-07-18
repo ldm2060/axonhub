@@ -354,6 +354,21 @@ var channelTemplates = []ChannelTemplate{
 		},
 	},
 	{
+		ProviderType: "minimax",
+		Name:         "Minimax",
+		Description:  "Monitor Minimax token plan usage through the bound Minimax channel",
+		ApiURL:       "https://www.minimaxi.com/v1/token_plan/remains",
+		ApiMethod:    "GET",
+		HeaderFormat: "bearer",
+		AuthType:     "api_key",
+		DisplayFields: []DisplayField{
+			{Key: "interval_used_pct", Label: "Interval Usage %", ValueRef: "interval_used_pct", Format: "percentage", DisplayOrder: 0, Group: "interval"},
+			{Key: "interval_reset", Label: "Interval Reset At", ValueRef: "interval_reset", Format: "datetime", DisplayOrder: 1, Group: "interval"},
+			{Key: "weekly_used_pct", Label: "Weekly Usage %", ValueRef: "weekly_used_pct", Format: "percentage", DisplayOrder: 2, Group: "weekly"},
+			{Key: "weekly_reset", Label: "Weekly Reset At", ValueRef: "weekly_reset", Format: "datetime", DisplayOrder: 3, Group: "weekly"},
+		},
+	},
+	{
 		ProviderType: "opencode_go",
 		Name:         "OpenCode Go",
 		Description:  "Monitor OpenCode Go usage by scraping the opencode.ai workspace dashboard (auth cookie)",

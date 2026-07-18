@@ -7970,6 +7970,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   antigravity
   apertis
   opencode_go
+  minimax
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status
