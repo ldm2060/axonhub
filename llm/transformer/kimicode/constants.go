@@ -7,7 +7,7 @@ const (
 	// CLIUserAgentProduct and CLIVersion match the official @moonshot-ai/kimi-code
 	// package identity used by the Kimi Code CLI.
 	CLIUserAgentProduct = "kimi-code-cli"
-	CLIVersion          = "0.26.0"
+	CLIVersion          = "0.27.0"
 
 	DeviceAuthorizationPath = "/api/oauth/device_authorization"
 	// TokenPath is the Kimi Code public OAuth token endpoint.

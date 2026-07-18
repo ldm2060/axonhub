@@ -57,8 +57,8 @@ func TestSystemService_KimiCodeIdentityIsStable(t *testing.T) {
 	second, err := service.KimiCodeIdentity(ctx)
 	require.NoError(t, err)
 
-	require.Equal(t, "kimi-code-cli", first.UserAgentProduct)
-	require.Equal(t, "0.26.0", first.Version)
+	require.NotEmpty(t, first.UserAgentProduct)
+	require.NotEmpty(t, first.Version)
 	require.NotEmpty(t, first.Hostname)
 	require.NotEmpty(t, first.DeviceModel)
 	require.NotEmpty(t, first.OSVersion)

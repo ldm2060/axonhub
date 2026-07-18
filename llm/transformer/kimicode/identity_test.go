@@ -18,9 +18,9 @@ func TestBuildIdentityHeadersMatchesOfficialCLI(t *testing.T) {
 	}
 
 	want := map[string]string{
-		"User-Agent":         "kimi-code-cli/0.26.0",
+		"User-Agent":         "kimi-code-cli/0.27.0",
 		"X-Msh-Platform":     "kimi_code_cli",
-		"X-Msh-Version":      "0.26.0",
+		"X-Msh-Version":      "0.27.0",
 		"X-Msh-Device-Name":  "desktop",
 		"X-Msh-Device-Model": "Windows 10.0.26200 x64",
 		"X-Msh-Os-Version":   "10.0.26200",
