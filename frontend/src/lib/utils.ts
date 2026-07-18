@@ -15,5 +15,5 @@ export const extractNumberIDAsNumber = (id: string) => {
 };
 
 export const buildGUID = (type: string, id: string) => {
-  return `gid://axonhub/${type}/${id}`;
+  return `gid://axonhub/${type}/${extractNumberID(id)}`;
 };

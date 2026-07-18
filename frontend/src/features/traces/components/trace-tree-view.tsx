@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, ChevronDown, Workflow, ChevronsDownUp, ExternalLink, Filter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { buildGUID, cn } from '@/lib/utils';
+import { cn, extractNumberID } from '@/lib/utils';
 import { formatNumber } from '@/utils/format-number';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -177,7 +177,7 @@ function SegmentRow({
 
   const handleViewRequest = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `/project/requests/${encodeURIComponent(buildGUID('Request', String(segment.id)))}`;
+    const url = `/project/requests/${encodeURIComponent(extractNumberID(String(segment.id)))}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
