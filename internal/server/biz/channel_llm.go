@@ -1197,8 +1197,13 @@ func (svc *ChannelService) refreshOAuthToken(ctx context.Context, ch *ent.Channe
 	updated.OAuth = refreshed
 
 	_, err := svc.entFromContext(ctx).Channel.UpdateOneID(ch.ID).SetCredentials(updated).Save(ctx)
+	if err != nil {
+		return err
+	}
 
-	return err
+	svc.asyncReloadChannels()
+
+	return nil
 }
 
 // GetModelEntries returns all models this channel can handle, RequestModel -> Entry

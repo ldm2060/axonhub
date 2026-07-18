@@ -126,6 +126,10 @@ func parseOAuthHTTPError(httpErr *httpclient.Error) (*oauth.OAuthCredentials, er
 }
 
 func parseToken(body []byte) (*oauth.OAuthCredentials, error) {
+	return parseTokenWithRefreshToken(body, "")
+}
+
+func parseTokenWithRefreshToken(body []byte, fallbackRefreshToken string) (*oauth.OAuthCredentials, error) {
 	var token oauth.TokenResponse
 	if err := json.Unmarshal(body, &token); err != nil {
 		return nil, fmt.Errorf("decode token response: %w", err)
@@ -136,6 +140,9 @@ func parseToken(body []byte) (*oauth.OAuthCredentials, error) {
 			return nil, &providerError
 		}
 		return nil, errors.New("token response missing access_token")
+	}
+	if token.RefreshToken == "" {
+		token.RefreshToken = fallbackRefreshToken
 	}
 	if token.RefreshToken == "" {
 		return nil, errors.New("token response missing refresh_token")

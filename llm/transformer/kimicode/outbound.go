@@ -258,7 +258,11 @@ func (e *retryingExecutor) DoStream(ctx context.Context, request *httpclient.Req
 }
 
 func (e *retryingExecutor) refreshAndReplace(ctx context.Context, request *httpclient.Request) error {
-	credentials, err := e.tokens.ForceRefresh(ctx)
+	failedAccessToken := ""
+	if request.Auth != nil {
+		failedAccessToken = request.Auth.APIKey
+	}
+	credentials, err := e.tokens.ForceRefresh(ctx, failedAccessToken)
 	if err != nil {
 		return fmt.Errorf("Kimi Code login is required after upstream 401: %w", err)
 	}

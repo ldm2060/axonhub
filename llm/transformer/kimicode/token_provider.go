@@ -23,9 +23,10 @@ type TokenProvider struct {
 	identity    Identity
 	onRefreshed func(context.Context, *oauth.OAuthCredentials) error
 
-	mu    sync.RWMutex
-	creds *oauth.OAuthCredentials
-	sf    singleflight.Group
+	mu                 sync.RWMutex
+	creds              *oauth.OAuthCredentials
+	pendingPersistence *oauth.OAuthCredentials
+	sf                 singleflight.Group
 
 	autoMu     sync.Mutex
 	autoCancel context.CancelFunc
@@ -59,35 +60,49 @@ func NewTokenProvider(params TokenProviderParams) (*TokenProvider, error) {
 }
 
 func (p *TokenProvider) Get(ctx context.Context) (*oauth.OAuthCredentials, error) {
-	return p.ensure(ctx, false)
+	return p.ensure(ctx, false, "")
 }
 
-// ForceRefresh renews the token even if it has not yet expired. It is used for
-// the single replay permitted after an upstream 401.
-func (p *TokenProvider) ForceRefresh(ctx context.Context) (*oauth.OAuthCredentials, error) {
-	return p.ensure(ctx, true)
+// ForceRefresh renews the token used by a failed upstream request. If another
+// request has already replaced that access token, it reuses the newer bundle.
+func (p *TokenProvider) ForceRefresh(ctx context.Context, failedAccessTokens ...string) (*oauth.OAuthCredentials, error) {
+	failedAccessToken := ""
+	if len(failedAccessTokens) > 0 {
+		failedAccessToken = failedAccessTokens[0]
+	}
+	return p.ensure(ctx, true, failedAccessToken)
 }
 
-func (p *TokenProvider) ensure(ctx context.Context, force bool) (*oauth.OAuthCredentials, error) {
+func (p *TokenProvider) ensure(ctx context.Context, force bool, failedAccessToken string) (*oauth.OAuthCredentials, error) {
 	p.mu.RLock()
 	current := p.creds
+	pending := p.pendingPersistence
 	p.mu.RUnlock()
 	if current == nil {
 		return nil, errors.New("credentials are nil; Kimi Code login is required")
 	}
-	if !force && !current.IsExpired(time.Now()) {
+	if force && pending == nil && failedAccessToken != "" && current.AccessToken != failedAccessToken {
 		return current, nil
 	}
-	key := "refresh"
-	if force {
-		key = "force-refresh"
+	if !force && pending == nil && !current.IsExpired(time.Now()) {
+		return current, nil
 	}
-	result, err, _ := p.sf.Do(key, func() (any, error) {
+	result, err, _ := p.sf.Do("refresh", func() (any, error) {
 		p.mu.RLock()
 		active := p.creds
+		pending := p.pendingPersistence
 		p.mu.RUnlock()
 		if active == nil {
 			return nil, errors.New("credentials are nil; Kimi Code login is required")
+		}
+		if pending != nil {
+			if err := p.persist(ctx, pending); err != nil {
+				return nil, err
+			}
+			return pending, nil
+		}
+		if force && failedAccessToken != "" && active.AccessToken != failedAccessToken {
+			return active, nil
 		}
 		if !force && !active.IsExpired(time.Now()) {
 			return active, nil
@@ -101,11 +116,10 @@ func (p *TokenProvider) ensure(ctx context.Context, force bool) (*oauth.OAuthCre
 		}
 		p.mu.Lock()
 		p.creds = refreshed
+		p.pendingPersistence = refreshed
 		p.mu.Unlock()
-		if p.onRefreshed != nil {
-			if err := p.onRefreshed(ctx, refreshed); err != nil {
-				return nil, fmt.Errorf("persist refreshed Kimi Code credentials: %w", err)
-			}
+		if err := p.persist(ctx, refreshed); err != nil {
+			return nil, err
 		}
 		return refreshed, nil
 	})
@@ -117,6 +131,20 @@ func (p *TokenProvider) ensure(ctx context.Context, force bool) (*oauth.OAuthCre
 		return nil, fmt.Errorf("unexpected refreshed credential type %T", result)
 	}
 	return credentials, nil
+}
+
+func (p *TokenProvider) persist(ctx context.Context, credentials *oauth.OAuthCredentials) error {
+	if p.onRefreshed != nil {
+		if err := p.onRefreshed(ctx, credentials); err != nil {
+			return fmt.Errorf("persist refreshed Kimi Code credentials: %w", err)
+		}
+	}
+	p.mu.Lock()
+	if p.pendingPersistence == credentials {
+		p.pendingPersistence = nil
+	}
+	p.mu.Unlock()
+	return nil
 }
 
 func (p *TokenProvider) refresh(ctx context.Context, current *oauth.OAuthCredentials) (*oauth.OAuthCredentials, error) {
@@ -132,7 +160,7 @@ func (p *TokenProvider) refresh(ctx context.Context, current *oauth.OAuthCredent
 		}
 		response, err := p.httpClient.Do(ctx, request)
 		if err == nil {
-			refreshed, parseErr := parseToken(response.Body)
+			refreshed, parseErr := parseTokenWithRefreshToken(response.Body, current.RefreshToken)
 			if parseErr == nil {
 				refreshed.KimiCode = current.KimiCode
 				return refreshed, nil
@@ -212,6 +240,9 @@ func (p *TokenProvider) runAutoRefresh(ctx context.Context, refreshBefore, inter
 			// A background refresh must never bring down the channel runtime.
 		}
 	}()
+	if !p.runAutoRefreshOnce(ctx, refreshBefore) {
+		return
+	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -219,14 +250,26 @@ func (p *TokenProvider) runAutoRefresh(ctx context.Context, refreshBefore, inter
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			p.mu.RLock()
-			creds := p.creds
-			p.mu.RUnlock()
-			if creds != nil && time.Until(creds.ExpiresAt) <= refreshBefore {
-				_, _ = p.ensure(ctx, false)
+			if !p.runAutoRefreshOnce(ctx, refreshBefore) {
+				return
 			}
 		}
 	}
+}
+
+func (p *TokenProvider) runAutoRefreshOnce(ctx context.Context, refreshBefore time.Duration) bool {
+	p.mu.RLock()
+	creds := p.creds
+	pending := p.pendingPersistence
+	p.mu.RUnlock()
+	if pending != nil {
+		_, _ = p.ensure(ctx, false, "")
+		return ctx.Err() == nil
+	}
+	if creds != nil && time.Until(creds.ExpiresAt) <= refreshBefore {
+		_, _ = p.ensure(ctx, true, creds.AccessToken)
+	}
+	return ctx.Err() == nil
 }
 
 func (p *TokenProvider) StopAutoRefresh() {
