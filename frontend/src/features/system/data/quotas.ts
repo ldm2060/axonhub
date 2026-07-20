@@ -256,6 +256,121 @@ export type ProviderOpenCodeGoQuotaData = ProviderQuotaDataCommon & {
   };
 };
 
+export type KimiCodeUsageRow = {
+  label: string;
+  used: number;
+  limit: number;
+  resetAt?: string;
+  resetAfterSeconds?: number;
+};
+
+export type ProviderKimiCodeQuotaData = ProviderQuotaDataCommon & {
+  rows?: KimiCodeUsageRow[];
+  boosterWallet?: {
+    balanceCents: number;
+    totalCents: number;
+    monthlyChargeLimitEnabled: boolean;
+    monthlyChargeLimitCents: number;
+    monthlyUsedCents: number;
+    currency: string;
+  };
+};
+
+export type MinimaxModelRow = {
+  modelName: string;
+  intervalUsedPercent: number;
+  intervalTotalPercent: number;
+  intervalPercent: number;
+  intervalStatus: string;
+  intervalResetAt?: string;
+  weeklyUsedPercent: number;
+  weeklyTotalPercent: number;
+  weeklyPercent: number;
+  weeklyStatus: string;
+  weeklyResetAt?: string;
+  weeklyBoostPermille?: number;
+};
+
+export type ProviderMinimaxQuotaData = ProviderQuotaDataCommon & {
+  rows?: MinimaxModelRow[];
+};
+
+export type ZhipuWindowRow = {
+  window: string;
+  usedPercent: number;
+  status: string;
+  resetAt?: string;
+};
+
+export type ProviderZhipuQuotaData = ProviderQuotaDataCommon & {
+  rows?: ZhipuWindowRow[];
+  level?: string;
+};
+
+export type ClineQuotaWindow = {
+  items_count: number;
+  used_cost_units: number;
+  limit_cost_units: number;
+  remaining_cost_units: number;
+  credits_used: number;
+  usage_ratio?: number;
+  usage_percent?: number;
+  next_reset_at?: string | null;
+};
+
+type ClineBalance = {
+  raw_balance?: number | null;
+  unit_note?: string;
+};
+
+type ClineUsageFetch = {
+  pages: number;
+  items_seen: number;
+  truncated: boolean;
+};
+
+type ProviderClinePassQuotaData = ProviderQuotaDataCommon & {
+  model_scope: 'cline_pass_only' | 'mixed' | 'unknown';
+  status_basis: string;
+  pool: 'cline_pass';
+  pool_note?: string;
+  cost_scale: number;
+  balance: ClineBalance;
+  windows: {
+    last5h: ClineQuotaWindow;
+    last7d: ClineQuotaWindow;
+    last30d: ClineQuotaWindow;
+  };
+  usage_fetch: ClineUsageFetch;
+};
+
+type ProviderClineDirectQuotaData = ProviderQuotaDataCommon & {
+  model_scope: 'direct_only';
+  status_basis: string;
+  pool: 'direct_credit' | string;
+  pool_note?: string;
+  balance: ClineBalance;
+  cost_scale?: never;
+  windows?: never;
+  usage_fetch?: never;
+};
+
+type ProviderClineErrorQuotaData = ProviderQuotaDataCommon & {
+  model_scope?: undefined;
+  status_basis?: string;
+  pool?: string;
+  balance?: ClineBalance;
+  cost_scale?: never;
+  windows?: never;
+  usage_fetch?: never;
+};
+
+export type ProviderClineQuotaData = ProviderClinePassQuotaData | ProviderClineDirectQuotaData | ProviderClineErrorQuotaData;
+
+export function isClinePassPoolQuotaData(qd: ProviderClineQuotaData): qd is ProviderClinePassQuotaData {
+  return qd.pool === 'cline_pass';
+}
+
 export type ProviderQuotaChannel = {
   id: string;
   name: string;
@@ -303,7 +418,25 @@ export type ProviderQuotaChannel = {
       };
     }
   | {
-      type: 'openai';
+      type: 'moonshot_coding';
+      quotaStatus?: {
+        quotaData: ProviderKimiCodeQuotaData;
+      };
+    }
+  | {
+      type: 'minimax' | 'minimax_anthropic';
+      quotaStatus?: {
+        quotaData: ProviderMinimaxQuotaData;
+      };
+    }
+  | {
+      type: 'zhipu' | 'zhipu_anthropic';
+      quotaStatus?: {
+        quotaData: ProviderZhipuQuotaData;
+      };
+    }
+  | {
+      type: 'openai' | 'openai_responses';
       providerType: 'wafer';
       quotaStatus?: {
         quotaData: ProviderWaferQuotaData;
