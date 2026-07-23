@@ -22,6 +22,7 @@ import {
   bulkUpdateChannelOrderingResultSchema,
   channelSummaryConnectionSchema,
   ChannelSettings,
+  ProxyConfig,
   ChannelPolicies,
   ChannelModelPrice,
   SaveChannelModelPriceInput,
@@ -111,6 +112,7 @@ const CREATE_CHANNEL_MUTATION = `
           url
           username
           password
+          disableConnectionReuse
         }
         transformOptions {
           forceArrayInstructions
@@ -198,6 +200,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
           url
           username
           password
+          disableConnectionReuse
         }
         transformOptions {
           forceArrayInstructions
@@ -294,6 +297,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
           url
           username
           password
+          disableConnectionReuse
         }
         transformOptions {
           forceArrayInstructions
@@ -390,6 +394,7 @@ const UPDATE_CHANNEL_MUTATION = `
           url
           username
           password
+          disableConnectionReuse
         }
         transformOptions {
           forceArrayInstructions
@@ -709,6 +714,38 @@ const GET_CHANNEL_MODEL_PRICES_QUERY = `
               }
             }
           }
+          schedule {
+            timezone
+            overrides {
+              name
+              priority
+              when {
+                dailyTime {
+                  start
+                  end
+                }
+                weekdays
+                dateRange {
+                  start
+                  end
+                }
+              }
+              items {
+                itemCode
+                pricing {
+                  mode
+                  flatFee
+                  usagePerUnit
+                  usageTiered {
+                    tiers {
+                      upTo
+                      pricePerUnit
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -957,6 +994,7 @@ const QUERY_CHANNELS_QUERY = `
               url
               username
               password
+              disableConnectionReuse
             }
             transformOptions {
               forceArrayInstructions
@@ -1530,7 +1568,7 @@ export function useTestChannel(options?: { silent?: boolean }) {
     }: {
       channelID: string;
       modelID?: string;
-      proxy?: { type: string; url?: string; username?: string; password?: string };
+      proxy?: ProxyConfig;
     }) => {
       try {
         const data = await graphqlRequest<{

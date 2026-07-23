@@ -2097,6 +2097,7 @@ func (r *queryResolver) DailyUsageStatsByUser(ctx context.Context, days *int) ([
 	return response, nil
 }
 
+// UserUsageStats is the resolver for the userUsageStats field.
 func (r *queryResolver) UserUsageStats(ctx context.Context, timeRange biz.TimeRange, search *string, sortBy UserStatsSortField, sortOrder entgql.OrderDirection, page int, pageSize int) (*UserUsageStatsPayload, error) {
 	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadDashboard)
 

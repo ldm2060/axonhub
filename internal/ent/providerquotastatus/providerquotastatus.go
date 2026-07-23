@@ -105,15 +105,15 @@ const (
 	ProviderTypeCodex         ProviderType = "codex"
 	ProviderTypeGithubCopilot ProviderType = "github_copilot"
 	ProviderTypeNanogpt       ProviderType = "nanogpt"
+	ProviderTypeCline         ProviderType = "cline"
 	ProviderTypeWafer         ProviderType = "wafer"
 	ProviderTypeSynthetic     ProviderType = "synthetic"
 	ProviderTypeNeuralwatt    ProviderType = "neuralwatt"
-	ProviderTypeCline         ProviderType = "cline"
-	ProviderTypeZhipu         ProviderType = "zhipu"
 	ProviderTypeApertis       ProviderType = "apertis"
 	ProviderTypeOpencodeGo    ProviderType = "opencode_go"
 	ProviderTypeKimiCode      ProviderType = "kimi_code"
 	ProviderTypeMinimax       ProviderType = "minimax"
+	ProviderTypeZhipu         ProviderType = "zhipu"
 )
 
 func (pt ProviderType) String() string {

@@ -478,6 +478,36 @@ models:
   PromptWriteCacheVariantInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.PromptWriteCacheVariant
+  PriceSchedule:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.PriceSchedule
+  PriceScheduleInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.PriceSchedule
+  PriceOverride:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.PriceOverride
+  PriceOverrideInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.PriceOverride
+  OverrideWhen:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OverrideWhen
+  OverrideWhenInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OverrideWhen
+  DailyTimeRange:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.DailyTimeRange
+  DailyTimeRangeInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.DailyTimeRange
+  DateRange:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.DateRange
+  DateRangeInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.DateRange
   PricingMode:
     model:
       - github.com/ldm2060/axonhub/internal/objects.PricingMode
@@ -651,7 +681,7 @@ models:
       - github.com/ldm2060/axonhub/internal/server/biz.SystemChannelSettings
   UpdateSystemChannelSettingsInput:
     model:
-      - github.com/ldm2060/axonhub/internal/server/biz.SystemChannelSettings
+      - github.com/ldm2060/axonhub/internal/server/biz.UpdateSystemChannelSettings
   SystemGeneralSettings:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.SystemGeneralSettings

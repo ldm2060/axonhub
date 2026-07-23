@@ -305,6 +305,7 @@ const (
 	TypeOpencodeGo          Type = "opencode_go"
 	TypeOpencodeGoAnthropic Type = "opencode_go_anthropic"
 	TypeOllama              Type = "ollama"
+	TypeOllamaAnthropic     Type = "ollama_anthropic"
 	TypeEvolink             Type = "evolink"
 	TypeEvolinkAnthropic    Type = "evolink_anthropic"
 )
@@ -316,7 +317,7 @@ func (_type Type) String() string {
 // TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
 func TypeValidator(_type Type) error {
 	switch _type {
-	case TypeOpenai, TypeOpenaiResponses, TypeAtlascloud, TypeCline, TypeCodex, TypeVercel, TypeAnthropic, TypeAnthropicAWS, TypeAnthropicGcp, TypeGeminiOpenai, TypeGemini, TypeGeminiVertex, TypeDeepseek, TypeDeepseekAnthropic, TypeDeepinfra, TypeQiniu, TypeFireworks, TypeDoubao, TypeDoubaoAnthropic, TypeMoonshot, TypeMoonshotAnthropic, TypeZhipu, TypeZai, TypeZhipuAnthropic, TypeZaiAnthropic, TypeAnthropicFake, TypeOpenaiFake, TypeOpenrouter, TypeXiaomi, TypeXiaomiAnthropic, TypeXai, TypePpio, TypeSiliconflow, TypeVolcengine, TypeVolcengineAnthropic, TypeLongcat, TypeLongcatAnthropic, TypeMinimax, TypeMinimaxAnthropic, TypeAihubmix, TypeAihubmixAnthropic, TypeBurncloud, TypeModelscope, TypeBailian, TypeBailianAnthropic, TypeMoonshotCoding, TypeKimiCode, TypeJina, TypeGithub, TypeGithubCopilot, TypeClaudecode, TypeCerebras, TypeAntigravity, TypeNanogpt, TypeNanogptResponses, TypeOpencodeGo, TypeOpencodeGoAnthropic, TypeOllama, TypeEvolink, TypeEvolinkAnthropic:
+	case TypeOpenai, TypeOpenaiResponses, TypeAtlascloud, TypeCline, TypeCodex, TypeVercel, TypeAnthropic, TypeAnthropicAWS, TypeAnthropicGcp, TypeGeminiOpenai, TypeGemini, TypeGeminiVertex, TypeDeepseek, TypeDeepseekAnthropic, TypeDeepinfra, TypeQiniu, TypeFireworks, TypeDoubao, TypeDoubaoAnthropic, TypeMoonshot, TypeMoonshotAnthropic, TypeZhipu, TypeZai, TypeZhipuAnthropic, TypeZaiAnthropic, TypeAnthropicFake, TypeOpenaiFake, TypeOpenrouter, TypeXiaomi, TypeXiaomiAnthropic, TypeXai, TypePpio, TypeSiliconflow, TypeVolcengine, TypeVolcengineAnthropic, TypeLongcat, TypeLongcatAnthropic, TypeMinimax, TypeMinimaxAnthropic, TypeAihubmix, TypeAihubmixAnthropic, TypeBurncloud, TypeModelscope, TypeBailian, TypeBailianAnthropic, TypeMoonshotCoding, TypeKimiCode, TypeJina, TypeGithub, TypeGithubCopilot, TypeClaudecode, TypeCerebras, TypeAntigravity, TypeNanogpt, TypeNanogptResponses, TypeOpencodeGo, TypeOpencodeGoAnthropic, TypeOllama, TypeOllamaAnthropic, TypeEvolink, TypeEvolinkAnthropic:
 		return nil
 	default:
 		return fmt.Errorf("channel: invalid enum value for type field: %q", _type)
@@ -636,7 +637,6 @@ func ByQuotaMonitorBindings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpt
 		sqlgraph.OrderByNeighborTerms(s, newQuotaMonitorBindingsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -644,7 +644,6 @@ func newOwnerStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
 	)
 }
-
 func newRequestsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -652,7 +651,6 @@ func newRequestsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, RequestsTable, RequestsColumn),
 	)
 }
-
 func newExecutionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -660,7 +658,6 @@ func newExecutionsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionsTable, ExecutionsColumn),
 	)
 }
-
 func newUsageLogsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -668,7 +665,6 @@ func newUsageLogsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageLogsTable, UsageLogsColumn),
 	)
 }
-
 func newChannelProbesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -676,7 +672,6 @@ func newChannelProbesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, ChannelProbesTable, ChannelProbesColumn),
 	)
 }
-
 func newChannelModelPricesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -684,7 +679,6 @@ func newChannelModelPricesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, ChannelModelPricesTable, ChannelModelPricesColumn),
 	)
 }
-
 func newProviderQuotaStatusStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -692,7 +686,6 @@ func newProviderQuotaStatusStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2O, false, ProviderQuotaStatusTable, ProviderQuotaStatusColumn),
 	)
 }
-
 func newUsageMonitorChannelsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -700,7 +693,6 @@ func newUsageMonitorChannelsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, UsageMonitorChannelsTable, UsageMonitorChannelsColumn),
 	)
 }
-
 func newQuotaMonitorBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),

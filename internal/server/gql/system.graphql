@@ -311,6 +311,8 @@ type ChannelModelAutoSyncSetting {
 type SystemChannelSettings {
   probe: ChannelProbeSetting!
   autoSync: ChannelModelAutoSyncSetting!
+  testSystemPrompt: String!
+  testUserPrompt: String!
 }
 
 input UpdateChannelProbeSettingInput {
@@ -325,6 +327,8 @@ input UpdateChannelModelAutoSyncSettingInput {
 input UpdateSystemChannelSettingsInput {
   probe: UpdateChannelProbeSettingInput
   autoSync: UpdateChannelModelAutoSyncSettingInput
+  testSystemPrompt: String
+  testUserPrompt: String
 }
 
 type SystemGeneralSettings {
