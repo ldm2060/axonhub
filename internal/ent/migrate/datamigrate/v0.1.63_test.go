@@ -14,7 +14,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
 )
 
-func TestV1_0_0_Beta6_NormalizesLegacySystemRoles(t *testing.T) {
+func TestV0_1_63_NormalizesLegacySystemRoles(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:legacy-system-role?mode=memory&_fk=0")
 	defer client.Close()
 
@@ -23,9 +23,9 @@ func TestV1_0_0_Beta6_NormalizesLegacySystemRoles(t *testing.T) {
 	legacyRole = client.Role.UpdateOne(legacyRole).ClearProjectID().SaveX(ctx)
 	require.Nil(t, legacyRole.ProjectID)
 
-	err := datamigrate.NewV1_0_0_Beta6().Migrate(ctx, client)
+	err := datamigrate.NewV0_1_63().Migrate(ctx, client)
 	require.NoError(t, err)
-	err = datamigrate.NewV1_0_0_Beta6().Migrate(ctx, client)
+	err = datamigrate.NewV0_1_63().Migrate(ctx, client)
 	require.NoError(t, err)
 
 	legacyRole = client.Role.GetX(ctx, legacyRole.ID)
@@ -37,7 +37,7 @@ func TestV1_0_0_Beta6_NormalizesLegacySystemRoles(t *testing.T) {
 	require.True(t, ent.IsConstraintError(err))
 }
 
-func TestV1_0_0_Beta6_MergesDuplicateSystemRoles(t *testing.T) {
+func TestV0_1_63_MergesDuplicateSystemRoles(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:duplicate-system-role?mode=memory&_fk=0")
 	defer client.Close()
 
@@ -51,7 +51,7 @@ func TestV1_0_0_Beta6_MergesDuplicateSystemRoles(t *testing.T) {
 	client.UserRole.Create().SetUserID(firstUser.ID).SetRoleID(canonical.ID).ExecX(ctx)
 	client.UserRole.Create().SetUserID(secondUser.ID).SetRoleID(duplicate.ID).ExecX(ctx)
 
-	require.NoError(t, datamigrate.NewV1_0_0_Beta6().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_1_63().Migrate(ctx, client))
 
 	roles := client.Role.Query().Where(role.LevelEQ(role.LevelSystem), role.NameEQ("admin")).AllX(ctx)
 	require.Len(t, roles, 1)
@@ -63,7 +63,7 @@ func TestV1_0_0_Beta6_MergesDuplicateSystemRoles(t *testing.T) {
 	require.True(t, ent.IsNotFound(err))
 }
 
-func TestV1_0_0_Beta6_RejectsDuplicateRolesWithDifferentScopes(t *testing.T) {
+func TestV0_1_63_RejectsDuplicateRolesWithDifferentScopes(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:conflicting-system-role?mode=memory&_fk=0")
 	defer client.Close()
 
@@ -73,7 +73,7 @@ func TestV1_0_0_Beta6_RejectsDuplicateRolesWithDifferentScopes(t *testing.T) {
 	second := client.Role.Create().SetName("admin").SetScopes([]string{"write"}).SaveX(ctx)
 	client.Role.UpdateOne(second).ClearProjectID().ExecX(ctx)
 
-	err := datamigrate.NewV1_0_0_Beta6().Migrate(ctx, client)
+	err := datamigrate.NewV0_1_63().Migrate(ctx, client)
 	require.ErrorContains(t, err, "different scopes")
 
 	roles := client.Role.Query().Where(role.LevelEQ(role.LevelSystem), role.NameEQ("admin")).AllX(ctx)

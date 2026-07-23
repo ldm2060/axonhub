@@ -12,21 +12,21 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/userrole"
 )
 
-// V1_0_0_Beta6 implements DataMigrator for version 1.0.0-beta6 migration.
-type V1_0_0_Beta6 struct{}
+// V0_1_63 implements DataMigrator for version v0.1.63 migration.
+type V0_1_63 struct{}
 
-// NewV1_0_0_Beta6 creates the v1.0.0-beta6 data migrator.
-func NewV1_0_0_Beta6() DataMigrator {
-	return &V1_0_0_Beta6{}
+// NewV0_1_63 creates the v0.1.63 data migrator.
+func NewV0_1_63() DataMigrator {
+	return &V0_1_63{}
 }
 
 // Version returns the migration version.
-func (v *V1_0_0_Beta6) Version() string {
-	return "v1.0.0-beta6"
+func (v *V0_1_63) Version() string {
+	return "v0.1.63"
 }
 
 // Migrate normalizes legacy system role project IDs to the system sentinel.
-func (v *V1_0_0_Beta6) Migrate(ctx context.Context, client *ent.Client) (err error) {
+func (v *V0_1_63) Migrate(ctx context.Context, client *ent.Client) (err error) {
 	ctx = authz.WithSystemBypass(ctx, "database-migrate")
 	ctx, tx, err := client.OpenTx(ctx)
 	if err != nil {
