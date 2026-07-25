@@ -7,11 +7,11 @@ import (
 type Usage struct {
 	InputTokens       int64 `json:"input_tokens"`
 	InputTokenDetails struct {
+		// CacheWriteTokens is the number of input tokens written to the prompt cache.
+		CacheWriteTokens int64 `json:"cache_write_tokens"`
+		// CachedTokens is the number of input tokens retrieved from the prompt cache.
 		CachedTokens int64 `json:"cached_tokens"`
 
-		// CacheWriteTokens is the official OpenAI prompt cache-write token count
-		// (input_tokens_details.cache_write_tokens), billed independently.
-		CacheWriteTokens int64 `json:"cache_write_tokens,omitempty"`
 	} `json:"input_tokens_details"`
 	OutputTokens       int64 `json:"output_tokens"`
 	OutputTokenDetails struct {

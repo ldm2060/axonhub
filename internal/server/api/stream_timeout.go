@@ -126,11 +126,20 @@ func (w *streamEventWaiter) Next() streamNextResult {
 		return streamNextResult{}
 	}
 
+	// Check context before starting a read. If already canceled,
+	// return immediately so the caller can drain the stream directly
+	// without losing events to the background goroutine.
+	select {
+	case <-w.ctx.Done():
+		w.done = true
+		return streamNextResult{err: w.ctx.Err()}
+	default:
+	}
+
 	w.startRead()
 	select {
 	case <-w.ctx.Done():
 		w.done = true
-		_ = w.stream.Close()
 		return streamNextResult{err: w.ctx.Err()}
 	case <-timerChannel(w.idleTimer):
 		w.done = true
@@ -148,6 +157,18 @@ func (w *streamEventWaiter) Next() streamNextResult {
 			w.done = true
 		}
 		return result
+	}
+}
+
+// DrainBuffered returns any event already read by the background goroutine
+// but not yet consumed by Next(). Used after context cancellation to avoid
+// losing events that were read before the cancel was observed.
+func (w *streamEventWaiter) DrainBuffered() streamNextResult {
+	select {
+	case result := <-w.resultCh:
+		return result
+	default:
+		return streamNextResult{}
 	}
 }
 

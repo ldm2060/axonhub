@@ -371,6 +371,12 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 // StreamErrorFormatter formats a stream error into a JSON-serializable object for SSE error events.
 type StreamErrorFormatter func(ctx context.Context, err error) any
 
+// maxStreamEventsAfterCancel bounds how many events the stream writers drain after
+// the request context is canceled. Draining lets persistence wrappers observe a
+// buffered terminal event, but streams are expected to end promptly on cancellation;
+// the cap only guards against implementations that ignore it.
+const maxStreamEventsAfterCancel = 256
+
 // WriteSSEStream writes stream events as Server-Sent Events (SSE) with default error formatting.
 func WriteSSEStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
 	WriteSSEStreamWithOptionsAndErrorFormatter(c, stream, StreamWriteOptions{}, FormatStreamError)
@@ -407,6 +413,7 @@ func WriteSSEStreamWithOptionsAndErrorFormatter(c *gin.Context, stream streams.S
 	c.Writer.Flush()
 
 	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
+	eventsAfterCancel := 0
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
@@ -428,6 +435,28 @@ func WriteSSEStreamWithOptionsAndErrorFormatter(c *gin.Context, stream streams.S
 
 		if result.err != nil {
 			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+				// Drain remaining buffered events so the request is marked
+				// completed rather than canceled when the client disconnects
+				// right after the terminal event.
+				if buffered := waiter.DrainBuffered(); buffered.ok {
+					c.SSEvent(buffered.event.Type, buffered.event.Data)
+					c.Writer.Flush()
+				}
+				for stream.Next() {
+					eventsAfterCancel++
+					if eventsAfterCancel > maxStreamEventsAfterCancel {
+						clientDisconnected = true
+						log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
+							log.Int("events_after_cancel", eventsAfterCancel))
+						return
+					}
+					cur := stream.Current()
+					c.SSEvent(cur.Type, cur.Data)
+					c.Writer.Flush()
+				}
+				if err := stream.Err(); err != nil && !errors.Is(err, context.Canceled) {
+					log.Warn(ctx, "Stream error after client disconnected", log.Cause(err))
+				}
 				clientDisconnected = true
 				log.Warn(ctx, "Context done, stopping stream", log.Cause(result.err))
 				return
@@ -470,6 +499,22 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 		if !result.ok {
 			if result.err != nil {
 				if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+					// Drain remaining buffered events so the request is marked
+					// completed rather than canceled when the client disconnects
+					// right after the terminal event.
+					eventsAfterCancel := 0
+					for stream.Next() {
+						eventsAfterCancel++
+						if eventsAfterCancel > maxStreamEventsAfterCancel {
+							clientDisconnected = true
+							log.Warn(ctx, "Binary stream still producing after cancellation, aborting drain",
+								log.Int("events_after_cancel", eventsAfterCancel))
+							return
+						}
+					}
+					if err := stream.Err(); err != nil && !errors.Is(err, context.Canceled) {
+						log.Warn(ctx, "Binary stream error after client disconnected", log.Cause(err))
+					}
 					clientDisconnected = true
 					log.Warn(ctx, "Context done, stopping binary stream", log.Cause(result.err))
 					return
