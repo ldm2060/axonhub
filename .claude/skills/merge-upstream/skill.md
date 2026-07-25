@@ -42,12 +42,26 @@ Upstream ships schema changes via two mechanisms in this repo:
 When upstream adds a migration:
 
 - Check whether the migrated field/column already exists in our schema under a different name or type. If so, the migration must be rewritten to target *our* column, or skipped if it's a no-op against our schema.
-- **Derive the new migration version from our latest git tag, NOT from the existing migration file names or from upstream's version label.** This is the single most error-prone step — getting it wrong wedges the semver gate. Do it by running `git fetch --tags` then `git tag --sort=-v:refname | grep -E '^v0\.1\.' | head -1` (filter to our `v0.1.x` series; upstream `v1.0.0-beta*` tags are a different track and must be ignored). The new migration's `Version()` is the **next patch** after that tag (e.g. latest tag `v0.1.62` → new migration `v0.1.63`). Naming a migration off the highest *existing file* under `datamigrate/` is wrong — files there are sparse (we have `v0.1.10`, `v0.1.34`, `v0.1.35`, ... not a contiguous run), so the highest file is almost always far behind the real latest release tag. Always go to the tag. Also update `internal/build/VERSION` to the same version. Never reuse upstream's label verbatim (e.g. `v1.0.0-beta6`, `v0.2.0`) — those are on upstream's version track and will either never run or run at the wrong time for our users.
+- **Rename the migration to our version track.** This is the #1 mistake in past merges — do it right:
+  1. `git fetch --tags`
+  2. `git tag --sort=-v:refname | grep -E '^v0\.1\.' | head -1` → e.g. `v0.1.62`
+  3. New version = that tag + 1 patch → `v0.1.63`
+  4. Rename the migration file: `v1.0.0-beta6.go` → `v0.1.63.go` (and `_test.go`)
+  5. In the `.go` file, replace the struct/func/version string: `V1_0_0_Beta6`/`NewV1_0_0_Beta6`/`"v1.0.0-beta6"` → `V0_1_63`/`NewV0_1_63`/`"v0.1.63"`
+  6. In `migrator.go`, replace `NewV1_0_0_Beta6()` → `NewV0_1_63()`
+  7. Update `internal/build/VERSION` to the same `v0.1.63`
+  8. `git rm` the old upstream-named files, `git add` the new ones
+
+  **Common mistakes to avoid:**
+  - ❌ Guessing from existing migration files under `datamigrate/` (they are sparse — `v0.1.10, v0.1.34, v0.1.35` — far behind the real latest release)
+  - ❌ Reusing upstream's label verbatim (`v1.0.0-beta6`, `v0.2.0`, etc.) — different version track, will misfire the semver gate
+  - ❌ Looking at `internal/build/VERSION` before fixing it — it still holds upstream's label after the merge
+
 - Register any new `DataMigrator` in `NewMigrator` in version order.
 - If upstream's migration assumes a clean upstream schema (columns we don't have, or columns we added that upstream doesn't know about), adapt the SQL/Go to our actual schema. A migration that `ALTER TABLE`-s a non-existent column will fail at startup.
 - Never delete or reorder existing registered migrations — users on older versions still need them. Only append.
 
-**Why:** the migration runs on startup against whatever schema and system version the user's DB holds. A migration written for upstream's schema track will either crash on our column names or silently no-op past real data, leaving the DB in a half-migrated state. The semver gate means a wrongly-tagged version either runs when it shouldn't or never runs when it should. We have been bitten specifically by guessing the version from filenames instead of tags — the next version is always `latest v0.1.x tag + 1 patch`, derived from `git tag`, nothing else.
+**Why:** the migration runs on startup against whatever schema and system version the user's DB holds. The semver gate means a wrongly-tagged version either runs when it shouldn't or never runs when it should. Past incidents: (1) blindly kept upstream's `v1.0.0-beta6`; (2) derived `v0.1.36` from the highest migration filename instead of the latest git tag (`v0.1.62` → should have been `v0.1.63`). Both were caught by the user post-commit. The correct procedure is always: **latest `v0.1.x` tag + 1**, nothing else.
 
 ## Hazard 3 — Upstream reimplemented a feature we already shipped
 
@@ -69,12 +83,13 @@ Do not commit until the merge is verified end-to-end on a running instance, incl
 
 Sequence:
 
-1. `go build ./...` and `cd llm && go build ./...` — both must compile.
-2. `golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && golangci-lint run ...` — must pass.
-3. `go test ./...` and `cd llm && go test ./...` — must pass.
-4. `go build -o axonhub.exe ./cmd/axonhub/`, stop the running `axonhub.exe`, start the new one. Watch startup logs for migration execution and errors — the datamigrate `Migrator` runs at boot; a failing migration surfaces here.
-5. Open the app in the browser, exercise the affected pages, check for errors (console + network).
-6. **Upgrade-path check:** if any Hazard 2 migration was added or modified, verify against the old-version instance kept on the local machine (a real running instance of the previous release with its own DB, not a fresh DB). Point the new binary at that old instance's DB — or start the old instance, confirm it boots, then upgrade it in place to the new binary — and confirm migrations run and the app is functional afterward. This catches the case where migrations are correct on a fresh DB but break on real old data.
+1. **Migration version sanity check (do this FIRST, before build/test):** if any migration was added/renamed in Hazard 2, re-run `git tag --sort=-v:refname | grep -E '^v0\.1\.' | head -1` and confirm the migration's `Version()` string, filename, `migrator.go` registration, and `internal/build/VERSION` all equal `latest_tag + 1 patch`. If they don't match, fix before doing anything else — do not build/test/commit a wrongly-versioned migration.
+2. `go build ./...` and `cd llm && go build ./...` — both must compile.
+3. `golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && golangci-lint run ...` — must pass.
+4. `go test ./...` and `cd llm && go test ./...` — must pass.
+5. `go build -o axonhub.exe ./cmd/axonhub/`, stop the running `axonhub.exe`, start the new one. Watch startup logs for migration execution and errors — the datamigrate `Migrator` runs at boot; a failing migration surfaces here.
+6. Open the app in the browser, exercise the affected pages, check for errors (console + network).
+7. **Upgrade-path check:** if any Hazard 2 migration was added or modified, verify against the old-version instance kept on the local machine (a real running instance of the previous release with its own DB, not a fresh DB). Point the new binary at that old instance's DB — or start the old instance, confirm it boots, then upgrade it in place to the new binary — and confirm migrations run and the app is functional afterward. This catches the case where migrations are correct on a fresh DB but break on real old data.
 
 If any step fails, fix before committing. A merge that compiles but fails migration on a real DB is worse than no merge — it wedges users on startup.
 
