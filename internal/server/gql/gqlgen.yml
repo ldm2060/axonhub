@@ -730,6 +730,9 @@ models:
   QuotaEnforcementMode:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.QuotaEnforcementMode
+  TraceStickyMode:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.TraceStickyMode
   TriggerGcCleanupInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/gc.TriggerGcCleanupInput
