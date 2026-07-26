@@ -162,21 +162,17 @@ export function ChannelQuotaMonitorBinding({
   const removeLabel = t('channels.quotaMonitorBinding.remove');
 
   return (
-    <div className='space-y-4'>
-      <div>
-        <h3 className='text-lg font-medium'>{t('channels.quotaMonitorBinding.title')}</h3>
-        <p className='text-muted-foreground text-sm'>{t('channels.quotaMonitorBinding.description')}</p>
-      </div>
-
-      <div className='flex items-center space-x-2'>
+    <div className='space-y-2'>
+      <div className='flex items-center gap-2'>
         <Switch checked={enabled} onCheckedChange={onEnabledChange} />
-        <Label>{t('channels.quotaMonitorBinding.enabled')}</Label>
+        <Label className='text-sm'>{t('channels.quotaMonitorBinding.enabled')}</Label>
       </div>
+      <p className='text-muted-foreground text-xs'>{t('channels.quotaMonitorBinding.description')}</p>
 
       {enabled && (
-        <>
-          <div className='space-y-2'>
-            <Label>{t('channels.quotaMonitorBinding.strategy')}</Label>
+        <div className='space-y-3 rounded-md border p-3'>
+          <div className='space-y-1.5'>
+            <Label className='text-sm'>{t('channels.quotaMonitorBinding.strategy')}</Label>
             <Select value={strategy} onValueChange={(v) => onStrategyChange(v as 'any' | 'all')}>
               <SelectTrigger>
                 <SelectValue />
@@ -236,7 +232,7 @@ export function ChannelQuotaMonitorBinding({
                   </div>
 
                   {/* Binding-level enabled toggle */}
-                  <div className='flex items-center space-x-2'>
+                  <div className='flex items-center gap-2'>
                     <Switch
                       checked={binding.enabled}
                       onCheckedChange={(v) => handleBindingFieldChange(bindingIndex, 'enabled', v)}
@@ -338,7 +334,7 @@ export function ChannelQuotaMonitorBinding({
               {t('channels.quotaMonitorBinding.addBinding')}
             </Button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

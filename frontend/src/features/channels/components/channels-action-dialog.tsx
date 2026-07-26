@@ -3120,7 +3120,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
                       {/* Client Restriction */}
                       <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                        <div className='pt-2 md:col-span-2' />
+                        <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                          {t('channels.clientRestriction.title')}
+                        </FormLabel>
                         <div className='md:col-span-6'>
                           <ChannelClientRestriction
                             channel={currentRow}
@@ -3134,7 +3136,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
                       {/* Auto-Disable Config */}
                       <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                        <div className='pt-2 md:col-span-2' />
+                        <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                          {t('channels.autoDisable.title')}
+                        </FormLabel>
                         <div className='md:col-span-6'>
                           <ChannelAutoDisableConfig
                             channel={currentRow}
@@ -3153,7 +3157,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                       {/* Quota Monitor Binding (edit mode only) */}
                       {isEdit && (
                         <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                          <div className='pt-2 md:col-span-2' />
+                          <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                            {t('channels.quotaMonitorBinding.title')}
+                          </FormLabel>
                           <div className='md:col-span-6'>
                             <ChannelQuotaMonitorBinding
                               enabled={quotaBindingEnabled}
