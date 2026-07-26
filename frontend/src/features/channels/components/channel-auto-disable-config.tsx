@@ -94,10 +94,15 @@ export function ChannelAutoDisableConfig({ channel, onUpdate }: ChannelAutoDisab
         <p className='text-muted-foreground text-sm'>{t('channels.autoDisable.description')}</p>
       </div>
 
-      <div className='space-y-2'>
-        <Label>{t('channels.autoDisable.mode.inheritGlobal')}</Label>
+      <div className='flex items-center justify-between gap-4'>
+        <div className='space-y-0.5'>
+          <Label htmlFor='channel-auto-disable-mode' className='text-base'>
+            {t('channels.autoDisable.mode.label')}
+          </Label>
+          <div className='text-muted-foreground text-sm'>{t('channels.autoDisable.mode.description')}</div>
+        </div>
         <Select value={mode} onValueChange={handleModeChange}>
-          <SelectTrigger>
+          <SelectTrigger id='channel-auto-disable-mode' className='w-56 shrink-0'>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -110,9 +115,14 @@ export function ChannelAutoDisableConfig({ channel, onUpdate }: ChannelAutoDisab
 
       {mode === 'CUSTOM' && (
         <>
-          <div className='flex items-center space-x-2'>
-            <Switch checked={enabled} onCheckedChange={handleEnabledChange} />
-            <Label>{t('channels.autoDisable.enabled.label')}</Label>
+          <div className='flex items-center justify-between gap-4'>
+            <div className='space-y-0.5'>
+              <Label htmlFor='channel-auto-disable-enabled' className='text-base'>
+                {t('channels.autoDisable.enabled.label')}
+              </Label>
+              <div className='text-muted-foreground text-sm'>{t('channels.autoDisable.enabled.description')}</div>
+            </div>
+            <Switch id='channel-auto-disable-enabled' checked={enabled} onCheckedChange={handleEnabledChange} />
           </div>
 
           {enabled && (

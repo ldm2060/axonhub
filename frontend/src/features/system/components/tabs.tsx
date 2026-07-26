@@ -22,23 +22,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'streaming' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
 
-const systemTabKeys = new Set<SystemTabKey>([
-  'general',
-  'security',
-  'brand',
-  'storage',
-  'retry',
-  'webhook',
-  'proxy',
-  'quota',
-  'backup',
-  'diagnostics',
-  'about',
-]);
-
-function isSystemTabKey(value: string | undefined): value is SystemTabKey {
-  return value !== undefined && systemTabKeys.has(value as SystemTabKey);
-}
+const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['backup', 'diagnostics']);
 
 interface SystemSettingsTabsProps {
   initialTab?: string;
@@ -47,7 +31,7 @@ interface SystemSettingsTabsProps {
 export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
   const { t } = useTranslation();
   const { isOwner } = usePermissions();
-  const [activeTab, setActiveTab] = useState<SystemTabKey>('general');
+  const [activeTab, setActiveTab] = useState<string>('general');
   const tabListRef = useRef<HTMLDivElement>(null);
   const horizontalScrollRef = useHorizontalScroll<HTMLDivElement>();
   const setTabListRef = useCallback(
@@ -63,10 +47,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       return;
     }
 
-    if (
-      !isSystemTabKey(initialTab) ||
-      (!isOwner && (initialTab === 'backup' || initialTab === 'diagnostics'))
-    ) {
+    if (!isOwner && OWNER_ONLY_TABS.has(initialTab)) {
       setActiveTab('general');
       return;
     }
@@ -96,13 +77,11 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
     <Tabs
       value={activeTab}
       onValueChange={(value) => {
-        if (!isSystemTabKey(value)) return;
-        const nextTab = value;
-        if (!isOwner && (nextTab === 'backup' || nextTab === 'diagnostics')) {
+        if (!isOwner && OWNER_ONLY_TABS.has(value)) {
           setActiveTab('general');
           return;
         }
-        setActiveTab(nextTab);
+        setActiveTab(value);
       }}
       className='w-full'
     >

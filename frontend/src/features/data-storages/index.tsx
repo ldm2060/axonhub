@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
@@ -85,7 +85,8 @@ function DataStoragesContent() {
     resetCursor();
   };
 
-  const columns = createColumns(t, defaultDataStorageID ?? undefined);
+  // Memoize columns to prevent infinite re-renders (React #185)
+  const columns = useMemo(() => createColumns(t, defaultDataStorageID ?? undefined), [t, defaultDataStorageID]);
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>

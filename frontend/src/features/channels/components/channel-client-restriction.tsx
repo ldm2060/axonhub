@@ -44,10 +44,15 @@ export function ChannelClientRestriction({ channel, onUpdate }: ChannelClientRes
         <p className='text-muted-foreground text-sm'>{t('channels.clientRestriction.description')}</p>
       </div>
 
-      <div className='space-y-2'>
-        <Label>{t('system.retry.clientRestriction.label')}</Label>
+      <div className='flex items-center justify-between gap-4'>
+        <div className='space-y-0.5'>
+          <Label htmlFor='channel-client-restriction' className='text-base'>
+            {t('system.retry.clientRestriction.label')}
+          </Label>
+          <div className='text-muted-foreground text-sm'>{t('system.retry.clientRestriction.description')}</div>
+        </div>
         <Select value={value} onValueChange={handleChange}>
-          <SelectTrigger>
+          <SelectTrigger id='channel-client-restriction' className='w-56 shrink-0'>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -57,11 +62,11 @@ export function ChannelClientRestriction({ channel, onUpdate }: ChannelClientRes
             <SelectItem value='strict'>{t('channels.clientRestriction.strict')}</SelectItem>
           </SelectContent>
         </Select>
-        <p className='text-muted-foreground text-sm'>
-          {value === 'lenient' && t('system.retry.clientRestriction.documentation.lenient')}
-          {value === 'strict' && t('system.retry.clientRestriction.documentation.strict')}
-          {value === 'off' && t('system.retry.clientRestriction.documentation.off')}
-        </p>
+      </div>
+      <div className='text-muted-foreground text-sm'>
+        {value === 'lenient' && t('system.retry.clientRestriction.documentation.lenient')}
+        {value === 'strict' && t('system.retry.clientRestriction.documentation.strict')}
+        {value === 'off' && t('system.retry.clientRestriction.documentation.off')}
       </div>
     </div>
   );
