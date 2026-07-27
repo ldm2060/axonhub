@@ -28,6 +28,11 @@ func TestClientDetector_DetectClient(t *testing.T) {
 			userAgent: "claude-cli/1.0.0",
 			want:      "claude",
 		},
+		{
+			name:      "Claude TUI variant",
+			userAgent: "claude-tui/1.0.0",
+			want:      "claude",
+		},
 
 		// Codex
 		{
@@ -38,6 +43,11 @@ func TestClientDetector_DetectClient(t *testing.T) {
 		{
 			name:      "Codex CLI",
 			userAgent: "codex-cli/1.0",
+			want:      "codex",
+		},
+		{
+			name:      "Codex TUI variant",
+			userAgent: "codex-tui/1.0",
 			want:      "codex",
 		},
 

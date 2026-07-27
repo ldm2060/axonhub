@@ -40,24 +40,11 @@ func (d *ClientDetector) DetectClient(userAgent string, referer string) string {
 
 	ua := strings.ToLower(userAgent)
 
-	patterns := map[string]string{
-		"claude-cli":  "claude",
-		"claudecode":  "claude",
-		"codex-cli":   "codex",
-		"codex":       "codex",
-		"antigravity": "antigravity",
-		"opencode":    "opencode",
-	}
-
-	orderedPatterns := []string{
-		"claude-cli", "claudecode",
-		"codex-cli", "codex",
-		"antigravity", "opencode",
-	}
-
-	for _, pattern := range orderedPatterns {
-		if strings.Contains(ua, pattern) {
-			return patterns[pattern]
+	// Match by bare keyword so suffix variants (-cli, -tui, -desktop, …) are
+	// all detected, not just the "-cli" form.
+	for _, client := range SupportedCodingClients {
+		if strings.Contains(ua, client) {
+			return client
 		}
 	}
 
