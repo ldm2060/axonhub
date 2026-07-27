@@ -1,6 +1,9 @@
 package biz
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 type ClientDetector struct{}
 
@@ -21,6 +24,14 @@ var ChannelClientMapping = map[string][]string{
 	"moonshot_coding":       {"opencode"},
 	"kimi_code":             {"claude", "codex", "opencode"},
 }
+
+// API-format families used for strict-mode matching on generic channels
+// (channel types without a precise ChannelClientMapping entry).
+const (
+	familyAnthropic = "anthropic"
+	familyOpenAI    = "openai"
+	familyGemini    = "gemini"
+)
 
 func (d *ClientDetector) DetectClient(userAgent string, referer string) string {
 	if userAgent == "" {
@@ -87,17 +98,36 @@ func (d *ClientDetector) IsStrictClientAllowed(userAgent string, referer string,
 		return false
 	}
 
-	allowedClients, exists := ChannelClientMapping[channelType]
-	if !exists {
-		// Unmapped channel types fall back to lenient supported-client check
-		return d.IsLenientClientAllowed(userAgent, referer)
+	// Coding-agent channels keep precise per-channel client lists; every other
+	// (generic) channel matches the client by API-format family.
+	if allowedClients, exists := ChannelClientMapping[channelType]; exists {
+		return slices.Contains(allowedClients, client)
 	}
 
-	for _, allowedClient := range allowedClients {
-		if client == allowedClient {
-			return true
-		}
-	}
+	return clientFamily(client) == channelFamily(channelType)
+}
 
-	return false
+func clientFamily(client string) string {
+	switch client {
+	case "claude":
+		return familyAnthropic
+	case "codex", "opencode":
+		return familyOpenAI
+	case "antigravity":
+		return familyGemini
+	default:
+		return ""
+	}
+}
+
+func channelFamily(channelType string) string {
+	lt := strings.ToLower(channelType)
+	switch {
+	case strings.Contains(lt, "anthropic"):
+		return familyAnthropic
+	case strings.Contains(lt, "gemini"):
+		return familyGemini
+	default:
+		return familyOpenAI
+	}
 }

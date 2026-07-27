@@ -331,17 +331,71 @@ func TestClientDetector_IsStrictClientAllowed(t *testing.T) {
 			want:        false,
 		},
 
-		// Unknown channel type falls back to lenient supported-client check
+		// Generic channel types: strict mode matches by API-format family
 		{
-			name:        "Unknown channel type with supported client falls back to lenient",
+			name:        "Claude allowed on anthropic channel (same family)",
 			userAgent:   "ClaudeCode/1.0.0",
-			channelType: "unknown_channel",
+			channelType: "anthropic",
 			want:        true,
 		},
 		{
-			name:        "Unknown channel type with unsupported client still rejected",
+			name:        "Claude allowed on deepseek_anthropic channel (same family)",
+			userAgent:   "claude-cli/2.1.158",
+			channelType: "deepseek_anthropic",
+			want:        true,
+		},
+		{
+			name:        "Claude rejected on openai channel (cross-family)",
+			userAgent:   "claude-cli/2.1.158",
+			channelType: "openai",
+			want:        false,
+		},
+		{
+			name:        "Codex allowed on openai channel (same family)",
+			userAgent:   "Codex/1.0",
+			channelType: "openai",
+			want:        true,
+		},
+		{
+			name:        "Codex rejected on anthropic channel (cross-family)",
+			userAgent:   "Codex/1.0",
+			channelType: "anthropic",
+			want:        false,
+		},
+		{
+			name:        "OpenCode allowed on openai channel (OpenAI family)",
+			userAgent:   "OpenCode/1.0",
+			channelType: "openai",
+			want:        true,
+		},
+		{
+			name:        "OpenCode rejected on anthropic channel (cross-family)",
+			userAgent:   "OpenCode/1.0",
+			channelType: "anthropic",
+			want:        false,
+		},
+		{
+			name:        "Antigravity allowed on gemini channel (same family)",
+			userAgent:   "Antigravity/1.0",
+			channelType: "gemini",
+			want:        true,
+		},
+		{
+			name:        "Antigravity allowed on gemini_openai channel (Gemini family by name)",
+			userAgent:   "Antigravity/1.0",
+			channelType: "gemini_openai",
+			want:        true,
+		},
+		{
+			name:        "Antigravity rejected on openai channel (cross-family)",
+			userAgent:   "Antigravity/1.0",
+			channelType: "openai",
+			want:        false,
+		},
+		{
+			name:        "Unknown client rejected on generic channel",
 			userAgent:   "Mozilla/5.0",
-			channelType: "unknown_channel",
+			channelType: "openai",
 			want:        false,
 		},
 

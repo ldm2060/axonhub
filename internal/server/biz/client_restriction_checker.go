@@ -55,11 +55,17 @@ func (c *ClientRestrictionChecker) GetRejectionReason(
 	case ClientRestrictionLenient:
 		return "This channel requires requests from supported coding agent clients (Claude, Codex, Antigravity, OpenCode)"
 	case ClientRestrictionStrict:
-		allowedClients := ChannelClientMapping[channelType]
-		if len(allowedClients) == 0 {
-			return "This channel requires requests from supported coding agent clients (Claude, Codex, Antigravity, OpenCode)"
+		if allowedClients, exists := ChannelClientMapping[channelType]; exists && len(allowedClients) > 0 {
+			return "This channel only accepts requests from: " + strings.Join(allowedClients, ", ")
 		}
-		return "This channel only accepts requests from: " + strings.Join(allowedClients, ", ")
+		switch channelFamily(channelType) {
+		case familyAnthropic:
+			return "This channel only accepts requests from Anthropic-family clients (Claude)"
+		case familyGemini:
+			return "This channel only accepts requests from Gemini-family clients (Antigravity)"
+		default:
+			return "This channel only accepts requests from OpenAI-family clients (Codex, OpenCode)"
+		}
 	default:
 		return "Client restriction check failed"
 	}
