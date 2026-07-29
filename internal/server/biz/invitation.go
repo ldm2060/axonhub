@@ -190,6 +190,7 @@ func (s *InvitationService) RegisterInvitation(ctx context.Context, token, email
 				SetPassword(hashedPassword).
 				SetFirstName(strings.TrimSpace(firstName)).
 				SetLastName(strings.TrimSpace(lastName)).
+				SetStatus(user.StatusActivated).
 				Save(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to create user: %w", err)
