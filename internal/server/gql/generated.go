@@ -101,6 +101,9 @@ type ResolverRoot interface {
 	Role() RoleResolver
 	Segment() SegmentResolver
 	System() SystemResolver
+	SystemRuntimeOverview() SystemRuntimeOverviewResolver
+	SystemRuntimeSample() SystemRuntimeSampleResolver
+	SystemRuntimeStats() SystemRuntimeStatsResolver
 	Thread() ThreadResolver
 	Trace() TraceResolver
 	UsageLog() UsageLogResolver
@@ -1617,6 +1620,7 @@ type ComplexityRoot struct {
 		SystemChannelSettings        func(childComplexity int) int
 		SystemGeneralSettings        func(childComplexity int) int
 		SystemModelSettings          func(childComplexity int) int
+		SystemRuntimeOverview        func(childComplexity int) int
 		SystemStatus                 func(childComplexity int) int
 		SystemVersion                func(childComplexity int) int
 		Systems                      func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) int
@@ -2009,6 +2013,72 @@ type ComplexityRoot struct {
 		FallbackToChannelsOnModelNotFound func(childComplexity int) int
 		ModelBlacklistRegex               func(childComplexity int) int
 		QueryAllChannelModels             func(childComplexity int) int
+	}
+
+	SystemRuntimeHost struct {
+		Architecture     func(childComplexity int) int
+		GoVersion        func(childComplexity int) int
+		Hostname         func(childComplexity int) int
+		KernelVersion    func(childComplexity int) int
+		LogicalCPUs      func(childComplexity int) int
+		OS               func(childComplexity int) int
+		Platform         func(childComplexity int) int
+		PlatformVersion  func(childComplexity int) int
+		ProcessID        func(childComplexity int) int
+		ServiceStartedAt func(childComplexity int) int
+		Version          func(childComplexity int) int
+	}
+
+	SystemRuntimeOverview struct {
+		CollectedAt           func(childComplexity int) int
+		Current               func(childComplexity int) int
+		History               func(childComplexity int) int
+		Host                  func(childComplexity int) int
+		RetentionSeconds      func(childComplexity int) int
+		SampleIntervalSeconds func(childComplexity int) int
+		Stats                 func(childComplexity int) int
+	}
+
+	SystemRuntimeSample struct {
+		DiskTotalBytes                func(childComplexity int) int
+		DiskUsedBytes                 func(childComplexity int) int
+		DiskUsedPercent               func(childComplexity int) int
+		GCPauseMilliseconds           func(childComplexity int) int
+		GcCount                       func(childComplexity int) int
+		Goroutines                    func(childComplexity int) int
+		Load1                         func(childComplexity int) int
+		Load15                        func(childComplexity int) int
+		Load5                         func(childComplexity int) int
+		MemoryTotalBytes              func(childComplexity int) int
+		MemoryUsedBytes               func(childComplexity int) int
+		MemoryUsedPercent             func(childComplexity int) int
+		NetworkReceiveBytesPerSecond  func(childComplexity int) int
+		NetworkTransmitBytesPerSecond func(childComplexity int) int
+		ProcessCPUPercent             func(childComplexity int) int
+		ProcessHeapAllocBytes         func(childComplexity int) int
+		ProcessRssBytes               func(childComplexity int) int
+		ProcessThreads                func(childComplexity int) int
+		ServiceUptimeSeconds          func(childComplexity int) int
+		SystemCPUPercent              func(childComplexity int) int
+		Timestamp                     func(childComplexity int) int
+	}
+
+	SystemRuntimeStats struct {
+		MemoryUsedAveragePercent          func(childComplexity int) int
+		MemoryUsedMaxPercent              func(childComplexity int) int
+		NetworkReceivePeakBytesPerSecond  func(childComplexity int) int
+		NetworkReceiveTotalBytes          func(childComplexity int) int
+		NetworkTransmitPeakBytesPerSecond func(childComplexity int) int
+		NetworkTransmitTotalBytes         func(childComplexity int) int
+		PeriodEnd                         func(childComplexity int) int
+		PeriodStart                       func(childComplexity int) int
+		ProcessCPUAveragePercent          func(childComplexity int) int
+		ProcessCPUMaxPercent              func(childComplexity int) int
+		ProcessRSSAverageBytes            func(childComplexity int) int
+		ProcessRssMaxBytes                func(childComplexity int) int
+		SampleCount                       func(childComplexity int) int
+		SystemCPUAveragePercent           func(childComplexity int) int
+		SystemCPUMaxPercent               func(childComplexity int) int
 	}
 
 	SystemStatus struct {
@@ -2794,6 +2864,7 @@ type QueryResolver interface {
 	MyProjects(ctx context.Context) ([]*ent.Project, error)
 	PreviewGcCleanup(ctx context.Context, input gc.TriggerGcCleanupInput) ([]*gc.GcCleanupPreviewItem, error)
 	SystemStatus(ctx context.Context) (*SystemStatus, error)
+	SystemRuntimeOverview(ctx context.Context) (*biz.SystemRuntimeOverview, error)
 	BrandSettings(ctx context.Context) (*BrandSettings, error)
 	StoragePolicy(ctx context.Context) (*biz.StoragePolicy, error)
 	RetryPolicy(ctx context.Context) (*biz.RetryPolicy, error)
@@ -2905,6 +2976,26 @@ type SegmentResolver interface {
 }
 type SystemResolver interface {
 	ID(ctx context.Context, obj *ent.System) (*objects.GUID, error)
+}
+type SystemRuntimeOverviewResolver interface {
+	SampleIntervalSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error)
+	RetentionSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error)
+}
+type SystemRuntimeSampleResolver interface {
+	MemoryUsedBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	MemoryTotalBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	ProcessRssBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	ProcessHeapAllocBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	NetworkReceiveBytesPerSecond(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	NetworkTransmitBytesPerSecond(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+
+	DiskUsedBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+	DiskTotalBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error)
+
+	GcCount(ctx context.Context, obj *biz.SystemRuntimeSample) (int, error)
+}
+type SystemRuntimeStatsResolver interface {
+	ProcessRssMaxBytes(ctx context.Context, obj *biz.SystemRuntimeStats) (float64, error)
 }
 type ThreadResolver interface {
 	ID(ctx context.Context, obj *ent.Thread) (*objects.GUID, error)
@@ -10178,6 +10269,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.SystemModelSettings(childComplexity), true
+	case "Query.systemRuntimeOverview":
+		if e.complexity.Query.SystemRuntimeOverview == nil {
+			break
+		}
+
+		return e.complexity.Query.SystemRuntimeOverview(childComplexity), true
 	case "Query.systemStatus":
 		if e.complexity.Query.SystemStatus == nil {
 			break
@@ -11767,6 +11864,334 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SystemModelSettings.QueryAllChannelModels(childComplexity), true
+
+	case "SystemRuntimeHost.architecture":
+		if e.complexity.SystemRuntimeHost.Architecture == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.Architecture(childComplexity), true
+	case "SystemRuntimeHost.goVersion":
+		if e.complexity.SystemRuntimeHost.GoVersion == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.GoVersion(childComplexity), true
+	case "SystemRuntimeHost.hostname":
+		if e.complexity.SystemRuntimeHost.Hostname == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.Hostname(childComplexity), true
+	case "SystemRuntimeHost.kernelVersion":
+		if e.complexity.SystemRuntimeHost.KernelVersion == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.KernelVersion(childComplexity), true
+	case "SystemRuntimeHost.logicalCpus":
+		if e.complexity.SystemRuntimeHost.LogicalCPUs == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.LogicalCPUs(childComplexity), true
+	case "SystemRuntimeHost.os":
+		if e.complexity.SystemRuntimeHost.OS == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.OS(childComplexity), true
+	case "SystemRuntimeHost.platform":
+		if e.complexity.SystemRuntimeHost.Platform == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.Platform(childComplexity), true
+	case "SystemRuntimeHost.platformVersion":
+		if e.complexity.SystemRuntimeHost.PlatformVersion == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.PlatformVersion(childComplexity), true
+	case "SystemRuntimeHost.processId":
+		if e.complexity.SystemRuntimeHost.ProcessID == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.ProcessID(childComplexity), true
+	case "SystemRuntimeHost.serviceStartedAt":
+		if e.complexity.SystemRuntimeHost.ServiceStartedAt == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.ServiceStartedAt(childComplexity), true
+	case "SystemRuntimeHost.version":
+		if e.complexity.SystemRuntimeHost.Version == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeHost.Version(childComplexity), true
+
+	case "SystemRuntimeOverview.collectedAt":
+		if e.complexity.SystemRuntimeOverview.CollectedAt == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.CollectedAt(childComplexity), true
+	case "SystemRuntimeOverview.current":
+		if e.complexity.SystemRuntimeOverview.Current == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.Current(childComplexity), true
+	case "SystemRuntimeOverview.history":
+		if e.complexity.SystemRuntimeOverview.History == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.History(childComplexity), true
+	case "SystemRuntimeOverview.host":
+		if e.complexity.SystemRuntimeOverview.Host == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.Host(childComplexity), true
+	case "SystemRuntimeOverview.retentionSeconds":
+		if e.complexity.SystemRuntimeOverview.RetentionSeconds == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.RetentionSeconds(childComplexity), true
+	case "SystemRuntimeOverview.sampleIntervalSeconds":
+		if e.complexity.SystemRuntimeOverview.SampleIntervalSeconds == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.SampleIntervalSeconds(childComplexity), true
+	case "SystemRuntimeOverview.stats":
+		if e.complexity.SystemRuntimeOverview.Stats == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeOverview.Stats(childComplexity), true
+
+	case "SystemRuntimeSample.diskTotalBytes":
+		if e.complexity.SystemRuntimeSample.DiskTotalBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.DiskTotalBytes(childComplexity), true
+	case "SystemRuntimeSample.diskUsedBytes":
+		if e.complexity.SystemRuntimeSample.DiskUsedBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.DiskUsedBytes(childComplexity), true
+	case "SystemRuntimeSample.diskUsedPercent":
+		if e.complexity.SystemRuntimeSample.DiskUsedPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.DiskUsedPercent(childComplexity), true
+	case "SystemRuntimeSample.gcPauseMilliseconds":
+		if e.complexity.SystemRuntimeSample.GCPauseMilliseconds == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.GCPauseMilliseconds(childComplexity), true
+	case "SystemRuntimeSample.gcCount":
+		if e.complexity.SystemRuntimeSample.GcCount == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.GcCount(childComplexity), true
+	case "SystemRuntimeSample.goroutines":
+		if e.complexity.SystemRuntimeSample.Goroutines == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.Goroutines(childComplexity), true
+	case "SystemRuntimeSample.load1":
+		if e.complexity.SystemRuntimeSample.Load1 == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.Load1(childComplexity), true
+	case "SystemRuntimeSample.load15":
+		if e.complexity.SystemRuntimeSample.Load15 == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.Load15(childComplexity), true
+	case "SystemRuntimeSample.load5":
+		if e.complexity.SystemRuntimeSample.Load5 == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.Load5(childComplexity), true
+	case "SystemRuntimeSample.memoryTotalBytes":
+		if e.complexity.SystemRuntimeSample.MemoryTotalBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.MemoryTotalBytes(childComplexity), true
+	case "SystemRuntimeSample.memoryUsedBytes":
+		if e.complexity.SystemRuntimeSample.MemoryUsedBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.MemoryUsedBytes(childComplexity), true
+	case "SystemRuntimeSample.memoryUsedPercent":
+		if e.complexity.SystemRuntimeSample.MemoryUsedPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.MemoryUsedPercent(childComplexity), true
+	case "SystemRuntimeSample.networkReceiveBytesPerSecond":
+		if e.complexity.SystemRuntimeSample.NetworkReceiveBytesPerSecond == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.NetworkReceiveBytesPerSecond(childComplexity), true
+	case "SystemRuntimeSample.networkTransmitBytesPerSecond":
+		if e.complexity.SystemRuntimeSample.NetworkTransmitBytesPerSecond == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.NetworkTransmitBytesPerSecond(childComplexity), true
+	case "SystemRuntimeSample.processCpuPercent":
+		if e.complexity.SystemRuntimeSample.ProcessCPUPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.ProcessCPUPercent(childComplexity), true
+	case "SystemRuntimeSample.processHeapAllocBytes":
+		if e.complexity.SystemRuntimeSample.ProcessHeapAllocBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.ProcessHeapAllocBytes(childComplexity), true
+	case "SystemRuntimeSample.processRssBytes":
+		if e.complexity.SystemRuntimeSample.ProcessRssBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.ProcessRssBytes(childComplexity), true
+	case "SystemRuntimeSample.processThreads":
+		if e.complexity.SystemRuntimeSample.ProcessThreads == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.ProcessThreads(childComplexity), true
+	case "SystemRuntimeSample.serviceUptimeSeconds":
+		if e.complexity.SystemRuntimeSample.ServiceUptimeSeconds == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.ServiceUptimeSeconds(childComplexity), true
+	case "SystemRuntimeSample.systemCpuPercent":
+		if e.complexity.SystemRuntimeSample.SystemCPUPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.SystemCPUPercent(childComplexity), true
+	case "SystemRuntimeSample.timestamp":
+		if e.complexity.SystemRuntimeSample.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeSample.Timestamp(childComplexity), true
+
+	case "SystemRuntimeStats.memoryUsedAveragePercent":
+		if e.complexity.SystemRuntimeStats.MemoryUsedAveragePercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.MemoryUsedAveragePercent(childComplexity), true
+	case "SystemRuntimeStats.memoryUsedMaxPercent":
+		if e.complexity.SystemRuntimeStats.MemoryUsedMaxPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.MemoryUsedMaxPercent(childComplexity), true
+	case "SystemRuntimeStats.networkReceivePeakBytesPerSecond":
+		if e.complexity.SystemRuntimeStats.NetworkReceivePeakBytesPerSecond == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.NetworkReceivePeakBytesPerSecond(childComplexity), true
+	case "SystemRuntimeStats.networkReceiveTotalBytes":
+		if e.complexity.SystemRuntimeStats.NetworkReceiveTotalBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.NetworkReceiveTotalBytes(childComplexity), true
+	case "SystemRuntimeStats.networkTransmitPeakBytesPerSecond":
+		if e.complexity.SystemRuntimeStats.NetworkTransmitPeakBytesPerSecond == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.NetworkTransmitPeakBytesPerSecond(childComplexity), true
+	case "SystemRuntimeStats.networkTransmitTotalBytes":
+		if e.complexity.SystemRuntimeStats.NetworkTransmitTotalBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.NetworkTransmitTotalBytes(childComplexity), true
+	case "SystemRuntimeStats.periodEnd":
+		if e.complexity.SystemRuntimeStats.PeriodEnd == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.PeriodEnd(childComplexity), true
+	case "SystemRuntimeStats.periodStart":
+		if e.complexity.SystemRuntimeStats.PeriodStart == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.PeriodStart(childComplexity), true
+	case "SystemRuntimeStats.processCpuAveragePercent":
+		if e.complexity.SystemRuntimeStats.ProcessCPUAveragePercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.ProcessCPUAveragePercent(childComplexity), true
+	case "SystemRuntimeStats.processCpuMaxPercent":
+		if e.complexity.SystemRuntimeStats.ProcessCPUMaxPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.ProcessCPUMaxPercent(childComplexity), true
+	case "SystemRuntimeStats.processRssAverageBytes":
+		if e.complexity.SystemRuntimeStats.ProcessRSSAverageBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.ProcessRSSAverageBytes(childComplexity), true
+	case "SystemRuntimeStats.processRssMaxBytes":
+		if e.complexity.SystemRuntimeStats.ProcessRssMaxBytes == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.ProcessRssMaxBytes(childComplexity), true
+	case "SystemRuntimeStats.sampleCount":
+		if e.complexity.SystemRuntimeStats.SampleCount == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.SampleCount(childComplexity), true
+	case "SystemRuntimeStats.systemCpuAveragePercent":
+		if e.complexity.SystemRuntimeStats.SystemCPUAveragePercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.SystemCPUAveragePercent(childComplexity), true
+	case "SystemRuntimeStats.systemCpuMaxPercent":
+		if e.complexity.SystemRuntimeStats.SystemCPUMaxPercent == nil {
+			break
+		}
+
+		return e.complexity.SystemRuntimeStats.SystemCPUMaxPercent(childComplexity), true
 
 	case "SystemStatus.isInitialized":
 		if e.complexity.SystemStatus.IsInitialized == nil {
@@ -39432,6 +39857,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteAPIKey(ctx context.Conte
 				return ec.fieldContext_APIKey_scopes(ctx, field)
 			case "profiles":
 				return ec.fieldContext_APIKey_profiles(ctx, field)
+			case "allowedIps":
+				return ec.fieldContext_APIKey_allowedIps(ctx, field)
 			case "user":
 				return ec.fieldContext_APIKey_user(ctx, field)
 			case "project":
@@ -53981,6 +54408,51 @@ func (ec *executionContext) fieldContext_Query_systemStatus(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_systemRuntimeOverview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_systemRuntimeOverview,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().SystemRuntimeOverview(ctx)
+		},
+		nil,
+		ec.marshalNSystemRuntimeOverview2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeOverview,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_systemRuntimeOverview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "collectedAt":
+				return ec.fieldContext_SystemRuntimeOverview_collectedAt(ctx, field)
+			case "sampleIntervalSeconds":
+				return ec.fieldContext_SystemRuntimeOverview_sampleIntervalSeconds(ctx, field)
+			case "retentionSeconds":
+				return ec.fieldContext_SystemRuntimeOverview_retentionSeconds(ctx, field)
+			case "host":
+				return ec.fieldContext_SystemRuntimeOverview_host(ctx, field)
+			case "current":
+				return ec.fieldContext_SystemRuntimeOverview_current(ctx, field)
+			case "stats":
+				return ec.fieldContext_SystemRuntimeOverview_stats(ctx, field)
+			case "history":
+				return ec.fieldContext_SystemRuntimeOverview_history(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemRuntimeOverview", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_brandSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -64470,6 +64942,1716 @@ func (ec *executionContext) fieldContext_SystemModelSettings_developerSettings(_
 				return ec.fieldContext_DeveloperModelSettings_associations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DeveloperModelSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_hostname(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_hostname,
+		func(ctx context.Context) (any, error) {
+			return obj.Hostname, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_hostname(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_os(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_os,
+		func(ctx context.Context) (any, error) {
+			return obj.OS, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_os(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_architecture(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_architecture,
+		func(ctx context.Context) (any, error) {
+			return obj.Architecture, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_architecture(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_platform(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_platform,
+		func(ctx context.Context) (any, error) {
+			return obj.Platform, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_platform(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_platformVersion(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_platformVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.PlatformVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_platformVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_kernelVersion(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_kernelVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.KernelVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_kernelVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_logicalCpus(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_logicalCpus,
+		func(ctx context.Context) (any, error) {
+			return obj.LogicalCPUs, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_logicalCpus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_processId(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_processId,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_processId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_goVersion(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_goVersion,
+		func(ctx context.Context) (any, error) {
+			return obj.GoVersion, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_goVersion(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_version(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_version,
+		func(ctx context.Context) (any, error) {
+			return obj.Version, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeHost_serviceStartedAt(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeHost) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeHost_serviceStartedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.ServiceStartedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeHost_serviceStartedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeHost",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_collectedAt(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_collectedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CollectedAt, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_collectedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_sampleIntervalSeconds(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_sampleIntervalSeconds,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeOverview().SampleIntervalSeconds(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_sampleIntervalSeconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_retentionSeconds(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_retentionSeconds,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeOverview().RetentionSeconds(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_retentionSeconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_host(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_host,
+		func(ctx context.Context) (any, error) {
+			return obj.Host, nil
+		},
+		nil,
+		ec.marshalNSystemRuntimeHost2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeHost,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_host(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hostname":
+				return ec.fieldContext_SystemRuntimeHost_hostname(ctx, field)
+			case "os":
+				return ec.fieldContext_SystemRuntimeHost_os(ctx, field)
+			case "architecture":
+				return ec.fieldContext_SystemRuntimeHost_architecture(ctx, field)
+			case "platform":
+				return ec.fieldContext_SystemRuntimeHost_platform(ctx, field)
+			case "platformVersion":
+				return ec.fieldContext_SystemRuntimeHost_platformVersion(ctx, field)
+			case "kernelVersion":
+				return ec.fieldContext_SystemRuntimeHost_kernelVersion(ctx, field)
+			case "logicalCpus":
+				return ec.fieldContext_SystemRuntimeHost_logicalCpus(ctx, field)
+			case "processId":
+				return ec.fieldContext_SystemRuntimeHost_processId(ctx, field)
+			case "goVersion":
+				return ec.fieldContext_SystemRuntimeHost_goVersion(ctx, field)
+			case "version":
+				return ec.fieldContext_SystemRuntimeHost_version(ctx, field)
+			case "serviceStartedAt":
+				return ec.fieldContext_SystemRuntimeHost_serviceStartedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemRuntimeHost", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_current(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_current,
+		func(ctx context.Context) (any, error) {
+			return obj.Current, nil
+		},
+		nil,
+		ec.marshalNSystemRuntimeSample2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeSample,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_current(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timestamp":
+				return ec.fieldContext_SystemRuntimeSample_timestamp(ctx, field)
+			case "systemCpuPercent":
+				return ec.fieldContext_SystemRuntimeSample_systemCpuPercent(ctx, field)
+			case "processCpuPercent":
+				return ec.fieldContext_SystemRuntimeSample_processCpuPercent(ctx, field)
+			case "memoryUsedPercent":
+				return ec.fieldContext_SystemRuntimeSample_memoryUsedPercent(ctx, field)
+			case "memoryUsedBytes":
+				return ec.fieldContext_SystemRuntimeSample_memoryUsedBytes(ctx, field)
+			case "memoryTotalBytes":
+				return ec.fieldContext_SystemRuntimeSample_memoryTotalBytes(ctx, field)
+			case "processRssBytes":
+				return ec.fieldContext_SystemRuntimeSample_processRssBytes(ctx, field)
+			case "processHeapAllocBytes":
+				return ec.fieldContext_SystemRuntimeSample_processHeapAllocBytes(ctx, field)
+			case "networkReceiveBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeSample_networkReceiveBytesPerSecond(ctx, field)
+			case "networkTransmitBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeSample_networkTransmitBytesPerSecond(ctx, field)
+			case "diskUsedPercent":
+				return ec.fieldContext_SystemRuntimeSample_diskUsedPercent(ctx, field)
+			case "diskUsedBytes":
+				return ec.fieldContext_SystemRuntimeSample_diskUsedBytes(ctx, field)
+			case "diskTotalBytes":
+				return ec.fieldContext_SystemRuntimeSample_diskTotalBytes(ctx, field)
+			case "load1":
+				return ec.fieldContext_SystemRuntimeSample_load1(ctx, field)
+			case "load5":
+				return ec.fieldContext_SystemRuntimeSample_load5(ctx, field)
+			case "load15":
+				return ec.fieldContext_SystemRuntimeSample_load15(ctx, field)
+			case "goroutines":
+				return ec.fieldContext_SystemRuntimeSample_goroutines(ctx, field)
+			case "processThreads":
+				return ec.fieldContext_SystemRuntimeSample_processThreads(ctx, field)
+			case "gcCount":
+				return ec.fieldContext_SystemRuntimeSample_gcCount(ctx, field)
+			case "gcPauseMilliseconds":
+				return ec.fieldContext_SystemRuntimeSample_gcPauseMilliseconds(ctx, field)
+			case "serviceUptimeSeconds":
+				return ec.fieldContext_SystemRuntimeSample_serviceUptimeSeconds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemRuntimeSample", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_stats(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_stats,
+		func(ctx context.Context) (any, error) {
+			return obj.Stats, nil
+		},
+		nil,
+		ec.marshalNSystemRuntimeStats2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeStats,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_stats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "periodStart":
+				return ec.fieldContext_SystemRuntimeStats_periodStart(ctx, field)
+			case "periodEnd":
+				return ec.fieldContext_SystemRuntimeStats_periodEnd(ctx, field)
+			case "sampleCount":
+				return ec.fieldContext_SystemRuntimeStats_sampleCount(ctx, field)
+			case "systemCpuAveragePercent":
+				return ec.fieldContext_SystemRuntimeStats_systemCpuAveragePercent(ctx, field)
+			case "systemCpuMaxPercent":
+				return ec.fieldContext_SystemRuntimeStats_systemCpuMaxPercent(ctx, field)
+			case "processCpuAveragePercent":
+				return ec.fieldContext_SystemRuntimeStats_processCpuAveragePercent(ctx, field)
+			case "processCpuMaxPercent":
+				return ec.fieldContext_SystemRuntimeStats_processCpuMaxPercent(ctx, field)
+			case "memoryUsedAveragePercent":
+				return ec.fieldContext_SystemRuntimeStats_memoryUsedAveragePercent(ctx, field)
+			case "memoryUsedMaxPercent":
+				return ec.fieldContext_SystemRuntimeStats_memoryUsedMaxPercent(ctx, field)
+			case "processRssAverageBytes":
+				return ec.fieldContext_SystemRuntimeStats_processRssAverageBytes(ctx, field)
+			case "processRssMaxBytes":
+				return ec.fieldContext_SystemRuntimeStats_processRssMaxBytes(ctx, field)
+			case "networkReceiveTotalBytes":
+				return ec.fieldContext_SystemRuntimeStats_networkReceiveTotalBytes(ctx, field)
+			case "networkTransmitTotalBytes":
+				return ec.fieldContext_SystemRuntimeStats_networkTransmitTotalBytes(ctx, field)
+			case "networkReceivePeakBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeStats_networkReceivePeakBytesPerSecond(ctx, field)
+			case "networkTransmitPeakBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeStats_networkTransmitPeakBytesPerSecond(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemRuntimeStats", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeOverview_history(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeOverview) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeOverview_history,
+		func(ctx context.Context) (any, error) {
+			return obj.History, nil
+		},
+		nil,
+		ec.marshalNSystemRuntimeSample2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeSampleᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeOverview_history(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeOverview",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timestamp":
+				return ec.fieldContext_SystemRuntimeSample_timestamp(ctx, field)
+			case "systemCpuPercent":
+				return ec.fieldContext_SystemRuntimeSample_systemCpuPercent(ctx, field)
+			case "processCpuPercent":
+				return ec.fieldContext_SystemRuntimeSample_processCpuPercent(ctx, field)
+			case "memoryUsedPercent":
+				return ec.fieldContext_SystemRuntimeSample_memoryUsedPercent(ctx, field)
+			case "memoryUsedBytes":
+				return ec.fieldContext_SystemRuntimeSample_memoryUsedBytes(ctx, field)
+			case "memoryTotalBytes":
+				return ec.fieldContext_SystemRuntimeSample_memoryTotalBytes(ctx, field)
+			case "processRssBytes":
+				return ec.fieldContext_SystemRuntimeSample_processRssBytes(ctx, field)
+			case "processHeapAllocBytes":
+				return ec.fieldContext_SystemRuntimeSample_processHeapAllocBytes(ctx, field)
+			case "networkReceiveBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeSample_networkReceiveBytesPerSecond(ctx, field)
+			case "networkTransmitBytesPerSecond":
+				return ec.fieldContext_SystemRuntimeSample_networkTransmitBytesPerSecond(ctx, field)
+			case "diskUsedPercent":
+				return ec.fieldContext_SystemRuntimeSample_diskUsedPercent(ctx, field)
+			case "diskUsedBytes":
+				return ec.fieldContext_SystemRuntimeSample_diskUsedBytes(ctx, field)
+			case "diskTotalBytes":
+				return ec.fieldContext_SystemRuntimeSample_diskTotalBytes(ctx, field)
+			case "load1":
+				return ec.fieldContext_SystemRuntimeSample_load1(ctx, field)
+			case "load5":
+				return ec.fieldContext_SystemRuntimeSample_load5(ctx, field)
+			case "load15":
+				return ec.fieldContext_SystemRuntimeSample_load15(ctx, field)
+			case "goroutines":
+				return ec.fieldContext_SystemRuntimeSample_goroutines(ctx, field)
+			case "processThreads":
+				return ec.fieldContext_SystemRuntimeSample_processThreads(ctx, field)
+			case "gcCount":
+				return ec.fieldContext_SystemRuntimeSample_gcCount(ctx, field)
+			case "gcPauseMilliseconds":
+				return ec.fieldContext_SystemRuntimeSample_gcPauseMilliseconds(ctx, field)
+			case "serviceUptimeSeconds":
+				return ec.fieldContext_SystemRuntimeSample_serviceUptimeSeconds(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemRuntimeSample", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_timestamp(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_timestamp,
+		func(ctx context.Context) (any, error) {
+			return obj.Timestamp, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_systemCpuPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_systemCpuPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.SystemCPUPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_systemCpuPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_processCpuPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_processCpuPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessCPUPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_processCpuPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_memoryUsedPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_memoryUsedPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.MemoryUsedPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_memoryUsedPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_memoryUsedBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_memoryUsedBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().MemoryUsedBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_memoryUsedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_memoryTotalBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_memoryTotalBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().MemoryTotalBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_memoryTotalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_processRssBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_processRssBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().ProcessRssBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_processRssBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_processHeapAllocBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_processHeapAllocBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().ProcessHeapAllocBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_processHeapAllocBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_networkReceiveBytesPerSecond(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_networkReceiveBytesPerSecond,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().NetworkReceiveBytesPerSecond(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_networkReceiveBytesPerSecond(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_networkTransmitBytesPerSecond(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_networkTransmitBytesPerSecond,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().NetworkTransmitBytesPerSecond(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_networkTransmitBytesPerSecond(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_diskUsedPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_diskUsedPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.DiskUsedPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_diskUsedPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_diskUsedBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_diskUsedBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().DiskUsedBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_diskUsedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_diskTotalBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_diskTotalBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().DiskTotalBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_diskTotalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_load1(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_load1,
+		func(ctx context.Context) (any, error) {
+			return obj.Load1, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_load1(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_load5(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_load5,
+		func(ctx context.Context) (any, error) {
+			return obj.Load5, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_load5(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_load15(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_load15,
+		func(ctx context.Context) (any, error) {
+			return obj.Load15, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_load15(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_goroutines(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_goroutines,
+		func(ctx context.Context) (any, error) {
+			return obj.Goroutines, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_goroutines(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_processThreads(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_processThreads,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessThreads, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_processThreads(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_gcCount(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_gcCount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeSample().GcCount(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_gcCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_gcPauseMilliseconds(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_gcPauseMilliseconds,
+		func(ctx context.Context) (any, error) {
+			return obj.GCPauseMilliseconds, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_gcPauseMilliseconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeSample_serviceUptimeSeconds(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeSample) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeSample_serviceUptimeSeconds,
+		func(ctx context.Context) (any, error) {
+			return obj.ServiceUptimeSeconds, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeSample_serviceUptimeSeconds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeSample",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_periodStart(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_periodStart,
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodStart, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_periodStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_periodEnd(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_periodEnd,
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodEnd, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_periodEnd(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_sampleCount(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_sampleCount,
+		func(ctx context.Context) (any, error) {
+			return obj.SampleCount, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_sampleCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_systemCpuAveragePercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_systemCpuAveragePercent,
+		func(ctx context.Context) (any, error) {
+			return obj.SystemCPUAveragePercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_systemCpuAveragePercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_systemCpuMaxPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_systemCpuMaxPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.SystemCPUMaxPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_systemCpuMaxPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_processCpuAveragePercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_processCpuAveragePercent,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessCPUAveragePercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_processCpuAveragePercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_processCpuMaxPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_processCpuMaxPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessCPUMaxPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_processCpuMaxPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_memoryUsedAveragePercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_memoryUsedAveragePercent,
+		func(ctx context.Context) (any, error) {
+			return obj.MemoryUsedAveragePercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_memoryUsedAveragePercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_memoryUsedMaxPercent(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_memoryUsedMaxPercent,
+		func(ctx context.Context) (any, error) {
+			return obj.MemoryUsedMaxPercent, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_memoryUsedMaxPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_processRssAverageBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_processRssAverageBytes,
+		func(ctx context.Context) (any, error) {
+			return obj.ProcessRSSAverageBytes, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_processRssAverageBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_processRssMaxBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_processRssMaxBytes,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.SystemRuntimeStats().ProcessRssMaxBytes(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_processRssMaxBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_networkReceiveTotalBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_networkReceiveTotalBytes,
+		func(ctx context.Context) (any, error) {
+			return obj.NetworkReceiveTotalBytes, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_networkReceiveTotalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_networkTransmitTotalBytes(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_networkTransmitTotalBytes,
+		func(ctx context.Context) (any, error) {
+			return obj.NetworkTransmitTotalBytes, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_networkTransmitTotalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_networkReceivePeakBytesPerSecond(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_networkReceivePeakBytesPerSecond,
+		func(ctx context.Context) (any, error) {
+			return obj.NetworkReceivePeakBytesPerSecond, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_networkReceivePeakBytesPerSecond(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemRuntimeStats_networkTransmitPeakBytesPerSecond(ctx context.Context, field graphql.CollectedField, obj *biz.SystemRuntimeStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemRuntimeStats_networkTransmitPeakBytesPerSecond,
+		func(ctx context.Context) (any, error) {
+			return obj.NetworkTransmitPeakBytesPerSecond, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemRuntimeStats_networkTransmitPeakBytesPerSecond(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemRuntimeStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -123106,6 +125288,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "systemRuntimeOverview":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_systemRuntimeOverview(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "brandSettings":
 			field := field
 
@@ -128150,6 +130354,784 @@ func (ec *executionContext) _SystemModelSettings(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._SystemModelSettings_developerSettings(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemRuntimeHostImplementors = []string{"SystemRuntimeHost"}
+
+func (ec *executionContext) _SystemRuntimeHost(ctx context.Context, sel ast.SelectionSet, obj *biz.SystemRuntimeHost) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemRuntimeHostImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemRuntimeHost")
+		case "hostname":
+			out.Values[i] = ec._SystemRuntimeHost_hostname(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "os":
+			out.Values[i] = ec._SystemRuntimeHost_os(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "architecture":
+			out.Values[i] = ec._SystemRuntimeHost_architecture(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "platform":
+			out.Values[i] = ec._SystemRuntimeHost_platform(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "platformVersion":
+			out.Values[i] = ec._SystemRuntimeHost_platformVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "kernelVersion":
+			out.Values[i] = ec._SystemRuntimeHost_kernelVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logicalCpus":
+			out.Values[i] = ec._SystemRuntimeHost_logicalCpus(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "processId":
+			out.Values[i] = ec._SystemRuntimeHost_processId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "goVersion":
+			out.Values[i] = ec._SystemRuntimeHost_goVersion(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._SystemRuntimeHost_version(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "serviceStartedAt":
+			out.Values[i] = ec._SystemRuntimeHost_serviceStartedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemRuntimeOverviewImplementors = []string{"SystemRuntimeOverview"}
+
+func (ec *executionContext) _SystemRuntimeOverview(ctx context.Context, sel ast.SelectionSet, obj *biz.SystemRuntimeOverview) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemRuntimeOverviewImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemRuntimeOverview")
+		case "collectedAt":
+			out.Values[i] = ec._SystemRuntimeOverview_collectedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sampleIntervalSeconds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeOverview_sampleIntervalSeconds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "retentionSeconds":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeOverview_retentionSeconds(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "host":
+			out.Values[i] = ec._SystemRuntimeOverview_host(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "current":
+			out.Values[i] = ec._SystemRuntimeOverview_current(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "stats":
+			out.Values[i] = ec._SystemRuntimeOverview_stats(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "history":
+			out.Values[i] = ec._SystemRuntimeOverview_history(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemRuntimeSampleImplementors = []string{"SystemRuntimeSample"}
+
+func (ec *executionContext) _SystemRuntimeSample(ctx context.Context, sel ast.SelectionSet, obj *biz.SystemRuntimeSample) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemRuntimeSampleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemRuntimeSample")
+		case "timestamp":
+			out.Values[i] = ec._SystemRuntimeSample_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "systemCpuPercent":
+			out.Values[i] = ec._SystemRuntimeSample_systemCpuPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processCpuPercent":
+			out.Values[i] = ec._SystemRuntimeSample_processCpuPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "memoryUsedPercent":
+			out.Values[i] = ec._SystemRuntimeSample_memoryUsedPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "memoryUsedBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_memoryUsedBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "memoryTotalBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_memoryTotalBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "processRssBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_processRssBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "processHeapAllocBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_processHeapAllocBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "networkReceiveBytesPerSecond":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_networkReceiveBytesPerSecond(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "networkTransmitBytesPerSecond":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_networkTransmitBytesPerSecond(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "diskUsedPercent":
+			out.Values[i] = ec._SystemRuntimeSample_diskUsedPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "diskUsedBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_diskUsedBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "diskTotalBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_diskTotalBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "load1":
+			out.Values[i] = ec._SystemRuntimeSample_load1(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "load5":
+			out.Values[i] = ec._SystemRuntimeSample_load5(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "load15":
+			out.Values[i] = ec._SystemRuntimeSample_load15(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "goroutines":
+			out.Values[i] = ec._SystemRuntimeSample_goroutines(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processThreads":
+			out.Values[i] = ec._SystemRuntimeSample_processThreads(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "gcCount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeSample_gcCount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "gcPauseMilliseconds":
+			out.Values[i] = ec._SystemRuntimeSample_gcPauseMilliseconds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "serviceUptimeSeconds":
+			out.Values[i] = ec._SystemRuntimeSample_serviceUptimeSeconds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemRuntimeStatsImplementors = []string{"SystemRuntimeStats"}
+
+func (ec *executionContext) _SystemRuntimeStats(ctx context.Context, sel ast.SelectionSet, obj *biz.SystemRuntimeStats) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemRuntimeStatsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemRuntimeStats")
+		case "periodStart":
+			out.Values[i] = ec._SystemRuntimeStats_periodStart(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "periodEnd":
+			out.Values[i] = ec._SystemRuntimeStats_periodEnd(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sampleCount":
+			out.Values[i] = ec._SystemRuntimeStats_sampleCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "systemCpuAveragePercent":
+			out.Values[i] = ec._SystemRuntimeStats_systemCpuAveragePercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "systemCpuMaxPercent":
+			out.Values[i] = ec._SystemRuntimeStats_systemCpuMaxPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processCpuAveragePercent":
+			out.Values[i] = ec._SystemRuntimeStats_processCpuAveragePercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processCpuMaxPercent":
+			out.Values[i] = ec._SystemRuntimeStats_processCpuMaxPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "memoryUsedAveragePercent":
+			out.Values[i] = ec._SystemRuntimeStats_memoryUsedAveragePercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "memoryUsedMaxPercent":
+			out.Values[i] = ec._SystemRuntimeStats_memoryUsedMaxPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processRssAverageBytes":
+			out.Values[i] = ec._SystemRuntimeStats_processRssAverageBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "processRssMaxBytes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._SystemRuntimeStats_processRssMaxBytes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "networkReceiveTotalBytes":
+			out.Values[i] = ec._SystemRuntimeStats_networkReceiveTotalBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "networkTransmitTotalBytes":
+			out.Values[i] = ec._SystemRuntimeStats_networkTransmitTotalBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "networkReceivePeakBytesPerSecond":
+			out.Values[i] = ec._SystemRuntimeStats_networkReceivePeakBytesPerSecond(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "networkTransmitPeakBytesPerSecond":
+			out.Values[i] = ec._SystemRuntimeStats_networkTransmitPeakBytesPerSecond(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -139494,6 +142476,76 @@ func (ec *executionContext) marshalNSystemOrderField2ᚖgithubᚗcomᚋldm2060�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalNSystemRuntimeHost2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeHost(ctx context.Context, sel ast.SelectionSet, v biz.SystemRuntimeHost) graphql.Marshaler {
+	return ec._SystemRuntimeHost(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSystemRuntimeOverview2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeOverview(ctx context.Context, sel ast.SelectionSet, v biz.SystemRuntimeOverview) graphql.Marshaler {
+	return ec._SystemRuntimeOverview(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSystemRuntimeOverview2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeOverview(ctx context.Context, sel ast.SelectionSet, v *biz.SystemRuntimeOverview) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SystemRuntimeOverview(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSystemRuntimeSample2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeSample(ctx context.Context, sel ast.SelectionSet, v biz.SystemRuntimeSample) graphql.Marshaler {
+	return ec._SystemRuntimeSample(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSystemRuntimeSample2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeSampleᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.SystemRuntimeSample) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSystemRuntimeSample2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeSample(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSystemRuntimeStats2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemRuntimeStats(ctx context.Context, sel ast.SelectionSet, v biz.SystemRuntimeStats) graphql.Marshaler {
+	return ec._SystemRuntimeStats(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNSystemStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐSystemStatus(ctx context.Context, sel ast.SelectionSet, v SystemStatus) graphql.Marshaler {

@@ -481,6 +481,72 @@ extend type Query {
   previewGcCleanup(input: TriggerGcCleanupInput!): [GcCleanupPreviewItem!]!
 }
 
+type SystemRuntimeHost {
+  hostname: String!
+  os: String!
+  architecture: String!
+  platform: String!
+  platformVersion: String!
+  kernelVersion: String!
+  logicalCpus: Int!
+  processId: Int!
+  goVersion: String!
+  version: String!
+  serviceStartedAt: Time!
+}
+
+type SystemRuntimeSample {
+  timestamp: Time!
+  systemCpuPercent: Float!
+  processCpuPercent: Float!
+  memoryUsedPercent: Float!
+  memoryUsedBytes: Float!
+  memoryTotalBytes: Float!
+  processRssBytes: Float!
+  processHeapAllocBytes: Float!
+  networkReceiveBytesPerSecond: Float!
+  networkTransmitBytesPerSecond: Float!
+  diskUsedPercent: Float!
+  diskUsedBytes: Float!
+  diskTotalBytes: Float!
+  load1: Float!
+  load5: Float!
+  load15: Float!
+  goroutines: Int!
+  processThreads: Int!
+  gcCount: Int!
+  gcPauseMilliseconds: Float!
+  serviceUptimeSeconds: Float!
+}
+
+type SystemRuntimeStats {
+  periodStart: Time!
+  periodEnd: Time!
+  sampleCount: Int!
+  systemCpuAveragePercent: Float!
+  systemCpuMaxPercent: Float!
+  processCpuAveragePercent: Float!
+  processCpuMaxPercent: Float!
+  memoryUsedAveragePercent: Float!
+  memoryUsedMaxPercent: Float!
+  processRssAverageBytes: Float!
+  processRssMaxBytes: Float!
+  networkReceiveTotalBytes: Float!
+  networkTransmitTotalBytes: Float!
+  networkReceivePeakBytesPerSecond: Float!
+  networkTransmitPeakBytesPerSecond: Float!
+}
+
+type SystemRuntimeOverview {
+  collectedAt: Time!
+  sampleIntervalSeconds: Int!
+  retentionSeconds: Int!
+  host: SystemRuntimeHost!
+  current: SystemRuntimeSample!
+  stats: SystemRuntimeStats!
+  history: [SystemRuntimeSample!]!
+}
+
 type SystemVersion {
   version: String!
   commit: String!
@@ -523,6 +589,7 @@ type ClearCachePayload {
 
 extend type Query {
   systemStatus: SystemStatus!
+  systemRuntimeOverview: SystemRuntimeOverview!
   brandSettings: BrandSettings!
   storagePolicy: StoragePolicy!
   retryPolicy: RetryPolicy!

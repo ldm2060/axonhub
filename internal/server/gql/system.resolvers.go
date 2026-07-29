@@ -432,6 +432,16 @@ func (r *queryResolver) SystemStatus(ctx context.Context) (*SystemStatus, error)
 	}, nil
 }
 
+// SystemRuntimeOverview is the resolver for the systemRuntimeOverview field.
+func (r *queryResolver) SystemRuntimeOverview(ctx context.Context) (*biz.SystemRuntimeOverview, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil || !user.IsOwner {
+		return nil, ErrNotOwner
+	}
+
+	return lo.ToPtr(r.memorySampler.RuntimeOverview()), nil
+}
+
 // BrandSettings is the resolver for the brandSettings field.
 func (r *queryResolver) BrandSettings(ctx context.Context) (*BrandSettings, error) {
 	brandName, err := r.systemService.BrandName(ctx)
@@ -695,7 +705,85 @@ func (r *queryResolver) EmailSettings(ctx context.Context) (*biz.EmailSettings, 
 	return es, nil
 }
 
+// SampleIntervalSeconds is the resolver for the sampleIntervalSeconds field.
+func (r *systemRuntimeOverviewResolver) SampleIntervalSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error) {
+	return obj.SampleInterval, nil
+}
+
+// RetentionSeconds is the resolver for the retentionSeconds field.
+func (r *systemRuntimeOverviewResolver) RetentionSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error) {
+	return obj.Retention, nil
+}
+
+// MemoryUsedBytes is the resolver for the memoryUsedBytes field.
+func (r *systemRuntimeSampleResolver) MemoryUsedBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.MemoryUsedBytes), nil
+}
+
+// MemoryTotalBytes is the resolver for the memoryTotalBytes field.
+func (r *systemRuntimeSampleResolver) MemoryTotalBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.MemoryTotalBytes), nil
+}
+
+// ProcessRssBytes is the resolver for the processRssBytes field.
+func (r *systemRuntimeSampleResolver) ProcessRssBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.ProcessRSSBytes), nil
+}
+
+// ProcessHeapAllocBytes is the resolver for the processHeapAllocBytes field.
+func (r *systemRuntimeSampleResolver) ProcessHeapAllocBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.ProcessHeapAllocBytes), nil
+}
+
+// NetworkReceiveBytesPerSecond is the resolver for the networkReceiveBytesPerSecond field.
+func (r *systemRuntimeSampleResolver) NetworkReceiveBytesPerSecond(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return obj.NetworkReceiveBytesPerSec, nil
+}
+
+// NetworkTransmitBytesPerSecond is the resolver for the networkTransmitBytesPerSecond field.
+func (r *systemRuntimeSampleResolver) NetworkTransmitBytesPerSecond(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return obj.NetworkTransmitBytesPerSec, nil
+}
+
+// DiskUsedBytes is the resolver for the diskUsedBytes field.
+func (r *systemRuntimeSampleResolver) DiskUsedBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.DiskUsedBytes), nil
+}
+
+// DiskTotalBytes is the resolver for the diskTotalBytes field.
+func (r *systemRuntimeSampleResolver) DiskTotalBytes(ctx context.Context, obj *biz.SystemRuntimeSample) (float64, error) {
+	return float64(obj.DiskTotalBytes), nil
+}
+
+// GcCount is the resolver for the gcCount field.
+func (r *systemRuntimeSampleResolver) GcCount(ctx context.Context, obj *biz.SystemRuntimeSample) (int, error) {
+	return int(obj.GCCount), nil
+}
+
+// ProcessRssMaxBytes is the resolver for the processRssMaxBytes field.
+func (r *systemRuntimeStatsResolver) ProcessRssMaxBytes(ctx context.Context, obj *biz.SystemRuntimeStats) (float64, error) {
+	return float64(obj.ProcessRSSMaxBytes), nil
+}
+
 // EmailSettings returns EmailSettingsResolver implementation.
 func (r *Resolver) EmailSettings() EmailSettingsResolver { return &emailSettingsResolver{r} }
 
+// SystemRuntimeOverview returns SystemRuntimeOverviewResolver implementation.
+func (r *Resolver) SystemRuntimeOverview() SystemRuntimeOverviewResolver {
+	return &systemRuntimeOverviewResolver{r}
+}
+
+// SystemRuntimeSample returns SystemRuntimeSampleResolver implementation.
+func (r *Resolver) SystemRuntimeSample() SystemRuntimeSampleResolver {
+	return &systemRuntimeSampleResolver{r}
+}
+
+// SystemRuntimeStats returns SystemRuntimeStatsResolver implementation.
+func (r *Resolver) SystemRuntimeStats() SystemRuntimeStatsResolver {
+	return &systemRuntimeStatsResolver{r}
+}
+
 type emailSettingsResolver struct{ *Resolver }
+type systemRuntimeOverviewResolver struct{ *Resolver }
+type systemRuntimeSampleResolver struct{ *Resolver }
+type systemRuntimeStatsResolver struct{ *Resolver }

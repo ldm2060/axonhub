@@ -1,6 +1,5 @@
 import {
   IconLayoutDashboard,
-  IconSettings,
   IconRobot,
   IconShield,
   IconKey,
@@ -14,6 +13,7 @@ import {
   IconUsers,
   IconUsersGroup,
   IconChartBar,
+  IconServer,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +118,11 @@ export function useSidebarData(): SidebarData {
           url: '/admin/roles',
           icon: IconUsersGroup,
         } as NavLink,
+        {
+          title: t('sidebar.items.system'),
+          url: '/admin/system',
+          icon: IconServer,
+        } as NavLink,
       ],
     },
     {
@@ -162,17 +167,6 @@ export function useSidebarData(): SidebarData {
           title: t('sidebar.items.threads'),
           url: '/project/threads',
           icon: IconBaselineDensityMedium,
-        } as NavLink,
-      ],
-    },
-    {
-      title: t('sidebar.groups.settings'),
-      items: [
-        {
-          title: t('sidebar.items.system'),
-          url: '/admin/system',
-          icon: IconSettings,
-          mobileOnly: true,
         } as NavLink,
       ],
     },

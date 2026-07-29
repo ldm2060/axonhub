@@ -39,19 +39,21 @@ type MemorySample struct {
 }
 
 type MemorySampler struct {
-	mu        sync.Mutex
-	ring      [ringSize]MemorySample
-	pos       int
-	count     int
-	startTime time.Time
-	stopCh    chan struct{}
-	stopOnce  sync.Once
+	mu             sync.Mutex
+	ring           [ringSize]MemorySample
+	pos            int
+	count          int
+	startTime      time.Time
+	stopCh         chan struct{}
+	stopOnce       sync.Once
+	runtimeMonitor *SystemRuntimeMonitor
 }
 
 func NewMemorySampler() *MemorySampler {
 	return &MemorySampler{
-		startTime: time.Now(),
-		stopCh:    make(chan struct{}),
+		startTime:      time.Now(),
+		stopCh:         make(chan struct{}),
+		runtimeMonitor: NewSystemRuntimeMonitor(),
 	}
 }
 
@@ -59,13 +61,18 @@ func (ms *MemorySampler) Run() {
 	ticker := time.NewTicker(sampleInterval)
 	defer ticker.Stop()
 
-	// Take initial sample immediately
+	// Take initial samples immediately.
 	ms.sample()
+	ms.runtimeMonitor.sample()
+	runtimeTicker := time.NewTicker(runtimeSampleInterval)
+	defer runtimeTicker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
 			ms.sample()
+		case <-runtimeTicker.C:
+			ms.runtimeMonitor.sample()
 		case <-ms.stopCh:
 			return
 		}
@@ -101,6 +108,10 @@ func (ms *MemorySampler) sample() {
 		ms.count++
 	}
 	ms.mu.Unlock()
+}
+
+func (ms *MemorySampler) RuntimeOverview() SystemRuntimeOverview {
+	return ms.runtimeMonitor.Overview()
 }
 
 func (ms *MemorySampler) Stop() {

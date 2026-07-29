@@ -43,6 +43,12 @@ export default defineConfig({
       '/admin/system': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
+        bypass: (req) => {
+          // Only proxy backend API calls (status/initialize); let SPA handle the page route.
+          if (!req.url?.match(/\/admin\/system\/(status|initialize)($|\?)/)) {
+            return req.url;
+          }
+        },
       },
       '/admin/auth': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
