@@ -14,6 +14,7 @@ var Module = fx.Module(
 	fx.Provide(NewSystemHandlers),
 	fx.Provide(NewAuthHandlers),
 	fx.Provide(NewAvatarHandlers),
+	fx.Provide(NewInvitationHandlers),
 	fx.Provide(NewAPIKeyHandlers),
 	fx.Provide(NewJinaHandlers),
 	fx.Provide(NewDoubaoHandlers),

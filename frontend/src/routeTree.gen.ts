@@ -21,6 +21,7 @@ import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-emai
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
+import { Route as authInviteRouteImport } from './routes/(auth)/invite'
 import { Route as authInitializationRouteImport } from './routes/(auth)/initialization'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
@@ -124,6 +125,11 @@ const authSignInRoute = authSignInRouteImport.update({
 const authResetPasswordRoute = authResetPasswordRouteImport.update({
   id: '/(auth)/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authInviteRoute = authInviteRouteImport.update({
+  id: '/(auth)/invite',
+  path: '/invite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authInitializationRoute = authInitializationRouteImport.update({
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/initialization': typeof authInitializationRoute
+  '/invite': typeof authInviteRoute
   '/reset-password': typeof authResetPasswordRoute
   '/sign-in': typeof authSignInRoute
   '/sign-up': typeof authSignUpRoute
@@ -452,6 +459,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
   '/initialization': typeof authInitializationRoute
+  '/invite': typeof authInviteRoute
   '/reset-password': typeof authResetPasswordRoute
   '/sign-in': typeof authSignInRoute
   '/sign-up': typeof authSignUpRoute
@@ -512,6 +520,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/initialization': typeof authInitializationRoute
+  '/(auth)/invite': typeof authInviteRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/sign-up': typeof authSignUpRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/forgot-password'
     | '/initialization'
+    | '/invite'
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
   to:
     | '/forgot-password'
     | '/initialization'
+    | '/invite'
     | '/reset-password'
     | '/sign-in'
     | '/sign-up'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/initialization'
+    | '/(auth)/invite'
     | '/(auth)/reset-password'
     | '/(auth)/sign-in'
     | '/(auth)/sign-up'
@@ -745,6 +757,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authInitializationRoute: typeof authInitializationRoute
+  authInviteRoute: typeof authInviteRoute
   authResetPasswordRoute: typeof authResetPasswordRoute
   authSignInRoute: typeof authSignInRoute
   authSignUpRoute: typeof authSignUpRoute
@@ -841,6 +854,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof authResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/invite': {
+      id: '/(auth)/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof authInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/initialization': {
@@ -1299,6 +1319,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authInitializationRoute: authInitializationRoute,
+  authInviteRoute: authInviteRoute,
   authResetPasswordRoute: authResetPasswordRoute,
   authSignInRoute: authSignInRoute,
   authSignUpRoute: authSignUpRoute,

@@ -36,6 +36,9 @@ type DataStorage func(*sql.Selector)
 // EmailToken is the predicate function for emailtoken builders.
 type EmailToken func(*sql.Selector)
 
+// Invitation is the predicate function for invitation builders.
+type Invitation func(*sql.Selector)
+
 // Model is the predicate function for model builders.
 type Model func(*sql.Selector)
 

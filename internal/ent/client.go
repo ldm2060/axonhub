@@ -25,6 +25,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channelusagemonitorbinding"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
+	"github.com/ldm2060/axonhub/internal/ent/invitation"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -71,6 +72,8 @@ type Client struct {
 	DataStorage *DataStorageClient
 	// EmailToken is the client for interacting with the EmailToken builders.
 	EmailToken *EmailTokenClient
+	// Invitation is the client for interacting with the Invitation builders.
+	Invitation *InvitationClient
 	// Model is the client for interacting with the Model builders.
 	Model *ModelClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
@@ -132,6 +135,7 @@ func (c *Client) init() {
 	c.ChannelUsageMonitorBinding = NewChannelUsageMonitorBindingClient(c.config)
 	c.DataStorage = NewDataStorageClient(c.config)
 	c.EmailToken = NewEmailTokenClient(c.config)
+	c.Invitation = NewInvitationClient(c.config)
 	c.Model = NewModelClient(c.config)
 	c.OIDCIdentity = NewOIDCIdentityClient(c.config)
 	c.Project = NewProjectClient(c.config)
@@ -253,6 +257,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ChannelUsageMonitorBinding: NewChannelUsageMonitorBindingClient(cfg),
 		DataStorage:                NewDataStorageClient(cfg),
 		EmailToken:                 NewEmailTokenClient(cfg),
+		Invitation:                 NewInvitationClient(cfg),
 		Model:                      NewModelClient(cfg),
 		OIDCIdentity:               NewOIDCIdentityClient(cfg),
 		Project:                    NewProjectClient(cfg),
@@ -301,6 +306,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ChannelUsageMonitorBinding: NewChannelUsageMonitorBindingClient(cfg),
 		DataStorage:                NewDataStorageClient(cfg),
 		EmailToken:                 NewEmailTokenClient(cfg),
+		Invitation:                 NewInvitationClient(cfg),
 		Model:                      NewModelClient(cfg),
 		OIDCIdentity:               NewOIDCIdentityClient(cfg),
 		Project:                    NewProjectClient(cfg),
@@ -351,8 +357,8 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Model,
-		c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
+		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Invitation,
+		c.Model, c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
 		c.ProviderQuotaStatus, c.PublishRequest, c.Request, c.RequestExecution, c.Role,
 		c.System, c.Thread, c.Trace, c.UsageLog, c.UsageMonitorChannel, c.User,
 		c.UserProject, c.UserRole, c.UserUsageStats,
@@ -367,8 +373,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.APIKey, c.APIKeyProfileTemplate, c.Channel, c.ChannelModelPrice,
 		c.ChannelModelPriceVersion, c.ChannelOverrideTemplate, c.ChannelProbe,
-		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Model,
-		c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
+		c.ChannelUsageMonitorBinding, c.DataStorage, c.EmailToken, c.Invitation,
+		c.Model, c.OIDCIdentity, c.Project, c.Prompt, c.PromptProtectionRule,
 		c.ProviderQuotaStatus, c.PublishRequest, c.Request, c.RequestExecution, c.Role,
 		c.System, c.Thread, c.Trace, c.UsageLog, c.UsageMonitorChannel, c.User,
 		c.UserProject, c.UserRole, c.UserUsageStats,
@@ -400,6 +406,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.DataStorage.mutate(ctx, m)
 	case *EmailTokenMutation:
 		return c.EmailToken.mutate(ctx, m)
+	case *InvitationMutation:
+		return c.Invitation.mutate(ctx, m)
 	case *ModelMutation:
 		return c.Model.mutate(ctx, m)
 	case *OIDCIdentityMutation:
@@ -2156,6 +2164,157 @@ func (c *EmailTokenClient) mutate(ctx context.Context, m *EmailTokenMutation) (V
 	}
 }
 
+// InvitationClient is a client for the Invitation schema.
+type InvitationClient struct {
+	config
+}
+
+// NewInvitationClient returns a client for the Invitation from the given config.
+func NewInvitationClient(c config) *InvitationClient {
+	return &InvitationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `invitation.Hooks(f(g(h())))`.
+func (c *InvitationClient) Use(hooks ...Hook) {
+	c.hooks.Invitation = append(c.hooks.Invitation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `invitation.Intercept(f(g(h())))`.
+func (c *InvitationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Invitation = append(c.inters.Invitation, interceptors...)
+}
+
+// Create returns a builder for creating a Invitation entity.
+func (c *InvitationClient) Create() *InvitationCreate {
+	mutation := newInvitationMutation(c.config, OpCreate)
+	return &InvitationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Invitation entities.
+func (c *InvitationClient) CreateBulk(builders ...*InvitationCreate) *InvitationCreateBulk {
+	return &InvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InvitationClient) MapCreateBulk(slice any, setFunc func(*InvitationCreate, int)) *InvitationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InvitationCreateBulk{err: fmt.Errorf("calling to InvitationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InvitationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InvitationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Invitation.
+func (c *InvitationClient) Update() *InvitationUpdate {
+	mutation := newInvitationMutation(c.config, OpUpdate)
+	return &InvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InvitationClient) UpdateOne(_m *Invitation) *InvitationUpdateOne {
+	mutation := newInvitationMutation(c.config, OpUpdateOne, withInvitation(_m))
+	return &InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InvitationClient) UpdateOneID(id int) *InvitationUpdateOne {
+	mutation := newInvitationMutation(c.config, OpUpdateOne, withInvitationID(id))
+	return &InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Invitation.
+func (c *InvitationClient) Delete() *InvitationDelete {
+	mutation := newInvitationMutation(c.config, OpDelete)
+	return &InvitationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InvitationClient) DeleteOne(_m *Invitation) *InvitationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InvitationClient) DeleteOneID(id int) *InvitationDeleteOne {
+	builder := c.Delete().Where(invitation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InvitationDeleteOne{builder}
+}
+
+// Query returns a query builder for Invitation.
+func (c *InvitationClient) Query() *InvitationQuery {
+	return &InvitationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInvitation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Invitation entity by its id.
+func (c *InvitationClient) Get(ctx context.Context, id int) (*Invitation, error) {
+	return c.Query().Where(invitation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InvitationClient) GetX(ctx context.Context, id int) *Invitation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProject queries the project edge of a Invitation.
+func (c *InvitationClient) QueryProject(_m *Invitation) *ProjectQuery {
+	query := (&ProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(invitation.Table, invitation.FieldID, id),
+			sqlgraph.To(project.Table, project.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, invitation.ProjectTable, invitation.ProjectColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *InvitationClient) Hooks() []Hook {
+	hooks := c.hooks.Invitation
+	return append(hooks[:len(hooks):len(hooks)], invitation.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *InvitationClient) Interceptors() []Interceptor {
+	inters := c.inters.Invitation
+	return append(inters[:len(inters):len(inters)], invitation.Interceptors[:]...)
+}
+
+func (c *InvitationClient) mutate(ctx context.Context, m *InvitationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InvitationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InvitationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InvitationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InvitationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Invitation mutation op: %q", m.Op())
+	}
+}
+
 // ModelClient is a client for the Model schema.
 type ModelClient struct {
 	config
@@ -2575,6 +2734,22 @@ func (c *ProjectClient) QueryUsers(_m *Project) *UserQuery {
 			sqlgraph.From(project.Table, project.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, project.UsersTable, project.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitations queries the invitations edge of a Project.
+func (c *ProjectClient) QueryInvitations(_m *Project) *InvitationQuery {
+	query := (&InvitationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(project.Table, project.FieldID, id),
+			sqlgraph.To(invitation.Table, invitation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, project.InvitationsTable, project.InvitationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -5675,18 +5850,19 @@ type (
 	hooks struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe,
-		ChannelUsageMonitorBinding, DataStorage, EmailToken, Model, OIDCIdentity,
-		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, PublishRequest,
-		Request, RequestExecution, Role, System, Thread, Trace, UsageLog,
-		UsageMonitorChannel, User, UserProject, UserRole, UserUsageStats []ent.Hook
+		ChannelUsageMonitorBinding, DataStorage, EmailToken, Invitation, Model,
+		OIDCIdentity, Project, Prompt, PromptProtectionRule, ProviderQuotaStatus,
+		PublishRequest, Request, RequestExecution, Role, System, Thread, Trace,
+		UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
+		UserUsageStats []ent.Hook
 	}
 	inters struct {
 		APIKey, APIKeyProfileTemplate, Channel, ChannelModelPrice,
 		ChannelModelPriceVersion, ChannelOverrideTemplate, ChannelProbe,
-		ChannelUsageMonitorBinding, DataStorage, EmailToken, Model, OIDCIdentity,
-		Project, Prompt, PromptProtectionRule, ProviderQuotaStatus, PublishRequest,
-		Request, RequestExecution, Role, System, Thread, Trace, UsageLog,
-		UsageMonitorChannel, User, UserProject, UserRole,
+		ChannelUsageMonitorBinding, DataStorage, EmailToken, Invitation, Model,
+		OIDCIdentity, Project, Prompt, PromptProtectionRule, ProviderQuotaStatus,
+		PublishRequest, Request, RequestExecution, Role, System, Thread, Trace,
+		UsageLog, UsageMonitorChannel, User, UserProject, UserRole,
 		UserUsageStats []ent.Interceptor
 	}
 )

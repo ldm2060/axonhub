@@ -29,6 +29,7 @@ type Handlers struct {
 	System         *api.SystemHandlers
 	Auth           *api.AuthHandlers
 	Avatar         *api.AvatarHandlers
+	Invitation     *api.InvitationHandlers
 	Jina           *api.JinaHandlers
 	Codex          *api.CodexHandlers
 	ClaudeCode     *api.ClaudeCodeHandlers
@@ -85,6 +86,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		// Health check endpoint - no authentication required
 		publicGroup.GET("/health", handlers.System.Health)
 		publicGroup.GET("/avatars/:userID", handlers.Avatar.Serve)
+		publicGroup.GET("/auth/invitations/:token", handlers.Invitation.Get)
+		publicGroup.POST("/auth/invitations/:token/register", handlers.Invitation.Register)
 	}
 
 	// Auth routes (preferred, no /admin prefix)
@@ -131,6 +134,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.POST("/graphql", middleware.WithTimeout(server.Config.RequestTimeout), func(c *gin.Context) {
 			handlers.Graphql.Graphql.ServeHTTP(c.Writer, c.Request)
 		})
+		adminGroup.POST("/invitations", handlers.Invitation.Create)
 
 		adminGroup.POST("/codex/oauth/start", handlers.Codex.StartOAuth)
 		adminGroup.POST("/codex/oauth/exchange", handlers.Codex.Exchange)
