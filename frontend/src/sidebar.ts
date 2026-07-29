@@ -13,7 +13,6 @@ import {
   IconUsers,
   IconUsersGroup,
   IconChartBar,
-  IconServer,
 } from '@tabler/icons-react';
 import { Command } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -120,11 +119,6 @@ export function useSidebarData(): SidebarData {
         } as NavLink,
         {
           title: t('sidebar.items.system'),
-          url: '/admin/system',
-          icon: IconServer,
-        } as NavLink,
-        {
-          title: t('sidebar.items.runtime'),
           url: '/admin/runtime',
           icon: IconActivity,
         } as NavLink,

@@ -1,5 +1,5 @@
 {
-  "runtime.title": "Runtime",
+  "runtime.title": "System",
   "runtime.description": "Real-time host and process metrics for this AxonHub instance.",
   "runtime.live": "Live",
   "runtime.refresh": "Refresh",

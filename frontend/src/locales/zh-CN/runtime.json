@@ -1,5 +1,5 @@
 {
-  "runtime.title": "运行时",
+  "runtime.title": "系统",
   "runtime.description": "当前 AxonHub 实例的主机与进程实时指标。",
   "runtime.live": "实时",
   "runtime.refresh": "刷新",
