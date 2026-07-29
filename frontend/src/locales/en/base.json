@@ -19,6 +19,7 @@
   "usageStats.description": "Token usage and cost distribution across users in the project.",
   "sidebar.items.playground": "Playground",
   "sidebar.items.system": "System",
+  "sidebar.items.runtime": "Runtime",
   "sidebar.items.projects": "Projects",
   "sidebar.items.myChannels": "My Channels",
   "sidebar.items.myModels": "My Models",

@@ -73,6 +73,11 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/runtime',
+        requiredScopes: ['read_settings'],
+        mode: 'hidden',
+      },
+      {
         path: '/analytics',
         requiredScopes: ['read_dashboard'],
         scopeLevel: 'system',

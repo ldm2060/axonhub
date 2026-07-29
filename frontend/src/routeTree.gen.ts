@@ -53,6 +53,7 @@ import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
 import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
+import { Route as AuthenticatedAdminRuntimeIndexRouteImport } from './routes/_authenticated/admin/runtime/index'
 import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
 import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
 import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
@@ -311,6 +312,12 @@ const AuthenticatedAdminSystemIndexRoute =
     path: '/system/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminRuntimeIndexRoute =
+  AuthenticatedAdminRuntimeIndexRouteImport.update({
+    id: '/runtime/',
+    path: '/runtime/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminRolesIndexRoute =
   AuthenticatedAdminRolesIndexRouteImport.update({
     id: '/roles/',
@@ -428,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
+  '/admin/runtime/': typeof AuthenticatedAdminRuntimeIndexRoute
   '/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -483,6 +491,7 @@ export interface FileRoutesByTo {
   '/admin/publish-requests': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
   '/admin/roles': typeof AuthenticatedAdminRolesIndexRoute
+  '/admin/runtime': typeof AuthenticatedAdminRuntimeIndexRoute
   '/admin/system': typeof AuthenticatedAdminSystemIndexRoute
   '/admin/usage-monitor': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
@@ -542,6 +551,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
   '/_authenticated/admin/roles/': typeof AuthenticatedAdminRolesIndexRoute
+  '/_authenticated/admin/runtime/': typeof AuthenticatedAdminRuntimeIndexRoute
   '/_authenticated/admin/system/': typeof AuthenticatedAdminSystemIndexRoute
   '/_authenticated/admin/usage-monitor/': typeof AuthenticatedAdminUsageMonitorIndexRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -601,6 +611,7 @@ export interface FileRouteTypes {
     | '/admin/publish-requests/'
     | '/admin/requests/'
     | '/admin/roles/'
+    | '/admin/runtime/'
     | '/admin/system/'
     | '/admin/usage-monitor/'
     | '/admin/users/'
@@ -656,6 +667,7 @@ export interface FileRouteTypes {
     | '/admin/publish-requests'
     | '/admin/requests'
     | '/admin/roles'
+    | '/admin/runtime'
     | '/admin/system'
     | '/admin/usage-monitor'
     | '/admin/users'
@@ -714,6 +726,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/publish-requests/'
     | '/_authenticated/admin/requests/'
     | '/_authenticated/admin/roles/'
+    | '/_authenticated/admin/runtime/'
     | '/_authenticated/admin/system/'
     | '/_authenticated/admin/usage-monitor/'
     | '/_authenticated/admin/users/'
@@ -1054,6 +1067,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSystemIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/runtime/': {
+      id: '/_authenticated/admin/runtime/'
+      path: '/runtime'
+      fullPath: '/admin/runtime/'
+      preLoaderRoute: typeof AuthenticatedAdminRuntimeIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/roles/': {
       id: '/_authenticated/admin/roles/'
       path: '/roles'
@@ -1152,6 +1172,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPublishRequestsIndexRoute: typeof AuthenticatedAdminPublishRequestsIndexRoute
   AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
   AuthenticatedAdminRolesIndexRoute: typeof AuthenticatedAdminRolesIndexRoute
+  AuthenticatedAdminRuntimeIndexRoute: typeof AuthenticatedAdminRuntimeIndexRoute
   AuthenticatedAdminSystemIndexRoute: typeof AuthenticatedAdminSystemIndexRoute
   AuthenticatedAdminUsageMonitorIndexRoute: typeof AuthenticatedAdminUsageMonitorIndexRoute
   AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
@@ -1174,6 +1195,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
       AuthenticatedAdminPublishRequestsIndexRoute,
     AuthenticatedAdminRequestsIndexRoute: AuthenticatedAdminRequestsIndexRoute,
     AuthenticatedAdminRolesIndexRoute: AuthenticatedAdminRolesIndexRoute,
+    AuthenticatedAdminRuntimeIndexRoute: AuthenticatedAdminRuntimeIndexRoute,
     AuthenticatedAdminSystemIndexRoute: AuthenticatedAdminSystemIndexRoute,
     AuthenticatedAdminUsageMonitorIndexRoute:
       AuthenticatedAdminUsageMonitorIndexRoute,

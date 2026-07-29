@@ -1,5 +1,3 @@
-'use client';
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -10,7 +8,6 @@ import { DiagnosticsSettings } from './diagnostics-settings';
 import { EmailSettingsTab } from './email-settings';
 import { GeneralSettings } from './general-settings';
 import { QuotaSettings } from './quota-settings';
-import { RuntimeOverview } from './runtime-overview';
 import { RegistrationSettingsTab } from './registration-settings';
 import { RetrySettings } from './retry-settings';
 import { StreamingSettings } from './streaming-settings';
@@ -21,7 +18,7 @@ import { ProxyPresetsSettings } from './proxy-presets-settings';
 import { WebhookSettings } from './webhook-settings';
 import { usePermissions } from '@/hooks/usePermissions';
 
-type SystemTabKey = 'overview' | 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'streaming' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
+type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'streaming' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
 
 const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['backup', 'diagnostics']);
 
@@ -32,7 +29,7 @@ interface SystemSettingsTabsProps {
 export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
   const { t } = useTranslation();
   const { isOwner } = usePermissions();
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTab] = useState<string>('general');
   const tabListRef = useRef<HTMLDivElement>(null);
   const horizontalScrollRef = useHorizontalScroll<HTMLDivElement>();
   const setTabListRef = useCallback(
@@ -49,7 +46,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
     }
 
     if (!isOwner && OWNER_ONLY_TABS.has(initialTab)) {
-      setActiveTab('overview');
+      setActiveTab('general');
       return;
     }
 
@@ -79,7 +76,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
       value={activeTab}
       onValueChange={(value) => {
         if (!isOwner && OWNER_ONLY_TABS.has(value)) {
-          setActiveTab('overview');
+          setActiveTab('general');
           return;
         }
         setActiveTab(value);
@@ -90,9 +87,6 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         ref={setTabListRef}
         className='shadow-soft border-border bg-background flex w-full justify-start overflow-x-auto rounded-2xl border sm:overflow-x-visible [&_[data-slot=tabs-trigger]]:flex-none [&_[data-slot=tabs-trigger]]:shrink-0 sm:[&_[data-slot=tabs-trigger]]:flex-1 sm:[&_[data-slot=tabs-trigger]]:shrink'
       >
-        <TabsTrigger value='overview' data-value='overview'>
-          {t('system.tabs.overview')}
-        </TabsTrigger>
         <TabsTrigger value='general' data-value='general'>
           {t('system.tabs.general')}
         </TabsTrigger>
@@ -145,9 +139,6 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
         </TabsTrigger>
       </TabsList>
       <div className='shadow-soft border-border bg-card mt-6 rounded-2xl border p-4 sm:p-6'>
-        <TabsContent value='overview' className='mt-0 p-0'>
-          <RuntimeOverview />
-        </TabsContent>
         <TabsContent value='general' className='mt-0 p-0'>
           <GeneralSettings />
         </TabsContent>

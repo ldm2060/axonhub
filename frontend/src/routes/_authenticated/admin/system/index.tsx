@@ -3,7 +3,6 @@ import { RouteGuard } from '@/components/route-guard';
 import SystemManagement from '@/features/system';
 
 type SystemTabKey =
-  | 'overview'
   | 'general'
   | 'security'
   | 'brand'

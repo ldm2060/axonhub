@@ -19,6 +19,7 @@
   "usageStats.description": "项目内各用户的 Token 消耗与成本分布。",
   "sidebar.items.playground": "测试场",
   "sidebar.items.system": "系统",
+  "sidebar.items.runtime": "运行时",
   "sidebar.items.projects": "项目",
   "sidebar.items.myChannels": "我的渠道",
   "sidebar.items.myModels": "我的模型",

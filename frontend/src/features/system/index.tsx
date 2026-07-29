@@ -7,7 +7,6 @@ import { SystemSettingsTabs } from './components/tabs';
 import SystemProvider from './context/system-context';
 
 type SystemTabKey =
-  | 'overview'
   | 'general'
   | 'security'
   | 'brand'

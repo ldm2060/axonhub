@@ -123,6 +123,11 @@ export function useSidebarData(): SidebarData {
           url: '/admin/system',
           icon: IconServer,
         } as NavLink,
+        {
+          title: t('sidebar.items.runtime'),
+          url: '/admin/runtime',
+          icon: IconActivity,
+        } as NavLink,
       ],
     },
     {
