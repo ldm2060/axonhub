@@ -352,7 +352,7 @@ type UsageMonitorServiceParams struct {
 	DefaultMultiMonitorStrategy string  `name:"quota_channel_binding.default_multi_monitor_strategy"`
 }
 
-type QuotaCacheCallback func(channelID int, quotaStatus string, ready bool, limits []map[string]any)
+type QuotaCacheCallback func(channelID int, providerType string, quotaStatus string, ready bool, limits []map[string]any)
 
 // ChannelsReloadCallback is invoked after a channel's quota_binding_ready state
 // changes in the DB, so the owner (ChannelService) can synchronously refresh
@@ -1123,7 +1123,7 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 
 		// Notify quota cache for orchestrator routing
 		if svc.quotaCacheCallback != nil && updated.ChannelID != nil && quotaStatus != "" {
-			svc.quotaCacheCallback(*updated.ChannelID, quotaStatus, quotaReady != nil && *quotaReady, quotaLimits)
+			svc.quotaCacheCallback(*updated.ChannelID, string(updated.ProviderType), quotaStatus, quotaReady != nil && *quotaReady, quotaLimits)
 		}
 
 		// Legacy direct-channel evaluation for builtin monitors with ChannelID.

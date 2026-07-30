@@ -42,6 +42,9 @@ var Module = fx.Module("biz",
 	fx.Provide(NewMemorySampler),
 	fx.Provide(NewUserUsageStatsService),
 	fx.Provide(NewUsageMonitorService),
+	fx.Invoke(func(channelSvc *ChannelService, quotaSvc *ProviderQuotaService) {
+		channelSvc.SetChannelProviderQuotaInvalidator(quotaSvc)
+	}),
 	fx.Invoke(func(lc fx.Lifecycle, svc *APIKeyService) {
 		lc.Append(fx.Hook{
 			OnStop: func(ctx context.Context) error {

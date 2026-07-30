@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -9,15 +10,18 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
+	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 type QuotaChannelStatus struct {
-	Status providerquotastatus.Status
-	Ready  bool
-	Limits []provider_quota.QuotaLimitStatus
+	ProviderType string
+	Status       providerquotastatus.Status
+	Ready        bool
+	Limits       []provider_quota.QuotaLimitStatus
 }
 
 // EffectiveStatus returns the effective quota status for the given limit type.
@@ -122,7 +126,7 @@ func NewProviderQuotaService(params ProviderQuotaServiceParams) *ProviderQuotaSe
 
 // OnUsageMonitorPollComplete is called by UsageMonitorService after each successful poll
 // to update the in-memory quota cache for orchestrator routing.
-func (svc *ProviderQuotaService) OnUsageMonitorPollComplete(channelID int, quotaStatus string, ready bool, limits []map[string]any) {
+func (svc *ProviderQuotaService) OnUsageMonitorPollComplete(channelID int, providerType string, quotaStatus string, ready bool, limits []map[string]any) {
 	var quotaLimits []provider_quota.QuotaLimitStatus
 	for _, m := range limits {
 		ls := provider_quota.QuotaLimitStatus{}
@@ -146,7 +150,7 @@ func (svc *ProviderQuotaService) OnUsageMonitorPollComplete(channelID int, quota
 		quotaLimits = append(quotaLimits, ls)
 	}
 
-	svc.updateQuotaCache(channelID, providerquotastatus.Status(quotaStatus), ready, quotaLimits)
+	svc.updateQuotaCache(channelID, providerType, providerquotastatus.Status(quotaStatus), ready, quotaLimits)
 }
 
 func (svc *ProviderQuotaService) RegisterScheduledTasks(ctx context.Context, s *scheduler.Scheduler) error {
@@ -165,16 +169,17 @@ func (svc *ProviderQuotaService) loadQuotaCache(ctx context.Context) {
 		}
 		limits := extractLimitsFromQuotaLimits(ch.QuotaLimits)
 		svc.quotaCache.Store(*ch.ChannelID, &QuotaChannelStatus{
-			Status: providerquotastatus.Status(ch.QuotaStatus),
-			Ready:  ch.QuotaReady != nil && *ch.QuotaReady,
-			Limits: limits,
+			ProviderType: string(ch.ProviderType),
+			Status:       providerquotastatus.Status(ch.QuotaStatus),
+			Ready:        ch.QuotaReady != nil && *ch.QuotaReady,
+			Limits:       limits,
 		})
 	}
 
 	log.Debug(ctx, "Loaded quota cache from usage monitor channels", log.Int("channels", len(channels)))
 }
 
-func (svc *ProviderQuotaService) GetQuotaStatus(channelID int) *QuotaChannelStatus {
+func (svc *ProviderQuotaService) GetQuotaStatus(ctx context.Context, channelID int) *QuotaChannelStatus {
 	val, ok := svc.quotaCache.Load(channelID)
 	if !ok {
 		return nil
@@ -184,16 +189,54 @@ func (svc *ProviderQuotaService) GetQuotaStatus(channelID int) *QuotaChannelStat
 	if !ok {
 		return nil
 	}
+	if status.ProviderType != "" {
+		settings := svc.SystemService.ProviderQuotaCollectionSettingsOrDefault(ctx)
+		if !settings.Enabled || !settings.Providers[status.ProviderType] {
+			return nil
+		}
+	}
 
 	return status
 }
 
-func (svc *ProviderQuotaService) updateQuotaCache(channelID int, status providerquotastatus.Status, ready bool, limits []provider_quota.QuotaLimitStatus) {
+func (svc *ProviderQuotaService) updateQuotaCache(channelID int, providerType string, status providerquotastatus.Status, ready bool, limits []provider_quota.QuotaLimitStatus) {
 	svc.quotaCache.Store(channelID, &QuotaChannelStatus{
-		Status: status,
-		Ready:  ready,
-		Limits: limits,
+		ProviderType: providerType,
+		Status:       status,
+		Ready:        ready,
+		Limits:       limits,
 	})
+}
+
+// InvalidateChannelQuota removes a channel's persisted and cached quota state.
+// Channel provider identity changes invalidate the previous provider's quota
+// result, so serialize this with quota checks before removing the record.
+func (svc *ProviderQuotaService) InvalidateChannelQuota(ctx context.Context, channelID int) error {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	defer svc.quotaCache.Delete(channelID)
+
+	// Drop any persisted legacy provider_quota_status row (pre-usage-monitor
+	// architecture) so stale state does not survive a re-read.
+	if _, err := svc.db.ProviderQuotaStatus.Delete().
+		Where(providerquotastatus.ChannelIDEQ(channelID)).
+		Exec(schematype.SkipSoftDelete(ctx)); err != nil {
+		return fmt.Errorf("failed to invalidate provider quota status: %w", err)
+	}
+
+	// Clear the usage-monitor quota snapshot for the builtin monitor bound to
+	// this channel, if present.
+	if _, err := svc.db.UsageMonitorChannel.Update().
+		Where(usagemonitorchannel.ChannelIDEQ(channelID)).
+		ClearQuotaStatus().
+		ClearQuotaReady().
+		ClearQuotaLimits().
+		Save(ctx); err != nil {
+		return fmt.Errorf("failed to clear usage monitor quota snapshot: %w", err)
+	}
+
+	return nil
 }
 
 // ManualCheck forces an immediate quota check for all relevant channels.

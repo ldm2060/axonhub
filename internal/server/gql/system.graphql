@@ -222,6 +222,26 @@ input UpdateQuotaEnforcementSettingsInput {
   mode: QuotaEnforcementMode
 }
 
+type ProviderQuotaCollectionProvider {
+  provider: String!
+  enabled: Boolean!
+}
+
+type ProviderQuotaCollectionSettings {
+  enabled: Boolean!
+  providers: [ProviderQuotaCollectionProvider!]!
+}
+
+input ProviderQuotaCollectionProviderInput {
+  provider: String!
+  enabled: Boolean!
+}
+
+input UpdateProviderQuotaCollectionSettingsInput {
+  enabled: Boolean
+  providers: [ProviderQuotaCollectionProviderInput!]
+}
+
 type SecuritySettings {
   blockedIPs: [String!]!
   showRequestLogIPBanIcon: Boolean!
@@ -465,6 +485,7 @@ extend type Mutation {
   updateSystemGeneralSettings(input: UpdateSystemGeneralSettingsInput!): Boolean!
   updateVideoStorageSettings(input: UpdateVideoStorageSettingsInput!): Boolean!
   updateQuotaEnforcementSettings(input: UpdateQuotaEnforcementSettingsInput!): Boolean!
+  updateProviderQuotaCollectionSettings(input: UpdateProviderQuotaCollectionSettingsInput!): Boolean!
   updateSecuritySettings(input: UpdateSecuritySettingsInput!): Boolean!
   checkProviderQuotas: Boolean!
   triggerGcCleanup(input: TriggerGcCleanupInput!): Boolean!
@@ -599,11 +620,12 @@ extend type Query {
   defaultDataStorageID: ID
   onboardingInfo: OnboardingInfo
   systemVersion: SystemVersion!
-  checkForUpdate: VersionCheck!
+  checkForUpdate(includeBeta: Boolean! = false): VersionCheck!
   systemChannelSettings: SystemChannelSettings!
   systemGeneralSettings: SystemGeneralSettings!
   videoStorageSettings: VideoStorageSettings!
   quotaEnforcementSettings: QuotaEnforcementSettings!
+  providerQuotaCollectionSettings: ProviderQuotaCollectionSettings!
   securitySettings: SecuritySettings!
   proxyPresets: [ProxyPreset!]!
   userAgentPassThroughSettings: UserAgentPassThroughSettings!
