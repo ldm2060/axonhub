@@ -122,8 +122,16 @@ export function CombinedTrendChart({ data, isLoading, currencyCode }: CombinedTr
               tickMargin={8}
             />
             <Tooltip
+              isAnimationActive={false}
               content={({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number | string; color?: string; payload?: Record<string, number> }>; label?: string }) => {
-                if (!active || !payload || payload.length === 0) return null;
+                if (!active) return null;
+                if (!payload || payload.length === 0) {
+                  return (
+                    <div className='rounded-md border bg-background p-2 shadow-md' style={{ fontSize: '12px' }}>
+                      <p className='font-medium'>{label}</p>
+                    </div>
+                  );
+                }
                 const order = [
                   t('analytics.chart.cachedInput'),
                   t('analytics.chart.uncachedInput'),
@@ -181,8 +189,8 @@ export function CombinedTrendChart({ data, isLoading, currencyCode }: CombinedTr
             <Bar yAxisId='tokens' dataKey='cachedInput' name={t('analytics.chart.cachedInput')} stackId='tokens' fill='var(--chart-1)' isAnimationActive={false} />
             <Bar yAxisId='tokens' dataKey='uncachedInput' name={t('analytics.chart.uncachedInput')} stackId='tokens' fill='var(--chart-2)' isAnimationActive={false} />
             <Bar yAxisId='tokens' dataKey='output' name={t('analytics.chart.outputTokens')} stackId='tokens' fill='var(--chart-3)' radius={[4, 4, 0, 0]} isAnimationActive={false} />
-            <Line yAxisId='requests' type='monotone' dataKey='requests' name={t('analytics.chart.requestCount')} stroke='var(--chart-4)' strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-            <Line yAxisId='cost' type='monotone' dataKey='cost' name={t('analytics.chart.cost')} stroke='var(--chart-5)' strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+            <Line yAxisId='requests' type='monotone' dataKey='requests' name={t('analytics.chart.requestCount')} stroke='var(--chart-4)' strokeWidth={2} dot={{ r: 2.5, strokeWidth: 0, fill: 'var(--chart-4)' }} activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }} />
+            <Line yAxisId='cost' type='monotone' dataKey='cost' name={t('analytics.chart.cost')} stroke='var(--chart-5)' strokeWidth={2} dot={{ r: 2.5, strokeWidth: 0, fill: 'var(--chart-5)' }} activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }} />
           </ComposedChart>
         </ResponsiveContainer>
       </CardContent>

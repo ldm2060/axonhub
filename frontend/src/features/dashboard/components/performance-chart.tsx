@@ -76,25 +76,27 @@ interface PerformanceTooltipProps {
 function PerformanceTooltip({ active, payload, label, displayMode }: PerformanceTooltipProps) {
   const { t } = useTranslation();
 
-  if (!active || !payload || payload.length === 0) return null;
+  if (!active) return null;
 
-  const dataPoint = payload[0]?.payload as Record<string, string | number | null> | undefined;
-  if (!dataPoint) return null;
+  const dataPoint = payload?.[0]?.payload as Record<string, string | number | null> | undefined;
 
-  const filteredPayload = displayMode === 'throughput'
-    ? payload.filter((item) => item.dataKey.toString().includes('-capped') && !item.dataKey.toString().includes('-ttft') && item.value != null && item.value > 0)
-    : payload.filter((item) => item.dataKey.toString().includes('-ttft-capped') && item.value != null && item.value > 0);
+  const filteredPayload = (payload ?? [])
+    .filter((item) => {
+      const key = item.dataKey?.toString() ?? '';
+      if (displayMode === 'throughput') {
+        return key.includes('-capped') && !key.includes('-ttft') && item.value != null && item.value > 0;
+      }
+      return key.includes('-ttft-capped') && item.value != null && item.value > 0;
+    });
 
   const itemData = filteredPayload
     .map((item) => {
       const dataKey = item.dataKey.toString();
-      // Extract base ID by removing capped suffixes
       const id = displayMode === 'throughput'
         ? dataKey.replace('-capped', '')
         : dataKey.replace('-ttft-capped', '');
-      // Read actual values (not capped) from original data keys
-      const throughputValue = dataPoint[id] as number ?? 0;
-      const ttftValue = dataPoint[`${id}-ttft`] as number ?? 0;
+      const throughputValue = (dataPoint?.[id] as number | null) ?? 0;
+      const ttftValue = (dataPoint?.[`${id}-ttft`] as number | null) ?? 0;
       return {
         id,
         name: item.name,
@@ -105,36 +107,38 @@ function PerformanceTooltip({ active, payload, label, displayMode }: Performance
     })
     .sort((a, b) => displayMode === 'throughput' ? b.throughput - a.throughput : a.ttft - b.ttft);
 
-  if (itemData.length === 0) return null;
-
   return (
     <div
       className='rounded-md border bg-background p-3 shadow-md'
       style={{ fontSize: '12px' }}
     >
       <div className='mb-2 font-medium text-foreground'>{label}</div>
-      <div className='space-y-2'>
-        {itemData.map((item) => (
-          <div key={item.id}>
-            <div className='flex items-center gap-2'>
-              <span
-                className='h-2 w-2 rounded-full'
-                style={{ backgroundColor: item.color }}
-              />
-              <span className='truncate font-medium text-foreground'>
-                {item.name}
-              </span>
+      {itemData.length === 0 ? (
+        <div className='text-muted-foreground'>{t('dashboard.charts.noUserData')}</div>
+      ) : (
+        <div className='space-y-2'>
+          {itemData.map((item) => (
+            <div key={item.id}>
+              <div className='flex items-center gap-2'>
+                <span
+                  className='h-2 w-2 rounded-full'
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className='truncate font-medium text-foreground'>
+                  {item.name}
+                </span>
+              </div>
+              <div className='ml-4 text-muted-foreground'>
+                {displayMode === 'throughput' ? (
+                  <>{formatNumber(item.throughput, { digits: 0 })} {t('dashboard.stats.throughput')}</>
+                ) : (
+                  <>{t('dashboard.stats.ttft')} {formatDuration(item.ttft)}</>
+                )}
+              </div>
             </div>
-            <div className='ml-4 text-muted-foreground'>
-              {displayMode === 'throughput' ? (
-                <>{formatNumber(item.throughput, { digits: 0 })} {t('dashboard.stats.throughput')}</>
-              ) : (
-                <>{t('dashboard.stats.ttft')} {formatDuration(item.ttft)}</>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -369,7 +373,7 @@ export function PerformanceChart({
             tickMargin={8}
             tickCount={6}
           />
-          <Tooltip content={<PerformanceTooltip displayMode={displayMode} />} />
+          <Tooltip content={<PerformanceTooltip displayMode={displayMode} />} isAnimationActive={false} />
           {topItems.map((id, index) => {
             const color = COLORS[index % COLORS.length];
             const isActive = !activeSeries || activeSeries === id;
@@ -386,8 +390,8 @@ export function PerformanceChart({
                 strokeWidth={2}
                 fill={`url(#${gradientPrefix}-${displayMode}-${id})`}
                 fillOpacity={1}
-                dot={false}
-                activeDot={{ r: 4 }}
+                dot={{ r: 2.5, strokeWidth: 0, fill: color, fillOpacity: opacity }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }}
                 connectNulls={true}
                 strokeOpacity={opacity}
                 hide={!visibleItems.includes(id)}

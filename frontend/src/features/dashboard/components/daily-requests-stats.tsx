@@ -152,6 +152,7 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
         />
         <Tooltip
           formatter={tooltipFormatter}
+          isAnimationActive={false}
           contentStyle={{
             backgroundColor: 'var(--background)',
             borderColor: 'var(--border)',
@@ -170,8 +171,8 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
           strokeWidth={2}
           fillOpacity={1}
           fill='url(#colorRequests)'
-          dot={false}
-          activeDot={{ r: 5 }}
+          dot={{ r: 2.5, strokeWidth: 0, fill: 'var(--chart-1)' }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }}
         />
         <Area
           yAxisId='tokens'
@@ -182,8 +183,8 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
           strokeWidth={2}
           fillOpacity={1}
           fill='url(#colorTokens)'
-          dot={false}
-          activeDot={{ r: 4 }}
+          dot={{ r: 2.5, strokeWidth: 0, fill: 'var(--chart-2)' }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }}
         />
         <Area
           yAxisId='cost'
@@ -194,8 +195,8 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
           strokeWidth={2}
           fillOpacity={1}
           fill='url(#colorCost)'
-          dot={false}
-          activeDot={{ r: 4 }}
+          dot={{ r: 2.5, strokeWidth: 0, fill: 'var(--chart-3)' }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }}
         />
       </AreaChart>
     </ResponsiveContainer>

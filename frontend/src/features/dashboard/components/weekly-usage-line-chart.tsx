@@ -111,10 +111,10 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
   };
 
   const tooltipContent = (props: CombinedTooltipProps) => {
-    if (!props.active || !props.payload?.length) return null;
-    const row = props.payload[0]?.payload;
-    if (!row) return null;
-    const dateLabel = String(row.name);
+    if (!props.active) return null;
+    const row = props.payload?.[0]?.payload;
+    const dateLabel = row?.name != null ? String(row.name) : String(props.label ?? '');
+    if (!dateLabel) return null;
 
     // Pull token/cost for the hovered day from the raw data (top users only).
     const dayEntries = (data ?? [])
@@ -213,7 +213,7 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
                     tickMargin={8}
                     tickCount={6}
                   />
-                  <Tooltip content={tooltipContent} cursor={{ stroke: 'var(--muted)' }} />
+                  <Tooltip content={tooltipContent} cursor={{ stroke: 'var(--muted)' }} isAnimationActive={false} />
                   {users.map((u, index) => (
                     <Area
                       key={u.name}
@@ -223,8 +223,8 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
                       strokeWidth={2}
                       fill={`url(#weeklyUsage-${index})`}
                       fillOpacity={1}
-                      dot={false}
-                      activeDot={{ r: 4 }}
+                      dot={{ r: 2.5, strokeWidth: 0, fill: COLORS[index % COLORS.length] }}
+                      activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--background)' }}
                       isAnimationActive={false}
                     />
                   ))}

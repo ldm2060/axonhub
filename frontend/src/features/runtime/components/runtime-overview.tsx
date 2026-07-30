@@ -99,11 +99,11 @@ export function RuntimeOverview() {
               <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
               <XAxis dataKey='time' stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine minTickGap={28} />
               <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine width={40} tickMargin={8} />
-              <Tooltip formatter={(value: number | string, name: string) => [formatPercent(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+              <Tooltip isAnimationActive={false} formatter={(value: number | string, name: string) => [formatPercent(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
               <Legend verticalAlign='top' height={36} />
-              <Area type='monotone' dataKey='systemCpu' name={t('runtime.series.systemCpu')} stroke={CHART_COLORS.systemCpu} strokeWidth={2} fill='url(#runtime-cpu-fill)' fillOpacity={1} dot={false} activeDot={{ r: 5 }} />
-              <Area type='monotone' dataKey='memory' name={t('runtime.series.memory')} stroke={CHART_COLORS.memory} strokeWidth={2} fill='url(#runtime-memory-fill)' fillOpacity={1} dot={false} activeDot={{ r: 4 }} />
-              <Area type='monotone' dataKey='processCpu' name={t('runtime.series.processCpu')} stroke={CHART_COLORS.processCpu} strokeWidth={2} fill='url(#runtime-process-cpu-fill)' fillOpacity={1} dot={false} activeDot={{ r: 4 }} />
+              <Area type='monotone' dataKey='systemCpu' name={t('runtime.series.systemCpu')} stroke={CHART_COLORS.systemCpu} strokeWidth={2} fill='url(#runtime-cpu-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.systemCpu }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
+              <Area type='monotone' dataKey='memory' name={t('runtime.series.memory')} stroke={CHART_COLORS.memory} strokeWidth={2} fill='url(#runtime-memory-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.memory }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
+              <Area type='monotone' dataKey='processCpu' name={t('runtime.series.processCpu')} stroke={CHART_COLORS.processCpu} strokeWidth={2} fill='url(#runtime-process-cpu-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.processCpu }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -127,10 +127,10 @@ export function RuntimeOverview() {
               <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
               <XAxis dataKey='time' stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine minTickGap={28} />
               <YAxis tickFormatter={(value) => formatBytes(value, 0)} stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine width={58} tickMargin={8} />
-              <Tooltip formatter={(value: number | string, name: string) => [formatRate(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+              <Tooltip isAnimationActive={false} formatter={(value: number | string, name: string) => [formatRate(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
               <Legend verticalAlign='top' height={36} />
-              <Area type='monotone' dataKey='receive' name={t('runtime.series.receive')} stroke={CHART_COLORS.receive} strokeWidth={2} fill='url(#runtime-rx-fill)' fillOpacity={1} dot={false} activeDot={{ r: 5 }} />
-              <Area type='monotone' dataKey='transmit' name={t('runtime.series.transmit')} stroke={CHART_COLORS.transmit} strokeWidth={2} fill='url(#runtime-tx-fill)' fillOpacity={1} dot={false} activeDot={{ r: 4 }} />
+              <Area type='monotone' dataKey='receive' name={t('runtime.series.receive')} stroke={CHART_COLORS.receive} strokeWidth={2} fill='url(#runtime-rx-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.receive }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
+              <Area type='monotone' dataKey='transmit' name={t('runtime.series.transmit')} stroke={CHART_COLORS.transmit} strokeWidth={2} fill='url(#runtime-tx-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.transmit }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
@@ -156,10 +156,10 @@ export function RuntimeOverview() {
               <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
               <XAxis dataKey='time' stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine minTickGap={28} />
               <YAxis tickFormatter={(value) => formatBytes(value, 0)} stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine width={58} tickMargin={8} />
-              <Tooltip formatter={(value: number | string, name: string) => [formatBytes(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
+              <Tooltip isAnimationActive={false} formatter={(value: number | string, name: string) => [formatBytes(Number(value)), name]} contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} />
               <Legend verticalAlign='top' height={36} />
-              <Area type='monotone' dataKey='rss' name={t('runtime.series.rss')} stroke={CHART_COLORS.rss} strokeWidth={2} fill='url(#runtime-rss-fill)' fillOpacity={1} dot={false} activeDot={{ r: 5 }} />
-              <Area type='monotone' dataKey='heap' name={t('runtime.series.heap')} stroke={CHART_COLORS.heap} strokeWidth={2} fill='url(#runtime-heap-fill)' fillOpacity={1} dot={false} activeDot={{ r: 4 }} />
+              <Area type='monotone' dataKey='rss' name={t('runtime.series.rss')} stroke={CHART_COLORS.rss} strokeWidth={2} fill='url(#runtime-rss-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.rss }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
+              <Area type='monotone' dataKey='heap' name={t('runtime.series.heap')} stroke={CHART_COLORS.heap} strokeWidth={2} fill='url(#runtime-heap-fill)' fillOpacity={1} dot={{ r: 2, strokeWidth: 0, fill: CHART_COLORS.heap }} activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }} />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
