@@ -198,6 +198,80 @@ func TestClientRestrictionChecker_CheckClientRestriction(t *testing.T) {
 			globalRestriction: ClientRestrictionStrict,
 			expected:          true,
 		},
+		// strict_<family> modes force a specific family regardless of channel
+		// type or ChannelClientMapping. Channel-level only.
+		{
+			name:               "strict_anthropic allows claude on generic openai channel",
+			userAgent:          "claude-cli/2.1.158",
+			channelType:        "openai",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_anthropic")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           true,
+		},
+		{
+			name:               "strict_anthropic rejects codex on generic openai channel",
+			userAgent:          "codex-cli/1.0",
+			channelType:        "openai",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_anthropic")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           false,
+		},
+		{
+			name:               "strict_openai allows codex on anthropic-named channel (overrides name inference)",
+			userAgent:          "codex-cli/1.0",
+			channelType:        "anthropic",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_openai")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           true,
+		},
+		{
+			name:               "strict_openai allows opencode",
+			userAgent:          "opencode/1.0",
+			channelType:        "openai",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_openai")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           true,
+		},
+		{
+			name:               "strict_openai overrides ChannelClientMapping on claudecode",
+			userAgent:          "codex-cli/1.0",
+			channelType:        "claudecode",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_openai")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           true,
+		},
+		{
+			name:               "strict_openai rejects claude even on claudecode (mapping overridden)",
+			userAgent:          "claude-cli/2.1.158",
+			channelType:        "claudecode",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_openai")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           false,
+		},
+		{
+			name:               "strict_gemini allows antigravity on openai channel",
+			userAgent:          "Antigravity/1.0",
+			channelType:        "openai",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_gemini")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           true,
+		},
+		{
+			name:               "strict_gemini rejects claude",
+			userAgent:          "claude-cli/2.1.158",
+			channelType:        "gemini",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_gemini")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           false,
+		},
+		{
+			name:               "strict_anthropic rejects unknown client",
+			userAgent:          "SomeRandomClient/1.0",
+			channelType:        "openai",
+			channelRestriction: ptr(ClientRestrictionLevel("strict_anthropic")),
+			globalRestriction:  ClientRestrictionOff,
+			expected:           false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -264,6 +338,24 @@ func TestClientRestrictionChecker_GetRejectionReason(t *testing.T) {
 			channelType: "claudecode",
 			restriction: "invalid",
 			expected:    "Client restriction check failed",
+		},
+		{
+			name:        "strict_anthropic rejection message",
+			channelType: "openai",
+			restriction: ClientRestrictionLevel("strict_anthropic"),
+			expected:    "This channel only accepts requests from Anthropic-family clients (Claude)",
+		},
+		{
+			name:        "strict_openai rejection message",
+			channelType: "openai",
+			restriction: ClientRestrictionLevel("strict_openai"),
+			expected:    "This channel only accepts requests from OpenAI-family clients (Codex, OpenCode)",
+		},
+		{
+			name:        "strict_gemini rejection message",
+			channelType: "openai",
+			restriction: ClientRestrictionLevel("strict_gemini"),
+			expected:    "This channel only accepts requests from Gemini-family clients (Antigravity)",
 		},
 	}
 

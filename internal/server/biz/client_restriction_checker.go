@@ -42,6 +42,11 @@ func (c *ClientRestrictionChecker) CheckClientRestriction(
 	case ClientRestrictionStrict:
 		return c.detector.IsStrictClientAllowed(userAgent, referer, channelType)
 	default:
+		// strict_<family> modes force a specific client family regardless of
+		// channel type or ChannelClientMapping.
+		if family, ok := familyFromRestriction(string(effectiveRestriction)); ok {
+			return c.detector.IsClientAllowedForFamily(userAgent, referer, family)
+		}
 		return false
 	}
 }
@@ -67,6 +72,16 @@ func (c *ClientRestrictionChecker) GetRejectionReason(
 			return "This channel only accepts requests from OpenAI-family clients (Codex, OpenCode)"
 		}
 	default:
+		if family, ok := familyFromRestriction(string(restriction)); ok {
+			switch family {
+			case familyAnthropic:
+				return "This channel only accepts requests from Anthropic-family clients (Claude)"
+			case familyGemini:
+				return "This channel only accepts requests from Gemini-family clients (Antigravity)"
+			default:
+				return "This channel only accepts requests from OpenAI-family clients (Codex, OpenCode)"
+			}
+		}
 		return "Client restriction check failed"
 	}
 }

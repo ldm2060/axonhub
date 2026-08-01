@@ -47,6 +47,9 @@ export function ChannelClientRestriction({ channel, onUpdate }: ChannelClientRes
           <SelectItem value='off'>{t('channels.clientRestriction.off')}</SelectItem>
           <SelectItem value='lenient'>{t('channels.clientRestriction.lenient')}</SelectItem>
           <SelectItem value='strict'>{t('channels.clientRestriction.strict')}</SelectItem>
+          <SelectItem value='strict_anthropic'>{t('channels.clientRestriction.strictAnthropic')}</SelectItem>
+          <SelectItem value='strict_openai'>{t('channels.clientRestriction.strictOpenAI')}</SelectItem>
+          <SelectItem value='strict_gemini'>{t('channels.clientRestriction.strictGemini')}</SelectItem>
         </SelectContent>
       </Select>
       <p className='text-muted-foreground text-xs'>{t('channels.clientRestriction.description')}</p>
@@ -55,6 +58,9 @@ export function ChannelClientRestriction({ channel, onUpdate }: ChannelClientRes
           {value === 'lenient' && t('system.retry.clientRestriction.documentation.lenient')}
           {value === 'strict' && t('system.retry.clientRestriction.documentation.strict')}
           {value === 'off' && t('system.retry.clientRestriction.documentation.off')}
+          {value === 'strict_anthropic' && t('system.retry.clientRestriction.documentation.strictAnthropic')}
+          {value === 'strict_openai' && t('system.retry.clientRestriction.documentation.strictOpenAI')}
+          {value === 'strict_gemini' && t('system.retry.clientRestriction.documentation.strictGemini')}
         </p>
       )}
     </div>

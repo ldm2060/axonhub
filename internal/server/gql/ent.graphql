@@ -562,6 +562,9 @@ enum ChannelClientRestriction @goModel(model: "github.com/ldm2060/axonhub/intern
   off
   lenient
   strict
+  strict_anthropic
+  strict_openai
+  strict_gemini
 }
 """
 A connection to a list of items.

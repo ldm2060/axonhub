@@ -1410,6 +1410,26 @@ func TestClientRestrictionLevel_UnmarshalJSON_NonString(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid ClientRestrictionLevel")
 }
 
+// The strict_<family> modes are channel-level only. The global RetryPolicy must
+// reject them and downgrade to off during normalization.
+func TestNormalizeRetryPolicy_ClientRestrictionStrictFamilyDowngraded(t *testing.T) {
+	t.Parallel()
+
+	for _, raw := range []string{"strict_anthropic", "strict_openai", "strict_gemini"} {
+		policy := &RetryPolicy{ClientRestriction: ClientRestrictionLevel(raw)}
+		normalizeRetryPolicy(policy)
+		require.Equal(t, ClientRestrictionOff, policy.ClientRestriction,
+			"global client restriction %q must normalize to off", raw)
+	}
+
+	// Valid global values are preserved.
+	for _, level := range []ClientRestrictionLevel{ClientRestrictionOff, ClientRestrictionLenient, ClientRestrictionStrict} {
+		policy := &RetryPolicy{ClientRestriction: level}
+		normalizeRetryPolicy(policy)
+		require.Equal(t, level, policy.ClientRestriction)
+	}
+}
+
 func TestStreamingSettingsForRuntime_ReadsWithoutUser(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
 	defer client.Close()

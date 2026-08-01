@@ -505,3 +505,57 @@ func TestChannelClientMapping(t *testing.T) {
 		})
 	}
 }
+
+func TestClientDetector_IsClientAllowedForFamily(t *testing.T) {
+	detector := &ClientDetector{}
+
+	tests := []struct {
+		name      string
+		userAgent string
+		family    string
+		want      bool
+	}{
+		{"claude on anthropic family", "claude-cli/2.1.158", familyAnthropic, true},
+		{"codex on openai family", "codex-cli/1.0", familyOpenAI, true},
+		{"opencode on openai family", "opencode/1.0", familyOpenAI, true},
+		{"antigravity on gemini family", "Antigravity/1.0", familyGemini, true},
+		{"claude rejected on openai family", "claude-cli/2.1.158", familyOpenAI, false},
+		{"codex rejected on anthropic family", "codex-cli/1.0", familyAnthropic, false},
+		{"antigravity rejected on anthropic family", "Antigravity/1.0", familyAnthropic, false},
+		{"unknown client rejected on anthropic family", "SomeRandomClient/1.0", familyAnthropic, false},
+		{"empty UA rejected", "", familyAnthropic, false},
+		{"browser UA rejected on openai family", "Mozilla/5.0 Chrome", familyOpenAI, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, detector.IsClientAllowedForFamily(tt.userAgent, "", tt.family))
+		})
+	}
+}
+
+func TestFamilyFromRestriction(t *testing.T) {
+	tests := []struct {
+		level  string
+		family string
+		ok     bool
+	}{
+		{"strict_anthropic", familyAnthropic, true},
+		{"strict_openai", familyOpenAI, true},
+		{"strict_gemini", familyGemini, true},
+		{"strict", "", false},
+		{"off", "", false},
+		{"lenient", "", false},
+		{"strict_unknown", "", false},
+		{"", "", false},
+		{"strict_", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.level, func(t *testing.T) {
+			family, ok := familyFromRestriction(tt.level)
+			assert.Equal(t, tt.ok, ok)
+			assert.Equal(t, tt.family, family)
+		})
+	}
+}

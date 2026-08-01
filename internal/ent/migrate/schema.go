@@ -118,7 +118,7 @@ var (
 		{Name: "error_message", Type: field.TypeString, Nullable: true},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
 		{Name: "endpoints", Type: field.TypeJSON, Nullable: true},
-		{Name: "client_restriction", Type: field.TypeEnum, Nullable: true, Enums: []string{"off", "lenient", "strict"}},
+		{Name: "client_restriction", Type: field.TypeEnum, Nullable: true, Enums: []string{"off", "lenient", "strict", "strict_anthropic", "strict_openai", "strict_gemini"}},
 		{Name: "auto_disable_config", Type: field.TypeJSON, Nullable: true},
 		{Name: "visibility", Type: field.TypeEnum, Enums: []string{"private", "shared", "published"}, Default: "private"},
 		{Name: "shared_with", Type: field.TypeJSON, Nullable: true},

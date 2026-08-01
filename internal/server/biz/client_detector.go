@@ -14,6 +14,10 @@ var SupportedCodingClients = []string{
 	"opencode",
 }
 
+// strictFamilyPrefix is the prefix for strict_<family> client restriction modes.
+// These modes force a specific client family regardless of channel type.
+const strictFamilyPrefix = "strict_"
+
 var ChannelClientMapping = map[string][]string{
 	"claudecode":            {"claude"},
 	"codex":                 {"codex"},
@@ -92,6 +96,33 @@ func (d *ClientDetector) IsStrictClientAllowed(userAgent string, referer string,
 	}
 
 	return clientFamily(client) == channelFamily(channelType)
+}
+
+// IsClientAllowedForFamily reports whether the detected client belongs to the
+// given API-format family. Used by the strict_<family> restriction modes, which
+// force a specific family regardless of channel type or ChannelClientMapping.
+func (d *ClientDetector) IsClientAllowedForFamily(userAgent string, referer string, family string) bool {
+	client := d.DetectClient(userAgent, referer)
+	if client == "" {
+		return false
+	}
+	return clientFamily(client) == family
+}
+
+// familyFromRestriction extracts the API-format family from a strict_<family>
+// client restriction level (e.g. "strict_anthropic" -> "anthropic").
+// ok is false for levels that do not pin a family.
+func familyFromRestriction(level string) (string, bool) {
+	family, ok := strings.CutPrefix(level, strictFamilyPrefix)
+	if !ok {
+		return "", false
+	}
+	switch family {
+	case familyAnthropic, familyOpenAI, familyGemini:
+		return family, true
+	default:
+		return "", false
+	}
 }
 
 func clientFamily(client string) string {

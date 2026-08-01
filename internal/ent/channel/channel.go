@@ -356,9 +356,12 @@ type ClientRestriction string
 
 // ClientRestriction values.
 const (
-	ClientRestrictionOff     ClientRestriction = "off"
-	ClientRestrictionLenient ClientRestriction = "lenient"
-	ClientRestrictionStrict  ClientRestriction = "strict"
+	ClientRestrictionOff             ClientRestriction = "off"
+	ClientRestrictionLenient         ClientRestriction = "lenient"
+	ClientRestrictionStrict          ClientRestriction = "strict"
+	ClientRestrictionStrictAnthropic ClientRestriction = "strict_anthropic"
+	ClientRestrictionStrictOpenAI    ClientRestriction = "strict_openai"
+	ClientRestrictionStrictGemini    ClientRestriction = "strict_gemini"
 )
 
 func (cr ClientRestriction) String() string {
@@ -368,7 +371,7 @@ func (cr ClientRestriction) String() string {
 // ClientRestrictionValidator is a validator for the "client_restriction" field enum values. It is called by the builders before save.
 func ClientRestrictionValidator(cr ClientRestriction) error {
 	switch cr {
-	case ClientRestrictionOff, ClientRestrictionLenient, ClientRestrictionStrict:
+	case ClientRestrictionOff, ClientRestrictionLenient, ClientRestrictionStrict, ClientRestrictionStrictAnthropic, ClientRestrictionStrictOpenAI, ClientRestrictionStrictGemini:
 		return nil
 	default:
 		return fmt.Errorf("channel: invalid enum value for client_restriction field: %q", cr)

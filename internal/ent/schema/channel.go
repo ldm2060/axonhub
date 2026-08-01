@@ -160,10 +160,10 @@ func (Channel) Fields() []ent.Field {
 			Optional().
 			Comment("Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type."),
 		field.Enum("client_restriction").
-			Values("off", "lenient", "strict").
+			Values("off", "lenient", "strict", "strict_anthropic", "strict_openai", "strict_gemini").
 			Optional().
 			Nillable().
-			Comment("Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels."),
+			Comment("Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type."),
 		field.JSON("auto_disable_config", &objects.ChannelAutoDisableConfig{}).
 			Optional().
 			Comment("Channel-level auto-disable configuration. nil = inherit global settings."),
