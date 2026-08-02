@@ -57,6 +57,7 @@ When upstream adds a migration:
   - ❌ Reusing upstream's label verbatim (`v1.0.0-beta6`, `v0.2.0`, etc.) — different version track, will misfire the semver gate
   - ❌ Looking at `internal/build/VERSION` before fixing it — it still holds upstream's label after the merge
 
+- You must reserve upstream commits. DO NOT DELETE THEM.
 - Register any new `DataMigrator` in `NewMigrator` in version order.
 - If upstream's migration assumes a clean upstream schema (columns we don't have, or columns we added that upstream doesn't know about), adapt the SQL/Go to our actual schema. A migration that `ALTER TABLE`-s a non-existent column will fail at startup.
 - Never delete or reorder existing registered migrations — users on older versions still need them. Only append.
