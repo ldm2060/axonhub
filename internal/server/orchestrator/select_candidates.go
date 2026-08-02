@@ -75,12 +75,14 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 		quotaSelector := WithProviderQuotaSelector(selector, quotaProvider, systemService)
 		selector = quotaSelector
 
-		if inbound.state.LoadBalancer != nil {
-			selector = WithTraceStickyLoadBalancedSelector(
+		if len(inbound.state.LoadBalancers) > 0 {
+			selector = WithRoutingPolicyLoadBalancedSelector(
 				selector,
-				inbound.state.LoadBalancer,
+				inbound.state.LoadBalancers,
 				inbound.state.RetryPolicyProvider,
 				inbound.state.RequestService,
+				inbound.state.APIKey,
+				&inbound.state.RoutingPolicy,
 			)
 		}
 
@@ -93,6 +95,8 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 			log.Debug(ctx, "selected candidates",
 				log.Int("candidate_count", len(candidates)),
 				log.String("model", llmRequest.Model),
+				log.String("load_balance_strategy", inbound.state.RoutingPolicy.LoadBalancerStrategy),
+				log.String("trace_sticky_mode", string(inbound.state.RoutingPolicy.TraceStickyMode)),
 				log.Any("candidates", lo.Map(candidates, func(candidate *ChannelModelsCandidate, _ int) map[string]any {
 					return map[string]any{
 						"channel_name": candidate.Channel.Name,

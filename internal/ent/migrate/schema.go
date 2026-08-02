@@ -410,6 +410,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
 		{Name: "token_hash", Type: field.TypeString},
+		{Name: "role_id", Type: field.TypeInt, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "max_uses", Type: field.TypeInt, Default: 1},
 		{Name: "used_count", Type: field.TypeInt, Default: 0},
@@ -423,7 +424,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "invitations_projects_invitations",
-				Columns:    []*schema.Column{InvitationsColumns[8]},
+				Columns:    []*schema.Column{InvitationsColumns[9]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -437,7 +438,7 @@ var (
 			{
 				Name:    "invitation_project_id",
 				Unique:  false,
-				Columns: []*schema.Column{InvitationsColumns[8]},
+				Columns: []*schema.Column{InvitationsColumns[9]},
 			},
 		},
 	}

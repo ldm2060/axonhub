@@ -23,6 +23,7 @@ import {
   IconHistory,
   IconPlugConnected,
   IconShare,
+  IconShieldLock,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -93,6 +94,7 @@ const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
   const { user: authUser } = useAuthStore((state) => state.auth);
   const channel = row.original;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { channelPermissions } = usePermissions();
 
   const isEnabled = channel.status === 'enabled';
   const isArchived = channel.status === 'archived';
@@ -105,6 +107,10 @@ const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
       setDialogOpen(true);
     }
   }, [canToggle, isArchived]);
+
+  if (!channelPermissions.canWrite) {
+    return <Badge variant='outline'>{channel.status}</Badge>;
+  }
 
   return (
     <div className='flex items-center justify-center'>
@@ -267,6 +273,17 @@ const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
             >
               <IconPlayerPlay size={16} className='mr-2' />
               {t('channels.actions.testAPIKeys', { count: apiKeysCount })}
+            </DropdownMenuItem>
+          )}
+          {channelPermissions.canWrite && (
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(channel);
+                setOpen('apiKeyRules');
+              }}
+            >
+              <IconShieldLock size={16} className='mr-2' />
+              {t('channels.dialogs.apiKeyRules.action')}
             </DropdownMenuItem>
           )}
           {hasDisabledAPIKeys && (
@@ -579,6 +596,7 @@ const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [weight, setWeight] = useState<string>(initialWeight?.toString() || '1');
   const updateChannel = useUpdateChannel();
+  const { channelPermissions } = usePermissions();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -622,6 +640,10 @@ const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
     },
     [handleSave, initialWeight]
   );
+
+  if (!channelPermissions.canWrite) {
+    return <span className={cn('font-mono text-sm', initialWeight == null && 'text-muted-foreground')}>{initialWeight ?? '-'}</span>;
+  }
 
   if (isEditing) {
     return (

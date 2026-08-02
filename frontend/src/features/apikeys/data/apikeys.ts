@@ -91,6 +91,7 @@ function buildApiKeyQuery() {
             channelTagsMatchMode
             modelIDs
             loadBalanceStrategy
+            traceStickyMode
             quota {
               requests
               totalTokens
@@ -183,6 +184,7 @@ const UPDATE_APIKEY_PROFILES_MUTATION = `
           channelTagsMatchMode
           modelIDs
           loadBalanceStrategy
+          traceStickyMode
           quota {
             requests
             totalTokens
@@ -299,6 +301,7 @@ const APIKEY_PROFILE_TEMPLATES_QUERY = `
             channelTagsMatchMode
             modelIDs
             loadBalanceStrategy
+            traceStickyMode
             quota {
               requests
               totalTokens
@@ -310,7 +313,6 @@ const APIKEY_PROFILE_TEMPLATES_QUERY = `
               }
             }
           }
-          project { id name }
         }
       }
       totalCount
@@ -373,6 +375,7 @@ const LOAD_APIKEY_PROFILE_TEMPLATE_MUTATION = `
           channelTagsMatchMode
           modelIDs
           loadBalanceStrategy
+          traceStickyMode
           quota {
             requests
             totalTokens

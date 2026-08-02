@@ -1493,3 +1493,30 @@ func TestStreamingSettings_MarshalRoundTrip(t *testing.T) {
 	require.Equal(t, 12, got.WebSocketKeepaliveIntervalSeconds)
 	require.Equal(t, 25, got.HTTPStreamKeepaliveIntervalSeconds)
 }
+
+func TestNormalizeRetryPolicy_LoadBalancerStrategy(t *testing.T) {
+	t.Run("invalid strategy falls back to default", func(t *testing.T) {
+		policy := &RetryPolicy{LoadBalancerStrategy: "unknown"}
+		normalizeRetryPolicy(policy)
+		require.Equal(t, defaultRetryPolicy.LoadBalancerStrategy, policy.LoadBalancerStrategy)
+	})
+
+	t.Run("legacy weighted migrates to failover", func(t *testing.T) {
+		policy := &RetryPolicy{LoadBalancerStrategy: "weighted"}
+		normalizeRetryPolicy(policy)
+		require.Equal(t, LoadBalancerStrategyFailover, policy.LoadBalancerStrategy)
+	})
+
+	t.Run("valid strategies are preserved", func(t *testing.T) {
+		for _, strategy := range []string{
+			LoadBalancerStrategyAdaptive,
+			LoadBalancerStrategyFailover,
+			LoadBalancerStrategyCircuitBreaker,
+			LoadBalancerStrategyRoundRobin,
+		} {
+			policy := &RetryPolicy{LoadBalancerStrategy: strategy}
+			normalizeRetryPolicy(policy)
+			require.Equal(t, strategy, policy.LoadBalancerStrategy)
+		}
+	})
+}

@@ -24,6 +24,7 @@ function StatusSwitchCell({ row }: { row: Row<Model> }) {
   const { modelPermissions } = usePermissions();
   const { user: authUser } = useAuthStore((state) => state.auth);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { channelPermissions } = usePermissions();
 
   const isEnabled = model.status === 'enabled';
   const isArchived = model.status === 'archived';
@@ -35,6 +36,10 @@ function StatusSwitchCell({ row }: { row: Row<Model> }) {
       setDialogOpen(true);
     }
   }, [canToggle, isArchived]);
+
+  if (!channelPermissions.canWrite) {
+    return <Badge variant='outline'>{model.status}</Badge>;
+  }
 
   return (
     <>
@@ -333,15 +338,15 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
           enableSorting: true,
           enableHiding: false,
         },
-        {
-          id: 'actions',
-          header: t('common.columns.actions'),
-          cell: DataTableRowActions,
-          meta: {
-            className: 'w-[88px] min-w-[88px] pr-3 pl-0',
-          },
-          enableSorting: false,
-          enableHiding: false,
-        },
+        ...(canWrite
+          ? [{
+              id: 'actions',
+              header: t('common.columns.actions'),
+              cell: DataTableRowActions,
+              meta: { className: 'w-[88px] min-w-[88px] pr-3 pl-0' },
+              enableSorting: false,
+              enableHiding: false,
+            }]
+          : []),
   ];
 };

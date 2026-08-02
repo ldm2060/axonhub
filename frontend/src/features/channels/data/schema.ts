@@ -144,9 +144,32 @@ export const channelAvailabilitySchema = z.object({
 });
 export type ChannelAvailability = z.infer<typeof channelAvailabilitySchema>;
 
+export const apiKeyAutoDisableActionSchema = z.enum(['temporary_disable', 'permanent_disable_delete']);
+export type APIKeyAutoDisableAction = z.infer<typeof apiKeyAutoDisableActionSchema>;
+
+export const apiKeyAutoDisableRuleSchema = z.object({
+  statusCodes: z.array(z.number().int().min(100).max(599)).optional().nullable(),
+  keywordPatterns: z.array(z.string()).optional().nullable(),
+  times: z.number().int().min(1),
+  action: apiKeyAutoDisableActionSchema,
+  disableDurationMinutes: z.number().int().positive().optional().nullable(),
+});
+export type APIKeyAutoDisableRule = z.infer<typeof apiKeyAutoDisableRuleSchema>;
+
+export const apiKeyAutoDisableRuleFormSchema = apiKeyAutoDisableRuleSchema
+  .refine((rule) => (rule.statusCodes?.length ?? 0) > 0 || (rule.keywordPatterns?.some((pattern) => pattern.trim() !== '') ?? false), {
+    message: 'At least one status code or keyword pattern is required',
+    path: ['statusCodes'],
+  })
+  .refine((rule) => rule.action !== 'temporary_disable' || (rule.disableDurationMinutes ?? 0) > 0, {
+    message: 'Temporary disable requires a duration',
+    path: ['disableDurationMinutes'],
+  });
+
 export const channelPoliciesSchema = z.object({
   stream: capabilityPolicySchema.optional(),
   availability: channelAvailabilitySchema.optional().nullable(),
+  apiKeyAutoDisableRules: z.array(apiKeyAutoDisableRuleSchema).optional().nullable(),
 });
 export type ChannelPolicies = z.infer<typeof channelPoliciesSchema>;
 
@@ -332,6 +355,7 @@ export const disabledAPIKeySchema = z.object({
   disabledAt: z.string(),
   errorCode: z.number(),
   reason: z.string().optional().nullable(),
+  expiresAt: z.string().optional().nullable(),
 });
 export type DisabledAPIKey = z.infer<typeof disabledAPIKeySchema>;
 

@@ -402,12 +402,12 @@ export default function RequestsManagement({ scope = 'project' }: { scope?: Requ
         <div className='flex flex-1 items-center justify-between'>
           <div>
             <h2 className='text-xl font-bold tracking-tight'>{t('requests.title')}</h2>
-            <p className='text-muted-foreground text-sm'>{t('requests.description')}</p>
+            <p className='text-muted-foreground hidden text-sm sm:block'>{t('requests.description')}</p>
           </div>
         </div>
       </Header>
 
-      <Main fixed>
+      <Main fixed className='py-2 sm:py-6'>
         <RequestsContent scope={scope} />
       </Main>
     </RequestsProvider>

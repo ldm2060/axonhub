@@ -1328,6 +1328,15 @@ func normalizeRetryPolicy(policy *RetryPolicy) {
 		policy.LoadBalancerStrategy = LoadBalancerStrategyFailover
 	}
 
+	switch policy.LoadBalancerStrategy {
+	case LoadBalancerStrategyAdaptive,
+		LoadBalancerStrategyFailover,
+		LoadBalancerStrategyCircuitBreaker,
+		LoadBalancerStrategyRoundRobin:
+	default:
+		policy.LoadBalancerStrategy = defaultRetryPolicy.LoadBalancerStrategy
+	}
+
 	switch policy.TraceStickyMode {
 	case TraceStickyDisabled, TraceStickyPreferPreviousChannel:
 	default:

@@ -54,6 +54,8 @@ const MODELS_QUERY = `
           }
           settings {
             disableDeveloperSettingsInheritance
+            loadBalancerStrategy
+            traceStickyMode
             associations {
               type
               priority
@@ -176,6 +178,8 @@ const CREATE_MODEL_MUTATION = `
       }
       settings {
         disableDeveloperSettingsInheritance
+        loadBalancerStrategy
+        traceStickyMode
         associations {
           type
           priority
@@ -277,6 +281,8 @@ const BULK_CREATE_MODELS_MUTATION = `
       }
       settings {
         disableDeveloperSettingsInheritance
+        loadBalancerStrategy
+        traceStickyMode
         associations {
           type
           priority
@@ -378,6 +384,8 @@ const UPDATE_MODEL_MUTATION = `
       }
       settings {
         disableDeveloperSettingsInheritance
+        loadBalancerStrategy
+        traceStickyMode
         associations {
           type
           priority

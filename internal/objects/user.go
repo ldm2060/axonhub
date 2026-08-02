@@ -8,6 +8,7 @@ func UserAvatarURL(userID int) string {
 	return fmt.Sprintf("/avatars/%d.png", userID)
 }
 
+// UserInfo contains the authenticated user's profile, permissions, and projects.
 type UserInfo struct {
 	ID             GUID               `json:"id"`
 	Email          string             `json:"email"`
@@ -23,6 +24,7 @@ type UserInfo struct {
 	HasPassword    bool               `json:"hasPassword"`
 }
 
+// OIDCIdentityInfo contains an identity provider association.
 type OIDCIdentityInfo struct {
 	ID      GUID   `json:"id"`
 	IdpName string `json:"idpName"`
@@ -31,13 +33,16 @@ type OIDCIdentityInfo struct {
 	Email   string `json:"email"`
 }
 
+// UserProjectInfo contains a user's membership and effective permissions for a project.
 type UserProjectInfo struct {
-	ProjectID GUID       `json:"projectID"`
-	IsOwner   bool       `json:"isOwner"`
-	Scopes    []string   `json:"scopes"`
-	Roles     []RoleInfo `json:"roles"`
+	ProjectID       GUID       `json:"projectID"`
+	IsOwner         bool       `json:"isOwner"`
+	Scopes          []string   `json:"scopes"`
+	EffectiveScopes []string   `json:"effectiveScopes"`
+	Roles           []RoleInfo `json:"roles"`
 }
 
+// RoleInfo contains the display name of a role.
 type RoleInfo struct {
 	Name string `json:"name"`
 }

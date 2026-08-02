@@ -157,6 +157,15 @@ models:
   ChannelAvailabilityInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelAvailability
+  APIKeyAutoDisableRule:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyAutoDisableRule
+  APIKeyAutoDisableRuleInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyAutoDisableRule
+  APIKeyAutoDisableAction:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.APIKeyAutoDisableAction
   ChannelSettings:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
