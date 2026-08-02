@@ -1803,6 +1803,17 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 		filterProjectID = projectID.ID
 	}
 
+	// Every account owns an auto-created private project, so "project owner" alone is
+	// not a privilege. Only system owners may see the system-wide aggregation; a mere
+	// project owner is always pinned to the project they actually own.
+	if !currentUser.IsOwner {
+		if filterProjectID != 0 && filterProjectID != headerProjectID {
+			return nil, fmt.Errorf("permission denied: cannot view usage statistics for another project")
+		}
+
+		filterProjectID = headerProjectID
+	}
+
 	// Owners see usage across all projects — the dashboard is system-wide, so we
 	// do not filter by project here (otherwise an owner whose selected project
 	// only contains themselves sees only their own stats).
@@ -1939,6 +1950,13 @@ func (r *queryResolver) DailyUsageStatsByUser(ctx context.Context, days *int) ([
 		return nil, fmt.Errorf("permission denied: only project owners can view usage statistics")
 	}
 
+	// Every account owns an auto-created private project, so a plain project owner must
+	// stay pinned to their own project; only system owners get the system-wide view.
+	filterProjectID := 0
+	if !currentUser.IsOwner {
+		filterProjectID = projectID
+	}
+
 	ctx = privacy.DecisionContext(ctx, privacy.Allow)
 
 	daysCount := 7
@@ -1966,12 +1984,18 @@ func (r *queryResolver) DailyUsageStatsByUser(ctx context.Context, days *int) ([
 
 	var results []userDailyStat
 
-	err := r.client.UsageLog.Query().
+	query := r.client.UsageLog.Query().
 		Where(
 			usagelog.APIKeyIDNotNil(),
 			usagelog.CreatedAtGTE(startDateUTC),
 			usagelog.CreatedAtLT(nowUTC),
-		).
+		)
+
+	if filterProjectID != 0 {
+		query = query.Where(usagelog.ProjectIDEQ(filterProjectID))
+	}
+
+	err := query.
 		Modify(func(s *sql.Selector) {
 			apiKeyTable := sql.Table(apikey.Table)
 			userTable := sql.Table("users")

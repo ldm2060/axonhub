@@ -61,6 +61,29 @@ func NewUserService(params UserServiceParams) *UserService {
 func (s *UserService) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
 	client := s.entFromContext(ctx)
 
+	// Creating a user must not become a way to mint privileges the caller lacks.
+	// Self-registration and other internal flows run under a system bypass, which
+	// leaves no user in context and therefore skips these checks.
+	if _, ok := contexts.GetUser(ctx); ok {
+		if input.IsOwner != nil && *input.IsOwner {
+			if err := s.permissionValidator.CanGrantOwnership(ctx); err != nil {
+				return nil, fmt.Errorf("permission denied: %w", err)
+			}
+		}
+
+		if input.Scopes != nil {
+			if err := s.permissionValidator.CanGrantScopes(ctx, input.Scopes, nil); err != nil {
+				return nil, fmt.Errorf("permission denied: %w", err)
+			}
+		}
+
+		for _, roleID := range input.RoleIDs {
+			if err := s.permissionValidator.CanEditRole(ctx, roleID, nil); err != nil {
+				return nil, fmt.Errorf("permission denied: %w", err)
+			}
+		}
+	}
+
 	// Hash the password
 	var hashedPassword string
 	if input.Password == OIDC_ONLY_PLACEHOLDER {
@@ -188,9 +211,24 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUs
 		return nil, fmt.Errorf("permission denied: %w", err)
 	}
 
+	// is_owner is not a scope, so CanGrantScopes never covers it. Without this guard a
+	// holder of write_users could grant ownership to themselves and bypass every policy.
+	if input.IsOwner != nil {
+		if err := s.permissionValidator.CanGrantOwnership(ctx); err != nil {
+			return nil, fmt.Errorf("permission denied: %w", err)
+		}
+	}
+
 	// Validate scope grants if scopes are being updated
 	if input.Scopes != nil {
 		if err := s.permissionValidator.CanGrantScopes(ctx, input.Scopes, nil); err != nil {
+			return nil, fmt.Errorf("permission denied: %w", err)
+		}
+	}
+
+	// Validate scope grants when appending rather than replacing.
+	if input.AppendScopes != nil {
+		if err := s.permissionValidator.CanGrantScopes(ctx, input.AppendScopes, nil); err != nil {
 			return nil, fmt.Errorf("permission denied: %w", err)
 		}
 	}

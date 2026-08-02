@@ -406,6 +406,15 @@ func init() {
 	// datastorage.DefaultPrimary holds the default value on creation for the primary field.
 	datastorage.DefaultPrimary = datastorageDescPrimary.Default.(bool)
 	emailtokenMixin := schema.EmailToken{}.Mixin()
+	emailtoken.Policy = privacy.NewPolicies(schema.EmailToken{})
+	emailtoken.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := emailtoken.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
 	emailtokenMixinFields0 := emailtokenMixin[0].Fields()
 	_ = emailtokenMixinFields0
 	emailtokenFields := schema.EmailToken{}.Fields()
@@ -775,6 +784,15 @@ func init() {
 	// request.DefaultContentSaved holds the default value on creation for the content_saved field.
 	request.DefaultContentSaved = requestDescContentSaved.Default.(bool)
 	requestexecutionMixin := schema.RequestExecution{}.Mixin()
+	requestexecution.Policy = privacy.NewPolicies(schema.RequestExecution{})
+	requestexecution.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := requestexecution.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
 	requestexecutionMixinFields0 := requestexecutionMixin[0].Fields()
 	_ = requestexecutionMixinFields0
 	requestexecutionFields := schema.RequestExecution{}.Fields()

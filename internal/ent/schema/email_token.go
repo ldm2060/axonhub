@@ -6,6 +6,8 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
 
 // EmailToken holds the schema definition for the EmailToken entity.
@@ -50,5 +52,19 @@ func (EmailToken) Indexes() []ent.Index {
 		index.Fields("type", "expires_at"),
 		index.Fields("type", "email").Unique(),
 		index.Fields("type", "email", "expires_at"),
+	}
+}
+
+// Policy 定义 EmailToken 的权限策略.
+// 邮件令牌是密码重置/邮箱验证的凭证，任何主体都不应通过 API 读取或写入，
+// 只允许 EmailTokenService 通过 authz 系统旁路访问，因此这里一律拒绝。
+func (EmailToken) Policy() ent.Policy {
+	return privacy.Policy{
+		Query: privacy.QueryPolicy{
+			privacy.AlwaysDenyRule(),
+		},
+		Mutation: privacy.MutationPolicy{
+			privacy.AlwaysDenyRule(),
+		},
 	}
 }

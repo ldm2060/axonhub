@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 
@@ -365,6 +366,12 @@ func (_q *EmailTokenQuery) prepareQuery(ctx context.Context) error {
 			return err
 		}
 		_q.sql = prev
+	}
+	if emailtoken.Policy == nil {
+		return errors.New("ent: uninitialized emailtoken.Policy (forgotten import ent/runtime?)")
+	}
+	if err := emailtoken.Policy.EvalQuery(ctx, _q); err != nil {
+		return err
 	}
 	return nil
 }

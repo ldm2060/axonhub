@@ -213,6 +213,23 @@ func (v *PermissionValidator) CanEditUserPermissions(ctx context.Context, target
 	return nil
 }
 
+// CanGrantOwnership checks if the current user can grant or revoke system ownership.
+// Rule: Only existing system owners can change the is_owner flag. is_owner is not a
+// scope, so CanGrantScopes does not cover it, and an owner bypasses every privacy
+// policy — this must therefore be gated separately.
+func (v *PermissionValidator) CanGrantOwnership(ctx context.Context) error {
+	currentUser, ok := contexts.GetUser(ctx)
+	if !ok || currentUser == nil {
+		return fmt.Errorf("user not found in context")
+	}
+
+	if !currentUser.IsOwner {
+		return fmt.Errorf("insufficient permissions: only system owners can change ownership")
+	}
+
+	return nil
+}
+
 // CanEditRole checks if the current user can edit a role.
 func (v *PermissionValidator) CanEditRole(ctx context.Context, roleID int, projectID *int) error {
 	role, err := authz.RunWithSystemBypass(ctx, "permission-check", func(bypassCtx context.Context) (*ent.Role, error) {

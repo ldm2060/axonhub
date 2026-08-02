@@ -557,6 +557,12 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 		return nil, err
 	}
 
+	if input.BaseURL != nil {
+		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
+			return nil, err
+		}
+	}
+
 	if input.Settings != nil {
 		if input.Settings.BodyOverrideOperations != nil {
 			if err := ValidateBodyOverrideOperations(input.Settings.BodyOverrideOperations); err != nil {
@@ -736,6 +742,12 @@ func NormalizeRetryableErrorPatterns(settings *objects.ChannelSettings) error {
 // UpdateChannel updates an existing channel with the provided input.
 func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent.UpdateChannelInput) (*ent.Channel, error) {
 	log.Debug(ctx, "UpdateChannel", log.Int("id", id), log.Any("input", input))
+
+	if input.BaseURL != nil {
+		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
+			return nil, err
+		}
+	}
 
 	// Check if name is being updated and if it conflicts with existing channels
 	if input.Name != nil {

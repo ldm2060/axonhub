@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/schema/index"
 
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/scopes"
 )
 
 type RequestExecution struct {
@@ -124,5 +125,24 @@ func (RequestExecution) Edges() []ent.Edge {
 func (RequestExecution) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.RelayConnection(),
+	}
+}
+
+// Policy 定义 RequestExecution 的权限策略.
+// RequestExecution 保存上游请求/响应体，敏感级别与 Request 一致，因此复用同一套规则。
+func (RequestExecution) Policy() ent.Policy {
+	return scopes.Policy{
+		Query: scopes.QueryPolicy{
+			scopes.OwnerRule(),
+			scopes.APIKeyScopeQueryRule(scopes.ScopeWriteRequests),
+			scopes.UserProjectScopeReadRequestsRule(scopes.ScopeReadRequests),
+			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
+		},
+		Mutation: scopes.MutationPolicy{
+			scopes.OwnerRule(),
+			scopes.APIKeyScopeMutationRule(scopes.ScopeWriteRequests),
+			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteRequests),
+			scopes.UserWriteScopeRule(scopes.ScopeWriteRequests),
+		},
 	}
 }
