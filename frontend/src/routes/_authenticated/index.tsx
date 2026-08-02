@@ -4,7 +4,7 @@ import { RouteGuard } from '@/components/route-guard';
 
 function PersonalDashboard() {
   return (
-    <RouteGuard requiredScopes={['read_dashboard']} scopeLevel="system">
+    <RouteGuard>
       <Dashboard mode="personal" />
     </RouteGuard>
   );
