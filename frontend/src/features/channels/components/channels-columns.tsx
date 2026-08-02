@@ -94,7 +94,6 @@ const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
   const { user: authUser } = useAuthStore((state) => state.auth);
   const channel = row.original;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { channelPermissions } = usePermissions();
 
   const isEnabled = channel.status === 'enabled';
   const isArchived = channel.status === 'archived';
