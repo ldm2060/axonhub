@@ -156,7 +156,7 @@ func (c *ApertisQuotaChecker) parseResponse(body []byte) (QuotaData, error) {
 
 // SupportsChannel returns true if the channel is OpenAI-compatible (used by Apertis).
 func (c *ApertisQuotaChecker) SupportsChannel(ch *ent.Channel) bool {
-	return ch.Type == channel.TypeOpenai || ch.Type == channel.TypeOpenaiResponses
+	return ch.Type == channel.TypeOpenai || ch.Type == channel.TypeOpenaiResponses || ch.Type == channel.TypeOpenaiImageGeneration
 }
 
 // buildApertisQuotaURL builds the URL for the Apertis billing credits endpoint.

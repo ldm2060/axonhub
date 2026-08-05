@@ -437,7 +437,7 @@ type Channel implements Node {
   """
   endpoints: [ChannelEndpoint!]
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   """
@@ -1302,6 +1302,7 @@ ChannelType is enum for the field type
 enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channel.Type") {
   openai
   openai_responses
+  openai_image_generation
   atlascloud
   cline
   codex
@@ -1871,7 +1872,7 @@ input CreateChannelInput {
   """
   endpoints: [ChannelEndpointInput!]
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   """
@@ -5566,6 +5567,22 @@ input RequestExecutionWhereInput {
   modelIDEqualFold: String
   modelIDContainsFold: String
   """
+  format field predicates
+  """
+  format: String
+  formatNEQ: String
+  formatIn: [String!]
+  formatNotIn: [String!]
+  formatGT: String
+  formatGTE: String
+  formatLT: String
+  formatLTE: String
+  formatContains: String
+  formatHasPrefix: String
+  formatHasSuffix: String
+  formatEqualFold: String
+  formatContainsFold: String
+  """
   reasoning_effort field predicates
   """
   reasoningEffort: String
@@ -5583,22 +5600,6 @@ input RequestExecutionWhereInput {
   reasoningEffortNotNil: Boolean
   reasoningEffortEqualFold: String
   reasoningEffortContainsFold: String
-  """
-  format field predicates
-  """
-  format: String
-  formatNEQ: String
-  formatIn: [String!]
-  formatNotIn: [String!]
-  formatGT: String
-  formatGTE: String
-  formatLT: String
-  formatLTE: String
-  formatContains: String
-  formatHasPrefix: String
-  formatHasSuffix: String
-  formatEqualFold: String
-  formatContainsFold: String
   """
   error_message field predicates
   """
@@ -6879,7 +6880,7 @@ input UpdateChannelInput {
   appendEndpoints: [ChannelEndpointInput!]
   clearEndpoints: Boolean
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   clearClientRestriction: Boolean

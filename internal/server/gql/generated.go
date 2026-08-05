@@ -80781,14 +80781,14 @@ func (ec *executionContext) unmarshalInputAPIKeyTokenUsageStatsInput(ctx context
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtGte = data
+			it.CreatedAtGTE = data
 		case "createdAtLTE":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAtLTE"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CreatedAtLte = data
+			it.CreatedAtLTE = data
 		}
 	}
 
@@ -97638,7 +97638,7 @@ func (ec *executionContext) unmarshalInputRequestExecutionWhereInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "requestID", "requestIDNEQ", "requestIDIn", "requestIDNotIn", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "dataStorageID", "dataStorageIDNEQ", "dataStorageIDIn", "dataStorageIDNotIn", "dataStorageIDIsNil", "dataStorageIDNotNil", "externalID", "externalIDNEQ", "externalIDIn", "externalIDNotIn", "externalIDGT", "externalIDGTE", "externalIDLT", "externalIDLTE", "externalIDContains", "externalIDHasPrefix", "externalIDHasSuffix", "externalIDIsNil", "externalIDNotNil", "externalIDEqualFold", "externalIDContainsFold", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "reasoningEffort", "reasoningEffortNEQ", "reasoningEffortIn", "reasoningEffortNotIn", "reasoningEffortGT", "reasoningEffortGTE", "reasoningEffortLT", "reasoningEffortLTE", "reasoningEffortContains", "reasoningEffortHasPrefix", "reasoningEffortHasSuffix", "reasoningEffortIsNil", "reasoningEffortNotNil", "reasoningEffortEqualFold", "reasoningEffortContainsFold", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "responseStatusCode", "responseStatusCodeNEQ", "responseStatusCodeIn", "responseStatusCodeNotIn", "responseStatusCodeGT", "responseStatusCodeGTE", "responseStatusCodeLT", "responseStatusCodeLTE", "responseStatusCodeIsNil", "responseStatusCodeNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "stream", "streamNEQ", "metricsLatencyMs", "metricsLatencyMsNEQ", "metricsLatencyMsIn", "metricsLatencyMsNotIn", "metricsLatencyMsGT", "metricsLatencyMsGTE", "metricsLatencyMsLT", "metricsLatencyMsLTE", "metricsLatencyMsIsNil", "metricsLatencyMsNotNil", "metricsFirstTokenLatencyMs", "metricsFirstTokenLatencyMsNEQ", "metricsFirstTokenLatencyMsIn", "metricsFirstTokenLatencyMsNotIn", "metricsFirstTokenLatencyMsGT", "metricsFirstTokenLatencyMsGTE", "metricsFirstTokenLatencyMsLT", "metricsFirstTokenLatencyMsLTE", "metricsFirstTokenLatencyMsIsNil", "metricsFirstTokenLatencyMsNotNil", "metricsReasoningDurationMs", "metricsReasoningDurationMsNEQ", "metricsReasoningDurationMsIn", "metricsReasoningDurationMsNotIn", "metricsReasoningDurationMsGT", "metricsReasoningDurationMsGTE", "metricsReasoningDurationMsLT", "metricsReasoningDurationMsLTE", "metricsReasoningDurationMsIsNil", "metricsReasoningDurationMsNotNil", "requestURL", "requestURLNEQ", "requestURLIn", "requestURLNotIn", "requestURLGT", "requestURLGTE", "requestURLLT", "requestURLLTE", "requestURLContains", "requestURLHasPrefix", "requestURLHasSuffix", "requestURLIsNil", "requestURLNotNil", "requestURLEqualFold", "requestURLContainsFold", "passThroughApplied", "passThroughAppliedNEQ", "hasRequest", "hasRequestWith", "hasChannel", "hasChannelWith", "hasDataStorage", "hasDataStorageWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "projectID", "projectIDNEQ", "projectIDIn", "projectIDNotIn", "projectIDGT", "projectIDGTE", "projectIDLT", "projectIDLTE", "requestID", "requestIDNEQ", "requestIDIn", "requestIDNotIn", "channelID", "channelIDNEQ", "channelIDIn", "channelIDNotIn", "channelIDIsNil", "channelIDNotNil", "dataStorageID", "dataStorageIDNEQ", "dataStorageIDIn", "dataStorageIDNotIn", "dataStorageIDIsNil", "dataStorageIDNotNil", "externalID", "externalIDNEQ", "externalIDIn", "externalIDNotIn", "externalIDGT", "externalIDGTE", "externalIDLT", "externalIDLTE", "externalIDContains", "externalIDHasPrefix", "externalIDHasSuffix", "externalIDIsNil", "externalIDNotNil", "externalIDEqualFold", "externalIDContainsFold", "modelID", "modelIDNEQ", "modelIDIn", "modelIDNotIn", "modelIDGT", "modelIDGTE", "modelIDLT", "modelIDLTE", "modelIDContains", "modelIDHasPrefix", "modelIDHasSuffix", "modelIDEqualFold", "modelIDContainsFold", "format", "formatNEQ", "formatIn", "formatNotIn", "formatGT", "formatGTE", "formatLT", "formatLTE", "formatContains", "formatHasPrefix", "formatHasSuffix", "formatEqualFold", "formatContainsFold", "reasoningEffort", "reasoningEffortNEQ", "reasoningEffortIn", "reasoningEffortNotIn", "reasoningEffortGT", "reasoningEffortGTE", "reasoningEffortLT", "reasoningEffortLTE", "reasoningEffortContains", "reasoningEffortHasPrefix", "reasoningEffortHasSuffix", "reasoningEffortIsNil", "reasoningEffortNotNil", "reasoningEffortEqualFold", "reasoningEffortContainsFold", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "responseStatusCode", "responseStatusCodeNEQ", "responseStatusCodeIn", "responseStatusCodeNotIn", "responseStatusCodeGT", "responseStatusCodeGTE", "responseStatusCodeLT", "responseStatusCodeLTE", "responseStatusCodeIsNil", "responseStatusCodeNotNil", "status", "statusNEQ", "statusIn", "statusNotIn", "stream", "streamNEQ", "metricsLatencyMs", "metricsLatencyMsNEQ", "metricsLatencyMsIn", "metricsLatencyMsNotIn", "metricsLatencyMsGT", "metricsLatencyMsGTE", "metricsLatencyMsLT", "metricsLatencyMsLTE", "metricsLatencyMsIsNil", "metricsLatencyMsNotNil", "metricsFirstTokenLatencyMs", "metricsFirstTokenLatencyMsNEQ", "metricsFirstTokenLatencyMsIn", "metricsFirstTokenLatencyMsNotIn", "metricsFirstTokenLatencyMsGT", "metricsFirstTokenLatencyMsGTE", "metricsFirstTokenLatencyMsLT", "metricsFirstTokenLatencyMsLTE", "metricsFirstTokenLatencyMsIsNil", "metricsFirstTokenLatencyMsNotNil", "metricsReasoningDurationMs", "metricsReasoningDurationMsNEQ", "metricsReasoningDurationMsIn", "metricsReasoningDurationMsNotIn", "metricsReasoningDurationMsGT", "metricsReasoningDurationMsGTE", "metricsReasoningDurationMsLT", "metricsReasoningDurationMsLTE", "metricsReasoningDurationMsIsNil", "metricsReasoningDurationMsNotNil", "requestURL", "requestURLNEQ", "requestURLIn", "requestURLNotIn", "requestURLGT", "requestURLGTE", "requestURLLT", "requestURLLTE", "requestURLContains", "requestURLHasPrefix", "requestURLHasSuffix", "requestURLIsNil", "requestURLNotNil", "requestURLEqualFold", "requestURLContainsFold", "passThroughApplied", "passThroughAppliedNEQ", "hasRequest", "hasRequestWith", "hasChannel", "hasChannelWith", "hasDataStorage", "hasDataStorageWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98278,6 +98278,97 @@ func (ec *executionContext) unmarshalInputRequestExecutionWhereInput(ctx context
 				return it, err
 			}
 			it.ModelIDContainsFold = data
+		case "format":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("format"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Format = data
+		case "formatNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatNEQ"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatNEQ = data
+		case "formatIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatIn = data
+		case "formatNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatNotIn"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatNotIn = data
+		case "formatGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatGT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatGT = data
+		case "formatGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatGTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatGTE = data
+		case "formatLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatLT"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatLT = data
+		case "formatLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatLTE"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatLTE = data
+		case "formatContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatContains = data
+		case "formatHasPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatHasPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatHasPrefix = data
+		case "formatHasSuffix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatHasSuffix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatHasSuffix = data
+		case "formatEqualFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatEqualFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatEqualFold = data
+		case "formatContainsFold":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatContainsFold"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FormatContainsFold = data
 		case "reasoningEffort":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reasoningEffort"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -98383,97 +98474,6 @@ func (ec *executionContext) unmarshalInputRequestExecutionWhereInput(ctx context
 				return it, err
 			}
 			it.ReasoningEffortContainsFold = data
-		case "format":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("format"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Format = data
-		case "formatNEQ":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatNEQ"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatNEQ = data
-		case "formatIn":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatIn"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatIn = data
-		case "formatNotIn":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatNotIn"))
-			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatNotIn = data
-		case "formatGT":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatGT"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatGT = data
-		case "formatGTE":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatGTE"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatGTE = data
-		case "formatLT":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatLT"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatLT = data
-		case "formatLTE":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatLTE"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatLTE = data
-		case "formatContains":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatContains"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatContains = data
-		case "formatHasPrefix":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatHasPrefix"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatHasPrefix = data
-		case "formatHasSuffix":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatHasSuffix"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatHasSuffix = data
-		case "formatEqualFold":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatEqualFold"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatEqualFold = data
-		case "formatContainsFold":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("formatContainsFold"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FormatContainsFold = data
 		case "errorMessage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errorMessage"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

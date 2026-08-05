@@ -48,6 +48,7 @@
   "channels.status.auto_disabled": "自动禁用",
   "channels.types.openai": "OpenAI",
   "channels.types.openai_responses": "OpenAI (Responses)",
+  "channels.types.openai_image_generation": "OpenAI (Image)",
   "channels.types.atlascloud": "AtlasCloud",
   "channels.types.cline": "Cline",
   "channels.types.anthropic": "Anthropic",

@@ -1213,7 +1213,7 @@ func providerTypeFromChannel(chType channel.Type, baseURL string) string {
 		return "opencode_go"
 	case channel.TypeMinimax, channel.TypeMinimaxAnthropic:
 		return "minimax"
-	case channel.TypeOpenai, channel.TypeOpenaiResponses:
+	case channel.TypeOpenai, channel.TypeOpenaiResponses, channel.TypeOpenaiImageGeneration:
 		return provider_quota.DetectProviderFromURL(baseURL)
 	default:
 		return ""

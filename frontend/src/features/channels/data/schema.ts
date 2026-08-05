@@ -58,6 +58,7 @@ export type ChannelEndpoint = z.infer<typeof channelEndpointSchema>;
 export const channelTypeSchema = z.enum([
   'openai',
   'openai_responses',
+  'openai_image_generation',
   'atlascloud',
   'cline',
   'codex',

@@ -96,6 +96,14 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     color: 'bg-green-100 text-green-800 border-green-200',
     icon: OpenAI,
   },
+  openai_image_generation: {
+    channelType: 'openai_image_generation',
+    baseURL: 'https://api.openai.com/v1',
+    defaultModels: ['gpt-image-1', 'gpt-image-1-mini', 'dall-e-3'],
+    apiFormat: 'openai/image_generation',
+    color: 'bg-white-100 text-white-800 border-white-200',
+    icon: OpenAI,
+  },
   codex: {
     channelType: 'codex',
     baseURL: 'https://chatgpt.com/backend-api/codex#',
@@ -832,6 +840,7 @@ export type Provider =
 export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   openai: 'openai',
   openai_responses: 'openai',
+  openai_image_generation: 'openai',
   atlascloud: 'atlascloud',
   cline: 'cline',
   openai_fake: 'openai',
