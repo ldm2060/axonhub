@@ -46,8 +46,8 @@ type APIKeyTokenUsageStats struct {
 
 type APIKeyTokenUsageStatsInput struct {
 	APIKeyIds    []*objects.GUID `json:"apiKeyIds,omitempty"`
-	CreatedAtGTE *time.Time      `json:"createdAtGTE,omitempty"`
-	CreatedAtLTE *time.Time      `json:"createdAtLTE,omitempty"`
+	CreatedAtGte *time.Time      `json:"createdAtGTE,omitempty"`
+	CreatedAtLte *time.Time      `json:"createdAtLTE,omitempty"`
 }
 
 type AddUserToProjectInput struct {

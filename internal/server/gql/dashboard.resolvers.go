@@ -472,11 +472,11 @@ func (r *queryResolver) APIKeyTokenUsageStats(ctx context.Context, input *APIKey
 	query := r.client.UsageLog.Query().
 		Where(usagelog.APIKeyIDIn(accessibleIDs...))
 
-	if input.CreatedAtGTE != nil {
-		query = query.Where(usagelog.CreatedAtGTE(*input.CreatedAtGTE))
+	if input.CreatedAtGte != nil {
+		query = query.Where(usagelog.CreatedAtGTE(*input.CreatedAtGte))
 	}
-	if input.CreatedAtLTE != nil {
-		query = query.Where(usagelog.CreatedAtLTE(*input.CreatedAtLTE))
+	if input.CreatedAtLte != nil {
+		query = query.Where(usagelog.CreatedAtLTE(*input.CreatedAtLte))
 	}
 
 	type usageStats struct {

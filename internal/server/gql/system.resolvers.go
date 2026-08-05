@@ -803,6 +803,11 @@ func (r *systemRuntimeStatsResolver) ProcessRssMaxBytes(ctx context.Context, obj
 // EmailSettings returns EmailSettingsResolver implementation.
 func (r *Resolver) EmailSettings() EmailSettingsResolver { return &emailSettingsResolver{r} }
 
+// ProviderQuotaCollectionSettings returns ProviderQuotaCollectionSettingsResolver implementation.
+func (r *Resolver) ProviderQuotaCollectionSettings() ProviderQuotaCollectionSettingsResolver {
+	return &providerQuotaCollectionSettingsResolver{r}
+}
+
 // SystemRuntimeOverview returns SystemRuntimeOverviewResolver implementation.
 func (r *Resolver) SystemRuntimeOverview() SystemRuntimeOverviewResolver {
 	return &systemRuntimeOverviewResolver{r}
@@ -819,13 +824,7 @@ func (r *Resolver) SystemRuntimeStats() SystemRuntimeStatsResolver {
 }
 
 type emailSettingsResolver struct{ *Resolver }
+type providerQuotaCollectionSettingsResolver struct{ *Resolver }
 type systemRuntimeOverviewResolver struct{ *Resolver }
 type systemRuntimeSampleResolver struct{ *Resolver }
 type systemRuntimeStatsResolver struct{ *Resolver }
-
-// ProviderQuotaCollectionSettings returns ProviderQuotaCollectionSettingsResolver implementation.
-func (r *Resolver) ProviderQuotaCollectionSettings() ProviderQuotaCollectionSettingsResolver {
-	return &providerQuotaCollectionSettingsResolver{r}
-}
-
-type providerQuotaCollectionSettingsResolver struct{ *Resolver }
