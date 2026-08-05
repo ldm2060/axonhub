@@ -432,6 +432,37 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
           },
         ] as ColumnDef<Request>[])
       : []),
+    // User column - only show if user has permission to view users (admin scope)
+    ...(permissions.canViewUsers
+      ? ([
+          {
+            id: 'user',
+            accessorFn: (row: Request) => row.apiKey?.user?.id ?? '',
+            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
+            enableSorting: false,
+            enableHiding: true,
+            cell: ({ row }) => {
+              const user = row.original.apiKey?.user;
+              if (!user) return <div className='text-muted-foreground text-xs'>-</div>;
+              const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+              return (
+                <div className='text-xs'>
+                  <div className='font-medium'>{name || user.email}</div>
+                  {name && user.email && <div className='text-muted-foreground'>{user.email}</div>}
+                </div>
+              );
+            },
+          },
+        ] as ColumnDef<Request>[])
+      : [
+          {
+            id: 'user',
+            header: () => null,
+            cell: () => null,
+            enableHiding: true,
+            meta: { className: 'hidden' },
+          } as ColumnDef<Request>,
+        ]),
 
     {
       accessorKey: 'status',
