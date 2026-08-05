@@ -44,6 +44,12 @@ export interface ProviderConfig {
   color: string;
   /** Channel types supported by this provider, ordered by API format preference */
   channelTypes: ChannelType[];
+  /**
+   * Extra API formats to expose in the create-channel dialog's API format dropdown
+   * even though no dedicated channelType carries them (the provider's default
+   * channelType is reused on submit).
+   */
+  additionalApiFormats?: ApiFormat[];
 }
 
 /**
@@ -56,6 +62,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     icon: OpenAI,
     color: 'bg-white-100 text-white-800 border-white-200',
     channelTypes: ['openai', 'openai_responses'],
+    additionalApiFormats: ['openai/image_generation'],
   },
   atlascloud: {
     provider: 'atlascloud',
@@ -321,6 +328,11 @@ export const getApiFormatsForProvider = (provider: string): ApiFormat[] => {
     const channelConfig = CHANNEL_CONFIGS[channelType];
     if (channelConfig?.apiFormat && !formats.includes(channelConfig.apiFormat)) {
       formats.push(channelConfig.apiFormat);
+    }
+  }
+  for (const format of providerConfig.additionalApiFormats ?? []) {
+    if (!formats.includes(format)) {
+      formats.push(format);
     }
   }
   return formats;

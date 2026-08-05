@@ -946,7 +946,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             ? 'anthropic_aws'
             : provider === 'moonshot' && newFormat === 'anthropic/messages' && useKimiCoding
               ? 'moonshot_coding'
-              : getChannelTypeForApiFormat(provider, newFormat);
+              : (getChannelTypeForApiFormat(provider, newFormat) ?? (provider === 'openai' ? 'openai' : undefined));
       if (newChannelType) {
         form.setValue('type', newChannelType);
         if (!isEdit) {
@@ -993,7 +993,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             ? 'anthropic_aws'
             : format === 'anthropic/messages' && useKimiCoding
               ? 'moonshot_coding'
-              : channelTypeFromFormat;
+              : (channelTypeFromFormat ?? (selectedProvider === 'openai' ? 'openai' : undefined));
       if (newChannelType) {
         form.setValue('type', newChannelType);
 
