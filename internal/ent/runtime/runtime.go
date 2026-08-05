@@ -816,7 +816,7 @@ func init() {
 	// requestexecution.ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
 	requestexecution.ExternalIDValidator = requestexecutionDescExternalID.Validators[0].(func(string) error)
 	// requestexecutionDescFormat is the schema descriptor for format field.
-	requestexecutionDescFormat := requestexecutionFields[7].Descriptor()
+	requestexecutionDescFormat := requestexecutionFields[6].Descriptor()
 	// requestexecution.DefaultFormat holds the default value on creation for the format field.
 	requestexecution.DefaultFormat = requestexecutionDescFormat.Default.(string)
 	// requestexecutionDescStream is the schema descriptor for stream field.

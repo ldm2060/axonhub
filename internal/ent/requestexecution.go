@@ -38,10 +38,10 @@ type RequestExecution struct {
 	ExternalID string `json:"external_id,omitempty"`
 	// ModelID holds the value of the "model_id" field.
 	ModelID string `json:"model_id,omitempty"`
-	// Reasoning effort sent to the channel
-	ReasoningEffort string `json:"reasoning_effort,omitempty"`
 	// Format holds the value of the "format" field.
 	Format string `json:"format,omitempty"`
+	// Final reasoning effort sent to the upstream provider
+	ReasoningEffort *string `json:"reasoning_effort,omitempty"`
 	// RequestBody holds the value of the "request_body" field.
 	RequestBody objects.JSONRawMessage `json:"request_body,omitempty"`
 	// ResponseBody holds the value of the "response_body" field.
@@ -133,7 +133,7 @@ func (*RequestExecution) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case requestexecution.FieldID, requestexecution.FieldProjectID, requestexecution.FieldRequestID, requestexecution.FieldChannelID, requestexecution.FieldDataStorageID, requestexecution.FieldResponseStatusCode, requestexecution.FieldMetricsLatencyMs, requestexecution.FieldMetricsFirstTokenLatencyMs, requestexecution.FieldMetricsReasoningDurationMs:
 			values[i] = new(sql.NullInt64)
-		case requestexecution.FieldExternalID, requestexecution.FieldModelID, requestexecution.FieldReasoningEffort, requestexecution.FieldFormat, requestexecution.FieldErrorMessage, requestexecution.FieldStatus, requestexecution.FieldRequestURL:
+		case requestexecution.FieldExternalID, requestexecution.FieldModelID, requestexecution.FieldFormat, requestexecution.FieldReasoningEffort, requestexecution.FieldErrorMessage, requestexecution.FieldStatus, requestexecution.FieldRequestURL:
 			values[i] = new(sql.NullString)
 		case requestexecution.FieldCreatedAt, requestexecution.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -206,17 +206,18 @@ func (_m *RequestExecution) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ModelID = value.String
 			}
-		case requestexecution.FieldReasoningEffort:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field reasoning_effort", values[i])
-			} else if value.Valid {
-				_m.ReasoningEffort = value.String
-			}
 		case requestexecution.FieldFormat:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field format", values[i])
 			} else if value.Valid {
 				_m.Format = value.String
+			}
+		case requestexecution.FieldReasoningEffort:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reasoning_effort", values[i])
+			} else if value.Valid {
+				_m.ReasoningEffort = new(string)
+				*_m.ReasoningEffort = value.String
 			}
 		case requestexecution.FieldRequestBody:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -383,11 +384,13 @@ func (_m *RequestExecution) String() string {
 	builder.WriteString("model_id=")
 	builder.WriteString(_m.ModelID)
 	builder.WriteString(", ")
-	builder.WriteString("reasoning_effort=")
-	builder.WriteString(_m.ReasoningEffort)
-	builder.WriteString(", ")
 	builder.WriteString("format=")
 	builder.WriteString(_m.Format)
+	builder.WriteString(", ")
+	if v := _m.ReasoningEffort; v != nil {
+		builder.WriteString("reasoning_effort=")
+		builder.WriteString(*v)
+	}
 	builder.WriteString(", ")
 	builder.WriteString("request_body=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RequestBody))

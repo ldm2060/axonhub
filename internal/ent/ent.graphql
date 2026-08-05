@@ -24,6 +24,10 @@ type APIKey implements Node {
   """
   scopes: [String!]
   profiles: APIKeyProfiles
+  """
+  IP CIDR allowlist for this API key. If non-empty, only requests from matching source IPs are accepted.
+  """
+  allowedIps: [String!]
   user: User @goField(forceResolver: true)
   project: Project!
   requests(
@@ -107,6 +111,7 @@ Properties by which APIKey connections can be ordered.
 enum APIKeyOrderField {
   CREATED_AT
   UPDATED_AT
+  NAME
 }
 type APIKeyProfileTemplate implements Node {
   id: ID!
@@ -432,7 +437,7 @@ type Channel implements Node {
   """
   endpoints: [ChannelEndpoint!]
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   """
@@ -557,6 +562,9 @@ enum ChannelClientRestriction @goModel(model: "github.com/ldm2060/axonhub/intern
   off
   lenient
   strict
+  strict_anthropic
+  strict_openai
+  strict_gemini
 }
 """
 A connection to a list of items.
@@ -1350,8 +1358,10 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   opencode_go
   opencode_go_anthropic
   ollama
+  ollama_anthropic
   evolink
   evolink_anthropic
+  groq
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!
@@ -1807,6 +1817,10 @@ input CreateAPIKeyInput {
   API Key specific scopes. For user type: default read_channels, write_requests (immutable). For service_account: custom scopes.
   """
   scopes: [String!]
+  """
+  IP CIDR allowlist for this API key. If non-empty, only requests from matching source IPs are accepted.
+  """
+  allowedIps: [String!]
   projectID: ID!
 }
 """
@@ -1857,7 +1871,7 @@ input CreateChannelInput {
   """
   endpoints: [ChannelEndpointInput!]
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   """
@@ -2055,7 +2069,6 @@ input CreatePromptInput {
   prompt settings in JSON format
   """
   settings: PromptSettingsInput!
-  projectIDs: [ID!]
 }
 """
 CreatePromptProtectionRuleInput is used for create PromptProtectionRule object.
@@ -2174,6 +2187,10 @@ input CreateThreadInput {
   Unique thread identifier for this thread
   """
   threadID: String!
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: ThreadStatus
   projectID: ID!
 }
 """
@@ -2185,6 +2202,10 @@ input CreateTraceInput {
   Unique trace identifier
   """
   traceID: String!
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: TraceStatus
   projectID: ID!
   threadID: ID
 }
@@ -3775,7 +3796,7 @@ type Prompt implements Node {
   """
   Project ID that this prompt belongs to
   """
-  projectID: Int!
+  projectID: ID!
   """
   prompt name
   """
@@ -3801,37 +3822,7 @@ type Prompt implements Node {
   prompt settings in JSON format
   """
   settings: PromptSettings!
-  projects(
-    """
-    Returns the elements in the list that come after the specified cursor.
-    """
-    after: Cursor
-
-    """
-    Returns the first _n_ elements from the list.
-    """
-    first: Int
-
-    """
-    Returns the elements in the list that come before the specified cursor.
-    """
-    before: Cursor
-
-    """
-    Returns the last _n_ elements from the list.
-    """
-    last: Int
-
-    """
-    Ordering options for Projects returned from the connection.
-    """
-    orderBy: ProjectOrder
-
-    """
-    Filtering options for Projects returned from the connection.
-    """
-    where: ProjectWhereInput
-  ): ProjectConnection!
+  project: Project!
 }
 """
 A connection to a list of items.
@@ -4113,14 +4104,10 @@ input PromptWhereInput {
   """
   project_id field predicates
   """
-  projectID: Int
-  projectIDNEQ: Int
-  projectIDIn: [Int!]
-  projectIDNotIn: [Int!]
-  projectIDGT: Int
-  projectIDGTE: Int
-  projectIDLT: Int
-  projectIDLTE: Int
+  projectID: ID
+  projectIDNEQ: ID
+  projectIDIn: [ID!]
+  projectIDNotIn: [ID!]
   """
   name field predicates
   """
@@ -4204,10 +4191,10 @@ input PromptWhereInput {
   orderLT: Int
   orderLTE: Int
   """
-  projects edge predicates
+  project edge predicates
   """
-  hasProjects: Boolean
-  hasProjectsWith: [ProjectWhereInput!]
+  hasProject: Boolean
+  hasProjectWith: [ProjectWhereInput!]
 }
 type ProviderQuotaStatus implements Node {
   id: ID!
@@ -4265,12 +4252,15 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   codex
   github_copilot
   nanogpt
+  cline
   wafer
   synthetic
   neuralwatt
-  zhipu
   apertis
   opencode_go
+  kimi_code
+  minimax
+  zhipu
 }
 """
 ProviderQuotaStatusStatus is enum for the field status
@@ -5367,11 +5357,11 @@ type RequestExecution implements Node {
   dataStorageID: ID
   externalID: String
   modelID: String!
+  format: String!
   """
-  Reasoning effort sent to the channel
+  Final reasoning effort sent to the upstream provider
   """
   reasoningEffort: String
-  format: String!
   requestBody: JSONRawMessage! @goField(forceResolver: true)
   responseBody: JSONRawMessage @goField(forceResolver: true)
   responseChunks: [JSONRawMessage!] @goField(forceResolver: true)
@@ -5576,6 +5566,22 @@ input RequestExecutionWhereInput {
   modelIDEqualFold: String
   modelIDContainsFold: String
   """
+  format field predicates
+  """
+  format: String
+  formatNEQ: String
+  formatIn: [String!]
+  formatNotIn: [String!]
+  formatGT: String
+  formatGTE: String
+  formatLT: String
+  formatLTE: String
+  formatContains: String
+  formatHasPrefix: String
+  formatHasSuffix: String
+  formatEqualFold: String
+  formatContainsFold: String
+  """
   reasoning_effort field predicates
   """
   reasoningEffort: String
@@ -5593,22 +5599,6 @@ input RequestExecutionWhereInput {
   reasoningEffortNotNil: Boolean
   reasoningEffortEqualFold: String
   reasoningEffortContainsFold: String
-  """
-  format field predicates
-  """
-  format: String
-  formatNEQ: String
-  formatIn: [String!]
-  formatNotIn: [String!]
-  formatGT: String
-  formatGTE: String
-  formatLT: String
-  formatLTE: String
-  formatContains: String
-  formatHasPrefix: String
-  formatHasSuffix: String
-  formatEqualFold: String
-  formatContainsFold: String
   """
   error_message field predicates
   """
@@ -6419,6 +6409,10 @@ type Thread implements Node {
   Unique thread identifier for this thread
   """
   threadID: String!
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: ThreadStatus!
   project: Project!
   traces(
     """
@@ -6503,6 +6497,14 @@ enum ThreadOrderField {
   UPDATED_AT
 }
 """
+ThreadStatus is enum for the field status
+"""
+enum ThreadStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/thread.Status") {
+  active
+  archived
+  retained
+}
+"""
 ThreadWhereInput is used for filtering Thread objects.
 Input was generated by ent.
 """
@@ -6567,6 +6569,13 @@ input ThreadWhereInput {
   threadIDEqualFold: String
   threadIDContainsFold: String
   """
+  status field predicates
+  """
+  status: ThreadStatus
+  statusNEQ: ThreadStatus
+  statusIn: [ThreadStatus!]
+  statusNotIn: [ThreadStatus!]
+  """
   project edge predicates
   """
   hasProject: Boolean
@@ -6597,6 +6606,10 @@ type Trace implements Node {
   Thread ID that this trace belongs to
   """
   threadID: ID
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: TraceStatus!
   project: Project!
   thread: Thread
   requests(
@@ -6682,6 +6695,14 @@ enum TraceOrderField {
   UPDATED_AT
 }
 """
+TraceStatus is enum for the field status
+"""
+enum TraceStatus @goModel(model: "github.com/ldm2060/axonhub/internal/ent/trace.Status") {
+  active
+  archived
+  retained
+}
+"""
 TraceWhereInput is used for filtering Trace objects.
 Input was generated by ent.
 """
@@ -6755,6 +6776,13 @@ input TraceWhereInput {
   threadIDIsNil: Boolean
   threadIDNotNil: Boolean
   """
+  status field predicates
+  """
+  status: TraceStatus
+  statusNEQ: TraceStatus
+  statusIn: [TraceStatus!]
+  statusNotIn: [TraceStatus!]
+  """
   project edge predicates
   """
   hasProject: Boolean
@@ -6782,6 +6810,12 @@ input UpdateAPIKeyInput {
   scopes: [String!]
   appendScopes: [String!]
   clearScopes: Boolean
+  """
+  IP CIDR allowlist for this API key. If non-empty, only requests from matching source IPs are accepted.
+  """
+  allowedIps: [String!]
+  appendAllowedIps: [String!]
+  clearAllowedIps: Boolean
 }
 """
 UpdateAPIKeyProfileTemplateInput is used for update APIKeyProfileTemplate object.
@@ -6845,7 +6879,7 @@ input UpdateChannelInput {
   appendEndpoints: [ChannelEndpointInput!]
   clearEndpoints: Boolean
   """
-  Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+  Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
   """
   clientRestriction: ChannelClientRestriction
   clearClientRestriction: Boolean
@@ -7060,9 +7094,6 @@ input UpdatePromptInput {
   prompt settings in JSON format
   """
   settings: PromptSettingsInput
-  addProjectIDs: [ID!]
-  removeProjectIDs: [ID!]
-  clearProjects: Boolean
 }
 """
 UpdatePromptProtectionRuleInput is used for update PromptProtectionRule object.
@@ -7184,6 +7215,10 @@ input UpdateThreadInput {
   Unique thread identifier for this thread
   """
   threadID: String
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: ThreadStatus
 }
 """
 UpdateTraceInput is used for update Trace object.
@@ -7194,6 +7229,10 @@ input UpdateTraceInput {
   Unique trace identifier
   """
   traceID: String
+  """
+  Record status: active (default), archived (hidden), retained (protected from GC)
+  """
+  status: TraceStatus
 }
 """
 UpdateUsageLogInput is used for update UsageLog object.
@@ -7915,6 +7954,7 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   antigravity
   apertis
   opencode_go
+  minimax
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status

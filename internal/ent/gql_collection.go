@@ -4589,15 +4589,15 @@ func (_q *RequestExecutionQuery) collectField(ctx context.Context, oneNode bool,
 				selectedFields = append(selectedFields, requestexecution.FieldModelID)
 				fieldSeen[requestexecution.FieldModelID] = struct{}{}
 			}
-		case "reasoningEffort":
-			if _, ok := fieldSeen[requestexecution.FieldReasoningEffort]; !ok {
-				selectedFields = append(selectedFields, requestexecution.FieldReasoningEffort)
-				fieldSeen[requestexecution.FieldReasoningEffort] = struct{}{}
-			}
 		case "format":
 			if _, ok := fieldSeen[requestexecution.FieldFormat]; !ok {
 				selectedFields = append(selectedFields, requestexecution.FieldFormat)
 				fieldSeen[requestexecution.FieldFormat] = struct{}{}
+			}
+		case "reasoningEffort":
+			if _, ok := fieldSeen[requestexecution.FieldReasoningEffort]; !ok {
+				selectedFields = append(selectedFields, requestexecution.FieldReasoningEffort)
+				fieldSeen[requestexecution.FieldReasoningEffort] = struct{}{}
 			}
 		case "requestBody":
 			if _, ok := fieldSeen[requestexecution.FieldRequestBody]; !ok {

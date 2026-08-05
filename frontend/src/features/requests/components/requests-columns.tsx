@@ -24,21 +24,6 @@ import { getStatusColor } from './help';
 interface UseRequestsColumnsOptions {
   onBodyClick?: (requestId: string, index: number) => void;
   onViewDetail?: (requestId: string) => void;
-  showOwnershipColumns?: boolean;
-  systemOnly?: boolean;
-}
-
-function formatUserName(user?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
-  const firstName = user?.firstName?.trim() ?? '';
-  const lastName = user?.lastName?.trim() ?? '';
-  const fullName = [firstName, lastName].filter(Boolean).join(' ');
-
-  if (fullName) return fullName;
-  return user?.email?.trim() || '-';
-}
-
-function getStringFilterValues(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 }
 
 export const DEFAULT_MOBILE_HIDDEN_COLUMN_IDS = [
@@ -60,10 +45,14 @@ export const DEFAULT_MOBILE_HIDDEN_COLUMN_IDS = [
 
 export const MODEL_ID_COLUMN = 'modelID' as const;
 
+function getStringFilterValues(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnDef<Request>[] {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
-  const permissions = useRequestPermissions({ systemOnly: options?.systemOnly ?? false });
+  const permissions = useRequestPermissions();
   const { hasSystemScope } = usePermissions();
   const { data: settings } = useGeneralSettings();
   const { data: securitySettings } = useSecuritySettings();
@@ -116,33 +105,6 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       enableSorting: true,
       enableHiding: false,
     },
-    ...(options?.showOwnershipColumns
-      ? ([
-          ...(permissions.canViewProjects
-            ? [
-                {
-                  id: 'project',
-                  accessorFn: (row) => row.project?.name || '',
-                  header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.project')} />,
-                  enableSorting: false,
-                  enableHiding: true,
-                  cell: ({ row }) => <div className='px-2 text-sm'>{row.original.project?.name || '-'}</div>,
-                } as ColumnDef<Request>,
-              ]
-            : []),
-          {
-            id: 'requestUser',
-            accessorFn: (row) => formatUserName(row.apiKey?.user),
-            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
-            enableSorting: false,
-            enableHiding: true,
-            cell: ({ row }) => {
-              const user = row.original.apiKey?.user;
-              return <div className='px-2 text-sm'>{formatUserName(user)}</div>;
-            },
-          },
-        ] as ColumnDef<Request>[])
-      : []),
 
     {
       id: 'modelID',
@@ -232,41 +194,15 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       enableSorting: false,
       enableHiding: true,
       cell: ({ row }) => {
-        const request = row.original;
-        const reasoningEffort = request.reasoningEffort;
+        const latestExecution = row.original.executions?.edges?.[0]?.node;
+        const reasoningEffort = latestExecution
+          ? latestExecution.reasoningEffort
+          : row.original.status === 'processing'
+            ? undefined
+            : row.original.reasoningEffort;
 
         if (!reasoningEffort) {
           return <div className='text-muted-foreground text-xs'>-</div>;
-        }
-
-        // Check if there are any executions with different reasoning effort
-        const executions = request.executions?.edges?.map((edge) => edge.node) || [];
-        const executionEfforts = Array.from(new Set(executions.map((exe) => exe?.reasoningEffort || ''))).filter(
-          (effort) => effort && effort !== reasoningEffort
-        );
-
-        if (executionEfforts.length > 0) {
-          return (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type='button'
-                  className='flex w-fit cursor-help items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50'
-                >
-                  <span>{reasoningEffort}</span>
-                  <IconRoute className='h-3.5 w-3.5 opacity-80' />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side='right' className='border-sky-200 bg-white dark:bg-zinc-900'>
-                <div className='flex items-center gap-2 p-2'>
-                  <span className='text-muted-foreground text-xs whitespace-nowrap'>{t('requests.columns.executedReasoningEffort')}:</span>
-                  <span className='rounded bg-sky-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-sky-800 dark:bg-sky-900/40 dark:text-sky-200'>
-                    {executionEfforts[0]}
-                  </span>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          );
         }
 
         return (
@@ -471,8 +407,8 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               return <div className='px-2 font-mono text-xs'>{channel.name}</div>;
             },
             filterFn: (row, _id, value) => {
-              const values = getStringFilterValues(value);
               // For client-side filtering, check if any of the selected channels match
+              const values = getStringFilterValues(value);
               if (values.length === 0) return true; // No filter applied
 
               const channel = row.original.channel;
@@ -658,7 +594,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
           <div className='font-mono text-xs font-medium'>
             {t('currencies.format', {
               val: cost,
-              currency: settings?.currencyCode,
+              currency: settings?.currencyCode ?? 'USD',
               locale: i18n.language === 'zh' ? 'zh-CN' : 'en-US',
               minimumFractionDigits: 6,
             })}
@@ -739,7 +675,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
 
             navigateWithSearch({
               to: '/project/requests/$requestId',
-              params: { requestId: extractNumberID(row.original.id) || row.original.id },
+              params: { requestId: row.original.id },
             });
           }}
         >
@@ -758,13 +694,6 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       },
       enableSorting: false,
       enableHiding: true,
-    },
-    {
-      id: 'user',
-      header: () => null,
-      cell: () => null,
-      enableHiding: true,
-      meta: { className: 'hidden' },
     },
   ];
   return columns;

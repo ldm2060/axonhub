@@ -109,6 +109,7 @@ function buildRequestsQuery(
                   modelID
                   reasoningEffort
                   status
+                  reasoningEffort
                   passThroughApplied${executionChannelFields}
                 }
                 cursor
@@ -373,6 +374,7 @@ function buildRequestExecutionSummariesQuery(permissions: { canViewChannels: boo
                 responseStatusCode
                 status
                 format
+                reasoningEffort
                 stream
                 requestURL
                 passThroughApplied

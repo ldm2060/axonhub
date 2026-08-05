@@ -122,20 +122,6 @@ func (_c *RequestExecutionCreate) SetModelID(v string) *RequestExecutionCreate {
 	return _c
 }
 
-// SetReasoningEffort sets the "reasoning_effort" field.
-func (_c *RequestExecutionCreate) SetReasoningEffort(v string) *RequestExecutionCreate {
-	_c.mutation.SetReasoningEffort(v)
-	return _c
-}
-
-// SetNillableReasoningEffort sets the "reasoning_effort" field if the given value is not nil.
-func (_c *RequestExecutionCreate) SetNillableReasoningEffort(v *string) *RequestExecutionCreate {
-	if v != nil {
-		_c.SetReasoningEffort(*v)
-	}
-	return _c
-}
-
 // SetFormat sets the "format" field.
 func (_c *RequestExecutionCreate) SetFormat(v string) *RequestExecutionCreate {
 	_c.mutation.SetFormat(v)
@@ -146,6 +132,20 @@ func (_c *RequestExecutionCreate) SetFormat(v string) *RequestExecutionCreate {
 func (_c *RequestExecutionCreate) SetNillableFormat(v *string) *RequestExecutionCreate {
 	if v != nil {
 		_c.SetFormat(*v)
+	}
+	return _c
+}
+
+// SetReasoningEffort sets the "reasoning_effort" field.
+func (_c *RequestExecutionCreate) SetReasoningEffort(v string) *RequestExecutionCreate {
+	_c.mutation.SetReasoningEffort(v)
+	return _c
+}
+
+// SetNillableReasoningEffort sets the "reasoning_effort" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableReasoningEffort(v *string) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetReasoningEffort(*v)
 	}
 	return _c
 }
@@ -314,7 +314,9 @@ func (_c *RequestExecutionCreate) Mutation() *RequestExecutionMutation {
 
 // Save creates the RequestExecution in the database.
 func (_c *RequestExecutionCreate) Save(ctx context.Context) (*RequestExecution, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -341,12 +343,18 @@ func (_c *RequestExecutionCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *RequestExecutionCreate) defaults() {
+func (_c *RequestExecutionCreate) defaults() error {
 	if _, ok := _c.mutation.CreatedAt(); !ok {
+		if requestexecution.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized requestexecution.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := requestexecution.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		if requestexecution.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized requestexecution.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := requestexecution.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
@@ -366,6 +374,7 @@ func (_c *RequestExecutionCreate) defaults() {
 		v := requestexecution.DefaultPassThroughApplied
 		_c.mutation.SetPassThroughApplied(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -454,13 +463,13 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 		_spec.SetField(requestexecution.FieldModelID, field.TypeString, value)
 		_node.ModelID = value
 	}
-	if value, ok := _c.mutation.ReasoningEffort(); ok {
-		_spec.SetField(requestexecution.FieldReasoningEffort, field.TypeString, value)
-		_node.ReasoningEffort = value
-	}
 	if value, ok := _c.mutation.Format(); ok {
 		_spec.SetField(requestexecution.FieldFormat, field.TypeString, value)
 		_node.Format = value
+	}
+	if value, ok := _c.mutation.ReasoningEffort(); ok {
+		_spec.SetField(requestexecution.FieldReasoningEffort, field.TypeString, value)
+		_node.ReasoningEffort = &value
 	}
 	if value, ok := _c.mutation.RequestBody(); ok {
 		_spec.SetField(requestexecution.FieldRequestBody, field.TypeJSON, value)
@@ -886,11 +895,11 @@ func (u *RequestExecutionUpsertOne) UpdateNewValues() *RequestExecutionUpsertOne
 		if _, exists := u.create.mutation.ModelID(); exists {
 			s.SetIgnore(requestexecution.FieldModelID)
 		}
-		if _, exists := u.create.mutation.ReasoningEffort(); exists {
-			s.SetIgnore(requestexecution.FieldReasoningEffort)
-		}
 		if _, exists := u.create.mutation.Format(); exists {
 			s.SetIgnore(requestexecution.FieldFormat)
+		}
+		if _, exists := u.create.mutation.ReasoningEffort(); exists {
+			s.SetIgnore(requestexecution.FieldReasoningEffort)
 		}
 		if _, exists := u.create.mutation.RequestBody(); exists {
 			s.SetIgnore(requestexecution.FieldRequestBody)
@@ -1403,11 +1412,11 @@ func (u *RequestExecutionUpsertBulk) UpdateNewValues() *RequestExecutionUpsertBu
 			if _, exists := b.mutation.ModelID(); exists {
 				s.SetIgnore(requestexecution.FieldModelID)
 			}
-			if _, exists := b.mutation.ReasoningEffort(); exists {
-				s.SetIgnore(requestexecution.FieldReasoningEffort)
-			}
 			if _, exists := b.mutation.Format(); exists {
 				s.SetIgnore(requestexecution.FieldFormat)
+			}
+			if _, exists := b.mutation.ReasoningEffort(); exists {
+				s.SetIgnore(requestexecution.FieldReasoningEffort)
 			}
 			if _, exists := b.mutation.RequestBody(); exists {
 				s.SetIgnore(requestexecution.FieldRequestBody)

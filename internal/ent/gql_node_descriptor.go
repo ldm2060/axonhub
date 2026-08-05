@@ -2326,20 +2326,20 @@ func (_m *RequestExecution) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "model_id",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.ReasoningEffort); err != nil {
+	if buf, err = json.Marshal(_m.Format); err != nil {
 		return nil, err
 	}
 	node.Fields[8] = &Field{
 		Type:  "string",
-		Name:  "reasoning_effort",
+		Name:  "format",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.Format); err != nil {
+	if buf, err = json.Marshal(_m.ReasoningEffort); err != nil {
 		return nil, err
 	}
 	node.Fields[9] = &Field{
 		Type:  "string",
-		Name:  "format",
+		Name:  "reasoning_effort",
 		Value: string(buf),
 	}
 	if buf, err = json.Marshal(_m.RequestBody); err != nil {

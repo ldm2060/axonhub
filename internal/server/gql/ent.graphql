@@ -1361,6 +1361,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   ollama_anthropic
   evolink
   evolink_anthropic
+  groq
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!
@@ -5356,11 +5357,11 @@ type RequestExecution implements Node {
   dataStorageID: ID
   externalID: String
   modelID: String!
+  format: String!
   """
-  Reasoning effort sent to the channel
+  Final reasoning effort sent to the upstream provider
   """
   reasoningEffort: String
-  format: String!
   requestBody: JSONRawMessage! @goField(forceResolver: true)
   responseBody: JSONRawMessage @goField(forceResolver: true)
   responseChunks: [JSONRawMessage!] @goField(forceResolver: true)

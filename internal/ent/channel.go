@@ -63,7 +63,7 @@ type Channel struct {
 	Remark *string `json:"remark,omitempty"`
 	// Outbound API endpoints for this channel. Each endpoint specifies api_format and optional path. When empty, defaults are derived from channel type.
 	Endpoints []objects.ChannelEndpoint `json:"endpoints,omitempty"`
-	// Client access restriction level. nil = inherit global, non-nil = override global. Only effective for coding channels.
+	// Client access restriction level. nil = inherit global, non-nil = override global. strict_<family> forces a specific client family regardless of channel type.
 	ClientRestriction *channel.ClientRestriction `json:"client_restriction,omitempty"`
 	// Channel-level auto-disable configuration. nil = inherit global settings.
 	AutoDisableConfig *objects.ChannelAutoDisableConfig `json:"auto_disable_config,omitempty"`
