@@ -1,15 +1,15 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Header } from '@/components/layout/header';
-import { Button } from '@/components/ui/button';
 import { useAnalyticsFilterStore } from '@/stores/analyticsStore';
-import { useAnalyticsMetadata, useAnalyticsOverview, useAnalyticsDailyStats, useAnalyticsDimensionStats } from './data/analytics';
-import { AnalyticsFilterBar } from './components/analytics-filter-bar';
-import { OverviewCards } from './components/overview-cards';
-import { CombinedTrendChart } from './components/combined-trend-chart';
-import { DimensionPieCharts } from './components/dimension-pie-charts';
-import { DimensionDetailTable } from './components/dimension-detail-table';
+import { Button } from '@/components/ui/button';
+import { Header } from '@/components/layout/header';
 import { useGeneralSettings } from '@/features/system/data/system';
+import { AnalyticsFilterBar } from './components/analytics-filter-bar';
+import { CombinedTrendChart } from './components/combined-trend-chart';
+import { DimensionDetailTable } from './components/dimension-detail-table';
+import { DimensionPieCharts } from './components/dimension-pie-charts';
+import { OverviewCards } from './components/overview-cards';
+import { useAnalyticsMetadata, useAnalyticsOverview, useAnalyticsDailyStats, useAnalyticsDimensionStats } from './data/analytics';
 
 export default function AnalyticsPage() {
   const { t } = useTranslation();

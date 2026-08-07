@@ -35,12 +35,7 @@ function downloadFile(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function RequestExecutionContentPanel({
-  requestId,
-  executionId,
-  projectId,
-  includeAdminFields,
-}: RequestExecutionContentPanelProps) {
+export function RequestExecutionContentPanel({ requestId, executionId, projectId, includeAdminFields }: RequestExecutionContentPanelProps) {
   const { t } = useTranslation();
   const { data, isLoading, isError, refetch } = useRequestExecutionContent(requestId, executionId, {
     projectId,
@@ -63,7 +58,9 @@ export function RequestExecutionContentPanel({
     return (
       <div className='space-y-4 py-10 text-center'>
         <p className='text-muted-foreground'>{t('requests.detail.loadFailed')}</p>
-        <Button variant='outline' onClick={() => void refetch()}>{t('requests.detail.retry')}</Button>
+        <Button variant='outline' onClick={() => void refetch()}>
+          {t('requests.detail.retry')}
+        </Button>
       </div>
     );
   }
@@ -83,7 +80,15 @@ export function RequestExecutionContentPanel({
             variant='outline'
             size='sm'
             onClick={() => {
-              setCurlCommand(generateExecutionCurl(data.requestHeaders, data.requestBody, data.channel as any, data.format as any, data.requestURL ?? undefined));
+              setCurlCommand(
+                generateExecutionCurl(
+                  data.requestHeaders,
+                  data.requestBody,
+                  data.channel as any,
+                  data.format as any,
+                  data.requestURL ?? undefined
+                )
+              );
               setShowCurl(true);
             }}
           >
@@ -93,27 +98,48 @@ export function RequestExecutionContentPanel({
         </div>
       )}
 
-      {([
-        ['requestHeaders', t('requests.columns.requestHeaders'), data.requestHeaders, 'request-headers'],
-        ['requestBody', t('requests.columns.requestBody'), data.requestBody, 'request-body'],
-        ['responseBody', t('requests.columns.responseBody'), data.responseBody, 'response-body'],
-      ] as const).map(([key, label, value, filename]) => value && (
-        <section key={key} className='space-y-3'>
-          <div className='flex items-center justify-between gap-4'>
-            <h6 className='flex items-center gap-2 font-semibold'><FileText className='text-primary h-4 w-4' />{label}</h6>
-            <div className='flex gap-2'>
-              {key === 'responseBody' && (
-                <Button variant='outline' size='sm' disabled={!data.responseChunks?.length} onClick={() => setShowChunks(true)}><Layers className='mr-2 h-4 w-4' />{t('requests.columns.responseChunks')}</Button>
-              )}
-              <Button variant='outline' size='sm' onClick={() => copy(value)}><Copy className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.copy')}</Button>
-              <Button variant='outline' size='sm' onClick={() => downloadFile(formatJson(value), `execution-${executionId}-${filename}.json`)}><Download className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.download')}</Button>
-            </div>
-          </div>
-          <div className='bg-background h-72 overflow-auto rounded-lg border p-3'>
-            <JsonViewer data={value} rootName='' defaultExpanded={false} hideArrayIndices className='text-xs' />
-          </div>
-        </section>
-      ))}
+      {(
+        [
+          ['requestHeaders', t('requests.columns.requestHeaders'), data.requestHeaders, 'request-headers'],
+          ['requestBody', t('requests.columns.requestBody'), data.requestBody, 'request-body'],
+          ['responseBody', t('requests.columns.responseBody'), data.responseBody, 'response-body'],
+        ] as const
+      ).map(
+        ([key, label, value, filename]) =>
+          value && (
+            <section key={key} className='space-y-3'>
+              <div className='flex items-center justify-between gap-4'>
+                <h6 className='flex items-center gap-2 font-semibold'>
+                  <FileText className='text-primary h-4 w-4' />
+                  {label}
+                </h6>
+                <div className='flex gap-2'>
+                  {key === 'responseBody' && (
+                    <Button variant='outline' size='sm' disabled={!data.responseChunks?.length} onClick={() => setShowChunks(true)}>
+                      <Layers className='mr-2 h-4 w-4' />
+                      {t('requests.columns.responseChunks')}
+                    </Button>
+                  )}
+                  <Button variant='outline' size='sm' onClick={() => copy(value)}>
+                    <Copy className='mr-2 h-4 w-4' />
+                    {t('requests.dialogs.jsonViewer.copy')}
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => downloadFile(formatJson(value), `execution-${executionId}-${filename}.json`)}
+                  >
+                    <Download className='mr-2 h-4 w-4' />
+                    {t('requests.dialogs.jsonViewer.download')}
+                  </Button>
+                </div>
+              </div>
+              <div className='bg-background h-72 overflow-auto rounded-lg border p-3'>
+                <JsonViewer data={value} rootName='' defaultExpanded={false} hideArrayIndices className='text-xs' />
+              </div>
+            </section>
+          )
+      )}
 
       <ChunksDialog
         open={showChunks}

@@ -4,7 +4,7 @@ import Users from '@/features/users';
 
 function ProtectedUsers() {
   return (
-    <RouteGuard requiredScopes={['read_users']} scopeLevel="system">
+    <RouteGuard requiredScopes={['read_users']} scopeLevel='system'>
       <Users />
     </RouteGuard>
   );

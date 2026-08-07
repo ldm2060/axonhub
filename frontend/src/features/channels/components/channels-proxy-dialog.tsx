@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,12 +16,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import LongText from '@/components/long-text';
+import { useProxyPresets, useSaveProxyPreset } from '@/features/system/data/system';
 import { useUpdateChannel, useTestChannel } from '../data/channels';
 import { Channel } from '../data/schema';
-import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { ErrorDisplay } from '../utils/error-formatter';
-import { useProxyPresets, useSaveProxyPreset } from '@/features/system/data/system';
-import { usePermissions } from '@/hooks/usePermissions';
+import { mergeChannelSettingsForUpdate } from '../utils/merge';
 
 interface Props {
   open: boolean;

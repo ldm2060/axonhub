@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 
 const source = readFileSync(join(import.meta.dirname, 'requests.ts'), 'utf8');
 const graphqlSource = readFileSync(join(import.meta.dirname, '../../../gql/graphql.ts'), 'utf8');

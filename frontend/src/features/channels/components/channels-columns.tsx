@@ -27,13 +27,12 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useAuthStore } from '@/stores/authStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
@@ -114,7 +114,12 @@ const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
 
   return (
     <div className='flex items-center justify-center'>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={!canToggle || isArchived} data-testid='channel-status-switch' />
+      <Switch
+        checked={isEnabled}
+        onCheckedChange={handleSwitchClick}
+        disabled={!canToggle || isArchived}
+        data-testid='channel-status-switch'
+      />
       {isTimeUnavailable && (
         <Badge variant='outline' className='ml-1 text-xs'>
           {t('channels.columns.timeUnavailable')}
@@ -442,9 +447,7 @@ const NameCell = memo(({ row }: { row: Row<Channel> }) => {
       <Tooltip>
         <TooltipTrigger asChild>{content}</TooltipTrigger>
         <TooltipContent>
-          <p className='text-sm text-amber-500'>
-            {t('channels.actions.disabledAPIKeys', { count: disabledKeysCount })}
-          </p>
+          <p className='text-sm text-amber-500'>{t('channels.actions.disabledAPIKeys', { count: disabledKeysCount })}</p>
         </TooltipContent>
       </Tooltip>
     );
@@ -665,11 +668,9 @@ const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
   }
 
   return (
-    <div className='flex items-center justify-center gap-2 group cursor-pointer' onDoubleClick={handleDoubleClick}>
-      <span className={cn('font-mono text-sm', initialWeight == null && 'text-muted-foreground')}>
-        {initialWeight ?? '-'}
-      </span>
-      {updateChannel.isPending && <IconLoader2 className='h-3 w-3 animate-spin text-muted-foreground' />}
+    <div className='group flex cursor-pointer items-center justify-center gap-2' onDoubleClick={handleDoubleClick}>
+      <span className={cn('font-mono text-sm', initialWeight == null && 'text-muted-foreground')}>{initialWeight ?? '-'}</span>
+      {updateChannel.isPending && <IconLoader2 className='text-muted-foreground h-3 w-3 animate-spin' />}
     </div>
   );
 });
@@ -706,7 +707,11 @@ interface CreateColumnsOptions {
   hideOrderingWeight?: boolean;
 }
 
-export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true, options?: CreateColumnsOptions): ColumnDef<Channel>[] => {
+export const createColumns = (
+  t: ReturnType<typeof useTranslation>['t'],
+  canWrite: boolean = true,
+  options?: CreateColumnsOptions
+): ColumnDef<Channel>[] => {
   return [
     {
       id: 'expand',

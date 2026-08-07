@@ -3,19 +3,22 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
 import { Loader2, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { authApi } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { authApi } from '@/lib/api-client';
 
 type ForgotPasswordFormProps = HTMLAttributes<HTMLFormElement>;
 
 const createFormSchema = (t: (key: string) => string) =>
   z.object({
-    email: z.string().min(1, { message: t('auth.forgotPassword.validation.emailRequired') }).email({ message: t('auth.forgotPassword.validation.emailInvalid') }),
+    email: z
+      .string()
+      .min(1, { message: t('auth.forgotPassword.validation.emailRequired') })
+      .email({ message: t('auth.forgotPassword.validation.emailInvalid') }),
   });
 
 export function ForgotPasswordForm({ className, ...props }: ForgotPasswordFormProps) {
@@ -52,9 +55,7 @@ export function ForgotPasswordForm({ className, ...props }: ForgotPasswordFormPr
         <h3 className='text-lg font-medium text-slate-800'>{t('auth.forgotPassword.successTitle')}</h3>
         <p className='text-sm text-slate-600'>{t('auth.forgotPassword.successMessage')}</p>
         <Link to='/sign-in'>
-          <Button className='bg-slate-800 text-white hover:bg-slate-700'>
-            {t('auth.forgotPassword.backToSignIn')}
-          </Button>
+          <Button className='bg-slate-800 text-white hover:bg-slate-700'>{t('auth.forgotPassword.backToSignIn')}</Button>
         </Link>
       </div>
     );

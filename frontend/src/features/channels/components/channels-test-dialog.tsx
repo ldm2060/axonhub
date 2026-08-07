@@ -170,10 +170,12 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='flex max-h-[90vh] flex-col w-full max-w-full sm:max-w-2xl'>
+      <DialogContent className='flex max-h-[90vh] w-full max-w-full flex-col sm:max-w-2xl'>
         <DialogHeader>
           <DialogTitle className='text-lg sm:text-xl'>{t('channels.dialogs.test.title')}</DialogTitle>
-          <DialogDescription className='text-sm sm:text-base'>{t('channels.dialogs.test.description', { name: channel.name })}</DialogDescription>
+          <DialogDescription className='text-sm sm:text-base'>
+            {t('channels.dialogs.test.description', { name: channel.name })}
+          </DialogDescription>
         </DialogHeader>
 
         <div className='min-h-0 flex-1 space-y-4'>
@@ -184,7 +186,7 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
               placeholder={t('channels.dialogs.test.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className='pl-10 h-10 sm:h-9'
+              className='h-10 pl-10 sm:h-9'
             />
           </div>
 
@@ -226,7 +228,7 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
                             className='scale-100 sm:scale-75'
                           />
                         </TableCell>
-                        <TableCell className='pr-4 sm:pr-8 font-medium'>
+                        <TableCell className='pr-4 font-medium sm:pr-8'>
                           <div>{model}</div>
                           {result?.error && (
                             <div className='mt-2 max-w-full sm:max-w-[320px]'>
@@ -234,7 +236,7 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
                             </div>
                           )}
                         </TableCell>
-                        <TableCell className='min-w-[120px] sm:min-w-[140px] align-top'>
+                        <TableCell className='min-w-[120px] align-top sm:min-w-[140px]'>
                           <div className='pt-0.5'>{getStatusBadge(result?.status || 'not_started')}</div>
                           {result?.latency && <div className='text-muted-foreground mt-2 text-xs'>{result.latency.toFixed(2)}s</div>}
                         </TableCell>
@@ -248,7 +250,9 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
                               className='h-9 sm:h-8'
                             >
                               <IconPlayerPlay className='mr-1 h-4 w-4 sm:h-3 sm:w-3' />
-                              {result?.status === 'testing' ? t('channels.dialogs.test.testingModel') : t('channels.dialogs.test.testModel')}
+                              {result?.status === 'testing'
+                                ? t('channels.dialogs.test.testingModel')
+                                : t('channels.dialogs.test.testModel')}
                             </Button>
                           </div>
                         </TableCell>
@@ -261,8 +265,8 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
           </div>
         </div>
 
-        <DialogFooter className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-2'>
-          <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
+        <DialogFooter className='flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-2'>
+          <div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'>
             <Button variant='outline' onClick={() => onOpenChange(false)} className='w-full sm:w-auto'>
               {t('common.buttons.cancel')}
             </Button>

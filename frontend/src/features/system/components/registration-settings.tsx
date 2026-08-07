@@ -3,16 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useRegistrationSettings, useUpdateRegistrationSettings, useEmailSettings } from '../data/registration-email-settings';
-import { toast } from 'sonner';
 
 function isValidRegex(pattern: string): boolean {
   try {
@@ -57,8 +57,14 @@ export function RegistrationSettingsTab() {
         allowSignUp: checked,
         approvalRequired: mode === 'approval',
         defaultUserScopes: defaultScopes,
-        emailAllowPatterns: allowPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
-        emailDenyPatterns: denyPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
+        emailAllowPatterns: allowPatterns
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean),
+        emailDenyPatterns: denyPatterns
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean),
       });
     } catch (err: any) {
       setEnabled(previousValue);
@@ -77,8 +83,14 @@ export function RegistrationSettingsTab() {
         allowSignUp: enabled,
         approvalRequired: newMode === 'approval',
         defaultUserScopes: defaultScopes,
-        emailAllowPatterns: allowPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
-        emailDenyPatterns: denyPatterns.split('\n').map((l) => l.trim()).filter(Boolean),
+        emailAllowPatterns: allowPatterns
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean),
+        emailDenyPatterns: denyPatterns
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean),
       });
     } catch {
       setMode(previousValue);
@@ -86,8 +98,14 @@ export function RegistrationSettingsTab() {
   };
 
   const handleSavePatterns = useCallback(async () => {
-    const allow = allowPatterns.split('\n').map((l) => l.trim()).filter(Boolean);
-    const deny = denyPatterns.split('\n').map((l) => l.trim()).filter(Boolean);
+    const allow = allowPatterns
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const deny = denyPatterns
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     const invalidAllow = allow.find((p) => !isValidRegex(p));
     if (invalidAllow) {
@@ -200,7 +218,10 @@ export function RegistrationSettingsTab() {
                     <Textarea
                       id='allow-patterns'
                       value={allowPatterns}
-                      onChange={(e) => { setAllowPatterns(e.target.value); setPatternsDirty(true); }}
+                      onChange={(e) => {
+                        setAllowPatterns(e.target.value);
+                        setPatternsDirty(true);
+                      }}
                       placeholder={t('system.registration.patterns.placeholder')}
                       rows={5}
                       className='font-mono text-sm'
@@ -213,7 +234,10 @@ export function RegistrationSettingsTab() {
                     <Textarea
                       id='deny-patterns'
                       value={denyPatterns}
-                      onChange={(e) => { setDenyPatterns(e.target.value); setPatternsDirty(true); }}
+                      onChange={(e) => {
+                        setDenyPatterns(e.target.value);
+                        setPatternsDirty(true);
+                      }}
                       placeholder={t('system.registration.patterns.placeholder')}
                       rows={5}
                       className='font-mono text-sm'

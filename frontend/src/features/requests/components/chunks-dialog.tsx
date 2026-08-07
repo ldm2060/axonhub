@@ -94,11 +94,14 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
     }
   }, [pageInputValue, totalChunksPages, chunksPage]);
 
-  const handlePageInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handlePageInputBlur();
-    }
-  }, [handlePageInputBlur]);
+  const handlePageInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handlePageInputBlur();
+      }
+    },
+    [handlePageInputBlur]
+  );
 
   // Reset page when dialog opens or chunks identity changes.
   // Keep chunksPage out of deps so manual page navigation is not reverted.
@@ -134,20 +137,10 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
             <Badge variant='secondary' className='ml-2'>
               {chunks.length} {t('requests.columns.responseChunks')}
             </Badge>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={handleCopyAll}
-            >
+            <Button variant='ghost' size='icon' className='h-8 w-8' onClick={handleCopyAll}>
               {copied ? <Check className='h-4 w-4 text-green-500' /> : <Copy className='h-4 w-4' />}
             </Button>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8'
-              onClick={handleDownloadAll}
-            >
+            <Button variant='ghost' size='icon' className='h-8 w-8' onClick={handleDownloadAll}>
               <Download className='h-4 w-4' />
             </Button>
           </DialogTitle>
@@ -158,11 +151,7 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
             <div className='bg-muted/20 w-full flex-1 overflow-auto rounded-lg border p-4'>
               <div className='space-y-4'>
                 {paginatedChunks.map((chunk, index) => (
-                  <ChunkItem
-                    key={(chunksPage - 1) * pageSize + index}
-                    chunk={chunk}
-                    index={(chunksPage - 1) * pageSize + index}
-                  />
+                  <ChunkItem key={(chunksPage - 1) * pageSize + index} chunk={chunk} index={(chunksPage - 1) * pageSize + index} />
                 ))}
               </div>
             </div>
@@ -204,12 +193,7 @@ export function ChunksDialog({ open, onOpenChange, chunks, title, isLive }: Chun
                     <span className='text-muted-foreground text-sm'>/ {totalChunksPages}</span>
                   </div>
                   <div className='flex items-center space-x-2'>
-                    <Button
-                      variant='outline'
-                      className='h-8 w-8 p-0'
-                      onClick={() => handleChunksPageChange(1)}
-                      disabled={chunksPage === 1}
-                    >
+                    <Button variant='outline' className='h-8 w-8 p-0' onClick={() => handleChunksPageChange(1)} disabled={chunksPage === 1}>
                       <span className='sr-only'>{t('pagination.firstPage')}</span>
                       <DoubleArrowLeftIcon className='h-4 w-4' />
                     </Button>

@@ -1,33 +1,33 @@
 import { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { BarChart3, Brain, Key, Users, Zap, ChevronRight, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { formatNumber } from '@/utils/format-number';
+import { useRoutePermissions } from '@/hooks/useRoutePermissions';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Header } from '@/components/layout/header';
-import { formatNumber } from '@/utils/format-number';
 import { TimePeriodSelector, type TimePeriod } from '@/components/time-period-selector';
+import { ChannelPerformanceStats } from './components/channel-performance-stats';
 import { ChannelSuccessRate } from './components/channel-success-rate';
+import { CollapsibleSection } from './components/collapsible-section';
 import { DailyRequestStats } from './components/daily-requests-stats';
-import { RequestsByChannelChart } from './components/requests-by-channel-chart';
-import { RequestsByModelChart } from './components/requests-by-model-chart';
-import { RequestsByAPIKeyChart } from './components/requests-by-api-key-chart';
-import { TokensByAPIKeyChart } from './components/tokens-by-api-key-chart';
-import { TokensByChannelChart } from './components/tokens-by-channel-chart';
-import { TokensByModelChart } from './components/tokens-by-model-chart';
-import { SuccessRateCard } from './components/success-rate-card';
-import { TodayRequestsCard } from './components/today-requests-card';
-import { TokenStatsCard } from './components/token-stats-card';
-import { TotalRequestsCard } from './components/total-requests-card';
 import { FastestChannelsCard } from './components/fastest-channels-card';
 import { FastestModelsCard } from './components/fastest-models-card';
 import { ModelPerformanceStats } from './components/model-performance-stats';
-import { ChannelPerformanceStats } from './components/channel-performance-stats';
-import { CollapsibleSection } from './components/collapsible-section';
+import { RequestsByAPIKeyChart } from './components/requests-by-api-key-chart';
+import { RequestsByChannelChart } from './components/requests-by-channel-chart';
+import { RequestsByModelChart } from './components/requests-by-model-chart';
+import { SuccessRateCard } from './components/success-rate-card';
+import { TodayRequestsCard } from './components/today-requests-card';
+import { TokenStatsCard } from './components/token-stats-card';
+import { TokensByAPIKeyChart } from './components/tokens-by-api-key-chart';
+import { TokensByChannelChart } from './components/tokens-by-channel-chart';
+import { TokensByModelChart } from './components/tokens-by-model-chart';
+import { TotalRequestsCard } from './components/total-requests-card';
 import { UserUsageBarChart } from './components/user-usage-bar-chart';
 import { WeeklyUsageLineChart } from './components/weekly-usage-line-chart';
 import { useDashboardStats, type DashboardMode } from './data/dashboard';
-import { useRoutePermissions } from '@/hooks/useRoutePermissions';
 
 interface DashboardPageProps {
   mode: DashboardMode;
@@ -114,7 +114,6 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
         channelTotalRequests={channelTotalRequests}
         setChannelTotalRequests={setChannelTotalRequests}
       />
-
     </div>
   );
 }
@@ -195,7 +194,7 @@ function DashboardContent({
               <CardDescription>{t('dashboard.charts.channelSuccessRateDescription')}</CardDescription>
               <CardAction>
                 {mode === 'project' && (
-                  <Link to='/admin/dashboard/channel-success-rates' className='text-sm text-primary hover:underline'>
+                  <Link to='/admin/dashboard/channel-success-rates' className='text-primary text-sm hover:underline'>
                     {t('dashboard.viewAll')}
                   </Link>
                 )}
@@ -210,27 +209,27 @@ function DashboardContent({
 
       {/* 使用详情分析 - 导航卡片 */}
       {canAccessAnalytics && (
-      <Link
-        to='/analytics'
-        className='flex w-full items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent/50'
-      >
-        <div className='flex items-center gap-3'>
-          <div className='flex h-8 w-8 items-center justify-center rounded-md bg-primary/10'>
-            <TrendingUp className='h-4 w-4 text-primary' />
+        <Link
+          to='/analytics'
+          className='bg-card hover:bg-accent/50 flex w-full items-center justify-between rounded-lg border p-4 text-left transition-colors'
+        >
+          <div className='flex items-center gap-3'>
+            <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md'>
+              <TrendingUp className='text-primary h-4 w-4' />
+            </div>
+            <div>
+              <span className='text-lg font-semibold'>{t('dashboard.sections.analytics')}</span>
+              <p className='text-muted-foreground text-sm'>{t('dashboard.sections.analyticsDescription')}</p>
+            </div>
           </div>
-          <div>
-            <span className='text-lg font-semibold'>{t('dashboard.sections.analytics')}</span>
-            <p className='text-sm text-muted-foreground'>{t('dashboard.sections.analyticsDescription')}</p>
-          </div>
-        </div>
-        <ChevronRight className='h-5 w-5 text-muted-foreground' />
-      </Link>
+          <ChevronRight className='text-muted-foreground h-5 w-5' />
+        </Link>
       )}
 
       {/* 渠道分析 - 可折叠 */}
       <CollapsibleSection
         title={t('dashboard.sections.channels')}
-        icon={<BarChart3 className='h-4 w-4 text-primary' />}
+        icon={<BarChart3 className='text-primary h-4 w-4' />}
         storageKey='channels'
       >
         <div className='grid gap-4 md:grid-cols-2'>
@@ -262,11 +261,7 @@ function DashboardContent({
       </CollapsibleSection>
 
       {/* Model Analytics - collapsible */}
-      <CollapsibleSection
-        title={t('dashboard.sections.models')}
-        icon={<Brain className='h-4 w-4 text-primary' />}
-        storageKey='models'
-      >
+      <CollapsibleSection title={t('dashboard.sections.models')} icon={<Brain className='text-primary h-4 w-4' />} storageKey='models'>
         <div className='grid gap-4 md:grid-cols-2'>
           <Card className='hover-card'>
             <CardHeader>
@@ -296,11 +291,7 @@ function DashboardContent({
       </CollapsibleSection>
 
       {/* API Key Analytics - collapsible */}
-      <CollapsibleSection
-        title={t('dashboard.sections.apiKeys')}
-        icon={<Key className='h-4 w-4 text-primary' />}
-        storageKey='apiKeys'
-      >
+      <CollapsibleSection title={t('dashboard.sections.apiKeys')} icon={<Key className='text-primary h-4 w-4' />} storageKey='apiKeys'>
         <div className='grid gap-4 md:grid-cols-2'>
           <Card className='hover-card'>
             <CardHeader>
@@ -331,11 +322,7 @@ function DashboardContent({
 
       {/* 用户分析 - 可折叠 */}
       {(mode === 'personal' || isProjectOwner) && (
-        <CollapsibleSection
-          title={t('dashboard.sections.users')}
-          icon={<Users className='h-4 w-4 text-primary' />}
-          storageKey='users'
-        >
+        <CollapsibleSection title={t('dashboard.sections.users')} icon={<Users className='text-primary h-4 w-4' />} storageKey='users'>
           <div className='flex justify-end'>
             <TimePeriodSelector value={userTimePeriod} onChange={setUserTimePeriod} />
           </div>
@@ -349,7 +336,7 @@ function DashboardContent({
       {/* Performance Analytics - collapsible */}
       <CollapsibleSection
         title={t('dashboard.sections.performance')}
-        icon={<Zap className='h-4 w-4 text-primary' />}
+        icon={<Zap className='text-primary h-4 w-4' />}
         storageKey='performance'
       >
         <div className='grid gap-4 md:grid-cols-1 lg:grid-cols-7'>

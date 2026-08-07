@@ -3,8 +3,8 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
 import { IconEdit, IconArchive, IconArchiveOff, IconTrash, IconNote } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useAuthStore } from '@/stores/authStore';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -90,10 +90,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
                 </DropdownMenuItem>
               )}
 
-              <DropdownMenuItem
-                onClick={() => openRowDialog('delete')}
-                className='text-red-500!'
-              >
+              <DropdownMenuItem onClick={() => openRowDialog('delete')} className='text-red-500!'>
                 <IconTrash size={16} className='mr-2' />
                 {t('common.buttons.delete')}
               </DropdownMenuItem>

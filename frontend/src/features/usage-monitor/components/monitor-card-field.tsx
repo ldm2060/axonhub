@@ -12,9 +12,9 @@ export function MonitorCardField({ field, displayFields }: MonitorCardFieldProps
 
   if (field.error) {
     return (
-      <div className="space-y-0.5">
-        <div className="text-sm text-muted-foreground">{field.label}</div>
-        <div className="text-xs text-red-500">
+      <div className='space-y-0.5'>
+        <div className='text-muted-foreground text-sm'>{field.label}</div>
+        <div className='text-xs text-red-500'>
           {'⚠'} {t('usageMonitor.parseFailed')}: {field.error}
         </div>
       </div>
@@ -22,8 +22,8 @@ export function MonitorCardField({ field, displayFields }: MonitorCardFieldProps
   }
 
   return (
-    <div className="space-y-0.5">
-      <div className="text-sm text-muted-foreground">{field.label}</div>
+    <div className='space-y-0.5'>
+      <div className='text-muted-foreground text-sm'>{field.label}</div>
       <ParsedFieldDisplay field={field} displayFields={displayFields} />
     </div>
   );

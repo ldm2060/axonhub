@@ -3,13 +3,13 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
 import { useInitializeSystem } from '@/features/auth/data/initialization';
-import i18n from '@/lib/i18n';
 
 type InitializationFormProps = HTMLAttributes<HTMLFormElement>;
 
@@ -73,7 +73,11 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
             <FormItem>
               <FormLabel>{t('initialization.form.ownerFirstName')}</FormLabel>
               <FormControl>
-                <Input placeholder={t('initialization.form.placeholders.ownerFirstName')} className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white' {...field} />
+                <Input
+                  placeholder={t('initialization.form.placeholders.ownerFirstName')}
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,7 +90,11 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
             <FormItem>
               <FormLabel>{t('initialization.form.ownerLastName')}</FormLabel>
               <FormControl>
-                <Input placeholder={t('initialization.form.placeholders.ownerLastName')} className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white' {...field} />
+                <Input
+                  placeholder={t('initialization.form.placeholders.ownerLastName')}
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +107,11 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
             <FormItem>
               <FormLabel>{t('initialization.form.ownerEmail')}</FormLabel>
               <FormControl>
-                <Input placeholder={t('initialization.form.placeholders.ownerEmail')} className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white' {...field} />
+                <Input
+                  placeholder={t('initialization.form.placeholders.ownerEmail')}
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,7 +124,11 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
             <FormItem>
               <FormLabel>{t('initialization.form.ownerPassword')}</FormLabel>
               <FormControl>
-                <PasswordInput placeholder={t('initialization.form.placeholders.ownerPassword')} className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white' {...field} />
+                <PasswordInput
+                  placeholder={t('initialization.form.placeholders.ownerPassword')}
+                  className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,7 +141,11 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
             <FormItem>
               <FormLabel>{t('initialization.form.brandName')}</FormLabel>
               <FormControl>
-                <Input placeholder={t('initialization.form.placeholders.brandName')} className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white' {...field} />
+                <Input
+                  placeholder={t('initialization.form.placeholders.brandName')}
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

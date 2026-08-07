@@ -46,10 +46,10 @@ interface AuthState {
 export const getTokenFromStorage = (): string => {
   try {
     return localStorage.getItem(ACCESS_TOKEN) || '';
-    } catch (_error) {
-      return '';
-    }
-  };
+  } catch (_error) {
+    return '';
+  }
+};
 
 export const setTokenToStorage = (token: string): void => {
   try {

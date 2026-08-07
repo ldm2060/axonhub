@@ -12,9 +12,9 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { useStoragePolicy } from '@/features/system/data/system';
 import { type RequestMetadata, useRequestMetadata } from '../data';
-import { RequestDetailContent } from './request-detail-content';
-import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
 import { createPreviewChunkBatcher } from './preview-chunk-batcher';
+import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
+import { RequestDetailContent } from './request-detail-content';
 
 type PreviewFallbackResponse = {
   mode?: string;
@@ -370,8 +370,7 @@ export default function RequestDetailPage() {
             </div>
             <div>
               <h1 className='text-lg leading-none font-semibold'>
-                {t('requests.detail.title')} #
-                {request ? extractNumberID(request.id) || request.id : requestId}
+                {t('requests.detail.title')} #{request ? extractNumberID(request.id) || request.id : requestId}
               </h1>
               {request && (
                 <div className='mt-1 flex items-center gap-2'>

@@ -1,33 +1,34 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { z } from 'zod';
-
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { graphqlRequest } from '@/gql/graphql';
+import { UPDATE_MY_PASSWORD_MUTATION } from '@/gql/users';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useAuthStore } from '@/stores/authStore';
-import { graphqlRequest } from '@/gql/graphql';
-import { UPDATE_MY_PASSWORD_MUTATION } from '@/gql/users';
 
 const getFormSchema = (hasPassword: boolean) => {
-  const schema = z.object({
-    oldPassword: hasPassword ? z.string().min(1, 'Current password is required') : z.string().optional(),
-    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Confirm new password is required'),
-  }).refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+  const schema = z
+    .object({
+      oldPassword: hasPassword ? z.string().min(1, 'Current password is required') : z.string().optional(),
+      newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+      confirmPassword: z.string().min(1, 'Confirm new password is required'),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: "Passwords don't match",
+      path: ['confirmPassword'],
+    });
   return schema;
 };
 
 type FormValues = {
-    oldPassword?: string;
-    newPassword: string;
-    confirmPassword: string;
+  oldPassword?: string;
+  newPassword: string;
+  confirmPassword: string;
 };
 
 export default function SecurityForm() {
@@ -66,7 +67,7 @@ export default function SecurityForm() {
     } catch (error: any) {
       toast.error(
         t('security.messages.passwordChangeError', 'Failed to change password: ') +
-          (error.response?.errors?.[0]?.message || error.message || t('common.errors.unknown')),
+          (error.response?.errors?.[0]?.message || error.message || t('common.errors.unknown'))
       );
     } finally {
       setIsUpdating(false);
@@ -80,7 +81,7 @@ export default function SecurityForm() {
           <h3 className='text-lg font-medium'>
             {hasPassword ? t('security.password.changeTitle', 'Change Password') : t('security.password.setTitle', 'Set Initial Password')}
           </h3>
-          
+
           {hasPassword && (
             <FormField
               control={form.control}
@@ -127,11 +128,11 @@ export default function SecurityForm() {
 
           <div>
             <Button type='submit' disabled={isUpdating}>
-              {isUpdating 
-                ? t('common.saving', 'Saving...') 
-                : (hasPassword 
-                    ? t('security.password.changeButton', 'Change Password') 
-                    : t('security.password.setButton', 'Set Password'))}
+              {isUpdating
+                ? t('common.saving', 'Saving...')
+                : hasPassword
+                  ? t('security.password.changeButton', 'Change Password')
+                  : t('security.password.setButton', 'Set Password')}
             </Button>
           </div>
         </form>

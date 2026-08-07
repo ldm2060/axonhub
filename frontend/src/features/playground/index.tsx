@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { cn } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,8 +26,6 @@ import { Response as UIResponse } from '@/components/ai-elements/response';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
 import { useAllChannelSummarys } from '@/features/channels/data/channels';
 import { useQueryModels } from '@/features/models/data/models';
-import { usePermissions } from '@/hooks/usePermissions';
-import { cn } from '@/lib/utils';
 
 type PlaygroundModelSource = 'channel' | 'model_gateway';
 
@@ -331,7 +331,7 @@ export default function Playground() {
       <div className='bg-background flex h-screen w-full flex-col md:flex-row'>
         {/* Settings Sidebar */}
 
-        <div className='bg-card shadow-soft border-border m-4 flex max-h-[60vh] w-auto flex-col rounded-2xl border border-r md:max-h-none md:w-[340px] md:min-w-[280px] md:max-w-[400px]'>
+        <div className='bg-card shadow-soft border-border m-4 flex max-h-[60vh] w-auto flex-col rounded-2xl border border-r md:max-h-none md:w-[340px] md:max-w-[400px] md:min-w-[280px]'>
           <div className='border-b p-4'>
             <h1 className='text-xl font-bold tracking-tight'>{t('playground.title')}</h1>
             <p className='text-muted-foreground mt-1 text-xs leading-relaxed'>{t('playground.description')}</p>

@@ -72,12 +72,12 @@ export function ProxyPresetsSettings() {
               </div>
 
               {/* Mobile Card View */}
-              <div className='md:hidden space-y-3'>
+              <div className='space-y-3 md:hidden'>
                 {presets.map((preset) => (
-                  <div key={preset.url} className='rounded-lg border p-3 space-y-2'>
+                  <div key={preset.url} className='space-y-2 rounded-lg border p-3'>
                     <div className='flex items-start justify-between gap-2'>
-                      <div className='font-medium text-sm min-w-0 flex-1 truncate'>{preset.name || '-'}</div>
-                      <div className='flex gap-1 shrink-0'>
+                      <div className='min-w-0 flex-1 truncate text-sm font-medium'>{preset.name || '-'}</div>
+                      <div className='flex shrink-0 gap-1'>
                         <ProxyPresetEditDialog preset={preset} />
                         <Button
                           variant='ghost'
@@ -91,12 +91,12 @@ export function ProxyPresetsSettings() {
                       </div>
                     </div>
                     <div className='space-y-1'>
-                      <div className='text-xs text-muted-foreground'>{t('system.proxy.columns.url')}</div>
+                      <div className='text-muted-foreground text-xs'>{t('system.proxy.columns.url')}</div>
                       <div className='font-mono text-xs break-all'>{preset.url}</div>
                     </div>
                     <div className='space-y-1'>
-                      <div className='text-xs text-muted-foreground'>{t('system.proxy.columns.username')}</div>
-                      <div className='text-sm text-muted-foreground'>{preset.username || '-'}</div>
+                      <div className='text-muted-foreground text-xs'>{t('system.proxy.columns.username')}</div>
+                      <div className='text-muted-foreground text-sm'>{preset.username || '-'}</div>
                     </div>
                   </div>
                 ))}

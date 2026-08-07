@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import { graphqlRequest } from './graphql';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { graphqlRequest } from './graphql';
 
 export interface Model {
   id: string;

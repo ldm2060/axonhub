@@ -28,8 +28,8 @@ export function UsersStatusDialog({ open, onOpenChange, currentRow }: Props) {
       });
       onOpenChange(false);
     } catch (_error) {
-          toast.error(t('common.errors.somethingWentWrong'));
-        }
+      toast.error(t('common.errors.somethingWentWrong'));
+    }
   };
 
   return (

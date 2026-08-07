@@ -18,8 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { AutoComplete } from '@/components/auto-complete';
 import { useAllChannelSummarys } from '@/features/channels/data/channels';
 import { useUpdateApiKeyProfileTemplate } from '../data/apikeys';
-import { formSchemaFactory, type FormValues } from '../data/template-form-schema';
 import { normalizeRoutingPolicyValue, type ApiKeyProfileTemplate } from '../data/schema';
+import { formSchemaFactory, type FormValues } from '../data/template-form-schema';
 
 interface ApiKeyEditTemplateDialogProps {
   open: boolean;
@@ -218,10 +218,7 @@ export function ApiKeyEditTemplateDialog({ open, onOpenChange, template }: ApiKe
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || 'default'}
-                          >
+                          <Select onValueChange={field.onChange} value={field.value || 'default'}>
                             <SelectTrigger className='w-[140px]'>
                               <SelectValue placeholder={t('apikeys.profiles.loadBalancerStrategyPlaceholder')} />
                             </SelectTrigger>
@@ -261,7 +258,9 @@ export function ApiKeyEditTemplateDialog({ open, onOpenChange, template }: ApiKe
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='default'>{t('apikeys.profiles.traceStickyModePlaceholder')}</SelectItem>
-                              <SelectItem value='prefer_previous_channel'>{t('system.retry.traceStickyMode.options.preferPreviousChannel')}</SelectItem>
+                              <SelectItem value='prefer_previous_channel'>
+                                {t('system.retry.traceStickyMode.options.preferPreviousChannel')}
+                              </SelectItem>
                               <SelectItem value='disabled'>{t('system.retry.traceStickyMode.options.disabled')}</SelectItem>
                             </SelectContent>
                           </Select>

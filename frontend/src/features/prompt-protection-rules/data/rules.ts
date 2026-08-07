@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '@/gql/graphql';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { graphqlRequest } from '@/gql/graphql';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import {
   CreatePromptProtectionRuleInput,
@@ -283,7 +283,9 @@ export function useBulkEnablePromptProtectionRules() {
 export function usePreviewPromptProtectionRule() {
   return useMutation({
     mutationFn: async (input: PreviewPromptProtectionRuleInput) => {
-      const data = await graphqlRequest<{ previewPromptProtectionRule: PromptProtectionRulePreviewResult }>(PREVIEW_RULE_MUTATION, { input });
+      const data = await graphqlRequest<{ previewPromptProtectionRule: PromptProtectionRulePreviewResult }>(PREVIEW_RULE_MUTATION, {
+        input,
+      });
       return promptProtectionRulePreviewResultSchema.parse(data.previewPromptProtectionRule);
     },
   });

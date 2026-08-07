@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { extractNumberID } from '@/lib/utils';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
@@ -13,7 +14,6 @@ import {
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
-import { extractNumberID } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { RequestsTable, type RequestTableFilters } from './components';

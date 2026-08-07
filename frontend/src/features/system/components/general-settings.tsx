@@ -106,9 +106,7 @@ export function GeneralSettings() {
     }
   };
 
-  const hasChanges = settings
-    ? settings.currencyCode !== currencyCode || settings.timezone !== timezone
-    : false;
+  const hasChanges = settings ? settings.currencyCode !== currencyCode || settings.timezone !== timezone : false;
 
   if (isLoadingSettings) {
     return (

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 
 const dataDir = import.meta.dirname;
 const srcRoot = join(dataDir, '..', '..', '..');
@@ -21,12 +21,19 @@ test('Cline is available as a channel type in frontend schemas and configs', () 
 
   assert.match(schema, /channelTypeSchema[\s\S]*'cline'/, 'channelTypeSchema should accept cline');
   assert.match(channelsConfig, /cline:\s*{[\s\S]*channelType:\s*'cline'/, 'CHANNEL_CONFIGS should define cline');
-  assert.match(channelsConfig, /cline:\s*{[\s\S]*baseURL:\s*'https:\/\/api\.cline\.bot\/api\/v1'/, 'Cline should use the documented API base URL');
-  assert.match(channelsConfig, /cline:\s*{[\s\S]*apiFormat:\s*OPENAI_CHAT_COMPLETIONS/, 'Cline should use OpenAI Chat Completions in the UI');
+  assert.match(
+    channelsConfig,
+    /cline:\s*{[\s\S]*baseURL:\s*'https:\/\/api\.cline\.bot\/api\/v1'/,
+    'Cline should use the documented API base URL'
+  );
+  assert.match(
+    channelsConfig,
+    /cline:\s*{[\s\S]*apiFormat:\s*OPENAI_CHAT_COMPLETIONS/,
+    'Cline should use OpenAI Chat Completions in the UI'
+  );
   assert.match(channelsConfig, /CHANNEL_TYPE_TO_PROVIDER[\s\S]*cline:\s*'cline'/, 'Cline should map to the Cline provider');
   assert.match(providersConfig, /cline:\s*{[\s\S]*channelTypes:\s*\[\s*'cline'\s*\]/, 'PROVIDER_CONFIGS should expose a Cline provider');
 });
-
 
 test('Cline has localized channel and provider labels', () => {
   for (const locale of ['en', 'zh-CN']) {

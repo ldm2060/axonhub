@@ -5,10 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { authApi } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
+import { authApi } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -74,18 +74,12 @@ export function InviteForm({ token, className, ...props }: InviteFormProps) {
 
   if (isLoadingInvitation) {
     return (
-      <p className='rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600'>
-        {t('common.buttons.processing')}
-      </p>
+      <p className='rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600'>{t('common.buttons.processing')}</p>
     );
   }
 
   if (invitationError) {
-    return (
-      <p className='rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive'>
-        {invitationError}
-      </p>
-    );
+    return <p className='border-destructive/20 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm'>{invitationError}</p>;
   }
 
   return (

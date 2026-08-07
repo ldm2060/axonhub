@@ -64,7 +64,10 @@ test('filters shared channels to enabled channels owned by other users', () => {
     { id: 'enabled', name: 'Enabled', status: 'enabled', ownerID: '9', type: 'openai' },
   ];
 
-  assert.deepEqual(filterSharedPersonalChannels(channels, '42').map((channel) => channel.id), ['enabled']);
+  assert.deepEqual(
+    filterSharedPersonalChannels(channels, '42').map((channel) => channel.id),
+    ['enabled']
+  );
 });
 
 test('filters owned personal channels excluding current user', () => {
@@ -74,8 +77,14 @@ test('filters owned personal channels excluding current user', () => {
     { id: 'other', name: 'Other', status: 'enabled', ownerID: '9', type: 'openai' },
   ];
 
-  assert.deepEqual(filterOwnedPersonalChannels(channels, '42').map((c) => c.id), ['null-owner', 'other']);
-  assert.deepEqual(filterOwnedPersonalChannels(channels, undefined).map((c) => c.id), ['owned', 'null-owner', 'other']);
+  assert.deepEqual(
+    filterOwnedPersonalChannels(channels, '42').map((c) => c.id),
+    ['null-owner', 'other']
+  );
+  assert.deepEqual(
+    filterOwnedPersonalChannels(channels, undefined).map((c) => c.id),
+    ['owned', 'null-owner', 'other']
+  );
 });
 
 test('filters personal channel rows with the table filters used by shared channels', () => {

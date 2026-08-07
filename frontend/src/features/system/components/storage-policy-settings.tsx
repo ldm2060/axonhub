@@ -66,24 +66,27 @@ export function StoragePolicySettings() {
     }
   }, [storagePolicy]);
 
-  const fetchPreview = React.useCallback(async (reqDays: number, usageDays: number) => {
-    if (reqDays <= 0 && usageDays <= 0) {
-      setPreviewItems([]);
-      return;
-    }
-    setIsPreviewLoading(true);
-    try {
-      const items = await previewGcCleanup.mutateAsync({
-        requestsCleanupDays: reqDays,
-        usageLogsCleanupDays: usageDays,
-      });
-      setPreviewItems(items);
-    } catch {
-      setPreviewItems([]);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  }, [previewGcCleanup]);
+  const fetchPreview = React.useCallback(
+    async (reqDays: number, usageDays: number) => {
+      if (reqDays <= 0 && usageDays <= 0) {
+        setPreviewItems([]);
+        return;
+      }
+      setIsPreviewLoading(true);
+      try {
+        const items = await previewGcCleanup.mutateAsync({
+          requestsCleanupDays: reqDays,
+          usageLogsCleanupDays: usageDays,
+        });
+        setPreviewItems(items);
+      } catch {
+        setPreviewItems([]);
+      } finally {
+        setIsPreviewLoading(false);
+      }
+    },
+    [previewGcCleanup]
+  );
 
   const schedulePreview = (reqDays: number, usageDays: number) => {
     if (previewTimerRef.current) {
@@ -97,8 +100,8 @@ export function StoragePolicySettings() {
   const handleDialogOpenChange = (open: boolean) => {
     dialogOpenRef.current = open;
     if (open) {
-      const requestsOption = storagePolicyState.cleanupOptions.find(o => o.resourceType === 'requests');
-      const usageLogsOption = storagePolicyState.cleanupOptions.find(o => o.resourceType === 'usage_logs');
+      const requestsOption = storagePolicyState.cleanupOptions.find((o) => o.resourceType === 'requests');
+      const usageLogsOption = storagePolicyState.cleanupOptions.find((o) => o.resourceType === 'usage_logs');
       const reqDays = requestsOption?.cleanupDays || 30;
       const usageDays = usageLogsOption?.cleanupDays || 7;
       setManualRequestsDays(reqDays);
@@ -191,25 +194,15 @@ export function StoragePolicySettings() {
           </div>
           <AlertDialog onOpenChange={handleDialogOpenChange}>
             <AlertDialogTrigger asChild>
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={triggerGcCleanup.isPending || isLoading}
-              >
-                {triggerGcCleanup.isPending ? (
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                ) : (
-                  <Play className='mr-2 h-4 w-4' />
-                )}
+              <Button variant='outline' size='sm' disabled={triggerGcCleanup.isPending || isLoading}>
+                {triggerGcCleanup.isPending ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Play className='mr-2 h-4 w-4' />}
                 {t('system.storage.policy.runCleanupNow')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>{t('system.storage.policy.runCleanupManualTitle')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('system.storage.policy.runCleanupManualDescription')}
-                </AlertDialogDescription>
+                <AlertDialogDescription>{t('system.storage.policy.runCleanupManualDescription')}</AlertDialogDescription>
               </AlertDialogHeader>
               <div className='space-y-4 py-4'>
                 <div className='flex items-center gap-4'>
@@ -241,16 +234,14 @@ export function StoragePolicySettings() {
                   </div>
                 </div>
                 <div className='rounded-lg border p-3'>
-                  <div className='text-sm font-medium mb-2'>{t('system.storage.policy.runCleanupPreviewLabel')}</div>
+                  <div className='mb-2 text-sm font-medium'>{t('system.storage.policy.runCleanupPreviewLabel')}</div>
                   {isPreviewLoading ? (
-                    <div className='flex items-center gap-2 text-muted-foreground text-sm'>
+                    <div className='text-muted-foreground flex items-center gap-2 text-sm'>
                       <Loader2 className='h-3 w-3 animate-spin' />
                       {t('system.storage.policy.runCleanupPreviewLoading')}
                     </div>
                   ) : previewItems.length === 0 ? (
-                    <div className='text-muted-foreground text-sm'>
-                      {t('system.storage.policy.runCleanupPreviewEmpty')}
-                    </div>
+                    <div className='text-muted-foreground text-sm'>{t('system.storage.policy.runCleanupPreviewEmpty')}</div>
                   ) : (
                     <ul className='space-y-1'>
                       {previewItems.map((item) => (
@@ -268,10 +259,7 @@ export function StoragePolicySettings() {
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel>{t('system.storage.policy.runCleanupCancel')}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleManualCleanup}
-                  disabled={isPreviewLoading || triggerGcCleanup.isPending}
-                >
+                <AlertDialogAction onClick={handleManualCleanup} disabled={isPreviewLoading || triggerGcCleanup.isPending}>
                   {triggerGcCleanup.isPending ? (
                     <>
                       <Loader2 className='mr-2 h-4 w-4 animate-spin' />

@@ -4,7 +4,7 @@ import ApiKeysManagement from '@/features/apikeys';
 
 function ProtectedApiKeys() {
   return (
-    <RouteGuard requiredScopes={['read_api_keys']} scopeLevel="system">
+    <RouteGuard requiredScopes={['read_api_keys']} scopeLevel='system'>
       <ApiKeysManagement />
     </RouteGuard>
   );

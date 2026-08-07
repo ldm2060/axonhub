@@ -1,24 +1,17 @@
 import { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Search, Loader2 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Header } from '@/components/layout/header';
-import { Main } from '@/components/layout/main';
-import { Button } from '@/components/ui/button';
-import { DateRangePicker, type DateTimeRangeValue } from '@/components/date-range-picker';
+import { useTranslation } from 'react-i18next';
 import { buildDateRangeWhereClause } from '@/utils/date-range';
 import { formatNumber } from '@/utils/format-number';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DateRangePicker, type DateTimeRangeValue } from '@/components/date-range-picker';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
 import { useGeneralSettings } from '@/features/system/data/system';
 import { useUsageStatsByUser } from './data/usage-stats';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 export default function UsageStatisticsPage() {
   const { t, i18n } = useTranslation();
@@ -57,9 +50,7 @@ export default function UsageStatisticsPage() {
   const filteredData = useMemo(() => {
     if (!allData) return [];
     if (!searchTerm) return allData;
-    return allData.filter((item) =>
-      item.userName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return allData.filter((item) => item.userName.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [allData, searchTerm]);
 
   if (isLoading || isSettingsLoading) {
@@ -74,7 +65,9 @@ export default function UsageStatisticsPage() {
   if (error) {
     return (
       <div className='flex-1 space-y-4 p-8 pt-6'>
-        <div className='text-red-500'>{t('common.loadError')} {error.message}</div>
+        <div className='text-red-500'>
+          {t('common.loadError')} {error.message}
+        </div>
       </div>
     );
   }
@@ -85,16 +78,16 @@ export default function UsageStatisticsPage() {
         <div className='flex flex-1 items-center justify-between'>
           <div>
             <h2 className='text-xl font-bold tracking-tight'>{t('sidebar.items.usageStats')}</h2>
-            <p className='text-sm text-muted-foreground'>{t('usageStats.description')}</p>
+            <p className='text-muted-foreground text-sm'>{t('usageStats.description')}</p>
           </div>
         </div>
       </Header>
 
       <Main fixed className='flex flex-col'>
-        <div className='flex items-center justify-between gap-4 mb-4 flex-shrink-0'>
+        <div className='mb-4 flex flex-shrink-0 items-center justify-between gap-4'>
           <div className='flex items-center gap-2'>
             <div className='relative w-72'>
-              <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+              <Search className='text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4' />
               <Input
                 type='search'
                 placeholder={t('search.placeholder')}
@@ -105,12 +98,7 @@ export default function UsageStatisticsPage() {
             </div>
             <DateRangePicker value={dateRange} onChange={setDateRange} />
             {dateRange && (dateRange.from || dateRange.to) && (
-              <Button
-                variant='ghost'
-                onClick={() => setDateRange(undefined)}
-                className='h-8 px-2'
-                size='sm'
-              >
+              <Button variant='ghost' onClick={() => setDateRange(undefined)} className='h-8 px-2' size='sm'>
                 {t('common.filters.reset')}
               </Button>
             )}
@@ -119,20 +107,28 @@ export default function UsageStatisticsPage() {
 
         <div className='shadow-soft relative flex-1 overflow-auto overflow-x-hidden rounded-2xl border border-[var(--table-border)]'>
           {filteredData.length === 0 ? (
-            <div className='flex h-[200px] items-center justify-center bg-[var(--table-background)] rounded-2xl'>
-              <div className='text-muted-foreground text-sm'>
-                {searchTerm ? t('common.noResults') : t('dashboard.charts.noUserData')}
-              </div>
+            <div className='flex h-[200px] items-center justify-center rounded-2xl bg-[var(--table-background)]'>
+              <div className='text-muted-foreground text-sm'>{searchTerm ? t('common.noResults') : t('dashboard.charts.noUserData')}</div>
             </div>
           ) : (
             <Table className='border-separate border-spacing-0 rounded-2xl bg-[var(--table-background)]'>
               <TableHeader className='sticky top-0 z-20 bg-[var(--table-header)] shadow-sm'>
                 <TableRow className='group/row border-0'>
-                  <TableHead className='w-12 text-center text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>#</TableHead>
-                  <TableHead className='text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>{t('dashboard.stats.user')}</TableHead>
-                  <TableHead className='text-right text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>{t('dashboard.stats.requestCount')}</TableHead>
-                  <TableHead className='text-right text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>{t('dashboard.stats.tokenCount')}</TableHead>
-                  <TableHead className='text-right text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>{t('dashboard.stats.userCost')}</TableHead>
+                  <TableHead className='text-muted-foreground w-12 border-0 text-center text-xs font-semibold tracking-wider uppercase'>
+                    #
+                  </TableHead>
+                  <TableHead className='text-muted-foreground border-0 text-xs font-semibold tracking-wider uppercase'>
+                    {t('dashboard.stats.user')}
+                  </TableHead>
+                  <TableHead className='text-muted-foreground border-0 text-right text-xs font-semibold tracking-wider uppercase'>
+                    {t('dashboard.stats.requestCount')}
+                  </TableHead>
+                  <TableHead className='text-muted-foreground border-0 text-right text-xs font-semibold tracking-wider uppercase'>
+                    {t('dashboard.stats.tokenCount')}
+                  </TableHead>
+                  <TableHead className='text-muted-foreground border-0 text-right text-xs font-semibold tracking-wider uppercase'>
+                    {t('dashboard.stats.userCost')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className='space-y-1 !bg-[var(--table-background)] p-2'>
@@ -141,19 +137,25 @@ export default function UsageStatisticsPage() {
                     key={item.userId}
                     className='group/row table-row-hover rounded-xl border-0 !bg-[var(--table-background)] transition-all duration-200 ease-in-out'
                   >
-                    <TableCell className='text-muted-foreground text-center text-xs border-0 bg-inherit px-4 py-3'>{index + 1}</TableCell>
-                    <TableCell className='font-medium border-0 bg-inherit px-4 py-3'>{item.userName}</TableCell>
-                    <TableCell className='text-right font-mono text-sm border-0 bg-inherit px-4 py-3'>{formatNumber(item.requestCount)}</TableCell>
-                    <TableCell className='text-right font-mono text-sm border-0 bg-inherit px-4 py-3'>{formatNumber(item.totalTokens)}</TableCell>
-                    <TableCell className='text-right font-mono text-sm border-0 bg-inherit px-4 py-3'>{formatCurrency(item.totalCost)}</TableCell>
+                    <TableCell className='text-muted-foreground border-0 bg-inherit px-4 py-3 text-center text-xs'>{index + 1}</TableCell>
+                    <TableCell className='border-0 bg-inherit px-4 py-3 font-medium'>{item.userName}</TableCell>
+                    <TableCell className='border-0 bg-inherit px-4 py-3 text-right font-mono text-sm'>
+                      {formatNumber(item.requestCount)}
+                    </TableCell>
+                    <TableCell className='border-0 bg-inherit px-4 py-3 text-right font-mono text-sm'>
+                      {formatNumber(item.totalTokens)}
+                    </TableCell>
+                    <TableCell className='border-0 bg-inherit px-4 py-3 text-right font-mono text-sm'>
+                      {formatCurrency(item.totalCost)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
           {isFetching && (
-            <div className='absolute inset-0 flex items-center justify-center bg-background/50 rounded-2xl z-30'>
-              <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+            <div className='bg-background/50 absolute inset-0 z-30 flex items-center justify-center rounded-2xl'>
+              <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
             </div>
           )}
         </div>
@@ -161,4 +163,3 @@ export default function UsageStatisticsPage() {
     </div>
   );
 }
-

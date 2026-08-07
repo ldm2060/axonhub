@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -100,9 +100,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
   const watchedMaxConcurrent = form.watch('maxConcurrent');
   const watchedQueueSize = form.watch('queueSize');
   const showUnboundedQueueHint =
-    typeof watchedMaxConcurrent === 'number' &&
-    watchedMaxConcurrent > 0 &&
-    (typeof watchedQueueSize !== 'number' || watchedQueueSize <= 0);
+    typeof watchedMaxConcurrent === 'number' && watchedMaxConcurrent > 0 && (typeof watchedQueueSize !== 'number' || watchedQueueSize <= 0);
 
   const onSubmit = async (values: RateLimitFormValues) => {
     try {
@@ -196,21 +194,21 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
                     'rpm',
                     'channels.dialogs.rateLimit.fields.rpm.label',
                     'channels.dialogs.rateLimit.fields.rpm.placeholder',
-                    'channels.dialogs.rateLimit.fields.rpm.description',
+                    'channels.dialogs.rateLimit.fields.rpm.description'
                   )}
 
                   {renderNumericField(
                     'tpm',
                     'channels.dialogs.rateLimit.fields.tpm.label',
                     'channels.dialogs.rateLimit.fields.tpm.placeholder',
-                    'channels.dialogs.rateLimit.fields.tpm.description',
+                    'channels.dialogs.rateLimit.fields.tpm.description'
                   )}
 
                   {renderNumericField(
                     'maxConcurrent',
                     'channels.dialogs.rateLimit.fields.maxConcurrent.label',
                     'channels.dialogs.rateLimit.fields.maxConcurrent.placeholder',
-                    'channels.dialogs.rateLimit.fields.maxConcurrent.description',
+                    'channels.dialogs.rateLimit.fields.maxConcurrent.description'
                   )}
 
                   <FormField
@@ -239,9 +237,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
                           </div>
                         )}
                         {fieldState.error?.message === 'queueRequiresMaxConcurrent' ? (
-                          <p className='text-destructive text-sm'>
-                            {t('channels.dialogs.rateLimit.errors.queueRequiresMaxConcurrent')}
-                          </p>
+                          <p className='text-destructive text-sm'>{t('channels.dialogs.rateLimit.errors.queueRequiresMaxConcurrent')}</p>
                         ) : (
                           <FormMessage />
                         )}
@@ -253,7 +249,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
                     'queueTimeoutMs',
                     'channels.dialogs.rateLimit.fields.queueTimeoutMs.label',
                     'channels.dialogs.rateLimit.fields.queueTimeoutMs.placeholder',
-                    'channels.dialogs.rateLimit.fields.queueTimeoutMs.description',
+                    'channels.dialogs.rateLimit.fields.queueTimeoutMs.description'
                   )}
                 </form>
               </Form>
@@ -272,7 +268,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
                     'minInputTokens',
                     'channels.dialogs.rateLimit.fields.minInputTokens.label',
                     'channels.dialogs.rateLimit.fields.minInputTokens.placeholder',
-                    'channels.dialogs.rateLimit.fields.minInputTokens.description',
+                    'channels.dialogs.rateLimit.fields.minInputTokens.description'
                   )}
                 </form>
               </Form>
@@ -284,11 +280,7 @@ export function ChannelsRateLimitDialog({ open, onOpenChange, currentRow }: Prop
           <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
             {t('common.buttons.cancel')}
           </Button>
-          <Button
-            type='button'
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={updateChannel.isPending || !form.formState.isValid}
-          >
+          <Button type='button' onClick={form.handleSubmit(onSubmit)} disabled={updateChannel.isPending || !form.formState.isValid}>
             {updateChannel.isPending ? t('common.buttons.saving') : t('common.buttons.save')}
           </Button>
         </DialogFooter>

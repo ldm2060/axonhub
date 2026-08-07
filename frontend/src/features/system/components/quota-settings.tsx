@@ -65,9 +65,7 @@ export function QuotaSettings() {
   const handleCollectionProviderChange = useCallback((providerType: string, checked: boolean) => {
     setCollectionFormData((prev) => ({
       ...prev,
-      providers: prev.providers.map((provider) =>
-        provider.provider === providerType ? { ...provider, enabled: checked } : provider
-      ),
+      providers: prev.providers.map((provider) => (provider.provider === providerType ? { ...provider, enabled: checked } : provider)),
     }));
   }, []);
 
@@ -141,11 +139,7 @@ export function QuotaSettings() {
 
             <div className='flex justify-end'>
               <Button type='submit' disabled={updateProviderQuotaCollectionSettings.isPending} className='min-w-24'>
-                {updateProviderQuotaCollectionSettings.isPending ? (
-                  <Loader2 className='h-4 w-4 animate-spin' />
-                ) : (
-                  t('common.buttons.save')
-                )}
+                {updateProviderQuotaCollectionSettings.isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : t('common.buttons.save')}
               </Button>
             </div>
           </form>
@@ -182,9 +176,7 @@ export function QuotaSettings() {
                   <div className='text-muted-foreground mb-2 text-sm'>{t('system.quota.mode.description')}</div>
                   <Select
                     value={quotaFormData.mode}
-                    onValueChange={(value) =>
-                      setQuotaFormData((prev) => ({ ...prev, mode: value as QuotaEnforcementMode }))
-                    }
+                    onValueChange={(value) => setQuotaFormData((prev) => ({ ...prev, mode: value as QuotaEnforcementMode }))}
                   >
                     <SelectTrigger id='quota-mode' className='w-56'>
                       <SelectValue placeholder={t('system.quota.mode.placeholder')} />
@@ -210,11 +202,7 @@ export function QuotaSettings() {
 
             <div className='flex justify-end'>
               <Button type='submit' disabled={updateQuotaEnforcementSettings.isPending} className='min-w-24'>
-                {updateQuotaEnforcementSettings.isPending ? (
-                  <Loader2 className='h-4 w-4 animate-spin' />
-                ) : (
-                  t('common.buttons.save')
-                )}
+                {updateQuotaEnforcementSettings.isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : t('common.buttons.save')}
               </Button>
             </div>
           </form>

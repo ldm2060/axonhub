@@ -3,8 +3,9 @@ import { CheckIcon, Cross2Icon, PlusCircledIcon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { RefreshCw, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { cn } from '@/lib/utils';
+import type { DateTimeRangeValue } from '@/utils/date-range';
+import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
@@ -13,7 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { DateRangePicker } from '@/components/date-range-picker';
-import type { DateTimeRangeValue } from '@/utils/date-range';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -58,7 +58,7 @@ export function ThreadsTableToolbar<TData>({
 
   return (
     <div ref={scrollRef} className='flex items-center justify-between gap-2 overflow-x-auto'>
-      <div className='flex flex-1 items-center space-x-2 shrink-0'>
+      <div className='flex flex-1 shrink-0 items-center space-x-2'>
         <Input
           placeholder={t('threads.filters.filterThreadId')}
           value={threadIdFilter}
@@ -108,9 +108,7 @@ export function ThreadsTableToolbar<TData>({
                         <CommandItem
                           key={option.value}
                           onSelect={() => {
-                            const newFilter = isSelected
-                              ? statusFilter.filter((s) => s !== option.value)
-                              : [...statusFilter, option.value];
+                            const newFilter = isSelected ? statusFilter.filter((s) => s !== option.value) : [...statusFilter, option.value];
                             onStatusFilterChange(newFilter.length > 0 ? newFilter : []);
                           }}
                         >
@@ -163,9 +161,9 @@ export function ThreadsTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <div className='flex items-center space-x-2 shrink-0'>
+      <div className='flex shrink-0 items-center space-x-2'>
         {showRefresh && onAutoRefreshChange && (
-          <div className='flex items-center space-x-2 shrink-0'>
+          <div className='flex shrink-0 items-center space-x-2'>
             <Switch checked={autoRefresh} onCheckedChange={onAutoRefreshChange} id='auto-refresh-switch' />
             <label htmlFor='auto-refresh-switch' className='text-muted-foreground cursor-pointer text-sm whitespace-nowrap'>
               {t('common.autoRefresh')}

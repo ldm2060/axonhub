@@ -102,7 +102,10 @@ export type FilterCondition = {
 export const filterConditionSchema: z.ZodType<FilterCondition> = z.object({
   type: z.enum(['condition', 'group']).default('condition'),
   logic: z.string().optional(),
-  conditions: z.array(z.lazy(() => filterConditionSchema)).optional().default([]),
+  conditions: z
+    .array(z.lazy(() => filterConditionSchema))
+    .optional()
+    .default([]),
   field: z.string().optional(),
   operator: z.string().optional(),
   value: z.any().optional(),

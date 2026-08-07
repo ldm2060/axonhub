@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { usePermissions } from '@/hooks/usePermissions';
 import { RouteGuard } from '@/components/route-guard';
 import RuntimeManagement from '@/features/runtime';
-import { usePermissions } from '@/hooks/usePermissions';
 
 function ProtectedRuntime() {
   const router = useRouter();
@@ -19,7 +19,7 @@ function ProtectedRuntime() {
   }
 
   return (
-    <RouteGuard requiredScopes={['read_settings']} scopeLevel="system" showForbidden={false} fallbackPath="/">
+    <RouteGuard requiredScopes={['read_settings']} scopeLevel='system' showForbidden={false} fallbackPath='/'>
       <RuntimeManagement />
     </RouteGuard>
   );

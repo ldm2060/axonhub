@@ -382,11 +382,7 @@ export function useDailyUsageStatsByUser(days?: number, mode: DashboardMode = 'p
       // The personal query is user-scoped (no project header); the system query
       // reads the project header for owner verification.
       const headers = !isPersonal && selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ [key: string]: DailyUsageStatsByUser[] }>(
-        query,
-        { days },
-        headers
-      );
+      const data = await graphqlRequest<{ [key: string]: DailyUsageStatsByUser[] }>(query, { days }, headers);
       return data[fieldName].map((item) => dailyUsageStatsByUserSchema.parse(item));
     },
     enabled: isPersonal || !!selectedProjectId,
@@ -405,11 +401,7 @@ export function useUsageStatsByUser(timeWindow?: string, mode: DashboardMode = '
       const query = isPersonal ? MY_USAGE_STATS_BY_USER_QUERY : USAGE_STATS_BY_USER_QUERY;
       const fieldName = isPersonal ? 'myUsageStatsByUser' : 'usageStatsByUser';
       const headers = !isPersonal && selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ [key: string]: UsageStatsByUser[] }>(
-        query,
-        { timeWindow },
-        headers
-      );
+      const data = await graphqlRequest<{ [key: string]: UsageStatsByUser[] }>(query, { timeWindow }, headers);
       return data[fieldName].map((item) => usageStatsByUserSchema.parse(item));
     },
     enabled: isPersonal || !!selectedProjectId,
@@ -833,10 +825,10 @@ export function useChannelSuccessRates(limit?: number, timeWindow?: string, mode
     queryFn: async () => {
       const query = isPersonal ? MY_CHANNEL_SUCCESS_RATES_QUERY : CHANNEL_SUCCESS_RATES_QUERY;
       const fieldName = isPersonal ? 'myChannelSuccessRates' : 'channelSuccessRates';
-      const data = await graphqlRequest<{ [key: string]: ChannelSuccessRate[] }>(
-        query,
-        { ...(timeWindow != null && { timeWindow }), ...(limit != null && { limit }) }
-      );
+      const data = await graphqlRequest<{ [key: string]: ChannelSuccessRate[] }>(query, {
+        ...(timeWindow != null && { timeWindow }),
+        ...(limit != null && { limit }),
+      });
       return data[fieldName].map((item) => channelSuccessRateSchema.parse(item));
     },
     refetchInterval: 300000,

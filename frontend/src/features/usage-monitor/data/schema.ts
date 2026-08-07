@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import {
-  quotaMonitorBindingConditionSchema,
-  quotaMonitorBindingTriggerStatusSchema,
-} from '@/features/channels/data/schema';
+import { quotaMonitorBindingConditionSchema, quotaMonitorBindingTriggerStatusSchema } from '@/features/channels/data/schema';
 
 export const fieldConfigSchema = z.object({
   key: z.string(),

@@ -19,9 +19,7 @@ export function useMySharedChannels() {
   const sharedChannels = useMemo(() => {
     if (!currentUser?.id || !data?.edges) return [];
     const userId = Number(currentUser.id);
-    return data.edges
-      .map((edge) => edge.node)
-      .filter((ch) => Array.isArray(ch.sharedWith) && ch.sharedWith.includes(userId));
+    return data.edges.map((edge) => edge.node).filter((ch) => Array.isArray(ch.sharedWith) && ch.sharedWith.includes(userId));
   }, [data?.edges, currentUser?.id]);
 
   return { data: sharedChannels, isLoading };

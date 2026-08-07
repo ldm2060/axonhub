@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { ScopesSelect } from '@/components/scopes-select';
 import { useApiKeysContext } from '../context/apikeys-context';
 import { useCreateApiKey } from '../data/apikeys';
 import { CreateApiKeyInput, createApiKeyInputSchema } from '../data/schema';
-import { ScopesSelect } from '@/components/scopes-select';
-import { usePermissions } from '@/hooks/usePermissions';
 
 export function ApiKeysCreateDialog() {
   const { t } = useTranslation();
@@ -65,7 +65,7 @@ export function ApiKeysCreateDialog() {
       closeDialog('create');
       setSelectedApiKey(result.createAPIKey);
       openDialog('view', result.createAPIKey);
-} catch (_error) {
+    } catch (_error) {
       // Error is handled by the mutation
     } finally {
       setIsSubmitting(false);

@@ -1,13 +1,12 @@
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { CopyIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
+import { CodeBlock } from '@/components/ai-elements/code-block';
+import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import { Response as UIResponse } from '@/components/ai-elements/response';
-import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Tool, ToolHeader, ToolContent } from '@/components/ai-elements/tool';
-import { CodeBlock } from '@/components/ai-elements/code-block';
-import { Badge } from '@/components/ui/badge';
-
 import { parseResponse } from '../utils/response-parser';
 
 interface ResponseFlowProps {
@@ -21,19 +20,16 @@ interface ResponseFlowProps {
 export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurationMs }: ResponseFlowProps) {
   const { t } = useTranslation();
 
-  const { content, reasoning, toolCalls } = useMemo(
-    () => parseResponse(body, chunks),
-    [chunks, body, version]
-  );
+  const { content, reasoning, toolCalls } = useMemo(() => parseResponse(body, chunks), [chunks, body, version]);
 
   if (!content && !reasoning && toolCalls.length === 0) {
     if (isLive) {
       return (
-        <div className='flex min-h-[200px] w-full items-center justify-center rounded-xl border border-dashed bg-muted/5'>
-            <div className='space-y-4 text-center'>
-              <div className='border-primary mx-auto h-12 w-12 animate-spin rounded-full border-b-2'></div>
-              <p className='text-muted-foreground text-lg'>{t('common.loading')}</p>
-            </div>
+        <div className='bg-muted/5 flex min-h-[200px] w-full items-center justify-center rounded-xl border border-dashed'>
+          <div className='space-y-4 text-center'>
+            <div className='border-primary mx-auto h-12 w-12 animate-spin rounded-full border-b-2'></div>
+            <p className='text-muted-foreground text-lg'>{t('common.loading')}</p>
+          </div>
         </div>
       );
     }
@@ -52,8 +48,8 @@ export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurat
     <div className='bg-muted/10 rounded-xl border p-6'>
       {isLive && (
         <div className='mb-4 flex justify-end'>
-          <Badge className='bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 gap-1.5 border-none px-2 py-0.5'>
-            <span className='h-2 w-2 rounded-full bg-green-500 animate-pulse' />
+          <Badge className='gap-1.5 border-none bg-green-100 px-2 py-0.5 text-green-800 dark:bg-green-900 dark:text-green-300'>
+            <span className='h-2 w-2 animate-pulse rounded-full bg-green-500' />
             Live
           </Badge>
         </div>
@@ -74,10 +70,10 @@ export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurat
             <div className='mt-4 space-y-3'>
               {toolCalls.map((tc, index) => (
                 <Tool key={tc.id || index} defaultOpen={true}>
-                  <ToolHeader 
-                    title={tc.function?.name || 'tool'} 
-                    type='tool-call' 
-                    state={isLive ? 'input-available' : 'output-available'} 
+                  <ToolHeader
+                    title={tc.function?.name || 'tool'}
+                    type='tool-call'
+                    state={isLive ? 'input-available' : 'output-available'}
                   />
                   <ToolContent>
                     {tc.id && (
@@ -90,11 +86,12 @@ export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurat
                         <h4 className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>Parameters</h4>
                         <button
                           type='button'
-                          className='text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 transition-colors cursor-pointer'
+                          className='text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-xs transition-colors'
                           onClick={() => {
-                            const text = typeof tc.function?.arguments === 'string'
-                              ? tc.function.arguments
-                              : JSON.stringify(parseJson(tc.function?.arguments || '{}'), null, 2);
+                            const text =
+                              typeof tc.function?.arguments === 'string'
+                                ? tc.function.arguments
+                                : JSON.stringify(parseJson(tc.function?.arguments || '{}'), null, 2);
                             navigator.clipboard.writeText(text);
                           }}
                         >
@@ -113,9 +110,9 @@ export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurat
           )}
 
           {!content && !toolCalls.length && isLive ? (
-            <div className='flex items-center gap-2 text-sm text-muted-foreground italic'>
-               <span className='h-1.5 w-1.5 animate-pulse rounded-full bg-primary' />
-               {t('common.loading')}...
+            <div className='text-muted-foreground flex items-center gap-2 text-sm italic'>
+              <span className='bg-primary h-1.5 w-1.5 animate-pulse rounded-full' />
+              {t('common.loading')}...
             </div>
           ) : null}
         </MessageContent>

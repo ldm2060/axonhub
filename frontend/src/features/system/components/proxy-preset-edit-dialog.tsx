@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
 import { Pencil } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -59,12 +59,7 @@ export function ProxyPresetEditDialog({ preset, trigger }: Props) {
       {trigger ? (
         trigger
       ) : (
-        <Button
-          variant='ghost'
-          size='sm'
-          className='h-8 w-8 p-0'
-          onClick={() => setOpen(true)}
-        >
+        <Button variant='ghost' size='sm' className='h-8 w-8 p-0' onClick={() => setOpen(true)}>
           <Pencil className='h-4 w-4' />
         </Button>
       )}

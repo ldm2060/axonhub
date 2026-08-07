@@ -6,7 +6,7 @@ import PromptsManagement from '@/features/prompts';
 function ProtectedProjectPrompts() {
   return (
     <ProjectGuard>
-      <RouteGuard requiredScopes={['read_prompts']} scopeLevel="any">
+      <RouteGuard requiredScopes={['read_prompts']} scopeLevel='any'>
         <PromptsManagement />
       </RouteGuard>
     </ProjectGuard>

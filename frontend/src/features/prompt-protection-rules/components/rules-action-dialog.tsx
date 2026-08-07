@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -156,7 +156,9 @@ export function RulesActionDialog() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className='sm:max-w-[680px]'>
         <DialogHeader>
-          <DialogTitle>{isEdit ? t('promptProtectionRules.dialogs.edit.title') : t('promptProtectionRules.dialogs.create.title')}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? t('promptProtectionRules.dialogs.edit.title') : t('promptProtectionRules.dialogs.create.title')}
+          </DialogTitle>
           <DialogDescription>
             {isEdit ? t('promptProtectionRules.dialogs.edit.description') : t('promptProtectionRules.dialogs.create.description')}
           </DialogDescription>
@@ -262,14 +264,14 @@ export function RulesActionDialog() {
                               <Checkbox
                                 checked={field.value?.includes(scope)}
                                 onCheckedChange={(checked) => {
-                                  const next = checked
-                                    ? [...field.value, scope]
-                                    : field.value.filter((value) => value !== scope);
+                                  const next = checked ? [...field.value, scope] : field.value.filter((value) => value !== scope);
                                   field.onChange(next);
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className='m-0 cursor-pointer text-sm font-normal'>{t(`promptProtectionRules.scopes.${scope}`)}</FormLabel>
+                            <FormLabel className='m-0 cursor-pointer text-sm font-normal'>
+                              {t(`promptProtectionRules.scopes.${scope}`)}
+                            </FormLabel>
                           </FormItem>
                         )}
                       />
@@ -283,11 +285,9 @@ export function RulesActionDialog() {
             {/* Test Preview Section */}
             <div className='space-y-3 rounded-lg border p-4'>
               <h4 className='text-sm font-medium'>{t('promptProtectionRules.test.title')}</h4>
-              
+
               <div className='space-y-2'>
-                <label className='text-sm font-medium text-muted-foreground'>
-                  {t('promptProtectionRules.test.testInput')}
-                </label>
+                <label className='text-muted-foreground text-sm font-medium'>{t('promptProtectionRules.test.testInput')}</label>
                 <Textarea
                   value={testText}
                   onChange={(e) => setTestText(e.target.value)}
@@ -299,26 +299,26 @@ export function RulesActionDialog() {
 
               {testText && (
                 <div className='space-y-2'>
-                  <label className='text-sm font-medium text-muted-foreground'>
-                    {t('promptProtectionRules.test.previewResult')}
-                  </label>
-                  <div className='rounded-md bg-muted p-3 text-sm'>
+                  <label className='text-muted-foreground text-sm font-medium'>{t('promptProtectionRules.test.previewResult')}</label>
+                  <div className='bg-muted rounded-md p-3 text-sm'>
                     {previewMutation.isError ? (
-                      <div className='flex items-start gap-2 text-destructive'>
-                        <AlertCircle className='h-4 w-4 mt-0.5 flex-shrink-0' />
-                        <span>{previewMutation.error instanceof Error ? previewMutation.error.message : t('promptProtectionRules.test.invalidPattern')}</span>
+                      <div className='text-destructive flex items-start gap-2'>
+                        <AlertCircle className='mt-0.5 h-4 w-4 flex-shrink-0' />
+                        <span>
+                          {previewMutation.error instanceof Error
+                            ? previewMutation.error.message
+                            : t('promptProtectionRules.test.invalidPattern')}
+                        </span>
                       </div>
                     ) : previewMutation.data?.hasMatch ? (
                       <div className='flex items-start gap-2 text-green-600 dark:text-green-400'>
-                        <CheckCircle2 className='h-4 w-4 mt-0.5 flex-shrink-0' />
-                        <pre className='whitespace-pre-wrap font-mono text-xs'>{previewMutation.data.result}</pre>
+                        <CheckCircle2 className='mt-0.5 h-4 w-4 flex-shrink-0' />
+                        <pre className='font-mono text-xs whitespace-pre-wrap'>{previewMutation.data.result}</pre>
                       </div>
                     ) : previewMutation.isPending ? (
                       <div className='text-muted-foreground'>{t('common.loading')}</div>
                     ) : (
-                      <div className='text-muted-foreground'>
-                        {t('promptProtectionRules.test.noMatch')}
-                      </div>
+                      <div className='text-muted-foreground'>{t('promptProtectionRules.test.noMatch')}</div>
                     )}
                   </div>
                 </div>

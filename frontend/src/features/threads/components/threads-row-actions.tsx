@@ -3,14 +3,6 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
 import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +13,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useArchiveThread, useUnarchiveThread, useRetainThread, useUnretainThread } from '../data/threads';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Thread } from '../data/schema';
+import { useArchiveThread, useUnarchiveThread, useRetainThread, useUnretainThread } from '../data/threads';
 
 interface ThreadsRowActionsProps {
   row: Row<Thread>;
@@ -109,7 +109,10 @@ export function ThreadsRowActions({ row }: ThreadsRowActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('threads.dialogs.archiveTitle', 'Archive thread?')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('threads.dialogs.archiveDescription', 'This thread and all its traces will be hidden from the default view. You can restore it later by filtering for archived threads.')}
+              {t(
+                'threads.dialogs.archiveDescription',
+                'This thread and all its traces will be hidden from the default view. You can restore it later by filtering for archived threads.'
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

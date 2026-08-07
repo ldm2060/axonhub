@@ -131,7 +131,7 @@ export function ChannelsBulkTestDialog() {
         setResultStatus(channel, result.success ? 'success' : 'failed', {
           modelID,
           latency: result.success ? result.latency : undefined,
-          error: result.success ? undefined : (result.error || t('common.errors.internalServerError')),
+          error: result.success ? undefined : result.error || t('common.errors.internalServerError'),
         });
       } catch (error) {
         setResultStatus(channel, 'failed', {
@@ -268,7 +268,9 @@ export function ChannelsBulkTestDialog() {
         <div className='flex min-h-0 flex-1 flex-col'>
           <div className='grid shrink-0 gap-3 border-b pb-4 md:grid-cols-4'>
             <div className='rounded-lg border bg-slate-50 p-3'>
-              <div className='text-muted-foreground text-xs'>{t('channels.dialogs.bulkTest.progress', { completed: completedCount, total: selectedChannels.length })}</div>
+              <div className='text-muted-foreground text-xs'>
+                {t('channels.dialogs.bulkTest.progress', { completed: completedCount, total: selectedChannels.length })}
+              </div>
               <div className='mt-1 text-lg font-semibold'>
                 {completedCount}/{selectedChannels.length}
               </div>
@@ -320,7 +322,9 @@ export function ChannelsBulkTestDialog() {
                         <TableCell className='align-top'>
                           <div className='space-y-1'>
                             {getStatusBadge(result?.status || 'idle')}
-                            {typeof result?.latency === 'number' && <div className='text-muted-foreground text-xs'>{result.latency.toFixed(2)}s</div>}
+                            {typeof result?.latency === 'number' && (
+                              <div className='text-muted-foreground text-xs'>{result.latency.toFixed(2)}s</div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className='align-top'>
@@ -331,7 +335,10 @@ export function ChannelsBulkTestDialog() {
                             </div>
                           ) : result?.error ? (
                             <div className='max-w-full overflow-hidden'>
-                              <ErrorDisplay error={result.error} messageClassName='block max-w-full break-all text-xs font-medium text-red-600 whitespace-pre-wrap' />
+                              <ErrorDisplay
+                                error={result.error}
+                                messageClassName='block max-w-full break-all text-xs font-medium text-red-600 whitespace-pre-wrap'
+                              />
                             </div>
                           ) : result?.status === 'success' ? (
                             <span className='block truncate text-xs text-green-700'>{t('channels.dialogs.bulkTest.success')}</span>
@@ -358,16 +365,33 @@ export function ChannelsBulkTestDialog() {
             <Button variant='outline' onClick={() => handleOpenChange(false)} disabled={isTesting || bulkRecoverChannels.isPending}>
               {t('common.buttons.cancel')}
             </Button>
-            <Button variant='outline' onClick={handleRetryFailed} disabled={failedChannels.length === 0 || isTesting || bulkRecoverChannels.isPending}>
+            <Button
+              variant='outline'
+              onClick={handleRetryFailed}
+              disabled={failedChannels.length === 0 || isTesting || bulkRecoverChannels.isPending}
+            >
               <IconRefresh className='mr-2 h-4 w-4' />
               {t('channels.dialogs.bulkTest.retryFailedButton', { count: failedChannels.length })}
             </Button>
-            <Button variant='outline' onClick={handleRunAll} disabled={isTesting || bulkRecoverChannels.isPending || selectedChannels.length === 0}>
+            <Button
+              variant='outline'
+              onClick={handleRunAll}
+              disabled={isTesting || bulkRecoverChannels.isPending || selectedChannels.length === 0}
+            >
               {isTesting ? <IconLoader2 className='mr-2 h-4 w-4 animate-spin' /> : <IconFlask className='mr-2 h-4 w-4' />}
-              {completedCount > 0 ? t('channels.dialogs.bulkTest.runAgainButton') : t('channels.dialogs.bulkTest.runButton', { count: selectedChannels.length })}
+              {completedCount > 0
+                ? t('channels.dialogs.bulkTest.runAgainButton')
+                : t('channels.dialogs.bulkTest.runButton', { count: selectedChannels.length })}
             </Button>
-            <Button onClick={handleRecoverChannels} disabled={recoverableChannels.length === 0 || isTesting || bulkRecoverChannels.isPending}>
-              {bulkRecoverChannels.isPending ? <IconLoader2 className='mr-2 h-4 w-4 animate-spin' /> : <IconCheck className='mr-2 h-4 w-4' />}
+            <Button
+              onClick={handleRecoverChannels}
+              disabled={recoverableChannels.length === 0 || isTesting || bulkRecoverChannels.isPending}
+            >
+              {bulkRecoverChannels.isPending ? (
+                <IconLoader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <IconCheck className='mr-2 h-4 w-4' />
+              )}
               {t('channels.dialogs.bulkTest.recoverButton', { count: recoverableChannels.length })}
             </Button>
           </div>

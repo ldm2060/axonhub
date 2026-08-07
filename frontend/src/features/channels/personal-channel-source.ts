@@ -25,7 +25,11 @@ export function isPersonalChannelSourceReadOnly(source: PersonalChannelSource) {
   return source !== 'mine';
 }
 
-export function buildPersonalChannelWhere(source: PersonalChannelSource, currentUserId: string | undefined, baseWhere: PersonalChannelBaseWhere) {
+export function buildPersonalChannelWhere(
+  source: PersonalChannelSource,
+  currentUserId: string | undefined,
+  baseWhere: PersonalChannelBaseWhere
+) {
   const where: PersonalChannelBaseWhere = { ...baseWhere };
 
   if (source === 'mine') {
@@ -57,7 +61,10 @@ export function filterOwnedPersonalChannels<T extends PersonalChannelOwnerItem>(
   });
 }
 
-export function filterSharedPersonalChannels<T extends PersonalChannelOwnerItem>(channels: T[], currentUserId: string | number | undefined) {
+export function filterSharedPersonalChannels<T extends PersonalChannelOwnerItem>(
+  channels: T[],
+  currentUserId: string | number | undefined
+) {
   const currentUserIdText = currentUserId == null ? undefined : String(currentUserId);
 
   return channels.filter((channel) => {

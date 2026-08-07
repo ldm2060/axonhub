@@ -1,9 +1,9 @@
-import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 import AuthLayout from '@/features/auth/auth-layout';
 import TwoColumnAuth from '@/features/auth/components/two-column-auth';
-import { Button } from '@/components/ui/button';
 
 export default function VerifyEmail() {
   const { t } = useTranslation();
@@ -28,9 +28,7 @@ export default function VerifyEmail() {
     message = t('auth.verifyEmail.pendingMessage');
     action = (
       <Link to='/sign-in'>
-        <Button className='bg-slate-800 text-white hover:bg-slate-700'>
-          {t('auth.verifyEmail.backToSignIn')}
-        </Button>
+        <Button className='bg-slate-800 text-white hover:bg-slate-700'>{t('auth.verifyEmail.backToSignIn')}</Button>
       </Link>
     );
   } else if (isVerified) {
@@ -40,9 +38,7 @@ export default function VerifyEmail() {
     message = t('auth.verifyEmail.successMessage');
     action = (
       <Link to='/sign-in'>
-        <Button className='bg-slate-800 text-white hover:bg-slate-700'>
-          {t('auth.verifyEmail.signIn')}
-        </Button>
+        <Button className='bg-slate-800 text-white hover:bg-slate-700'>{t('auth.verifyEmail.signIn')}</Button>
       </Link>
     );
   } else {
@@ -58,9 +54,7 @@ export default function VerifyEmail() {
           </Button>
         </Link>
         <Link to='/sign-in'>
-          <Button className='bg-slate-800 text-white hover:bg-slate-700'>
-            {t('auth.verifyEmail.backToSignIn')}
-          </Button>
+          <Button className='bg-slate-800 text-white hover:bg-slate-700'>{t('auth.verifyEmail.backToSignIn')}</Button>
         </Link>
       </div>
     );
@@ -68,14 +62,9 @@ export default function VerifyEmail() {
 
   return (
     <AuthLayout>
-      <TwoColumnAuth
-        title={title}
-        description={message}
-      >
+      <TwoColumnAuth title={title} description={message}>
         <div className='flex flex-col items-center gap-6 text-center'>
-          <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100'>
-            {icon}
-          </div>
+          <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100'>{icon}</div>
           {action}
         </div>
       </TwoColumnAuth>

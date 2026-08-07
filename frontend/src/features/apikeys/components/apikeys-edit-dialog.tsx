@@ -8,10 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { ScopesSelect } from '@/components/scopes-select';
 import { useApiKeysContext } from '../context/apikeys-context';
 import { useUpdateApiKey } from '../data/apikeys';
 import { UpdateApiKeyInput, updateApiKeyInputSchemaFactory } from '../data/schema';
-import { ScopesSelect } from '@/components/scopes-select';
 
 export function ApiKeysEditDialog() {
   const { t } = useTranslation();

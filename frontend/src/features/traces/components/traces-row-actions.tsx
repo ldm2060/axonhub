@@ -3,14 +3,6 @@ import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { Row } from '@tanstack/react-table';
 import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +13,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useArchiveTrace, useUnarchiveTrace, useRetainTrace, useUnretainTrace } from '../data/traces';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Trace } from '../data/schema';
+import { useArchiveTrace, useUnarchiveTrace, useRetainTrace, useUnretainTrace } from '../data/traces';
 
 interface TracesRowActionsProps {
   row: Row<Trace>;
@@ -109,7 +109,10 @@ export function TracesRowActions({ row }: TracesRowActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('traces.dialogs.archiveTitle', 'Archive trace?')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('traces.dialogs.archiveDescription', 'This trace will be hidden from the default view. You can restore it later by filtering for archived traces.')}
+              {t(
+                'traces.dialogs.archiveDescription',
+                'This trace will be hidden from the default view. You can restore it later by filtering for archived traces.'
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

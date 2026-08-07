@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Trash2 } from 'lucide-react';
 import { useUsageMonitorChannels } from '@/features/usage-monitor/data/usage-monitor';
 import type { SaveChannelQuotaMonitorBindingInput } from '../data/schema';
 import type { QuotaMonitorConditionOperator, QuotaMonitorBindingTriggerStatus } from '../data/schema';
@@ -116,7 +116,7 @@ export function ChannelQuotaMonitorBinding({
   const handleBindingFieldChange = <K extends keyof SaveChannelQuotaMonitorBindingInput>(
     index: number,
     field: K,
-    value: SaveChannelQuotaMonitorBindingInput[K],
+    value: SaveChannelQuotaMonitorBindingInput[K]
   ) => {
     const next = bindings.map((b, i) => (i === index ? { ...b, [field]: value } : b));
     onBindingsChange(next);
@@ -141,12 +141,7 @@ export function ChannelQuotaMonitorBinding({
     handleBindingFieldChange(bindingIndex, 'conditions', nextConditions);
   };
 
-  const handleConditionChange = (
-    bindingIndex: number,
-    conditionIndex: number,
-    field: 'field' | 'operator' | 'value',
-    value: string,
-  ) => {
+  const handleConditionChange = (bindingIndex: number, conditionIndex: number, field: 'field' | 'operator' | 'value', value: string) => {
     const binding = bindings[bindingIndex];
     const conditions = [...(binding.conditions ?? [])];
     conditions[conditionIndex] = { ...conditions[conditionIndex], [field]: value };
@@ -185,16 +180,14 @@ export function ChannelQuotaMonitorBinding({
           </div>
 
           <div className='space-y-3'>
-            {bindings.length === 0 && (
-              <p className='text-muted-foreground text-sm'>{t('channels.quotaMonitorBinding.empty')}</p>
-            )}
+            {bindings.length === 0 && <p className='text-muted-foreground text-sm'>{t('channels.quotaMonitorBinding.empty')}</p>}
 
             {keyedBindings.map((binding, bindingIndex) => {
               const _selectedMonitor = monitorMap.get(binding.usageMonitorChannelID);
               const fieldSuggestions = getFieldSuggestions(binding.usageMonitorChannelID);
 
               return (
-                <div key={binding._key} className='border-border rounded-md border p-3 space-y-3'>
+                <div key={binding._key} className='border-border space-y-3 rounded-md border p-3'>
                   {/* Monitor select + remove */}
                   <div className='flex items-center gap-2'>
                     <div className='flex-1'>
@@ -233,10 +226,7 @@ export function ChannelQuotaMonitorBinding({
 
                   {/* Binding-level enabled toggle */}
                   <div className='flex items-center gap-2'>
-                    <Switch
-                      checked={binding.enabled}
-                      onCheckedChange={(v) => handleBindingFieldChange(bindingIndex, 'enabled', v)}
-                    />
+                    <Switch checked={binding.enabled} onCheckedChange={(v) => handleBindingFieldChange(bindingIndex, 'enabled', v)} />
                     <Label className='text-xs'>{t('channels.quotaMonitorBinding.enabled')}</Label>
                   </div>
 
@@ -250,7 +240,7 @@ export function ChannelQuotaMonitorBinding({
                           <Badge
                             key={status}
                             variant={isActive ? 'default' : 'outline'}
-                            className='cursor-pointer select-none text-xs'
+                            className='cursor-pointer text-xs select-none'
                             onClick={() => handleToggleTriggerStatus(bindingIndex, status)}
                           >
                             {t(`channels.quotaMonitorBinding.statuses.${status}`)}

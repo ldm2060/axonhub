@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -59,9 +59,7 @@ export function ApiKeySaveTemplateDialog({ open, onOpenChange, profileData, proj
       return;
     }
 
-    const isDuplicate = existingTemplates?.some(
-      (template) => template.name.trim().toLowerCase() === templateName.trim().toLowerCase()
-    );
+    const isDuplicate = existingTemplates?.some((template) => template.name.trim().toLowerCase() === templateName.trim().toLowerCase());
 
     if (isDuplicate) {
       form.setError('name', {
@@ -122,12 +120,7 @@ export function ApiKeySaveTemplateDialog({ open, onOpenChange, profileData, proj
                 <FormItem>
                   <FormLabel>{t('apikeys.templates.descriptionLabel')}</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ''}
-                      placeholder={t('apikeys.templates.descriptionPlaceholder')}
-                      rows={3}
-                    />
+                    <Textarea {...field} value={field.value ?? ''} placeholder={t('apikeys.templates.descriptionPlaceholder')} rows={3} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

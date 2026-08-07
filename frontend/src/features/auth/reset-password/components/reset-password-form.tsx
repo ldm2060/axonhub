@@ -3,15 +3,15 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
-import { useTranslation } from 'react-i18next';
 import { Loader2, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { authApi } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { PasswordInput } from '@/components/password-input';
-import { authApi } from '@/lib/api-client';
-import { toast } from 'sonner';
 
 type ResetPasswordFormProps = HTMLAttributes<HTMLFormElement>;
 
@@ -58,9 +58,7 @@ export function ResetPasswordForm({ token, className, ...props }: ResetPasswordF
         <h3 className='text-lg font-medium text-slate-800'>{t('auth.resetPassword.successTitle')}</h3>
         <p className='text-sm text-slate-600'>{t('auth.resetPassword.successMessage')}</p>
         <Link to='/sign-in'>
-          <Button className='bg-slate-800 text-white hover:bg-slate-700'>
-            {t('auth.resetPassword.signIn')}
-          </Button>
+          <Button className='bg-slate-800 text-white hover:bg-slate-700'>{t('auth.resetPassword.signIn')}</Button>
         </Link>
       </div>
     );

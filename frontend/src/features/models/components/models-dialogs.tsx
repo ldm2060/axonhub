@@ -21,7 +21,7 @@ export function ModelsDialogs() {
       {(open === 'association' || open === 'developerAssociation') && <ModelsAssociationDialog />}
       {open === 'settings' && <ModelSettingsDialog />}
       {open === 'unassociated' && <ModelsUnassociatedDialog />}
-            <ModelsBulkDisableDialog />
+      <ModelsBulkDisableDialog />
       <ModelsBulkEnableDialog />
     </>
   );

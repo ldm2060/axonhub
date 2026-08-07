@@ -84,9 +84,7 @@ export function BrandSettings() {
   };
 
   const hasChanges = settings
-    ? (settings.brandName ?? '') !== brandName ||
-      (settings.title ?? '') !== title ||
-      (settings.brandLogo ?? '') !== brandLogo
+    ? (settings.brandName ?? '') !== brandName || (settings.title ?? '') !== title || (settings.brandLogo ?? '') !== brandLogo
     : false;
 
   if (isLoadingSettings) {

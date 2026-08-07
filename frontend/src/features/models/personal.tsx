@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import { SortingState } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/stores/authStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useAuthStore } from '@/stores/authStore';
-import { useMe } from '@/features/auth/data/auth';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { useMe } from '@/features/auth/data/auth';
 import { createColumns } from './components/models-columns';
 import { ModelsPersonalButtons } from './components/models-personal-buttons';
 import { ModelsTable } from './components/models-table';
@@ -87,7 +87,7 @@ export default function PersonalModelsPage() {
         <div className='flex w-full flex-1 flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-0'>
           <div className='min-w-0'>
             <h2 className='text-xl font-bold tracking-tight'>{t('models.personal.title')}</h2>
-            <p className='text-sm text-muted-foreground'>{t('models.personal.description')}</p>
+            <p className='text-muted-foreground text-sm'>{t('models.personal.description')}</p>
           </div>
           <ModelsPersonalButtons />
         </div>

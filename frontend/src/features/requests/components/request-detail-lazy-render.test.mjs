@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 
 const detailSource = readFileSync(join(import.meta.dirname, 'request-detail-content.tsx'), 'utf8');
 const projectPageSource = readFileSync(join(import.meta.dirname, 'request-detail-page.tsx'), 'utf8');

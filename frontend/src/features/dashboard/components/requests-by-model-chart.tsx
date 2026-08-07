@@ -1,14 +1,14 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipProps } from 'recharts';
-import { Loader2 } from 'lucide-react';
 import { formatNumber } from '@/utils/format-number';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { TimePeriod } from '@/components/time-period-selector';
 import { useGeneralSettings } from '../../system/data/system';
 import { useRequestsByModel, useCostByModel, type DashboardMode } from '../data/dashboard';
-import type { TimePeriod } from '@/components/time-period-selector';
 import { ChartLegend } from './chart-legend';
 
 const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)'];
@@ -20,7 +20,12 @@ interface RequestsByModelChartProps {
 
 export function RequestsByModelChart({ timePeriod, mode }: RequestsByModelChartProps) {
   const { t, i18n } = useTranslation();
-  const { data: modelData, isLoading: isRequestsLoading, isFetching: isRequestsFetching, error: requestsError } = useRequestsByModel(timePeriod, mode);
+  const {
+    data: modelData,
+    isLoading: isRequestsLoading,
+    isFetching: isRequestsFetching,
+    error: requestsError,
+  } = useRequestsByModel(timePeriod, mode);
   const { data: costData, isLoading: isCostLoading, isFetching: isCostFetching, error: costError } = useCostByModel(timePeriod, mode);
   const { data: generalSettings, isLoading: isSettingsLoading, isFetching: isSettingsFetching } = useGeneralSettings();
 
@@ -105,15 +110,19 @@ export function RequestsByModelChart({ timePeriod, mode }: RequestsByModelChartP
 
     return (
       <div className='bg-background/90 rounded-md border px-3 py-2 text-xs shadow-sm backdrop-blur'>
-        <div className='text-foreground text-sm font-medium mb-1'>{data.name}</div>
+        <div className='text-foreground mb-1 text-sm font-medium'>{data.name}</div>
         <div className='space-y-1'>
           <div className='flex justify-between gap-4'>
             <span className='text-muted-foreground'>{t('dashboard.stats.requests')}:</span>
-            <span className='font-medium'>{formatNumber(data.requests)} ({reqPercent.toFixed(0)}%)</span>
+            <span className='font-medium'>
+              {formatNumber(data.requests)} ({reqPercent.toFixed(0)}%)
+            </span>
           </div>
           <div className='flex justify-between gap-4'>
             <span className='text-muted-foreground'>{t('dashboard.stats.totalCost')}:</span>
-            <span className='font-medium'>{formatCurrency(data.cost, 4)} ({costPercent.toFixed(0)}%)</span>
+            <span className='font-medium'>
+              {formatCurrency(data.cost, 4)} ({costPercent.toFixed(0)}%)
+            </span>
           </div>
         </div>
       </div>
@@ -163,8 +172,8 @@ export function RequestsByModelChart({ timePeriod, mode }: RequestsByModelChartP
       )}
 
       {isFetching && (
-        <div className='absolute inset-0 flex items-center justify-center bg-background/50'>
-          <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+        <div className='bg-background/50 absolute inset-0 flex items-center justify-center'>
+          <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
         </div>
       )}
     </div>

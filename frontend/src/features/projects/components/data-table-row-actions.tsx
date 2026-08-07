@@ -67,7 +67,6 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       <DropdownMenuContent align='end' className='w-[160px]'>
         {/* Profiles - requires write permission */}
 
-
         {/* Edit - requires write permission */}
         {projectPermissions.canEdit && (
           <DropdownMenuItem onClick={handleEdit}>

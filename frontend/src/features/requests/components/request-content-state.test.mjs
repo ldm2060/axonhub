@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
-import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
+import ts from 'typescript';
 
 const source = readFileSync(join(import.meta.dirname, 'request-content-state.ts'), 'utf8');
 const transpiled = ts.transpileModule(source, {

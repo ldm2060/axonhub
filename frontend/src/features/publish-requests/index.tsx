@@ -3,35 +3,17 @@
 import { useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { IconCheck, IconX, IconLoader2 } from '@tabler/icons-react';
+import { usePublishRequests, useCancelPublishRequest, useReviewPublishRequest } from '@/gql/sharing';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/stores/authStore';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  usePublishRequests,
-  useCancelPublishRequest,
-  useReviewPublishRequest,
-} from '@/gql/sharing';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useAuthStore } from '@/stores/authStore';
 
 function getStatusBadge(status: string, t: (key: string) => string) {
   const variants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
@@ -39,11 +21,7 @@ function getStatusBadge(status: string, t: (key: string) => string) {
     approved: 'default',
     rejected: 'destructive',
   };
-  return (
-    <Badge variant={variants[status] || 'outline'}>
-      {t(`publishRequests.status.${status}`)}
-    </Badge>
-  );
+  return <Badge variant={variants[status] || 'outline'}>{t(`publishRequests.status.${status}`)}</Badge>;
 }
 
 export default function PublishRequestsPage() {
@@ -107,7 +85,7 @@ export default function PublishRequestsPage() {
         <div className='flex flex-1 items-center justify-between'>
           <div>
             <h2 className='text-xl font-bold tracking-tight'>{t('publishRequests.title')}</h2>
-            <p className='text-sm text-muted-foreground'>{t('publishRequests.description')}</p>
+            <p className='text-muted-foreground text-sm'>{t('publishRequests.description')}</p>
           </div>
         </div>
       </Header>
@@ -131,13 +109,13 @@ export default function PublishRequestsPage() {
                 {isLoading && (
                   <TableRow>
                     <TableCell colSpan={7} className='h-24 text-center'>
-                      <IconLoader2 className='mx-auto h-6 w-6 animate-spin text-muted-foreground' />
+                      <IconLoader2 className='text-muted-foreground mx-auto h-6 w-6 animate-spin' />
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && requests.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className='h-24 text-center text-muted-foreground'>
+                    <TableCell colSpan={7} className='text-muted-foreground h-24 text-center'>
                       {t('publishRequests.empty')}
                     </TableCell>
                   </TableRow>
@@ -154,24 +132,18 @@ export default function PublishRequestsPage() {
                           {t(`publishRequests.resourceType.${request.resourceType}`)}
                         </Badge>
                       </TableCell>
-                      <TableCell className='font-mono text-sm'>
-                        {request.resourceID}
-                      </TableCell>
+                      <TableCell className='font-mono text-sm'>{request.resourceID}</TableCell>
                       <TableCell>
                         <div>
                           <p className='text-sm font-medium'>
                             {request.requester.firstName} {request.requester.lastName}
                           </p>
-                          <p className='text-xs text-muted-foreground'>{request.requester.email}</p>
+                          <p className='text-muted-foreground text-xs'>{request.requester.email}</p>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(request.status, t)}</TableCell>
-                      <TableCell className='max-w-[200px] truncate text-sm'>
-                        {request.requestComment || '-'}
-                      </TableCell>
-                      <TableCell className='text-sm'>
-                        {format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm')}
-                      </TableCell>
+                      <TableCell className='max-w-[200px] truncate text-sm'>{request.requestComment || '-'}</TableCell>
+                      <TableCell className='text-sm'>{format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm')}</TableCell>
                       <TableCell>
                         <div className='flex items-center gap-1'>
                           {canCancel && (
@@ -222,7 +194,7 @@ export default function PublishRequestsPage() {
                             </>
                           )}
                           {request.status !== 'pending' && request.reviewer && (
-                            <span className='text-xs text-muted-foreground'>
+                            <span className='text-muted-foreground text-xs'>
                               {t('publishRequests.columns.reviewedBy', {
                                 name: `${request.reviewer.firstName} ${request.reviewer.lastName}`,
                               })}
@@ -252,9 +224,7 @@ export default function PublishRequestsPage() {
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>
-              {reviewDialog?.action === 'approve'
-                ? t('publishRequests.dialog.approveTitle')
-                : t('publishRequests.dialog.rejectTitle')}
+              {reviewDialog?.action === 'approve' ? t('publishRequests.dialog.approveTitle') : t('publishRequests.dialog.rejectTitle')}
             </DialogTitle>
             <DialogDescription>
               {reviewDialog?.action === 'approve'
@@ -265,7 +235,7 @@ export default function PublishRequestsPage() {
           <div className='space-y-2'>
             <label className='text-sm font-medium'>{t('publishRequests.dialog.reviewComment')}</label>
             <textarea
-              className='flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+              className='border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50'
               placeholder={t('publishRequests.dialog.reviewCommentPlaceholder')}
               value={reviewComment}
               onChange={(e) => setReviewComment(e.target.value)}
@@ -287,9 +257,7 @@ export default function PublishRequestsPage() {
               variant={reviewDialog?.action === 'reject' ? 'destructive' : 'default'}
             >
               {reviewRequest.isPending && <IconLoader2 className='mr-2 h-4 w-4 animate-spin' />}
-              {reviewDialog?.action === 'approve'
-                ? t('publishRequests.actions.approve')
-                : t('publishRequests.actions.reject')}
+              {reviewDialog?.action === 'approve' ? t('publishRequests.actions.approve') : t('publishRequests.actions.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>

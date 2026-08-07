@@ -14,7 +14,7 @@ export function BadgeDisplay({ value, badge, badgePresets }: BadgeDisplayProps) 
   const gradient = BADGE_GRADIENTS[gradientKey];
   return (
     <span
-      className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase"
+      className='inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase'
       style={{
         background: gradient.css,
         color: gradient.textColor,

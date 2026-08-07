@@ -56,7 +56,8 @@ export function ChannelsDeleteDialog({ open, onOpenChange, currentRow }: Props) 
           </Alert>
           <div className='space-y-2'>
             <Label htmlFor='channel-name'>
-              {t('channels.dialogs.delete.confirmLabel')} <strong>{currentRow.name}</strong> {t('channels.dialogs.delete.confirmLabelStrong')}
+              {t('channels.dialogs.delete.confirmLabel')} <strong>{currentRow.name}</strong>{' '}
+              {t('channels.dialogs.delete.confirmLabelStrong')}
             </Label>
             <Input id='channel-name' placeholder={currentRow.name} value={value} onChange={(e) => setValue(e.target.value)} />
           </div>

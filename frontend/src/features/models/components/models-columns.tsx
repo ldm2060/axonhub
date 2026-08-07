@@ -4,8 +4,8 @@ import { ColumnDef, Row, Table } from '@tanstack/react-table';
 import { IconCheck, IconX, IconLink, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import * as Icons from '@lobehub/icons';
 import { useTranslation } from 'react-i18next';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useAuthStore } from '@/stores/authStore';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,7 +43,12 @@ function StatusSwitchCell({ row }: { row: Row<Model> }) {
 
   return (
     <>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} disabled={!canToggle || isArchived} data-testid='model-status-switch' />
+      <Switch
+        checked={isEnabled}
+        onCheckedChange={handleSwitchClick}
+        disabled={!canToggle || isArchived}
+        data-testid='model-status-switch'
+      />
       {dialogOpen && <ModelsStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={model} />}
     </>
   );
@@ -316,37 +321,39 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
     },
 
     {
-          accessorKey: 'createdAt',
-          header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.createdAt')} />,
-          cell: ({ row }) => {
-            const raw = row.getValue('createdAt') as unknown;
-            const date = raw instanceof Date ? raw : new Date(raw as string);
+      accessorKey: 'createdAt',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.createdAt')} />,
+      cell: ({ row }) => {
+        const raw = row.getValue('createdAt') as unknown;
+        const date = raw instanceof Date ? raw : new Date(raw as string);
 
-            if (Number.isNaN(date.getTime())) {
-              return <span className='text-muted-foreground text-xs'>-</span>;
-            }
+        if (Number.isNaN(date.getTime())) {
+          return <span className='text-muted-foreground text-xs'>-</span>;
+        }
 
-            return (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className='text-muted-foreground cursor-help text-sm'>{format(date, 'yyyy-MM-dd')}</div>
-                </TooltipTrigger>
-                <TooltipContent>{format(date, 'yyyy-MM-dd HH:mm:ss')}</TooltipContent>
-              </Tooltip>
-            );
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className='text-muted-foreground cursor-help text-sm'>{format(date, 'yyyy-MM-dd')}</div>
+            </TooltipTrigger>
+            <TooltipContent>{format(date, 'yyyy-MM-dd HH:mm:ss')}</TooltipContent>
+          </Tooltip>
+        );
+      },
+      enableSorting: true,
+      enableHiding: false,
+    },
+    ...(canWrite
+      ? [
+          {
+            id: 'actions',
+            header: t('common.columns.actions'),
+            cell: DataTableRowActions,
+            meta: { className: 'w-[88px] min-w-[88px] pr-3 pl-0' },
+            enableSorting: false,
+            enableHiding: false,
           },
-          enableSorting: true,
-          enableHiding: false,
-        },
-        ...(canWrite
-          ? [{
-              id: 'actions',
-              header: t('common.columns.actions'),
-              cell: DataTableRowActions,
-              meta: { className: 'w-[88px] min-w-[88px] pr-3 pl-0' },
-              enableSorting: false,
-              enableHiding: false,
-            }]
-          : []),
+        ]
+      : []),
   ];
 };

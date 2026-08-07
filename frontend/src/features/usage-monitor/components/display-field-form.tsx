@@ -1,13 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Plus, Trash2, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { DisplayField, Variable } from '../data/schema';
 
 interface Props {
@@ -46,7 +46,7 @@ export function DisplayFieldForm({ displayFields, variables, onChange, readOnly 
   }
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {displayFields.map((df, index) => (
         <DisplayFieldItem
           key={df.key}
@@ -60,8 +60,8 @@ export function DisplayFieldForm({ displayFields, variables, onChange, readOnly 
       ))}
 
       {!readOnly && (
-        <Button type="button" variant="outline" onClick={addField} className="w-full">
-          <Plus className="mr-1.5 size-4" />
+        <Button type='button' variant='outline' onClick={addField} className='w-full'>
+          <Plus className='mr-1.5 size-4' />
           {t('usageMonitor.addDisplayField')}
         </Button>
       )}
@@ -86,28 +86,28 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
   const isVariableRef = variables.some((v) => v.key === df.valueRef);
 
   return (
-    <div className="rounded-lg border p-3 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">
+    <div className='space-y-3 rounded-lg border p-3'>
+      <div className='flex items-center justify-between'>
+        <span className='text-sm font-medium'>
           {t('usageMonitor.displayField.label')} #{index + 1}
         </span>
         {!readOnly && (
           <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
+            type='button'
+            variant='ghost'
+            size='icon-sm'
             onClick={onRemove}
-            className="text-destructive hover:text-destructive"
+            className='text-destructive hover:text-destructive'
             aria-label={t('usageMonitor.deleteDisplayField')}
           >
-            <Trash2 className="size-4" />
+            <Trash2 className='size-4' />
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
         {/* Display Label */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.field.label')}</Label>
           <Input
             value={df.label}
@@ -118,28 +118,24 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
         </div>
 
         {/* Display Format */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.field.format')}</Label>
-          <Select
-            value={df.format}
-            onValueChange={(v) => onUpdate({ format: v as DisplayField['format'] })}
-            disabled={readOnly}
-          >
-            <SelectTrigger className="w-full">
+          <Select value={df.format} onValueChange={(v) => onUpdate({ format: v as DisplayField['format'] })} disabled={readOnly}>
+            <SelectTrigger className='w-full'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="percentage">{t('usageMonitor.format.percentage')}</SelectItem>
-              <SelectItem value="fraction">{t('usageMonitor.format.fraction')}</SelectItem>
-              <SelectItem value="number">{t('usageMonitor.format.number')}</SelectItem>
-              <SelectItem value="datetime">{t('usageMonitor.format.datetime')}</SelectItem>
-              <SelectItem value="text">{t('usageMonitor.format.text')}</SelectItem>
+              <SelectItem value='percentage'>{t('usageMonitor.format.percentage')}</SelectItem>
+              <SelectItem value='fraction'>{t('usageMonitor.format.fraction')}</SelectItem>
+              <SelectItem value='number'>{t('usageMonitor.format.number')}</SelectItem>
+              <SelectItem value='datetime'>{t('usageMonitor.format.datetime')}</SelectItem>
+              <SelectItem value='text'>{t('usageMonitor.format.text')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Value Ref - variable selector */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.displayField.valueRef')}</Label>
           <Select
             value={isVariableRef ? df.valueRef : '__expression__'}
@@ -153,88 +149,92 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
             }}
             disabled={readOnly}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className='w-full'>
               <SelectValue placeholder={t('usageMonitor.displayField.valueRef')} />
             </SelectTrigger>
             <SelectContent>
-              {variables.filter((v) => v.key).map((v) => (
-                <SelectItem key={v.key} value={v.key}>
-                  {v.key}
-                </SelectItem>
-              ))}
-              <SelectItem value="__expression__">{t('usageMonitor.displayField.expression')}</SelectItem>
+              {variables
+                .filter((v) => v.key)
+                .map((v) => (
+                  <SelectItem key={v.key} value={v.key}>
+                    {v.key}
+                  </SelectItem>
+                ))}
+              <SelectItem value='__expression__'>{t('usageMonitor.displayField.expression')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Expression Input - shown when valueRef is not a variable key */}
         {!isVariableRef && (
-          <div className="space-y-1.5">
+          <div className='space-y-1.5'>
             <Label>{t('usageMonitor.field.expression')}</Label>
             <Input
               value={df.valueRef}
               onChange={(e) => onUpdate({ valueRef: e.target.value })}
-              placeholder="${var1}/${var2}*100"
-              className="font-mono"
+              placeholder='${var1}/${var2}*100'
+              className='font-mono'
               disabled={readOnly}
             />
-            <p className="text-xs text-muted-foreground">{t('usageMonitor.field.expressionHint')}</p>
+            <p className='text-muted-foreground text-xs'>{t('usageMonitor.field.expressionHint')}</p>
           </div>
         )}
 
         {/* Unit */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.field.unit')}</Label>
           <Input
             value={df.unit ?? ''}
             onChange={(e) => onUpdate({ unit: e.target.value || undefined })}
-            placeholder="%"
+            placeholder='%'
             disabled={readOnly}
           />
         </div>
 
         {/* Group */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.displayField.group')}</Label>
           <Input
             value={df.group ?? ''}
             onChange={(e) => onUpdate({ group: e.target.value || undefined })}
-            placeholder="primary"
+            placeholder='primary'
             disabled={readOnly}
           />
         </div>
 
         {/* Group Label Ref */}
-        <div className="space-y-1.5">
+        <div className='space-y-1.5'>
           <Label>{t('usageMonitor.displayField.groupLabelRef')}</Label>
           <Input
             value={df.groupLabelRef ?? ''}
             onChange={(e) => onUpdate({ groupLabelRef: e.target.value || undefined })}
-            placeholder="additional_0_name"
-            className="font-mono"
+            placeholder='additional_0_name'
+            className='font-mono'
             disabled={readOnly}
           />
         </div>
 
         {/* Total Ref - only for fraction format */}
         {df.format === 'fraction' && (
-          <div className="space-y-1.5">
+          <div className='space-y-1.5'>
             <Label>{t('usageMonitor.displayField.totalRef')}</Label>
             <Select
               value={df.totalRef || '__none__'}
               onValueChange={(val) => onUpdate({ totalRef: val === '__none__' ? undefined : val })}
               disabled={readOnly}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className='w-full'>
                 <SelectValue placeholder={t('usageMonitor.displayField.totalRef')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">{t('usageMonitor.displayField.none')}</SelectItem>
-                {variables.filter((v) => v.key).map((v) => (
-                  <SelectItem key={v.key} value={v.key}>
-                    {v.key}
-                  </SelectItem>
-                ))}
+                <SelectItem value='__none__'>{t('usageMonitor.displayField.none')}</SelectItem>
+                {variables
+                  .filter((v) => v.key)
+                  .map((v) => (
+                    <SelectItem key={v.key} value={v.key}>
+                      {v.key}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -245,34 +245,34 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
       <Collapsible open={badgeOpen} onOpenChange={setBadgeOpen}>
         <CollapsibleTrigger asChild>
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start px-0 text-xs text-muted-foreground hover:text-foreground"
+            type='button'
+            variant='ghost'
+            size='sm'
+            className='text-muted-foreground hover:text-foreground w-full justify-start px-0 text-xs'
           >
             <ChevronDown className={`mr-1 size-3 transition-transform ${badgeOpen ? 'rotate-0' : '-rotate-90'}`} />
             {t('usageMonitor.displayField.badgeConfig')}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-            <div className="space-y-1.5">
+          <div className='grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2'>
+            <div className='space-y-1.5'>
               <Label>{t('usageMonitor.displayField.badgeKey')}</Label>
               <Input
                 value={df.badge ?? ''}
                 onChange={(e) => onUpdate({ badge: e.target.value || undefined })}
-                placeholder="tier"
-                className="font-mono"
+                placeholder='tier'
+                className='font-mono'
                 disabled={readOnly}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className='space-y-1.5'>
               <Label>{t('usageMonitor.displayField.badgePresets')}</Label>
               <Input
                 value={df.badgePresets ?? ''}
                 onChange={(e) => onUpdate({ badgePresets: e.target.value || undefined })}
                 placeholder='{"free":"gradient","pro":"blue"}'
-                className="font-mono text-xs"
+                className='font-mono text-xs'
                 disabled={readOnly}
               />
             </div>

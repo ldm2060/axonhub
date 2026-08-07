@@ -7,10 +7,7 @@ export class GraphQLRequestError extends Error {
   isAuthError: boolean;
   extensions?: Record<string, any>;
 
-  constructor(
-    message: string,
-    options?: { status?: number; isAuthError?: boolean; extensions?: Record<string, any> }
-  ) {
+  constructor(message: string, options?: { status?: number; isAuthError?: boolean; extensions?: Record<string, any> }) {
     super(message);
     this.name = 'GraphQLRequestError';
     this.status = options?.status;

@@ -7,12 +7,7 @@ function getTimestamp(value: Date | string): number {
   return value instanceof Date ? value.getTime() : new Date(value).getTime();
 }
 
-export function reconcileAnimatedQueue<T extends AnimatedListItem>(
-  queue: T[],
-  incoming: T[],
-  displayed: T[],
-  maxSize: number
-): T[] {
+export function reconcileAnimatedQueue<T extends AnimatedListItem>(queue: T[], incoming: T[], displayed: T[], maxSize: number): T[] {
   if (maxSize <= 0) return [];
 
   const incomingIds = new Set(incoming.map(({ id }) => id));
@@ -23,9 +18,7 @@ export function reconcileAnimatedQueue<T extends AnimatedListItem>(
   const additions = incoming.filter(({ id, createdAt }) => {
     return !displayedIds.has(id) && !queuedIds.has(id) && getTimestamp(createdAt) > newestDisplayedTime;
   });
-  const candidates = [...retained, ...additions].sort(
-    (left, right) => getTimestamp(left.createdAt) - getTimestamp(right.createdAt)
-  );
+  const candidates = [...retained, ...additions].sort((left, right) => getTimestamp(left.createdAt) - getTimestamp(right.createdAt));
 
   return candidates.length <= maxSize ? candidates : candidates.slice(-maxSize);
 }

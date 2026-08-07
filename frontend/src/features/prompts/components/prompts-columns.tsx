@@ -172,14 +172,16 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
       enableHiding: false,
     },
     ...(canWrite
-      ? [{
-          id: 'actions',
-          header: t('common.columns.actions'),
-          cell: DataTableRowActions,
-          meta: { className: 'w-[56px] min-w-[56px] pr-3 pl-0' },
-          enableSorting: false,
-          enableHiding: false,
-        }]
+      ? [
+          {
+            id: 'actions',
+            header: t('common.columns.actions'),
+            cell: DataTableRowActions,
+            meta: { className: 'w-[56px] min-w-[56px] pr-3 pl-0' },
+            enableSorting: false,
+            enableHiding: false,
+          },
+        ]
       : []),
   ];
 };

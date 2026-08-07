@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useEmailSettings, useUpdateEmailSettings, useTestEmailConnection } from '../data/registration-email-settings';
 
 export function EmailSettingsTab() {
@@ -224,15 +224,21 @@ export function EmailSettingsTab() {
             >
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='ssl' id='encryption-ssl' />
-                <Label htmlFor='encryption-ssl' className='cursor-pointer font-normal'>{t('system.email.encryption.options.sslTls')}</Label>
+                <Label htmlFor='encryption-ssl' className='cursor-pointer font-normal'>
+                  {t('system.email.encryption.options.sslTls')}
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='starttls' id='encryption-starttls' />
-                <Label htmlFor='encryption-starttls' className='cursor-pointer font-normal'>{t('system.email.encryption.options.starttls')}</Label>
+                <Label htmlFor='encryption-starttls' className='cursor-pointer font-normal'>
+                  {t('system.email.encryption.options.starttls')}
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='none' id='encryption-none' />
-                <Label htmlFor='encryption-none' className='cursor-pointer font-normal'>{t('system.email.encryption.options.none')}</Label>
+                <Label htmlFor='encryption-none' className='cursor-pointer font-normal'>
+                  {t('system.email.encryption.options.none')}
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -284,11 +290,7 @@ export function EmailSettingsTab() {
               onClick={handleTestConnection}
               disabled={testConnection.isPending || updateSettings.isPending}
             >
-              {testConnection.isPending ? (
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-              ) : (
-                <Send className='mr-2 h-4 w-4' />
-              )}
+              {testConnection.isPending ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Send className='mr-2 h-4 w-4' />}
               {t('system.email.testConnection')}
             </Button>
 

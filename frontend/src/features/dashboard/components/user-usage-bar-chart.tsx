@@ -1,33 +1,16 @@
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  type TooltipProps,
-} from 'recharts';
 import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { type TimePeriod } from '@/components/time-period-selector';
+import { useTranslation } from 'react-i18next';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipProps } from 'recharts';
 import { formatNumber } from '@/utils/format-number';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { type TimePeriod } from '@/components/time-period-selector';
 import { useGeneralSettings } from '../../system/data/system';
 import { useUsageStatsByUser, type DashboardMode } from '../data/dashboard';
 import { ChartLegend } from './chart-legend';
 
-const COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-  'var(--chart-6)',
-];
+const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)'];
 
 export type UserUsageMetric = 'requests' | 'tokens' | 'cost';
 
@@ -117,7 +100,7 @@ export function UserUsageBarChart({ timePeriod, metric, mode }: UserUsageBarChar
 
     return (
       <div className='bg-background/90 rounded-md border px-3 py-2 text-xs shadow-sm backdrop-blur'>
-        <div className='text-foreground text-sm font-medium mb-1'>{d.userName}</div>
+        <div className='text-foreground mb-1 text-sm font-medium'>{d.userName}</div>
         <div className='space-y-1'>
           <div className='flex justify-between gap-4'>
             <span className='text-muted-foreground'>{t('dashboard.stats.requestCount')}:</span>
@@ -199,8 +182,8 @@ export function UserUsageBarChart({ timePeriod, metric, mode }: UserUsageBarChar
             </>
           )}
           {isFetching && !isLoading && (
-            <div className='absolute inset-0 flex items-center justify-center bg-background/50'>
-              <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+            <div className='bg-background/50 absolute inset-0 flex items-center justify-center'>
+              <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
             </div>
           )}
         </div>

@@ -4,7 +4,7 @@ import ChannelsManagement from '@/features/channels';
 
 function ProtectedChannels() {
   return (
-    <RouteGuard requiredScopes={['read_channels']} scopeLevel="system">
+    <RouteGuard requiredScopes={['read_channels']} scopeLevel='system'>
       <ChannelsManagement />
     </RouteGuard>
   );

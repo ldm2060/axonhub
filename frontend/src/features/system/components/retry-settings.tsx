@@ -228,7 +228,9 @@ export function RetrySettings() {
                         <SelectValue placeholder={t('system.retry.traceStickyMode.placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value='PREFER_PREVIOUS_CHANNEL'>{t('system.retry.traceStickyMode.options.preferPreviousChannel')}</SelectItem>
+                        <SelectItem value='PREFER_PREVIOUS_CHANNEL'>
+                          {t('system.retry.traceStickyMode.options.preferPreviousChannel')}
+                        </SelectItem>
                         <SelectItem value='DISABLED'>{t('system.retry.traceStickyMode.options.disabled')}</SelectItem>
                       </SelectContent>
                     </Select>

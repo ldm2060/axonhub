@@ -131,11 +131,15 @@ export function ChannelsBulkApplyTemplateDialog({ open, onOpenChange, selectedCh
             <RadioGroup value={mode} onValueChange={(v) => setMode(v as 'MERGE' | 'REPLACE')} className='flex gap-6'>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='MERGE' id='mode-merge' />
-                <Label htmlFor='mode-merge' className='cursor-pointer font-normal'>{t('channels.templates.bulk.modeMerge')}</Label>
+                <Label htmlFor='mode-merge' className='cursor-pointer font-normal'>
+                  {t('channels.templates.bulk.modeMerge')}
+                </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='REPLACE' id='mode-replace' />
-                <Label htmlFor='mode-replace' className='cursor-pointer font-normal'>{t('channels.templates.bulk.modeReplace')}</Label>
+                <Label htmlFor='mode-replace' className='cursor-pointer font-normal'>
+                  {t('channels.templates.bulk.modeReplace')}
+                </Label>
               </div>
             </RadioGroup>
           </div>

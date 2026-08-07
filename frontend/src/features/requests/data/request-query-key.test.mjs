@@ -1,19 +1,15 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
-import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
+import ts from 'typescript';
 
 const source = readFileSync(join(import.meta.dirname, 'request-query-key.ts'), 'utf8');
 const transpiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2023 },
 }).outputText;
-const {
-  buildRequestQueryKey,
-  buildRequestMetadataQueryKey,
-  buildRequestContentQueryKey,
-  buildRequestExecutionContentQueryKey,
-} = await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`);
+const { buildRequestQueryKey, buildRequestMetadataQueryKey, buildRequestContentQueryKey, buildRequestExecutionContentQueryKey } =
+  await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`);
 
 const params = {
   id: 'Request:1',

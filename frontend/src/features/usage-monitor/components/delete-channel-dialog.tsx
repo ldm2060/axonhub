@@ -1,10 +1,10 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useDeleteUsageMonitorChannel } from '../data/usage-monitor';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
+import { useDeleteUsageMonitorChannel } from '../data/usage-monitor';
 
 export function DeleteChannelDialog() {
   const { t } = useTranslation();
@@ -30,29 +30,23 @@ export function DeleteChannelDialog() {
         if (!v) setOpen(null);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('usageMonitor.deleteChannel')}</DialogTitle>
           <DialogDescription>{t('usageMonitor.deleteConfirm')}</DialogDescription>
         </DialogHeader>
 
         {currentChannel && (
-          <p className="text-sm">
-            {t('usageMonitor.deleteConfirm')}{' '}
-            <strong>{currentChannel.name}</strong>
+          <p className='text-sm'>
+            {t('usageMonitor.deleteConfirm')} <strong>{currentChannel.name}</strong>
           </p>
         )}
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(null)}>
+          <Button type='button' variant='outline' onClick={() => setOpen(null)}>
             {t('common.buttons.cancel')}
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-          >
+          <Button type='button' variant='destructive' onClick={handleDelete} disabled={deleteMutation.isPending}>
             {deleteMutation.isPending ? t('common.buttons.processing') : t('common.buttons.delete')}
           </Button>
         </DialogFooter>

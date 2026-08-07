@@ -122,10 +122,10 @@ export function ChannelsStatusDialog({ open, onOpenChange, currentRow }: Props) 
                   {testResult.error && !testResult.success && (
                     <div className='text-xs'>
                       <span className='font-medium'>{t('channels.dialogs.status.enable.errorDetails')}:</span>
-                      <div className='mt-1 min-w-0 max-w-full overflow-hidden rounded border-l-2 border-red-400 bg-red-100 p-2 dark:border-red-600 dark:bg-red-900/30'>
+                      <div className='mt-1 max-w-full min-w-0 overflow-hidden rounded border-l-2 border-red-400 bg-red-100 p-2 dark:border-red-600 dark:bg-red-900/30'>
                         <ErrorDisplay
                           error={testResult.error}
-                          className='min-w-0 max-w-full'
+                          className='max-w-full min-w-0'
                           messageClassName='block max-w-full break-all whitespace-pre-wrap text-xs font-medium text-red-800 dark:text-red-200'
                         />
                       </div>

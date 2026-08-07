@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale/zh-CN';
 import { IconFileDownload, IconLoader2, IconTemplate, IconTrash } from '@tabler/icons-react';
+import { zhCN } from 'date-fns/locale/zh-CN';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApiKeyProfileTemplates, useLoadApiKeyProfileTemplate, useDeleteApiKeyProfileTemplate } from '../data/apikeys';
@@ -48,24 +48,20 @@ function TemplateItem({
     <div className='hover:bg-muted/50 flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors'>
       <button
         type='button'
-        className='flex min-w-0 flex-1 items-start gap-3 text-left disabled:opacity-50 disabled:cursor-not-allowed'
+        className='flex min-w-0 flex-1 items-start gap-3 text-left disabled:cursor-not-allowed disabled:opacity-50'
         onClick={() => onLoad(template)}
         disabled={isLoading || isDeleting}
       >
         <IconTemplate className='text-muted-foreground mt-0.5 h-4 w-4 shrink-0' />
         <div className='min-w-0 flex-1'>
           <div className='text-foreground text-sm font-medium'>{template.name}</div>
-          {template.description && (
-            <div className='text-muted-foreground mt-0.5 truncate text-xs'>
-              {template.description}
-            </div>
-          )}
+          {template.description && <div className='text-muted-foreground mt-0.5 truncate text-xs'>{template.description}</div>}
           <div className='text-muted-foreground/70 mt-1 text-[11px]'>{createdDate}</div>
         </div>
       </button>
       <button
         type='button'
-        className='text-muted-foreground hover:text-destructive mt-0.5 shrink-0 rounded p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        className='text-muted-foreground hover:text-destructive mt-0.5 shrink-0 rounded p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50'
         onClick={(e) => {
           e.stopPropagation();
           onDelete(template);
@@ -79,11 +75,7 @@ function TemplateItem({
   );
 }
 
-export function ApiKeyLoadTemplatePopover({
-  apiKeyID,
-  projectID,
-  onLoadComplete,
-}: ApiKeyLoadTemplatePopoverProps) {
+export function ApiKeyLoadTemplatePopover({ apiKeyID, projectID, onLoadComplete }: ApiKeyLoadTemplatePopoverProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(null);
@@ -146,19 +138,15 @@ export function ApiKeyLoadTemplatePopover({
           </Button>
         </PopoverTrigger>
         <PopoverContent className='w-80 p-0' align='start'>
-          <div className='px-4 py-3 border-b'>
+          <div className='border-b px-4 py-3'>
             <h4 className='text-sm font-medium'>{t('apikeys.templates.loadTitle')}</h4>
           </div>
 
           {isEmpty && (
             <div className='flex flex-col items-center justify-center gap-2 px-4 py-8'>
               <IconTemplate className='text-muted-foreground/50 h-8 w-8' />
-              <p className='text-muted-foreground text-sm font-medium'>
-                {t('apikeys.templates.emptyTitle')}
-              </p>
-              <p className='text-muted-foreground/70 text-center text-xs'>
-                {t('apikeys.templates.emptyMessage')}
-              </p>
+              <p className='text-muted-foreground text-sm font-medium'>{t('apikeys.templates.emptyTitle')}</p>
+              <p className='text-muted-foreground/70 text-center text-xs'>{t('apikeys.templates.emptyMessage')}</p>
             </div>
           )}
 
@@ -191,9 +179,7 @@ export function ApiKeyLoadTemplatePopover({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('apikeys.templates.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('apikeys.templates.deleteConfirmDescription', { name: deleteTarget?.name })}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('apikeys.templates.deleteConfirmDescription', { name: deleteTarget?.name })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.buttons.cancel')}</AlertDialogCancel>

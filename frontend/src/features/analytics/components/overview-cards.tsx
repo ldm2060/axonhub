@@ -1,14 +1,14 @@
-import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 import { BarChart4, Activity, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useGeneralSettings } from '@/features/system/data/system';
 import type { AnalyticsOverview } from '../data/analytics';
 
 function formatExactNumber(value: number): string {
   return Math.round(value).toLocaleString();
 }
-import { useGeneralSettings } from '@/features/system/data/system';
-import { useCallback } from 'react';
 
 interface OverviewCardsProps {
   overview: AnalyticsOverview | undefined;
@@ -44,9 +44,7 @@ export function OverviewCards({ overview, isLoading }: OverviewCardsProps) {
     );
   }
 
-  const cacheHitRate = overview?.totalInputTokens
-    ? ((overview.totalCachedInputTokens / overview.totalInputTokens) * 100).toFixed(1)
-    : '0';
+  const cacheHitRate = overview?.totalInputTokens ? ((overview.totalCachedInputTokens / overview.totalInputTokens) * 100).toFixed(1) : '0';
 
   const cards = [
     {
@@ -83,9 +81,7 @@ export function OverviewCards({ overview, isLoading }: OverviewCardsProps) {
           </CardHeader>
           <CardContent>
             <div className='font-mono text-2xl font-bold'>{card.value}</div>
-            {card.description && (
-              <p className='text-xs text-muted-foreground'>{card.description}</p>
-            )}
+            {card.description && <p className='text-muted-foreground text-xs'>{card.description}</p>}
           </CardContent>
         </Card>
       ))}

@@ -61,6 +61,5 @@ export const useAnalyticsFilterStore = create<AnalyticsFilterState>((set) => ({
       filter: { ...state.filter, userIDs: ids.length > 0 ? ids : undefined },
     })),
 
-  resetFilter: () =>
-    set({ filter: { ...defaultFilter } }),
+  resetFilter: () => set({ filter: { ...defaultFilter } }),
 }));

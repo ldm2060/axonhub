@@ -2,21 +2,12 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { extractNumberID } from '@/lib/utils';
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, ChevronsDownUp, ChevronsUpDown, Copy, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  ChevronsDownUp,
-  ChevronsUpDown,
-  Copy,
-  Terminal,
-} from 'lucide-react';
 import { toast } from 'sonner';
-import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { extractNumberID } from '@/lib/utils';
+import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,15 +18,10 @@ import { JsonViewer } from '@/components/json-tree-view';
 import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import { useRequest, fetchAdjacentRequestPage } from '../data';
 import { Request, RequestConnection } from '../data/schema';
+import { generateRequestCurl } from '../utils/curl-generator';
 import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
-import {
-  createNavigationState,
-  flattenNavigationPages,
-  mergeNavigationPage,
-  type NavigationState,
-} from './request-navigation-state';
-import { generateRequestCurl } from '../utils/curl-generator';
+import { createNavigationState, flattenNavigationPages, mergeNavigationPage, type NavigationState } from './request-navigation-state';
 
 interface RequestBodyDrawerProps {
   open: boolean;
@@ -69,13 +55,13 @@ const EMPTY_PAGE_INFO: RequestPageInfo = {
   hasPreviousPage: false,
 };
 
-function RequestBodyDrawerContent({
-  currentRequestId,
-  projectId,
-  includeAdminFields,
-}: RequestBodyDrawerContentProps) {
+function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFields }: RequestBodyDrawerContentProps) {
   const { t } = useTranslation();
-  const { data: request, isLoading, isFetching } = useRequest(currentRequestId, {
+  const {
+    data: request,
+    isLoading,
+    isFetching,
+  } = useRequest(currentRequestId, {
     projectId,
     enabled: true,
     includeAdminFields,
@@ -105,11 +91,7 @@ function RequestBodyDrawerContent({
 
   const handleCurlPreview = useCallback(() => {
     if (!displayedRequest) return;
-    const curl = generateRequestCurl(
-      displayedRequest.requestHeaders,
-      displayedRequest.requestBody,
-      displayedRequest.format as any
-    );
+    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format as any);
     setCurlCommand(curl);
     setShowCurlPreview(true);
   }, [displayedRequest]);
@@ -129,7 +111,7 @@ function RequestBodyDrawerContent({
   return (
     <>
       <div className='relative flex min-h-0 flex-1 flex-col'>
-        {isFetching && <div className='absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary/40' />}
+        {isFetching && <div className='bg-primary/40 absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse' />}
         <Tabs value={activeTab} onValueChange={setActiveTab} className='flex h-full flex-col'>
           <div className='mx-6 mt-4 flex flex-shrink-0 items-center gap-2'>
             <TabsList className='grid flex-1 grid-cols-2'>
@@ -149,9 +131,7 @@ function RequestBodyDrawerContent({
               variant='outline'
               size='icon'
               className='h-9 w-9 flex-shrink-0'
-              onClick={() =>
-                copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)
-              }
+              onClick={() => copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)}
               title={t('requests.actions.copy')}
             >
               <Copy className='h-4 w-4' />
@@ -169,7 +149,7 @@ function RequestBodyDrawerContent({
             )}
           </div>
 
-          <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+          <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>
             <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
               {displayedRequest.requestBody ? (
                 <JsonViewer
@@ -190,7 +170,7 @@ function RequestBodyDrawerContent({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+          <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>
             <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
               {displayedRequest.responseBody ? (
                 <JsonViewer
@@ -245,10 +225,7 @@ export function RequestBodyDrawer({
 
   const isOpeningBeforeStateSync = open && !prevOpenRef.current;
   const visibleNavigation = isOpeningBeforeStateSync
-    ? createNavigationState(
-        { items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO },
-        initialIndex
-      )
+    ? createNavigationState({ items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO }, initialIndex)
     : navigation;
   const visibleRequests = flattenNavigationPages(visibleNavigation.pages);
   const currentIndex = visibleNavigation.currentIndex;
@@ -263,12 +240,7 @@ export function RequestBodyDrawer({
 
     if (justOpened) {
       navigationGenerationRef.current += 1;
-      setNavigation(
-        createNavigationState(
-          { items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO },
-          initialIndex
-        )
-      );
+      setNavigation(createNavigationState({ items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO }, initialIndex));
       return;
     }
 
@@ -319,12 +291,7 @@ export function RequestBodyDrawer({
       if (generation !== navigationGenerationRef.current) return;
 
       setNavigation((current) =>
-        mergeNavigationPage(
-          current,
-          { items: result.requests, pageInfo: result.pageInfo },
-          'older',
-          MAX_NAVIGATION_PAGES
-        )
+        mergeNavigationPage(current, { items: result.requests, pageInfo: result.pageInfo }, 'older', MAX_NAVIGATION_PAGES)
       );
     } finally {
       if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
@@ -363,26 +330,12 @@ export function RequestBodyDrawer({
       if (generation !== navigationGenerationRef.current) return;
 
       setNavigation((current) =>
-        mergeNavigationPage(
-          current,
-          { items: result.requests, pageInfo: result.pageInfo },
-          'newer',
-          MAX_NAVIGATION_PAGES
-        )
+        mergeNavigationPage(current, { items: result.requests, pageInfo: result.pageInfo }, 'newer', MAX_NAVIGATION_PAGES)
       );
     } finally {
       if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
     }
-  }, [
-    currentIndex,
-    firstPageInfo,
-    isLoadingMore,
-    initialRequests.length,
-    queryWhere,
-    permissions,
-    effectiveProjectId,
-    includeAdminFields,
-  ]);
+  }, [currentIndex, firstPageInfo, isLoadingMore, initialRequests.length, queryWhere, permissions, effectiveProjectId, includeAdminFields]);
 
   const handleViewDetail = useCallback(() => {
     if (!currentRequestId) return;
@@ -406,10 +359,7 @@ export function RequestBodyDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side='right'
-        className='flex w-[min(100vw,clamp(500px,50vw,800px))] max-w-none flex-col gap-0 p-0 sm:max-w-none'
-      >
+      <SheetContent side='right' className='flex w-[min(100vw,clamp(500px,50vw,800px))] max-w-none flex-col gap-0 p-0 sm:max-w-none'>
         <SheetHeader className='flex-shrink-0 border-b px-6 py-4'>
           <div className='flex items-center justify-between pr-6'>
             <SheetTitle className='flex items-center gap-2 text-base'>

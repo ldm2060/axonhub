@@ -36,7 +36,7 @@ export const BADGE_GRADIENTS: Record<BadgeGradientKey, { css: string; textColor:
 export function resolveBadgeGradient(
   badge: string | undefined,
   badgePresets: string | undefined,
-  value: string | null | undefined,
+  value: string | null | undefined
 ): BadgeGradientKey | null {
   if (!badge || !badgePresets || !value) return null;
   try {

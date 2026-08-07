@@ -1,15 +1,12 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useParams, useNavigate } from '@tanstack/react-router';
+import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { zhCN, enUS } from 'date-fns/locale';
 import { ArrowLeft, Activity, RefreshCw, FileText, Eye, EyeOff } from 'lucide-react';
-import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { buildGUID, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,11 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { ServerSidePagination } from '@/components/server-side-pagination';
-import type { Trace } from '@/features/traces/data/schema';
 import { useGeneralSettings } from '@/features/system/data/system';
+import type { Trace } from '@/features/traces/data/schema';
 import { useThreadDetail, useArchiveThread, useUnarchiveThread, useRetainThread, useUnretainThread } from '../data/threads';
 import { TraceCard } from './trace-card';
 import { TraceDrawer } from './trace-drawer';
@@ -45,7 +45,7 @@ export default function ThreadDetailPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
-  
+
   // 合并 Drawer 相关状态
   const [drawerState, setDrawerState] = useState<{
     open: boolean;
@@ -159,32 +159,32 @@ export default function ThreadDetailPage() {
     <div className='flex h-full flex-col'>
       <Header className='bg-background/95 supports-[backdrop-filter]:bg-background/60 w-full border-b backdrop-blur'>
         <div className='flex w-full items-center justify-between gap-2'>
-          <div className='flex items-center gap-2 sm:gap-4 min-w-0 flex-1'>
+          <div className='flex min-w-0 flex-1 items-center gap-2 sm:gap-4'>
             <Button variant='ghost' size='sm' onClick={handleBack} className='hover:bg-accent shrink-0'>
-              <ArrowLeft className='mr-1 sm:mr-2 h-4 w-4' />
+              <ArrowLeft className='mr-1 h-4 w-4 sm:mr-2' />
               <span className='hidden sm:inline'>{t('common.back')}</span>
             </Button>
-            <Separator orientation='vertical' className='h-6 shrink-0 hidden sm:block' />
-            <div className='flex items-center gap-2 sm:gap-3 min-w-0'>
-              <div className='bg-primary/10 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg shrink-0'>
+            <Separator orientation='vertical' className='hidden h-6 shrink-0 sm:block' />
+            <div className='flex min-w-0 items-center gap-2 sm:gap-3'>
+              <div className='bg-primary/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8'>
                 <Activity className='text-primary h-3.5 w-3.5 sm:h-4 sm:w-4' />
               </div>
               <div className='min-w-0'>
-                <h1 className='text-sm sm:text-lg leading-none font-semibold truncate'>
+                <h1 className='truncate text-sm leading-none font-semibold sm:text-lg'>
                   {t('threads.detail.title')} #{extractNumberID(thread.id) || thread.threadID}
                 </h1>
-                <div className='mt-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm'>
-                  <p className='text-muted-foreground truncate max-w-[120px] sm:max-w-none'>{thread.threadID}</p>
+                <div className='mt-1 flex items-center gap-1 text-xs sm:gap-2 sm:text-sm'>
+                  <p className='text-muted-foreground max-w-[120px] truncate sm:max-w-none'>{thread.threadID}</p>
                   <span className='text-muted-foreground hidden sm:inline'>•</span>
-                  <p className='text-muted-foreground text-[10px] sm:text-xs hidden sm:inline'>{createdAtLabel}</p>
+                  <p className='text-muted-foreground hidden text-[10px] sm:inline sm:text-xs'>{createdAtLabel}</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className='flex items-center gap-1 sm:gap-2 shrink-0'>
+          <div className='flex shrink-0 items-center gap-1 sm:gap-2'>
             <Button variant='outline' size='sm' onClick={() => refetch()} disabled={isLoading} className='px-2 sm:px-3'>
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className='hidden sm:inline ml-2'>{t('common.refresh')}</span>
+              <span className='ml-2 hidden sm:inline'>{t('common.refresh')}</span>
             </Button>
             {(() => {
               const status = thread.status ?? 'active';
@@ -193,28 +193,43 @@ export default function ThreadDetailPage() {
                   <>
                     <Button variant='outline' size='sm' onClick={() => setShowArchiveDialog(true)} className='px-2 sm:px-3'>
                       <IconArchive className='h-4 w-4' />
-                      <span className='hidden sm:inline ml-2'>{t('common.actions.archive')}</span>
+                      <span className='ml-2 hidden sm:inline'>{t('common.actions.archive')}</span>
                     </Button>
-                    <Button variant='outline' size='sm' onClick={() => retainMutation.mutate(thread.id, { onSuccess: () => refetch() })} className='px-2 sm:px-3'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => retainMutation.mutate(thread.id, { onSuccess: () => refetch() })}
+                      className='px-2 sm:px-3'
+                    >
                       <IconPin className='h-4 w-4' />
-                      <span className='hidden sm:inline ml-2'>{t('common.actions.retain')}</span>
+                      <span className='ml-2 hidden sm:inline'>{t('common.actions.retain')}</span>
                     </Button>
                   </>
                 );
               }
               if (status === 'archived') {
                 return (
-                  <Button variant='outline' size='sm' onClick={() => unarchiveMutation.mutate(thread.id, { onSuccess: () => refetch() })} className='px-2 sm:px-3'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => unarchiveMutation.mutate(thread.id, { onSuccess: () => refetch() })}
+                    className='px-2 sm:px-3'
+                  >
                     <IconRotate className='h-4 w-4' />
-                    <span className='hidden sm:inline ml-2'>{t('common.actions.unarchive')}</span>
+                    <span className='ml-2 hidden sm:inline'>{t('common.actions.unarchive')}</span>
                   </Button>
                 );
               }
               if (status === 'retained') {
                 return (
-                  <Button variant='outline' size='sm' onClick={() => unretainMutation.mutate(thread.id, { onSuccess: () => refetch() })} className='px-2 sm:px-3'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => unretainMutation.mutate(thread.id, { onSuccess: () => refetch() })}
+                    className='px-2 sm:px-3'
+                  >
                     <IconRotate className='h-4 w-4' />
-                    <span className='hidden sm:inline ml-2'>{t('common.actions.unretain')}</span>
+                    <span className='ml-2 hidden sm:inline'>{t('common.actions.unretain')}</span>
                   </Button>
                 );
               }
@@ -232,41 +247,46 @@ export default function ThreadDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { archiveMutation.mutate(thread.id, { onSuccess: () => refetch() }); setShowArchiveDialog(false); }}>
+            <AlertDialogAction
+              onClick={() => {
+                archiveMutation.mutate(thread.id, { onSuccess: () => refetch() });
+                setShowArchiveDialog(false);
+              }}
+            >
               {t('common.actions.archive')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Main className='flex-1 overflow-hidden flex flex-col p-0'>
+      <Main className='flex flex-1 flex-col overflow-hidden p-0'>
         {/* Top: Usage Metadata */}
-        <div className='px-4 sm:px-6 py-3 sm:py-4 border-b bg-background'>
-          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4'>
+        <div className='bg-background border-b px-4 py-3 sm:px-6 sm:py-4'>
+          <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6'>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('traces.detail.totalTokensLabel')}</p>
-              <p className='text-base sm:text-lg font-semibold'>{(thread.usageMetadata?.totalTokens ?? 0).toLocaleString()}</p>
+              <p className='text-base font-semibold sm:text-lg'>{(thread.usageMetadata?.totalTokens ?? 0).toLocaleString()}</p>
             </div>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('traces.detail.inputTokensLabel')}</p>
-              <p className='text-base sm:text-lg font-semibold'>{(thread.usageMetadata?.totalInputTokens ?? 0).toLocaleString()}</p>
+              <p className='text-base font-semibold sm:text-lg'>{(thread.usageMetadata?.totalInputTokens ?? 0).toLocaleString()}</p>
             </div>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('traces.detail.outputTokensLabel')}</p>
-              <p className='text-base sm:text-lg font-semibold'>{(thread.usageMetadata?.totalOutputTokens ?? 0).toLocaleString()}</p>
+              <p className='text-base font-semibold sm:text-lg'>{(thread.usageMetadata?.totalOutputTokens ?? 0).toLocaleString()}</p>
             </div>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('traces.detail.cachedTokensLabel')}</p>
-              <p className='text-base sm:text-lg font-semibold'>{(thread.usageMetadata?.totalCachedTokens ?? 0).toLocaleString()}</p>
+              <p className='text-base font-semibold sm:text-lg'>{(thread.usageMetadata?.totalCachedTokens ?? 0).toLocaleString()}</p>
             </div>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('traces.detail.cachedWriteTokensLabel')}</p>
-              <p className='text-base sm:text-lg font-semibold'>{(thread.usageMetadata?.totalCachedWriteTokens ?? 0).toLocaleString()}</p>
+              <p className='text-base font-semibold sm:text-lg'>{(thread.usageMetadata?.totalCachedWriteTokens ?? 0).toLocaleString()}</p>
             </div>
             <div className='bg-muted/30 rounded-lg px-3 py-2'>
               <p className='text-muted-foreground text-xs sm:text-sm'>{t('usageLogs.columns.totalCost')}</p>
               {thread.usageMetadata?.totalCost ? (
-                <p className='text-base sm:text-lg font-semibold'>
+                <p className='text-base font-semibold sm:text-lg'>
                   {t('currencies.format', {
                     val: thread.usageMetadata.totalCost,
                     currency: settings?.currencyCode ?? 'USD',
@@ -275,7 +295,7 @@ export default function ThreadDetailPage() {
                   })}
                 </p>
               ) : (
-                <p className='text-muted-foreground text-base sm:text-lg font-semibold'>-</p>
+                <p className='text-muted-foreground text-base font-semibold sm:text-lg'>-</p>
               )}
             </div>
           </div>
@@ -285,11 +305,7 @@ export default function ThreadDetailPage() {
         <div className='flex-1 overflow-auto p-3 sm:p-6'>
           {(thread.archivedTracesCount ?? 0) > 0 && (
             <div className='mb-3 sm:mb-4'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => setShowArchivedTraces(!showArchivedTraces)}
-              >
+              <Button variant='outline' size='sm' onClick={() => setShowArchivedTraces(!showArchivedTraces)}>
                 {showArchivedTraces ? (
                   <>
                     <EyeOff className='mr-2 h-4 w-4' />
@@ -328,7 +344,7 @@ export default function ThreadDetailPage() {
 
         {/* Pagination */}
         {totalCount !== undefined && totalCount > 0 && (
-          <div className='border-t bg-background px-3 sm:px-6 py-3'>
+          <div className='bg-background border-t px-3 py-3 sm:px-6'>
             <ServerSidePagination
               pageInfo={pageInfo}
               pageSize={pageSize}

@@ -29,13 +29,10 @@ export function ApiKeysArchiveDialog() {
   };
 
   const getDescription = () => {
-    const baseDescription = t(
-      isArchived ? 'apikeys.dialogs.archive.restoreDescription' : 'apikeys.dialogs.archive.description',
-      { name: selectedApiKey.name }
-    );
-    const warningText = t(
-      isArchived ? 'apikeys.dialogs.archive.restoreInfo' : 'apikeys.dialogs.archive.warning'
-    );
+    const baseDescription = t(isArchived ? 'apikeys.dialogs.archive.restoreDescription' : 'apikeys.dialogs.archive.description', {
+      name: selectedApiKey.name,
+    });
+    const warningText = t(isArchived ? 'apikeys.dialogs.archive.restoreInfo' : 'apikeys.dialogs.archive.warning');
 
     return (
       <div className='space-y-3'>

@@ -9,8 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { useRequestMetadata } from '../data';
-import { RequestDetailContent } from './request-detail-content';
 import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
+import { RequestDetailContent } from './request-detail-content';
 
 interface RequestDetailGlobalPageProps {
   backTo?: '/admin/channels' | '/admin/requests';

@@ -139,9 +139,7 @@ export function useAnalyticsMetadata() {
   return useQuery({
     queryKey: ['analyticsMetadata'],
     queryFn: async () => {
-      const data = await graphqlRequest<{ analyticsMetadata: AnalyticsMetadata }>(
-        ANALYTICS_METADATA_QUERY
-      );
+      const data = await graphqlRequest<{ analyticsMetadata: AnalyticsMetadata }>(ANALYTICS_METADATA_QUERY);
       return analyticsMetadataSchema.parse(data.analyticsMetadata);
     },
     staleTime: 5 * 60 * 1000,
@@ -153,10 +151,7 @@ export function useAnalyticsOverview(filter: AnalyticsFilter | null) {
     queryKey: ['analyticsOverview', filter],
     queryFn: async () => {
       const gqlFilter = toGraphQLFilter(filter);
-      const data = await graphqlRequest<{ analyticsOverview: AnalyticsOverview }>(
-        ANALYTICS_OVERVIEW_QUERY,
-        { filter: gqlFilter }
-      );
+      const data = await graphqlRequest<{ analyticsOverview: AnalyticsOverview }>(ANALYTICS_OVERVIEW_QUERY, { filter: gqlFilter });
       return analyticsOverviewSchema.parse(data.analyticsOverview);
     },
     refetchInterval: 60000,
@@ -169,10 +164,7 @@ export function useAnalyticsDailyStats(filter: AnalyticsFilter | null) {
     queryKey: ['analyticsDailyStats', filter],
     queryFn: async () => {
       const gqlFilter = toGraphQLFilter(filter);
-      const data = await graphqlRequest<{ analyticsDailyStats: AnalyticsDailyStat[] }>(
-        ANALYTICS_DAILY_STATS_QUERY,
-        { filter: gqlFilter }
-      );
+      const data = await graphqlRequest<{ analyticsDailyStats: AnalyticsDailyStat[] }>(ANALYTICS_DAILY_STATS_QUERY, { filter: gqlFilter });
       return data.analyticsDailyStats.map((item) => analyticsDailyStatSchema.parse(item));
     },
     refetchInterval: 60000,
@@ -185,10 +177,10 @@ export function useAnalyticsDimensionStats(filter: AnalyticsFilter | null, dimen
     queryKey: ['analyticsDimensionStats', filter, dimension],
     queryFn: async () => {
       const gqlFilter = toGraphQLFilter(filter);
-      const data = await graphqlRequest<{ analyticsDimensionStats: AnalyticsDimensionStat[] }>(
-        ANALYTICS_DIMENSION_STATS_QUERY,
-        { filter: gqlFilter, dimension }
-      );
+      const data = await graphqlRequest<{ analyticsDimensionStats: AnalyticsDimensionStat[] }>(ANALYTICS_DIMENSION_STATS_QUERY, {
+        filter: gqlFilter,
+        dimension,
+      });
       return data.analyticsDimensionStats.map((item) => analyticsDimensionStatSchema.parse(item));
     },
     enabled: !!dimension,

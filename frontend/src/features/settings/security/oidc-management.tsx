@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
-
 import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { graphqlRequest } from '@/gql/graphql';
 import { UNLINK_OIDC_IDENTITY_MUTATION } from '@/gql/users';
-import { authApi } from '@/lib/api-client';
 import { Link as LinkIcon, Unlink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { authApi } from '@/lib/api-client';
+import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 
 interface OidcManagementProps {
   providers: any[];
@@ -60,63 +59,59 @@ export default function OidcManagement({ providers }: OidcManagementProps) {
 
       {providers.length > 0 && (
         <div className='mt-4 space-y-4'>
-          <div className='grid gap-4 grid-cols-1 md:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             {providers.map((p: any) => {
               const isInactive = p.active === false;
               const providerId = p.id || p.name;
               const providerLabel = p.display_name || p.name;
 
               return (
-              <div
-                key={providerId}
-                className={`flex items-center justify-between rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md ${isInactive ? 'border-2 border-destructive' : ''}`}
-                title={isInactive ? t('common.status.inactiveRetry') : undefined}
-              >
-                <div className='flex items-center gap-3'>
-                  {p.icon_url && (
-                    <img src={p.icon_url} alt={providerLabel} className='w-8 h-8 object-contain rounded' />
-                  )}
-                  <div className='flex flex-col'>
-                    <span className='font-semibold text-foreground'>{providerLabel}</span>
-                    {isInactive ? (
-                      <span className='text-xs font-medium text-destructive'>{t('common.status.inactiveRetry')}</span>
-                    ) : p.is_linked && (
-                      <span className='text-xs text-muted-foreground truncate max-w-[150px]'>
-                        {p.linked_email}
-                      </span>
-                    )}
+                <div
+                  key={providerId}
+                  className={`bg-card flex items-center justify-between rounded-lg border p-4 shadow-sm transition-all hover:shadow-md ${isInactive ? 'border-destructive border-2' : ''}`}
+                  title={isInactive ? t('common.status.inactiveRetry') : undefined}
+                >
+                  <div className='flex items-center gap-3'>
+                    {p.icon_url && <img src={p.icon_url} alt={providerLabel} className='h-8 w-8 rounded object-contain' />}
+                    <div className='flex flex-col'>
+                      <span className='text-foreground font-semibold'>{providerLabel}</span>
+                      {isInactive ? (
+                        <span className='text-destructive text-xs font-medium'>{t('common.status.inactiveRetry')}</span>
+                      ) : (
+                        p.is_linked && <span className='text-muted-foreground max-w-[150px] truncate text-xs'>{p.linked_email}</span>
+                      )}
+                    </div>
                   </div>
+
+                  {p.is_linked ? (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='text-destructive hover:text-destructive hover:bg-destructive/10 h-9 transition-colors'
+                      onClick={() =>
+                        setUnlinkTarget({
+                          identityId: p.linked_identity_id.toString(),
+                          providerName: providerLabel,
+                        })
+                      }
+                      type='button'
+                    >
+                      <Unlink className='mr-2 h-4 w-4' />
+                      {t('common.unlink', 'Unlink')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='border-primary/20 hover:border-primary hover:bg-primary/5 text-primary h-9 transition-colors'
+                      onClick={() => handleLink(providerId)}
+                      type='button'
+                    >
+                      <LinkIcon className='mr-2 h-4 w-4' />
+                      {t('common.link', 'Link')}
+                    </Button>
+                  )}
                 </div>
-                
-                {p.is_linked ? (
-                  <Button 
-                    variant='ghost' 
-                    size='sm' 
-                    className='h-9 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors'
-                    onClick={() =>
-                      setUnlinkTarget({
-                        identityId: p.linked_identity_id.toString(),
-                        providerName: providerLabel,
-                      })
-                    }
-                    type='button'
-                  >
-                    <Unlink className='w-4 h-4 mr-2' />
-                    {t('common.unlink', 'Unlink')}
-                  </Button>
-                ) : (
-                  <Button 
-                    variant='outline' 
-                    size='sm' 
-                    className='h-9 border-primary/20 hover:border-primary hover:bg-primary/5 transition-colors text-primary'
-                    onClick={() => handleLink(providerId)}
-                    type='button'
-                  >
-                    <LinkIcon className='w-4 h-4 mr-2' />
-                    {t('common.link', 'Link')}
-                  </Button>
-                )}
-              </div>
               );
             })}
           </div>

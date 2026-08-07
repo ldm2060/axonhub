@@ -1,9 +1,9 @@
+import { useNavigate } from '@tanstack/react-router';
 import { IconPlus, IconUpload, IconArrowsSort, IconSettings, IconScale } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from '@tanstack/react-router';
+import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { Button } from '@/components/ui/button';
 import { PermissionGuard } from '@/components/permission-guard';
-import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { useChannels } from '../context/channels-context';
 
 export function ChannelsPrimaryButtons() {

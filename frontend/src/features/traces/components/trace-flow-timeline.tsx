@@ -37,7 +37,7 @@ export interface TraceFlowTimelineProps {
 
 const NODE_WIDTH = 280;
 const NODE_HEADER_HEIGHT = 38; // header row
-const SPAN_ROW_HEIGHT = 28;   // each span row
+const SPAN_ROW_HEIGHT = 28; // each span row
 const NODE_FOOTER_HEIGHT = 26; // token stats row
 const H_GAP = 40;
 const V_GAP = 50;
@@ -210,10 +210,7 @@ function SegmentNode({ data, selected }: NodeProps<SegmentFlowNode>) {
     <>
       <Handle type='target' position={Position.Top} className='!bg-border !h-2 !w-2' />
       <div
-        className={cn(
-          'bg-card border-border/60 rounded-lg border shadow-sm transition-shadow',
-          selected && 'ring-primary/40 ring-2'
-        )}
+        className={cn('bg-card border-border/60 rounded-lg border shadow-sm transition-shadow', selected && 'ring-primary/40 ring-2')}
         style={{ borderLeftWidth: 3, borderLeftColor: data.borderColor, width: NODE_WIDTH }}
       >
         {/* Header: model + duration + link */}
@@ -256,14 +253,12 @@ function SegmentNode({ data, selected }: NodeProps<SegmentFlowNode>) {
                   }}
                 >
                   <SpanIcon className='text-muted-foreground h-3 w-3 flex-shrink-0' />
-                  <span className='truncate text-[11px] font-medium'>
-                    {spanDisplay?.primary || info.span.type}
-                  </span>
+                  <span className='truncate text-[11px] font-medium'>{spanDisplay?.primary || info.span.type}</span>
                   <Badge
                     variant='outline'
                     className={cn(
                       'ml-auto h-4 px-1 text-[9px]',
-                      info.kind === 'request' ? 'text-blue-500 border-blue-500/30' : 'text-green-500 border-green-500/30'
+                      info.kind === 'request' ? 'border-blue-500/30 text-blue-500' : 'border-green-500/30 text-green-500'
                     )}
                   >
                     {info.kind === 'request' ? 'REQ' : 'RES'}
@@ -276,7 +271,10 @@ function SegmentNode({ data, selected }: NodeProps<SegmentFlowNode>) {
 
         {/* Footer: token stats */}
         {hasTokens && (
-          <div className='border-border/40 text-muted-foreground flex items-center gap-3 border-t px-3 text-[10px]' style={{ height: NODE_FOOTER_HEIGHT }}>
+          <div
+            className='border-border/40 text-muted-foreground flex items-center gap-3 border-t px-3 text-[10px]'
+            style={{ height: NODE_FOOTER_HEIGHT }}
+          >
             {inputTokens != null && <span>↑ {inputTokens.toLocaleString()}</span>}
             {outputTokens != null && <span>↓ {outputTokens.toLocaleString()}</span>}
           </div>
@@ -307,10 +305,7 @@ function TraceFlowTimelineInner({ trace, onSelectSpan, selectedSpanId, isFullscr
         <h2 className='text-lg font-semibold'>{t('traces.flowTimeline.title')}</h2>
       </div>
       <div
-        className={cn(
-          'border-border/40 bg-card/30 flex-1 overflow-hidden rounded-lg border',
-          isFullscreen && 'rounded-none border-0'
-        )}
+        className={cn('border-border/40 bg-card/30 flex-1 overflow-hidden rounded-lg border', isFullscreen && 'rounded-none border-0')}
         style={{ minHeight: isFullscreen ? 'calc(100vh - 220px)' : 400 }}
       >
         <ReactFlow

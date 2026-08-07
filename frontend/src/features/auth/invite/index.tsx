@@ -18,10 +18,7 @@ export default function Invite() {
         description={
           <>
             {t('users.invitation.registrationDescription')}{' '}
-            <Link
-              to='/sign-in'
-              className='font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950'
-            >
+            <Link to='/sign-in' className='font-medium text-slate-700 underline underline-offset-4 hover:text-slate-950'>
               {t('users.invitation.signIn')}
             </Link>
           </>
@@ -29,17 +26,11 @@ export default function Invite() {
         rightFooter={
           <p className='text-sm leading-relaxed text-slate-500'>
             {t('users.invitation.termsPrefix')}{' '}
-            <a
-              href='/terms'
-              className='font-medium text-slate-600 underline underline-offset-4 hover:text-slate-950'
-            >
+            <a href='/terms' className='font-medium text-slate-600 underline underline-offset-4 hover:text-slate-950'>
               {t('users.invitation.terms')}
             </a>{' '}
             {t('users.invitation.termsAnd')}{' '}
-            <a
-              href='/privacy'
-              className='font-medium text-slate-600 underline underline-offset-4 hover:text-slate-950'
-            >
+            <a href='/privacy' className='font-medium text-slate-600 underline underline-offset-4 hover:text-slate-950'>
               {t('users.invitation.privacy')}
             </a>
             .
@@ -50,7 +41,7 @@ export default function Invite() {
         {token ? (
           <InviteForm token={token} />
         ) : (
-          <p className='rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive'>
+          <p className='border-destructive/20 bg-destructive/5 text-destructive rounded-lg border px-4 py-3 text-sm'>
             {t('users.invitation.required')}
           </p>
         )}

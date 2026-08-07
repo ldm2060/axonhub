@@ -34,16 +34,12 @@ export function ChannelsBulkClearTemplateDialog() {
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>{t('channels.templates.bulkClear.title')}</DialogTitle>
-          <DialogDescription>
-            {t('channels.templates.bulkClear.description', { count: selectedChannels.length })}
-          </DialogDescription>
+          <DialogDescription>{t('channels.templates.bulkClear.description', { count: selectedChannels.length })}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-4'>
-          <div className='bg-destructive/10 rounded-md border border-destructive/30 p-3'>
-            <p className='text-destructive text-sm'>
-              {t('channels.templates.bulkClear.warning')}
-            </p>
+          <div className='bg-destructive/10 border-destructive/30 rounded-md border p-3'>
+            <p className='text-destructive text-sm'>{t('channels.templates.bulkClear.warning')}</p>
           </div>
         </div>
 

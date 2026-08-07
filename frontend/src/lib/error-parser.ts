@@ -1,6 +1,6 @@
 /**
  * GraphQL Error Parser
- * 
+ *
  * Parses GraphQL errors and extracts structured information from extensions.code
  * for client-side error handling and i18n translation.
  */
@@ -34,12 +34,7 @@ function isGraphQLError(error: unknown): error is {
   message: string;
   extensions?: Record<string, unknown>;
 } {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as { message: string }).message === 'string'
-  );
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: string }).message === 'string';
 }
 
 /**
@@ -120,12 +115,14 @@ export function parseGraphQLErrors(error: unknown): ParsedGraphQLError[] {
   if (isGraphQLError(error)) {
     const extensions = getErrorExtensions(error) || {};
     const code = (extensions.code as GraphQLErrorCode) || 'INTERNAL_SERVER_ERROR';
-    return [{
-      code,
-      message: error.message,
-      extensions,
-      originalError: error,
-    }];
+    return [
+      {
+        code,
+        message: error.message,
+        extensions,
+        originalError: error,
+      },
+    ];
   }
 
   return [];
@@ -157,14 +154,14 @@ export function isDuplicateError(error: unknown): boolean {
 /**
  * Get duplicate error info
  */
-export function getDuplicateErrorInfo(error: unknown): { 
-  resource?: string; 
-  field?: string; 
+export function getDuplicateErrorInfo(error: unknown): {
+  resource?: string;
+  field?: string;
   value?: string;
 } | null {
   const errors = parseGraphQLErrors(error);
   if (errors.length === 0) return null;
-  
+
   const err = errors[0];
   if (err.code !== 'DUPLICATE_NAME' && err.code !== 'ALREADY_EXISTS') {
     return null;
@@ -182,14 +179,14 @@ export function getDuplicateErrorInfo(error: unknown): {
  */
 export function getErrorI18nKey(code: GraphQLErrorCode | null): string {
   const i18nMap: Record<string, string> = {
-    'DUPLICATE_NAME': 'common.errors.duplicateName',
-    'ALREADY_EXISTS': 'common.errors.duplicateKey',
-    'NOT_FOUND': 'common.errors.notFound',
-    'INVALID_INPUT': 'common.errors.validationFailed',
-    'VALIDATION_FAILED': 'common.errors.validationFailed',
-    'UNAUTHENTICATED': 'common.errors.sessionExpired',
-    'FORBIDDEN': 'common.errors.forbidden',
-    'INTERNAL_SERVER_ERROR': 'common.errors.internalServerError',
+    DUPLICATE_NAME: 'common.errors.duplicateName',
+    ALREADY_EXISTS: 'common.errors.duplicateKey',
+    NOT_FOUND: 'common.errors.notFound',
+    INVALID_INPUT: 'common.errors.validationFailed',
+    VALIDATION_FAILED: 'common.errors.validationFailed',
+    UNAUTHENTICATED: 'common.errors.sessionExpired',
+    FORBIDDEN: 'common.errors.forbidden',
+    INTERNAL_SERVER_ERROR: 'common.errors.internalServerError',
   };
 
   return code && i18nMap[code] ? i18nMap[code] : 'common.errors.internalServerError';

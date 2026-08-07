@@ -9,12 +9,7 @@ interface RequestQueryKeyInput extends RequestScopedQueryKeyInput {
   scope?: 'detail' | 'quick-view';
 }
 
-export function buildRequestMetadataQueryKey({
-  id,
-  permissions,
-  projectId,
-  includeAdminFields,
-}: RequestScopedQueryKeyInput) {
+export function buildRequestMetadataQueryKey({ id, permissions, projectId, includeAdminFields }: RequestScopedQueryKeyInput) {
   return ['request', 'metadata', id, permissions, projectId, includeAdminFields] as const;
 }
 
@@ -38,12 +33,6 @@ export function buildRequestExecutionContentQueryKey({
   return ['request-execution', 'content', executionId, id, permissions, projectId, includeAdminFields] as const;
 }
 
-export function buildRequestQueryKey({
-  id,
-  permissions,
-  projectId,
-  includeAdminFields,
-  scope = 'detail',
-}: RequestQueryKeyInput) {
+export function buildRequestQueryKey({ id, permissions, projectId, includeAdminFields, scope = 'detail' }: RequestQueryKeyInput) {
   return ['request', scope, id, permissions, projectId, includeAdminFields] as const;
 }

@@ -5,16 +5,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { IconCheck, IconCopy, IconMailPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useSelectedProjectId } from '@/stores/projectStore';
 import { apiRequest } from '@/lib/api-client';
 import { extractNumberIDAsNumber } from '@/lib/utils';
-import { useSelectedProjectId } from '@/stores/projectStore';
-import { useRoles } from '@/features/project-roles/data/roles';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRoles } from '@/features/project-roles/data/roles';
 
 const formSchema = z.object({
   expiresInHours: z.enum(['1', '6', '24', '168', '0']),
@@ -112,7 +112,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
                 {isCopied ? <IconCheck /> : <IconCopy />}
               </Button>
             </div>
-            <p className='text-sm text-muted-foreground'>{t('users.messages.invitationLinkReady')}</p>
+            <p className='text-muted-foreground text-sm'>{t('users.messages.invitationLinkReady')}</p>
           </div>
         ) : (
           <Form {...form}>
@@ -131,7 +131,9 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
                       </FormControl>
                       <SelectContent>
                         {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -189,13 +191,19 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
         )}
         <DialogFooter>
           {inviteLink ? (
-            <Button type='button' onClick={() => closeDialog(false)}>{t('common.buttons.close')}</Button>
+            <Button type='button' onClick={() => closeDialog(false)}>
+              {t('common.buttons.close')}
+            </Button>
           ) : (
             <>
               <DialogClose asChild>
                 <Button variant='outline'>{t('common.buttons.cancel')}</Button>
               </DialogClose>
-              <Button type='submit' form='project-user-invite-form' disabled={form.formState.isSubmitting || isLoadingRoles || roles.length === 0}>
+              <Button
+                type='submit'
+                form='project-user-invite-form'
+                disabled={form.formState.isSubmitting || isLoadingRoles || roles.length === 0}
+              >
                 {t('users.buttons.createInvitation')}
               </Button>
             </>

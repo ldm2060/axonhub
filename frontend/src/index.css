@@ -64,15 +64,15 @@
   --popover-foreground: oklch(0.984 0.003 247.858);
   --primary: oklch(0.929 0.013 255.508);
   --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.20 0.025 260);
+  --secondary: oklch(0.2 0.025 260);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.19 0.02 260);
   --muted-foreground: oklch(0.704 0.04 256.788);
   --accent: oklch(0.26 0.03 260);
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.68 0.2 22.5);
-  --border: oklch(0.30 0.02 260);
-  --input: oklch(0.30 0.02 260);
+  --border: oklch(0.3 0.02 260);
+  --input: oklch(0.3 0.02 260);
   --ring: oklch(0.551 0.027 264.364);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -147,12 +147,12 @@
 .dark.claude {
   --background: oklch(0.22 0.002 106); /* Darker background */
   --foreground: oklch(0.8074 0.0142 93.0137);
-  --card: oklch(0.30 0.006 106); /* Lighter card for contrast */
+  --card: oklch(0.3 0.006 106); /* Lighter card for contrast */
   --card-foreground: var(--foreground);
   --popover: oklch(0.32 0.006 106);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.6724 0.1308 38.7559);
-  --primary-foreground: oklch(0.20 0.02 45);
+  --primary-foreground: oklch(0.2 0.02 45);
   --secondary: oklch(0.26 0.006 106);
   --secondary-foreground: var(--foreground);
   --muted: oklch(0.24 0.004 106);
@@ -260,7 +260,7 @@
   --foreground: oklch(0.9219 0 0);
   --card: oklch(0.28 0.02 260); /* Lighter blue card */
   --card-foreground: var(--foreground);
-  --popover: oklch(0.30 0.02 260);
+  --popover: oklch(0.3 0.02 260);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.53 0.18 260);
   --primary-foreground: oklch(1 0 0);
@@ -365,7 +365,7 @@
   --foreground: oklch(0.9288 0.0126 255.5078);
   --card: oklch(0.28 0.015 160); /* Slightly lighter green card */
   --card-foreground: var(--foreground);
-  --popover: oklch(0.30 0.015 160);
+  --popover: oklch(0.3 0.015 160);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.4365 0.1044 156.7556);
   --primary-foreground: oklch(0.9213 0.0135 167.1556);
@@ -473,7 +473,7 @@
   --foreground: oklch(0.8787 0.0426 272.2767);
   --card: oklch(0.28 0.025 280); /* Lighter purple card */
   --card-foreground: var(--foreground);
-  --popover: oklch(0.30 0.025 280);
+  --popover: oklch(0.3 0.025 280);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.7871 0.1187 304.7693);
   --primary-foreground: oklch(0.2429 0.0304 283.911);
@@ -561,8 +561,8 @@
 
 /* 胶囊滚动条隐藏 */
 .hide-scroll {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .hide-scroll::-webkit-scrollbar {
@@ -630,7 +630,7 @@
   --foreground: oklch(0.9219 0 0);
   --card: oklch(0.28 0.025 70); /* Slightly lighter card */
   --card-foreground: var(--foreground);
-  --popover: oklch(0.30 0.025 70);
+  --popover: oklch(0.3 0.025 70);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.7686 0.1647 70.0804);
   --primary-foreground: oklch(0 0 0);
@@ -735,7 +735,7 @@
   --foreground: oklch(0.8398 0.0387 309.5391);
   --card: oklch(0.28 0.025 15); /* Slightly lighter red card */
   --card-foreground: var(--foreground);
-  --popover: oklch(0.30 0.025 15);
+  --popover: oklch(0.3 0.025 15);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.4607 0.1853 4.0994);
   --primary-foreground: oklch(0.97 0 0);
@@ -864,7 +864,7 @@
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0);
   --sidebar-primary-foreground: oklch(0 0 0);
-  --sidebar-accent: oklch(0.20 0 0);
+  --sidebar-accent: oklch(0.2 0 0);
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.32 0 0);
   --sidebar-ring: oklch(0.72 0 0);
@@ -935,7 +935,7 @@
 .dark.cream {
   --background: oklch(0.22 0.005 80); /* Dark cream background */
   --foreground: oklch(0.9219 0 0);
-  --card: oklch(0.30 0.012 80); /* Lighter cream card */
+  --card: oklch(0.3 0.012 80); /* Lighter cream card */
   --card-foreground: var(--foreground);
   --popover: oklch(0.32 0.012 80);
   --popover-foreground: var(--foreground);
@@ -1322,8 +1322,8 @@
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.65 0.28 20);
   --destructive-foreground: oklch(0.97 0.03 210);
-  --border: oklch(0.30 0.08 240);
-  --input: oklch(0.30 0.08 240);
+  --border: oklch(0.3 0.08 240);
+  --input: oklch(0.3 0.08 240);
   --ring: oklch(0.7 0.25 205);
   --chart-1: oklch(0.7 0.25 205);
   --chart-2: oklch(0.78 0.2 195);
@@ -1335,7 +1335,7 @@
   --sidebar-foreground: oklch(0.92 0.05 218);
   --sidebar-primary: oklch(0.7 0.25 205);
   --sidebar-primary-foreground: oklch(0.06 0.05 245);
-  --sidebar-accent: oklch(0.20 0.08 240);
+  --sidebar-accent: oklch(0.2 0.08 240);
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: oklch(0.26 0.08 240);
   --sidebar-ring: oklch(0.7 0.25 205);
@@ -1473,12 +1473,12 @@
 
 /* Range start date - cell background and rounded corners */
 .rdp-custom-day.rdp-custom-range-start {
-  @apply bg-primary/10 rounded-l-full dark:bg-primary/20;
+  @apply bg-primary/10 dark:bg-primary/20 rounded-l-full;
 }
 
 /* Range end date - cell background and rounded corners */
 .rdp-custom-day.rdp-custom-range-end {
-  @apply bg-primary/10 rounded-r-full dark:bg-primary/20;
+  @apply bg-primary/10 dark:bg-primary/20 rounded-r-full;
 }
 
 /* Range start and end on the same day */
@@ -1489,12 +1489,12 @@
 /* Range start/end date - button styles */
 .rdp-custom-day.rdp-custom-range-start > .rdp-custom-day-button,
 .rdp-custom-day.rdp-custom-range-end > .rdp-custom-day-button {
-  @apply bg-primary text-white hover:bg-primary;
+  @apply bg-primary hover:bg-primary text-white;
 }
 
 /* Today's date style */
 .rdp-custom-day.rdp-custom-today > .rdp-custom-day-button {
-  @apply ring-1 ring-inset ring-primary/40;
+  @apply ring-primary/40 ring-1 ring-inset;
 }
 
 /* Outside dates (prev/next month) */

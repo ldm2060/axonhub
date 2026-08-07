@@ -31,7 +31,7 @@ export function ApiKeysDeleteDialog() {
       disabled={deleteApiKey.isPending}
       title={
         <span className='text-destructive'>
-          <IconTrash className='mr-1 inline-block stroke-destructive' size={18} />
+          <IconTrash className='stroke-destructive mr-1 inline-block' size={18} />
           {t('apikeys.dialogs.delete.title')}
         </span>
       }

@@ -19,7 +19,7 @@ export function ChannelSuccessRate({ mode }: ChannelSuccessRateProps) {
       <div className='@container'>
         <div
           tabIndex={0}
-          className='grid max-h-[322px] grid-cols-1 gap-x-6 gap-y-6 overflow-y-auto [scrollbar-gutter:stable] @md:grid-cols-2 @2xl:grid-cols-3'
+          className='grid max-h-[322px] [scrollbar-gutter:stable] grid-cols-1 gap-x-6 gap-y-6 overflow-y-auto @md:grid-cols-2 @2xl:grid-cols-3'
         >
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className='flex items-center'>
@@ -52,7 +52,7 @@ export function ChannelSuccessRate({ mode }: ChannelSuccessRateProps) {
     <div className='@container'>
       <div
         tabIndex={0}
-        className='grid max-h-[322px] grid-cols-1 gap-x-6 gap-y-6 overflow-y-auto [scrollbar-gutter:stable] @md:grid-cols-2 @2xl:grid-cols-3'
+        className='grid max-h-[322px] [scrollbar-gutter:stable] grid-cols-1 gap-x-6 gap-y-6 overflow-y-auto @md:grid-cols-2 @2xl:grid-cols-3'
       >
         {channels.map((channel) => (
           <div key={channel.channelId} className='flex items-center'>

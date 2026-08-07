@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
+
 export type { DashboardMode } from './dashboard';
 
 const REFETCH_INTERVAL_MS = 30000;
@@ -96,10 +97,7 @@ export function useFastestChannels(timeWindow: string = 'day', limit: number = 5
     queryFn: async () => {
       const query = isPersonal ? MY_FASTEST_CHANNELS_QUERY : FASTEST_CHANNELS_QUERY;
       const fieldName = isPersonal ? 'myFastestChannels' : 'fastestChannels';
-      const data = await graphqlRequest<{ [key: string]: FastestChannel[] }>(
-        query,
-        { input: { timeWindow, limit } }
-      );
+      const data = await graphqlRequest<{ [key: string]: FastestChannel[] }>(query, { input: { timeWindow, limit } });
       return data[fieldName].map((item) => fastestChannelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,
@@ -114,10 +112,7 @@ export function useFastestModels(timeWindow: string = 'day', limit: number = 5, 
     queryFn: async () => {
       const query = isPersonal ? MY_FASTEST_MODELS_QUERY : FASTEST_MODELS_QUERY;
       const fieldName = isPersonal ? 'myFastestModels' : 'fastestModels';
-      const data = await graphqlRequest<{ [key: string]: FastestModel[] }>(
-        query,
-        { input: { timeWindow, limit } }
-      );
+      const data = await graphqlRequest<{ [key: string]: FastestModel[] }>(query, { input: { timeWindow, limit } });
       return data[fieldName].map((item) => fastestModelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,

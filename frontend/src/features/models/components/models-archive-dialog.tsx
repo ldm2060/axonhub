@@ -16,10 +16,7 @@ export function ModelsArchiveDialog() {
 
   const handleStatusChange = () => {
     if (!currentRow) return;
-    updateModelStatus.mutate(
-      { id: currentRow.id, status: isArchived ? 'enabled' : 'archived' },
-      { onSuccess: () => setOpen(null) },
-    );
+    updateModelStatus.mutate({ id: currentRow.id, status: isArchived ? 'enabled' : 'archived' }, { onSuccess: () => setOpen(null) });
   };
 
   const handleClose = () => {
@@ -56,7 +53,11 @@ export function ModelsArchiveDialog() {
       disabled={updateModelStatus.isPending}
       title={
         <span className={isArchived ? 'text-green-600' : 'text-orange-600'}>
-          {isArchived ? <IconCheck className='mr-1 inline-block stroke-green-600' size={18} /> : <IconArchive className='mr-1 inline-block stroke-orange-600' size={18} />}
+          {isArchived ? (
+            <IconCheck className='mr-1 inline-block stroke-green-600' size={18} />
+          ) : (
+            <IconArchive className='mr-1 inline-block stroke-orange-600' size={18} />
+          )}
           {t(isArchived ? 'models.dialogs.status.restoreTitle' : 'models.dialogs.status.archiveTitle')}
         </span>
       }

@@ -205,9 +205,14 @@ export function parseResponse(body?: any, chunks?: any[] | null): ParsedResponse
         return;
       }
 
-      if (data.type === 'content_block_stop' || chunk.event === 'content_block_stop'
-        || data.type === 'message_delta' || chunk.event === 'message_delta'
-        || data.type === 'message_stop' || chunk.event === 'message_stop') {
+      if (
+        data.type === 'content_block_stop' ||
+        chunk.event === 'content_block_stop' ||
+        data.type === 'message_delta' ||
+        chunk.event === 'message_delta' ||
+        data.type === 'message_stop' ||
+        chunk.event === 'message_stop'
+      ) {
         isAnthropicFormat = true;
         return;
       }
@@ -229,7 +234,7 @@ export function parseResponse(body?: any, chunks?: any[] | null): ParsedResponse
             if (!openaiToolCallMap.has(index)) {
               openaiToolCallMap.set(index, {
                 ...tc,
-                function: tc.function ? { ...tc.function } : { name: '', arguments: '' }
+                function: tc.function ? { ...tc.function } : { name: '', arguments: '' },
               });
             } else {
               const existing = openaiToolCallMap.get(index);
@@ -261,10 +266,9 @@ export function parseResponse(body?: any, chunks?: any[] | null): ParsedResponse
                 type: 'function',
                 function: {
                   name: name,
-                  arguments: typeof part.functionCall.args === 'string' 
-                    ? part.functionCall.args 
-                    : JSON.stringify(part.functionCall.args || {}),
-                }
+                  arguments:
+                    typeof part.functionCall.args === 'string' ? part.functionCall.args : JSON.stringify(part.functionCall.args || {}),
+                },
               });
             }
           });

@@ -58,7 +58,11 @@ export function ChannelsArchiveDialog({ open, onOpenChange, currentRow }: Props)
       disabled={updateChannelStatus.isPending}
       title={
         <span className={isArchived ? 'text-green-600' : 'text-orange-600'}>
-          {isArchived ? <IconCheck className='mr-1 inline-block stroke-green-600' size={18} /> : <IconArchive className='mr-1 inline-block stroke-orange-600' size={18} />}
+          {isArchived ? (
+            <IconCheck className='mr-1 inline-block stroke-green-600' size={18} />
+          ) : (
+            <IconArchive className='mr-1 inline-block stroke-orange-600' size={18} />
+          )}
           {t(isArchived ? 'channels.dialogs.status.restore.title' : 'channels.dialogs.status.archive.title')}
         </span>
       }

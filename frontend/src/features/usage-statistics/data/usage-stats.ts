@@ -34,4 +34,3 @@ export function useUsageStatsByUser(timeWindow?: string) {
     placeholderData: (previousData) => previousData,
   });
 }
-

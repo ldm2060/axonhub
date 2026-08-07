@@ -1,8 +1,8 @@
 import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 
 export type FilterBuilderFieldType = 'number' | 'string' | 'boolean';
 
@@ -138,7 +138,8 @@ function buildLeafCondition(fields: FilterBuilderField[]): FilterBuilderConditio
     return null;
   }
 
-  const operators = firstField.operators && firstField.operators.length > 0 ? firstField.operators : defaultOperatorsByType[firstField.type];
+  const operators =
+    firstField.operators && firstField.operators.length > 0 ? firstField.operators : defaultOperatorsByType[firstField.type];
   const firstOperator = operators[0];
 
   return {
@@ -162,9 +163,11 @@ function normalizeConditionNode(
   depth: number,
   allowNestedGroups: boolean,
   maxDepth: number
-) : FilterBuilderCondition[] {
+): FilterBuilderCondition[] {
   if (node.type === 'group') {
-    const normalizedConditions = (node.conditions || []).flatMap((condition) => normalizeConditionNode(condition, depth + 1, allowNestedGroups, maxDepth));
+    const normalizedConditions = (node.conditions || []).flatMap((condition) =>
+      normalizeConditionNode(condition, depth + 1, allowNestedGroups, maxDepth)
+    );
 
     if (!allowNestedGroups || depth >= maxDepth) {
       return normalizedConditions;
@@ -276,9 +279,9 @@ function GroupEditor({
   };
 
   return (
-    <div className='rounded-lg border bg-muted/30 p-3'>
+    <div className='bg-muted/30 rounded-lg border p-3'>
       <div className='mb-2 flex items-center justify-between gap-2'>
-        <span className='text-xs font-medium text-muted-foreground'>{groupLabel}</span>
+        <span className='text-muted-foreground text-xs font-medium'>{groupLabel}</span>
         <div className='flex gap-1'>
           {allowNestedGroups && depth < maxDepth && addGroupLabel ? (
             <Button type='button' variant='ghost' size='sm' onClick={addGroup} disabled={disabled} className='h-7 px-2 text-xs'>
@@ -286,12 +289,26 @@ function GroupEditor({
               {addGroupLabel}
             </Button>
           ) : null}
-          <Button type='button' variant='ghost' size='sm' onClick={addCondition} disabled={disabled || conditions.length >= maxConditionsPerGroup} className='h-7 px-2 text-xs'>
+          <Button
+            type='button'
+            variant='ghost'
+            size='sm'
+            onClick={addCondition}
+            disabled={disabled || conditions.length >= maxConditionsPerGroup}
+            className='h-7 px-2 text-xs'
+          >
             <IconPlus className='mr-1 h-3 w-3' />
             {addLabel}
           </Button>
           {onRemove ? (
-            <Button type='button' variant='ghost' size='sm' onClick={onRemove} disabled={disabled} className='h-7 px-2 text-xs text-muted-foreground hover:text-destructive'>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={onRemove}
+              disabled={disabled}
+              className='text-muted-foreground hover:text-destructive h-7 px-2 text-xs'
+            >
               <IconTrash className='h-3 w-3' />
             </Button>
           ) : null}
@@ -299,9 +316,13 @@ function GroupEditor({
       </div>
 
       <div className='mb-3 flex items-center gap-2'>
-        {logicLabel ? <span className='text-xs font-medium text-muted-foreground'>{logicLabel}</span> : null}
+        {logicLabel ? <span className='text-muted-foreground text-xs font-medium'>{logicLabel}</span> : null}
         {logicOptions && logicOptions.length > 0 ? (
-          <Select value={group.logic || logicOptions[0]?.value} onValueChange={(value) => onChange({ ...group, logic: value })} disabled={disabled}>
+          <Select
+            value={group.logic || logicOptions[0]?.value}
+            onValueChange={(value) => onChange({ ...group, logic: value })}
+            disabled={disabled}
+          >
             <SelectTrigger className='h-8 w-[10rem] text-xs'>
               <SelectValue placeholder={logicLabel} />
             </SelectTrigger>
@@ -317,7 +338,7 @@ function GroupEditor({
       </div>
 
       <div className='space-y-3'>
-        {conditions.length === 0 ? <div className='text-xs text-muted-foreground'>No conditions</div> : null}
+        {conditions.length === 0 ? <div className='text-muted-foreground text-xs'>No conditions</div> : null}
         {conditions.map((condition, index) => {
           const itemKey = `${depth}-${index}-${condition.type}-${condition.field || 'group'}`;
 
@@ -325,12 +346,12 @@ function GroupEditor({
             return (
               <div key={itemKey}>
                 {index > 0 && selectedLogicLabel ? (
-                  <div className='relative mb-3 mt-1'>
+                  <div className='relative mt-1 mb-3'>
                     <div className='absolute inset-0 flex items-center' aria-hidden='true'>
                       <div className='w-full border-t border-dashed' />
                     </div>
                     <div className='relative flex justify-center'>
-                      <span className='bg-muted/50 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                      <span className='bg-muted/50 text-muted-foreground px-2 text-[10px] font-semibold tracking-wider uppercase'>
                         {selectedLogicLabel}
                       </span>
                     </div>
@@ -377,7 +398,9 @@ function GroupEditor({
               onValueChange={(fieldValue) => {
                 const nextField = getFieldDefinition(fields, fieldValue);
                 const nextOperators =
-                  nextField?.operators && nextField.operators.length > 0 ? nextField.operators : defaultOperatorsByType[nextField?.type || 'string'];
+                  nextField?.operators && nextField.operators.length > 0
+                    ? nextField.operators
+                    : defaultOperatorsByType[nextField?.type || 'string'];
 
                 updateConditions(
                   conditions.map((item, itemIndex) =>
@@ -460,7 +483,9 @@ function GroupEditor({
               <Select
                 value={String(condition.value ?? true)}
                 onValueChange={(nextValue) =>
-                  updateConditions(conditions.map((item, itemIndex) => (itemIndex === index ? { ...item, value: nextValue === 'true' } : item)))
+                  updateConditions(
+                    conditions.map((item, itemIndex) => (itemIndex === index ? { ...item, value: nextValue === 'true' } : item))
+                  )
                 }
                 disabled={disabled}
               >
@@ -521,7 +546,7 @@ function GroupEditor({
               size='icon'
               disabled={disabled}
               onClick={() => updateConditions(conditions.filter((_, itemIndex) => itemIndex !== index))}
-              className='h-10 w-10 justify-self-end text-muted-foreground hover:text-destructive sm:justify-self-auto'
+              className='text-muted-foreground hover:text-destructive h-10 w-10 justify-self-end sm:justify-self-auto'
             >
               <IconTrash className='h-4 w-4' />
             </Button>
@@ -530,12 +555,12 @@ function GroupEditor({
           return (
             <div key={itemKey}>
               {index > 0 && selectedLogicLabel ? (
-                <div className='relative mb-3 mt-1'>
+                <div className='relative mt-1 mb-3'>
                   <div className='absolute inset-0 flex items-center' aria-hidden='true'>
                     <div className='w-full border-t border-dashed' />
                   </div>
                   <div className='relative flex justify-center'>
-                    <span className='bg-muted/50 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                    <span className='bg-muted/50 text-muted-foreground px-2 text-[10px] font-semibold tracking-wider uppercase'>
                       {selectedLogicLabel}
                     </span>
                   </div>
@@ -543,7 +568,10 @@ function GroupEditor({
               ) : null}
               {field.subField ? (
                 <div className='space-y-2'>
-                  <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>{fieldSelect}{subFieldInput}</div>
+                  <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+                    {fieldSelect}
+                    {subFieldInput}
+                  </div>
                   <div className='grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)_2.5rem] gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_2.5rem] sm:items-center'>
                     {operatorSelect}
                     {valueControl}
@@ -586,8 +614,7 @@ export function FilterBuilder({
   singleGroup = false,
 }: FilterBuilderProps) {
   const normalizedValue = normalizeValue(value, allowNestedGroups, maxDepth, singleGroup);
-  const displayGroups =
-    singleGroup && normalizedValue.groups.length === 0 ? [buildGroupCondition()] : normalizedValue.groups;
+  const displayGroups = singleGroup && normalizedValue.groups.length === 0 ? [buildGroupCondition()] : normalizedValue.groups;
 
   const updateGroups = (nextGroups: FilterBuilderCondition[]) => {
     onChange({
@@ -611,9 +638,7 @@ export function FilterBuilder({
       ) : null}
 
       {displayGroups.length === 0 ? (
-        <div className='text-muted-foreground rounded-lg border border-dashed bg-muted/20 p-6 text-center text-sm'>
-          No conditions
-        </div>
+        <div className='text-muted-foreground bg-muted/20 rounded-lg border border-dashed p-6 text-center text-sm'>No conditions</div>
       ) : (
         <div className='space-y-3'>
           {displayGroups.map((group, groupIndex) => (
@@ -621,12 +646,10 @@ export function FilterBuilder({
               {groupIndex > 0 && groupJoinLabel ? (
                 <div className='relative py-2'>
                   <div className='absolute inset-0 flex items-center' aria-hidden='true'>
-                    <div className='w-full border-t border-muted-foreground/20' />
+                    <div className='border-muted-foreground/20 w-full border-t' />
                   </div>
                   <div className='relative flex justify-center'>
-                    <span className='bg-background px-3 text-xs font-bold uppercase tracking-widest text-primary'>
-                      {groupJoinLabel}
-                    </span>
+                    <span className='bg-background text-primary px-3 text-xs font-bold tracking-widest uppercase'>{groupJoinLabel}</span>
                   </div>
                 </div>
               ) : null}
@@ -644,7 +667,9 @@ export function FilterBuilder({
                 logicOptions={logicOptions}
                 maxConditionsPerGroup={maxConditionsPerGroup}
                 maxDepth={maxDepth}
-                onChange={(nextGroup) => updateGroups(displayGroups.map((item, itemIndex) => (itemIndex === groupIndex ? nextGroup : item)))}
+                onChange={(nextGroup) =>
+                  updateGroups(displayGroups.map((item, itemIndex) => (itemIndex === groupIndex ? nextGroup : item)))
+                }
                 onRemove={singleGroup ? undefined : () => updateGroups(displayGroups.filter((_, itemIndex) => itemIndex !== groupIndex))}
                 operatorLabel={operatorLabel}
                 valueLabel={valueLabel}

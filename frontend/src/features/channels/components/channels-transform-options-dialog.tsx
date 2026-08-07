@@ -274,12 +274,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
                                 onChange={(e) => setDraft({ ...draft, to: e.target.value })}
                                 className='min-w-0'
                               />
-                              <Button
-                                type='button'
-                                size='sm'
-                                onClick={addMapping}
-                                disabled={!draft.from.trim() || !draft.to.trim()}
-                              >
+                              <Button type='button' size='sm' onClick={addMapping} disabled={!draft.from.trim() || !draft.to.trim()}>
                                 <Plus size={16} />
                               </Button>
                               <datalist id='reasoning-effort-from-suggestions'>
@@ -300,10 +295,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
                               </p>
                             ) : (
                               mappings.map((mapping, index) => (
-                                <div
-                                  key={index}
-                                  className='flex items-center justify-between rounded-lg border p-2'
-                                >
+                                <div key={index} className='flex items-center justify-between rounded-lg border p-2'>
                                   <div className='flex flex-1 items-center gap-2'>
                                     <span className='text-sm'>{mapping.from}</span>
                                     <span className='text-muted-foreground'>→</span>

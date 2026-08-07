@@ -4,18 +4,25 @@ import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from 'react-i18next';
 import { IconAlertTriangle } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { useProjectsContext } from '../context/projects-context';
-import { useCreateProject, useUpdateProject, useArchiveProject, useActivateProject, useDeleteProject, useUpdateProjectProfiles } from '../data/projects';
+import {
+  useCreateProject,
+  useUpdateProject,
+  useArchiveProject,
+  useActivateProject,
+  useDeleteProject,
+  useUpdateProjectProfiles,
+} from '../data/projects';
 import { createProjectInputSchema, updateProjectInputSchema, type UpdateProjectProfilesInput } from '../data/schema';
 import { ProjectProfilesDialog } from './project-profiles-dialog';
 
@@ -318,7 +325,8 @@ export function DeleteProjectDialog() {
           </Alert>
           <div className='space-y-2'>
             <Label htmlFor='project-name'>
-              {t('projects.dialogs.delete.confirmLabel')} <strong>{deletingProject?.name}</strong> {t('projects.dialogs.delete.confirmLabelSuffix')}
+              {t('projects.dialogs.delete.confirmLabel')} <strong>{deletingProject?.name}</strong>{' '}
+              {t('projects.dialogs.delete.confirmLabelSuffix')}
             </Label>
             <Input
               id='project-name'

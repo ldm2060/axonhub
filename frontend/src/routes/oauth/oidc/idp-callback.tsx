@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useOIDCExchange } from '@/features/auth/data/auth';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useOIDCExchange } from '@/features/auth/data/auth';
 
 export const Route = createFileRoute('/oauth/oidc/idp-callback')({
   component: OIDCCallback,
@@ -42,14 +42,14 @@ function OIDCCallback() {
   }, [code, error, error_description, navigate, exchangeMutation]);
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center space-y-4 rounded-xl bg-white p-8 text-center shadow-lg">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-800" />
+    <div className='flex h-screen w-full flex-col items-center justify-center bg-slate-50'>
+      <div className='flex flex-col items-center space-y-4 rounded-xl bg-white p-8 text-center shadow-lg'>
+        <div className='flex h-16 w-16 items-center justify-center rounded-full bg-slate-100'>
+          <Loader2 className='h-8 w-8 animate-spin text-slate-800' />
         </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-slate-900">Completing Sign In</h2>
-          <p className="text-sm text-slate-500">Please wait while we verify your credentials...</p>
+        <div className='space-y-2'>
+          <h2 className='text-xl font-semibold text-slate-900'>Completing Sign In</h2>
+          <p className='text-sm text-slate-500'>Please wait while we verify your credentials...</p>
         </div>
       </div>
     </div>

@@ -1,13 +1,14 @@
 import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import { SortingState } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/stores/authStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useAuthStore } from '@/stores/authStore';
-import { useMe } from '@/features/auth/data/auth';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { useMe } from '@/features/auth/data/auth';
+import { useProvidersData } from '@/features/models/data/providers';
 import { createColumns } from './components/channels-columns';
 import { ChannelsErrorBanner } from './components/channels-error-banner';
 import { PersonalChannelsButtons } from './components/channels-personal-buttons';
@@ -15,7 +16,6 @@ import { ChannelsTable } from './components/channels-table';
 import { ChannelsTypeTabs } from './components/channels-type-tabs';
 import ChannelsProvider from './context/channels-context';
 import { useQueryChannels, useChannelTypes, useErrorChannelsCount, useChannelProbeData } from './data/channels';
-import { useProvidersData } from '@/features/models/data/providers';
 import { useMySharedChannels } from './data/shared';
 import {
   type PersonalChannelSource,
@@ -82,7 +82,7 @@ function PersonalChannelsContent() {
 
   const { data: channelTypeCounts = [] } = useChannelTypes(
     statusFilter.length > 0 ? statusFilter : ['enabled', 'disabled'],
-    currentUser?.id,
+    currentUser?.id
   );
   const { data: errorCount = 0 } = useErrorChannelsCount(currentUser?.id);
   const debouncedNameFilter = useDebounce(nameFilter, 300);
@@ -145,10 +145,7 @@ function PersonalChannelsContent() {
     }
   }, [sorting]);
 
-  const {
-    data: mineData,
-    isLoading: mineLoading,
-  } = useQueryChannels({
+  const { data: mineData, isLoading: mineLoading } = useQueryChannels({
     ...paginationArgs,
     where: mineWhereClause,
     orderBy: currentOrderBy,
@@ -156,10 +153,7 @@ function PersonalChannelsContent() {
     model: modelFilter || undefined,
   });
 
-  const {
-    data: publicData,
-    isLoading: publicLoading,
-  } = useQueryChannels({
+  const { data: publicData, isLoading: publicLoading } = useQueryChannels({
     ...paginationArgs,
     where: publicWhereClause,
     orderBy: currentOrderBy,
@@ -168,10 +162,7 @@ function PersonalChannelsContent() {
   });
 
   const { data: sharedRaw = [], isLoading: sharedLoading } = useMySharedChannels();
-  const sharedChannels = useMemo(
-    () => filterSharedPersonalChannels(sharedRaw, currentUser?.id),
-    [sharedRaw, currentUser?.id],
-  );
+  const sharedChannels = useMemo(() => filterSharedPersonalChannels(sharedRaw, currentUser?.id), [sharedRaw, currentUser?.id]);
   const sharedFiltered = useMemo(
     () =>
       filterPersonalChannelRows(sharedChannels, {
@@ -180,14 +171,12 @@ function PersonalChannelsContent() {
         hasTag: tagFilter || undefined,
         model: modelFilter || undefined,
       }),
-    [sharedChannels, debouncedNameFilter, typeFilter, tabFilteredTypes, tagFilter, modelFilter],
+    [sharedChannels, debouncedNameFilter, typeFilter, tabFilteredTypes, tagFilter, modelFilter]
   );
 
   const publicDataFiltered = useMemo(() => {
     if (!publicData?.edges) return publicData;
-    const filteredEdges = publicData.edges.filter((edge) =>
-      filterOwnedPersonalChannels([edge.node], currentUser?.id).length > 0,
-    );
+    const filteredEdges = publicData.edges.filter((edge) => filterOwnedPersonalChannels([edge.node], currentUser?.id).length > 0);
     return {
       ...publicData,
       edges: filteredEdges,
@@ -244,57 +233,39 @@ function PersonalChannelsContent() {
     (newPageSize: number) => {
       setPageSize(newPageSize);
     },
-    [setPageSize],
+    [setPageSize]
   );
 
-  const handleNameFilterChange = useCallback(
-    (filter: string) => {
-      setNameFilter(filter);
-      resetCursor();
-    },
-    [],
-  );
+  const handleNameFilterChange = useCallback((filter: string) => {
+    setNameFilter(filter);
+    resetCursor();
+  }, []);
 
-  const handleTypeFilterChange = useCallback(
-    (filters: string[]) => {
-      setTypeFilter(filters);
-      resetCursor();
-    },
-    [],
-  );
+  const handleTypeFilterChange = useCallback((filters: string[]) => {
+    setTypeFilter(filters);
+    resetCursor();
+  }, []);
 
-  const handleTabChange = useCallback(
-    (tab: string) => {
-      setSelectedTypeTab(tab);
-      setTypeFilter([]);
-      resetCursor();
-    },
-    [],
-  );
+  const handleTabChange = useCallback((tab: string) => {
+    setSelectedTypeTab(tab);
+    setTypeFilter([]);
+    resetCursor();
+  }, []);
 
-  const handleStatusFilterChange = useCallback(
-    (filters: string[]) => {
-      setStatusFilter(filters);
-      resetCursor();
-    },
-    [],
-  );
+  const handleStatusFilterChange = useCallback((filters: string[]) => {
+    setStatusFilter(filters);
+    resetCursor();
+  }, []);
 
-  const handleTagFilterChange = useCallback(
-    (filter: string) => {
-      setTagFilter(filter);
-      resetCursor();
-    },
-    [],
-  );
+  const handleTagFilterChange = useCallback((filter: string) => {
+    setTagFilter(filter);
+    resetCursor();
+  }, []);
 
-  const handleModelFilterChange = useCallback(
-    (filter: string) => {
-      setModelFilter(filter);
-      resetCursor();
-    },
-    [],
-  );
+  const handleModelFilterChange = useCallback((filter: string) => {
+    setModelFilter(filter);
+    resetCursor();
+  }, []);
 
   const handleFilterErrorChannels = useCallback(() => {
     setShowErrorOnly(true);
@@ -306,20 +277,14 @@ function PersonalChannelsContent() {
     resetCursor();
   }, []);
 
-  const handleSourceChange = useCallback(
-    (newSource: PersonalChannelSource) => {
-      setSource(newSource);
-      setTypeFilter([]);
-      setSelectedTypeTab('all');
-      resetCursor();
-    },
-    [],
-  );
+  const handleSourceChange = useCallback((newSource: PersonalChannelSource) => {
+    setSource(newSource);
+    setTypeFilter([]);
+    setSelectedTypeTab('all');
+    resetCursor();
+  }, []);
 
-  const columns = useMemo(
-    () => createColumns(t, isReadOnly ? false : canWrite, { hideOrderingWeight: true }),
-    [t, isReadOnly, canWrite],
-  );
+  const columns = useMemo(() => createColumns(t, isReadOnly ? false : canWrite, { hideOrderingWeight: true }), [t, isReadOnly, canWrite]);
 
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
@@ -346,9 +311,7 @@ function PersonalChannelsContent() {
           ))}
         </div>
       </div>
-      {source === 'mine' && (
-        <ChannelsTypeTabs typeCounts={channelTypeCounts} selectedTab={selectedTypeTab} onTabChange={handleTabChange} />
-      )}
+      {source === 'mine' && <ChannelsTypeTabs typeCounts={channelTypeCounts} selectedTab={selectedTypeTab} onTabChange={handleTabChange} />}
       <ChannelsTable
         loading={isLoading}
         data={channelsWithProbeData}
@@ -392,7 +355,7 @@ export default function PersonalChannelsPage() {
         <div className='flex w-full flex-1 flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-0'>
           <div className='min-w-0'>
             <h2 className='text-xl font-bold tracking-tight'>{t('channels.personal.title')}</h2>
-            <p className='text-sm text-muted-foreground'>{t('channels.personal.description')}</p>
+            <p className='text-muted-foreground text-sm'>{t('channels.personal.description')}</p>
           </div>
           <PersonalChannelsButtons />
         </div>

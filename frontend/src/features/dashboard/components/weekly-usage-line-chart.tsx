@@ -1,33 +1,17 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  CartesianGrid,
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  type TooltipProps,
-} from 'recharts';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CartesianGrid, Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipProps } from 'recharts';
+import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatNumber } from '@/utils/format-number';
 import { useGeneralSettings } from '../../system/data/system';
 import { useDailyUsageStatsByUser, type DashboardMode } from '../data/dashboard';
 import { ChartLegend } from './chart-legend';
 
-const COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-  'var(--chart-6)',
-];
+const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)'];
 
 const WEEK_DAYS = 7;
 const TOP_USERS = 10;
@@ -140,8 +124,8 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
 
     return (
       <div className='bg-background/90 rounded-md border px-3 py-2 text-xs shadow-sm backdrop-blur'>
-        <div className='text-foreground text-sm font-medium mb-1'>{dateLabel}</div>
-        <div className='space-y-1 max-h-48 overflow-auto'>
+        <div className='text-foreground mb-1 text-sm font-medium'>{dateLabel}</div>
+        <div className='max-h-48 space-y-1 overflow-auto'>
           {dayEntries.length === 0 ? (
             <div className='text-muted-foreground'>{t('dashboard.charts.noUserData')}</div>
           ) : (
@@ -194,14 +178,7 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
                     ))}
                   </defs>
                   <CartesianGrid strokeDasharray='3 3' stroke='var(--border)' vertical={false} />
-                  <XAxis
-                    dataKey='name'
-                    stroke='var(--muted-foreground)'
-                    fontSize={12}
-                    tickLine
-                    axisLine
-                    padding={{ right: 24 }}
-                  />
+                  <XAxis dataKey='name' stroke='var(--muted-foreground)' fontSize={12} tickLine axisLine padding={{ right: 24 }} />
                   <YAxis
                     stroke='var(--muted-foreground)'
                     fontSize={12}
@@ -234,8 +211,8 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
             </>
           )}
           {isFetching && !isLoading && (
-            <div className='absolute inset-0 flex items-center justify-center bg-background/50'>
-              <Loader2 className='h-6 w-6 animate-spin text-muted-foreground' />
+            <div className='bg-background/50 absolute inset-0 flex items-center justify-center'>
+              <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
             </div>
           )}
         </div>

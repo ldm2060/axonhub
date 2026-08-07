@@ -1,18 +1,14 @@
 'use client';
 
+import React from 'react';
 import { format } from 'date-fns';
 import { ColumnDef } from '@tanstack/react-table';
+import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { zhCN, enUS } from 'date-fns/locale';
 import { FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import type { Thread } from '../data/schema';
-import { useArchiveThread, useUnarchiveThread, useRetainThread, useUnretainThread } from '../data/threads';
-import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +19,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DataTableColumnHeader } from '@/components/data-table-column-header';
+import type { Thread } from '../data/schema';
+import { useArchiveThread, useUnarchiveThread, useRetainThread, useUnretainThread } from '../data/threads';
 
 function ThreadActionButtons({ thread }: { thread: Thread }) {
   const { t } = useTranslation();
@@ -66,7 +66,12 @@ function ThreadActionButtons({ thread }: { thread: Thread }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { archiveMutation.mutate(thread.id); setShowArchiveDialog(false); }}>
+            <AlertDialogAction
+              onClick={() => {
+                archiveMutation.mutate(thread.id);
+                setShowArchiveDialog(false);
+              }}
+            >
               {t('common.actions.archive')}
             </AlertDialogAction>
           </AlertDialogFooter>

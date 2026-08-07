@@ -1,15 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useChannelSuccessRates, useTokensByChannel, type TokensByChannel } from '../data/dashboard';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ActivityIcon, AlertTriangleIcon, CheckCircle2Icon, CoinsIcon, XCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Header } from '@/components/layout/header';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Header } from '@/components/layout/header';
 import ContentSection from '@/features/settings/components/content-section';
+import { useChannelSuccessRates, useTokensByChannel, type TokensByChannel } from '../data/dashboard';
 
 type SortField = 'totalCount' | 'successCount' | 'failedCount' | 'successRate' | 'inputTokens' | 'outputTokens' | 'totalTokens';
 type SortOrder = 'asc' | 'desc';
@@ -108,10 +108,7 @@ export default function DashboardChannelSuccessRates() {
 
   // Paginate channels
   const totalPages = Math.ceil(sortedChannels.length / PAGE_SIZE);
-  const paginatedChannels = sortedChannels.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  const paginatedChannels = sortedChannels.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -144,8 +141,8 @@ export default function DashboardChannelSuccessRates() {
 
   if (error) {
     return (
-      <ContentSection title={t('dashboard.channelSuccessRates.pageTitle')} desc="">
-        <div className="text-red-500">加载失败: {error.message}</div>
+      <ContentSection title={t('dashboard.channelSuccessRates.pageTitle')} desc=''>
+        <div className='text-red-500'>加载失败: {error.message}</div>
       </ContentSection>
     );
   }
@@ -155,35 +152,35 @@ export default function DashboardChannelSuccessRates() {
   const total = sortedChannels.length;
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-8 pt-6">
-      <Header title={t('dashboard.channelSuccessRates.pageTitle')} description="查看所有渠道的请求成功率统计" />
-      <div className="space-y-4">
+    <div className='flex flex-1 flex-col gap-4 p-8 pt-6'>
+      <Header title={t('dashboard.channelSuccessRates.pageTitle')} description='查看所有渠道的请求成功率统计' />
+      <div className='space-y-4'>
         {/* Toolbar */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <Button onClick={handleBack} variant="outline" className="self-start">
+        <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+          <Button onClick={handleBack} variant='outline' className='self-start'>
             {t('dashboard.channelSuccessRates.backToDashboard')}
           </Button>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className='flex flex-wrap items-center gap-2'>
             {/* Time window */}
             <Select value={timeWindow} onValueChange={setTimeWindow}>
-              <SelectTrigger className="w-[120px]">
+              <SelectTrigger className='w-[120px]'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">{t('dashboard.stats.today')}</SelectItem>
-                <SelectItem value="week">{t('dashboard.stats.thisWeek')}</SelectItem>
-                <SelectItem value="month">{t('dashboard.stats.thisMonth')}</SelectItem>
+                <SelectItem value='day'>{t('dashboard.stats.today')}</SelectItem>
+                <SelectItem value='week'>{t('dashboard.stats.thisWeek')}</SelectItem>
+                <SelectItem value='month'>{t('dashboard.stats.thisMonth')}</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Channel type filter */}
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className='w-[150px]'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('dashboard.channelSuccessRates.allTypes')}</SelectItem>
+                <SelectItem value='all'>{t('dashboard.channelSuccessRates.allTypes')}</SelectItem>
                 {channelTypes.map((type) => (
                   <SelectItem key={type} value={type}>
                     {type}
@@ -193,35 +190,35 @@ export default function DashboardChannelSuccessRates() {
             </Select>
 
             {/* Show warnings only */}
-            <label className="flex items-center gap-2 whitespace-nowrap text-sm">
+            <label className='flex items-center gap-2 text-sm whitespace-nowrap'>
               <Checkbox checked={showWarningsOnly} onCheckedChange={(checked) => setShowWarningsOnly(checked === true)} />
               {t('dashboard.channelSuccessRates.showWarnings')}
             </label>
 
             {/* Sort field */}
             <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className='w-[150px]'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="totalCount">{t('dashboard.channelSuccessRates.sortByTotal')}</SelectItem>
-                <SelectItem value="successCount">{t('dashboard.channelSuccessRates.sortBySuccess')}</SelectItem>
-                <SelectItem value="failedCount">{t('dashboard.channelSuccessRates.sortByFailed')}</SelectItem>
-                <SelectItem value="successRate">{t('dashboard.channelSuccessRates.sortByRate')}</SelectItem>
-                <SelectItem value="inputTokens">{t('dashboard.channelSuccessRates.sortByInputTokens')}</SelectItem>
-                <SelectItem value="outputTokens">{t('dashboard.channelSuccessRates.sortByOutputTokens')}</SelectItem>
-                <SelectItem value="totalTokens">{t('dashboard.channelSuccessRates.sortByTotalTokens')}</SelectItem>
+                <SelectItem value='totalCount'>{t('dashboard.channelSuccessRates.sortByTotal')}</SelectItem>
+                <SelectItem value='successCount'>{t('dashboard.channelSuccessRates.sortBySuccess')}</SelectItem>
+                <SelectItem value='failedCount'>{t('dashboard.channelSuccessRates.sortByFailed')}</SelectItem>
+                <SelectItem value='successRate'>{t('dashboard.channelSuccessRates.sortByRate')}</SelectItem>
+                <SelectItem value='inputTokens'>{t('dashboard.channelSuccessRates.sortByInputTokens')}</SelectItem>
+                <SelectItem value='outputTokens'>{t('dashboard.channelSuccessRates.sortByOutputTokens')}</SelectItem>
+                <SelectItem value='totalTokens'>{t('dashboard.channelSuccessRates.sortByTotalTokens')}</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Sort order */}
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortOrder)}>
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className='w-[100px]'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="desc">{t('dashboard.channelSuccessRates.desc')}</SelectItem>
-                <SelectItem value="asc">{t('dashboard.channelSuccessRates.asc')}</SelectItem>
+                <SelectItem value='desc'>{t('dashboard.channelSuccessRates.desc')}</SelectItem>
+                <SelectItem value='asc'>{t('dashboard.channelSuccessRates.asc')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -229,27 +226,27 @@ export default function DashboardChannelSuccessRates() {
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-5 w-5 rounded-md" />
-                    <div className="flex-1 space-y-1">
-                      <Skeleton className="h-4 w-[140px]" />
-                      <Skeleton className="h-3 w-[80px]" />
+                <CardContent className='space-y-3'>
+                  <div className='flex items-center gap-3'>
+                    <Skeleton className='h-5 w-5 rounded-md' />
+                    <div className='flex-1 space-y-1'>
+                      <Skeleton className='h-4 w-[140px]' />
+                      <Skeleton className='h-3 w-[80px]' />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-baseline justify-between">
-                      <Skeleton className="h-8 w-[80px]" />
-                      <Skeleton className="h-3 w-[72px]" />
+                  <div className='space-y-2'>
+                    <div className='flex items-baseline justify-between'>
+                      <Skeleton className='h-8 w-[80px]' />
+                      <Skeleton className='h-3 w-[72px]' />
                     </div>
-                    <Skeleton className="h-2 w-full rounded-full" />
+                    <Skeleton className='h-2 w-full rounded-full' />
                   </div>
-                  <div className="flex gap-3">
-                    <Skeleton className="h-4 w-[64px]" />
-                    <Skeleton className="h-4 w-[64px]" />
+                  <div className='flex gap-3'>
+                    <Skeleton className='h-4 w-[64px]' />
+                    <Skeleton className='h-4 w-[64px]' />
                   </div>
                 </CardContent>
               </Card>
@@ -258,66 +255,73 @@ export default function DashboardChannelSuccessRates() {
         )}
 
         {/* Empty state */}
-        {!isLoading && paginatedChannels.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground">暂无数据</div>
-        )}
+        {!isLoading && paginatedChannels.length === 0 && <div className='text-muted-foreground py-12 text-center'>暂无数据</div>}
 
         {/* Channel cards grid */}
         {!isLoading && paginatedChannels.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
             {paginatedChannels.map((channel) => {
               const tokens = tokenByChannel.get(channel.channelId);
               const showTokens = tokens && tokens.totalTokens > 0;
 
               return (
-                <Card key={channel.channelId} className="hover-card min-w-0">
-                  <CardContent className="space-y-3">
+                <Card key={channel.channelId} className='hover-card min-w-0'>
+                  <CardContent className='space-y-3'>
                     {/* Channel info */}
-                    <div className="flex items-center gap-3">
-                      <ActivityIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{channel.channelName}</p>
-                        <span className="text-xs text-muted-foreground">{channel.channelType}</span>
+                    <div className='flex items-center gap-3'>
+                      <ActivityIcon className='text-muted-foreground h-5 w-5 shrink-0' />
+                      <div className='min-w-0 flex-1'>
+                        <p className='truncate font-medium'>{channel.channelName}</p>
+                        <span className='text-muted-foreground text-xs'>{channel.channelType}</span>
                       </div>
-                      {channel.channelDisabled && <AlertTriangleIcon className="h-5 w-5 shrink-0 text-red-500" />}
+                      {channel.channelDisabled && <AlertTriangleIcon className='h-5 w-5 shrink-0 text-red-500' />}
                     </div>
 
                     {/* Success rate display */}
                     <div>
-                      <div className="mb-1 flex items-baseline justify-between">
+                      <div className='mb-1 flex items-baseline justify-between'>
                         <span className={`text-2xl font-bold ${getSuccessRateColor(channel.successRate)}`}>
                           {channel.successRate.toFixed(1)}%
                         </span>
-                        <span className="text-xs text-muted-foreground">{formatNumber(channel.totalCount)} total</span>
+                        <span className='text-muted-foreground text-xs'>{formatNumber(channel.totalCount)} total</span>
                       </div>
 
                       {/* Progress bar */}
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div className={`h-full ${getProgressBarColor(channel.successRate)}`} style={{ width: `${channel.successRate}%` }} />
+                      <div className='bg-muted h-2 w-full overflow-hidden rounded-full'>
+                        <div
+                          className={`h-full ${getProgressBarColor(channel.successRate)}`}
+                          style={{ width: `${channel.successRate}%` }}
+                        />
                       </div>
                     </div>
 
                     {/* Success/Failed counts */}
-                    <div className="flex gap-3 text-sm">
-                      <span className="flex items-center gap-1">
-                        <CheckCircle2Icon className="h-4 w-4 text-green-500" />
+                    <div className='flex gap-3 text-sm'>
+                      <span className='flex items-center gap-1'>
+                        <CheckCircle2Icon className='h-4 w-4 text-green-500' />
                         {formatNumber(channel.successCount)}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <XCircleIcon className="h-4 w-4 text-red-500" />
+                      <span className='flex items-center gap-1'>
+                        <XCircleIcon className='h-4 w-4 text-red-500' />
                         {formatNumber(channel.failedCount)}
                       </span>
                     </div>
 
                     {/* Token consumption (from tokenStatsByChannel API) */}
                     {showTokens && (
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        <CoinsIcon className="h-3 w-3 shrink-0" />
-                        <span>{t('dashboard.channelSuccessRates.inputTokens')}: {formatNumber(tokens.inputTokens)}</span>
-                        <span className="text-border">|</span>
-                        <span>{t('dashboard.channelSuccessRates.outputTokens')}: {formatNumber(tokens.outputTokens)}</span>
-                        <span className="text-border">|</span>
-                        <span>{t('dashboard.channelSuccessRates.totalTokens')}: {formatNumber(tokens.totalTokens)}</span>
+                      <div className='text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs'>
+                        <CoinsIcon className='h-3 w-3 shrink-0' />
+                        <span>
+                          {t('dashboard.channelSuccessRates.inputTokens')}: {formatNumber(tokens.inputTokens)}
+                        </span>
+                        <span className='text-border'>|</span>
+                        <span>
+                          {t('dashboard.channelSuccessRates.outputTokens')}: {formatNumber(tokens.outputTokens)}
+                        </span>
+                        <span className='text-border'>|</span>
+                        <span>
+                          {t('dashboard.channelSuccessRates.totalTokens')}: {formatNumber(tokens.totalTokens)}
+                        </span>
                       </div>
                     )}
                   </CardContent>
@@ -329,21 +333,19 @@ export default function DashboardChannelSuccessRates() {
 
         {/* Pagination */}
         {!isLoading && totalPages > 1 && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-muted-foreground">
-              {t('dashboard.channelSuccessRates.showing', { start, end, total })}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={() => setCurrentPage((p) => p - 1)} disabled={currentPage === 1} variant="outline" size="sm">
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='text-muted-foreground text-sm'>{t('dashboard.channelSuccessRates.showing', { start, end, total })}</div>
+            <div className='flex flex-wrap items-center gap-2'>
+              <Button onClick={() => setCurrentPage((p) => p - 1)} disabled={currentPage === 1} variant='outline' size='sm'>
                 {t('dashboard.channelSuccessRates.prev')}
               </Button>
-              <span className="text-sm">
+              <span className='text-sm'>
                 {currentPage} / {totalPages}
               </span>
-              <Button onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === totalPages} variant="outline" size="sm">
+              <Button onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === totalPages} variant='outline' size='sm'>
                 {t('dashboard.channelSuccessRates.next')}
               </Button>
-              <Button onClick={scrollToTop} variant="outline" size="sm">
+              <Button onClick={scrollToTop} variant='outline' size='sm'>
                 回到顶部
               </Button>
             </div>

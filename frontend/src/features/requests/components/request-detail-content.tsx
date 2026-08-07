@@ -1,23 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DashboardIcon } from '@radix-ui/react-icons';
 import { format } from 'date-fns';
+import { DashboardIcon } from '@radix-ui/react-icons';
 import { enUS, zhCN } from 'date-fns/locale';
 import { ChevronDown, ChevronRight, Copy, Database, Download, FileText, Key, Layers, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { extractNumberID } from '@/lib/utils';
 import { getTokenFromStorage } from '@/stores/authStore';
+import { extractNumberID } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JsonViewer } from '@/components/json-tree-view';
 import { useGeneralSettings } from '@/features/system/data/system';
-import {
-  type RequestMetadata,
-  useRequestContent,
-  useRequestExecutions,
-} from '../data';
+import { type RequestMetadata, useRequestContent, useRequestExecutions } from '../data';
 import { generateRequestCurl } from '../utils/curl-generator';
 import { parseResponse } from '../utils/response-parser';
 import { ChunksDialog } from './chunks-dialog';
@@ -94,7 +90,9 @@ function ContentError({ retry }: { retry: () => void }) {
       <div className='space-y-4 text-center'>
         <FileText className='text-muted-foreground mx-auto h-12 w-12' />
         <p className='text-muted-foreground'>{t('requests.detail.loadFailed')}</p>
-        <Button variant='outline' onClick={retry}>{t('requests.detail.retry')}</Button>
+        <Button variant='outline' onClick={retry}>
+          {t('requests.detail.retry')}
+        </Button>
       </div>
     </div>
   );
@@ -137,10 +135,25 @@ function RequestContentPanel({ request, requestId, projectId, includeAdminFields
       {requestHeaders && (
         <section className='space-y-4'>
           <div className='flex items-center justify-between gap-4'>
-            <h4 className='flex items-center gap-2 font-semibold'><FileText className='text-primary h-4 w-4' />{t('requests.columns.requestHeaders')}</h4>
+            <h4 className='flex items-center gap-2 font-semibold'>
+              <FileText className='text-primary h-4 w-4' />
+              {t('requests.columns.requestHeaders')}
+            </h4>
             <div className='flex gap-2'>
-              <Button variant='outline' size='sm' onClick={() => copyToClipboard(formatJson(requestHeaders), t('requests.actions.copy'))}><Copy className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.copy')}</Button>
-              <Button variant='outline' size='sm' onClick={() => downloadFile(formatJson(requestHeaders), `request-headers-${request.id}.json`, t('requests.actions.download'))}><Download className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.download')}</Button>
+              <Button variant='outline' size='sm' onClick={() => copyToClipboard(formatJson(requestHeaders), t('requests.actions.copy'))}>
+                <Copy className='mr-2 h-4 w-4' />
+                {t('requests.dialogs.jsonViewer.copy')}
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  downloadFile(formatJson(requestHeaders), `request-headers-${request.id}.json`, t('requests.actions.download'))
+                }
+              >
+                <Download className='mr-2 h-4 w-4' />
+                {t('requests.dialogs.jsonViewer.download')}
+              </Button>
             </div>
           </div>
           <div className='bg-muted/20 h-[300px] overflow-auto rounded-lg border p-4'>
@@ -151,16 +164,37 @@ function RequestContentPanel({ request, requestId, projectId, includeAdminFields
 
       <section className='space-y-4'>
         <div className='flex items-center justify-between gap-4'>
-          <h4 className='flex items-center gap-2 font-semibold'><FileText className='text-primary h-4 w-4' />{t('requests.columns.requestBody')}</h4>
+          <h4 className='flex items-center gap-2 font-semibold'>
+            <FileText className='text-primary h-4 w-4' />
+            {t('requests.columns.requestBody')}
+          </h4>
           <div className='flex gap-2'>
-            <Button variant='outline' size='sm' disabled={!requestBody} onClick={() => copyToClipboard(formatJson(requestBody), t('requests.actions.copy'))}><Copy className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.copy')}</Button>
-            <Button variant='outline' size='sm' disabled={!requestBody} onClick={() => downloadFile(formatJson(requestBody), `request-body-${request.id}.json`, t('requests.actions.download'))}><Download className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.download')}</Button>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={!requestBody}
+              onClick={() => copyToClipboard(formatJson(requestBody), t('requests.actions.copy'))}
+            >
+              <Copy className='mr-2 h-4 w-4' />
+              {t('requests.dialogs.jsonViewer.copy')}
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={!requestBody}
+              onClick={() => downloadFile(formatJson(requestBody), `request-body-${request.id}.json`, t('requests.actions.download'))}
+            >
+              <Download className='mr-2 h-4 w-4' />
+              {t('requests.dialogs.jsonViewer.download')}
+            </Button>
           </div>
         </div>
         <div className='bg-muted/20 h-[500px] overflow-auto rounded-lg border p-4'>
-          {requestBody
-            ? <JsonViewer data={requestBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
-            : <div className='text-muted-foreground flex h-full items-center justify-center'>{t('requests.drawer.noRequestBody')}</div>}
+          {requestBody ? (
+            <JsonViewer data={requestBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
+          ) : (
+            <div className='text-muted-foreground flex h-full items-center justify-center'>{t('requests.drawer.noRequestBody')}</div>
+          )}
         </div>
       </section>
 
@@ -209,10 +243,7 @@ function ResponseContentPanel({
 
   const responseBody = previewRequest ? undefined : data?.responseBody;
   const responseChunks = previewRequest ? previewChunks : data?.responseChunks;
-  const parsedResponse = useMemo(
-    () => parseResponse(responseBody, responseChunks),
-    [previewVersion, responseBody, responseChunks]
-  );
+  const parsedResponse = useMemo(() => parseResponse(responseBody, responseChunks), [previewVersion, responseBody, responseChunks]);
   const isLive = isPreviewStreaming || (request.status === 'processing' && request.stream === true);
   const isSpeechRequest = request.format === 'openai/audio_speech';
   const isVideoRequest = request.format === 'openai/video' || request.format === 'seedance/video';
@@ -292,32 +323,68 @@ function ResponseContentPanel({
           </TabsList>
           <div className='flex flex-wrap gap-2'>
             {(isVideoRequest || isSpeechRequest) && hasStoredContent && (
-              <Button variant='outline' size='sm' disabled={isDownloading} onClick={() => void downloadStoredContent()}><Download className='mr-2 h-4 w-4' />{isVideoRequest ? t('requests.actions.downloadVideo') : t('requests.actions.downloadAudio')}</Button>
+              <Button variant='outline' size='sm' disabled={isDownloading} onClick={() => void downloadStoredContent()}>
+                <Download className='mr-2 h-4 w-4' />
+                {isVideoRequest ? t('requests.actions.downloadVideo') : t('requests.actions.downloadAudio')}
+              </Button>
             )}
-            <Button variant='outline' size='sm' disabled={!responseChunks?.length} onClick={() => setShowChunks(true)}><Layers className='mr-2 h-4 w-4' />{isLive ? t('requests.actions.preview') : t('requests.columns.responseChunks')}</Button>
-            <Button variant='outline' size='sm' disabled={responseView === 'preview' ? !responseText : !responseBody} onClick={() => copyToClipboard(responseView === 'preview' ? responseText : formatJson(responseBody), t('requests.actions.copy'))}><Copy className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.copy')}</Button>
-            <Button variant='outline' size='sm' disabled={!responseBody} onClick={() => downloadFile(formatJson(responseBody), `response-body-${request.id}.json`, t('requests.actions.download'))}><Download className='mr-2 h-4 w-4' />{t('requests.dialogs.jsonViewer.download')}</Button>
+            <Button variant='outline' size='sm' disabled={!responseChunks?.length} onClick={() => setShowChunks(true)}>
+              <Layers className='mr-2 h-4 w-4' />
+              {isLive ? t('requests.actions.preview') : t('requests.columns.responseChunks')}
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={responseView === 'preview' ? !responseText : !responseBody}
+              onClick={() =>
+                copyToClipboard(responseView === 'preview' ? responseText : formatJson(responseBody), t('requests.actions.copy'))
+              }
+            >
+              <Copy className='mr-2 h-4 w-4' />
+              {t('requests.dialogs.jsonViewer.copy')}
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={!responseBody}
+              onClick={() => downloadFile(formatJson(responseBody), `response-body-${request.id}.json`, t('requests.actions.download'))}
+            >
+              <Download className='mr-2 h-4 w-4' />
+              {t('requests.dialogs.jsonViewer.download')}
+            </Button>
           </div>
         </div>
 
         <TabsContent value='preview' className='mt-6'>
           {isSpeechRequest ? (
             <div className='bg-muted/20 flex min-h-52 items-center justify-center rounded-lg border p-6'>
-              {audioObjectUrl
-                ? <audio controls src={audioObjectUrl} className='w-full max-w-xl' />
-                : <p className='text-muted-foreground'>{audioLoadFailed ? t('requests.detail.audioLoadFailed') : t('common.loading')}</p>}
+              {audioObjectUrl ? (
+                <audio controls src={audioObjectUrl} className='w-full max-w-xl' />
+              ) : (
+                <p className='text-muted-foreground'>{audioLoadFailed ? t('requests.detail.audioLoadFailed') : t('common.loading')}</p>
+              )}
             </div>
           ) : responseText || isLive ? (
-            <ResponseFlow chunks={responseChunks} version={previewVersion} body={responseBody} isLive={isLive} reasoningDurationMs={request.metricsReasoningDurationMs} />
+            <ResponseFlow
+              chunks={responseChunks}
+              version={previewVersion}
+              body={responseBody}
+              isLive={isLive}
+              reasoningDurationMs={request.metricsReasoningDurationMs}
+            />
           ) : (
-            <div className='bg-muted/20 text-muted-foreground flex h-96 items-center justify-center rounded-lg border'>{t('requests.detail.noResponse')}</div>
+            <div className='bg-muted/20 text-muted-foreground flex h-96 items-center justify-center rounded-lg border'>
+              {t('requests.detail.noResponse')}
+            </div>
           )}
         </TabsContent>
         <TabsContent value='json' className='mt-6'>
           <div className='bg-muted/20 h-[500px] overflow-auto rounded-lg border p-4'>
-            {responseBody
-              ? <JsonViewer data={responseBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
-              : <div className='text-muted-foreground flex h-full items-center justify-center'>{t('requests.detail.noResponse')}</div>}
+            {responseBody ? (
+              <JsonViewer data={responseBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
+            ) : (
+              <div className='text-muted-foreground flex h-full items-center justify-center'>{t('requests.detail.noResponse')}</div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -358,22 +425,47 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
       <Card className='border-0 shadow-sm'>
         <CardHeader className='pb-2'>
           <CardTitle className='flex items-center justify-between'>
-            <span className='flex items-center gap-2'><DashboardIcon className='text-primary h-4 w-4' />{t('requests.detail.overview')}</span>
-            <Badge className={getStatusColor(request.status)} variant='secondary'>{t(`requests.status.${request.status}`)}</Badge>
+            <span className='flex items-center gap-2'>
+              <DashboardIcon className='text-primary h-4 w-4' />
+              {t('requests.detail.overview')}
+            </span>
+            <Badge className={getStatusColor(request.status)} variant='secondary'>
+              {t(`requests.status.${request.status}`)}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'><span className='flex items-center gap-2 text-sm'><Database className='text-primary h-4 w-4' />{t('requests.columns.channel')}</span><span className='font-mono text-sm'>{request.channel?.name || t('requests.columns.unknown')}</span></div>
-            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'><span className='flex items-center gap-2 text-sm'><Database className='text-primary h-4 w-4' />{t('requests.columns.modelId')}</span><span className='font-mono text-sm'>{request.modelID || t('requests.columns.unknown')}</span></div>
-            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'><span className='flex items-center gap-2 text-sm'><Key className='text-primary h-4 w-4' />{t('requests.dialogs.requestDetail.fields.apiKeyName')}</span><span className='font-mono text-sm'>{request.apiKey?.name || t('requests.columns.unknown')}</span></div>
+            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'>
+              <span className='flex items-center gap-2 text-sm'>
+                <Database className='text-primary h-4 w-4' />
+                {t('requests.columns.channel')}
+              </span>
+              <span className='font-mono text-sm'>{request.channel?.name || t('requests.columns.unknown')}</span>
+            </div>
+            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'>
+              <span className='flex items-center gap-2 text-sm'>
+                <Database className='text-primary h-4 w-4' />
+                {t('requests.columns.modelId')}
+              </span>
+              <span className='font-mono text-sm'>{request.modelID || t('requests.columns.unknown')}</span>
+            </div>
+            <div className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'>
+              <span className='flex items-center gap-2 text-sm'>
+                <Key className='text-primary h-4 w-4' />
+                {t('requests.dialogs.requestDetail.fields.apiKeyName')}
+              </span>
+              <span className='font-mono text-sm'>{request.apiKey?.name || t('requests.columns.unknown')}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {usage && (
         <Card className='border-0 shadow-sm'>
-          <CardHeader className='pb-2'><CardTitle className='text-base'>{t('requests.detail.tabs.usage')}</CardTitle></CardHeader>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-base'>{t('requests.detail.tabs.usage')}</CardTitle>
+          </CardHeader>
           <CardContent>
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
               <div className='bg-muted/30 rounded-lg border p-3'>
@@ -383,13 +475,21 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.outputLabel')}</p>
                 <p className='font-semibold'>{usage.completionTokens.toLocaleString()}</p>
-                {reasoningTokens > 0 && <p className='text-muted-foreground text-xs'>{t('requests.columns.reasoning')}: {reasoningTokens.toLocaleString()}</p>}
+                {reasoningTokens > 0 && (
+                  <p className='text-muted-foreground text-xs'>
+                    {t('requests.columns.reasoning')}: {reasoningTokens.toLocaleString()}
+                  </p>
+                )}
               </div>
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.promptCachedTokens')}</p>
                 <p className='font-semibold'>{cachedTokens.toLocaleString()}</p>
                 {cachedTokens > 0 && <p className='text-muted-foreground text-xs'>{cacheHitRate}%</p>}
-                {writeCachedTokens > 0 && <p className='text-muted-foreground text-xs'>{t('requests.columns.writeCache')}: {writeCachedTokens.toLocaleString()} ({writeCacheRate}%)</p>}
+                {writeCachedTokens > 0 && (
+                  <p className='text-muted-foreground text-xs'>
+                    {t('requests.columns.writeCache')}: {writeCachedTokens.toLocaleString()} ({writeCacheRate}%)
+                  </p>
+                )}
               </div>
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('requests.columns.cost')}</p>
@@ -403,7 +503,15 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
   );
 }
 
-function ExecutionSummariesPanel({ requestId, projectId, includeAdminFields }: { requestId: string; projectId?: string | null; includeAdminFields?: boolean }) {
+function ExecutionSummariesPanel({
+  requestId,
+  projectId,
+  includeAdminFields,
+}: {
+  requestId: string;
+  projectId?: string | null;
+  includeAdminFields?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'zh' ? zhCN : enUS;
   const [expandedExecutionId, setExpandedExecutionId] = useState<string | null>(null);
@@ -415,7 +523,8 @@ function ExecutionSummariesPanel({ requestId, projectId, includeAdminFields }: {
 
   if (isLoading) return <ContentLoading />;
   if (isError) return <ContentError retry={() => void refetch()} />;
-  if (!data?.edges.length) return <div className='text-muted-foreground py-16 text-center'>{t('requests.dialogs.requestDetail.noExecutions')}</div>;
+  if (!data?.edges.length)
+    return <div className='text-muted-foreground py-16 text-center'>{t('requests.dialogs.requestDetail.noExecutions')}</div>;
 
   return (
     <div className='space-y-4'>
@@ -424,24 +533,37 @@ function ExecutionSummariesPanel({ requestId, projectId, includeAdminFields }: {
           <CardHeader className='pb-3'>
             <CardTitle className='flex items-center justify-between text-base'>
               <span>{t('requests.dialogs.requestDetail.execution', { index: index + 1 })}</span>
-              <Badge className={getStatusColor(execution.status)} variant='secondary'>{t(`requests.status.${execution.status}`)}</Badge>
+              <Badge className={getStatusColor(execution.status)} variant='secondary'>
+                {t(`requests.status.${execution.status}`)}
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className='space-y-3'>
             <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
-              <div className='bg-background rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('requests.columns.channel')}</p><p className='font-mono text-sm'>{execution.channel?.name || t('requests.columns.unknown')}</p></div>
-              <div className='bg-background rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('requests.dialogs.requestDetail.fields.startTime')}</p><p className='font-mono text-sm'>{format(new Date(execution.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale })}</p></div>
-              <div className='bg-background rounded-lg border p-3'><p className='text-muted-foreground text-xs'>{t('requests.columns.firstTokenLatency')}</p><p className='font-mono text-sm'>{execution.metricsFirstTokenLatencyMs == null ? '-' : `${execution.metricsFirstTokenLatencyMs}ms`}</p></div>
+              <div className='bg-background rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('requests.columns.channel')}</p>
+                <p className='font-mono text-sm'>{execution.channel?.name || t('requests.columns.unknown')}</p>
+              </div>
+              <div className='bg-background rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('requests.dialogs.requestDetail.fields.startTime')}</p>
+                <p className='font-mono text-sm'>{format(new Date(execution.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale })}</p>
+              </div>
+              <div className='bg-background rounded-lg border p-3'>
+                <p className='text-muted-foreground text-xs'>{t('requests.columns.firstTokenLatency')}</p>
+                <p className='font-mono text-sm'>
+                  {execution.metricsFirstTokenLatencyMs == null ? '-' : `${execution.metricsFirstTokenLatencyMs}ms`}
+                </p>
+              </div>
             </div>
-            {execution.errorMessage && <p className='text-destructive bg-destructive/10 rounded border p-3 text-sm'>{execution.errorMessage}</p>}
+            {execution.errorMessage && (
+              <p className='text-destructive bg-destructive/10 rounded border p-3 text-sm'>{execution.errorMessage}</p>
+            )}
             <Button
               variant='outline'
               size='sm'
               onClick={() => setExpandedExecutionId((current) => nextExpandedExecution(current, execution.id))}
             >
-              {expandedExecutionId === execution.id
-                ? <ChevronDown className='mr-2 h-4 w-4' />
-                : <ChevronRight className='mr-2 h-4 w-4' />}
+              {expandedExecutionId === execution.id ? <ChevronDown className='mr-2 h-4 w-4' /> : <ChevronRight className='mr-2 h-4 w-4' />}
               {expandedExecutionId === execution.id
                 ? t('requests.detail.execution.hideContent')
                 : t('requests.detail.execution.showContent')}
@@ -494,7 +616,9 @@ export function RequestDetailContent({
             {activeTab === 'overview' && <OverviewPanel request={request} />}
           </TabsContent>
           <TabsContent value='request' className='p-6'>
-            {activeTab === 'request' && <RequestContentPanel request={request} requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />}
+            {activeTab === 'request' && (
+              <RequestContentPanel request={request} requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />
+            )}
           </TabsContent>
           <TabsContent value='response' className='p-6'>
             {activeTab === 'response' && (
@@ -511,7 +635,9 @@ export function RequestDetailContent({
             )}
           </TabsContent>
           <TabsContent value='executions' className='p-6'>
-            {activeTab === 'executions' && <ExecutionSummariesPanel requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />}
+            {activeTab === 'executions' && (
+              <ExecutionSummariesPanel requestId={requestId} projectId={projectId} includeAdminFields={includeAdminFields} />
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

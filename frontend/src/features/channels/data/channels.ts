@@ -1575,15 +1575,7 @@ export function useTestChannel(options?: { silent?: boolean }) {
   const silent = options?.silent ?? false;
 
   return useMutation({
-    mutationFn: async ({
-      channelID,
-      modelID,
-      proxy,
-    }: {
-      channelID: string;
-      modelID?: string;
-      proxy?: ProxyConfig;
-    }) => {
+    mutationFn: async ({ channelID, modelID, proxy }: { channelID: string; modelID?: string; proxy?: ProxyConfig }) => {
       try {
         const data = await graphqlRequest<{
           testChannel: {

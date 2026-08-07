@@ -192,7 +192,15 @@ export function ApiKeysProfileTemplatesDialog({ open, onOpenChange }: ApiKeysPro
       </AlertDialog>
 
       {createDialogOpen && <ApiKeyCreateTemplateDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />}
-      {editTarget && <ApiKeyEditTemplateDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} template={editTarget} />}
+      {editTarget && (
+        <ApiKeyEditTemplateDialog
+          open={!!editTarget}
+          onOpenChange={(open) => {
+            if (!open) setEditTarget(null);
+          }}
+          template={editTarget}
+        />
+      )}
     </>
   );
 }

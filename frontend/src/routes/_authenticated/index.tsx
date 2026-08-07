@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Dashboard from '@/features/dashboard';
 import { RouteGuard } from '@/components/route-guard';
+import Dashboard from '@/features/dashboard';
 
 function PersonalDashboard() {
   return (
     <RouteGuard>
-      <Dashboard mode="personal" />
+      <Dashboard mode='personal' />
     </RouteGuard>
   );
 }

@@ -1,16 +1,14 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
-import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
+import ts from 'typescript';
 
 const source = readFileSync(join(import.meta.dirname, 'preview-chunk-batcher.ts'), 'utf8');
 const transpiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2023 },
 }).outputText;
-const { createPreviewChunkBatcher } = await import(
-  `data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`
-);
+const { createPreviewChunkBatcher } = await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`);
 
 test('publishes queued chunks in order with one scheduled frame', () => {
   let scheduled;

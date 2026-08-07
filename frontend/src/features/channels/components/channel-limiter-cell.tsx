@@ -68,9 +68,7 @@ export const ChannelLimiterCell = memo(({ stats }: ChannelLimiterCellProps) => {
               {t('channels.columns.limiterTooltip.waiting')}: {waiting}/{queueSize}
             </div>
           ) : (
-            <div className='text-muted-foreground'>
-              {t('channels.columns.limiterTooltip.noQueue')}
-            </div>
+            <div className='text-muted-foreground'>{t('channels.columns.limiterTooltip.noQueue')}</div>
           )}
         </div>
       </TooltipContent>

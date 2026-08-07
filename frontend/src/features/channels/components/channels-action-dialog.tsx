@@ -9,6 +9,7 @@ import { X, RefreshCw, Search, ChevronLeft, ChevronRight, PanelLeft, Plus, Trash
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,7 +28,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
 import { SelectDropdown } from '@/components/select-dropdown';
 import { useProxyPresets, useSaveProxyPreset } from '@/features/system/data/system';
-import { usePermissions } from '@/hooks/usePermissions';
 import { antigravityOAuthExchange, antigravityOAuthStart } from '../data/antigravity';
 import {
   useCreateChannel,
@@ -60,17 +60,25 @@ import {
   getApiFormatsForProvider,
   getChannelTypeForApiFormat,
 } from '../data/config_providers';
-import { Channel, ChannelType, ApiFormat, RetryableErrorPattern, createChannelInputSchema, updateChannelInputSchema, SaveChannelQuotaMonitorBindingInput } from '../data/schema';
+import {
+  Channel,
+  ChannelType,
+  ApiFormat,
+  RetryableErrorPattern,
+  createChannelInputSchema,
+  updateChannelInputSchema,
+  SaveChannelQuotaMonitorBindingInput,
+} from '../data/schema';
 import { ProxyConfig, useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
+import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
+import { ChannelClientRestriction } from './channel-client-restriction';
+import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
 import { ProxyType } from './channels-proxy-dialog';
 import { CopilotDeviceFlow } from './copilot-device-flow';
 import { KimiCodeDeviceFlow } from './kimi-code-device-flow';
 import { ManualModelBadge } from './manual-model-badge';
-import { ChannelClientRestriction } from './channel-client-restriction';
-import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
-import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
 
 interface Props {
   currentRow?: Channel;
@@ -412,9 +420,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const saveQuotaBindings = useSaveChannelQuotaMonitorBindings();
   const { data: existingQuotaBindings } = useChannelQuotaMonitorBindings(currentRow?.id ?? '', { enabled: isEdit && open });
   const [quotaBindingEnabled, setQuotaBindingEnabled] = useState(false);
-  const [quotaBindingStrategy, setQuotaBindingStrategy] = useState<'any' | 'all'>(
-    currentRow?.quotaMultiMonitorStrategy ?? 'any'
-  );
+  const [quotaBindingStrategy, setQuotaBindingStrategy] = useState<'any' | 'all'>(currentRow?.quotaMultiMonitorStrategy ?? 'any');
   const [quotaBindings, setQuotaBindings] = useState<SaveChannelQuotaMonitorBindingInput[]>([]);
 
   // Memoized proxy config for OAuth exchange
@@ -566,8 +572,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       const container = providerListRef.current;
       if (target && container) {
         const isHorizontal =
-          (window.getComputedStyle(container).overflowX === 'auto' ||
-            window.getComputedStyle(container).overflowX === 'scroll') &&
+          (window.getComputedStyle(container).overflowX === 'auto' || window.getComputedStyle(container).overflowX === 'scroll') &&
           container.scrollWidth > container.clientWidth;
         if (isHorizontal) {
           const targetCenter = target.offsetLeft + target.clientWidth / 2;
@@ -1335,16 +1340,13 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         // toggle or removing all bindings correctly clears server-side state.
         if (isEdit && quotaBindingsLoadedRef.current) {
           // Filter out bindings with empty monitor ID to avoid sending invalid data
-          const validBindings = quotaBindings.filter(
-            (b) => b.usageMonitorChannelID.trim() !== ''
-          );
+          const validBindings = quotaBindings.filter((b) => b.usageMonitorChannelID.trim() !== '');
 
           // If enabled and any binding row has an empty monitor but has
           // conditions/statuses configured, abort and show an error.
           if (quotaBindingEnabled) {
             const incompleteBinding = quotaBindings.find(
-              (b) => b.usageMonitorChannelID.trim() === '' &&
-                ((b.conditions?.length ?? 0) > 0 || (b.triggerStatuses?.length ?? 0) > 0)
+              (b) => b.usageMonitorChannelID.trim() === '' && ((b.conditions?.length ?? 0) > 0 || (b.triggerStatuses?.length ?? 0) > 0)
             );
             if (incompleteBinding) {
               toast.error(t('channels.quotaMonitorBinding.messages.emptyMonitor'));
@@ -1855,7 +1857,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         <FormLabel className='text-base font-semibold'>{t('channels.dialogs.fields.provider.label')}</FormLabel>
                         <div
                           ref={setProviderListRef}
-                          className={`flex-1 overflow-x-auto overflow-y-hidden pb-2 md:overflow-x-hidden md:overflow-y-auto md:pb-0 md:pr-2 ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : ''}`}
+                          className={`flex-1 overflow-x-auto overflow-y-hidden pb-2 md:overflow-x-hidden md:overflow-y-auto md:pr-2 md:pb-0 ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : ''}`}
                         >
                           <RadioGroup
                             value={selectedProvider}
@@ -1874,7 +1876,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                   ref={(el) => {
                                     providerRefs.current[provider.key] = el;
                                   }}
-                                  className={`flex items-center space-x-3 rounded-lg border p-3 transition-colors shrink-0 md:w-full ${
+                                  className={`flex shrink-0 items-center space-x-3 rounded-lg border p-3 transition-colors md:w-full ${
                                     isProviderDisabled
                                       ? isSelected
                                         ? 'border-primary bg-muted/80 cursor-not-allowed shadow-sm'
@@ -1889,7 +1891,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                     data-testid={`provider-${provider.key}`}
                                   />
                                   {Icon && <Icon size={20} className='flex-shrink-0' />}
-                                  <FormLabel htmlFor={`provider-${provider.key}`} className='flex-1 cursor-pointer whitespace-nowrap font-normal'>
+                                  <FormLabel
+                                    htmlFor={`provider-${provider.key}`}
+                                    className='flex-1 cursor-pointer font-normal whitespace-nowrap'
+                                  >
                                     {provider.label}
                                   </FormLabel>
                                 </div>
@@ -2304,7 +2309,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                   aria-invalid={!!fieldState.error}
                                   data-testid='channel-base-url-input'
                                   disabled={
-                                    (isCodexType && authMode !== 'third-party') || (isClaudeCodeType && authMode === 'official') || selectedProvider === 'antigravity'
+                                    (isCodexType && authMode !== 'third-party') ||
+                                    (isClaudeCodeType && authMode === 'official') ||
+                                    selectedProvider === 'antigravity'
                                   }
                                   {...field}
                                 />
@@ -2590,7 +2597,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                 const allDaysUnchecked = !rule.days || rule.days.length === 0;
 
                                 return (
-                                  <div key={index} className='bg-muted/50 rounded-lg border p-3 space-y-3'>
+                                  <div key={index} className='bg-muted/50 space-y-3 rounded-lg border p-3'>
                                     <div className='flex items-center justify-between'>
                                       <div className='flex items-center gap-2'>
                                         <SelectDropdown
@@ -2598,13 +2605,19 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                           onValueChange={(value) => {
                                             const newRules = [...rules];
                                             newRules[index] = { ...newRules[index], type: value as 'available' | 'unavailable' };
-                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                            form.setValue('policies.availability.rules', newRules, {
+                                              shouldDirty: true,
+                                              shouldTouch: true,
+                                            });
                                           }}
                                           placeholder={t('channels.dialogs.fields.availability.rule.type.label')}
                                           isControlled={true}
                                           items={[
                                             { value: 'available', label: t('channels.dialogs.fields.availability.rule.type.available') },
-                                            { value: 'unavailable', label: t('channels.dialogs.fields.availability.rule.type.unavailable') },
+                                            {
+                                              value: 'unavailable',
+                                              label: t('channels.dialogs.fields.availability.rule.type.unavailable'),
+                                            },
                                           ]}
                                         />
                                         <div className='flex items-center gap-1.5'>
@@ -2613,10 +2626,15 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                             onCheckedChange={(checked) => {
                                               const newRules = [...rules];
                                               newRules[index] = { ...newRules[index], enabled: checked };
-                                              form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                              form.setValue('policies.availability.rules', newRules, {
+                                                shouldDirty: true,
+                                                shouldTouch: true,
+                                              });
                                             }}
                                           />
-                                          <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.enabled.label')}</span>
+                                          <span className='text-muted-foreground text-xs'>
+                                            {t('channels.dialogs.fields.availability.rule.enabled.label')}
+                                          </span>
                                         </div>
                                       </div>
                                       <Button
@@ -2652,7 +2670,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                                   ? [...currentDays, day.value].sort((a, b) => a - b)
                                                   : currentDays.filter((d) => d !== day.value);
                                                 newRules[index] = { ...newRules[index], days: newDays.length > 0 ? newDays : null };
-                                                form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                                form.setValue('policies.availability.rules', newRules, {
+                                                  shouldDirty: true,
+                                                  shouldTouch: true,
+                                                });
                                               }}
                                             />
                                             <span className='text-xs'>{day.label}</span>
@@ -2663,28 +2684,38 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
                                     <div className='flex items-center gap-3'>
                                       <div className='flex items-center gap-1.5'>
-                                        <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.startTime.label')}</span>
+                                        <span className='text-muted-foreground text-xs'>
+                                          {t('channels.dialogs.fields.availability.rule.startTime.label')}
+                                        </span>
                                         <Input
                                           type='time'
                                           value={rule.startTime || '00:00'}
                                           onChange={(e) => {
                                             const newRules = [...rules];
                                             newRules[index] = { ...newRules[index], startTime: e.target.value };
-                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                            form.setValue('policies.availability.rules', newRules, {
+                                              shouldDirty: true,
+                                              shouldTouch: true,
+                                            });
                                           }}
                                           className='h-7 w-[5.5rem] text-xs'
                                         />
                                       </div>
                                       <span className='text-muted-foreground text-xs'>—</span>
                                       <div className='flex items-center gap-1.5'>
-                                        <span className='text-muted-foreground text-xs'>{t('channels.dialogs.fields.availability.rule.endTime.label')}</span>
+                                        <span className='text-muted-foreground text-xs'>
+                                          {t('channels.dialogs.fields.availability.rule.endTime.label')}
+                                        </span>
                                         <Input
                                           type='time'
                                           value={rule.endTime || '23:59'}
                                           onChange={(e) => {
                                             const newRules = [...rules];
                                             newRules[index] = { ...newRules[index], endTime: e.target.value };
-                                            form.setValue('policies.availability.rules', newRules, { shouldDirty: true, shouldTouch: true });
+                                            form.setValue('policies.availability.rules', newRules, {
+                                              shouldDirty: true,
+                                              shouldTouch: true,
+                                            });
                                           }}
                                           className='h-7 w-[5.5rem] text-xs'
                                         />
@@ -2700,10 +2731,14 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                 size='sm'
                                 onClick={() => {
                                   const currentRules = form.watch('policies.availability.rules') || [];
-                                  form.setValue('policies.availability.rules', [
-                                    ...currentRules,
-                                    { type: 'unavailable', days: null, startTime: '00:00', endTime: '23:59', enabled: true },
-                                  ], { shouldDirty: true, shouldTouch: true });
+                                  form.setValue(
+                                    'policies.availability.rules',
+                                    [
+                                      ...currentRules,
+                                      { type: 'unavailable', days: null, startTime: '00:00', endTime: '23:59', enabled: true },
+                                    ],
+                                    { shouldDirty: true, shouldTouch: true }
+                                  );
                                 }}
                               >
                                 <Plus className='mr-1 h-3 w-3' />
@@ -3136,9 +3171,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
                       {/* Auto-Disable Config */}
                       <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                        <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
-                          {t('channels.autoDisable.title')}
-                        </FormLabel>
+                        <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>{t('channels.autoDisable.title')}</FormLabel>
                         <div className='md:col-span-6'>
                           <ChannelAutoDisableConfig
                             channel={currentRow}
@@ -3420,7 +3453,13 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <span className='inline-flex'>
-                                          <Button type='button' variant='ghost' size='sm' className='text-muted-foreground h-7 w-7 p-0' disabled>
+                                          <Button
+                                            type='button'
+                                            variant='ghost'
+                                            size='sm'
+                                            className='text-muted-foreground h-7 w-7 p-0'
+                                            disabled
+                                          >
                                             <Ban className='h-4 w-4' />
                                           </Button>
                                         </span>
@@ -3435,7 +3474,13 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                       onOpenChange={(isOpen) => setConfirmDisableKey(isOpen ? key : null)}
                                     >
                                       <PopoverTrigger asChild>
-                                        <Button type='button' variant='ghost' size='sm' className='text-orange-500 h-7 w-7 p-0' disabled={disableAPIKey.isPending || isFetchingDisabledKeys}>
+                                        <Button
+                                          type='button'
+                                          variant='ghost'
+                                          size='sm'
+                                          className='h-7 w-7 p-0 text-orange-500'
+                                          disabled={disableAPIKey.isPending || isFetchingDisabledKeys}
+                                        >
                                           <Ban className='h-4 w-4' />
                                         </Button>
                                       </PopoverTrigger>

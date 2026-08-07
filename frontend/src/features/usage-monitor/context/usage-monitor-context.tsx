@@ -17,9 +17,7 @@ export default function UsageMonitorProvider({ children }: { children: ReactNode
   const [currentChannel, setCurrentChannel] = useState<UsageMonitorChannel | null>(null);
 
   return (
-    <UsageMonitorContext.Provider value={{ open, setOpen, currentChannel, setCurrentChannel }}>
-      {children}
-    </UsageMonitorContext.Provider>
+    <UsageMonitorContext.Provider value={{ open, setOpen, currentChannel, setCurrentChannel }}>{children}</UsageMonitorContext.Provider>
   );
 }
 

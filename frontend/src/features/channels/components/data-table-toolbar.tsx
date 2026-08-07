@@ -1,15 +1,15 @@
 import { useMemo, useEffect } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import { IconChevronsDown, IconChevronsUp, IconSearch } from '@tabler/icons-react';
 import { Table } from '@tanstack/react-table';
+import { IconChevronsDown, IconChevronsUp, IconSearch } from '@tabler/icons-react';
 import { useQueryModels } from '@/gql/models';
 import { useTranslation } from 'react-i18next';
+import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
-import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
-import { useAllChannelTags } from '../data/channels';
 import { useChannels } from '../context/channels-context';
+import { useAllChannelTags } from '../data/channels';
 import { CHANNEL_CONFIGS } from '../data/config_channels';
 import { DataTableViewOptions } from './data-table-view-options';
 
@@ -86,7 +86,7 @@ export function DataTableToolbar<TData>({
 
   return (
     <div ref={scrollRef} className='flex items-center gap-4 overflow-x-auto pb-2 md:overflow-x-visible md:pb-0'>
-      <div className='relative w-[150px] shrink-0 lg:flex-1 lg:w-auto'>
+      <div className='relative w-[150px] shrink-0 lg:w-auto lg:flex-1'>
         <IconSearch className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
         <Input
           placeholder={t('channels.filters.filterByName')}
@@ -95,12 +95,8 @@ export function DataTableToolbar<TData>({
           className='h-8 pl-8'
         />
       </div>
-<Button variant='outline' size='sm' className='h-8' onClick={() => setShowTypeTabs(!showTypeTabs)}>
-        {showTypeTabs ? (
-          <IconChevronsDown className='mr-1 h-4 w-4' />
-        ) : (
-          <IconChevronsUp className='mr-1 h-4 w-4' />
-        )}
+      <Button variant='outline' size='sm' className='h-8' onClick={() => setShowTypeTabs(!showTypeTabs)}>
+        {showTypeTabs ? <IconChevronsDown className='mr-1 h-4 w-4' /> : <IconChevronsUp className='mr-1 h-4 w-4' />}
         {t('channels.filters.providerToggle')}
       </Button>
       {showStatusFilter && table.getColumn('status') && (
@@ -113,11 +109,7 @@ export function DataTableToolbar<TData>({
         <DataTableFacetedFilter column={table.getColumn('model')} title={t('channels.filters.model')} options={modelOptions} singleSelect />
       )}
       {isFiltered && (
-        <Button
-          variant='ghost'
-          onClick={() => table.resetColumnFilters()}
-          className='h-8 px-2 lg:px-3'
-        >
+        <Button variant='ghost' onClick={() => table.resetColumnFilters()} className='h-8 px-2 lg:px-3'>
           {t('common.filters.reset')}
           <Cross2Icon className='ml-2 h-4 w-4' />
         </Button>

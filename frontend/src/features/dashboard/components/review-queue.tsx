@@ -1,20 +1,13 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { ClipboardCheck, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { usePendingPublishRequests, useReviewPublishRequest } from '../data/publish-requests';
 import { CollapsibleSection } from './collapsible-section';
 
@@ -56,9 +49,7 @@ function ReviewDialog({
           <DialogTitle>
             {isApprove ? t('publish.approve') : t('publish.reject')} - {resourceName}
           </DialogTitle>
-          <DialogDescription>
-            {t('publish.reviewComment')}
-          </DialogDescription>
+          <DialogDescription>{t('publish.reviewComment')}</DialogDescription>
         </DialogHeader>
         <Textarea
           value={comment}
@@ -70,11 +61,7 @@ function ReviewDialog({
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('common.buttons.cancel')}
           </Button>
-          <Button
-            variant={isApprove ? 'default' : 'destructive'}
-            onClick={handleSubmit}
-            disabled={reviewMutation.isPending}
-          >
+          <Button variant={isApprove ? 'default' : 'destructive'} onClick={handleSubmit} disabled={reviewMutation.isPending}>
             {reviewMutation.isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
             {isApprove ? t('publish.approve') : t('publish.reject')}
           </Button>
@@ -132,7 +119,7 @@ export function ReviewQueue() {
     <>
       <CollapsibleSection
         title={t('dashboard.reviewQueue')}
-        icon={<ClipboardCheck className='h-4 w-4 text-primary' />}
+        icon={<ClipboardCheck className='text-primary h-4 w-4' />}
         storageKey='reviewQueue'
       >
         {isLoading ? (
@@ -160,13 +147,9 @@ export function ReviewQueue() {
                     <div className='min-w-0 flex-1'>
                       <div className='flex items-center gap-2'>
                         <Badge variant='outline' className='text-xs'>
-                          {req.resourceType === 'channel'
-                            ? t('dashboard.stats.channel')
-                            : t('dashboard.stats.model')}
+                          {req.resourceType === 'channel' ? t('dashboard.stats.channel') : t('dashboard.stats.model')}
                         </Badge>
-                        <span className='text-sm font-medium'>
-                          #{req.resourceID}
-                        </span>
+                        <span className='text-sm font-medium'>#{req.resourceID}</span>
                       </div>
                       <div className='text-muted-foreground mt-1 flex items-center gap-2 text-xs'>
                         <span>
@@ -188,7 +171,7 @@ export function ReviewQueue() {
                       <Button
                         size='sm'
                         variant='outline'
-                        className='h-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950'
+                        className='h-8 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-950'
                         onClick={() =>
                           setDialogState({
                             open: true,
@@ -204,7 +187,7 @@ export function ReviewQueue() {
                       <Button
                         size='sm'
                         variant='outline'
-                        className='h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950'
+                        className='h-8 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950'
                         onClick={() =>
                           setDialogState({
                             open: true,

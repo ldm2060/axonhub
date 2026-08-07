@@ -1,23 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { antigravityOAuthExchange, antigravityOAuthStart } from '@/features/channels/data/antigravity';
 import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
-import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
-import { useQuotaMonitorTemplates } from '../data/templates';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { Variable, DisplayField, VariableInput, DisplayFieldInput } from '../data/schema';
-import { VariableForm } from './variable-form';
+import { useQuotaMonitorTemplates } from '../data/templates';
+import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { DisplayFieldForm } from './display-field-form';
 import { TestConnection } from './test-connection';
+import { VariableForm } from './variable-form';
 
 const MASKED_API_KEY = '••••••••';
 
@@ -33,9 +33,8 @@ export function EditChannelDialog() {
   const isBuiltin = source === 'builtin';
 
   const templates = useQuotaMonitorTemplates();
-  const templateForChannel = isTemplate && currentChannel?.providerType
-    ? templates.find(t => t.providerType === currentChannel.providerType)
-    : undefined;
+  const templateForChannel =
+    isTemplate && currentChannel?.providerType ? templates.find((t) => t.providerType === currentChannel.providerType) : undefined;
 
   const [name, setName] = useState('');
   const [apiUrl, setApiUrl] = useState('');
@@ -189,11 +188,7 @@ export function EditChannelDialog() {
     }
   }
 
-  const canSubmit = isTemplate
-    ? name.trim()
-    : isBuiltin
-      ? name.trim()
-      : name.trim() && apiUrl.trim() && !headersError;
+  const canSubmit = isTemplate ? name.trim() : isBuiltin ? name.trim() : name.trim() && apiUrl.trim() && !headersError;
 
   return (
     <Dialog
@@ -202,23 +197,23 @@ export function EditChannelDialog() {
         if (!v) setOpen(null);
       }}
     >
-      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-2xl">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className='flex max-h-[90vh] flex-col sm:max-w-2xl'>
+        <DialogHeader className='flex-shrink-0'>
           <DialogTitle>{t('usageMonitor.editChannel')}</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-          <div className="space-y-5 pb-4">
+        <div className='min-h-0 flex-1 overflow-y-auto pr-1'>
+          <div className='space-y-5 pb-4'>
             {/* Template channel: Credential */}
             {isTemplate && authType === 'oauth' && currentChannel?.providerType === 'antigravity' && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{templateForChannel?.credentialLabel || t('usageMonitor.apiKey')}</Label>
-                <div className="rounded-md border p-3">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className='rounded-md border p-3'>
+                  <div className='flex flex-wrap items-center gap-2'>
                     <Button
-                      type="button"
-                      variant="secondary"
+                      type='button'
+                      variant='secondary'
                       onClick={() => antigravityOAuth.start()}
                       disabled={antigravityOAuth.isStarting}
                     >
@@ -228,8 +223,8 @@ export function EditChannelDialog() {
                     </Button>
                     {antigravityOAuth.authUrl && (
                       <Button
-                        type="button"
-                        variant="ghost"
+                        type='button'
+                        variant='ghost'
                         onClick={() => window.open(antigravityOAuth.authUrl || '', '_blank', 'noopener,noreferrer')}
                       >
                         {t('channels.dialogs.antigravity.buttons.openOAuthLink')}
@@ -237,15 +232,15 @@ export function EditChannelDialog() {
                     )}
                   </div>
                   {antigravityOAuth.authUrl && (
-                    <div className="mt-3 space-y-2">
+                    <div className='mt-3 space-y-2'>
                       <Input
                         value={antigravityOAuth.callbackUrl}
                         onChange={(e) => antigravityOAuth.setCallbackUrl(e.target.value)}
                         placeholder={t('channels.dialogs.antigravity.placeholders.callbackUrl')}
-                        className="font-mono text-xs"
+                        className='font-mono text-xs'
                       />
                       <Button
-                        type="button"
+                        type='button'
                         onClick={() => antigravityOAuth.exchange()}
                         disabled={antigravityOAuth.isExchanging || !antigravityOAuth.sessionId}
                       >
@@ -256,65 +251,65 @@ export function EditChannelDialog() {
                     </div>
                   )}
                   {apiKey && apiKey !== MASKED_API_KEY && (
-                    <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                    <p className='mt-2 text-xs text-green-600 dark:text-green-400'>
                       {t('channels.dialogs.oauth.messages.credentialsImported')}
                     </p>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {apiKey === MASKED_API_KEY ? t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key' : ''}
+                <p className='text-muted-foreground text-xs'>
+                  {apiKey === MASKED_API_KEY ? (t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key') : ''}
                 </p>
               </div>
             )}
             {isTemplate && !(authType === 'oauth' && currentChannel?.providerType === 'antigravity') && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{templateForChannel?.credentialLabel || t('usageMonitor.apiKey')}</Label>
-                <div className="relative">
+                <div className='relative'>
                   <Input
                     type={showApiKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder={templateForChannel?.credentialPlaceholder || t('usageMonitor.apiKeyPlaceholder')}
-                    className="pr-10 font-mono"
+                    className='pr-10 font-mono'
                   />
                   <button
-                    type="button"
+                    type='button'
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className='text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2'
                   >
-                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showApiKey ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {apiKey === MASKED_API_KEY ? t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key' : ''}
+                <p className='text-muted-foreground text-xs'>
+                  {apiKey === MASKED_API_KEY ? (t('usageMonitor.apiKeyUnchangedHint') ?? 'Leave unchanged to keep current key') : ''}
                 </p>
               </div>
             )}
 
             {/* Custom: API URL */}
             {!isTemplate && !isBuiltin && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{t('usageMonitor.apiUrl')}</Label>
                 <Input
                   value={apiUrl}
                   onChange={(e) => setApiUrl(e.target.value)}
-                  placeholder="https://api.example.com/v1/usage"
-                  className="font-mono"
+                  placeholder='https://api.example.com/v1/usage'
+                  className='font-mono'
                 />
               </div>
             )}
 
             {/* Custom: API Method */}
             {!isTemplate && !isBuiltin && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{t('usageMonitor.apiMethod')}</Label>
                 <Select value={apiMethod} onValueChange={(v) => setApiMethod(v as 'GET' | 'POST')}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className='w-full'>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="GET">GET</SelectItem>
-                    <SelectItem value="POST">POST</SelectItem>
+                    <SelectItem value='GET'>GET</SelectItem>
+                    <SelectItem value='POST'>POST</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -322,84 +317,66 @@ export function EditChannelDialog() {
 
             {/* Custom: API Headers */}
             {!isTemplate && !isBuiltin && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{t('usageMonitor.apiHeaders')}</Label>
                 <Textarea
                   value={apiHeaders}
                   onChange={(e) => validateHeaders(e.target.value)}
                   placeholder='{"Authorization": "Bearer sk-..."}'
-                  className="font-mono min-h-20"
+                  className='min-h-20 font-mono'
                 />
-                {headersError && (
-                  <p className="text-xs text-destructive">{headersError}</p>
-                )}
+                {headersError && <p className='text-destructive text-xs'>{headersError}</p>}
               </div>
             )}
 
             {/* Custom: API Body */}
             {!isTemplate && !isBuiltin && apiMethod === 'POST' && (
-              <div className="space-y-1.5">
+              <div className='space-y-1.5'>
                 <Label>{t('usageMonitor.apiBody')}</Label>
                 <Textarea
                   value={apiBody}
                   onChange={(e) => setApiBody(e.target.value)}
                   placeholder='{"key": "value"}'
-                  className="font-mono min-h-20"
+                  className='min-h-20 font-mono'
                 />
               </div>
             )}
 
             {/* Channel Name */}
-            <div className="space-y-1.5">
+            <div className='space-y-1.5'>
               <Label>{t('usageMonitor.channelName')}</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t('usageMonitor.channelName')}
-              />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('usageMonitor.channelName')} />
             </div>
 
             {/* Poll Interval */}
-            <div className="space-y-1.5">
+            <div className='space-y-1.5'>
               <Label>{t('usageMonitor.pollInterval')}</Label>
               <Input
-                type="number"
+                type='number'
                 min={1}
                 value={pollIntervalMin}
                 onChange={(e) => setPollIntervalMin(parseInt(e.target.value, 10) || 1)}
               />
-              <p className="text-xs text-muted-foreground">{t('usageMonitor.pollIntervalUnit')}</p>
+              <p className='text-muted-foreground text-xs'>{t('usageMonitor.pollIntervalUnit')}</p>
             </div>
 
             {/* Variable Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-semibold">{t('usageMonitor.variableSection')}</Label>
-                {isTemplate && <Lock className="size-3.5 text-muted-foreground" />}
+            <div className='space-y-3'>
+              <div className='flex items-center gap-2'>
+                <Label className='text-sm font-semibold'>{t('usageMonitor.variableSection')}</Label>
+                {isTemplate && <Lock className='text-muted-foreground size-3.5' />}
               </div>
-              {isTemplate && (
-                <p className="text-xs text-muted-foreground">{t('usageMonitor.templateVariablesHint')}</p>
-              )}
-              <VariableForm
-                variables={variables}
-                onChange={setVariables}
-                readOnly={isTemplate}
-              />
+              {isTemplate && <p className='text-muted-foreground text-xs'>{t('usageMonitor.templateVariablesHint')}</p>}
+              <VariableForm variables={variables} onChange={setVariables} readOnly={isTemplate} />
             </div>
 
             {/* Display Field Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-semibold">{t('usageMonitor.displayFieldSection')}</Label>
+            <div className='space-y-3'>
+              <div className='flex items-center gap-2'>
+                <Label className='text-sm font-semibold'>{t('usageMonitor.displayFieldSection')}</Label>
               </div>
-              {isTemplate && (
-                <p className="text-xs text-muted-foreground">{t('usageMonitor.templateDisplayFieldsHint')}</p>
-              )}
-              <DisplayFieldForm
-                displayFields={displayFields}
-                variables={variables}
-                onChange={setDisplayFields}
-              />
+              {isTemplate && <p className='text-muted-foreground text-xs'>{t('usageMonitor.templateDisplayFieldsHint')}</p>}
+              <DisplayFieldForm displayFields={displayFields} variables={variables} onChange={setDisplayFields} />
             </div>
 
             {/* Test Connection */}
@@ -416,15 +393,11 @@ export function EditChannelDialog() {
           </div>
         </div>
 
-        <DialogFooter className="flex-shrink-0">
-          <Button type="button" variant="outline" onClick={() => setOpen(null)}>
+        <DialogFooter className='flex-shrink-0'>
+          <Button type='button' variant='outline' onClick={() => setOpen(null)}>
             {t('common.buttons.cancel')}
           </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || updateMutation.isPending}
-          >
+          <Button type='button' onClick={handleSubmit} disabled={!canSubmit || updateMutation.isPending}>
             {updateMutation.isPending ? t('common.buttons.saving') : t('common.buttons.confirm')}
           </Button>
         </DialogFooter>

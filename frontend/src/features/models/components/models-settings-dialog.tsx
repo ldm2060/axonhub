@@ -46,7 +46,16 @@ export function ModelSettingsDialog() {
     };
     await updateModelSettings.mutateAsync(input);
     setOpen(null);
-  }, [updateModelSettings, fallbackEnabled, queryAllChannelModels, defaultModelAPIIncludeAll, autoReasoningEffort, modelBlacklistRegex, settings?.developerSettings, setOpen]);
+  }, [
+    updateModelSettings,
+    fallbackEnabled,
+    queryAllChannelModels,
+    defaultModelAPIIncludeAll,
+    autoReasoningEffort,
+    modelBlacklistRegex,
+    settings?.developerSettings,
+    setOpen,
+  ]);
 
   const handleClose = useCallback(() => {
     setOpen(null);
@@ -118,7 +127,7 @@ export function ModelSettingsDialog() {
                   {t('models.dialogs.settings.modelBlacklistRegex.label')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className='pt-1 space-y-2'>
+              <CardContent className='space-y-2 pt-1'>
                 <p className='text-muted-foreground text-sm'>{t('models.dialogs.settings.modelBlacklistRegex.description')}</p>
                 <Input
                   id='model-blacklist-regex'
@@ -174,11 +183,11 @@ export function ModelSettingsDialog() {
           </div>
         )}
 
-        <DialogFooter className='flex shrink-0 flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-2'>
-          <Button variant='outline' onClick={handleClose} disabled={updateModelSettings.isPending} className='w-full sm:w-auto h-10 sm:h-9'>
+        <DialogFooter className='flex shrink-0 flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-2'>
+          <Button variant='outline' onClick={handleClose} disabled={updateModelSettings.isPending} className='h-10 w-full sm:h-9 sm:w-auto'>
             {t('common.buttons.cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={updateModelSettings.isPending || isLoading} className='w-full sm:w-auto h-10 sm:h-9'>
+          <Button onClick={handleSave} disabled={updateModelSettings.isPending || isLoading} className='h-10 w-full sm:h-9 sm:w-auto'>
             {updateModelSettings.isPending ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />

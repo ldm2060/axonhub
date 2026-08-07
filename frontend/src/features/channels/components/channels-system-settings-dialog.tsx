@@ -3,15 +3,15 @@
 import React, { useCallback } from 'react';
 import { Loader2, Settings2, Activity, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useChannelSetting, useUpdateChannelSetting, type AutoSyncFrequency, type ProbeFrequency } from '@/features/system/data/system';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useChannels } from '../context/channels-context';
 
 const MAX_PROMPT_CODE_POINTS = 4096;
@@ -80,7 +80,17 @@ export function ChannelsSystemSettingsDialog() {
       testUserPrompt,
     });
     setOpen(null);
-  }, [updateSettings, probeEnabled, probeFrequency, autoSyncFrequency, testSystemPrompt, testUserPrompt, canWriteSettings, promptTooLong, setOpen]);
+  }, [
+    updateSettings,
+    probeEnabled,
+    probeFrequency,
+    autoSyncFrequency,
+    testSystemPrompt,
+    testUserPrompt,
+    canWriteSettings,
+    promptTooLong,
+    setOpen,
+  ]);
 
   const handleClose = useCallback(() => {
     setOpen(null);
@@ -117,7 +127,9 @@ export function ChannelsSystemSettingsDialog() {
                   <div className='flex-1 pr-4'>
                     <p className='text-sm font-medium'>{t('channels.dialogs.systemSettings.channelProbe.enabledLabel')}</p>
                     <p className='text-muted-foreground text-sm'>{t('channels.dialogs.systemSettings.channelProbe.enabledDescription')}</p>
-                    <p className='text-muted-foreground text-xs mt-1'>{t('channels.dialogs.systemSettings.channelProbe.probeDescription')}</p>
+                    <p className='text-muted-foreground mt-1 text-xs'>
+                      {t('channels.dialogs.systemSettings.channelProbe.probeDescription')}
+                    </p>
                   </div>
                   <Switch
                     id='probe-enabled'
@@ -144,8 +156,12 @@ export function ChannelsSystemSettingsDialog() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className='text-muted-foreground text-xs'>{t('channels.dialogs.systemSettings.channelProbe.frequencyDescription')}</p>
-                    <p className='text-muted-foreground text-xs mt-1'>{t('channels.dialogs.systemSettings.channelProbe.frequencyWarning')}</p>
+                    <p className='text-muted-foreground text-xs'>
+                      {t('channels.dialogs.systemSettings.channelProbe.frequencyDescription')}
+                    </p>
+                    <p className='text-muted-foreground mt-1 text-xs'>
+                      {t('channels.dialogs.systemSettings.channelProbe.frequencyWarning')}
+                    </p>
                   </div>
                 )}
               </CardContent>

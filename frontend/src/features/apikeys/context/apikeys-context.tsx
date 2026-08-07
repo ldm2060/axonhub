@@ -62,7 +62,15 @@ export function ApiKeysProvider({ children }: { children: React.ReactNode }) {
   const closeDialog = (type?: ApiKeyDialogType) => {
     if (type) {
       setIsDialogOpen((prev) => ({ ...prev, [type]: false }));
-      if (type === 'delete' || type === 'edit' || type === 'view' || type === 'archive' || type === 'status' || type === 'profiles' || type === 'rotate') {
+      if (
+        type === 'delete' ||
+        type === 'edit' ||
+        type === 'view' ||
+        type === 'archive' ||
+        type === 'status' ||
+        type === 'profiles' ||
+        type === 'rotate'
+      ) {
         setSelectedApiKey(null);
       }
       if (type === 'bulkDisable' || type === 'bulkArchive' || type === 'bulkEnable') {

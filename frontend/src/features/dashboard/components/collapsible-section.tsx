@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -31,21 +31,16 @@ export function CollapsibleSection({ title, icon, children, storageKey, defaultO
   return (
     <div className='space-y-4'>
       <button
-        type="button"
+        type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className='flex w-full items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:bg-accent/50'
+        className='bg-card hover:bg-accent/50 flex w-full items-center justify-between rounded-lg border p-4 text-left transition-colors'
       >
         <div className='flex items-center gap-3'>
-          <div className='flex h-8 w-8 items-center justify-center rounded-md bg-primary/10'>
-            {icon}
-          </div>
+          <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-md'>{icon}</div>
           <span className='text-lg font-semibold'>{title}</span>
         </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-        >
-          <ChevronDown className='h-5 w-5 text-muted-foreground' />
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeInOut' }}>
+          <ChevronDown className='text-muted-foreground h-5 w-5' />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>

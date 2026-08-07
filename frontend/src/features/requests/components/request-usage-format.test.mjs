@@ -1,16 +1,14 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
-import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
+import ts from 'typescript';
 
 const source = readFileSync(join(import.meta.dirname, 'request-usage-format.ts'), 'utf8');
 const transpiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2023 },
 }).outputText;
-const { formatRequestUsageCost } = await import(
-  `data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`
-);
+const { formatRequestUsageCost } = await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`);
 
 test('does not invoke currency formatting without a positive cost and currency code', () => {
   let calls = 0;
@@ -26,5 +24,8 @@ test('does not invoke currency formatting without a positive cost and currency c
 });
 
 test('formats a positive cost when currency settings are ready', () => {
-  assert.equal(formatRequestUsageCost(1.25, 'USD', (value, currency) => `${currency} ${value}`), 'USD 1.25');
+  assert.equal(
+    formatRequestUsageCost(1.25, 'USD', (value, currency) => `${currency} ${value}`),
+    'USD 1.25'
+  );
 });

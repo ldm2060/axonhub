@@ -363,16 +363,7 @@ export const disabledAPIKeySchema = z.object({
 export type DisabledAPIKey = z.infer<typeof disabledAPIKeySchema>;
 
 // Quota Monitor Binding Condition Operator
-export const quotaMonitorConditionOperatorSchema = z.enum([
-  '<',
-  '<=',
-  '=',
-  '!=',
-  '>=',
-  '>',
-  'contains',
-  'not_contains',
-]);
+export const quotaMonitorConditionOperatorSchema = z.enum(['<', '<=', '=', '!=', '>=', '>', 'contains', 'not_contains']);
 export type QuotaMonitorConditionOperator = z.infer<typeof quotaMonitorConditionOperatorSchema>;
 
 // Quota Monitor Binding Condition
@@ -626,7 +617,9 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
       access_token: z.string().min(1),
       refresh_token: isCopilot ? z.string().optional() : z.string().min(1),
       expires_at: isKimiCode ? z.string().min(1) : z.string().optional(),
-      kimi_code: isKimiCode ? z.object({ models: z.array(z.object({ id: z.string().min(1), context_length: z.number().positive() })).min(1) }) : z.unknown().optional(),
+      kimi_code: isKimiCode
+        ? z.object({ models: z.array(z.object({ id: z.string().min(1), context_length: z.number().positive() })).min(1) })
+        : z.unknown().optional(),
     })
     .safeParse(json);
 
@@ -686,7 +679,11 @@ export const createChannelInputSchema = z
   })
   .superRefine((data, ctx) => {
     const isOAuthType =
-      data.type === 'codex' || data.type === 'claudecode' || data.type === 'antigravity' || data.type === 'github_copilot' || data.type === 'kimi_code';
+      data.type === 'codex' ||
+      data.type === 'claudecode' ||
+      data.type === 'antigravity' ||
+      data.type === 'github_copilot' ||
+      data.type === 'kimi_code';
     const hasApiKey = data.credentials.apiKey && data.credentials.apiKey.trim().length > 0;
     const hasApiKeys = data.credentials.apiKeys && data.credentials.apiKeys.some((k) => k.trim().length > 0);
 

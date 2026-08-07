@@ -113,7 +113,7 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
           tickLine={true}
           axisLine={true}
           padding={{ right: 24 }}
-        // padding={{ left: 16, right: 16 }}
+          // padding={{ left: 16, right: 16 }}
         />
         <YAxis
           yAxisId='left'

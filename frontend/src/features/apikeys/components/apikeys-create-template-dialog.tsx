@@ -207,10 +207,7 @@ export function ApiKeyCreateTemplateDialog({ open, onOpenChange }: ApiKeyCreateT
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || 'default'}
-                          >
+                          <Select onValueChange={field.onChange} value={field.value || 'default'}>
                             <SelectTrigger className='w-[140px]'>
                               <SelectValue placeholder={t('apikeys.profiles.loadBalancerStrategyPlaceholder')} />
                             </SelectTrigger>
@@ -250,7 +247,9 @@ export function ApiKeyCreateTemplateDialog({ open, onOpenChange }: ApiKeyCreateT
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='default'>{t('apikeys.profiles.traceStickyModePlaceholder')}</SelectItem>
-                              <SelectItem value='prefer_previous_channel'>{t('system.retry.traceStickyMode.options.preferPreviousChannel')}</SelectItem>
+                              <SelectItem value='prefer_previous_channel'>
+                                {t('system.retry.traceStickyMode.options.preferPreviousChannel')}
+                              </SelectItem>
                               <SelectItem value='disabled'>{t('system.retry.traceStickyMode.options.disabled')}</SelectItem>
                             </SelectContent>
                           </Select>

@@ -9,10 +9,7 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout>
-      <TwoColumnAuth
-        title={t('auth.forgotPassword.title')}
-        description={t('auth.forgotPassword.description')}
-      >
+      <TwoColumnAuth title={t('auth.forgotPassword.title')} description={t('auth.forgotPassword.description')}>
         <ForgotPasswordForm />
         <p className='text-muted-foreground mt-4 text-center text-sm'>
           {t('auth.forgotPassword.noAccount')}{' '}

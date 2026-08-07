@@ -1,24 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AboutSettings } from './about-settings';
+import { BackupSettings } from './backup-settings';
 import { BrandSettings } from './brand-settings';
 import { DiagnosticsSettings } from './diagnostics-settings';
 import { EmailSettingsTab } from './email-settings';
 import { GeneralSettings } from './general-settings';
+import { ProxyPresetsSettings } from './proxy-presets-settings';
 import { QuotaSettings } from './quota-settings';
 import { RegistrationSettingsTab } from './registration-settings';
 import { RetrySettings } from './retry-settings';
-import { StreamingSettings } from './streaming-settings';
 import { SecuritySettings } from './security-settings';
 import { StorageSettings } from './storage-settings';
-import { BackupSettings } from './backup-settings';
-import { ProxyPresetsSettings } from './proxy-presets-settings';
+import { StreamingSettings } from './streaming-settings';
 import { WebhookSettings } from './webhook-settings';
-import { usePermissions } from '@/hooks/usePermissions';
 
-type SystemTabKey = 'general' | 'security' | 'brand' | 'registration' | 'email' | 'storage' | 'retry' | 'streaming' | 'webhook' | 'proxy' | 'quota' | 'backup' | 'diagnostics' | 'about';
+type SystemTabKey =
+  | 'general'
+  | 'security'
+  | 'brand'
+  | 'registration'
+  | 'email'
+  | 'storage'
+  | 'retry'
+  | 'streaming'
+  | 'webhook'
+  | 'proxy'
+  | 'quota'
+  | 'backup'
+  | 'diagnostics'
+  | 'about';
 
 const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['backup', 'diagnostics']);
 

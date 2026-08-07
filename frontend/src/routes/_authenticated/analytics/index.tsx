@@ -4,7 +4,7 @@ import AnalyticsPage from '@/features/analytics';
 
 function ProtectedAnalytics() {
   return (
-    <RouteGuard requiredScopes={['read_dashboard']} scopeLevel="system">
+    <RouteGuard requiredScopes={['read_dashboard']} scopeLevel='system'>
       <AnalyticsPage />
     </RouteGuard>
   );

@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Loader2, FileSearch, List, GitBranch, Waypoints, Maximize2, Minimize2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { SpanSection } from '@/features/traces/components/span-section';
 import { TraceFlatTimeline } from '@/features/traces/components/trace-flat-timeline';
 import { TraceFlowTimeline } from '@/features/traces/components/trace-flow-timeline';
@@ -66,17 +66,22 @@ export function TraceDrawer({ open, onOpenChange, traceId }: TraceDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side='right' className={cn('w-full p-0 transition-all duration-300', isFullscreen ? 'sm:max-w-none' : 'sm:max-w-[900px] lg:max-w-[1100px]')}>
-        <SheetHeader className={cn(
-          'border-b border-border/50 bg-gradient-to-r from-background via-background to-muted/20 px-6 py-4',
-          isFullscreen && 'fixed top-0 left-0 right-0 z-50'
-        )}>
+      <SheetContent
+        side='right'
+        className={cn('w-full p-0 transition-all duration-300', isFullscreen ? 'sm:max-w-none' : 'sm:max-w-[900px] lg:max-w-[1100px]')}
+      >
+        <SheetHeader
+          className={cn(
+            'border-border/50 from-background via-background to-muted/20 border-b bg-gradient-to-r px-6 py-4',
+            isFullscreen && 'fixed top-0 right-0 left-0 z-50'
+          )}
+        >
           <div className='flex items-center justify-between'>
             <SheetTitle className='flex items-center gap-2 text-lg font-semibold'>
-              <span className='h-5 w-1 rounded-full bg-gradient-to-b from-primary/60 via-primary to-primary/60' />
+              <span className='from-primary/60 via-primary to-primary/60 h-5 w-1 rounded-full bg-gradient-to-b' />
               {t('traces.detail.title')}
             </SheetTitle>
-            
+
             {/* View Mode Switcher */}
             <div className='flex items-center'>
               <div className='bg-muted inline-flex items-center rounded-md p-0.5'>
@@ -122,12 +127,7 @@ export function TraceDrawer({ open, onOpenChange, traceId }: TraceDrawerProps) {
 
               {/* Close Button (only in fullscreen) */}
               {isFullscreen && (
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='ml-1.5 h-8 w-8 p-0'
-                  onClick={() => onOpenChange(false)}
-                >
+                <Button variant='ghost' size='sm' className='ml-1.5 h-8 w-8 p-0' onClick={() => onOpenChange(false)}>
                   <X className='h-4 w-4' />
                 </Button>
               )}
@@ -138,26 +138,25 @@ export function TraceDrawer({ open, onOpenChange, traceId }: TraceDrawerProps) {
         </SheetHeader>
 
         {isLoading ? (
-          <div className='flex h-[calc(100vh-80px)] items-center justify-center bg-gradient-to-b from-background to-muted/20'>
+          <div className='from-background to-muted/20 flex h-[calc(100vh-80px)] items-center justify-center bg-gradient-to-b'>
             <div className='space-y-4 text-center'>
               <div className='relative mx-auto h-12 w-12'>
-                <div className='absolute inset-0 rounded-full border-2 border-primary/10' />
-                <div className='absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin' />
-                <Loader2 className='absolute inset-0 m-auto h-6 w-6 text-primary/60 animate-spin' />
+                <div className='border-primary/10 absolute inset-0 rounded-full border-2' />
+                <div className='border-t-primary absolute inset-0 animate-spin rounded-full border-2 border-transparent' />
+                <Loader2 className='text-primary/60 absolute inset-0 m-auto h-6 w-6 animate-spin' />
               </div>
               <p className='text-muted-foreground text-sm font-medium'>{t('common.loading')}</p>
             </div>
           </div>
         ) : effectiveRootSegment ? (
-          <div className={cn(
-            'flex bg-gradient-to-br from-background via-background to-muted/10',
-            isFullscreen ? 'fixed inset-0 z-40 pt-16' : 'h-[calc(100vh-80px)]'
-          )}>
+          <div
+            className={cn(
+              'from-background via-background to-muted/10 flex bg-gradient-to-br',
+              isFullscreen ? 'fixed inset-0 z-40 pt-16' : 'h-[calc(100vh-80px)]'
+            )}
+          >
             {/* Left: Timeline */}
-            <div className={cn(
-              'flex-1 min-w-0 overflow-auto',
-              isFullscreen ? 'p-4' : 'p-6'
-            )}>
+            <div className={cn('min-w-0 flex-1 overflow-auto', isFullscreen ? 'p-4' : 'p-6')}>
               {viewMode === 'flat' ? (
                 <TraceFlatTimeline
                   trace={effectiveRootSegment}
@@ -181,23 +180,27 @@ export function TraceDrawer({ open, onOpenChange, traceId }: TraceDrawerProps) {
             </div>
 
             {/* Right: Span Detail */}
-            <div className={cn(
-              'border-border/50 bg-card/50 shrink-0 overflow-y-auto border-l backdrop-blur-sm transition-all duration-300',
-              isFullscreen ? 'w-[420px]' : 'w-[380px] lg:w-[420px]'
-            )}>
+            <div
+              className={cn(
+                'border-border/50 bg-card/50 shrink-0 overflow-y-auto border-l backdrop-blur-sm transition-all duration-300',
+                isFullscreen ? 'w-[420px]' : 'w-[380px] lg:w-[420px]'
+              )}
+            >
               <SpanSection selectedTrace={selectedTrace} selectedSpan={selectedSpan} selectedSpanType={selectedSpanType} />
             </div>
           </div>
         ) : (
-          <div className={cn(
-            'flex items-center justify-center bg-gradient-to-b from-background to-muted/20',
-            isFullscreen ? 'fixed inset-0 z-40 pt-16' : 'h-[calc(100vh-80px)]'
-          )}>
+          <div
+            className={cn(
+              'from-background to-muted/20 flex items-center justify-center bg-gradient-to-b',
+              isFullscreen ? 'fixed inset-0 z-40 pt-16' : 'h-[calc(100vh-80px)]'
+            )}
+          >
             <div className='space-y-4 text-center'>
               <div className='relative mx-auto h-16 w-16'>
-                <div className='absolute inset-0 rounded-full bg-muted/50' />
+                <div className='bg-muted/50 absolute inset-0 rounded-full' />
                 <div className='absolute inset-0 flex items-center justify-center'>
-                  <FileSearch className='h-7 w-7 text-muted-foreground/60' />
+                  <FileSearch className='text-muted-foreground/60 h-7 w-7' />
                 </div>
               </div>
               <div className='space-y-1'>

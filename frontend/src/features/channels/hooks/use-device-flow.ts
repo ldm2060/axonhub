@@ -37,43 +37,83 @@ export function useDeviceFlow<T>({ start: startRequest, poll: pollRequest, onSuc
   const intervalRef = useRef(5);
   const onSuccessRef = useRef(onSuccess);
 
-  useEffect(() => { onSuccessRef.current = onSuccess; }, [onSuccess]);
-  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  }, [onSuccess]);
+  useEffect(
+    () => () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    },
+    []
+  );
 
   const reset = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = null;
-    setUserCode(null); setVerificationUri(null); setSessionId(null); setExpiresAt(null); setInterval(5);
-    intervalRef.current = 5; setIsPolling(false); setError(null); setIsComplete(false);
+    setUserCode(null);
+    setVerificationUri(null);
+    setSessionId(null);
+    setExpiresAt(null);
+    setInterval(5);
+    intervalRef.current = 5;
+    setIsPolling(false);
+    setError(null);
+    setIsComplete(false);
   }, []);
 
-  const poll = useCallback(async (activeSession: string, expiry: number) => {
-    if (Date.now() >= expiry) { setIsPolling(false); setError(t('channels.dialogs.oauth.errors.deviceFlowExpired')); return; }
-    try {
-      const result = await pollRequest({ session_id: activeSession });
-      if (result.status === 'complete' && result.completion !== undefined) {
-        setIsPolling(false); setIsComplete(true); onSuccessRef.current?.(result.completion);
-        toast.success(t('channels.dialogs.oauth.messages.credentialsImported'));
+  const poll = useCallback(
+    async (activeSession: string, expiry: number) => {
+      if (Date.now() >= expiry) {
+        setIsPolling(false);
+        setError(t('channels.dialogs.oauth.errors.deviceFlowExpired'));
         return;
       }
-      if (result.status === 'slow_down') { intervalRef.current *= 2; setInterval(intervalRef.current); }
-      if (result.status === 'pending' || result.status === 'slow_down') {
-        timeoutRef.current = window.setTimeout(() => { void poll(activeSession, expiry); }, intervalRef.current * 1000);
-        return;
+      try {
+        const result = await pollRequest({ session_id: activeSession });
+        if (result.status === 'complete' && result.completion !== undefined) {
+          setIsPolling(false);
+          setIsComplete(true);
+          onSuccessRef.current?.(result.completion);
+          toast.success(t('channels.dialogs.oauth.messages.credentialsImported'));
+          return;
+        }
+        if (result.status === 'slow_down') {
+          intervalRef.current *= 2;
+          setInterval(intervalRef.current);
+        }
+        if (result.status === 'pending' || result.status === 'slow_down') {
+          timeoutRef.current = window.setTimeout(() => {
+            void poll(activeSession, expiry);
+          }, intervalRef.current * 1000);
+          return;
+        }
+        setIsPolling(false);
+        setError(result.message || 'Device authorization failed');
+      } catch (cause) {
+        setIsPolling(false);
+        setError(cause instanceof Error ? cause.message : String(cause));
       }
-      setIsPolling(false); setError(result.message || 'Device authorization failed');
-    } catch (cause) { setIsPolling(false); setError(cause instanceof Error ? cause.message : String(cause)); }
-  }, [pollRequest, t]);
+    },
+    [pollRequest, t]
+  );
 
   const start = useCallback(async () => {
-    reset(); setIsPolling(true);
+    reset();
+    setIsPolling(true);
     try {
       const result = await startRequest();
       const expiry = Date.now() + result.expires_in * 1000;
-      setUserCode(result.user_code); setVerificationUri(result.verification_uri_complete || result.verification_uri);
-      setSessionId(result.session_id); setExpiresAt(expiry); setInterval(result.interval); intervalRef.current = result.interval;
+      setUserCode(result.user_code);
+      setVerificationUri(result.verification_uri_complete || result.verification_uri);
+      setSessionId(result.session_id);
+      setExpiresAt(expiry);
+      setInterval(result.interval);
+      intervalRef.current = result.interval;
       void poll(result.session_id, expiry);
-    } catch (cause) { setIsPolling(false); setError(cause instanceof Error ? cause.message : String(cause)); }
+    } catch (cause) {
+      setIsPolling(false);
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
   }, [poll, reset, startRequest]);
 
   return { userCode, verificationUri, sessionId, expiresAt, interval, isPolling, error, isComplete, start, reset };

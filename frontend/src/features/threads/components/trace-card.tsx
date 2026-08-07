@@ -1,10 +1,10 @@
 import { format } from 'date-fns';
 import { zhCN, enUS } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, User, Bot, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { Trace } from '@/features/traces/data/schema';
 
 interface TraceCardProps {
@@ -20,35 +20,30 @@ export function TraceCard({ trace, onViewTrace, index }: TraceCardProps) {
   const isArchived = trace.status === 'archived';
 
   return (
-    <Card className='group relative overflow-hidden border border-border/50 bg-gradient-to-br from-card to-card/95 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-border hover:-translate-y-0.5'>
+    <Card className='group border-border/50 from-card to-card/95 hover:border-border relative overflow-hidden border bg-gradient-to-br shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg'>
       {/* Top accent line */}
-      <div className='absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
-      
+      <div className='from-primary/60 via-primary to-primary/60 absolute top-0 right-0 left-0 h-0.5 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100' />
+
       <CardContent className='p-5'>
         <div className='space-y-4'>
           {/* Header: Index + Trace ID + Created At */}
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2.5'>
               {index !== undefined && (
-                <Badge 
-                  variant='secondary' 
-                  className='h-6 min-w-6 justify-center rounded-md px-2 font-mono text-xs font-medium'
-                >
+                <Badge variant='secondary' className='h-6 min-w-6 justify-center rounded-md px-2 font-mono text-xs font-medium'>
                   #{index + 1}
                 </Badge>
               )}
-              <div className='flex items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1'>
-                <span className='font-mono text-xs text-muted-foreground'>
-                  {trace.traceID}
-                </span>
+              <div className='bg-muted/50 flex items-center gap-1.5 rounded-md px-2 py-1'>
+                <span className='text-muted-foreground font-mono text-xs'>{trace.traceID}</span>
               </div>
               {isArchived && (
-                <Badge variant='outline' className='text-xs text-muted-foreground'>
+                <Badge variant='outline' className='text-muted-foreground text-xs'>
                   {t('common.status.archived', 'Archived')}
                 </Badge>
               )}
             </div>
-            <div className='flex items-center gap-1.5 text-xs text-muted-foreground/80'>
+            <div className='text-muted-foreground/80 flex items-center gap-1.5 text-xs'>
               <Clock className='h-3 w-3' />
               <span>{createdAtLabel}</span>
             </div>
@@ -60,12 +55,12 @@ export function TraceCard({ trace, onViewTrace, index }: TraceCardProps) {
             {trace.firstUserQuery && (
               <div className='flex items-start justify-end gap-2.5'>
                 <div className='flex max-w-[85%] flex-col items-end gap-1'>
-                  <div className='relative rounded-2xl rounded-tr-sm bg-gradient-to-br from-primary to-primary/90 px-4 py-2.5 text-primary-foreground shadow-sm'>
+                  <div className='from-primary to-primary/90 text-primary-foreground relative rounded-2xl rounded-tr-sm bg-gradient-to-br px-4 py-2.5 shadow-sm'>
                     <p className='text-sm leading-relaxed'>{trace.firstUserQuery}</p>
                   </div>
                 </div>
-                <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted ring-2 ring-background'>
-                  <User className='h-3.5 w-3.5 text-muted-foreground' />
+                <div className='bg-muted ring-background flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-2'>
+                  <User className='text-muted-foreground h-3.5 w-3.5' />
                 </div>
               </div>
             )}
@@ -73,11 +68,11 @@ export function TraceCard({ trace, onViewTrace, index }: TraceCardProps) {
             {/* Assistant Response */}
             {trace.firstText && (
               <div className='flex items-start gap-2.5'>
-                <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-2 ring-background'>
-                  <Bot className='h-3.5 w-3.5 text-primary' />
+                <div className='bg-primary/10 ring-background flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-2'>
+                  <Bot className='text-primary h-3.5 w-3.5' />
                 </div>
                 <div className='flex max-w-[85%] flex-col gap-1'>
-                  <div className='relative rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-foreground shadow-sm'>
+                  <div className='bg-muted text-foreground relative rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm'>
                     <p className='text-sm leading-relaxed whitespace-pre-wrap'>{trace.firstText}</p>
                   </div>
                 </div>
@@ -91,7 +86,7 @@ export function TraceCard({ trace, onViewTrace, index }: TraceCardProps) {
               variant='ghost'
               size='sm'
               onClick={() => onViewTrace(trace.id)}
-              className='group/button h-8 gap-1.5 rounded-lg text-xs font-medium text-muted-foreground/80 transition-colors hover:bg-primary/5 hover:text-primary'
+              className='group/button text-muted-foreground/80 hover:bg-primary/5 hover:text-primary h-8 gap-1.5 rounded-lg text-xs font-medium transition-colors'
             >
               {t('threads.detail.viewTrace')}
               <ArrowUpRight className='h-3.5 w-3.5 transition-transform group-hover/button:translate-x-0.5 group-hover/button:-translate-y-0.5' />
