@@ -331,6 +331,7 @@ func TestBackupService_Backup_SystemConfigs(t *testing.T) {
 		biz.SystemKeySecretKey:          "must-not-be-backed-up",
 		biz.SystemKeyDefaultDataStorage: "42",
 		biz.SystemKeyAutoBackupSettings: `{"data_storage_id":42}`,
+		biz.SystemKeyTurnstileSettings:  `{"enabled":true,"site_key":"public-test-key","secret_key":"turnstile-secret-must-not-be-backed-up"}`,
 	} {
 		_, err := client.System.Create().SetKey(key).SetValue(value).Save(ctx)
 		require.NoError(t, err)
@@ -341,6 +342,8 @@ func TestBackupService_Backup_SystemConfigs(t *testing.T) {
 	require.NotContains(t, string(data), "must-not-be-backed-up")
 	require.NotContains(t, string(data), `"default_data_storage_id"`)
 	require.NotContains(t, string(data), `"system_auto_backup_settings"`)
+	require.NotContains(t, string(data), `"turnstile_settings"`)
+	require.NotContains(t, string(data), "turnstile-secret-must-not-be-backed-up")
 
 	var backupData BackupData
 	require.NoError(t, json.Unmarshal(data, &backupData))

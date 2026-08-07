@@ -48,13 +48,24 @@ export function useMe(enabled = true) {
   return query;
 }
 
-export function useSignIn() {
+export type TurnstileTokenGetter = () => string | null;
+
+export function useAuthConfig() {
+  return useQuery({
+    queryKey: ['auth-config'],
+    queryFn: () => authApi.getConfig(),
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+}
+
+export function useSignIn(getTurnstileToken?: TurnstileTokenGetter) {
   const { setUser, setAccessToken } = useAuthStore((state) => state.auth);
   const router = useRouter();
 
   return useMutation({
     mutationFn: async (input: SignInInput) => {
-      return await authApi.signIn(input);
+      return await authApi.signIn(input, getTurnstileToken?.() ?? undefined);
     },
     onSuccess: (data) => {
       // Store token in localStorage
@@ -103,7 +114,6 @@ export function useSignOut() {
   };
 }
 
-
 export interface SignUpInput {
   email: string;
   password: string;
@@ -124,10 +134,10 @@ export function useSignUpAllowed() {
   });
 }
 
-export function useSendVerificationCode() {
+export function useSendVerificationCode(getTurnstileToken?: TurnstileTokenGetter) {
   return useMutation({
     mutationFn: async (email: string) => {
-      return await authApi.sendVerificationCode(email);
+      return await authApi.sendVerificationCode(email, getTurnstileToken?.() ?? undefined);
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to send verification code');
@@ -135,10 +145,10 @@ export function useSendVerificationCode() {
   });
 }
 
-export function useSignUp() {
+export function useSignUp(getTurnstileToken?: TurnstileTokenGetter) {
   return useMutation({
     mutationFn: async (input: SignUpInput) => {
-      return await authApi.signUp(input);
+      return await authApi.signUp(input, getTurnstileToken?.() ?? undefined);
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to sign up';
@@ -188,7 +198,7 @@ export function useOIDCExchange() {
     },
     onSuccess: (response) => {
       const data = response.data;
-      
+
       // Store token in localStorage
       setTokenToStorage(data.token);
 

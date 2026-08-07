@@ -605,6 +605,12 @@ type TriggerBackupPayload struct {
 	Message *string `json:"message,omitempty"`
 }
 
+type TurnstileSettings struct {
+	Enabled          bool   `json:"enabled"`
+	SiteKey          string `json:"siteKey"`
+	SecretConfigured bool   `json:"secretConfigured"`
+}
+
 type UpdateAPIKeyScopesInput struct {
 	Scopes []string `json:"scopes"`
 }
@@ -670,6 +676,12 @@ type UpdateQuotaEnforcementSettingsInput struct {
 type UpdateSecuritySettingsInput struct {
 	BlockedIPs              []string `json:"blockedIPs,omitempty"`
 	ShowRequestLogIPBanIcon *bool    `json:"showRequestLogIPBanIcon,omitempty"`
+}
+
+type UpdateTurnstileSettingsInput struct {
+	Enabled   bool    `json:"enabled"`
+	SiteKey   string  `json:"siteKey"`
+	SecretKey *string `json:"secretKey,omitempty"`
 }
 
 type UpdateUserAgentPassThroughSettingsInput struct {

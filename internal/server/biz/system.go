@@ -139,6 +139,10 @@ const (
 	// The value is JSON-encoded SecuritySettings struct.
 	SystemKeySecuritySettings = "security_settings"
 
+	// SystemKeyTurnstileSettings is the key used to store Cloudflare Turnstile settings.
+	// The value is JSON-encoded StoredTurnstileSettings.
+	SystemKeyTurnstileSettings = "turnstile_settings"
+
 	// SystemKeyKimiCodeDeviceID stores the stable AxonHub-install device
 	// identity required by Kimi Code OAuth and API requests.
 	SystemKeyKimiCodeDeviceID = "kimi_code_device_id"
@@ -164,6 +168,22 @@ type EmailSettings struct {
 	FromName      string `json:"from_name"`
 	FromAddress   string `json:"from_address"`
 	PublicURL     string `json:"public_url"`
+}
+
+// StoredTurnstileSettings is the server-side Turnstile configuration persisted in the system table.
+// The type name intentionally differs from the public GraphQL type because it contains the secret.
+type StoredTurnstileSettings struct {
+	Enabled   bool   `json:"enabled"`
+	SiteKey   string `json:"site_key"`
+	SecretKey string `json:"secret_key"`
+}
+
+// UpdateStoredTurnstileSettings contains administrator-editable Turnstile fields.
+// A blank SecretKey preserves the currently configured secret.
+type UpdateStoredTurnstileSettings struct {
+	Enabled   bool
+	SiteKey   string
+	SecretKey string
 }
 
 // SystemGeneralSettings represents general system configuration settings.
@@ -1032,6 +1052,67 @@ func (s *SystemService) SecretKey(ctx context.Context) (string, error) {
 // SetSecretKey sets a new JWT secret key.
 func (s *SystemService) SetSecretKey(ctx context.Context, secretKey string) error {
 	return s.setSystemValue(ctx, SystemKeySecretKey, secretKey)
+}
+
+// TurnstileSettings retrieves the server-side Turnstile configuration.
+// Missing settings preserve backward compatibility by leaving Turnstile disabled.
+func (s *SystemService) TurnstileSettings(ctx context.Context) (*StoredTurnstileSettings, error) {
+	ctx = authz.WithSystemBypass(ctx, "system-turnstile-settings")
+	value, err := s.getSystemValue(ctx, SystemKeyTurnstileSettings)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return &StoredTurnstileSettings{}, nil
+		}
+
+		return nil, fmt.Errorf("failed to get turnstile settings: %w", err)
+	}
+
+	var settings StoredTurnstileSettings
+	if err := json.Unmarshal([]byte(value), &settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal turnstile settings: %w", err)
+	}
+
+	settings.SiteKey = strings.TrimSpace(settings.SiteKey)
+	settings.SecretKey = strings.TrimSpace(settings.SecretKey)
+
+	return &settings, nil
+}
+
+// UpdateTurnstileSettings validates and persists Turnstile settings.
+// A blank replacement secret leaves the existing secret unchanged.
+func (s *SystemService) UpdateTurnstileSettings(ctx context.Context, input UpdateStoredTurnstileSettings) (*StoredTurnstileSettings, error) {
+	current, err := s.TurnstileSettings(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	settings := &StoredTurnstileSettings{
+		Enabled:   input.Enabled,
+		SiteKey:   strings.TrimSpace(input.SiteKey),
+		SecretKey: current.SecretKey,
+	}
+	if replacementSecret := strings.TrimSpace(input.SecretKey); replacementSecret != "" {
+		settings.SecretKey = replacementSecret
+	}
+
+	if settings.Enabled {
+		if settings.SiteKey == "" {
+			return nil, fmt.Errorf("turnstile site key is required when enabled")
+		}
+		if settings.SecretKey == "" {
+			return nil, fmt.Errorf("turnstile secret key is required when enabled")
+		}
+	}
+
+	jsonBytes, err := json.Marshal(settings)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal turnstile settings: %w", err)
+	}
+	if err := s.setSystemValue(ctx, SystemKeyTurnstileSettings, string(jsonBytes)); err != nil {
+		return nil, fmt.Errorf("failed to set turnstile settings: %w", err)
+	}
+
+	return settings, nil
 }
 
 // StoreChunks retrieves the store_chunks flag.

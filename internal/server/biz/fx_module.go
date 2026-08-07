@@ -12,6 +12,7 @@ import (
 var Module = fx.Module("biz",
 	fx.Provide(NewLiveStreamRegistry),
 	fx.Provide(NewSystemService),
+	fx.Provide(fx.Annotate(NewTurnstileService, fx.As(new(TurnstileVerifier)))),
 	fx.Provide(NewWebhookNotifier),
 	fx.Provide(NewAuthService),
 	fx.Provide(NewChannelService),

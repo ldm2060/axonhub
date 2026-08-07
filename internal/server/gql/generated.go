@@ -1228,6 +1228,7 @@ type ComplexityRoot struct {
 		UpdateSystemChannelSettings           func(childComplexity int, input biz.UpdateSystemChannelSettings) int
 		UpdateSystemGeneralSettings           func(childComplexity int, input biz.SystemGeneralSettings) int
 		UpdateSystemModelSettings             func(childComplexity int, input biz.SystemModelSettings) int
+		UpdateTurnstileSettings               func(childComplexity int, input UpdateTurnstileSettingsInput) int
 		UpdateUsageMonitorChannel             func(childComplexity int, id objects.GUID, input usage_monitor.UpdateUsageMonitorChannelInput) int
 		UpdateUser                            func(childComplexity int, id objects.GUID, input ent.UpdateUserInput) int
 		UpdateUserAgentPassThroughSettings    func(childComplexity int, input UpdateUserAgentPassThroughSettingsInput) int
@@ -1658,6 +1659,7 @@ type ComplexityRoot struct {
 		TokenStatsByModel               func(childComplexity int, timeWindow *string) int
 		TopRequestsProjects             func(childComplexity int) int
 		Traces                          func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.TraceOrder, where *ent.TraceWhereInput) int
+		TurnstileSettings               func(childComplexity int) int
 		UsageLogs                       func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.UsageLogOrder, where *ent.UsageLogWhereInput) int
 		UsageMonitorBindingSummaries    func(childComplexity int) int
 		UsageMonitorChannelByID         func(childComplexity int, id objects.GUID) int
@@ -2285,6 +2287,12 @@ type ComplexityRoot struct {
 		Success func(childComplexity int) int
 	}
 
+	TurnstileSettings struct {
+		Enabled          func(childComplexity int) int
+		SecretConfigured func(childComplexity int) int
+		SiteKey          func(childComplexity int) int
+	}
+
 	UnassociatedChannel struct {
 		Channel func(childComplexity int) int
 		Models  func(childComplexity int) int
@@ -2754,6 +2762,7 @@ type MutationResolver interface {
 	UpdateQuotaEnforcementSettings(ctx context.Context, input UpdateQuotaEnforcementSettingsInput) (bool, error)
 	UpdateProviderQuotaCollectionSettings(ctx context.Context, input UpdateProviderQuotaCollectionSettingsInput) (bool, error)
 	UpdateSecuritySettings(ctx context.Context, input UpdateSecuritySettingsInput) (bool, error)
+	UpdateTurnstileSettings(ctx context.Context, input UpdateTurnstileSettingsInput) (*TurnstileSettings, error)
 	CheckProviderQuotas(ctx context.Context) (bool, error)
 	TriggerGcCleanup(ctx context.Context, input gc.TriggerGcCleanupInput) (bool, error)
 	SaveProxyPreset(ctx context.Context, input biz.ProxyPreset) (bool, error)
@@ -2914,6 +2923,7 @@ type QueryResolver interface {
 	QuotaEnforcementSettings(ctx context.Context) (*biz.QuotaEnforcementSettings, error)
 	ProviderQuotaCollectionSettings(ctx context.Context) (*biz.ProviderQuotaCollectionSettings, error)
 	SecuritySettings(ctx context.Context) (*biz.SecuritySettings, error)
+	TurnstileSettings(ctx context.Context) (*TurnstileSettings, error)
 	ProxyPresets(ctx context.Context) ([]*biz.ProxyPreset, error)
 	UserAgentPassThroughSettings(ctx context.Context) (*UserAgentPassThroughSettings, error)
 	PassThroughSettings(ctx context.Context) (*PassThroughSettings, error)
@@ -8287,6 +8297,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateSystemModelSettings(childComplexity, args["input"].(biz.SystemModelSettings)), true
+	case "Mutation.updateTurnstileSettings":
+		if e.complexity.Mutation.UpdateTurnstileSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateTurnstileSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateTurnstileSettings(childComplexity, args["input"].(UpdateTurnstileSettingsInput)), true
 	case "Mutation.updateUsageMonitorChannel":
 		if e.complexity.Mutation.UpdateUsageMonitorChannel == nil {
 			break
@@ -10514,6 +10535,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Traces(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int), args["orderBy"].(*ent.TraceOrder), args["where"].(*ent.TraceWhereInput)), true
+	case "Query.turnstileSettings":
+		if e.complexity.Query.TurnstileSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.TurnstileSettings(childComplexity), true
 	case "Query.usageLogs":
 		if e.complexity.Query.UsageLogs == nil {
 			break
@@ -13040,6 +13067,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.TriggerBackupPayload.Success(childComplexity), true
 
+	case "TurnstileSettings.enabled":
+		if e.complexity.TurnstileSettings.Enabled == nil {
+			break
+		}
+
+		return e.complexity.TurnstileSettings.Enabled(childComplexity), true
+	case "TurnstileSettings.secretConfigured":
+		if e.complexity.TurnstileSettings.SecretConfigured == nil {
+			break
+		}
+
+		return e.complexity.TurnstileSettings.SecretConfigured(childComplexity), true
+	case "TurnstileSettings.siteKey":
+		if e.complexity.TurnstileSettings.SiteKey == nil {
+			break
+		}
+
+		return e.complexity.TurnstileSettings.SiteKey(childComplexity), true
+
 	case "UnassociatedChannel.channel":
 		if e.complexity.UnassociatedChannel.Channel == nil {
 			break
@@ -14573,6 +14619,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateSystemModelSettingsInput,
 		ec.unmarshalInputUpdateThreadInput,
 		ec.unmarshalInputUpdateTraceInput,
+		ec.unmarshalInputUpdateTurnstileSettingsInput,
 		ec.unmarshalInputUpdateUsageLogInput,
 		ec.unmarshalInputUpdateUsageMonitorChannelInput,
 		ec.unmarshalInputUpdateUserAgentPassThroughSettingsInput,
@@ -16546,6 +16593,17 @@ func (ec *executionContext) field_Mutation_updateSystemModelSettings_args(ctx co
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateSystemModelSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemModelSettings)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTurnstileSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateTurnstileSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateTurnstileSettingsInput)
 	if err != nil {
 		return nil, err
 	}
@@ -43407,6 +43465,55 @@ func (ec *executionContext) fieldContext_Mutation_updateSecuritySettings(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateTurnstileSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateTurnstileSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateTurnstileSettings(ctx, fc.Args["input"].(UpdateTurnstileSettingsInput))
+		},
+		nil,
+		ec.marshalNTurnstileSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTurnstileSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateTurnstileSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_TurnstileSettings_enabled(ctx, field)
+			case "siteKey":
+				return ec.fieldContext_TurnstileSettings_siteKey(ctx, field)
+			case "secretConfigured":
+				return ec.fieldContext_TurnstileSettings_secretConfigured(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TurnstileSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateTurnstileSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_checkProviderQuotas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -55768,6 +55875,43 @@ func (ec *executionContext) fieldContext_Query_securitySettings(_ context.Contex
 				return ec.fieldContext_SecuritySettings_showRequestLogIPBanIcon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SecuritySettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_turnstileSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_turnstileSettings,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().TurnstileSettings(ctx)
+		},
+		nil,
+		ec.marshalNTurnstileSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTurnstileSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_turnstileSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_TurnstileSettings_enabled(ctx, field)
+			case "siteKey":
+				return ec.fieldContext_TurnstileSettings_siteKey(ctx, field)
+			case "secretConfigured":
+				return ec.fieldContext_TurnstileSettings_secretConfigured(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TurnstileSettings", field.Name)
 		},
 	}
 	return fc, nil
@@ -70934,6 +71078,93 @@ func (ec *executionContext) fieldContext_TriggerBackupPayload_message(_ context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TurnstileSettings_enabled(ctx context.Context, field graphql.CollectedField, obj *TurnstileSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TurnstileSettings_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TurnstileSettings_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TurnstileSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TurnstileSettings_siteKey(ctx context.Context, field graphql.CollectedField, obj *TurnstileSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TurnstileSettings_siteKey,
+		func(ctx context.Context) (any, error) {
+			return obj.SiteKey, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TurnstileSettings_siteKey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TurnstileSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TurnstileSettings_secretConfigured(ctx context.Context, field graphql.CollectedField, obj *TurnstileSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_TurnstileSettings_secretConfigured,
+		func(ctx context.Context) (any, error) {
+			return obj.SecretConfigured, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_TurnstileSettings_secretConfigured(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TurnstileSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -106005,6 +106236,47 @@ func (ec *executionContext) unmarshalInputUpdateTraceInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateTurnstileSettingsInput(ctx context.Context, obj any) (UpdateTurnstileSettingsInput, error) {
+	var it UpdateTurnstileSettingsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "siteKey", "secretKey"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "siteKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("siteKey"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SiteKey = data
+		case "secretKey":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("secretKey"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SecretKey = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateUsageLogInput(ctx context.Context, obj any) (ent.UpdateUsageLogInput, error) {
 	var it ent.UpdateUsageLogInput
 	asMap := map[string]any{}
@@ -121816,6 +122088,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateTurnstileSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateTurnstileSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "checkProviderQuotas":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_checkProviderQuotas(ctx, field)
@@ -126829,6 +127108,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_securitySettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "turnstileSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_turnstileSettings(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -134129,6 +134430,55 @@ func (ec *executionContext) _TriggerBackupPayload(ctx context.Context, sel ast.S
 			}
 		case "message":
 			out.Values[i] = ec._TriggerBackupPayload_message(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var turnstileSettingsImplementors = []string{"TurnstileSettings"}
+
+func (ec *executionContext) _TurnstileSettings(ctx context.Context, sel ast.SelectionSet, obj *TurnstileSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, turnstileSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TurnstileSettings")
+		case "enabled":
+			out.Values[i] = ec._TurnstileSettings_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "siteKey":
+			out.Values[i] = ec._TurnstileSettings_siteKey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "secretConfigured":
+			out.Values[i] = ec._TurnstileSettings_secretConfigured(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -144409,6 +144759,20 @@ func (ec *executionContext) unmarshalNTriggerGcCleanupInput2githubᚗcomᚋldm20
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNTurnstileSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTurnstileSettings(ctx context.Context, sel ast.SelectionSet, v TurnstileSettings) graphql.Marshaler {
+	return ec._TurnstileSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTurnstileSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐTurnstileSettings(ctx context.Context, sel ast.SelectionSet, v *TurnstileSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TurnstileSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNUnassociatedChannel2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUnassociatedChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*biz.UnassociatedChannel) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -144610,6 +144974,11 @@ func (ec *executionContext) unmarshalNUpdateSystemGeneralSettingsInput2githubᚗ
 
 func (ec *executionContext) unmarshalNUpdateSystemModelSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSystemModelSettings(ctx context.Context, v any) (biz.SystemModelSettings, error) {
 	res, err := ec.unmarshalInputUpdateSystemModelSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateTurnstileSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateTurnstileSettingsInput(ctx context.Context, v any) (UpdateTurnstileSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateTurnstileSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

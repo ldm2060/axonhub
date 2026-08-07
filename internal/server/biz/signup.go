@@ -43,6 +43,7 @@ type SignUpInput struct {
 	Email            string `json:"email" binding:"required,email"`
 	Password         string `json:"password" binding:"required,min=8"`
 	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+	TurnstileToken   string `json:"turnstile_token"`
 	FirstName        string `json:"first_name"`
 	LastName         string `json:"last_name"`
 }
@@ -58,8 +59,9 @@ type SignUpService struct {
 	userService       *UserService
 	authService       *AuthService
 	systemService     *SystemService
+	turnstileVerifier TurnstileVerifier
 	emailTokenService *EmailTokenService
-emailService      verificationEmailSender
+	emailService      verificationEmailSender
 }
 
 // SignUpServiceParams holds the dependencies for SignUpService.
@@ -70,6 +72,7 @@ type SignUpServiceParams struct {
 	UserService       *UserService
 	AuthService       *AuthService
 	SystemService     *SystemService
+	TurnstileVerifier TurnstileVerifier
 	EmailTokenService *EmailTokenService
 	EmailService      *EmailService
 }
@@ -81,6 +84,7 @@ func NewSignUpService(params SignUpServiceParams) *SignUpService {
 		userService:       params.UserService,
 		authService:       params.AuthService,
 		systemService:     params.SystemService,
+		turnstileVerifier: params.TurnstileVerifier,
 		emailTokenService: params.EmailTokenService,
 		emailService:      params.EmailService,
 	}
@@ -122,7 +126,11 @@ func (s *SignUpService) validateRegistrationEmail(ctx context.Context, email str
 }
 
 // SendVerificationCode creates and emails a registration verification code.
-func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) error {
+func (s *SignUpService) SendVerificationCode(ctx context.Context, email, turnstileToken string) error {
+	if err := s.turnstileVerifier.Verify(ctx, turnstileToken, TurnstileActionSignUpCode); err != nil {
+		return err
+	}
+
 	ctx = authz.WithSystemBypass(ctx, "signup")
 	normalizedEmail := normalizeEmail(email)
 
@@ -155,6 +163,10 @@ func (s *SignUpService) SendVerificationCode(ctx context.Context, email string) 
 
 // SignUp registers a new user after verifying the email code.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
+	if err := s.turnstileVerifier.Verify(ctx, input.TurnstileToken, TurnstileActionSignUp); err != nil {
+		return nil, "", err
+	}
+
 	ctx = authz.WithSystemBypass(ctx, "signup")
 	normalizedEmail := normalizeEmail(input.Email)
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -31,13 +32,15 @@ type SignUpHandlers struct {
 }
 
 type SendVerificationCodeRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Email          string `json:"email" binding:"required,email"`
+	TurnstileToken string `json:"turnstile_token"`
 }
 
 type SignUpRequest struct {
 	Email            string `json:"email" binding:"required,email"`
 	Password         string `json:"password" binding:"required,min=8"`
 	VerificationCode string `json:"verification_code" binding:"required,len=6"`
+	TurnstileToken   string `json:"turnstile_token"`
 	FirstName        string `json:"first_name"`
 	LastName         string `json:"last_name"`
 }
@@ -49,8 +52,8 @@ func (h *SignUpHandlers) SendVerificationCode(c *gin.Context) {
 		return
 	}
 
-	if err := h.SignUpService.SendVerificationCode(c.Request.Context(), req.Email); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := h.SignUpService.SendVerificationCode(c.Request.Context(), req.Email, req.TurnstileToken); err != nil {
+		writeSignUpError(c, err)
 		return
 	}
 
@@ -76,12 +79,12 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 		Email:            req.Email,
 		Password:         req.Password,
 		VerificationCode: req.VerificationCode,
+		TurnstileToken:   req.TurnstileToken,
 		FirstName:        req.FirstName,
 		LastName:         req.LastName,
 	})
 	if err != nil {
-		status := http.StatusBadRequest
-		c.JSON(status, gin.H{"error": err.Error()})
+		writeSignUpError(c, err)
 		return
 	}
 
@@ -95,6 +98,17 @@ func (h *SignUpHandlers) SignUp(c *gin.Context) {
 		"message": "Registration successful. Please check your email to verify your account.",
 		"pending": pending,
 	})
+}
+
+func writeSignUpError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, biz.ErrTurnstileInvalid):
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Turnstile verification failed. Please try again"})
+	case errors.Is(err, biz.ErrTurnstileUnavailable):
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Turnstile verification is temporarily unavailable"})
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 }
 
 func (h *SignUpHandlers) AllowSignUp(c *gin.Context) {

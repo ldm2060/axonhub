@@ -257,6 +257,32 @@ func (r *mutationResolver) UpdateSecuritySettings(ctx context.Context, input Upd
 	return true, nil
 }
 
+// UpdateTurnstileSettings is the resolver for the updateTurnstileSettings field.
+func (r *mutationResolver) UpdateTurnstileSettings(ctx context.Context, input UpdateTurnstileSettingsInput) (*TurnstileSettings, error) {
+	if !scopes.UserHasScope(ctx, scopes.ScopeWriteSettings) {
+		return nil, fmt.Errorf("permission denied: requires write:settings scope")
+	}
+
+	secretKey := ""
+	if input.SecretKey != nil {
+		secretKey = *input.SecretKey
+	}
+	settings, err := r.systemService.UpdateTurnstileSettings(ctx, biz.UpdateStoredTurnstileSettings{
+		Enabled:   input.Enabled,
+		SiteKey:   input.SiteKey,
+		SecretKey: secretKey,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update turnstile settings: %w", err)
+	}
+
+	return &TurnstileSettings{
+		Enabled:          settings.Enabled,
+		SiteKey:          settings.SiteKey,
+		SecretConfigured: settings.SecretKey != "",
+	}, nil
+}
+
 // CheckProviderQuotas is the resolver for the checkProviderQuotas field.
 func (r *mutationResolver) CheckProviderQuotas(ctx context.Context) (bool, error) {
 	if r.providerQuotaService == nil {
@@ -629,6 +655,24 @@ func (r *queryResolver) ProviderQuotaCollectionSettings(ctx context.Context) (*b
 // SecuritySettings is the resolver for the securitySettings field.
 func (r *queryResolver) SecuritySettings(ctx context.Context) (*biz.SecuritySettings, error) {
 	return r.systemService.SecuritySettings(ctx)
+}
+
+// TurnstileSettings is the resolver for the turnstileSettings field.
+func (r *queryResolver) TurnstileSettings(ctx context.Context) (*TurnstileSettings, error) {
+	if !scopes.UserHasScope(ctx, scopes.ScopeReadSettings) {
+		return nil, fmt.Errorf("permission denied: requires read:settings scope")
+	}
+
+	settings, err := r.systemService.TurnstileSettings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get turnstile settings: %w", err)
+	}
+
+	return &TurnstileSettings{
+		Enabled:          settings.Enabled,
+		SiteKey:          settings.SiteKey,
+		SecretConfigured: settings.SecretKey != "",
+	}, nil
 }
 
 // ProxyPresets is the resolver for the proxyPresets field.

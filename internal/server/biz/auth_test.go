@@ -114,10 +114,11 @@ func setupTestAuthService(t *testing.T, cacheConfig xcache.Config) (*AuthService
 	})
 
 	authService := &AuthService{
-		SystemService: systemService,
-		APIKeyService: apiKeyService,
-		UserService:   userService,
-		AllowNoAuth:   false,
+		SystemService:     systemService,
+		TurnstileVerifier: disabledTurnstileVerifier{},
+		APIKeyService:     apiKeyService,
+		UserService:       userService,
+		AllowNoAuth:       false,
 	}
 
 	cleanup := func() {
@@ -214,18 +215,18 @@ func TestAuthService_AuthenticateUser(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test successful authentication
-	authenticatedUser, err := authService.AuthenticateUser(ctx, "test@example.com", password)
+	authenticatedUser, err := authService.AuthenticateUser(ctx, "test@example.com", password, "")
 	require.NoError(t, err)
 	require.Equal(t, testUser.ID, authenticatedUser.ID)
 	require.Equal(t, testUser.Email, authenticatedUser.Email)
 
 	// Test wrong password
-	_, err = authService.AuthenticateUser(ctx, "test@example.com", "wrong-password")
+	_, err = authService.AuthenticateUser(ctx, "test@example.com", "wrong-password", "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid email or password")
 
 	// Test non-existent user
-	_, err = authService.AuthenticateUser(ctx, "nonexistent@example.com", password)
+	_, err = authService.AuthenticateUser(ctx, "nonexistent@example.com", password, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid email or password")
 
@@ -233,9 +234,32 @@ func TestAuthService_AuthenticateUser(t *testing.T) {
 	_, err = authService.UserService.UpdateUserStatus(ctx, testUser.ID, user.StatusDeactivated)
 	require.NoError(t, err)
 
-	_, err = authService.AuthenticateUser(ctx, "test@example.com", password)
+	_, err = authService.AuthenticateUser(ctx, "test@example.com", password, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid email or password")
+}
+
+func TestAuthService_AuthenticateUser_VerifiesTurnstileBeforeLookup(t *testing.T) {
+	authService, client, cleanup := setupTestAuthService(t, xcache.Config{Mode: xcache.ModeMemory})
+	defer cleanup()
+	defer client.Close()
+
+	verifierErr := turnstileInvalid("test rejection")
+	verifier := &recordingTurnstileVerifier{verifyErr: verifierErr}
+	authService.TurnstileVerifier = verifier
+
+	ctx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
+	result, err := authService.AuthenticateUser(ctx, "missing@example.com", "password", "challenge")
+	require.Nil(t, result)
+	require.ErrorIs(t, err, ErrTurnstileInvalid)
+	require.Equal(t, []turnstileVerifyCall{{
+		token:  "challenge",
+		action: TurnstileActionSignIn,
+	}}, verifier.calls)
+
+	count, countErr := client.User.Query().Count(ctx)
+	require.NoError(t, countErr)
+	require.Zero(t, count)
 }
 
 func TestAuthService_AuthenticateJWTToken(t *testing.T) {
@@ -561,7 +585,7 @@ func TestAuthService_WithDifferentCacheConfigs(t *testing.T) {
 			require.Equal(t, testUser.ID, authenticatedUser.ID)
 
 			// Test user authentication
-			authenticatedUser2, err := authService.AuthenticateUser(ctx, "test@example.com", "test-password")
+			authenticatedUser2, err := authService.AuthenticateUser(ctx, "test@example.com", "test-password", "")
 			require.NoError(t, err)
 			require.Equal(t, testUser.ID, authenticatedUser2.ID)
 		})
@@ -663,7 +687,7 @@ func TestAuthService_AuthenticateUser_NormalizesEmailLookup(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	authenticatedUser, err := authService.AuthenticateUser(ctx, "User@Example.COM", password)
+	authenticatedUser, err := authService.AuthenticateUser(ctx, "User@Example.COM", password, "")
 	require.NoError(t, err)
 	require.Equal(t, createdUser.ID, authenticatedUser.ID)
 }

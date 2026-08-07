@@ -404,7 +404,13 @@
   "auth.signIn.verificationSuccess": "邮箱已验证！请登录。",
   "auth.signIn.verificationPending": "您的账户正在等待管理员审批。",
   "auth.signIn.verificationFailed": "验证链接无效或已过期。",
+  "auth.turnstile.required": "请先完成安全验证再继续。",
+  "auth.turnstile.expired": "安全验证已过期，请重新完成验证。",
+  "auth.turnstile.widgetError": "安全验证无法完成，请重试。",
+  "auth.turnstile.configUnavailable": "由于无法加载安全配置，密码认证暂时不可用。请重试，或使用可用的单点登录。",
+  "auth.turnstile.sendCodeLabel": "发送验证码安全验证",
+  "auth.turnstile.signUpLabel": "创建账户安全验证",
   "settings.nav.appearance": "外观",
   "settings.nav.display": "显示",
   "settings.nav.notifications": "通知"
-  }
+}

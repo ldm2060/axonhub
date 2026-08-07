@@ -60,13 +60,13 @@ func setupTestSignUpService(t *testing.T) (*SignUpService, *ent.Client) {
 		userService:       userService,
 		authService:       &AuthService{},
 		systemService:     systemService,
+		turnstileVerifier: disabledTurnstileVerifier{},
 		emailTokenService: emailTokenService,
 		emailService:      &EmailService{db: client, systemService: systemService},
 	}
 
 	return svc, client
 }
-
 
 func setRegistrationSettings(t *testing.T, svc *SignUpService, ctx context.Context, settings *RegistrationSettings) {
 	t.Helper()
@@ -131,6 +131,52 @@ func TestSignUp_CheckExistingUser_NoAuthContext(t *testing.T) {
 	require.Contains(t, err.Error(), "email already registered")
 }
 
+func TestSignUp_TurnstileFailurePreventsAllSideEffects(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := enableTestSignUp(t, svc, client, false)
+	sender := &recordingVerificationEmailSender{}
+	svc.emailService = sender
+	verifier := &recordingTurnstileVerifier{verifyErr: turnstileInvalid("test rejection")}
+	svc.turnstileVerifier = verifier
+
+	plainCtx := ent.NewContext(context.Background(), client)
+
+	err := svc.SendVerificationCode(plainCtx, "send@example.com", "send-token")
+	require.ErrorIs(t, err, ErrTurnstileInvalid)
+	require.Equal(t, []turnstileVerifyCall{{
+		token:  "send-token",
+		action: TurnstileActionSignUpCode,
+	}}, verifier.calls)
+
+	tokenCount, err := client.EmailToken.Query().Count(setupCtx)
+	require.NoError(t, err)
+	require.Zero(t, tokenCount)
+	require.Empty(t, sender.calls)
+
+	verifier.calls = nil
+	createdUser, _, err := svc.SignUp(plainCtx, SignUpInput{
+		Email:            "signup@example.com",
+		Password:         "password123",
+		VerificationCode: "000000",
+		TurnstileToken:   "signup-token",
+	})
+	require.Nil(t, createdUser)
+	require.ErrorIs(t, err, ErrTurnstileInvalid)
+	require.Equal(t, []turnstileVerifyCall{{
+		token:  "signup-token",
+		action: TurnstileActionSignUp,
+	}}, verifier.calls)
+
+	userCount, err := client.User.Query().Count(setupCtx)
+	require.NoError(t, err)
+	require.Zero(t, userCount)
+	tokenCount, err = client.EmailToken.Query().Count(setupCtx)
+	require.NoError(t, err)
+	require.Zero(t, tokenCount)
+}
+
 func TestSignUp_SendVerificationCode_CreatesEmailToken(t *testing.T) {
 	svc, client := setupTestSignUpService(t)
 	defer client.Close()
@@ -141,7 +187,7 @@ func TestSignUp_SendVerificationCode_CreatesEmailToken(t *testing.T) {
 
 	plainCtx := ent.NewContext(context.Background(), client)
 
-	err := svc.SendVerificationCode(plainCtx, "new@example.com")
+	err := svc.SendVerificationCode(plainCtx, "new@example.com", "")
 	require.NoError(t, err)
 	require.Len(t, sender.calls, 1)
 	require.Equal(t, "new@example.com", sender.calls[0].userEmail)

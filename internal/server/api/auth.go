@@ -14,29 +14,46 @@ import (
 type AuthHandlersParams struct {
 	fx.In
 
-	AuthService *biz.AuthService
+	AuthService       *biz.AuthService
+	TurnstileVerifier biz.TurnstileVerifier
 }
 
 func NewAuthHandlers(params AuthHandlersParams) *AuthHandlers {
 	return &AuthHandlers{
-		AuthService: params.AuthService,
+		AuthService:       params.AuthService,
+		TurnstileVerifier: params.TurnstileVerifier,
 	}
 }
 
 type AuthHandlers struct {
-	AuthService *biz.AuthService
+	AuthService       *biz.AuthService
+	TurnstileVerifier biz.TurnstileVerifier
 }
 
 // SignInRequest 登录请求.
 type SignInRequest struct {
-	Email    string `json:"email"    binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email          string `json:"email"             binding:"required,email"`
+	Password       string `json:"password"          binding:"required"`
+	TurnstileToken string `json:"turnstile_token"`
 }
 
 // SignInResponse 登录响应.
 type SignInResponse struct {
 	User  *objects.UserInfo `json:"user"`
 	Token string            `json:"token"`
+}
+
+// Config returns public authentication configuration without secret material.
+func (h *AuthHandlers) Config(c *gin.Context) {
+	config, err := h.TurnstileVerifier.PublicConfig(c.Request.Context())
+	if err != nil {
+		c.Header("Cache-Control", "no-store")
+		JSONError(c, http.StatusServiceUnavailable, errors.New("Authentication configuration is temporarily unavailable"))
+		return
+	}
+
+	c.Header("Cache-Control", "no-store")
+	c.JSON(http.StatusOK, gin.H{"turnstile": config})
 }
 
 // SignIn handles user authentication.
@@ -53,16 +70,22 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	}
 
 	// Authenticate user
-	user, err := h.AuthService.AuthenticateUser(ctx, req.Email, req.Password)
+	user, err := h.AuthService.AuthenticateUser(ctx, req.Email, req.Password, req.TurnstileToken)
 	if err != nil {
-		if errors.Is(err, biz.ErrInvalidPassword) {
+		switch {
+		case errors.Is(err, biz.ErrTurnstileInvalid):
+			JSONError(c, http.StatusBadRequest, errors.New("Turnstile verification failed. Please try again"))
+			return
+		case errors.Is(err, biz.ErrTurnstileUnavailable):
+			JSONError(c, http.StatusServiceUnavailable, errors.New("Turnstile verification is temporarily unavailable"))
+			return
+		case errors.Is(err, biz.ErrInvalidPassword):
 			JSONError(c, http.StatusUnauthorized, errors.New("Invalid email or password"))
 			return
+		default:
+			JSONError(c, http.StatusInternalServerError, errors.New("Internal server error"))
+			return
 		}
-
-		JSONError(c, http.StatusInternalServerError, errors.New("Internal server error"))
-
-		return
 	}
 
 	// Generate JWT token

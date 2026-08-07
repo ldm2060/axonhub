@@ -252,6 +252,18 @@ input UpdateSecuritySettingsInput {
   showRequestLogIPBanIcon: Boolean
 }
 
+type TurnstileSettings {
+  enabled: Boolean!
+  siteKey: String!
+  secretConfigured: Boolean!
+}
+
+input UpdateTurnstileSettingsInput {
+  enabled: Boolean!
+  siteKey: String!
+  secretKey: String
+}
+
 type SystemModelSettings {
   fallbackToChannelsOnModelNotFound: Boolean!
   queryAllChannelModels: Boolean!
@@ -487,6 +499,7 @@ extend type Mutation {
   updateQuotaEnforcementSettings(input: UpdateQuotaEnforcementSettingsInput!): Boolean!
   updateProviderQuotaCollectionSettings(input: UpdateProviderQuotaCollectionSettingsInput!): Boolean!
   updateSecuritySettings(input: UpdateSecuritySettingsInput!): Boolean!
+  updateTurnstileSettings(input: UpdateTurnstileSettingsInput!): TurnstileSettings!
   checkProviderQuotas: Boolean!
   triggerGcCleanup(input: TriggerGcCleanupInput!): Boolean!
   saveProxyPreset(input: SaveProxyPresetInput!): Boolean!
@@ -627,6 +640,7 @@ extend type Query {
   quotaEnforcementSettings: QuotaEnforcementSettings!
   providerQuotaCollectionSettings: ProviderQuotaCollectionSettings!
   securitySettings: SecuritySettings!
+  turnstileSettings: TurnstileSettings!
   proxyPresets: [ProxyPreset!]!
   userAgentPassThroughSettings: UserAgentPassThroughSettings!
   passThroughSettings: PassThroughSettings!

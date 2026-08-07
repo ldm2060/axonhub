@@ -131,36 +131,64 @@ export const systemApi = {
     }),
 };
 
+export interface PublicAuthConfig {
+  turnstile: {
+    enabled: boolean;
+    site_key: string;
+    actions: {
+      signin: string;
+      signup_send_code: string;
+      signup: string;
+    };
+  };
+}
+
 // Auth API endpoints
 export const authApi = {
-  signIn: (data: {
-    email: string;
-    password: string;
-  }): Promise<{
+  getConfig: (): Promise<PublicAuthConfig> => apiRequest('/auth/config'),
+
+  signIn: (
+    data: {
+      email: string;
+      password: string;
+    },
+    turnstileToken?: string
+  ): Promise<{
     user: AuthUser;
     token: string;
   }> =>
     apiRequest('/auth/signin', {
       method: 'POST',
-      body: data,
+      body: {
+        ...data,
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+      },
     }),
 
-  signUp: (data: {
-    email: string;
-    password: string;
-    first_name: string;
-    last_name: string;
-    verification_code: string;
-  }): Promise<{
+  signUp: (
+    data: {
+      email: string;
+      password: string;
+      first_name: string;
+      last_name: string;
+      verification_code: string;
+    },
+    turnstileToken?: string
+  ): Promise<{
     message: string;
     pending: boolean;
   }> =>
     apiRequest('/auth/signup', {
       method: 'POST',
-      body: data,
+      body: {
+        ...data,
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+      },
     }),
 
-  getInvitation: (token: string): Promise<{
+  getInvitation: (
+    token: string
+  ): Promise<{
     projectName: string;
     expiresAt: string | null;
     maxUses: number;
@@ -176,10 +204,13 @@ export const authApi = {
       body: data,
     }),
 
-  sendVerificationCode: (email: string): Promise<{ message: string }> =>
+  sendVerificationCode: (email: string, turnstileToken?: string): Promise<{ message: string }> =>
     apiRequest('/auth/signup/verification-code', {
       method: 'POST',
-      body: { email },
+      body: {
+        email,
+        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+      },
     }),
 
   isSignUpAllowed: (): Promise<{ allowed: boolean }> => apiRequest('/auth/signup/allowed'),
@@ -206,11 +237,13 @@ export const authApi = {
   getOIDCLinkAuthorizeURL: (provider: string): Promise<{ data: { url: string; state: string } }> =>
     apiRequest(`/admin/oidc/link/${provider}`, { requireAuth: true }),
 
-  exchangeOIDCCode: (code: string): Promise<{
+  exchangeOIDCCode: (
+    code: string
+  ): Promise<{
     data: {
       user: AuthUser;
       token: string;
-    }
+    };
   }> =>
     apiRequest('/oauth/oidc/exchange', {
       method: 'POST',

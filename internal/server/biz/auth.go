@@ -53,12 +53,13 @@ func VerifyPassword(hashedPassword, password string) error {
 type AuthServiceParams struct {
 	fx.In
 
-	SystemService *SystemService
-	APIKeyService *APIKeyService
-	UserService   *UserService
-	OIDCService   *OIDCService
-	Ent           *ent.Client
-	AllowNoAuth   bool `name:"allow_no_auth"`
+	SystemService     *SystemService
+	TurnstileVerifier TurnstileVerifier
+	APIKeyService     *APIKeyService
+	UserService       *UserService
+	OIDCService       *OIDCService
+	Ent               *ent.Client
+	AllowNoAuth       bool `name:"allow_no_auth"`
 }
 
 func NewAuthService(params AuthServiceParams) *AuthService {
@@ -66,22 +67,24 @@ func NewAuthService(params AuthServiceParams) *AuthService {
 		AbstractService: &AbstractService{
 			db: params.Ent,
 		},
-		SystemService: params.SystemService,
-		APIKeyService: params.APIKeyService,
-		UserService:   params.UserService,
-		OIDCService:   params.OIDCService,
-		AllowNoAuth:   params.AllowNoAuth,
+		SystemService:     params.SystemService,
+		TurnstileVerifier: params.TurnstileVerifier,
+		APIKeyService:     params.APIKeyService,
+		UserService:       params.UserService,
+		OIDCService:       params.OIDCService,
+		AllowNoAuth:       params.AllowNoAuth,
 	}
 }
 
 type AuthService struct {
 	*AbstractService
 
-	SystemService *SystemService
-	APIKeyService *APIKeyService
-	UserService   *UserService
-	OIDCService   *OIDCService
-	AllowNoAuth   bool
+	SystemService     *SystemService
+	TurnstileVerifier TurnstileVerifier
+	APIKeyService     *APIKeyService
+	UserService       *UserService
+	OIDCService       *OIDCService
+	AllowNoAuth       bool
 }
 
 // GenerateSecretKey generates a random secret key for JWT.
@@ -121,8 +124,12 @@ func (s *AuthService) GenerateJWTToken(ctx context.Context, user *ent.User) (str
 // AuthenticateUser authenticates a user with email and password.
 func (s *AuthService) AuthenticateUser(
 	ctx context.Context,
-	email, password string,
+	email, password, turnstileToken string,
 ) (*ent.User, error) {
+	if err := s.TurnstileVerifier.Verify(ctx, turnstileToken, TurnstileActionSignIn); err != nil {
+		return nil, err
+	}
+
 	u, err := authz.RunWithSystemBypass(ctx, "auth-lookup", func(bypassCtx context.Context) (*ent.User, error) {
 		client := s.entFromContext(bypassCtx)
 

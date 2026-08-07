@@ -93,6 +93,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	// Auth routes (preferred, no /admin prefix)
 	authGroup := server.Group("/auth", middleware.WithTimeout(server.Config.RequestTimeout))
 	{
+		authGroup.GET("/config", handlers.Auth.Config)
 		authGroup.POST("/signin", handlers.Auth.SignIn)
 		authGroup.POST("/signup", handlers.SignUp.SignUp)
 		authGroup.POST("/signup/verification-code", handlers.SignUp.SendVerificationCode)
@@ -109,6 +110,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		unSecureAdminGroup.GET("/system/status", handlers.System.GetSystemStatus)
 		unSecureAdminGroup.POST("/system/initialize", handlers.System.InitializeSystem)
 		// Legacy auth routes (backward compatibility)
+		unSecureAdminGroup.GET("/auth/config", handlers.Auth.Config)
 		unSecureAdminGroup.POST("/auth/signin", handlers.Auth.SignIn)
 		unSecureAdminGroup.POST("/auth/signup", handlers.SignUp.SignUp)
 		unSecureAdminGroup.POST("/auth/signup/verification-code", handlers.SignUp.SendVerificationCode)

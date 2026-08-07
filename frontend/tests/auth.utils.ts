@@ -76,7 +76,10 @@ export async function signInAsAdmin(page: Page, credentials: AdminCredentials = 
 
   // Wait for the sign-in API response before checking navigation
   const responsePromise = page.waitForResponse(
-    (response) => response.url().includes('/admin/auth/signin') && response.status() === 200,
+    (response) => {
+      const pathname = new URL(response.url()).pathname
+      return (pathname === '/auth/signin' || pathname === '/admin/auth/signin') && response.status() === 200
+    },
     { timeout: 15000 }
   )
 

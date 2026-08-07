@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { TagsInput } from '@/components/ui/tags-input';
 import { useSecuritySettings, useUpdateSecuritySettings } from '../data/system';
+import { TurnstileSettingsCard } from './turnstile-settings';
 
 function normalizeEntries(entries: string[]) {
   const seen = new Set<string>();
@@ -64,53 +65,56 @@ export function SecuritySettings() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('system.security.title')}</CardTitle>
-        <CardDescription>{t('system.security.description')}</CardDescription>
-      </CardHeader>
-      <CardContent className='space-y-6'>
-        <div className='space-y-2'>
-          <Label htmlFor='blocked-ips'>{t('system.security.blockedIPs.label')}</Label>
-          <TagsInput
-            id='blocked-ips'
-            value={blockedIPs}
-            onChange={setBlockedIPs}
-            placeholder={t('system.security.blockedIPs.placeholder')}
-            disabled={updateSettings.isPending}
-          />
-          <div className='text-muted-foreground text-sm'>{t('system.security.blockedIPs.description')}</div>
-        </div>
-
-        <div className='flex items-center justify-between gap-4 rounded-lg border p-4'>
-          <div className='space-y-1'>
-            <Label htmlFor='show-request-log-ip-ban-icon'>{t('system.security.showRequestLogIPBanIcon.label')}</Label>
-            <div className='text-muted-foreground text-sm'>{t('system.security.showRequestLogIPBanIcon.description')}</div>
+    <div className='space-y-6'>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('system.security.title')}</CardTitle>
+          <CardDescription>{t('system.security.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-6'>
+          <div className='space-y-2'>
+            <Label htmlFor='blocked-ips'>{t('system.security.blockedIPs.label')}</Label>
+            <TagsInput
+              id='blocked-ips'
+              value={blockedIPs}
+              onChange={setBlockedIPs}
+              placeholder={t('system.security.blockedIPs.placeholder')}
+              disabled={updateSettings.isPending}
+            />
+            <div className='text-muted-foreground text-sm'>{t('system.security.blockedIPs.description')}</div>
           </div>
-          <Switch
-            id='show-request-log-ip-ban-icon'
-            checked={showRequestLogIPBanIcon}
-            onCheckedChange={setShowRequestLogIPBanIcon}
-            disabled={updateSettings.isPending}
-          />
-        </div>
 
-        <div className='flex justify-end'>
-          <Button onClick={handleSave} disabled={!hasChanges || updateSettings.isPending} className='min-w-[100px]'>
-            {updateSettings.isPending ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                {t('system.buttons.saving')}
-              </>
-            ) : (
-              <>
-                <Save className='mr-2 h-4 w-4' />
-                {t('system.buttons.save')}
-              </>
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className='flex items-center justify-between gap-4 rounded-lg border p-4'>
+            <div className='space-y-1'>
+              <Label htmlFor='show-request-log-ip-ban-icon'>{t('system.security.showRequestLogIPBanIcon.label')}</Label>
+              <div className='text-muted-foreground text-sm'>{t('system.security.showRequestLogIPBanIcon.description')}</div>
+            </div>
+            <Switch
+              id='show-request-log-ip-ban-icon'
+              checked={showRequestLogIPBanIcon}
+              onCheckedChange={setShowRequestLogIPBanIcon}
+              disabled={updateSettings.isPending}
+            />
+          </div>
+
+          <div className='flex justify-end'>
+            <Button onClick={handleSave} disabled={!hasChanges || updateSettings.isPending} className='min-w-[100px]'>
+              {updateSettings.isPending ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  {t('system.buttons.saving')}
+                </>
+              ) : (
+                <>
+                  <Save className='mr-2 h-4 w-4' />
+                  {t('system.buttons.save')}
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      <TurnstileSettingsCard />
+    </div>
   );
 }

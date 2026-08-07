@@ -1,8 +1,9 @@
-import { HTMLAttributes, useState } from 'react';
+import { HTMLAttributes, useCallback, useRef, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
+import { AlertCircle, LogIn, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validation';
@@ -10,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
-import { useSignIn, useOIDCProviders, useOIDCAuthorize } from '@/features/auth/data/auth';
-import { LogIn } from 'lucide-react';
+import { TurnstileWidget } from '@/features/auth/components/turnstile-widget';
+import type { TurnstileWidgetHandle } from '@/features/auth/components/turnstile-widget.types';
+import { useAuthConfig, useSignIn, useOIDCProviders, useOIDCAuthorize } from '@/features/auth/data/auth';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
@@ -23,8 +25,13 @@ const createFormSchema = (t: (key: string) => string) =>
   });
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const { t } = useTranslation();
-  const signInMutation = useSignIn();
+  const { t, i18n } = useTranslation();
+  const turnstileTokenRef = useRef<string | null>(null);
+  const turnstileWidgetRef = useRef<TurnstileWidgetHandle>(null);
+  const getTurnstileToken = useCallback(() => turnstileTokenRef.current, []);
+  const signInMutation = useSignIn(getTurnstileToken);
+  const authConfigQuery = useAuthConfig();
+  const [turnstileMessage, setTurnstileMessage] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const { data: oidcProviders } = useOIDCProviders();
   const oidcAuthorizeMutation = useOIDCAuthorize();
@@ -38,12 +45,29 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    signInMutation.mutate(data);
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    const turnstileEnabled = authConfigQuery.data?.turnstile.enabled === true;
+    if (authConfigQuery.isError || (turnstileEnabled && !turnstileTokenRef.current)) {
+      setTurnstileMessage(authConfigQuery.isError ? t('auth.turnstile.configUnavailable') : t('auth.turnstile.required'));
+      return;
+    }
+
+    setTurnstileMessage(null);
+    try {
+      await signInMutation.mutateAsync(data);
+    } catch {
+      // Error handled by mutation onError.
+    } finally {
+      if (turnstileEnabled) {
+        turnstileTokenRef.current = null;
+        turnstileWidgetRef.current?.reset();
+      }
+    }
   }
 
+  const turnstileConfig = authConfigQuery.data?.turnstile;
   const isPasswordLoginDisabled = oidcProviders?.some((p) => p.active && p.oidc_login_only);
-  
+
   return (
     <Form {...form}>
       {!isPasswordLoginDisabled && (
@@ -95,6 +119,59 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             )}
           />
 
+          {authConfigQuery.isError ? (
+            <div className='rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700' role='alert'>
+              <div className='flex items-start gap-2'>
+                <AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
+                <span>{t('auth.turnstile.configUnavailable')}</span>
+              </div>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                className='mt-3 border-red-200 bg-white'
+                onClick={() => void authConfigQuery.refetch()}
+                disabled={authConfigQuery.isFetching}
+              >
+                <RefreshCw className={cn('mr-2 h-4 w-4', authConfigQuery.isFetching && 'animate-spin')} />
+                {t('common.buttons.retry')}
+              </Button>
+            </div>
+          ) : turnstileConfig?.enabled ? (
+            <div className='space-y-2'>
+              <TurnstileWidget
+                ref={turnstileWidgetRef}
+                siteKey={turnstileConfig.site_key}
+                action={turnstileConfig.actions.signin}
+                language={i18n.resolvedLanguage ?? i18n.language}
+                testId='turnstile-signin'
+                onTokenChange={(token) => {
+                  turnstileTokenRef.current = token;
+                  if (token) setTurnstileMessage(null);
+                }}
+                onExpired={() => setTurnstileMessage(t('auth.turnstile.expired'))}
+                onError={() => setTurnstileMessage(t('auth.turnstile.widgetError'))}
+              />
+              {turnstileMessage && (
+                <div className='space-y-2'>
+                  <p className='text-sm text-red-600'>{turnstileMessage}</p>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => {
+                      setTurnstileMessage(null);
+                      turnstileWidgetRef.current?.reset({ reloadScript: true });
+                    }}
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    {t('common.buttons.retry')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : null}
+
           {/* Remember Me Toggle */}
           <div className='flex items-center justify-between'>
             <label className='flex cursor-pointer items-center space-x-3'>
@@ -116,7 +193,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           <Button
             type='submit'
             className='mt-6 w-full rounded-lg bg-slate-800 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-slate-700 hover:shadow-xl focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50'
-            disabled={signInMutation.isPending}
+            disabled={signInMutation.isPending || authConfigQuery.isLoading || authConfigQuery.isError}
             data-testid='sign-in-submit'
           >
             {signInMutation.isPending ? (
@@ -130,73 +207,69 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           </Button>
         </form>
       )}
-        
-        {oidcProviders && oidcProviders.length > 0 && (
-          <div className={cn(!isPasswordLoginDisabled && 'mt-6')}>
-            {!isPasswordLoginDisabled && (
-              <div className='relative'>
-                <div className='absolute inset-0 flex items-center'>
-                  <span className='w-full border-t border-slate-300' />
-                </div>
-                <div className='relative flex justify-center text-xs uppercase'>
-                  <span className='bg-white px-2 text-slate-500'>Or continue with</span>
-                </div>
+
+      {oidcProviders && oidcProviders.length > 0 && (
+        <div className={cn(!isPasswordLoginDisabled && 'mt-6')}>
+          {!isPasswordLoginDisabled && (
+            <div className='relative'>
+              <div className='absolute inset-0 flex items-center'>
+                <span className='w-full border-t border-slate-300' />
               </div>
-            )}
-
-            <div className={cn(oidcProviders.length > 0 && !isPasswordLoginDisabled && 'mt-6', 'grid gap-2')}>
-              {oidcProviders.map((provider) => {
-                const isInactive = provider.active === false;
-                const providerId = provider.id || provider.name;
-                const providerLabel = provider.display_name || provider.name;
-
-                return (
-                  <Button
-                    key={providerId}
-                    type='button'
-                    variant='outline'
-                    className={cn(
-                      'h-auto w-full border-slate-300 py-3 disabled:opacity-50',
-                      isInactive && 'border-2 border-destructive'
-                    )}
-                    style={
-                      provider.button_color
-                        ? {
-                            backgroundColor: provider.button_color,
-                            color: '#ffffff',
-                            borderColor: isInactive ? 'var(--destructive)' : provider.button_color,
-                          }
-                        : undefined
-                    }
-                    disabled={oidcAuthorizeMutation.isPending}
-                    onClick={() => oidcAuthorizeMutation.mutate(providerId)}
-                    title={isInactive ? t('common.status.inactiveRetry') : undefined}
-                  >
-                    {oidcAuthorizeMutation.isPending && oidcAuthorizeMutation.variables === providerId ? (
-                      <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current'></div>
-                    ) : provider.icon_url ? (
-                      <img src={provider.icon_url} alt={providerLabel} className='mr-2 h-4 w-4 object-contain' />
-                    ) : (
-                      <LogIn className='mr-2 h-4 w-4' />
-                    )}
-                    <span className='flex min-w-0 flex-col items-center'>
-                      <span className='truncate'>{providerLabel}</span>
-                      {isInactive && <span className='text-xs font-medium text-current/85'>{t('common.status.inactiveRetry')}</span>}
-                    </span>
-                  </Button>
-                );
-              })}
+              <div className='relative flex justify-center text-xs uppercase'>
+                <span className='bg-white px-2 text-slate-500'>Or continue with</span>
+              </div>
             </div>
+          )}
+
+          <div className={cn(oidcProviders.length > 0 && !isPasswordLoginDisabled && 'mt-6', 'grid gap-2')}>
+            {oidcProviders.map((provider) => {
+              const isInactive = provider.active === false;
+              const providerId = provider.id || provider.name;
+              const providerLabel = provider.display_name || provider.name;
+
+              return (
+                <Button
+                  key={providerId}
+                  type='button'
+                  variant='outline'
+                  className={cn('h-auto w-full border-slate-300 py-3 disabled:opacity-50', isInactive && 'border-destructive border-2')}
+                  style={
+                    provider.button_color
+                      ? {
+                          backgroundColor: provider.button_color,
+                          color: '#ffffff',
+                          borderColor: isInactive ? 'var(--destructive)' : provider.button_color,
+                        }
+                      : undefined
+                  }
+                  disabled={oidcAuthorizeMutation.isPending}
+                  onClick={() => oidcAuthorizeMutation.mutate(providerId)}
+                  title={isInactive ? t('common.status.inactiveRetry') : undefined}
+                >
+                  {oidcAuthorizeMutation.isPending && oidcAuthorizeMutation.variables === providerId ? (
+                    <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current'></div>
+                  ) : provider.icon_url ? (
+                    <img src={provider.icon_url} alt={providerLabel} className='mr-2 h-4 w-4 object-contain' />
+                  ) : (
+                    <LogIn className='mr-2 h-4 w-4' />
+                  )}
+                  <span className='flex min-w-0 flex-col items-center'>
+                    <span className='truncate'>{providerLabel}</span>
+                    {isInactive && <span className='text-xs font-medium text-current/85'>{t('common.status.inactiveRetry')}</span>}
+                  </span>
+                </Button>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        <p className={cn('text-center text-sm text-slate-600', (!oidcProviders || oidcProviders.length === 0) && 'mt-2')}>
-          {t('auth.signIn.links.noAccount')}{' '}
-          <Link to='/sign-up' className='font-medium text-slate-500 transition-colors hover:text-slate-700 hover:underline'>
-            {t('auth.signIn.links.signUp')}
-          </Link>
-        </p>
-
+      <p className={cn('text-center text-sm text-slate-600', (!oidcProviders || oidcProviders.length === 0) && 'mt-2')}>
+        {t('auth.signIn.links.noAccount')}{' '}
+        <Link to='/sign-up' className='font-medium text-slate-500 transition-colors hover:text-slate-700 hover:underline'>
+          {t('auth.signIn.links.signUp')}
+        </Link>
+      </p>
     </Form>
   );
 }

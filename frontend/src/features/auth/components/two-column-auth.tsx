@@ -64,7 +64,11 @@ export default function TwoColumnAuth({
           <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(148,163,184,0.1)_0%,transparent_70%)]'></div>
         </div>
 
-        <div id='auth-card-wrapper' data-testid='auth-card-wrapper' className={`relative z-10 w-full ${rightMaxWidthClassName} px-6 py-8 sm:px-8 sm:py-12`}>
+        <div
+          id='auth-card-wrapper'
+          data-testid='auth-card-wrapper'
+          className={`relative z-10 w-full min-w-0 ${rightMaxWidthClassName} px-2 py-8 min-[360px]:px-4 sm:px-8 sm:py-12`}
+        >
           <Card
             className='animate-fade-in-up border-slate-200/60 bg-white/90 text-slate-800 shadow-xl shadow-slate-900/10 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-900/15'
             style={
@@ -81,7 +85,7 @@ export default function TwoColumnAuth({
                 <CardDescription className='text-sm leading-relaxed text-slate-600 sm:text-base'>{description}</CardDescription>
               ) : null}
             </CardHeader>
-            <CardContent className='px-6 pb-8 sm:px-8'>{children}</CardContent>
+            <CardContent className='min-w-0 px-2 pb-8 min-[360px]:px-4 sm:px-8'>{children}</CardContent>
           </Card>
 
           {rightFooter ? <div className='mt-6 px-4 text-center sm:mt-8'>{rightFooter}</div> : null}

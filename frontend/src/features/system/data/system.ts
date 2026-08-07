@@ -264,6 +264,18 @@ export interface UpdateVideoStorageSettingsInput {
   scanLimit?: number;
 }
 
+export interface TurnstileSettings {
+  enabled: boolean;
+  siteKey: string;
+  secretConfigured: boolean;
+}
+
+export interface UpdateTurnstileSettingsInput {
+  enabled: boolean;
+  siteKey: string;
+  secretKey?: string;
+}
+
 export interface SecuritySettings {
   blockedIPs: string[];
   showRequestLogIPBanIcon: boolean;
@@ -470,7 +482,6 @@ export function useBrandSettings(options?: { enabled?: boolean }) {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
-
   return useQuery({
     queryKey: ['brandSettings'],
     enabled: options?.enabled !== false && hasSystemScope('read_settings'),
@@ -484,7 +495,6 @@ export function useBrandSettings(options?: { enabled?: boolean }) {
 export function useStoragePolicy() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['storagePolicy'],
@@ -668,7 +678,6 @@ export function useUpdateWebhookNotifierConfig() {
 export function useDefaultDataStorageID() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['defaultDataStorageID'],
@@ -1015,6 +1024,26 @@ const UPDATE_VIDEO_STORAGE_SETTINGS_MUTATION = `
   }
 `;
 
+const TURNSTILE_SETTINGS_QUERY = `
+  query TurnstileSettings {
+    turnstileSettings {
+      enabled
+      siteKey
+      secretConfigured
+    }
+  }
+`;
+
+const UPDATE_TURNSTILE_SETTINGS_MUTATION = `
+  mutation UpdateTurnstileSettings($input: UpdateTurnstileSettingsInput!) {
+    updateTurnstileSettings(input: $input) {
+      enabled
+      siteKey
+      secretConfigured
+    }
+  }
+`;
+
 const SECURITY_SETTINGS_QUERY = `
   query SecuritySettings {
     securitySettings {
@@ -1056,7 +1085,6 @@ export interface DeveloperModelSettings {
 export function useModelSettings() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['modelSettings'],
@@ -1127,7 +1155,6 @@ export function useChannelSetting(options?: { enabled?: boolean }) {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
-
   return useQuery({
     queryKey: ['channelSetting'],
     enabled: options?.enabled !== false && hasSystemScope('read_settings'),
@@ -1160,7 +1187,6 @@ export function useUpdateChannelSetting() {
 export function useGeneralSettings() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['generalSettings'],
@@ -1220,10 +1246,40 @@ export function useUpdateVideoStorageSettings() {
   });
 }
 
+export function useTurnstileSettings() {
+  const { hasSystemScope } = usePermissions();
+
+  return useQuery({
+    queryKey: ['turnstileSettings'],
+    enabled: hasSystemScope('read_settings'),
+    queryFn: async () => {
+      const data = await graphqlRequest<{ turnstileSettings: TurnstileSettings }>(TURNSTILE_SETTINGS_QUERY);
+      return data.turnstileSettings;
+    },
+  });
+}
+
+export function useUpdateTurnstileSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateTurnstileSettingsInput) => {
+      const data = await graphqlRequest<{ updateTurnstileSettings: TurnstileSettings }>(UPDATE_TURNSTILE_SETTINGS_MUTATION, { input });
+      return data.updateTurnstileSettings;
+    },
+    onSuccess: (settings) => {
+      queryClient.setQueryData(['turnstileSettings'], settings);
+      toast.success(i18n.t('system.turnstile.saveSuccess'));
+    },
+    onError: () => {
+      toast.error(i18n.t('system.turnstile.saveError'));
+    },
+  });
+}
+
 export function useSecuritySettings() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['securitySettings'],
@@ -1542,7 +1598,6 @@ export function useProxyPresets() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
-
   return useQuery({
     queryKey: ['proxyPresets'],
     enabled: hasSystemScope('read_settings'),
@@ -1724,7 +1779,6 @@ export interface UpdateQuotaEnforcementSettingsInput {
 export function useQuotaEnforcementSettings() {
   const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
-
 
   return useQuery({
     queryKey: ['quotaEnforcementSettings'],
