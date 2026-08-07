@@ -4,7 +4,7 @@ import React from 'react';
  * Formats a raw error message from the backend by extracting request IDs
  * and cleaning up the message.
  */
-export function formatErrorMessage(error: string): {
+function formatErrorMessage(error: string): {
   message: string;
   requestIDs: string[];
 } {

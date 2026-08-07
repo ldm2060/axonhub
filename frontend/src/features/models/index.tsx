@@ -14,7 +14,8 @@ import { createColumns } from './components/models-columns';
 import { ModelsDialogs } from './components/models-dialogs';
 import { ModelsOnboardingFlow } from './components/models-onboarding-flow';
 import { ModelsTable } from './components/models-table';
-import ModelsProvider, { useModels } from './context/models-context';
+import { useModels } from './context/models-context';
+import ModelsProvider from './context/models-provider';
 import { useQueryAllModels } from './data/models';
 import { useDevelopersData } from './data/providers';
 

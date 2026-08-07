@@ -9,7 +9,7 @@ import { DataStorageDialogs } from './components/data-storage-dialogs';
 import { createColumns } from './components/data-storages-columns';
 import { DataStoragesPrimaryButtons } from './components/data-storages-primary-buttons';
 import { DataStoragesTable } from './components/data-storages-table';
-import DataStoragesProvider from './context/data-storages-context';
+import DataStoragesProvider from './context/data-storages-provider';
 import { useDataStorages } from './data/data-storages';
 
 function DataStoragesContent() {

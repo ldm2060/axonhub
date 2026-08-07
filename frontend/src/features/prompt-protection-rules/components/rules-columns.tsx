@@ -1,32 +1,13 @@
-import { useCallback, useState } from 'react';
 import { format } from 'date-fns';
 import { ColumnDef, Row, Table } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { PromptProtectionRule } from '../data/schema';
 import { DataTableRowActions } from './data-table-row-actions';
-import { RulesStatusDialog } from './rules-status-dialog';
-
-function StatusSwitchCell({ row }: { row: Row<PromptProtectionRule> }) {
-  const rule = row.original;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const isEnabled = rule.status === 'enabled';
-
-  const handleSwitchClick = useCallback(() => {
-    setDialogOpen(true);
-  }, []);
-
-  return (
-    <>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} />
-      {dialogOpen && <RulesStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={rule} />}
-    </>
-  );
-}
+import { StatusSwitchCell } from './rules-column-cells';
 
 export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true): ColumnDef<PromptProtectionRule>[] => [
   ...(canWrite

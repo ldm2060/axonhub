@@ -1,94 +1,16 @@
-import { useCallback, useState } from 'react';
 import { format } from 'date-fns';
 import { ColumnDef, Row, Table } from '@tanstack/react-table';
-import { IconCheck, IconX, IconLink, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { IconCheck, IconX, IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import * as Icons from '@lobehub/icons';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/stores/authStore';
-import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import { useModels } from '../context/models-context';
 import { Model } from '../data/schema';
 import { DataTableRowActions } from './data-table-row-actions';
-import { ModelsStatusDialog } from './models-status-dialog';
-import { useDeveloperLabel } from './models-table';
-
-// Status Switch Cell Component to handle status toggle with confirmation dialog
-function StatusSwitchCell({ row }: { row: Row<Model> }) {
-  const model = row.original;
-  const { modelPermissions } = usePermissions();
-  const { user: authUser } = useAuthStore((state) => state.auth);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const { channelPermissions } = usePermissions();
-
-  const isEnabled = model.status === 'enabled';
-  const isArchived = model.status === 'archived';
-  const isOwner = model.ownerID === authUser?.id;
-  const canToggle = modelPermissions.canWrite || (modelPermissions.canManageOwn && isOwner);
-
-  const handleSwitchClick = useCallback(() => {
-    if (canToggle && !isArchived) {
-      setDialogOpen(true);
-    }
-  }, [canToggle, isArchived]);
-
-  if (!channelPermissions.canWrite) {
-    return <Badge variant='outline'>{model.status}</Badge>;
-  }
-
-  return (
-    <>
-      <Switch
-        checked={isEnabled}
-        onCheckedChange={handleSwitchClick}
-        disabled={!canToggle || isArchived}
-        data-testid='model-status-switch'
-      />
-      {dialogOpen && <ModelsStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={model} />}
-    </>
-  );
-}
-
-// Developer Cell Component to show translated developer name
-function DeveloperCell({ row }: { row: Row<Model> }) {
-  const getDeveloperLabel = useDeveloperLabel();
-  return <Badge variant='outline'>{getDeveloperLabel(row.getValue('developer'))}</Badge>;
-}
-
-// Association Rules Cell Component to handle permission check
-function AssociationRulesCell({ row }: { row: Row<Model> }) {
-  const model = row.original;
-  const { setOpen, setCurrentRow } = useModels();
-  const { channelPermissions } = usePermissions();
-
-  const handleOpenAssociationDialog = useCallback(() => {
-    setCurrentRow(model);
-    setOpen('association');
-  }, [model, setCurrentRow, setOpen]);
-
-  const associationCount = model.settings?.associations?.length || 0;
-
-  // Only show button if user has write permissions
-  if (!channelPermissions.canWrite) {
-    return (
-      <div className='flex justify-center'>
-        <Badge variant='secondary'>{associationCount}</Badge>
-      </div>
-    );
-  }
-
-  return (
-    <Button size='sm' variant='outline' className='h-8 px-3' onClick={handleOpenAssociationDialog}>
-      <IconLink className='mr-1 h-3 w-3' />
-      {`${associationCount}`}
-    </Button>
-  );
-}
+import { AssociationRulesCell, DeveloperCell, StatusSwitchCell } from './models-column-cells';
 
 export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true): ColumnDef<Model>[] => {
   return [

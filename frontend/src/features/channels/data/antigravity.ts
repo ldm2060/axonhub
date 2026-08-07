@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api-client';
-import { ProxyConfig } from '../hooks/use-oauth-flow';
+import type { ProxyConfig } from './schema';
 
 export async function antigravityOAuthStart(
   headers?: Record<string, string>,

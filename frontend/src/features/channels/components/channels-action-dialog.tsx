@@ -68,14 +68,15 @@ import {
   createChannelInputSchema,
   updateChannelInputSchema,
   SaveChannelQuotaMonitorBindingInput,
+  ProxyType,
+  type ProxyConfig,
 } from '../data/schema';
-import { ProxyConfig, useOAuthFlow } from '../hooks/use-oauth-flow';
+import { useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
 import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
 import { ChannelClientRestriction } from './channel-client-restriction';
 import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
-import { ProxyType } from './channels-proxy-dialog';
 import { CopilotDeviceFlow } from './copilot-device-flow';
 import { KimiCodeDeviceFlow } from './kimi-code-device-flow';
 import { ManualModelBadge } from './manual-model-badge';

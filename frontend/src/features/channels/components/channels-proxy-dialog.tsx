@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useProxyPresets, useSaveProxyPreset } from '@/features/system/data/system';
 import { useUpdateChannel, useTestChannel } from '../data/channels';
-import { Channel } from '../data/schema';
+import { Channel, ProxyType, proxyConfigSchema as baseProxyConfigSchema } from '../data/schema';
 import { ErrorDisplay } from '../utils/error-formatter';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 
@@ -27,35 +27,20 @@ interface Props {
   currentRow: Channel;
 }
 
-// Proxy type enum
-export enum ProxyType {
-  DISABLED = 'disabled',
-  ENVIRONMENT = 'environment',
-  URL = 'url',
-}
-
 // Proxy configuration schema
-const proxyConfigSchema = z
-  .object({
-    type: z.nativeEnum(ProxyType),
-    url: z.string().optional(),
-    username: z.string().optional(),
-    password: z.string().optional(),
-    disableConnectionReuse: z.boolean().optional(),
-  })
-  .refine(
-    (data) => {
-      // If type is URL, url field is required
-      if (data.type === ProxyType.URL) {
-        return !!data.url && data.url.trim() !== '';
-      }
-      return true;
-    },
-    {
-      message: 'Proxy URL is required when type is URL',
-      path: ['url'],
+const proxyConfigSchema = baseProxyConfigSchema.refine(
+  (data) => {
+    // If type is URL, url field is required
+    if (data.type === ProxyType.URL) {
+      return !!data.url && data.url.trim() !== '';
     }
-  );
+    return true;
+  },
+  {
+    message: 'Proxy URL is required when type is URL',
+    path: ['url'],
+  }
+);
 
 type ProxyConfig = z.infer<typeof proxyConfigSchema>;
 

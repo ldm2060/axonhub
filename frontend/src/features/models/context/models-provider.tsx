@@ -1,43 +1,15 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { Model } from '../data/schema';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import type { Model } from '../data/schema';
+import { ModelsContext, type ModelsDialogType } from './models-context';
 
-type DialogType =
-  | 'create'
-  | 'batchCreate'
-  | 'edit'
-  | 'delete'
-  | 'archive'
-  | 'association'
-  | 'developerAssociation'
-  | 'settings'
-  | 'bulkEnable'
-  | 'bulkDisable'
-  | 'unassociated'
-  | null;
-
-interface ModelsContextType {
-  open: DialogType;
-  setOpen: (open: DialogType) => void;
-  currentRow: Model | null;
-  setCurrentRow: (row: Model | null) => void;
-  currentDeveloper: string | null;
-  setCurrentDeveloper: (developer: string | null) => void;
-  selectedModels: Model[];
-  setSelectedModels: (models: Model[]) => void;
-  resetRowSelection: (() => void) | null;
-  setResetRowSelection: (fn: (() => void) | null) => void;
-}
-
-const ModelsContext = createContext<ModelsContextType | undefined>(undefined);
-
-export function ModelsProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState<DialogType>(null);
+export function ModelsProvider({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState<ModelsDialogType>(null);
   const [currentRow, setCurrentRow] = useState<Model | null>(null);
   const [currentDeveloper, setCurrentDeveloper] = useState<string | null>(null);
   const [selectedModels, setSelectedModels] = useState<Model[]>([]);
   const [resetRowSelection, setResetRowSelection] = useState<(() => void) | null>(null);
 
-  const handleSetOpen = useCallback((newOpen: DialogType) => {
+  const handleSetOpen = useCallback((newOpen: ModelsDialogType) => {
     setOpen(newOpen);
   }, []);
 
@@ -85,14 +57,6 @@ export function ModelsProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <ModelsContext.Provider value={value}>{children}</ModelsContext.Provider>;
-}
-
-export function useModels() {
-  const context = useContext(ModelsContext);
-  if (context === undefined) {
-    throw new Error('useModels must be used within a ModelsProvider');
-  }
-  return context;
 }
 
 export default ModelsProvider;

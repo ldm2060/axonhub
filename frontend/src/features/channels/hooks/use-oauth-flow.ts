@@ -1,14 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ProxyType } from '../components/channels-proxy-dialog';
-
-export interface ProxyConfig {
-  type: ProxyType;
-  url?: string;
-  username?: string;
-  password?: string;
-}
+import { ProxyType, type ProxyConfig } from '../data/schema';
 
 export interface OAuthStartResult {
   session_id: string;

@@ -11,7 +11,7 @@ import { RolesDialogs } from './components/roles-action-dialog';
 import { createColumns } from './components/roles-columns';
 import { RolesPrimaryButtons } from './components/roles-primary-buttons';
 import { RolesTable } from './components/roles-table';
-import RolesProvider from './context/roles-context';
+import RolesProvider from './context/roles-provider';
 import { useRoles } from './data/roles';
 
 function RolesContent() {

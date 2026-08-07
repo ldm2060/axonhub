@@ -1,35 +1,8 @@
-import { createContext, useContext, useState, useRef } from 'react';
-import { ApiKey } from '../data/schema';
+import { useRef, useState, type ReactNode } from 'react';
+import type { ApiKey } from '../data/schema';
+import { ApiKeysContext, type ApiKeyDialogType } from './apikeys-context';
 
-type ApiKeyDialogType =
-  | 'create'
-  | 'edit'
-  | 'delete'
-  | 'status'
-  | 'view'
-  | 'profiles'
-  | 'profileTemplates'
-  | 'archive'
-  | 'bulkDisable'
-  | 'bulkArchive'
-  | 'bulkEnable'
-  | 'rotate';
-
-interface ApiKeysContextType {
-  selectedApiKey: ApiKey | null;
-  setSelectedApiKey: (apiKey: ApiKey | null) => void;
-  selectedApiKeys: ApiKey[];
-  setSelectedApiKeys: (apiKeys: ApiKey[]) => void;
-  isDialogOpen: Record<ApiKeyDialogType, boolean>;
-  openDialog: (type: ApiKeyDialogType, apiKey?: ApiKey | ApiKey[]) => void;
-  closeDialog: (type?: ApiKeyDialogType) => void;
-  resetRowSelection: () => void;
-  setResetRowSelection: (fn: () => void) => void;
-}
-
-const ApiKeysContext = createContext<ApiKeysContextType | undefined>(undefined);
-
-export function ApiKeysProvider({ children }: { children: React.ReactNode }) {
+export function ApiKeysProvider({ children }: { children: ReactNode }) {
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
   const [selectedApiKeys, setSelectedApiKeys] = useState<ApiKey[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<Record<ApiKeyDialogType, boolean>>({
@@ -77,7 +50,6 @@ export function ApiKeysProvider({ children }: { children: React.ReactNode }) {
         setSelectedApiKeys([]);
       }
     } else {
-      // Close all dialogs
       setIsDialogOpen({
         create: false,
         edit: false,
@@ -119,11 +91,3 @@ export function ApiKeysProvider({ children }: { children: React.ReactNode }) {
 }
 
 export default ApiKeysProvider;
-
-export function useApiKeysContext() {
-  const context = useContext(ApiKeysContext);
-  if (context === undefined) {
-    throw new Error('useApiKeysContext must be used within a ApiKeysProvider');
-  }
-  return context;
-}

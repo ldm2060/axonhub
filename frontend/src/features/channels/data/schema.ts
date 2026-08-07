@@ -211,6 +211,11 @@ export type OverrideOperation = z.infer<typeof overrideOperationSchema>;
 
 // Proxy Type
 export const proxyTypeSchema = z.enum(['disabled', 'environment', 'url']);
+export const ProxyType = {
+  DISABLED: proxyTypeSchema.enum.disabled,
+  ENVIRONMENT: proxyTypeSchema.enum.environment,
+  URL: proxyTypeSchema.enum.url,
+} as const;
 export type ProxyType = z.infer<typeof proxyTypeSchema>;
 
 // Proxy Config

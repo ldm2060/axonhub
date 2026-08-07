@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api-client';
-import { ProxyConfig } from '../hooks/use-oauth-flow';
+import type { ProxyConfig } from './schema';
 
 export async function claudecodeOAuthStart(headers?: Record<string, string>): Promise<{ session_id: string; auth_url: string }> {
   return apiRequest('/admin/claudecode/oauth/start', {

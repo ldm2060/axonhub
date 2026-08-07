@@ -12,7 +12,8 @@ import { PermissionGuard } from '@/components/permission-guard';
 import { createColumns } from './components/prompts-columns';
 import { PromptsDialogs } from './components/prompts-dialogs';
 import { PromptsTable } from './components/prompts-table';
-import PromptsProvider, { usePrompts } from './context/prompts-context';
+import { usePrompts } from './context/prompts-context';
+import PromptsProvider from './context/prompts-provider';
 import { useQueryPrompts } from './data/prompts';
 
 function PromptsContent() {

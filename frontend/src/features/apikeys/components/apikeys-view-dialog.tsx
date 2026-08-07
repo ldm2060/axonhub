@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MaskedCodeBlock, MaskedCodeBlockCopyButton, highlightMaskedCode } from '@/components/ai-elements/masked-code-block';
+import { highlightCode } from '@/components/ai-elements/code-highlight';
+import { MaskedCodeBlock, MaskedCodeBlockCopyButton } from '@/components/ai-elements/masked-code-block';
 import { useApiKeysContext } from '../context/apikeys-context';
 
 function CopyBaseUrlButton({ baseUrl }: { baseUrl: string }) {
@@ -234,7 +235,7 @@ print(response.text)`,
 
       await Promise.all(
         Object.entries(codeExamples).map(async ([key, example]) => {
-          const [light, dark] = await highlightMaskedCode(example.display, languages[key]);
+          const [light, dark] = await highlightCode(example.display, languages[key]);
           results[key] = { light, dark };
         })
       );

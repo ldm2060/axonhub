@@ -12,7 +12,7 @@ import { createColumns } from './components/apikeys-columns';
 import { ApiKeysDialogs } from './components/apikeys-dialogs';
 import { ApiKeysPrimaryButtons } from './components/apikeys-primary-buttons';
 import { ApiKeysTable } from './components/apikeys-table';
-import ApiKeysProvider from './context/apikeys-context';
+import ApiKeysProvider from './context/apikeys-provider';
 import { useApiKeys } from './data/apikeys';
 import { ApiKeyType } from './data/schema';
 

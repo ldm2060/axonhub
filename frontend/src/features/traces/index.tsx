@@ -7,7 +7,6 @@ import useInterval from '@/hooks/useInterval';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { TracesTable } from './components';
-import { TracesProvider } from './context';
 import { useTraces } from './data';
 
 function TracesContent() {
@@ -135,7 +134,7 @@ export default function TracesManagement() {
   const { t } = useTranslation();
 
   return (
-    <TracesProvider>
+    <>
       <Header fixed>
         <div className='flex flex-1 items-center justify-between'>
           <div>
@@ -148,6 +147,6 @@ export default function TracesManagement() {
       <Main fixed>
         <TracesContent />
       </Main>
-    </TracesProvider>
+    </>
   );
 }

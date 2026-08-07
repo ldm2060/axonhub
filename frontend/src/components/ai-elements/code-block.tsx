@@ -1,11 +1,11 @@
 'use client';
 
 import { type ComponentProps, createContext, type HTMLAttributes, useContext, useEffect, useRef, useState } from 'react';
-import type { Element } from 'hast';
 import { CheckIcon, CopyIcon } from 'lucide-react';
-import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
+import type { BundledLanguage } from 'shiki';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { highlightCode } from './code-highlight';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -20,37 +20,6 @@ type CodeBlockContextType = {
 const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
-
-const lineNumberTransformer: ShikiTransformer = {
-  name: 'line-numbers',
-  line(node: Element, line: number) {
-    node.children.unshift({
-      type: 'element',
-      tagName: 'span',
-      properties: {
-        className: ['inline-block', 'min-w-10', 'mr-4', 'text-right', 'select-none', 'text-muted-foreground'],
-      },
-      children: [{ type: 'text', value: String(line) }],
-    });
-  },
-};
-
-export async function highlightCode(code: string, language: BundledLanguage, showLineNumbers = false) {
-  const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
-
-  return await Promise.all([
-    codeToHtml(code, {
-      lang: language,
-      theme: 'one-light',
-      transformers,
-    }),
-    codeToHtml(code, {
-      lang: language,
-      theme: 'one-dark-pro',
-      transformers,
-    }),
-  ]);
-}
 
 export const CodeBlock = ({ code, language, showLineNumbers = false, className, children, ...props }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>('');

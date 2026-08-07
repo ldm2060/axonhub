@@ -12,7 +12,8 @@ import { PermissionGuard } from '@/components/permission-guard';
 import { createColumns } from './components/rules-columns';
 import { RulesDialogs } from './components/rules-dialogs';
 import { RulesTable } from './components/rules-table';
-import PromptProtectionRulesProvider, { usePromptProtectionRules } from './context/rules-context';
+import { usePromptProtectionRules } from './context/rules-context';
+import PromptProtectionRulesProvider from './context/rules-provider';
 import { useQueryPromptProtectionRules } from './data/rules';
 
 function RulesContent() {

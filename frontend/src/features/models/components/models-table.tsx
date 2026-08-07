@@ -38,19 +38,9 @@ import { PermissionGuard } from '@/components/permission-guard';
 import { useModelSettings } from '@/features/system/data/system';
 import { useModels } from '../context/models-context';
 import { Model } from '../data/schema';
+import { useDeveloperLabel } from '../hooks/use-developer-label';
 
 const MotionTableRow = motion.create(TableRow);
-
-export function useDeveloperLabel() {
-  const { t, i18n } = useTranslation();
-  return useCallback(
-    (developer: string) => {
-      const key = `models.developers.${developer}`;
-      return i18n.exists(key) ? t(key) : developer;
-    },
-    [t, i18n]
-  );
-}
 
 interface ModelsTableProps {
   columns: ColumnDef<Model>[];

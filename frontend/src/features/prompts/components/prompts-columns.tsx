@@ -1,37 +1,13 @@
-import { useCallback, useState } from 'react';
 import { format } from 'date-fns';
 import { ColumnDef, Row, Table } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { Prompt } from '../data/schema';
 import { DataTableRowActions } from './data-table-row-actions';
-import { PromptsStatusDialog } from './prompts-status-dialog';
-
-function StatusSwitchCell({ row, canWrite }: { row: Row<Prompt>; canWrite: boolean }) {
-  const prompt = row.original;
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const isEnabled = prompt.status === 'enabled';
-
-  const handleSwitchClick = useCallback(() => {
-    setDialogOpen(true);
-  }, []);
-
-  if (!canWrite) {
-    return <Badge variant='outline'>{prompt.status}</Badge>;
-  }
-
-  return (
-    <>
-      <Switch checked={isEnabled} onCheckedChange={handleSwitchClick} data-testid='prompt-status-switch' />
-      {dialogOpen && <PromptsStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} currentRow={prompt} />}
-    </>
-  );
-}
+import { StatusSwitchCell } from './prompts-column-cells';
 
 export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrite: boolean = true): ColumnDef<Prompt>[] => {
   return [

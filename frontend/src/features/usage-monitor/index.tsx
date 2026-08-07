@@ -6,7 +6,8 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { MonitorCard } from './components/monitor-card';
 import { MonitorErrorBoundary } from './components/monitor-error-boundary';
-import UsageMonitorProvider, { useUsageMonitorContext } from './context/usage-monitor-context';
+import { useUsageMonitorContext } from './context/usage-monitor-context';
+import UsageMonitorProvider from './context/usage-monitor-provider';
 import { useUsageMonitorChannels } from './data/usage-monitor';
 
 const AddChannelDialog = lazy(() => import('./components/add-channel-dialog').then((m) => ({ default: m.AddChannelDialog })));

@@ -17,7 +17,6 @@ import useInterval from '@/hooks/useInterval';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { RequestsTable, type RequestTableFilters } from './components';
-import { RequestsProvider } from './context';
 import { useRequests } from './data';
 
 const REQUEST_FILTER_SEARCH_KEYS = {
@@ -397,7 +396,7 @@ export default function RequestsManagement({ scope = 'project' }: { scope?: Requ
   const { t } = useTranslation();
 
   return (
-    <RequestsProvider>
+    <>
       <Header fixed>
         <div className='flex flex-1 items-center justify-between'>
           <div>
@@ -410,6 +409,6 @@ export default function RequestsManagement({ scope = 'project' }: { scope?: Requ
       <Main fixed className='py-2 sm:py-6'>
         <RequestsContent scope={scope} />
       </Main>
-    </RequestsProvider>
+    </>
   );
 }

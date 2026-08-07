@@ -10,7 +10,7 @@ import { useMe } from '@/features/auth/data/auth';
 import { createColumns } from './components/models-columns';
 import { ModelsPersonalButtons } from './components/models-personal-buttons';
 import { ModelsTable } from './components/models-table';
-import ModelsProvider from './context/models-context';
+import ModelsProvider from './context/models-provider';
 import { useQueryAllModels } from './data/models';
 import { useDevelopersData } from './data/providers';
 

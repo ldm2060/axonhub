@@ -11,7 +11,7 @@ import { ProjectsDialogs } from './components/projects-action-dialog';
 import { createColumns } from './components/projects-columns';
 import { ProjectsPrimaryButtons } from './components/projects-primary-buttons';
 import { ProjectsTable } from './components/projects-table';
-import ProjectsProvider from './context/projects-context';
+import ProjectsProvider from './context/projects-provider';
 import { useProjects } from './data/projects';
 
 function ProjectsContent() {
