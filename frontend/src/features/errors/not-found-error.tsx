@@ -25,70 +25,70 @@ interface SuggestedPage {
   keywords: string[];
 }
 
+const SUGGESTED_PAGES: SuggestedPage[] = [
+  {
+    title: 'Dashboard',
+    description: 'Overview of your AxonHub instance',
+    path: '/',
+    icon: <IconHome className='h-5 w-5' />,
+    keywords: ['dashboard', 'home', 'overview', 'main'],
+  },
+  {
+    title: 'Channels',
+    description: 'Manage AI model channels and configurations',
+    path: '/channels',
+    icon: <IconMessages className='h-5 w-5' />,
+    keywords: ['channels', 'models', 'ai', 'configuration', 'chat'],
+  },
+  {
+    title: 'Requests',
+    description: 'Monitor API requests and usage analytics',
+    path: '/requests',
+    icon: <IconChartBar className='h-5 w-5' />,
+    keywords: ['requests', 'api', 'analytics', 'monitoring', 'usage'],
+  },
+  {
+    title: 'Users',
+    description: 'User management and permissions',
+    path: '/users',
+    icon: <IconUsers className='h-5 w-5' />,
+    keywords: ['users', 'people', 'accounts', 'management'],
+  },
+  {
+    title: 'API Keys',
+    description: 'Generate and manage API authentication keys',
+    path: '/api-keys',
+    icon: <IconKey className='h-5 w-5' />,
+    keywords: ['api', 'keys', 'authentication', 'tokens', 'access'],
+  },
+  {
+    title: 'Roles',
+    description: 'Configure user roles and permissions',
+    path: '/roles',
+    icon: <IconShield className='h-5 w-5' />,
+    keywords: ['roles', 'permissions', 'access', 'security', 'rbac'],
+  },
+  {
+    title: 'Settings',
+    description: 'System configuration and preferences',
+    path: '/settings',
+    icon: <IconSettings className='h-5 w-5' />,
+    keywords: ['settings', 'configuration', 'preferences', 'system'],
+  },
+  {
+    title: 'Help Center',
+    description: 'Documentation and support resources',
+    path: '/help-center',
+    icon: <IconHelpCircle className='h-5 w-5' />,
+    keywords: ['help', 'documentation', 'support', 'guide', 'docs'],
+  },
+];
+
 export default function NotFoundError() {
   const navigate = useNavigate();
   const { history } = useRouter();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const suggestedPages: SuggestedPage[] = [
-    {
-      title: 'Dashboard',
-      description: 'Overview of your AxonHub instance',
-      path: '/',
-      icon: <IconHome className='h-5 w-5' />,
-      keywords: ['dashboard', 'home', 'overview', 'main'],
-    },
-    {
-      title: 'Channels',
-      description: 'Manage AI model channels and configurations',
-      path: '/channels',
-      icon: <IconMessages className='h-5 w-5' />,
-      keywords: ['channels', 'models', 'ai', 'configuration', 'chat'],
-    },
-    {
-      title: 'Requests',
-      description: 'Monitor API requests and usage analytics',
-      path: '/requests',
-      icon: <IconChartBar className='h-5 w-5' />,
-      keywords: ['requests', 'api', 'analytics', 'monitoring', 'usage'],
-    },
-    {
-      title: 'Users',
-      description: 'User management and permissions',
-      path: '/users',
-      icon: <IconUsers className='h-5 w-5' />,
-      keywords: ['users', 'people', 'accounts', 'management'],
-    },
-    {
-      title: 'API Keys',
-      description: 'Generate and manage API authentication keys',
-      path: '/api-keys',
-      icon: <IconKey className='h-5 w-5' />,
-      keywords: ['api', 'keys', 'authentication', 'tokens', 'access'],
-    },
-    {
-      title: 'Roles',
-      description: 'Configure user roles and permissions',
-      path: '/roles',
-      icon: <IconShield className='h-5 w-5' />,
-      keywords: ['roles', 'permissions', 'access', 'security', 'rbac'],
-    },
-    {
-      title: 'Settings',
-      description: 'System configuration and preferences',
-      path: '/settings',
-      icon: <IconSettings className='h-5 w-5' />,
-      keywords: ['settings', 'configuration', 'preferences', 'system'],
-    },
-    {
-      title: 'Help Center',
-      description: 'Documentation and support resources',
-      path: '/help-center',
-      icon: <IconHelpCircle className='h-5 w-5' />,
-      keywords: ['help', 'documentation', 'support', 'guide', 'docs'],
-    },
-  ];
 
   // Smart suggestions based on current URL and search query
   const smartSuggestions = useMemo(() => {
@@ -96,7 +96,7 @@ export default function NotFoundError() {
     const query = searchQuery.toLowerCase();
 
     // Score pages based on URL similarity and search relevance
-    const scoredPages = suggestedPages.map((page) => {
+    const scoredPages = SUGGESTED_PAGES.map((page) => {
       let score = 0;
 
       // URL path similarity
@@ -123,7 +123,7 @@ export default function NotFoundError() {
 
     // Sort by score and return top suggestions
     return scoredPages.sort((a, b) => b.score - a.score).slice(0, query ? 6 : 4);
-  }, [location.pathname, searchQuery, suggestedPages]);
+  }, [location.pathname, searchQuery]);
 
   const handlePageNavigation = (path: string) => {
     navigate({ to: path });

@@ -7,7 +7,7 @@ type UseCopyToClipboardProps = {
   copyMessage?: string;
 };
 
-export function useCopyToClipboard({ text, copyMessage = 'Copied to clipboard!' }: UseCopyToClipboardProps) {
+export function useCopyToClipboard({ text, copyMessage }: UseCopyToClipboardProps) {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -16,7 +16,7 @@ export function useCopyToClipboard({ text, copyMessage = 'Copied to clipboard!' 
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        toast.success(t('common.success.copiedToClipboard'));
+        toast.success(copyMessage || t('common.success.copiedToClipboard'));
         setIsCopied(true);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);

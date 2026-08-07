@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -105,7 +105,7 @@ export function RulesTable({
     manualFiltering: true,
   });
 
-  const filteredSelectedRows = useMemo(() => table.getFilteredSelectedRowModel().rows, [data, rowSelection, table]);
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedCount = filteredSelectedRows.length;
 
   useEffect(() => {

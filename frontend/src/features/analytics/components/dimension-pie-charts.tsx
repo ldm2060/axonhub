@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, BarChart4, Activity, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -89,11 +89,10 @@ function PieChartCard({ title, data, valueKey, valueFormatter, otherLabel }: Pie
   const [isCompact, setIsCompact] = useState(false);
   const total = data.reduce((sum, item) => sum + (item[valueKey] as number), 0);
 
-  useEffect(() => {
-    if (legendRef.current && legendRef.current !== legendPortal) {
-      setLegendPortal(legendRef.current);
-    }
-  });
+  const setLegendRef = useCallback((node: HTMLDivElement | null) => {
+    legendRef.current = node;
+    setLegendPortal(node);
+  }, []);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -203,7 +202,7 @@ function PieChartCard({ title, data, valueKey, valueFormatter, otherLabel }: Pie
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div ref={legendRef} className='mt-2 flex flex-col items-center gap-1' />
+          <div ref={setLegendRef} className='mt-2 flex flex-col items-center gap-1' />
         </CardContent>
       </Card>
     );
@@ -251,7 +250,7 @@ function PieChartCard({ title, data, valueKey, valueFormatter, otherLabel }: Pie
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div ref={legendRef} className='flex flex-col justify-center gap-1 pl-4' />
+          <div ref={setLegendRef} className='flex flex-col justify-center gap-1 pl-4' />
         </div>
       </CardContent>
     </Card>

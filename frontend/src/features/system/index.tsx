@@ -5,22 +5,7 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { SystemSettingsTabs } from './components/tabs';
 import SystemProvider from './context/system-context';
-
-type SystemTabKey =
-  | 'general'
-  | 'security'
-  | 'brand'
-  | 'registration'
-  | 'email'
-  | 'storage'
-  | 'retry'
-  | 'streaming'
-  | 'webhook'
-  | 'proxy'
-  | 'quota'
-  | 'backup'
-  | 'diagnostics'
-  | 'about';
+import { type SystemTabKey } from './data/system-tabs';
 
 interface SystemContentProps {
   initialTab?: SystemTabKey;

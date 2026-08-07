@@ -111,7 +111,7 @@ function ChannelsContent() {
       where.errorMessageNotNil = true;
     }
     return Object.keys(where).length > 0 ? where : undefined;
-  }, [debouncedNameFilter, tabFilteredTypes, statusFilter, showErrorOnly]);
+  }, [debouncedNameFilter, typeFilter, tabFilteredTypes, statusFilter, showErrorOnly]);
 
   const currentOrderBy = useMemo(() => {
     if (sorting.length === 0) {

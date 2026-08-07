@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { CopyIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +16,10 @@ interface ResponseFlowProps {
   reasoningDurationMs?: number | null;
 }
 
-export function ResponseFlow({ chunks, body, version = 0, isLive, reasoningDurationMs }: ResponseFlowProps) {
+export function ResponseFlow({ chunks, body, isLive, reasoningDurationMs }: ResponseFlowProps) {
   const { t } = useTranslation();
 
-  const { content, reasoning, toolCalls } = useMemo(() => parseResponse(body, chunks), [chunks, body, version]);
+  const { content, reasoning, toolCalls } = parseResponse(body, chunks);
 
   if (!content && !reasoning && toolCalls.length === 0) {
     if (isLive) {

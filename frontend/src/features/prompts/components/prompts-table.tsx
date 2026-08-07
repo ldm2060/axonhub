@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -107,7 +107,7 @@ export function PromptsTable({
     manualFiltering: true,
   });
 
-  const filteredSelectedRows = useMemo(() => table.getFilteredSelectedRowModel().rows, [table, rowSelection, data]);
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
 
   const selectedCount = filteredSelectedRows.length;
 

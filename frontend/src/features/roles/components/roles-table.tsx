@@ -117,7 +117,7 @@ export function RolesTable({
     });
   }, [setResetRowSelection, table]);
 
-  const filteredSelectedRows = useMemo(() => table.getFilteredSelectedRowModel().rows, [table, rowSelection, data]);
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedRoles = useMemo(() => filteredSelectedRows.map((row) => row.original as Role), [filteredSelectedRows]);
   const selectedCount = selectedRoles.length;
   const isFiltered = columnFilters.length > 0;

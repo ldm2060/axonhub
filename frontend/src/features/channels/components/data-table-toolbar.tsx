@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
 import { useChannels } from '../context/channels-context';
 import { useAllChannelTags } from '../data/channels';
-import { CHANNEL_CONFIGS } from '../data/config_channels';
 import { DataTableViewOptions } from './data-table-view-options';
 
 interface DataTableToolbarProps<TData> {

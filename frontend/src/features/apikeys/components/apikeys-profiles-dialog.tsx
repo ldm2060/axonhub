@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { format, type Locale } from 'date-fns';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { IconPlus, IconTrash, IconSettings, IconChevronDown, IconChevronUp, IconInfoCircle } from '@tabler/icons-react';
 import { useQueryModels } from '@/gql/models';
@@ -159,7 +159,11 @@ export function ApiKeyProfilesDialog({ open, onOpenChange, onSubmit, loading = f
   });
 
   // Watch profile names to update activeProfile dropdown options
-  const watchedProfiles = form.watch('profiles') || [];
+  const watchedProfiles = useWatch({
+    control: form.control,
+    name: 'profiles',
+    defaultValue: defaultValues.profiles,
+  });
   const profileNames = watchedProfiles.map((profile) => profile.name || '');
 
   useEffect(() => {
@@ -507,7 +511,11 @@ function ProfileCard({
   });
 
   // Watch all profiles to check for duplicates
-  const allProfiles = form.watch('profiles') || [];
+  const allProfiles = useWatch({
+    control: form.control,
+    name: 'profiles',
+    defaultValue: [],
+  });
   const profileName = form.watch(`profiles.${profileIndex}.name`);
   const channelTagsMatchMode = form.watch(`profiles.${profileIndex}.channelTagsMatchMode`);
   const isExcludeMode = channelTagsMatchMode === 'none';
@@ -531,7 +539,7 @@ function ProfileCard({
         return;
       }
 
-      const otherProfiles = allProfiles.filter((_profile: ApiKeyProfile, idx: number) => idx !== profileIndex);
+      const otherProfiles = (allProfiles || []).filter((_profile: ApiKeyProfile, idx: number) => idx !== profileIndex);
       const isDuplicate = otherProfiles.some((p: ApiKeyProfile) => p.name && p.name.trim().toLowerCase() === trimmedValue);
 
       if (isDuplicate) {

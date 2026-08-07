@@ -842,7 +842,16 @@ export function ModelsAssociationDialog() {
     };
 
     fetchConnections();
-  }, [channelOptions, currentRow?.modelID, debouncedAssociationsString, inheritedAssociations, isOpen, isDeveloperMode, queryConnections]);
+  }, [
+    channelOptions,
+    currentRow?.modelID,
+    debouncedAssociationsString,
+    inheritedAssociations,
+    isOpen,
+    isDeveloperMode,
+    queryConnections,
+    t,
+  ]);
 
   useEffect(() => {
     if (isOpen) {

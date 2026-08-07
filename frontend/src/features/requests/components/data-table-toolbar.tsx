@@ -205,18 +205,14 @@ export function DataTableToolbar<TData>({
   const [showArchivedChannels, setShowArchivedChannels] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasDateRange = !!dateRange?.from || !!dateRange?.to;
-  const isFiltered = table.getState().columnFilters.length > 0 || hasDateRange;
+  const columnFilters = table.getState().columnFilters ?? [];
+  const isFiltered = columnFilters.length > 0 || hasDateRange;
 
   // Active filter count for mobile badge (excludes model ID filter)
-  const columnFilters = table.getState().columnFilters ?? [];
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    for (const filter of columnFilters) {
-      if (filter.id !== MODEL_ID_COLUMN && filter.value) count++;
-    }
-    if (hasDateRange) count++;
-    return count;
-  }, [columnFilters, hasDateRange]);
+  const activeFilterCount = columnFilters.reduce(
+    (count, filter) => count + (filter.id !== MODEL_ID_COLUMN && filter.value ? 1 : 0),
+    hasDateRange ? 1 : 0
+  );
 
   // Handler to toggle show archived API keys and prune hidden IDs from filters
   const handleToggleShowArchivedApiKeys = (checked: boolean) => {

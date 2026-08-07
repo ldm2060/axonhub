@@ -216,7 +216,7 @@ response = client.models.generate_content(
 print(response.text)`,
       },
     };
-  }, [selectedApiKey?.key, apiKey, maskedApiKey]);
+  }, [selectedApiKey?.key, apiKey, maskedApiKey, currentOrigin]);
 
   useEffect(() => {
     if (!selectedApiKey?.key || Object.keys(codeExamples).length === 0) return;

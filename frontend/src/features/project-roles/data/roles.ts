@@ -71,76 +71,52 @@ export function useRoles(
     where?: any;
   } = {}
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const selectedProjectId = useSelectedProjectId();
 
   const queryVariables = {
     first: 20,
     ...variables,
     orderBy: variables.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
+    where: {
+      and: [{ projectID: selectedProjectId }, ...(variables.where ? [variables.where] : [])],
+    },
   };
 
-  const errorContext = t('common.errors.internalServerError');
-
   return useQuery({
-    queryKey: ['project-roles', queryVariables, selectedProjectId],
+    queryKey: ['project-roles', selectedProjectId, queryVariables],
     queryFn: async () => {
-      try {
-        if (!selectedProjectId) {
-          throw new Error('Project ID is required');
-        }
-        const data = await graphqlRequest<{ roles: RoleConnection }>(
-          PROJECT_ROLES_QUERY,
-          {
-            ...queryVariables,
-            where: { and: [{ projectID: selectedProjectId }, ...(variables.where ? [variables.where] : [])] },
-          },
-          { 'X-Project-ID': selectedProjectId }
-        );
-        return roleConnectionSchema.parse(data.roles);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      if (!selectedProjectId) {
+        throw new Error('Project ID is required');
       }
-    },
-    onError: (error) => {
-      handleError(error, errorContext);
+      const data = await graphqlRequest<{ roles: RoleConnection }>(PROJECT_ROLES_QUERY, queryVariables, {
+        'X-Project-ID': selectedProjectId,
+      });
+      return roleConnectionSchema.parse(data.roles);
     },
     enabled: !!selectedProjectId,
   });
 }
 
 export function useRole(id: string) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const selectedProjectId = useSelectedProjectId();
-  const errorContext = t('common.errors.internalServerError');
+  const queryVariables = {
+    where: { and: [{ projectID: selectedProjectId }, { id }] },
+  };
 
   return useQuery({
-    queryKey: ['project-role', id, selectedProjectId],
+    queryKey: ['project-role', selectedProjectId, id, queryVariables],
     queryFn: async () => {
-      try {
-        if (!selectedProjectId) {
-          throw new Error('Project ID is required');
-        }
-        const data = await graphqlRequest<{ roles: RoleConnection }>(
-          PROJECT_ROLES_QUERY,
-          { where: { and: [{ projectID: selectedProjectId }, { id }] } },
-          { 'X-Project-ID': selectedProjectId }
-        );
-        const role = data.roles?.edges[0]?.node;
-        if (!role) {
-          throw new Error('Role not found');
-        }
-        return roleSchema.parse(role);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
+      if (!selectedProjectId) {
+        throw new Error('Project ID is required');
       }
-    },
-    onError: (error) => {
-      handleError(error, errorContext);
+      const data = await graphqlRequest<{ roles: RoleConnection }>(PROJECT_ROLES_QUERY, queryVariables, {
+        'X-Project-ID': selectedProjectId,
+      });
+      const role = data.roles?.edges[0]?.node;
+      if (!role) {
+        throw new Error('Role not found');
+      }
+      return roleSchema.parse(role);
     },
     enabled: !!id && !!selectedProjectId,
   });

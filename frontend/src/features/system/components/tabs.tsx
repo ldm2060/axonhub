@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DEFAULT_SYSTEM_TAB, resolveSystemTab, type SystemTabKey } from '../data/system-tabs';
 import { AboutSettings } from './about-settings';
 import { BackupSettings } from './backup-settings';
 import { BrandSettings } from './brand-settings';
@@ -18,32 +19,14 @@ import { StorageSettings } from './storage-settings';
 import { StreamingSettings } from './streaming-settings';
 import { WebhookSettings } from './webhook-settings';
 
-type SystemTabKey =
-  | 'general'
-  | 'security'
-  | 'brand'
-  | 'registration'
-  | 'email'
-  | 'storage'
-  | 'retry'
-  | 'streaming'
-  | 'webhook'
-  | 'proxy'
-  | 'quota'
-  | 'backup'
-  | 'diagnostics'
-  | 'about';
-
-const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['backup', 'diagnostics']);
-
 interface SystemSettingsTabsProps {
-  initialTab?: string;
+  initialTab?: SystemTabKey;
 }
 
 export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
   const { t } = useTranslation();
   const { isOwner } = usePermissions();
-  const [activeTab, setActiveTab] = useState<string>('general');
+  const [activeTab, setActiveTab] = useState<SystemTabKey>(DEFAULT_SYSTEM_TAB);
   const tabListRef = useRef<HTMLDivElement>(null);
   const horizontalScrollRef = useHorizontalScroll<HTMLDivElement>();
   const setTabListRef = useCallback(
@@ -55,16 +38,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
   );
 
   useEffect(() => {
-    if (!initialTab) {
-      return;
-    }
-
-    if (!isOwner && OWNER_ONLY_TABS.has(initialTab)) {
-      setActiveTab('general');
-      return;
-    }
-
-    setActiveTab(initialTab);
+    setActiveTab(resolveSystemTab(initialTab, isOwner));
   }, [initialTab, isOwner]);
 
   useEffect(() => {
@@ -89,11 +63,7 @@ export function SystemSettingsTabs({ initialTab }: SystemSettingsTabsProps) {
     <Tabs
       value={activeTab}
       onValueChange={(value) => {
-        if (!isOwner && OWNER_ONLY_TABS.has(value)) {
-          setActiveTab('general');
-          return;
-        }
-        setActiveTab(value);
+        setActiveTab(resolveSystemTab(value, isOwner));
       }}
       className='w-full'
     >

@@ -479,7 +479,6 @@ export interface ClearCachePayload {
 
 // Hooks
 export function useBrandSettings(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -493,7 +492,6 @@ export function useBrandSettings(options?: { enabled?: boolean }) {
 }
 
 export function useStoragePolicy() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -676,7 +674,6 @@ export function useUpdateWebhookNotifierConfig() {
 }
 
 export function useDefaultDataStorageID() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1083,7 +1080,6 @@ export interface DeveloperModelSettings {
 }
 
 export function useModelSettings() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1152,7 +1148,6 @@ export interface UpdateSystemChannelSettingsInput {
 }
 
 export function useChannelSetting(options?: { enabled?: boolean }) {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1185,7 +1180,6 @@ export function useUpdateChannelSetting() {
 }
 
 export function useGeneralSettings() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1278,7 +1272,6 @@ export function useUpdateTurnstileSettings() {
 }
 
 export function useSecuritySettings() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1595,7 +1588,6 @@ export interface SaveProxyPresetInput {
 }
 
 export function useProxyPresets() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1777,7 +1769,6 @@ export interface UpdateQuotaEnforcementSettingsInput {
 }
 
 export function useQuotaEnforcementSettings() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
@@ -1843,22 +1834,16 @@ export interface UpdateProviderQuotaCollectionSettingsInput {
 }
 
 export function useProviderQuotaCollectionSettings() {
-  const { handleError } = useErrorHandler();
   const { hasSystemScope } = usePermissions();
 
   return useQuery({
     queryKey: ['providerQuotaCollectionSettings'],
     enabled: hasSystemScope('read_settings'),
     queryFn: async () => {
-      try {
-        const data = await graphqlRequest<{ providerQuotaCollectionSettings: ProviderQuotaCollectionSettings }>(
-          PROVIDER_QUOTA_COLLECTION_SETTINGS_QUERY
-        );
-        return data.providerQuotaCollectionSettings;
-      } catch (error) {
-        handleError(error, i18n.t('common.errors.internalServerError'));
-        throw error;
-      }
+      const data = await graphqlRequest<{ providerQuotaCollectionSettings: ProviderQuotaCollectionSettings }>(
+        PROVIDER_QUOTA_COLLECTION_SETTINGS_QUERY
+      );
+      return data.providerQuotaCollectionSettings;
     },
   });
 }

@@ -176,9 +176,10 @@ export function RequestsTable({
     }
 
     userOverridesRef.current = overrides;
-    setColumnVisibility({ ...mobileDefaults, ...overrides });
+    columnVisibilityRef.current = { ...mobileDefaults, ...overrides };
+    setColumnVisibility(columnVisibilityRef.current);
     setVisibilityReady(true);
-  }, []); // Run once on mount
+  }, [columnVisibilityStorageKey]); // Re-initialize when the storage scope changes
 
   // Mirror columnVisibility into a ref so the visibility-change handler can read prev without a closure
   useEffect(() => {
@@ -198,7 +199,7 @@ export function RequestsTable({
     } catch {
       // localStorage unavailable or quota exceeded — skip persistence
     }
-  }, [columnVisibility, visibilityReady]);
+  }, [columnVisibility, columnVisibilityStorageKey, visibilityReady]);
 
   useEffect(() => {
     if (!visibilityReady) return;

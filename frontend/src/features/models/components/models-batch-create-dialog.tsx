@@ -241,6 +241,12 @@ export function ModelsBatchCreateDialog() {
     [validationErrors]
   );
 
+  const handleClose = useCallback(() => {
+    setOpen(null);
+    setRows([]);
+    setValidationErrors({});
+  }, [setOpen]);
+
   const handleSubmit = useCallback(async () => {
     const errors: ValidationErrors = {};
     rows.forEach((row) => {
@@ -304,13 +310,7 @@ export function ModelsBatchCreateDialog() {
     } catch (_error) {
       // Error is handled by mutation
     }
-  }, [rows, bulkCreateModels, t]);
-
-  const handleClose = useCallback(() => {
-    setOpen(null);
-    setRows([]);
-    setValidationErrors({});
-  }, [setOpen]);
+  }, [rows, bulkCreateModels, handleClose]);
 
   const getModelIdOptions = useCallback(
     (developer: string) => {

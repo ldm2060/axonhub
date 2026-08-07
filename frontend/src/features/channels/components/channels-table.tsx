@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -236,10 +236,7 @@ export function ChannelsTable({
     manualFiltering: true, // Enable manual filtering for server-side filtering
   });
 
-  const filteredSelectedRows = useMemo(
-    () => table.getFilteredSelectedRowModel().rows,
-    [table.getState().rowSelection, table.getFilteredRowModel().rows]
-  );
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
 
   const getApiFormatLabel = useCallback(
     (apiFormat?: string) => {
@@ -252,8 +249,8 @@ export function ChannelsTable({
     [t]
   );
 
-  const selectedCount = useMemo(() => filteredSelectedRows.length, [filteredSelectedRows]);
-  const isFiltered = useMemo(() => columnFilters.length > 0, [columnFilters.length]);
+  const selectedCount = filteredSelectedRows.length;
+  const isFiltered = columnFilters.length > 0;
 
   useEffect(() => {
     const resetFn = () => {

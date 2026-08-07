@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import { enUS, zhCN } from 'date-fns/locale';
@@ -243,7 +243,7 @@ function ResponseContentPanel({
 
   const responseBody = previewRequest ? undefined : data?.responseBody;
   const responseChunks = previewRequest ? previewChunks : data?.responseChunks;
-  const parsedResponse = useMemo(() => parseResponse(responseBody, responseChunks), [previewVersion, responseBody, responseChunks]);
+  const parsedResponse = parseResponse(responseBody, responseChunks);
   const isLive = isPreviewStreaming || (request.status === 'processing' && request.stream === true);
   const isSpeechRequest = request.format === 'openai/audio_speech';
   const isVideoRequest = request.format === 'openai/video' || request.format === 'seedance/video';

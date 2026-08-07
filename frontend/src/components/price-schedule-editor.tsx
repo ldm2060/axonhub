@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -266,11 +266,13 @@ const OverrideCard = memo(function OverrideCard({
     `${base}.when`
   );
 
-  // Build condition list from when object
-  const conditions: ConditionType[] = [];
-  if (when?.dailyTime) conditions.push('dailyTime');
-  if (when?.weekdays?.length) conditions.push('weekdays');
-  if (when?.dateRange) conditions.push('dateRange');
+  const conditions = useMemo(() => {
+    const result: ConditionType[] = [];
+    if (when?.dailyTime) result.push('dailyTime');
+    if (when?.weekdays?.length) result.push('weekdays');
+    if (when?.dateRange) result.push('dateRange');
+    return result;
+  }, [when?.dailyTime, when?.weekdays, when?.dateRange]);
 
   const handleAddCondition = useCallback(() => {
     // Add the first available condition type
@@ -773,7 +775,7 @@ const OverrideItemsEditor = memo(function OverrideItemsEditor({
         </Button>
       </div>
 
-      {(items || []).map((item, itemIndex) => (
+      {(items || []).map((_item, itemIndex) => (
         <OverrideItemRow
           key={itemIndex}
           control={control}

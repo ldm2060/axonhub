@@ -531,7 +531,7 @@ export function ChannelsOverrideDialog({ open, onOpenChange, currentRow }: Props
     }
   );
 
-  const templates = templatesData?.edges?.map((edge) => edge.node) || [];
+  const templates = useMemo(() => templatesData?.edges?.map((edge) => edge.node) || [], [templatesData?.edges]);
 
   const form = useForm<OverrideFormValues>({
     resolver: zodResolver(overrideFormSchema),
@@ -742,7 +742,7 @@ export function ChannelsOverrideDialog({ open, onOpenChange, currentRow }: Props
         // Error already handled by mutation
       }
     },
-    [form, currentRow.type, createTemplate]
+    [form, createTemplate]
   );
 
   const handleDeleteTemplate = useCallback(

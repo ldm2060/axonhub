@@ -1,34 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { RouteGuard } from '@/components/route-guard';
 import SystemManagement from '@/features/system';
-
-type SystemTabKey =
-  | 'general'
-  | 'security'
-  | 'brand'
-  | 'registration'
-  | 'email'
-  | 'storage'
-  | 'retry'
-  | 'streaming'
-  | 'webhook'
-  | 'proxy'
-  | 'quota'
-  | 'backup'
-  | 'diagnostics'
-  | 'about';
+import { isSystemTabKey } from '@/features/system/data/system-tabs';
 
 function ProtectedSystem() {
   const search = Route.useSearch();
 
   return (
     <RouteGuard requiredScopes={['read_settings']} scopeLevel='system'>
-      <SystemManagement initialTab={search.tab as SystemTabKey | undefined} />
+      <SystemManagement initialTab={search.tab} />
     </RouteGuard>
   );
 }
 
 export const Route = createFileRoute('/_authenticated/admin/system/')({
   component: ProtectedSystem,
-  validateSearch: (search: { tab?: SystemTabKey }) => search,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: isSystemTabKey(search.tab) ? search.tab : undefined,
+  }),
 });

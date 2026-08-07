@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,7 +40,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
     defaultValues: { expiresInHours: '168', maxUses: '1', roleID: '' },
   });
 
-  const roles = rolesData?.edges.map((edge) => edge.node) || [];
+  const roles = useMemo(() => rolesData?.edges.map((edge) => edge.node) || [], [rolesData?.edges]);
 
   useEffect(() => {
     if (form.getValues('roleID') || roles.length === 0) {

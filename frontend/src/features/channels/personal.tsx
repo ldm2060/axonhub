@@ -236,53 +236,74 @@ function PersonalChannelsContent() {
     [setPageSize]
   );
 
-  const handleNameFilterChange = useCallback((filter: string) => {
-    setNameFilter(filter);
-    resetCursor();
-  }, []);
+  const handleNameFilterChange = useCallback(
+    (filter: string) => {
+      setNameFilter(filter);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
-  const handleTypeFilterChange = useCallback((filters: string[]) => {
-    setTypeFilter(filters);
-    resetCursor();
-  }, []);
+  const handleTypeFilterChange = useCallback(
+    (filters: string[]) => {
+      setTypeFilter(filters);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
-  const handleTabChange = useCallback((tab: string) => {
-    setSelectedTypeTab(tab);
-    setTypeFilter([]);
-    resetCursor();
-  }, []);
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      setSelectedTypeTab(tab);
+      setTypeFilter([]);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
-  const handleStatusFilterChange = useCallback((filters: string[]) => {
-    setStatusFilter(filters);
-    resetCursor();
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (filters: string[]) => {
+      setStatusFilter(filters);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
-  const handleTagFilterChange = useCallback((filter: string) => {
-    setTagFilter(filter);
-    resetCursor();
-  }, []);
+  const handleTagFilterChange = useCallback(
+    (filter: string) => {
+      setTagFilter(filter);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
-  const handleModelFilterChange = useCallback((filter: string) => {
-    setModelFilter(filter);
-    resetCursor();
-  }, []);
+  const handleModelFilterChange = useCallback(
+    (filter: string) => {
+      setModelFilter(filter);
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
   const handleFilterErrorChannels = useCallback(() => {
     setShowErrorOnly(true);
     resetCursor();
-  }, []);
+  }, [resetCursor]);
 
   const handleExitErrorOnlyMode = useCallback(() => {
     setShowErrorOnly(false);
     resetCursor();
-  }, []);
+  }, [resetCursor]);
 
-  const handleSourceChange = useCallback((newSource: PersonalChannelSource) => {
-    setSource(newSource);
-    setTypeFilter([]);
-    setSelectedTypeTab('all');
-    resetCursor();
-  }, []);
+  const handleSourceChange = useCallback(
+    (newSource: PersonalChannelSource) => {
+      setSource(newSource);
+      setTypeFilter([]);
+      setSelectedTypeTab('all');
+      resetCursor();
+    },
+    [resetCursor]
+  );
 
   const columns = useMemo(() => createColumns(t, isReadOnly ? false : canWrite, { hideOrderingWeight: true }), [t, isReadOnly, canWrite]);
 

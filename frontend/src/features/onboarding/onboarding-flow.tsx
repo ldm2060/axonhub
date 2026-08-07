@@ -257,7 +257,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         driverObj.drive();
       }, 500); // Wait a bit for the page to render
     });
-  }, [completeOnboarding, navigate, t]);
+  }, [completeOnboarding, navigate, onComplete, t]);
 
   const skipOnboarding = useCallback(() => {
     setShowPrompt(false);

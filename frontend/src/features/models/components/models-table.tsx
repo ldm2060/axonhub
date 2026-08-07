@@ -131,17 +131,17 @@ export function ModelsTable({
     manualFiltering: true,
   });
 
-  // Group rows by developer
-  const groupedRows = useMemo(() => {
-    const rows = table.getRowModel().rows;
-    const groups = new Map<string, typeof rows>();
-    rows.forEach((row) => {
+  const groupedRows = (() => {
+    const visibleRows = table.getRowModel().rows;
+    const groups = visibleRows.reduce((result, row) => {
       const developer = row.original.developer || 'Unknown';
-      if (!groups.has(developer)) groups.set(developer, []);
-      groups.get(developer)!.push(row);
-    });
+      const rows = result.get(developer) || [];
+      rows.push(row);
+      result.set(developer, rows);
+      return result;
+    }, new Map<string, typeof visibleRows>());
     return new Map([...groups.entries()].sort(([a], [b]) => a.localeCompare(b)));
-  }, [table, data, sorting]);
+  })();
 
   const allGroupsCollapsed = groupedRows.size > 0 && collapsedGroups.size === groupedRows.size;
   const developerRuleCounts = useMemo(() => {
@@ -164,15 +164,15 @@ export function ModelsTable({
     });
   }, []);
 
-  const toggleAllGroups = useCallback(() => {
+  const toggleAllGroups = () => {
     if (allGroupsCollapsed) {
       setCollapsedGroups(new Set());
     } else {
       setCollapsedGroups(new Set(groupedRows.keys()));
     }
-  }, [allGroupsCollapsed, groupedRows]);
+  };
 
-  const filteredSelectedRows = useMemo(() => table.getFilteredSelectedRowModel().rows, [table, rowSelection, data]);
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
 
   const selectedCount = filteredSelectedRows.length;
 

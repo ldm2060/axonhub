@@ -56,10 +56,13 @@ export default function PermissionDemo() {
         localStorage.removeItem(DEMO_USER_KEY);
         localStorage.removeItem(DEMO_ORIGINAL_USER_KEY);
       }
-    } else if (user) {
-      setDemoScopes(user.scopes || []);
+    } else {
+      const currentUser = useAuthStore.getState().auth.user;
+      if (currentUser) {
+        setDemoScopes(currentUser.scopes || []);
+      }
     }
-  }, []);
+  }, [setUser]);
 
   // 进入演示模式
   const enterDemoMode = () => {

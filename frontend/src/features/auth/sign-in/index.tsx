@@ -27,7 +27,7 @@ export default function SignIn() {
     if (verified) {
       window.history.replaceState({}, '', '/sign-in');
     }
-  }, []);
+  }, [t]);
 
   return (
     <AuthLayout>

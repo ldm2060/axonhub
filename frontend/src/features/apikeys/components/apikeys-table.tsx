@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -155,7 +155,7 @@ export function ApiKeysTable({
     getRowId: (row) => row.id,
   });
 
-  const filteredSelectedRows = useMemo(() => table.getFilteredSelectedRowModel().rows, [table, rowSelection, data]);
+  const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
 
   const selectedCount = filteredSelectedRows.length;
 
