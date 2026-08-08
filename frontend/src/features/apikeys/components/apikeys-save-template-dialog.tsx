@@ -72,6 +72,8 @@ export function ApiKeySaveTemplateDialog({ open, onOpenChange, profileData, proj
   }, [templateName, existingTemplates, form, t]);
 
   const handleSubmit = async (values: FormValues) => {
+    if (!projectID) return;
+
     try {
       await createTemplate.mutateAsync({
         name: values.name,

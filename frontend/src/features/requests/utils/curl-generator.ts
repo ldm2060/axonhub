@@ -1,11 +1,11 @@
 import { CHANNEL_CONFIGS } from '@/features/channels/data/config_channels';
-import { ApiFormat } from '@/features/channels/data/schema';
+import { ApiFormat, apiFormatSchema } from '@/features/channels/data/schema';
 
 export type ChannelType = keyof typeof CHANNEL_CONFIGS;
 
 export interface CurlGeneratorOptions {
-  headers?: Record<string, any>;
-  body?: any;
+  headers?: Record<string, unknown>;
+  body?: unknown;
   baseUrl?: string;
   requestURL?: string;
   apiFormat?: ApiFormat;
@@ -26,20 +26,22 @@ const API_FORMAT_PATHS: Record<ApiFormat, string> = {
   'openai/audio_translations': '/v1/audio/translations',
   'anthropic/messages': '/v1/messages',
   'gemini/contents': '/v1beta/models/{model}:generateContent',
+  'gemini/embeddings': '/v1beta/models/{model}:embedContent',
   'aisdk/text': '/api/chat',
   'aisdk/datastream': '/api/datastream',
   'jina/rerank': '/v1/rerank',
   'jina/embeddings': '/jina/v1/embeddings',
+  'ollama/chat': '/api/chat',
 };
 
-function getApiPath(apiFormat?: ApiFormat, body?: any, channelType?: ChannelType): string {
+function getApiPath(apiFormat?: ApiFormat, body?: unknown, channelType?: ChannelType): string {
   if (!apiFormat) {
     return '/v1/chat/completions';
   }
 
   let path = API_FORMAT_PATHS[apiFormat] || '/v1/chat/completions';
 
-  if (apiFormat === 'gemini/contents' && body?.model) {
+  if ((apiFormat === 'gemini/contents' || apiFormat === 'gemini/embeddings') && isRecord(body) && typeof body.model === 'string') {
     if (channelType === 'gemini_vertex') {
       path = '/v1/publishers/google/models/{model}:generateContent';
     }
@@ -128,7 +130,7 @@ export function generateCurlCommand(options: CurlGeneratorOptions): string {
   } else if (body && isMultipartImage) {
     appendImageFormParts(curlParts, parsedBody, resolvedApiFormat);
   } else if (body) {
-    const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
+    const bodyStr = typeof body === 'string' ? body : (JSON.stringify(body) ?? String(body));
     const escapedBody = bodyStr.replace(/'/g, "'\\''");
     curlParts.push(`  -d '${escapedBody}'`);
   }
@@ -241,27 +243,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-export function generateRequestCurl(headers: any, body: any, apiFormat?: ApiFormat): string {
+export function generateRequestCurl(headers: unknown, body: unknown, apiFormat?: string): string {
+  const parsedApiFormat = apiFormatSchema.safeParse(apiFormat);
+
   return generateCurlCommand({
-    headers,
+    headers: isRecord(headers) ? headers : undefined,
     body,
-    apiFormat: apiFormat || 'openai/chat_completions',
+    apiFormat: parsedApiFormat.success ? parsedApiFormat.data : 'openai/chat_completions',
   });
 }
 
 export function generateExecutionCurl(
-  headers: any,
-  body: any,
+  headers: unknown,
+  body: unknown,
   channel?: { baseURL?: string; type?: ChannelType },
-  apiFormat?: ApiFormat,
+  apiFormat?: string,
   requestURL?: string
 ): string {
+  const parsedApiFormat = apiFormatSchema.safeParse(apiFormat);
+
   return generateCurlCommand({
-    headers,
+    headers: isRecord(headers) ? headers : undefined,
     body,
     baseUrl: channel?.baseURL,
     channelType: channel?.type,
-    apiFormat,
+    apiFormat: parsedApiFormat.success ? parsedApiFormat.data : undefined,
     requestURL,
   });
 }

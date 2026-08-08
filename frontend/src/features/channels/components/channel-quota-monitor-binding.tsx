@@ -183,7 +183,6 @@ export function ChannelQuotaMonitorBinding({
             {bindings.length === 0 && <p className='text-muted-foreground text-sm'>{t('channels.quotaMonitorBinding.empty')}</p>}
 
             {keyedBindings.map((binding, bindingIndex) => {
-              const _selectedMonitor = monitorMap.get(binding.usageMonitorChannelID);
               const fieldSuggestions = getFieldSuggestions(binding.usageMonitorChannelID);
 
               return (

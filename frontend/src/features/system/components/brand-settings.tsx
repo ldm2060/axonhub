@@ -75,7 +75,7 @@ export function BrandSettings() {
     try {
       await updateSettings.mutateAsync({
         brandName: brandName.trim() || undefined,
-        title: title.trim() !== '' ? title.trim() : null,
+        title: title.trim() || undefined,
         brandLogo: brandLogo || undefined,
       });
     } finally {

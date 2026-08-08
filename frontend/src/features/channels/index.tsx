@@ -280,7 +280,6 @@ function ChannelsContent() {
         statusFilter={statusFilter}
         tagFilter={tagFilter}
         modelFilter={modelFilter}
-        selectedTypeTab={selectedTypeTab}
         showErrorOnly={showErrorOnly}
         sorting={sorting}
         onSortingChange={setSorting}

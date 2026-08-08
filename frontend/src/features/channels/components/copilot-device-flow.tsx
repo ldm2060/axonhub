@@ -22,7 +22,11 @@ export function CopilotDeviceFlow({ onSuccess, onError, existingCredentials }: C
     start: copilotOAuthStart,
     poll: async (input) => {
       const result = await copilotOAuthPoll(input);
-      return result.access_token ? { status: 'complete' as const, completion: result.access_token, message: result.message } : result;
+      if (result.access_token) {
+        return { status: 'complete' as const, completion: result.access_token, message: result.message };
+      }
+      const status = result.status === 'slow_down' ? 'slow_down' : 'pending';
+      return { status, message: result.message };
     },
     onSuccess,
   });

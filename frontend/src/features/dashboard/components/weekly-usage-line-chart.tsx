@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CartesianGrid, Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipProps } from 'recharts';
+import { CartesianGrid, Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -83,18 +83,7 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
     primaryValue: formatNumber(u.total),
   }));
 
-  type Payload = {
-    name?: string;
-    value?: number;
-    color?: string;
-    payload?: ChartRow;
-  };
-
-  type CombinedTooltipProps = TooltipProps<number, string> & {
-    payload?: Payload[];
-  };
-
-  const tooltipContent = (props: CombinedTooltipProps) => {
+  const tooltipContent = (props: TooltipContentProps) => {
     if (!props.active) return null;
     const row = props.payload?.[0]?.payload;
     const dateLabel = row?.name != null ? String(row.name) : String(props.label ?? '');
@@ -119,7 +108,7 @@ export function WeeklyUsageLineChart({ mode }: { mode: DashboardMode }) {
         const stat = user.daily[idx];
         return { name: user.userName, stat };
       })
-      .filter((e): e is { name: string; stat: { count: number; tokens: number; cost: number } } => e !== null)
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
       .sort((a, b) => b.stat.count - a.stat.count);
 
     return (

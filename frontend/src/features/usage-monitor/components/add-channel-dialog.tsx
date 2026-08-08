@@ -177,20 +177,20 @@ export function AddChannelDialog() {
         key: v.key,
         path: v.path,
         type: v.type,
-        groupIndex: v.groupIndex,
+        groupIndex: v.groupIndex ?? undefined,
       }));
       const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
         key: df.key,
         label: df.label,
         valueRef: df.valueRef,
         format: df.format,
-        unit: df.unit,
-        totalRef: df.totalRef,
+        unit: df.unit ?? undefined,
+        totalRef: df.totalRef ?? undefined,
         displayOrder: df.displayOrder,
-        badge: df.badge,
-        badgePresets: df.badgePresets,
-        group: df.group,
-        groupLabelRef: df.groupLabelRef,
+        badge: df.badge ?? undefined,
+        badgePresets: df.badgePresets ?? undefined,
+        group: df.group ?? undefined,
+        groupLabelRef: df.groupLabelRef ?? undefined,
       }));
 
       // For template source, use template fields as the legacy fields array

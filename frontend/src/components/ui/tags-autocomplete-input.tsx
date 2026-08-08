@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,8 +23,19 @@ export const TagsAutocompleteInput = forwardRef<HTMLDivElement, TagsAutocomplete
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
     const [isComposing, setIsComposing] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const setContainerRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        containerRef.current = node;
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref]
+    );
 
     // Filter suggestions based on input and not already selected (capped for performance)
     const filteredSuggestions = useMemo(() => {
@@ -112,7 +123,7 @@ export const TagsAutocompleteInput = forwardRef<HTMLDivElement, TagsAutocomplete
 
     return (
       <div
-        ref={containerRef}
+        ref={setContainerRef}
         data-tags-input-container
         className={cn(
           'border-input bg-background has-[input:focus-visible]:border-ring has-[input:focus-visible]:outline-foreground flex min-h-10 w-full flex-wrap gap-1 rounded-md border px-3 py-2 text-sm has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-1',

@@ -84,8 +84,8 @@ export function RequestExecutionContentPanel({ requestId, executionId, projectId
                 generateExecutionCurl(
                   data.requestHeaders,
                   data.requestBody,
-                  data.channel as any,
-                  data.format as any,
+                  data.channel ?? undefined,
+                  data.format,
                   data.requestURL ?? undefined
                 )
               );

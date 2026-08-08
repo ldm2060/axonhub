@@ -1,12 +1,10 @@
 import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
 import { SortingState } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/stores/authStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { useMe } from '@/features/auth/data/auth';
 import { createColumns } from './components/models-columns';
 import { ModelsPersonalButtons } from './components/models-personal-buttons';
 import { ModelsTable } from './components/models-table';
@@ -20,9 +18,6 @@ function PersonalModelsContent() {
   useDevelopersData();
   const { t } = useTranslation();
   const { modelPermissions } = usePermissions();
-  const { user: authUser } = useAuthStore((state) => state.auth);
-  const { data: meData } = useMe();
-  const _currentUser = meData || authUser;
 
   const [nameFilter, setNameFilter] = useState<string>('');
   const [sorting, setSorting] = useState<SortingState>(() => {

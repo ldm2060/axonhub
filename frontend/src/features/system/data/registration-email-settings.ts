@@ -76,6 +76,7 @@ export function useUpdateRegistrationSettings() {
 const EMAIL_SETTINGS_QUERY = `
   query EmailSettings {
     emailSettings {
+      publicUrl
       smtpHost
       smtpPort
       smtpUser
@@ -91,6 +92,7 @@ const EMAIL_SETTINGS_QUERY = `
 const UPDATE_EMAIL_SETTINGS_MUTATION = `
   mutation UpdateEmailSettings($input: UpdateEmailSettingsInput!) {
     updateEmailSettings(input: $input) {
+      publicUrl
       smtpHost
       smtpPort
       smtpUser
@@ -113,6 +115,7 @@ const TEST_EMAIL_CONNECTION_MUTATION = `
 `;
 
 export interface EmailSettings {
+  publicUrl: string;
   smtpHost: string;
   smtpPort: number;
   smtpUser: string;
@@ -124,6 +127,7 @@ export interface EmailSettings {
 }
 
 export interface UpdateEmailSettingsInput {
+  publicUrl?: string;
   smtpHost?: string;
   smtpPort?: number;
   smtpUser?: string;

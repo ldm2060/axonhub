@@ -79,7 +79,7 @@ export function ChannelsTestHistoryDrawer({ open, onOpenChange, channel }: Props
 
   const handleCurlPreview = () => {
     if (!request) return;
-    const curl = generateRequestCurl(request.requestHeaders, request.requestBody, request.format as any);
+    const curl = generateRequestCurl(request.requestHeaders, request.requestBody, request.format);
     setCurlCommand(curl);
     setShowCurlPreview(true);
   };

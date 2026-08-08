@@ -38,7 +38,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setShowPrompt(false);
 
     // Navigate to system page first
-    navigate({ to: '/admin/system' }).then(() => {
+    navigate({ to: '/admin/system', search: { tab: undefined } }).then(() => {
       // Start the tour after navigation
       setTimeout(() => {
         const driverObj = driver({

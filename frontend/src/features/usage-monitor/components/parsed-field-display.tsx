@@ -122,7 +122,7 @@ function TextDisplay({ field, badgeMeta }: { field: ParsedField; badgeMeta?: Dis
   if (badgeMeta?.badge) {
     return (
       <div className='text-sm'>
-        <BadgeDisplay value={textValue} badge={badgeMeta.badge} badgePresets={badgeMeta.badgePresets} />
+        <BadgeDisplay value={textValue} badge={badgeMeta.badge} badgePresets={badgeMeta.badgePresets ?? undefined} />
       </div>
     );
   }

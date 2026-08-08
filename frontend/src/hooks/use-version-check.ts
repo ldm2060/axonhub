@@ -32,12 +32,8 @@ export function useVersionCheck() {
     queryKey: ['versionCheck'],
     queryFn: async () => {
       const data = await graphqlRequest<{ checkForUpdate: VersionCheck }>(CHECK_FOR_UPDATE_QUERY, { includeBeta: false });
-      return data.checkForUpdate;
-    },
-    //@ts-expect-error -- react-query onSuccess deprecated option
-    onSuccess: () => {
-      // Store the timestamp after successful check
       localStorage.setItem(VERSION_CHECK_TIMESTAMP_KEY, Date.now().toString());
+      return data.checkForUpdate;
     },
     enabled: shouldCheckVersion(),
     retry: false,

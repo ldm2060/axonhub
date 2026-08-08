@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Mail, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { useEmailSettings, useUpdateEmailSettings, useTestEmailConnection } from '../data/registration-email-settings';
+import {
+  useEmailSettings,
+  useUpdateEmailSettings,
+  useTestEmailConnection,
+  type UpdateEmailSettingsInput,
+} from '../data/registration-email-settings';
 
 export function EmailSettingsTab() {
   const { t } = useTranslation();
@@ -69,20 +74,20 @@ export function EmailSettingsTab() {
       formData.fromAddress !== (settings.fromAddress || '')
     : false;
 
-  const handleSave = async () => {
-    const input: Record<string, unknown> = {
-      publicUrl: formData.publicUrl,
-      smtpHost: formData.smtpHost,
-      smtpPort: formData.smtpPort,
-      smtpUser: formData.smtpUser,
-      encryption: formData.encryption,
-      skipTLSVerify: formData.skipTLSVerify,
-      fromName: formData.fromName,
-      fromAddress: formData.fromAddress,
-      smtpPassword: formData.smtpPassword,
-    };
+  const buildInput = (): UpdateEmailSettingsInput => ({
+    publicUrl: formData.publicUrl,
+    smtpHost: formData.smtpHost,
+    smtpPort: formData.smtpPort,
+    smtpUser: formData.smtpUser,
+    encryption: formData.encryption,
+    skipTLSVerify: formData.skipTLSVerify,
+    fromName: formData.fromName,
+    fromAddress: formData.fromAddress,
+    smtpPassword: formData.smtpPassword,
+  });
 
-    const result = await updateSettings.mutateAsync(input as any);
+  const handleSave = async () => {
+    const result = await updateSettings.mutateAsync(buildInput());
     if (result) {
       setPasswordChanged(false);
     }
@@ -91,18 +96,7 @@ export function EmailSettingsTab() {
   const handleTestConnection = async () => {
     try {
       if (hasChanges) {
-        const input: Record<string, unknown> = {
-          publicUrl: formData.publicUrl,
-          smtpHost: formData.smtpHost,
-          smtpPort: formData.smtpPort,
-          smtpUser: formData.smtpUser,
-          encryption: formData.encryption,
-          skipTLSVerify: formData.skipTLSVerify,
-          fromName: formData.fromName,
-          fromAddress: formData.fromAddress,
-          smtpPassword: formData.smtpPassword,
-        };
-        await updateSettings.mutateAsync(input as any);
+        await updateSettings.mutateAsync(buildInput());
         setPasswordChanged(false);
       }
       const result = await testConnection.mutateAsync();

@@ -24,7 +24,7 @@ export function ModelsArchiveDialog() {
   };
 
   const getDescription = () => {
-    if (!currentRow) return null;
+    if (!currentRow) return '';
     const baseDescription = t(isArchived ? 'models.dialogs.status.restoreDescription' : 'models.dialogs.status.archiveDescription', {
       name: currentRow.name,
     });

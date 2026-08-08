@@ -222,7 +222,7 @@ export function RuntimeOverview() {
                 />
                 <Tooltip
                   isAnimationActive={false}
-                  formatter={(value: number | string, name: string) => [formatPercent(Number(value)), name]}
+                  formatter={(value, name) => [formatPercent(Number(value)), name]}
                   contentStyle={tooltipStyle}
                   itemStyle={tooltipItemStyle}
                 />
@@ -296,7 +296,7 @@ export function RuntimeOverview() {
                 />
                 <Tooltip
                   isAnimationActive={false}
-                  formatter={(value: number | string, name: string) => [formatRate(Number(value)), name]}
+                  formatter={(value, name) => [formatRate(Number(value)), name]}
                   contentStyle={tooltipStyle}
                   itemStyle={tooltipItemStyle}
                 />
@@ -361,7 +361,7 @@ export function RuntimeOverview() {
                 />
                 <Tooltip
                   isAnimationActive={false}
-                  formatter={(value: number | string, name: string) => [formatBytes(Number(value)), name]}
+                  formatter={(value, name) => [formatBytes(Number(value)), name]}
                   contentStyle={tooltipStyle}
                   itemStyle={tooltipItemStyle}
                 />

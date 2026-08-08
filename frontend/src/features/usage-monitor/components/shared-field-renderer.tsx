@@ -178,7 +178,7 @@ function TextField({ field, displayField }: { field: ParsedField; displayField?:
     <div className='text-xs'>
       <span className='text-muted-foreground font-medium'>{field.label}:</span>{' '}
       {displayField?.badge ? (
-        <BadgeDisplay value={textValue} badge={displayField.badge} badgePresets={displayField.badgePresets} />
+        <BadgeDisplay value={textValue} badge={displayField.badge} badgePresets={displayField.badgePresets ?? undefined} />
       ) : (
         <span className='text-foreground'>{textValue}</span>
       )}
@@ -269,7 +269,7 @@ export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRender
   for (const field of fields) {
     if (field.group) {
       if (!groupMap.has(field.group)) {
-        groupMap.set(field.group, { fields: [], groupLabel: field.groupLabel });
+        groupMap.set(field.group, { fields: [], groupLabel: field.groupLabel ?? undefined });
         groupOrder.push(field.group);
       }
       groupMap.get(field.group)!.fields.push(field);

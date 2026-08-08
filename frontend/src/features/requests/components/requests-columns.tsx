@@ -414,7 +414,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               const channel = row.original.channel;
               if (!channel) return false;
 
-              return values.includes(channel.id);
+              return channel.id !== undefined && values.includes(channel.id);
             },
           },
         ] as ColumnDef<Request>[])

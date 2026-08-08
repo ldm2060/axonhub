@@ -113,6 +113,8 @@ export function ApiKeyCreateTemplateDialog({ open, onOpenChange }: ApiKeyCreateT
   const quotaPeriodType = form.watch('profile.quota.period.type');
 
   const handleSubmit = async (values: FormValues) => {
+    if (!selectedProjectId) return;
+
     try {
       await createTemplate.mutateAsync({
         name: values.name,

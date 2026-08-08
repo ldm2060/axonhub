@@ -76,17 +76,12 @@ export function ModelsBatchCreateDialog() {
   }, []);
 
   const iconOptions = useMemo(() => {
-    return (
-      Object.entries(toc)
-        // @ts-expect-error -- ent gqlgen generated type mismatch
-        .filter(([_, value]) => value.group == 'provider' || value.group == 'model')
-        .map(([_, value]) => ({
-          // @ts-expect-error -- ent gqlgen generated type mismatch
-          value: value.id,
-          // @ts-expect-error -- ent gqlgen generated type mismatch
-          label: value.id,
-        }))
-    );
+    return Object.values(toc)
+      .filter((value) => value.group === 'provider' || value.group === 'model')
+      .map((value) => ({
+        value: value.id,
+        label: value.id,
+      }));
   }, []);
 
   useEffect(() => {
@@ -290,12 +285,14 @@ export function ModelsBatchCreateDialog() {
         limit: { context: 0, output: 0 },
       },
       settings: {
+        disableDeveloperSettingsInheritance: false,
         loadBalancerStrategy: 'default',
         traceStickyMode: 'default',
         associations: [
           {
             type: 'model',
             priority: 0,
+            disabled: false,
             modelId: {
               modelId: row.modelId,
             },

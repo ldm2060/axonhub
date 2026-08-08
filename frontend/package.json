@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --emptyOutDir && node -e \"require('node:fs').writeFileSync('../internal/server/static/dist/.gitkeep', '')\"",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix --max-warnings 0",
+    "typecheck": "tsc -b --pretty false",
     "preview": "vite preview",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
@@ -126,7 +127,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "eslint --fix --quiet",
+      "eslint --fix --max-warnings 0",
       "prettier --write"
     ],
     "*.{json,md,css}": [

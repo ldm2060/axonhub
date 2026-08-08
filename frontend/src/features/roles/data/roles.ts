@@ -76,9 +76,6 @@ export function useRoles(
     where?: Record<string, unknown>;
   } = {}
 ) {
-  const { handleError } = useErrorHandler();
-  const _t = useTranslation();
-
   // Always filter for system-level roles only (not project-specific)
   const queryVariables = {
     ...variables,
@@ -89,26 +86,18 @@ export function useRoles(
     orderBy: variables.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
   };
 
-  const queryContext = 'Load Roles';
-
   return useQuery({
-    queryKey: ['roles', queryVariables, queryContext, handleError],
+    queryKey: ['roles', queryVariables],
     queryFn: async () => {
       const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, queryVariables);
       return roleConnectionSchema.parse(data?.roles);
-    },
-    onError: (error) => {
-      handleError(error, { context: queryContext });
     },
   });
 }
 
 export function useRole(id: string) {
-  const { handleError } = useErrorHandler();
-  const { t: _t } = useTranslation();
-
   return useQuery({
-    queryKey: ['role', id, handleError],
+    queryKey: ['role', id],
     queryFn: async () => {
       const data = await graphqlRequest<{ roles: RoleConnection }>(ROLES_QUERY, { where: { id } });
       const role = data.roles.edges[0]?.node;
@@ -116,9 +105,6 @@ export function useRole(id: string) {
         throw new Error('Role not found');
       }
       return roleSchema.parse(role);
-    },
-    onError: (error) => {
-      handleError(error, { context: 'Load Role Detail' });
     },
     enabled: !!id,
   });

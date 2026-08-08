@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { z } from 'zod';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,7 +32,6 @@ import {
   ModelType,
   modelTypeSchema,
   normalizeModelRoutingPolicyValue,
-  updateModelInputSchema,
 } from '../data/schema';
 
 function isDeveloper(provider: string) {
@@ -88,21 +88,16 @@ export function ModelsActionDialog() {
   }, [selectedProviderModels]);
 
   const iconOptions = useMemo(() => {
-    return (
-      Object.entries(toc)
-        // @ts-expect-error -- ent gqlgen generated type mismatch
-        .filter(([_, value]) => value.group == 'provider' || value.group == 'model')
-        .map(([_, value]) => ({
-          // @ts-expect-error -- ent gqlgen generated type mismatch
-          value: value.id,
-          // @ts-expect-error -- ent gqlgen generated type mismatch
-          label: value.id,
-        }))
-    );
+    return Object.values(toc)
+      .filter((value) => value.group === 'provider' || value.group === 'model')
+      .map((value) => ({
+        value: value.id,
+        label: value.id,
+      }));
   }, []);
 
-  const form = useForm<CreateModelInput>({
-    resolver: zodResolver(isEdit ? updateModelInputSchema : createModelInputSchema) as any,
+  const form = useForm<z.input<typeof createModelInputSchema>, unknown, CreateModelInput>({
+    resolver: zodResolver(createModelInputSchema),
     defaultValues: {
       developer: '',
       modelID: '',

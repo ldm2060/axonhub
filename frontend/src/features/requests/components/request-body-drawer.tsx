@@ -91,7 +91,7 @@ function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFie
 
   const handleCurlPreview = useCallback(() => {
     if (!displayedRequest) return;
-    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format as any);
+    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format);
     setCurlCommand(curl);
     setShowCurlPreview(true);
   }, [displayedRequest]);

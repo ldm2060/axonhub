@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId, useProjectStore } from '@/stores/projectStore';
 import i18n from '@/lib/i18n';
@@ -117,15 +116,10 @@ export function useProjects(
     where?: any;
   } = {}
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-
   const queryVariables = {
     ...variables,
     orderBy: variables.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
   };
-
-  const queryContext = t('projects.errors.loadProjectsFailed');
 
   return useQuery({
     queryKey: ['projects', queryVariables],
@@ -133,17 +127,10 @@ export function useProjects(
       const data = await graphqlRequest<{ projects: ProjectConnection }>(PROJECTS_QUERY, queryVariables);
       return projectConnectionSchema.parse(data?.projects);
     },
-    onError: (error) => {
-      handleError(error, queryContext);
-    },
   });
 }
 
 export function useProject(id: string) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-  const queryContext = t('projects.errors.loadProjectDetailFailed');
-
   return useQuery({
     queryKey: ['project', id],
     queryFn: async () => {
@@ -154,18 +141,11 @@ export function useProject(id: string) {
       }
       return projectSchema.parse(project);
     },
-    onError: (error) => {
-      handleError(error, queryContext);
-    },
     enabled: !!id,
   });
 }
 
 export function useMyProjects() {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
-  const queryContext = t('projects.errors.loadMyProjectsFailed');
-
   return useQuery({
     queryKey: ['myProjects'],
     queryFn: async () => {
@@ -176,13 +156,7 @@ export function useMyProjects() {
       }
 
       // myProjects 直接返回项目数组，不是 connection 格式
-      const projects = data.myProjects.map((project) => projectSchema.parse(project));
-
-      return projects;
-    },
-    onError: (error) => {
-      handleError(error, queryContext);
-      return [];
+      return data.myProjects.map((project) => projectSchema.parse(project));
     },
   });
 }

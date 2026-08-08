@@ -1817,11 +1817,11 @@ export interface ChannelTypeCount {
   count: number;
 }
 
-export function useChannelTypes(statusIn?: string[], ownerID?: number) {
+export function useChannelTypes(statusIn?: string[], ownerID?: string) {
   return useQuery({
     queryKey: ['channelTypes', statusIn, ownerID],
     queryFn: async () => {
-      const input: { statusIn?: string[]; ownerID?: number } = {};
+      const input: { statusIn?: string[]; ownerID?: string } = {};
       if (statusIn && statusIn.length > 0) {
         input.statusIn = statusIn;
       }
@@ -1846,7 +1846,7 @@ const ERROR_CHANNELS_COUNT_QUERY = `
   }
 `;
 
-export function useErrorChannelsCount(ownerID?: number) {
+export function useErrorChannelsCount(ownerID?: string) {
   return useQuery({
     queryKey: ['errorChannelsCount', ownerID],
     queryFn: async () => {
@@ -1915,28 +1915,11 @@ export function useChannelDisabledAPIKeys(channelId: string, options?: { enabled
             disabledAt: string;
             errorCode: number;
             reason?: string | null;
+            expiresAt?: string | null;
           }>;
         };
       }>(GET_CHANNEL_DISABLED_API_KEYS_QUERY, { id: channelId });
       return data.node?.disabledAPIKeys || [];
-      try {
-        const data = await graphqlRequest<{
-          node: {
-            id: string;
-            disabledAPIKeys: Array<{
-              key: string;
-              disabledAt: string;
-              errorCode: number;
-              reason?: string | null;
-              expiresAt?: string | null;
-            }>;
-          };
-        }>(GET_CHANNEL_DISABLED_API_KEYS_QUERY, { id: channelId });
-        return data.node?.disabledAPIKeys || [];
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        return [];
-      }
     },
     enabled: !!channelId && options?.enabled !== false,
   });

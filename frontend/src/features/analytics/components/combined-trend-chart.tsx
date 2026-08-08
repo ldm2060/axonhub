@@ -1,5 +1,16 @@
 import { useTranslation } from 'react-i18next';
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  type TooltipContentProps,
+} from 'recharts';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -106,15 +117,7 @@ export function CombinedTrendChart({ data, isLoading, currencyCode }: CombinedTr
             />
             <Tooltip
               isAnimationActive={false}
-              content={({
-                active,
-                payload,
-                label,
-              }: {
-                active?: boolean;
-                payload?: Array<{ name?: string; value?: number | string; color?: string; payload?: Record<string, number> }>;
-                label?: string;
-              }) => {
+              content={({ active, payload, label }: TooltipContentProps) => {
                 if (!active) return null;
                 if (!payload || payload.length === 0) {
                   return (
@@ -168,18 +171,7 @@ export function CombinedTrendChart({ data, isLoading, currencyCode }: CombinedTr
                 );
               }}
             />
-            <Legend
-              verticalAlign='top'
-              height={36}
-              itemSorter={null}
-              payload={[
-                { value: t('analytics.chart.cachedInput'), type: 'square' as const, color: 'var(--chart-1)' },
-                { value: t('analytics.chart.uncachedInput'), type: 'square' as const, color: 'var(--chart-2)' },
-                { value: t('analytics.chart.outputTokens'), type: 'square' as const, color: 'var(--chart-3)' },
-                { value: t('analytics.chart.requestCount'), type: 'line' as const, color: 'var(--chart-4)' },
-                { value: t('analytics.chart.cost'), type: 'line' as const, color: 'var(--chart-5)' },
-              ]}
-            />
+            <Legend verticalAlign='top' height={36} itemSorter={null} />
             <Bar
               yAxisId='tokens'
               dataKey='cachedInput'

@@ -33,7 +33,7 @@ export function useDeviceFlow<T>({ start: startRequest, poll: pollRequest, onSuc
   const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<number | null>(null);
   const intervalRef = useRef(5);
   const onSuccessRef = useRef(onSuccess);
 

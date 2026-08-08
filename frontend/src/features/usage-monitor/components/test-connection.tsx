@@ -31,18 +31,18 @@ export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variabl
         key: v.key,
         path: v.path,
         type: v.type,
-        groupIndex: v.groupIndex,
+        groupIndex: v.groupIndex ?? undefined,
       }));
       const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
         key: df.key,
         label: df.label,
         valueRef: df.valueRef,
         format: df.format,
-        unit: df.unit,
-        totalRef: df.totalRef,
+        unit: df.unit ?? undefined,
+        totalRef: df.totalRef ?? undefined,
         displayOrder: df.displayOrder,
-        badge: df.badge,
-        badgePresets: df.badgePresets,
+        badge: df.badge ?? undefined,
+        badgePresets: df.badgePresets ?? undefined,
       }));
 
       const res = await testMutation.mutateAsync({

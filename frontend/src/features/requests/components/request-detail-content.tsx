@@ -122,7 +122,7 @@ function RequestContentPanel({ request, requestId, projectId, includeAdminFields
           variant='outline'
           size='sm'
           onClick={() => {
-            setCurlCommand(generateRequestCurl(requestHeaders, requestBody, request.format as any));
+            setCurlCommand(generateRequestCurl(requestHeaders, requestBody, request.format));
             setShowCurlPreview(true);
           }}
           disabled={!requestHeaders && !requestBody}
@@ -470,11 +470,11 @@ function OverviewPanel({ request }: { request: RequestMetadata }) {
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.inputLabel')}</p>
-                <p className='font-semibold'>{usage.promptTokens.toLocaleString()}</p>
+                <p className='font-semibold'>{(usage.promptTokens ?? 0).toLocaleString()}</p>
               </div>
               <div className='bg-muted/30 rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('usageLogs.columns.outputLabel')}</p>
-                <p className='font-semibold'>{usage.completionTokens.toLocaleString()}</p>
+                <p className='font-semibold'>{(usage.completionTokens ?? 0).toLocaleString()}</p>
                 {reasoningTokens > 0 && (
                   <p className='text-muted-foreground text-xs'>
                     {t('requests.columns.reasoning')}: {reasoningTokens.toLocaleString()}

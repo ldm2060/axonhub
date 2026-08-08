@@ -48,7 +48,6 @@ interface DataTableProps {
   statusFilter: string[];
   tagFilter: string;
   modelFilter: string;
-  selectedTypeTab?: string;
   showErrorOnly?: boolean;
   onExitErrorOnlyMode?: () => void;
   sorting: SortingState;
@@ -84,7 +83,6 @@ export function ChannelsTable({
   statusFilter,
   tagFilter,
   modelFilter,
-  selectedTypeTab = 'all',
   showErrorOnly,
   sorting,
   onSortingChange,
@@ -288,8 +286,6 @@ export function ChannelsTable({
       <DataTableToolbar
         table={table}
         isFiltered={isFiltered}
-        selectedCount={selectedCount}
-        selectedTypeTab={selectedTypeTab}
         showErrorOnly={showErrorOnly}
         showStatusFilter={showStatusFilter}
         onExitErrorOnlyMode={onExitErrorOnlyMode}
@@ -353,11 +349,7 @@ export function ChannelsTable({
                                 transition={{ duration: 0.2, ease: 'easeInOut' }}
                                 className='overflow-hidden'
                               >
-                                <ChannelExpandedRow
-                                  channel={channel}
-                                  columnsLength={columns.length}
-                                  getApiFormatLabel={getApiFormatLabel}
-                                />
+                                <ChannelExpandedRow channel={channel} getApiFormatLabel={getApiFormatLabel} />
                               </motion.div>
                             </TableCell>
                           </MotionExpandedRow>

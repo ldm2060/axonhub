@@ -153,7 +153,12 @@ export default function DashboardChannelSuccessRates() {
 
   return (
     <div className='flex flex-1 flex-col gap-4 p-8 pt-6'>
-      <Header title={t('dashboard.channelSuccessRates.pageTitle')} description='查看所有渠道的请求成功率统计' />
+      <Header>
+        <div>
+          <h2 className='text-xl font-bold tracking-tight'>{t('dashboard.channelSuccessRates.pageTitle')}</h2>
+          <p className='text-muted-foreground text-sm'>查看所有渠道的请求成功率统计</p>
+        </div>
+      </Header>
       <div className='space-y-4'>
         {/* Toolbar */}
         <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>

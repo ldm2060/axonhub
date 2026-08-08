@@ -32,8 +32,7 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
         {table
           .getAllColumns()
           .filter((column) => {
-            const accessorKey = column.columnDef.accessorKey;
-            const isDataColumn = typeof column.accessorFn !== 'undefined' || typeof accessorKey !== 'undefined';
+            const isDataColumn = typeof column.accessorFn !== 'undefined';
             const isDetailsColumn = column.id === 'details' || column.id === 'detail';
             return (isDataColumn || isDetailsColumn) && column.getCanHide();
           })

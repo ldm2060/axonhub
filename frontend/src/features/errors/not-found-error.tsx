@@ -101,7 +101,6 @@ export default function NotFoundError() {
 
       // URL path similarity
       const pathSegments = currentPath.split('/').filter(Boolean);
-      const _pageSegments = page.path.split('/').filter(Boolean);
 
       pathSegments.forEach((segment) => {
         if (page.path.includes(segment) || page.keywords.some((k) => k.includes(segment))) {

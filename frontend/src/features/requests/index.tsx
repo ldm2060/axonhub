@@ -177,7 +177,7 @@ function clearRequestFilterSearch(draft: Record<string, unknown>) {
 }
 
 function RequestsContent({ scope }: { scope: RequestsScope }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: scope === 'admin' ? '/admin/requests/' : '/project/requests/' });
   const currentSearch = useRouterState({
     select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
   });

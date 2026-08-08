@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
+import type { DashboardMode } from './dashboard';
 
 export type { DashboardMode } from './dashboard';
 

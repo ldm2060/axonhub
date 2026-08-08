@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell, type TooltipProps } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell, type TooltipContentProps } from 'recharts';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,7 +31,7 @@ function HorizontalBarChart({ data, total, height = 280, noDataLabel }: Horizont
     return <div className='text-muted-foreground flex h-[250px] items-center justify-center text-sm'>{noDataLabel}</div>;
   }
 
-  const tooltipContent = (props: TooltipProps<number, string>) => {
+  const tooltipContent = (props: TooltipContentProps) => {
     const { active, payload } = props;
     if (!active || !payload?.length) return null;
 

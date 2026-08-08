@@ -11,19 +11,12 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-const colorSchemes = ['blue', 'green', 'purple', 'orange', 'red', 'black', 'cream'] as const;
+const colorSchemes = ['blue', 'green', 'purple', 'orange', 'red', 'black', 'cream', 'claude', 'starry'] as const;
 
 const appearanceFormSchema = z.object({
-  theme: z.enum(['light', 'dark'], {
-    required_error: 'Please select a theme.',
-  }),
-  colorScheme: z.enum(colorSchemes, {
-    required_error: 'Please select a color scheme.',
-  }),
-  font: z.enum(fonts, {
-    invalid_type_error: 'Select a font',
-    required_error: 'Please select a font.',
-  }),
+  theme: z.enum(['light', 'dark'], { error: 'Please select a theme.' }),
+  colorScheme: z.enum(colorSchemes, { error: 'Please select a color scheme.' }),
+  font: z.enum(fonts, { error: 'Please select a font.' }),
 });
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;

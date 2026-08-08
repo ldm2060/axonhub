@@ -88,6 +88,13 @@ export const dailyRequestStatsSchema = z.object({
   cost: z.number(),
 });
 
+export const topProjectsSchema = z.object({
+  projectId: z.string(),
+  projectName: z.string(),
+  projectDescription: z.string(),
+  requestCount: z.number(),
+});
+
 export const channelSuccessRateSchema = z.object({
   channelId: z.string(),
   channelName: z.string(),
@@ -128,6 +135,7 @@ export type CostByChannel = z.infer<typeof costByChannelSchema>;
 export type CostByModel = z.infer<typeof costByModelSchema>;
 export type CostByAPIKey = z.infer<typeof costByAPIKeySchema>;
 export type DailyRequestStats = z.infer<typeof dailyRequestStatsSchema>;
+export type TopProject = z.infer<typeof topProjectsSchema>;
 export type ChannelSuccessRate = z.infer<typeof channelSuccessRateSchema>;
 export type ModelPerformanceStat = z.infer<typeof modelPerformanceStatSchema>;
 export type ChannelPerformanceStat = z.infer<typeof channelPerformanceStatSchema>;
@@ -271,6 +279,17 @@ const DAILY_REQUEST_STATS_QUERY = `
       count
       tokens
       cost
+    }
+  }
+`;
+
+const TOP_PROJECTS_QUERY = `
+  query GetTopProjects {
+    topRequestsProjects {
+      projectId
+      projectName
+      projectDescription
+      requestCount
     }
   }
 `;
@@ -813,6 +832,17 @@ export function useTokenStats(mode: DashboardMode = 'project') {
       const fieldName = isPersonal ? 'myTokenStats' : 'tokenStats';
       const data = await graphqlRequest<{ [key: string]: TokenStats }>(query);
       return tokenStatsSchema.parse(data[fieldName]);
+    },
+    refetchInterval: 300000,
+  });
+}
+
+export function useTopProjects(limit = 5) {
+  return useQuery({
+    queryKey: ['topRequestsProjects', limit],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ topRequestsProjects: TopProject[] }>(TOP_PROJECTS_QUERY);
+      return data.topRequestsProjects.slice(0, limit).map((item) => topProjectsSchema.parse(item));
     },
     refetchInterval: 300000,
   });

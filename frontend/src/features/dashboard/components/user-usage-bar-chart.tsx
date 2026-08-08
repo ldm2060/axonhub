@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipProps } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts';
 import { formatNumber } from '@/utils/format-number';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,22 +75,7 @@ export function UserUsageBarChart({ timePeriod, metric, mode }: UserUsageBarChar
     return formatCompactNumber(value);
   };
 
-  type Payload = {
-    name?: string;
-    value?: number;
-    payload?: {
-      userName: string;
-      requestCount: number;
-      totalCost: number;
-      totalTokens: number;
-    };
-  };
-
-  type CombinedTooltipProps = TooltipProps<number, string> & {
-    payload?: Payload[];
-  };
-
-  const tooltipContent = (props: CombinedTooltipProps) => {
+  const tooltipContent = (props: TooltipContentProps) => {
     if (!props.active || !props.payload?.length) return null;
     const d = props.payload[0].payload;
     if (!d) return null;

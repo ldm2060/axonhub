@@ -143,13 +143,12 @@ export function PerformanceChart({
   nameField,
 }: PerformanceChartProps) {
   const { t, i18n } = useTranslation();
-  const { data: generalSettings, isLoading: isSettingsLoading } = useGeneralSettings();
+  const { isLoading: isSettingsLoading } = useGeneralSettings();
   const [activeSeries, setActiveSeries] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<PerformanceDisplayMode>('throughput');
 
   const isLoadingData = isLoading || isSettingsLoading;
 
-  const _timezone = generalSettings?.timezone || 'UTC';
   const locale = i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US';
 
   const memoizedSafeData = useMemo(() => data ?? [], [data]);

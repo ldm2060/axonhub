@@ -71,6 +71,22 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
+      - name: Lint frontend
+        working-directory: frontend
+        run: pnpm lint
+
+      - name: Check frontend formatting
+        working-directory: frontend
+        run: pnpm format:check
+
+      - name: Type-check frontend
+        working-directory: frontend
+        run: pnpm typecheck
+
+      - name: Test frontend units
+        working-directory: frontend
+        run: pnpm test:unit
+
       - name: Build frontend
         working-directory: frontend
         run: pnpm build

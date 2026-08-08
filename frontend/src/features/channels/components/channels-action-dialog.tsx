@@ -93,10 +93,10 @@ const MAX_MODELS_DISPLAY = 2;
 
 const duplicateNameRegex = /^(.*) \((\d+)\)$/;
 
-type ApiFormatOption = ApiFormat | 'openai/responses:websocket';
 type ResponsesTransport = 'http' | 'websocket';
 
-const OPENAI_RESPONSES_WEBSOCKET: ApiFormatOption = 'openai/responses:websocket';
+const OPENAI_RESPONSES_WEBSOCKET = 'openai/responses:websocket' as const;
+type ApiFormatOption = ApiFormat | typeof OPENAI_RESPONSES_WEBSOCKET;
 // A single trailing # suppresses automatic version suffix appending while still
 // allowing the Responses transformer to append /responses. Do not replace these
 // defaults with ## unless the upstream URL should be used fully raw.
@@ -309,7 +309,7 @@ function getNextDuplicateName(name: string, existingNames: Set<string>) {
 // Providers that are always OAuth (no third-party API key mode)
 const alwaysOAuthProviderKeys = ['antigravity', 'github_copilot', 'kimi_code'];
 
-function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string } }): boolean {
+function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string | null } | null }): boolean {
   try {
     const apiKey = channel.credentials?.apiKey || '';
     const json = JSON.parse(apiKey);
@@ -319,14 +319,14 @@ function isOfficialCodexChannel(channel: { credentials?: { apiKey?: string } }):
   }
 }
 
-function isOfficialClaudeCodeChannel(channel: { credentials?: { apiKey?: string }; baseURL: string }): boolean {
+function isOfficialClaudeCodeChannel(channel: { credentials?: { apiKey?: string | null } | null; baseURL: string }): boolean {
   const apiKey = channel.credentials?.apiKey || '';
   const defaultURL = getDefaultBaseURL('claudecode');
   return apiKey.includes('sk-ant-oat') || apiKey.includes('sk-ant-api03') || channel.baseURL === defaultURL;
 }
 
-function extractCodexAuthJSONText(apiKey: string | undefined): string | undefined {
-  if (!apiKey) return apiKey;
+function extractCodexAuthJSONText(apiKey: string | null | undefined): string | undefined {
+  if (!apiKey) return undefined;
 
   try {
     const parsed = JSON.parse(apiKey);
@@ -702,9 +702,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       if (format === OPENAI_RESPONSES_WEBSOCKET) {
         return t('channels.dialogs.fields.apiFormat.formats.openai/responses_websocket');
       }
-      return getApiFormatLabel(format);
+      return t(`channels.dialogs.fields.apiFormat.formats.${format}`);
     },
-    [getApiFormatLabel, t]
+    [t]
   );
 
   // Determine the actual channel type based on provider and API format
@@ -975,7 +975,12 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       if (isOAuthChannel) return;
       if (selectedProvider === 'codex' || selectedProvider === 'antigravity') return;
 
-      const format = formatOption === OPENAI_RESPONSES_WEBSOCKET ? OPENAI_RESPONSES : formatOption;
+      let format: ApiFormat;
+      if (formatOption === OPENAI_RESPONSES_WEBSOCKET) {
+        format = OPENAI_RESPONSES;
+      } else {
+        format = formatOption;
+      }
       const nextResponsesTransport = formatOption === OPENAI_RESPONSES_WEBSOCKET ? 'websocket' : 'http';
 
       setSelectedApiFormat(format);
@@ -2100,7 +2105,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                                 setFetchedModels(modelIDs);
                                 setSupportedModels(modelIDs);
                                 form.setValue('supportedModels', modelIDs, { shouldDirty: true, shouldValidate: true });
-                                if (!isEdit || !modelIDs.includes(currentDefault)) {
+                                if (!isEdit || !currentDefault || !modelIDs.includes(currentDefault)) {
                                   form.setValue('defaultTestModel', modelIDs[0] || '', { shouldDirty: true, shouldValidate: true });
                                 }
                               }}
@@ -3161,7 +3166,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         </FormLabel>
                         <div className='md:col-span-6'>
                           <ChannelClientRestriction
-                            channel={currentRow}
+                            channel={currentRow ?? null}
                             onUpdate={(updates) => {
                               form.setValue('clientRestriction', updates.clientRestriction ?? null);
                               form.setValue('clearClientRestriction', updates.clearClientRestriction ?? false);
@@ -3175,7 +3180,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>{t('channels.autoDisable.title')}</FormLabel>
                         <div className='md:col-span-6'>
                           <ChannelAutoDisableConfig
-                            channel={currentRow}
+                            channel={currentRow ?? null}
                             onUpdate={(updates) => {
                               if (updates.autoDisableConfig !== undefined) {
                                 form.setValue('autoDisableConfig', updates.autoDisableConfig);

@@ -1,8 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
-import { useTranslation } from 'react-i18next';
 import { useSelectedProjectId } from '@/stores/projectStore';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import {
   buildRequestContentQueryKey,
@@ -671,33 +669,26 @@ export function useRequestExecutions(
   },
   options?: { projectId?: string | null; enabled?: boolean }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
 
   return useQuery({
-    queryKey: ['request-executions', requestID, variables, permissions, projectId, handleError, t],
+    queryKey: ['request-executions', requestID, variables, permissions, projectId],
     queryFn: async ({ signal }) => {
-      try {
-        const query = buildRequestExecutionSummariesQuery(permissions);
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const finalVariables = {
-          requestID,
-          ...variables,
-        };
-        const data = await graphqlRequest<{ node: { executions: RequestExecutionSummaryConnection } }>(
-          query,
-          finalVariables,
-          headers,
-          signal
-        );
-        return requestExecutionSummaryConnectionSchema.parse(data?.node?.executions);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const query = buildRequestExecutionSummariesQuery(permissions);
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const finalVariables = {
+        requestID,
+        ...variables,
+      };
+      const data = await graphqlRequest<{ node: { executions: RequestExecutionSummaryConnection } }>(
+        query,
+        finalVariables,
+        headers,
+        signal
+      );
+      return requestExecutionSummaryConnectionSchema.parse(data?.node?.executions);
     },
     enabled: (options?.enabled ?? true) && !!requestID,
   });
@@ -708,8 +699,6 @@ export function useRequestExecutionContent(
   executionID: string,
   options?: { projectId?: string | null; enabled?: boolean; includeAdminFields?: boolean }
 ) {
-  const { handleError } = useErrorHandler();
-  const { t } = useTranslation();
   const permissions = useRequestPermissions({ systemOnly: options?.projectId === null });
   const selectedProjectId = useSelectedProjectId();
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
@@ -722,22 +711,17 @@ export function useRequestExecutionContent(
   });
 
   return useQuery<RequestExecutionContent>({
-    queryKey: [...queryKey, projectId, permissions, executionID, handleError, t],
+    queryKey,
     queryFn: async ({ signal }) => {
-      try {
-        const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const data = await graphqlRequest<{ node: RequestExecutionContent }>(
-          buildRequestExecutionContentQuery(permissions),
-          { id: executionID },
-          headers,
-          signal
-        );
-        if (!data.node) throw new Error('Request execution not found');
-        return requestExecutionContentSchema.parse(data.node);
-      } catch (error) {
-        handleError(error, t('common.errors.internalServerError'));
-        throw error;
-      }
+      const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
+      const data = await graphqlRequest<{ node: RequestExecutionContent }>(
+        buildRequestExecutionContentQuery(permissions),
+        { id: executionID },
+        headers,
+        signal
+      );
+      if (!data.node) throw new Error('Request execution not found');
+      return requestExecutionContentSchema.parse(data.node);
     },
     enabled: (options?.enabled ?? true) && !!requestID && !!executionID,
     gcTime: 0,

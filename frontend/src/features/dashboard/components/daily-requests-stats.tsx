@@ -37,7 +37,7 @@ export function DailyRequestStats({ mode }: DailyRequestStatsProps) {
   const formatCostTick = useCallback((value: number | string) => formatCurrency(Number(value), 0), [formatCurrency]);
 
   const tooltipFormatter = useCallback(
-    (value: number | string, name: string) => {
+    (value: number | string | readonly (number | string)[] | undefined, name: number | string | undefined) => {
       if (name === t('dashboard.stats.totalCost')) {
         return [formatCurrency(Number(value), 0), name];
       }

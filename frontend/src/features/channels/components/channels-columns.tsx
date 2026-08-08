@@ -1,4 +1,4 @@
-import { ColumnDef, Row, Table } from '@tanstack/react-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
@@ -27,7 +27,7 @@ export const createColumns = (
   canWrite: boolean = true,
   options?: CreateColumnsOptions
 ): ColumnDef<Channel>[] => {
-  return [
+  const columns: ColumnDef<Channel>[] = [
     {
       id: 'expand',
       header: () => null,
@@ -38,38 +38,40 @@ export const createColumns = (
       enableSorting: false,
       enableHiding: false,
     },
-    ...(canWrite
-      ? [
-          {
-            id: 'select',
-            header: ({ table }: { table: Table<Channel> }) => (
-              <div className='flex justify-center'>
-                <Checkbox
-                  checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                  onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                  aria-label={t('common.columns.selectAll')}
-                  className='translate-y-[2px]'
-                />
-              </div>
-            ),
-            cell: ({ row }: { row: Row<Channel> }) => (
-              <div className='flex justify-center'>
-                <Checkbox
-                  checked={row.getIsSelected()}
-                  onCheckedChange={(value) => row.toggleSelected(!!value)}
-                  aria-label={t('common.columns.selectRow')}
-                  className='translate-y-[2px]'
-                />
-              </div>
-            ),
-            meta: {
-              className: 'text-center',
-            },
-            enableSorting: false,
-            enableHiding: false,
-          },
-        ]
-      : []),
+  ];
+
+  if (canWrite) {
+    columns.push({
+      id: 'select',
+      header: ({ table }) => (
+        <div className='flex justify-center'>
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label={t('common.columns.selectAll')}
+            className='translate-y-[2px]'
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className='flex justify-center'>
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label={t('common.columns.selectRow')}
+            className='translate-y-[2px]'
+          />
+        </div>
+      ),
+      meta: {
+        className: 'text-center',
+      },
+      enableSorting: false,
+      enableHiding: false,
+    });
+  }
+
+  columns.push(
     {
       accessorKey: 'name',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.name')} className='justify-center' />,
@@ -88,9 +90,7 @@ export const createColumns = (
       meta: {
         className: 'text-center',
       },
-      filterFn: (row, _id, value) => {
-        return value.includes(row.original.type);
-      },
+      filterFn: (row, _id, value) => Array.isArray(value) && value.includes(row.original.type),
       enableSorting: true,
       enableHiding: false,
     },
@@ -104,7 +104,6 @@ export const createColumns = (
       enableSorting: true,
       enableHiding: false,
     },
-
     {
       accessorKey: 'tags',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.tags')} className='justify-center' />,
@@ -112,20 +111,16 @@ export const createColumns = (
       meta: {
         className: 'text-center',
       },
-      filterFn: (row, id, value) => {
-        const tags = (row.getValue(id) as string[]) || [];
-        // Single select: value is a string, not an array
-        return tags.includes(value as string);
-      },
+      filterFn: (row, _id, value) => typeof value === 'string' && (row.original.tags ?? []).includes(value),
       enableSorting: false,
       enableHiding: true,
     },
     {
       id: 'model',
-      accessorFn: () => '', // Virtual column for filtering only
+      accessorFn: () => '',
       header: () => null,
       cell: () => null,
-      filterFn: () => true, // Server-side filtering, always return true
+      filterFn: () => true,
       enableSorting: false,
       enableHiding: true,
       enableColumnFilter: false,
@@ -157,8 +152,8 @@ export const createColumns = (
       id: 'health',
       accessorKey: 'health',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.health')} className='justify-center' />,
-      cell: ({ row }: { row: Row<Channel> }) => {
-        const probePoints = (row.original as any).probePoints || [];
+      cell: ({ row }) => {
+        const probePoints = row.original.probePoints ?? [];
         const limiterStats = row.original.liveLimiterStats;
         return (
           <div className='flex flex-col items-center gap-1'>
@@ -172,49 +167,48 @@ export const createColumns = (
       },
       enableSorting: false,
       enableHiding: true,
+    }
+  );
+
+  if (!options?.hideOrderingWeight) {
+    columns.push({
+      accessorKey: 'orderingWeight',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('channels.columns.orderingWeight')} className='justify-center' />
+      ),
+      cell: OrderingWeightCell,
+      meta: {
+        className: 'w-20 min-w-20 text-center',
+      },
+      sortingFn: 'alphanumeric',
+      enableSorting: true,
+      enableHiding: true,
+    });
+  }
+
+  columns.push({
+    accessorKey: 'createdAt',
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.createdAt')} className='justify-center' />,
+    cell: CreatedAtCell,
+    meta: {
+      className: 'text-center',
     },
-    ...(!options?.hideOrderingWeight
-      ? [
-          {
-            accessorKey: 'orderingWeight',
-            header: ({ column }: { column: any }) => (
-              <DataTableColumnHeader column={column} title={t('channels.columns.orderingWeight')} className='justify-center' />
-            ),
-            cell: OrderingWeightCell,
-            meta: {
-              className: 'w-20 min-w-20 text-center',
-            },
-            sortingFn: 'alphanumeric',
-            enableSorting: true,
-            enableHiding: true,
-          },
-        ]
-      : []),
-    {
-      accessorKey: 'createdAt',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.createdAt')} className='justify-center' />,
-      cell: CreatedAtCell,
+    enableSorting: true,
+    enableHiding: false,
+  });
+
+  if (canWrite) {
+    columns.push({
+      id: 'action',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.actions')} className='justify-center' />,
+      cell: ActionCell,
       meta: {
         className: 'text-center',
       },
-      enableSorting: true,
+      enableSorting: false,
       enableHiding: false,
-    },
-    ...(canWrite
-      ? [
-          {
-            id: 'action',
-            header: ({ column }: { column: any }) => (
-              <DataTableColumnHeader column={column} title={t('common.columns.actions')} className='justify-center' />
-            ),
-            cell: ActionCell,
-            meta: {
-              className: 'text-center',
-            },
-            enableSorting: false,
-            enableHiding: false,
-          },
-        ]
-      : []),
-  ];
+    });
+  }
+
+  return columns;
 };

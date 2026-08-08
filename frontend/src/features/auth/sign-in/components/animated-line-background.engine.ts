@@ -242,14 +242,23 @@ export function renderParticles(
     ctx.fill();
   }
 
-  const hasMouseArea = mouseArea.x !== null && mouseArea.y !== null;
+  const mouseX = mouseArea.x;
+  const mouseY = mouseArea.y;
+  if (mouseX !== null && mouseY !== null) {
+    for (let index = 0; index < particles.length; index += 1) {
+      const dot = particles[index];
+      drawConnection(ctx, canvasWidth, bounds, dot, mouseX, mouseY, mouseArea.max);
+
+      for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
+        const nextDot = particles[nextIndex];
+        drawConnection(ctx, canvasWidth, bounds, dot, nextDot.x, nextDot.y, nextDot.max);
+      }
+    }
+    return;
+  }
+
   for (let index = 0; index < particles.length; index += 1) {
     const dot = particles[index];
-
-    if (hasMouseArea) {
-      drawConnection(ctx, canvasWidth, bounds, dot, mouseArea.x, mouseArea.y, mouseArea.max);
-    }
-
     for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
       const nextDot = particles[nextIndex];
       drawConnection(ctx, canvasWidth, bounds, dot, nextDot.x, nextDot.y, nextDot.max);

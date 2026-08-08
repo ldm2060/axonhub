@@ -26,50 +26,43 @@ const priceItemCodes = ['prompt_tokens', 'completion_tokens', 'prompt_cached_tok
 
 type DateRangeValue = { start: string; end: string };
 
+type PriceTier = {
+  upTo?: number | null;
+  pricePerUnit: string;
+};
+
+type SchedulePriceItem = {
+  itemCode: (typeof priceItemCodes)[number];
+  pricing: {
+    mode: PricingMode;
+    flatFee?: string | null;
+    usagePerUnit?: string | null;
+    usageTiered?: { tiers: PriceTier[] } | null;
+  };
+};
+
+type PriceOverride = {
+  name: string;
+  priority: number;
+  when: {
+    dailyTime?: { start: string; end: string } | null;
+    weekdays?: number[] | null;
+    dateRange?: DateRangeValue | null;
+  };
+  items: SchedulePriceItem[];
+};
+
+type PriceSchedule = {
+  timezone: string;
+  overrides: PriceOverride[];
+};
+
 type ScheduleFormValues = {
   prices: Array<{
     modelId: string;
     price: {
-      items: Array<{
-        itemCode: (typeof priceItemCodes)[number];
-        pricing: {
-          mode: PricingMode;
-          flatFee?: string | null;
-          usagePerUnit?: string | null;
-          usageTiered?: {
-            tiers: Array<{
-              upTo?: number | null;
-              pricePerUnit: string;
-            }>;
-          } | null;
-        };
-      }>;
-      schedule?: {
-        timezone: string;
-        overrides: Array<{
-          name: string;
-          priority: number;
-          when: {
-            dailyTime?: { start: string; end: string } | null;
-            weekdays?: number[] | null;
-            dateRange?: DateRangeValue | null;
-          };
-          items: Array<{
-            itemCode: (typeof priceItemCodes)[number];
-            pricing: {
-              mode: PricingMode;
-              flatFee?: string | null;
-              usagePerUnit?: string | null;
-              usageTiered?: {
-                tiers: Array<{
-                  upTo?: number | null;
-                  pricePerUnit: string;
-                }>;
-              } | null;
-            };
-          }>;
-        }>;
-      } | null;
+      items: SchedulePriceItem[];
+      schedule?: PriceSchedule | null;
     };
   }>;
 };
@@ -261,10 +254,7 @@ const OverrideCard = memo(function OverrideCard({
   const { setValue } = useFormContext<ScheduleFormValues>();
 
   const base = `prices.${priceIndex}.price.schedule.overrides.${overrideIndex}`;
-  const when = useScheduleWatch<ScheduleFormValues['prices'][number]['price']['schedule']['overrides'][number]['when']>(
-    control,
-    `${base}.when`
-  );
+  const when = useScheduleWatch<PriceOverride['when']>(control, `${base}.when`);
 
   const conditions = useMemo(() => {
     const result: ConditionType[] = [];
@@ -687,34 +677,37 @@ const DateRangeSinglePicker = memo(function DateRangeSinglePicker({
     <FormField
       control={control}
       name={asFieldPath(path)}
-      render={({ field }) => (
-        <FormItem className='flex flex-col'>
-          <Popover>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant='outline'
-                  className={`h-8 w-full justify-start !bg-transparent pl-2 text-left text-xs font-normal ${
-                    !field.value && 'text-muted-foreground'
-                  }`}
-                >
-                  {field.value || placeholder}
-                  <IconCalendar className='ml-auto h-3.5 w-3.5 opacity-50' />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0' align='start'>
-              <Calendar
-                mode='single'
-                selected={field.value ? new Date(field.value) : undefined}
-                onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <FormMessage className='text-[10px]' />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const value = typeof field.value === 'string' ? field.value : '';
+        return (
+          <FormItem className='flex flex-col'>
+            <Popover>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant='outline'
+                    className={`h-8 w-full justify-start !bg-transparent pl-2 text-left text-xs font-normal ${
+                      !value && 'text-muted-foreground'
+                    }`}
+                  >
+                    {value || placeholder}
+                    <IconCalendar className='ml-auto h-3.5 w-3.5 opacity-50' />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className='w-auto p-0' align='start'>
+                <Calendar
+                  mode='single'
+                  selected={value ? new Date(value) : undefined}
+                  onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <FormMessage className='text-[10px]' />
+          </FormItem>
+        );
+      }}
     />
   );
 });
@@ -735,10 +728,10 @@ const OverrideItemsEditor = memo(function OverrideItemsEditor({
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
 
-  const items = useWatch({
+  const items = useScheduleWatch<PriceOverride['items'] | undefined>(
     control,
-    name: asFieldPath(`prices.${priceIndex}.price.schedule.overrides.${overrideIndex}.items`) as FieldPath<ScheduleFormValues>,
-  }) as unknown as ScheduleFormValues['prices'][number]['price']['schedule']['overrides'][number]['items'] | undefined;
+    `prices.${priceIndex}.price.schedule.overrides.${overrideIndex}.items`
+  );
 
   const handleAddItem = useCallback(() => {
     const currentItems = items || [];

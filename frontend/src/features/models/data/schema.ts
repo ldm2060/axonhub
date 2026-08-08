@@ -99,7 +99,12 @@ export type FilterCondition = {
   value?: string | number | boolean;
 };
 
-export const filterConditionSchema: z.ZodType<FilterCondition> = z.object({
+type FilterConditionInput = Omit<FilterCondition, 'type' | 'conditions'> & {
+  type?: FilterCondition['type'];
+  conditions?: FilterConditionInput[];
+};
+
+export const filterConditionSchema: z.ZodType<FilterCondition, FilterConditionInput> = z.object({
   type: z.enum(['condition', 'group']).default('condition'),
   logic: z.string().optional(),
   conditions: z
@@ -108,7 +113,7 @@ export const filterConditionSchema: z.ZodType<FilterCondition> = z.object({
     .default([]),
   field: z.string().optional(),
   operator: z.string().optional(),
-  value: z.any().optional(),
+  value: z.custom<FilterCondition['value']>().optional(),
 });
 
 export const modelAssociationWhenSchema = z.object({
@@ -131,7 +136,7 @@ export const modelAssociationSchema = z.object({
 });
 export type ModelAssociation = z.infer<typeof modelAssociationSchema>;
 
-export function normalizeModelRoutingPolicyValue(value?: string | null): string {
+export function normalizeModelRoutingPolicyValue<T extends string>(value?: T | 'system_default' | null): T | 'default' {
   if (!value || value === 'system_default') {
     return 'default';
   }

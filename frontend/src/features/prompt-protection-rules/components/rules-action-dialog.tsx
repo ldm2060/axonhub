@@ -31,7 +31,7 @@ const createFormSchema = (t: ReturnType<typeof useTranslation>['t']) =>
       pattern: z.string().min(1, t('promptProtectionRules.validation.patternRequired')),
       action: z.enum(['mask', 'reject']),
       replacement: z.string().optional(),
-      scopes: z.array(z.string()).default([]),
+      scopes: z.array(z.string()),
     })
     .superRefine((val, ctx) => {
       if (val.action === 'mask' && !val.replacement) {
