@@ -71,6 +71,10 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
+      - name: Check generated model icons
+        working-directory: frontend
+        run: pnpm check:model-icons
+
       - name: Lint frontend
         working-directory: frontend
         run: pnpm lint
@@ -90,3 +94,7 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: pnpm build
+
+      - name: Check frontend bundle budgets
+        working-directory: frontend
+        run: pnpm bundle:check

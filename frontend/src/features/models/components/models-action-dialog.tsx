@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toc } from '@lobehub/icons';
 import { CalendarIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -21,6 +20,7 @@ import { AutoComplete } from '@/components/auto-complete';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
 import { useModels } from '../context/models-context';
 import { DEVELOPER_IDS, DEVELOPER_ICONS } from '../data/constants';
+import { MODEL_ICON_NAMES } from '../data/model-icon-names.generated';
 import { useCreateModel, useUpdateModel } from '../data/models';
 import { useDevelopersData } from '../data/providers';
 import { type Provider, type ProviderModel, resolveVision } from '../data/providers.schema';
@@ -87,14 +87,7 @@ export function ModelsActionDialog() {
     }));
   }, [selectedProviderModels]);
 
-  const iconOptions = useMemo(() => {
-    return Object.values(toc)
-      .filter((value) => value.group === 'provider' || value.group === 'model')
-      .map((value) => ({
-        value: value.id,
-        label: value.id,
-      }));
-  }, []);
+  const iconOptions = useMemo(() => MODEL_ICON_NAMES.map((name) => ({ value: name, label: name })), []);
 
   const form = useForm<z.input<typeof createModelInputSchema>, unknown, CreateModelInput>({
     resolver: zodResolver(createModelInputSchema),

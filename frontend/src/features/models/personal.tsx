@@ -1,18 +1,17 @@
-import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { SortingState } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { LazyModelsDialogs } from './components/lazy-models-dialogs';
 import { createColumns } from './components/models-columns';
 import { ModelsPersonalButtons } from './components/models-personal-buttons';
 import { ModelsTable } from './components/models-table';
 import ModelsProvider from './context/models-provider';
 import { useQueryAllModels } from './data/models';
 import { useDevelopersData } from './data/providers';
-
-const ModelsDialogs = lazy(() => import('./components/models-dialogs').then((m) => ({ default: m.ModelsDialogs })));
 
 function PersonalModelsContent() {
   useDevelopersData();
@@ -91,9 +90,7 @@ export default function PersonalModelsPage() {
       <Main fixed>
         <PersonalModelsContent />
       </Main>
-      <Suspense fallback={null}>
-        <ModelsDialogs />
-      </Suspense>
+      <LazyModelsDialogs />
     </ModelsProvider>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { toc } from '@lobehub/icons';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { AutoComplete } from '@/components/auto-complete';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
 import { useModels } from '../context/models-context';
 import { DEVELOPER_IDS, DEVELOPER_ICONS } from '../data/constants';
+import { MODEL_ICON_NAMES } from '../data/model-icon-names.generated';
 import { useBulkCreateModels } from '../data/models';
 import { useDevelopersData } from '../data/providers';
 import { type Provider, type ProviderModel, resolveVision } from '../data/providers.schema';
@@ -75,14 +75,7 @@ export function ModelsBatchCreateDialog() {
     }));
   }, []);
 
-  const iconOptions = useMemo(() => {
-    return Object.values(toc)
-      .filter((value) => value.group === 'provider' || value.group === 'model')
-      .map((value) => ({
-        value: value.id,
-        label: value.id,
-      }));
-  }, []);
+  const iconOptions = useMemo(() => MODEL_ICON_NAMES.map((name) => ({ value: name, label: name })), []);
 
   useEffect(() => {
     if (isOpen && rows.length === 0) {

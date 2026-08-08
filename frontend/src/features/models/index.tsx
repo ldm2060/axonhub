@@ -10,8 +10,8 @@ import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { PermissionGuard } from '@/components/permission-guard';
 import { useOnboardingInfo } from '@/features/system/data/system';
+import { LazyModelsDialogs } from './components/lazy-models-dialogs';
 import { createColumns } from './components/models-columns';
-import { ModelsDialogs } from './components/models-dialogs';
 import { ModelsOnboardingFlow } from './components/models-onboarding-flow';
 import { ModelsTable } from './components/models-table';
 import { useModels } from './context/models-context';
@@ -177,7 +177,7 @@ export default function ModelsManagement() {
       <Main fixed>
         <ModelsContent />
       </Main>
-      <ModelsDialogs />
+      <LazyModelsDialogs />
       {showOnboarding && <ModelsOnboardingFlow onComplete={handleOnboardingComplete} />}
     </ModelsProvider>
   );

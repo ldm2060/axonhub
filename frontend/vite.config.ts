@@ -23,6 +23,7 @@ export default defineConfig({
   ],
   build: {
     outDir: '../internal/server/static/dist',
+    manifest: true,
   },
   resolve: {
     alias: {

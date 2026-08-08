@@ -9,8 +9,6 @@ import { FontProvider } from './context/font-context';
 import { SearchProvider } from './context/search-context';
 import { ThemeProvider } from './context/theme-context';
 import './index.css';
-// Initialize i18n
-import './lib/i18n';
 import i18n from './lib/i18n';
 // Generated Routes
 import { routeTree } from './routeTree.gen';

@@ -1,38 +1,36 @@
 import type { ComponentType } from 'react';
-import {
-  OpenAI,
-  Anthropic,
-  Cline,
-  Google,
-  DeepSeek,
-  Doubao,
-  Moonshot,
-  Zhipu,
-  OpenRouter,
-  XAI,
-  Volcengine,
-  SiliconCloud,
-  PPIO,
-  ZAI,
-  LongCat,
-  Minimax,
-  BurnCloud,
-  Vercel,
-  ModelScope,
-  Bailian,
-  Jina,
-  DeepInfra,
-  Github,
-  Claude,
-  Cerebras,
-  Qiniu,
-  XiaomiMiMo,
-  Fireworks,
-  Ollama,
-  AiHubMix,
-  OpenCode,
-  Groq,
-} from '@lobehub/icons';
+import AiHubMix from '@lobehub/icons/es/AiHubMix/components/Mono.js';
+import Anthropic from '@lobehub/icons/es/Anthropic/components/Mono.js';
+import Bailian from '@lobehub/icons/es/Bailian/components/Mono.js';
+import BurnCloud from '@lobehub/icons/es/BurnCloud/components/Mono.js';
+import Cerebras from '@lobehub/icons/es/Cerebras/components/Mono.js';
+import Claude from '@lobehub/icons/es/Claude/components/Mono.js';
+import Cline from '@lobehub/icons/es/Cline/components/Mono.js';
+import DeepInfra from '@lobehub/icons/es/DeepInfra/components/Mono.js';
+import DeepSeek from '@lobehub/icons/es/DeepSeek/components/Mono.js';
+import Doubao from '@lobehub/icons/es/Doubao/components/Mono.js';
+import Fireworks from '@lobehub/icons/es/Fireworks/components/Mono.js';
+import Github from '@lobehub/icons/es/Github/components/Mono.js';
+import Google from '@lobehub/icons/es/Google/components/Mono.js';
+import Groq from '@lobehub/icons/es/Groq/components/Mono.js';
+import Jina from '@lobehub/icons/es/Jina/components/Mono.js';
+import LongCat from '@lobehub/icons/es/LongCat/components/Mono.js';
+import Minimax from '@lobehub/icons/es/Minimax/components/Mono.js';
+import ModelScope from '@lobehub/icons/es/ModelScope/components/Mono.js';
+import Moonshot from '@lobehub/icons/es/Moonshot/components/Mono.js';
+import Ollama from '@lobehub/icons/es/Ollama/components/Mono.js';
+import OpenAI from '@lobehub/icons/es/OpenAI/components/Mono.js';
+import OpenCode from '@lobehub/icons/es/OpenCode/components/Mono.js';
+import OpenRouter from '@lobehub/icons/es/OpenRouter/components/Mono.js';
+import PPIO from '@lobehub/icons/es/PPIO/components/Mono.js';
+import Qiniu from '@lobehub/icons/es/Qiniu/components/Mono.js';
+import SiliconCloud from '@lobehub/icons/es/SiliconCloud/components/Mono.js';
+import Vercel from '@lobehub/icons/es/Vercel/components/Mono.js';
+import Volcengine from '@lobehub/icons/es/Volcengine/components/Mono.js';
+import XAI from '@lobehub/icons/es/XAI/components/Mono.js';
+import XiaomiMiMo from '@lobehub/icons/es/XiaomiMiMo/components/Mono.js';
+import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
+import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
 import { NanoGPTIcon } from '../components/nanogpt-icon';

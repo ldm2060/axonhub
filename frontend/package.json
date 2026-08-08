@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --emptyOutDir && node -e \"require('node:fs').writeFileSync('../internal/server/static/dist/.gitkeep', '')\"",
+    "generate:model-icons": "node scripts/generate-model-icons.mjs",
+    "check:model-icons": "node scripts/generate-model-icons.mjs --check",
+    "bundle:check": "node scripts/check-bundle.mjs",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
