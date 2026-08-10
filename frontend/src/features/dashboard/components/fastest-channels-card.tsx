@@ -19,7 +19,7 @@ export function FastestChannelsCard({ mode }: FastestChannelsCardProps) {
       description={(totalRequests) =>
         t('dashboard.cards.fastestPerformers.description', {
           type: t('dashboard.cards.fastestPerformers.channelType'),
-          count: formatNumber(totalRequests),
+          total: formatNumber(totalRequests),
         })
       }
       noDataLabel={t('dashboard.cards.fastestPerformers.noData')}

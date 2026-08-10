@@ -48,11 +48,11 @@ export default function DashboardPage({ mode }: DashboardPageProps) {
   const [userTimePeriod, setUserTimePeriod] = useState<TimePeriod>('month');
 
   const modelPerformanceDescription = useMemo(() => {
-    return t('dashboard.charts.performanceDescription', { count: formatNumber(modelTotalRequests) });
+    return t('dashboard.charts.performanceDescription', { total: formatNumber(modelTotalRequests) });
   }, [t, modelTotalRequests]);
 
   const channelPerformanceDescription = useMemo(() => {
-    return t('dashboard.charts.performanceDescription', { count: formatNumber(channelTotalRequests) });
+    return t('dashboard.charts.performanceDescription', { total: formatNumber(channelTotalRequests) });
   }, [t, channelTotalRequests]);
 
   if (isLoading) {

@@ -19,7 +19,7 @@ export function FastestModelsCard({ mode }: FastestModelsCardProps) {
       description={(totalRequests) =>
         t('dashboard.cards.fastestPerformers.description', {
           type: t('dashboard.cards.fastestPerformers.modelType'),
-          count: formatNumber(totalRequests),
+          total: formatNumber(totalRequests),
         })
       }
       noDataLabel={t('dashboard.cards.fastestPerformers.noData')}
