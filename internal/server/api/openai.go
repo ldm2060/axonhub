@@ -44,6 +44,7 @@ type OpenAIHandlersParams struct {
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	Client                      *ent.Client
 	TimeoutConfig               TimeoutConfig
+	SSEKeepAliveConfig          SSEKeepAliveConfig
 }
 
 type OpenAIHandlers struct {
@@ -320,6 +321,19 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 	handlers.SpeechHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.TranscriptionHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.TranslationHandlers.WithTimeouts(params.TimeoutConfig)
+
+	for _, handler := range []*ChatCompletionHandlers{
+		handlers.ChatCompletionHandlers,
+		handlers.CompletionHandlers,
+		handlers.ResponseCompletionHandlers,
+		handlers.CompactHandlers,
+		handlers.SpeechHandlers,
+		handlers.TranscriptionHandlers,
+		handlers.TranslationHandlers,
+	} {
+		handler.sseKeepAlive = params.SSEKeepAliveConfig
+		handler.sseHeartbeatFormat = sseHeartbeatOpenAI
+	}
 
 	return handlers
 }

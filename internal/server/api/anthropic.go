@@ -33,6 +33,7 @@ type AnthropicHandlersParams struct {
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	TimeoutConfig               TimeoutConfig
+	SSEKeepAliveConfig          SSEKeepAliveConfig
 }
 
 type AnthropicHandlers struct {
@@ -60,6 +61,9 @@ func NewAnthropicHandlers(params AnthropicHandlersParams) *AnthropicHandlers {
 			params.ProviderQuotaStatusProvider,
 		),
 	}).WithTimeouts(params.TimeoutConfig)
+
+	handler.sseKeepAlive = params.SSEKeepAliveConfig
+	handler.sseHeartbeatFormat = sseHeartbeatAnthropic
 
 	return &AnthropicHandlers{
 		ChatCompletionHandlers: handler,

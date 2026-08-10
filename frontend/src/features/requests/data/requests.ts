@@ -104,6 +104,8 @@ function buildRequestsQuery(
             executions(first: 10, orderBy: { field: CREATED_AT, direction: DESC }) {
               edges {
                 node {
+                  id
+                  createdAt
                   modelID
                   reasoningEffort
                   status

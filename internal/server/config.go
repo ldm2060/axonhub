@@ -94,6 +94,8 @@ type Config struct {
 	// LLMStreamIdleTimeout is the maximum duration a streaming LLM request may wait without chunks.
 	LLMStreamIdleTimeout time.Duration `conf:"llm_stream_idle_timeout" yaml:"llm_stream_idle_timeout" json:"llm_stream_idle_timeout"`
 
+	SSEKeepAlive SSEKeepAlive `conf:"sse_keep_alive" yaml:"sse_keep_alive" json:"sse_keep_alive"`
+
 	Trace     tracing.Config `conf:"trace" yaml:"trace" json:"trace"`
 	Dashboard Dashboard      `conf:"dashboard" yaml:"dashboard" json:"dashboard"`
 
@@ -114,6 +116,11 @@ type Pprof struct {
 	Enabled bool   `conf:"enabled" yaml:"enabled" json:"enabled"`
 	Host    string `conf:"host" yaml:"host" json:"host"`
 	Port    int    `conf:"port" yaml:"port" json:"port"`
+}
+
+type SSEKeepAlive struct {
+	Enabled  bool          `conf:"enabled" yaml:"enabled" json:"enabled"`
+	Interval time.Duration `conf:"interval" yaml:"interval" json:"interval"`
 }
 
 // Dashboard holds configuration for the dashboard cache settings.
