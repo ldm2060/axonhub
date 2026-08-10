@@ -98,6 +98,19 @@ If any step fails, fix before committing. A merge that compiles but fails migrat
 
 Per [[feedback_verify_and_commit]] and AGENTS.md: run the verification commands, then commit immediately. Use the established commit message style — `merge: resolve conflicts with upstream <short description of what was merged>`. Do not commit `.exe` binaries (see [[no_exe_in_commits]]). After the merge commit lands on the working branch, merge it back to `unstable` per [[feedback_merge_to_unstable]].
 
+**The merge commit MUST be a true merge with two parents.** Upstream's commits (`dba642a0`, etc.) must appear in our history as the second parent of the merge commit, not be squashed into a single-parent "merge:" commit. If they are squashed, the next upstream merge will not see them as ancestors and will re-raise every conflict we already resolved, plus `git log origin/unstable..HEAD` will under-count our divergence and break the merge-setup surveys in this skill.
+
+How to get this right:
+
+- Start the merge with `git merge remote/unstable` (or `git merge <upstream-sha>`) — never by cherry-picking or hand-applying upstream's diff onto a single-parent commit. `git merge` automatically creates the two-parent structure once conflicts are resolved and committed.
+- Do NOT use `git merge --squash`. It produces a single-parent commit that looks like a merge but doesn't record the parent link.
+- If you discover after the fact that you created a single-parent "merge:" commit (e.g. by `git checkout`-ing files and committing normally), rewrite it before pushing:
+  1. `NEW=$(git commit-tree <bad-commit>^{tree} -p <local-parent> -p <upstream-tip> -m "$(git log --format=%B -n 1 <bad-commit>)")`
+  2. For each commit on top of `<bad-commit>`, recreate it with `git commit-tree <c>^{tree} -p $NEW -m "..."` and update `$NEW` to the new sha.
+  3. `git update-ref refs/heads/<branch> $NEW`
+- Verify the result: `git log --graph --oneline -10` should show the upstream commits as a side branch merged in by your merge commit, and `git merge-base HEAD remote/unstable` should equal the upstream tip you merged.
+- Before pushing, run the frontend CI steps locally so a missing format/lint/typecheck failure doesn't surface only on the runner: `cd frontend && pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm build && pnpm bundle:check`. Past incident: a merge commit passed `pnpm lint` and `pnpm typecheck` locally but failed CI at `pnpm format:check` because we hadn't run prettier on the merged files — fix by running `pnpm format` and committing the result as a follow-up `style(frontend): apply prettier formatting to satisfy format:check`.
+
 ## When to escalate to the user
 
 Pause and ask before:
