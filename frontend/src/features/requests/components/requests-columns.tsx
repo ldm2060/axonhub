@@ -21,7 +21,7 @@ import { calculateTokensPerSecond, getTokensPerSecondValue } from '../utils/toke
 import { getStatusColor } from './help';
 
 interface UseRequestsColumnsOptions {
-  onBodyClick?: (requestId: string, index: number) => void;
+  adminScope?: boolean;
   onViewDetail?: (requestId: string) => void;
 }
 
@@ -94,17 +94,40 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         const request = row.original;
         return (
           <div className='flex min-w-[142px] flex-col gap-1'>
-            <button
-              type='button'
-              onClick={() => options?.onBodyClick?.(request.id, row.index)}
-              className='text-left text-sm font-medium hover:underline'
-            >
-              {format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale })}
-            </button>
+            <span className='text-sm font-medium'>{format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale })}</span>
             <Badge className={`${getStatusColor(request.status)} w-fit`}>{t(`requests.status.${request.status}`)}</Badge>
           </div>
         );
       },
+    },
+    ...(options?.adminScope && permissions.canViewUsers
+      ? ([
+          {
+            id: 'user',
+            accessorFn: (row: Request) => row.apiKey?.user?.id ?? '',
+            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
+            enableSorting: false,
+            enableHiding: true,
+            cell: ({ row }) => {
+              const user = row.original.apiKey?.user;
+              if (!user) return <div className='text-muted-foreground text-xs'>-</div>;
+              const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+              return (
+                <div className='text-xs'>
+                  <div className='font-medium'>{name || user.email}</div>
+                  {name && user.email && <div className='text-muted-foreground'>{user.email}</div>}
+                </div>
+              );
+            },
+          },
+        ] as ColumnDef<Request>[])
+      : []),
+    {
+      id: 'status',
+      accessorKey: 'status',
+      enableHiding: false,
+      filterFn: (row, id, value) => getStringFilterValues(value).includes(row.getValue(id)),
+      cell: () => null,
     },
     {
       id: 'modelID',
@@ -167,102 +190,11 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       },
     },
     {
-      id: 'passThrough',
-      accessorFn: (row) => row.executions?.edges?.some((edge) => edge.node?.passThroughApplied) ?? false,
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.passThrough')} />,
-      enableSorting: false,
-      enableHiding: true,
-      cell: ({ row }) => {
-        const executions = row.original.executions?.edges?.map((edge) => edge.node).filter(Boolean) || [];
-        const appliedExecution = executions.find((execution) => execution?.passThroughApplied);
-
-        if (!appliedExecution) {
-          return <div className='text-muted-foreground text-xs'>-</div>;
-        }
-
-        return (
-          <Badge className='border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300'>
-            {t('requests.passThrough.applied')}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'reasoningEffort',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.reasoningEffort')} />,
-      enableSorting: false,
-      enableHiding: true,
-      cell: ({ row }) => {
-        const latestExecution = row.original.executions?.edges?.[0]?.node;
-        const reasoningEffort = latestExecution
-          ? latestExecution.reasoningEffort
-          : row.original.status === 'processing'
-            ? undefined
-            : row.original.reasoningEffort;
-
-        if (!reasoningEffort) {
-          return <div className='text-muted-foreground text-xs'>-</div>;
-        }
-
-        return (
-          <Badge className='border-sky-200 bg-sky-100 text-sky-800 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300'>
-            {reasoningEffort}
-          </Badge>
-        );
-      },
-    },
-
-    {
-      id: 'stream',
-      accessorKey: 'stream',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.stream')} />,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const isStream = row.original.stream;
-        return (
-          <Badge
-            className={
-              isStream
-                ? 'border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
-                : 'border-gray-200 bg-gray-100 text-gray-800 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300'
-            }
-          >
-            {isStream ? t('requests.stream.streaming') : t('requests.stream.nonStreaming')}
-          </Badge>
-        );
-      },
-      filterFn: (row, _id, value) => {
-        const values = getStringFilterValues(value);
-        return values.includes(row.original.stream?.toString() || '-');
-      },
-      enableHiding: true,
-    },
-    {
       id: 'source',
       accessorKey: 'source',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.source')} />,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const source = row.getValue('source') as string;
-        const sourceColors: Record<string, string> = {
-          api: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
-          playground: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800',
-        };
-        return (
-          <Badge
-            className={
-              sourceColors[source] ||
-              'border-gray-200 bg-gray-100 text-gray-800 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-300'
-            }
-          >
-            {t(`requests.source.${source}`)}
-          </Badge>
-        );
-      },
-      filterFn: (row, id, value) => {
-        const values = getStringFilterValues(value);
-        return values.includes(row.getValue(id));
-      },
+      enableHiding: false,
+      filterFn: (row, id, value) => getStringFilterValues(value).includes(row.getValue(id)),
+      cell: () => null,
     },
     {
       id: 'clientIP',
@@ -375,75 +307,14 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               );
             },
             filterFn: (row, _id, value) => {
-              // For client-side filtering, check if any of the selected channels match
               const values = getStringFilterValues(value);
-              if (values.length === 0) return true; // No filter applied
-
+              if (values.length === 0) return true;
               const channel = row.original.executions?.edges?.[0]?.node?.channel ?? row.original.channel;
               return !!channel?.id && values.includes(channel.id);
             },
           },
         ] as ColumnDef<Request>[])
       : []),
-    // API Key column - only show if user has permission to view API keys
-    ...(permissions.canViewApiKeys
-      ? ([
-          {
-            accessorKey: 'apiKey',
-            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.apiKey')} />,
-            enableSorting: false,
-            cell: ({ row }) => {
-              return <div className='font-mono text-xs'>{row.original.apiKey?.name || '-'}</div>;
-            },
-          },
-        ] as ColumnDef<Request>[])
-      : []),
-    // User column - only show if user has permission to view users (admin scope)
-    ...(permissions.canViewUsers
-      ? ([
-          {
-            id: 'user',
-            accessorFn: (row: Request) => row.apiKey?.user?.id ?? '',
-            header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.user')} />,
-            enableSorting: false,
-            enableHiding: true,
-            cell: ({ row }) => {
-              const user = row.original.apiKey?.user;
-              if (!user) return <div className='text-muted-foreground text-xs'>-</div>;
-              const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
-              return (
-                <div className='text-xs'>
-                  <div className='font-medium'>{name || user.email}</div>
-                  {name && user.email && <div className='text-muted-foreground'>{user.email}</div>}
-                </div>
-              );
-            },
-          },
-        ] as ColumnDef<Request>[])
-      : [
-          {
-            id: 'user',
-            header: () => null,
-            cell: () => null,
-            enableHiding: true,
-            meta: { className: 'hidden' },
-          } as ColumnDef<Request>,
-        ]),
-
-    {
-      accessorKey: 'status',
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.status')} />,
-      cell: ({ row }) => {
-        const status = row.getValue('status') as string;
-        return <Badge className={getStatusColor(status)}>{t(`requests.status.${status}`)}</Badge>;
-      },
-      filterFn: (row, id, value) => {
-        const values = getStringFilterValues(value);
-        return values.includes(row.getValue(id));
-      },
-      enableSorting: false,
-      enableHiding: true,
-    },
     {
       id: 'usage',
       accessorFn: (row) => {
@@ -574,8 +445,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       },
       filterFn: (row, _id, value) => {
         const values = getStringFilterValues(value);
-        if (values.length === 0) return true;
-        return values.includes(row.original.apiKey?.id ?? '');
+        return values.length === 0 || values.includes(row.original.apiKey?.id ?? '');
       },
     },
     {

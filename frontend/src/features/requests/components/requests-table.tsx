@@ -23,9 +23,9 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { ServerSidePagination } from '@/components/server-side-pagination';
 import { Request, RequestConnection } from '../data/schema';
 import { DataTableToolbar } from './data-table-toolbar';
-import { RequestBodyDrawer } from './request-body-drawer';
 import { DEFAULT_HIDDEN_COLUMN_IDS, DEFAULT_MOBILE_HIDDEN_COLUMN_IDS, useRequestsColumns } from './requests-columns';
 
+const COLUMN_VISIBILITY_STORAGE_KEY = 'requests-table-column-visibility';
 const COLUMN_VISIBILITY_STORAGE_VERSION = 3;
 
 const MotionTableRow = motion.create(TableRow);
@@ -50,7 +50,6 @@ interface RequestsTableProps {
   modelIDFilter: string;
   userFilter: string[];
   dateRange?: DateTimeRangeValue;
-  queryWhere?: Record<string, any>;
   onNextPage: () => void;
   onPreviousPage: () => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -97,7 +96,6 @@ export function RequestsTable({
   modelIDFilter = '',
   userFilter = [],
   dateRange,
-  queryWhere,
   onNextPage,
   onPreviousPage,
   onPageSizeChange,
@@ -113,23 +111,7 @@ export function RequestsTable({
 }: RequestsTableProps) {
   const { t } = useTranslation();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerInitialRequestId, setDrawerInitialRequestId] = useState<string | null>(null);
-  const [drawerInitialIndex, setDrawerInitialIndex] = useState(0);
-
-  const handleBodyClick = useCallback((requestId: string, index: number) => {
-    setDrawerInitialRequestId(requestId);
-    setDrawerInitialIndex(index);
-    setDrawerOpen(true);
-  }, []);
-
-  const requestsColumns = useRequestsColumns({
-    onBodyClick: handleBodyClick,
-    onViewDetail,
-  });
-
-  const columnVisibilityStorageKey = adminScope ? 'admin-requests-table-column-visibility' : 'requests-table-column-visibility';
-
+  const requestsColumns = useRequestsColumns({ adminScope, onViewDetail });
   const [sorting, setSorting] = useState<SortingState>([]);
   const isMobile = useIsMobile();
 
@@ -148,7 +130,7 @@ export function RequestsTable({
 
     let overrides: VisibilityState = {};
     try {
-      const raw = localStorage.getItem(columnVisibilityStorageKey);
+      const raw = localStorage.getItem(COLUMN_VISIBILITY_STORAGE_KEY);
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
@@ -163,10 +145,9 @@ export function RequestsTable({
     }
 
     userOverridesRef.current = overrides;
-    columnVisibilityRef.current = { ...mobileDefaults, ...overrides };
-    setColumnVisibility(columnVisibilityRef.current);
+    setColumnVisibility({ ...mobileDefaults, ...overrides });
     setVisibilityReady(true);
-  }, [columnVisibilityStorageKey]); // Re-initialize when the storage scope changes
+  }, []); // Run once on mount
 
   // Mirror columnVisibility into a ref so the visibility-change handler can read prev without a closure
   useEffect(() => {
@@ -180,13 +161,13 @@ export function RequestsTable({
     if (!visibilityReady) return;
     try {
       localStorage.setItem(
-        columnVisibilityStorageKey,
+        COLUMN_VISIBILITY_STORAGE_KEY,
         JSON.stringify({ v: COLUMN_VISIBILITY_STORAGE_VERSION, overrides: userOverridesRef.current })
       );
     } catch {
       // localStorage unavailable or quota exceeded — skip persistence
     }
-  }, [columnVisibility, columnVisibilityStorageKey, visibilityReady]);
+  }, [columnVisibility, visibilityReady]);
 
   useEffect(() => {
     if (!visibilityReady) return;
@@ -233,11 +214,11 @@ export function RequestsTable({
     if (modelIDFilter) {
       filters.push({ id: 'modelID', value: modelIDFilter });
     }
-    if (userFilter.length > 0) {
+    if (adminScope && userFilter.length > 0) {
       filters.push({ id: 'user', value: userFilter });
     }
     return filters;
-  }, [statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter, userFilter]);
+  }, [statusFilter, sourceFilter, channelFilter, apiKeyFilter, modelIDFilter, userFilter, adminScope]);
 
   const handleColumnFiltersChange = useCallback(
     (updater: any) => {
@@ -249,10 +230,10 @@ export function RequestsTable({
         channelFilter: getFilterArrayValue(newFilters, 'channel'),
         apiKeyFilter: getFilterArrayValue(newFilters, 'caller'),
         modelIDFilter: getFilterStringValue(newFilters, 'modelID'),
-        userFilter: getFilterArrayValue(newFilters, 'user'),
+        userFilter: adminScope ? getFilterArrayValue(newFilters, 'user') : [],
       });
     },
-    [columnFilters, onFiltersChange]
+    [adminScope, columnFilters, onFiltersChange]
   );
 
   const handleColumnVisibilityChange = useCallback((updater: Updater<VisibilityState>) => {
@@ -381,19 +362,6 @@ export function RequestsTable({
           onPageSizeChange={onPageSizeChange}
         />
       </div>
-
-      <RequestBodyDrawer
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-        initialRequestId={drawerInitialRequestId}
-        initialIndex={drawerInitialIndex}
-        initialRequests={data}
-        pageInfo={pageInfo}
-        queryWhere={queryWhere}
-        onViewDetail={onViewDetail}
-        projectId={adminScope ? null : undefined}
-        includeAdminFields={adminScope}
-      />
     </div>
   );
 }
