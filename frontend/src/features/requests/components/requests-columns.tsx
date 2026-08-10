@@ -107,16 +107,6 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
       },
     },
     {
-      id: 'status',
-      accessorKey: 'status',
-      enableHiding: false,
-      filterFn: (row, id, value) => {
-        const values = getStringFilterValues(value);
-        return values.includes(row.getValue(id));
-      },
-      cell: () => null,
-    },
-    {
       id: 'modelID',
       accessorFn: (row) => row.modelID,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('requests.columns.model')} />,
