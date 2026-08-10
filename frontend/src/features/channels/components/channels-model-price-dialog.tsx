@@ -2,8 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
 import { useFieldArray, useForm, useWatch, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { IconPlus, IconTrash, IconCopy } from '@tabler/icons-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -545,13 +545,7 @@ const PriceCard = memo(function PriceCard({
           </div>
 
           <div className='hidden items-start justify-end md:flex'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className='text-destructive'
-              onClick={() => onRemovePrice(priceIndex)}
-            >
+            <Button type='button' variant='ghost' size='icon-sm' className='text-destructive' onClick={() => onRemovePrice(priceIndex)}>
               <IconTrash size={16} />
             </Button>
           </div>
@@ -733,9 +727,7 @@ export function ChannelsModelPriceDialog() {
       // so scroll it into view before surfacing the error message.
       const priceErrors = errors?.prices;
       if (Array.isArray(priceErrors)) {
-        const firstIndex = priceErrors.findIndex(
-          (e) => e && typeof e === 'object' && Object.keys(e).length > 0
-        );
+        const firstIndex = priceErrors.findIndex((e) => e && typeof e === 'object' && Object.keys(e).length > 0);
         if (firstIndex >= 0) {
           rowVirtualizer.scrollToIndex(firstIndex, { align: 'start' });
         }
@@ -1112,7 +1104,7 @@ export function ChannelsModelPriceDialog() {
                 </div>
               </CardContent>
             </Card>
-            <div ref={priceListRef} className='min-h-40 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden pt-4 pr-4 md:min-h-0'>
+            <div ref={priceListRef} className='min-h-40 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto pt-4 pr-4 md:min-h-0'>
               {fields.length === 0 && !isLoading && (
                 <div className='text-muted-foreground flex flex-col items-center justify-center py-12'>
                   <p>{t('price.noPrices')}</p>

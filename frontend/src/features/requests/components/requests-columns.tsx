@@ -3,8 +3,8 @@
 import { format } from 'date-fns';
 import { ColumnDef } from '@tanstack/react-table';
 import { IconArrowsJoin2, IconRoute } from '@tabler/icons-react';
-import { ArrowDown, ArrowUp, Ban, FileText } from 'lucide-react';
 import { zhCN, enUS } from 'date-fns/locale';
+import { ArrowDown, ArrowUp, Ban, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { formatDuration } from '@/utils/format-duration';
@@ -27,13 +27,7 @@ interface UseRequestsColumnsOptions {
 
 export const DEFAULT_HIDDEN_COLUMN_IDS = ['status', 'source', 'apiFormat', 'clientIP', 'tokensPerSecond'];
 
-export const DEFAULT_MOBILE_HIDDEN_COLUMN_IDS = [
-  ...DEFAULT_HIDDEN_COLUMN_IDS,
-  'channel',
-  'cost',
-  'duration',
-  'caller',
-];
+export const DEFAULT_MOBILE_HIDDEN_COLUMN_IDS = [...DEFAULT_HIDDEN_COLUMN_IDS, 'channel', 'cost', 'duration', 'caller'];
 
 export const MODEL_ID_COLUMN = 'modelID' as const;
 
@@ -156,7 +150,9 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
                     <IconRoute className='h-3.5 w-3.5' />
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{t(passThroughApplied ? 'requests.tooltips.passThroughApplied' : 'requests.tooltips.passThroughNotApplied')}</TooltipContent>
+                <TooltipContent>
+                  {t(passThroughApplied ? 'requests.tooltips.passThroughApplied' : 'requests.tooltips.passThroughNotApplied')}
+                </TooltipContent>
               </Tooltip>
             </div>
           </div>
@@ -483,7 +479,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className='inline-flex items-center gap-1' tabIndex={0} role='img' aria-label={t('requests.tooltips.inputTokens')}>
-                    <ArrowUp className='h-3.5 w-3.5 text-muted-foreground' />
+                    <ArrowUp className='text-muted-foreground h-3.5 w-3.5' />
                     {promptTokens.toLocaleString()}
                   </span>
                 </TooltipTrigger>
@@ -492,7 +488,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className='inline-flex items-center gap-1' tabIndex={0} role='img' aria-label={t('requests.tooltips.outputTokens')}>
-                    <ArrowDown className='h-3.5 w-3.5 text-muted-foreground' />
+                    <ArrowDown className='text-muted-foreground h-3.5 w-3.5' />
                     {completionTokens.toLocaleString()}
                   </span>
                 </TooltipTrigger>
@@ -543,13 +539,21 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
         }
 
         if (!request.stream) {
-          return <span className='font-mono text-xs'>{t('requests.duration.total', { duration: formatDuration(request.metricsLatencyMs) })} · {t('requests.stream.nonStreaming')}</span>;
+          return (
+            <span className='font-mono text-xs'>
+              {t('requests.duration.total', { duration: formatDuration(request.metricsLatencyMs) })} · {t('requests.stream.nonStreaming')}
+            </span>
+          );
         }
 
         return (
           <div className='min-w-[128px] font-mono text-xs'>
-            {request.metricsFirstTokenLatencyMs != null && <div>{t('requests.duration.firstToken', { duration: formatDuration(request.metricsFirstTokenLatencyMs) })}</div>}
-            <div className='text-muted-foreground'>{t('requests.duration.total', { duration: formatDuration(request.metricsLatencyMs) })} · {t('requests.stream.streaming')}</div>
+            {request.metricsFirstTokenLatencyMs != null && (
+              <div>{t('requests.duration.firstToken', { duration: formatDuration(request.metricsFirstTokenLatencyMs) })}</div>
+            )}
+            <div className='text-muted-foreground'>
+              {t('requests.duration.total', { duration: formatDuration(request.metricsLatencyMs) })} · {t('requests.stream.streaming')}
+            </div>
           </div>
         );
       },

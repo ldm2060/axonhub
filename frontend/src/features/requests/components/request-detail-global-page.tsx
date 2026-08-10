@@ -64,11 +64,18 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
             <div>
               <div className='flex items-center gap-1'>
                 <h1 className='text-lg leading-none font-semibold'>
-                  {t('requests.detail.title')} #{request ? extractNumberID(request.id) || request.id : extractNumberID(requestId) || requestId}
+                  {t('requests.detail.title')} #
+                  {request ? extractNumberID(request.id) || request.id : extractNumberID(requestId) || requestId}
                 </h1>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant='ghost' size='icon-sm' className='h-7 w-7' onClick={() => void copyRequestID()} aria-label={t('requests.actions.copyRequestId')}>
+                    <Button
+                      variant='ghost'
+                      size='icon-sm'
+                      className='h-7 w-7'
+                      onClick={() => void copyRequestID()}
+                      aria-label={t('requests.actions.copyRequestId')}
+                    >
                       <Copy className='h-3.5 w-3.5' />
                     </Button>
                   </TooltipTrigger>

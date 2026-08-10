@@ -91,7 +91,7 @@ export function ApiKeyTokenChartDialog({ apiKey, open, onOpenChange }: ApiKeyTok
             </TabsList>
           </Tabs>
         </DialogHeader>
-        <div className='-ml-6 min-h-0 flex-1 scrollbar-thin space-y-2 overflow-y-auto pl-6'>
+        <div className='scrollbar-thin -ml-6 min-h-0 flex-1 space-y-2 overflow-y-auto pl-6'>
           {isLoading ? (
             <Skeleton className='h-[200px] w-full' />
           ) : !stat || totalTokens === 0 ? (
