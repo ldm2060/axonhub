@@ -33,6 +33,7 @@ import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
 import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
+import { FennoIcon } from '../components/fenno-icon';
 import { NanoGPTIcon } from '../components/nanogpt-icon';
 import { BURNCLOUD_DEFAULT_MODELS } from './burncloud-models';
 import { ApiFormat, ChannelType } from './schema';
@@ -85,6 +86,30 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     apiFormat: OPENAI_CHAT_COMPLETIONS,
     color: 'bg-sky-100 text-sky-800 border-sky-200',
     icon: AtlasCloudIcon,
+  },
+  qiniu: {
+    channelType: 'qiniu',
+    baseURL: 'https://api.qnaigc.com/v1',
+    defaultModels: ['deepseek-v3'],
+    apiFormat: OPENAI_CHAT_COMPLETIONS,
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    icon: Qiniu,
+  },
+  qiniu_anthropic: {
+    channelType: 'qiniu_anthropic',
+    baseURL: 'https://api.qnaigc.com',
+    defaultModels: ['deepseek-v3'],
+    apiFormat: ANTHROPIC_MESSAGES,
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    icon: Qiniu,
+  },
+  fenno: {
+    channelType: 'fenno',
+    baseURL: 'https://api.fenno.ai',
+    defaultModels: ['gpt-5.2', 'gpt-5.2-codex'],
+    apiFormat: OPENAI_RESPONSES,
+    color: 'bg-[#EEF2FF] text-[#3155C6] border-[#C7D2FE]',
+    icon: FennoIcon,
   },
   openai_responses: {
     channelType: 'openai_responses',
@@ -151,14 +176,6 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     apiFormat: OPENAI_CHAT_COMPLETIONS,
     color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     icon: DeepInfra,
-  },
-  qiniu: {
-    channelType: 'qiniu',
-    baseURL: 'https://api.qnaigc.com/v1',
-    defaultModels: ['deepseek-v3'],
-    apiFormat: OPENAI_CHAT_COMPLETIONS,
-    color: 'bg-blue-100 text-blue-800 border-blue-200',
-    icon: Qiniu,
   },
   anthropic: {
     channelType: 'anthropic',
@@ -778,12 +795,13 @@ export const getDefaultModels = (channelType: ChannelType): string[] => {
 export type Provider =
   | 'openai'
   | 'atlascloud'
+  | 'qiniu'
+  | 'fenno'
   | 'cline'
   | 'anthropic'
   | 'claudecode'
   | 'deepseek'
   | 'deepinfra'
-  | 'qiniu'
   | 'gemini'
   | 'moonshot'
   | 'kimi_code'
@@ -824,6 +842,9 @@ export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   openai_responses: 'openai',
   openai_image_generation: 'openai',
   atlascloud: 'atlascloud',
+  qiniu: 'qiniu',
+  qiniu_anthropic: 'qiniu',
+  fenno: 'fenno',
   cline: 'cline',
   openai_fake: 'openai',
   anthropic: 'anthropic',
@@ -833,7 +854,6 @@ export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   deepseek: 'deepseek',
   deepseek_anthropic: 'deepseek',
   deepinfra: 'deepinfra',
-  qiniu: 'qiniu',
   gemini: 'gemini',
   gemini_openai: 'gemini',
   gemini_vertex: 'gemini',

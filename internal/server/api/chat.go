@@ -461,6 +461,7 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 
 	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
 	eventsAfterCancel := 0
+	terminalSeen := false
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
@@ -474,6 +475,9 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 		}
 		if result.ok {
 			cur := result.event
+			if orchestrator.IsTerminalStreamEvent(cur) {
+				terminalSeen = true
+			}
 			c.SSEvent(cur.Type, cur.Data)
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
 			c.Writer.Flush()
@@ -516,6 +520,10 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 			}
 
 			c.SSEvent("error", formatErr(ctx, result.err))
+		} else if !terminalSeen {
+			log.Error(ctx, "Stream ended without terminal event, reporting incomplete stream to client",
+				log.Cause(orchestrator.ErrStreamIncomplete))
+			c.SSEvent("error", formatErr(ctx, orchestrator.ErrStreamIncomplete))
 		}
 
 		c.Writer.Flush()
@@ -557,6 +565,7 @@ func writeSSEStreamWithHeartbeat(
 	timerC := timer.C
 	ctxDone := ctx.Done()
 	eventsAfterCancel := 0
+	terminalSeen := false
 
 	for {
 		select {
@@ -568,7 +577,7 @@ func writeSSEStreamWithHeartbeat(
 
 		case result := <-reader.Results():
 			if result.done {
-				writeSSEStreamEnd(c, ctx, result.err, formatErr, &clientDisconnected)
+				writeSSEStreamEnd(c, ctx, result.err, formatErr, terminalSeen, &clientDisconnected)
 				return
 			}
 
@@ -583,6 +592,9 @@ func writeSSEStreamWithHeartbeat(
 			}
 
 			cur := result.event
+			if orchestrator.IsTerminalStreamEvent(cur) {
+				terminalSeen = true
+			}
 			c.SSEvent(cur.Type, cur.Data)
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
 			c.Writer.Flush()
@@ -609,9 +621,11 @@ func writeSSEStreamEnd(
 	ctx context.Context,
 	streamErr error,
 	formatErr StreamErrorFormatter,
+	terminalSeen bool,
 	clientDisconnected *bool,
 ) {
-	if streamErr != nil {
+	switch {
+	case streamErr != nil:
 		if errors.Is(streamErr, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
 			*clientDisconnected = true
 
@@ -622,8 +636,12 @@ func writeSSEStreamEnd(
 			log.Error(ctx, "Error in stream", log.Cause(streamErr))
 			c.SSEvent("error", formatErr(ctx, streamErr))
 		}
-	} else if errors.Is(ctx.Err(), context.Canceled) {
+	case errors.Is(ctx.Err(), context.Canceled):
 		*clientDisconnected = true
+	case !terminalSeen:
+		log.Error(ctx, "Stream ended without terminal event, reporting incomplete stream to client",
+			log.Cause(orchestrator.ErrStreamIncomplete))
+		c.SSEvent("error", formatErr(ctx, orchestrator.ErrStreamIncomplete))
 	}
 
 	c.Writer.Flush()

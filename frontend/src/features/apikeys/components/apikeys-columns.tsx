@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import LongText from '@/components/long-text';
 import { ApiKey } from '../data/schema';
+import { ActiveProfileCell } from './apikeys-active-profile-cell';
 import { ApiKeyCell } from './apikeys-column-cells';
 import { DataTableRowActions } from './data-table-row-actions';
 
@@ -136,6 +137,13 @@ export const createColumns = (
     filterFn: (row, _id, value) => {
       return value.includes(row.getValue('status'));
     },
+    enableSorting: false,
+  },
+  {
+    id: 'activeProfile',
+    accessorFn: (row) => row.profiles?.activeProfile || '',
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t('apikeys.columns.activeProfile')} />,
+    cell: ({ row }) => <ActiveProfileCell apiKey={row.original} canWrite={canWrite} />,
     enableSorting: false,
   },
   {

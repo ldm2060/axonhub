@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, FileText, ChevronsDownUp, Chev
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
-import { extractNumberID } from '@/lib/utils';
+import { cn, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,10 @@ import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import { useRequest, fetchAdjacentRequestPage } from '../data';
 import { Request, RequestConnection } from '../data/schema';
 import { generateRequestCurl } from '../utils/curl-generator';
+import { parseRequestConversation } from '../utils/request-conversation';
 import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
+import { RequestConversationViewer } from './request-conversation-viewer';
 import { createNavigationState, flattenNavigationPages, mergeNavigationPage, type NavigationState } from './request-navigation-state';
 
 interface RequestBodyDrawerProps {
@@ -69,13 +71,29 @@ function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFie
     queryScope: 'quick-view',
   });
   const displayedRequestRef = useRef<Request | null>(null);
+  const lastAutoBodyRef = useRef<string>('');
   const [globalExpanded, setGlobalExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('request');
+  const [requestBodyView, setRequestBodyView] = useState<'conversation' | 'json'>('conversation');
   const [showCurlPreview, setShowCurlPreview] = useState(false);
   const [curlCommand, setCurlCommand] = useState('');
 
   if (request) displayedRequestRef.current = request;
   const displayedRequest = displayedRequestRef.current;
+
+  useEffect(() => {
+    if (!displayedRequest) return;
+
+    const bodyKey = JSON.stringify({
+      id: displayedRequest.id,
+      body: displayedRequest.requestBody,
+      format: displayedRequest.format,
+    });
+    if (bodyKey === lastAutoBodyRef.current) return;
+
+    lastAutoBodyRef.current = bodyKey;
+    setRequestBodyView(parseRequestConversation(displayedRequest.requestBody, displayedRequest.format) ? 'conversation' : 'json');
+  }, [displayedRequest]);
 
   const copyBody = useCallback(
     (data: any) => {
@@ -150,24 +168,56 @@ function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFie
           </div>
 
           <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>
-            <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
-              {displayedRequest.requestBody ? (
-                <JsonViewer
-                  key={`req-${currentRequestId}`}
-                  data={displayedRequest.requestBody}
-                  rootName=''
-                  defaultExpanded={true}
-                  expandDepth='all'
-                  hideArrayIndices={true}
-                  globalStringExpanded={globalExpanded}
-                  className='text-sm'
-                />
-              ) : (
-                <div className='flex h-32 items-center justify-center'>
-                  <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
-                </div>
-              )}
-            </ScrollArea>
+            <div className='flex h-full min-h-0 flex-col'>
+              <div className='bg-muted/40 border-border mb-3 inline-flex h-8 w-fit shrink-0 items-center rounded-md border p-0.5'>
+                <button
+                  type='button'
+                  className={cn(
+                    'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
+                    requestBodyView === 'conversation' && 'bg-background text-foreground shadow-sm'
+                  )}
+                  onClick={() => setRequestBodyView('conversation')}
+                >
+                  {t('requests.detail.tabs.conversation')}
+                </button>
+                <button
+                  type='button'
+                  className={cn(
+                    'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
+                    requestBodyView === 'json' && 'bg-background text-foreground shadow-sm'
+                  )}
+                  onClick={() => setRequestBodyView('json')}
+                >
+                  {t('requests.detail.tabs.json')}
+                </button>
+              </div>
+              <ScrollArea className='bg-muted/20 min-h-0 flex-1 rounded-lg border p-4'>
+                {displayedRequest.requestBody ? (
+                  requestBodyView === 'conversation' ? (
+                    <RequestConversationViewer
+                      key={`conversation-${currentRequestId}`}
+                      body={displayedRequest.requestBody}
+                      format={displayedRequest.format}
+                    />
+                  ) : (
+                    <JsonViewer
+                      key={`req-${currentRequestId}`}
+                      data={displayedRequest.requestBody}
+                      rootName=''
+                      defaultExpanded={true}
+                      expandDepth='all'
+                      hideArrayIndices={true}
+                      globalStringExpanded={globalExpanded}
+                      className='text-sm'
+                    />
+                  )
+                ) : (
+                  <div className='flex h-32 items-center justify-center'>
+                    <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
           </TabsContent>
 
           <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>

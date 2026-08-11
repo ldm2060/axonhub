@@ -17,6 +17,7 @@ import {
   useEnableSelectedChannelAPIKeys,
   useDeleteDisabledChannelAPIKeys,
 } from '../data/channels';
+import { OAUTH_CREDENTIAL_REF } from '../data/schema';
 
 interface ChannelsDisabledAPIKeysDialogProps {
   open: boolean;
@@ -227,30 +228,33 @@ export function ChannelsDisabledAPIKeysDialog({ open, onOpenChange }: ChannelsDi
                       </PopoverContent>
                     </Popover>
 
-                    {/* Delete Selected */}
-                    <Popover open={confirmDeleteSelected} onOpenChange={setConfirmDeleteSelected}>
-                      <PopoverTrigger asChild>
-                        <Button size='sm' variant='outline' className='text-destructive' disabled={isPending}>
-                          <IconTrash className='mr-1 h-4 w-4' />
-                          {t('channels.dialogs.disabledAPIKeys.deleteSelected', { count: selectedKeys.size })}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='w-80'>
-                        <div className='flex flex-col gap-3'>
-                          <p className='text-sm'>
-                            {t('channels.dialogs.disabledAPIKeys.confirmDeleteSelected', { count: selectedKeys.size })}
-                          </p>
-                          <div className='flex justify-end gap-2'>
-                            <Button size='sm' variant='outline' onClick={() => setConfirmDeleteSelected(false)}>
-                              {t('common.buttons.cancel')}
-                            </Button>
-                            <Button size='sm' variant='destructive' onClick={handleDeleteSelected} disabled={isPending}>
-                              {isPending ? t('common.buttons.processing') : t('common.buttons.confirm')}
-                            </Button>
+                    {/* Delete Selected. Hidden when the selection includes the OAuth
+                        credential, which the backend refuses to delete. */}
+                    {!selectedKeys.has(OAUTH_CREDENTIAL_REF) && (
+                      <Popover open={confirmDeleteSelected} onOpenChange={setConfirmDeleteSelected}>
+                        <PopoverTrigger asChild>
+                          <Button size='sm' variant='outline' className='text-destructive' disabled={isPending}>
+                            <IconTrash className='mr-1 h-4 w-4' />
+                            {t('channels.dialogs.disabledAPIKeys.deleteSelected', { count: selectedKeys.size })}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-80'>
+                          <div className='flex flex-col gap-3'>
+                            <p className='text-sm'>
+                              {t('channels.dialogs.disabledAPIKeys.confirmDeleteSelected', { count: selectedKeys.size })}
+                            </p>
+                            <div className='flex justify-end gap-2'>
+                              <Button size='sm' variant='outline' onClick={() => setConfirmDeleteSelected(false)}>
+                                {t('common.buttons.cancel')}
+                              </Button>
+                              <Button size='sm' variant='destructive' onClick={handleDeleteSelected} disabled={isPending}>
+                                {isPending ? t('common.buttons.processing') : t('common.buttons.confirm')}
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   </div>
                 )}
               </div>
@@ -277,7 +281,13 @@ export function ChannelsDisabledAPIKeysDialog({ open, onOpenChange }: ChannelsDi
                         />
                         <div className='flex flex-col gap-1'>
                           <div className='flex items-center gap-2'>
-                            <code className='bg-muted rounded px-2 py-0.5 font-mono text-sm'>****{dk.key.slice(-4)}</code>
+                            {dk.key === OAUTH_CREDENTIAL_REF ? (
+                              <span className='bg-muted rounded px-2 py-0.5 text-sm'>
+                                {t('channels.dialogs.disabledAPIKeys.oauthCredential')}
+                              </span>
+                            ) : (
+                              <code className='bg-muted rounded px-2 py-0.5 font-mono text-sm'>****{dk.key.slice(-4)}</code>
+                            )}
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className='text-destructive flex items-center gap-1 text-xs'>
@@ -335,30 +345,34 @@ export function ChannelsDisabledAPIKeysDialog({ open, onOpenChange }: ChannelsDi
                           </PopoverContent>
                         </Popover>
 
-                        {/* Delete single key */}
-                        <Popover
-                          open={confirmDeletePopoverKey === dk.key}
-                          onOpenChange={(isOpen) => setConfirmDeletePopoverKey(isOpen ? dk.key : null)}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button size='sm' variant='ghost' className='text-destructive' disabled={isPending}>
-                              <IconTrash className='h-4 w-4' />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-64'>
-                            <div className='flex flex-col gap-3'>
-                              <p className='text-sm'>{t('channels.dialogs.disabledAPIKeys.confirmDelete')}</p>
-                              <div className='flex justify-end gap-2'>
-                                <Button size='sm' variant='outline' onClick={() => setConfirmDeletePopoverKey(null)}>
-                                  {t('common.buttons.cancel')}
-                                </Button>
-                                <Button size='sm' variant='destructive' onClick={() => handleDeleteKey(dk.key)} disabled={isPending}>
-                                  {isPending ? t('common.buttons.processing') : t('common.buttons.confirm')}
-                                </Button>
+                        {/* Delete single key. The OAuth credential is not deletable:
+                            it is not a member of Credentials.APIKeys and the backend
+                            rejects deletion for OAuth channels. */}
+                        {dk.key !== OAUTH_CREDENTIAL_REF && (
+                          <Popover
+                            open={confirmDeletePopoverKey === dk.key}
+                            onOpenChange={(isOpen) => setConfirmDeletePopoverKey(isOpen ? dk.key : null)}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button size='sm' variant='ghost' className='text-destructive' disabled={isPending}>
+                                <IconTrash className='h-4 w-4' />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className='w-64'>
+                              <div className='flex flex-col gap-3'>
+                                <p className='text-sm'>{t('channels.dialogs.disabledAPIKeys.confirmDelete')}</p>
+                                <div className='flex justify-end gap-2'>
+                                  <Button size='sm' variant='outline' onClick={() => setConfirmDeletePopoverKey(null)}>
+                                    {t('common.buttons.cancel')}
+                                  </Button>
+                                  <Button size='sm' variant='destructive' onClick={() => handleDeleteKey(dk.key)} disabled={isPending}>
+                                    {isPending ? t('common.buttons.processing') : t('common.buttons.confirm')}
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       </div>
                     </div>
                   ))}

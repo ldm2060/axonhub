@@ -1,8 +1,8 @@
 import { useChannels } from '../context/channels-context';
 import { ChannelsActionDialog } from './channels-action-dialog';
 import { ChannelsAPIKeyManagementDialog } from './channels-api-key-management-dialog';
-import { ChannelsAPIKeyRulesDialog } from './channels-apikey-rules-dialog';
 import { ChannelsArchiveDialog } from './channels-archive-dialog';
+import { ChannelsAvailabilityDialog } from './channels-availability-dialog';
 import { ChannelsBulkApplyTemplateDialog } from './channels-bulk-apply-template-dialog';
 import { ChannelsBulkArchiveDialog } from './channels-bulk-archive-dialog';
 import { ChannelsBulkClearTemplateDialog } from './channels-bulk-clear-template-dialog';
@@ -313,9 +313,9 @@ export function ChannelsDialogs() {
             }}
           />
 
-          <ChannelsAPIKeyRulesDialog
-            key={`channel-api-key-rules-${currentRow.id}`}
-            open={open === 'apiKeyRules'}
+          <ChannelsAvailabilityDialog
+            key={`channel-availability-${currentRow.id}`}
+            open={open === 'availability'}
             onOpenChange={(isOpen) => {
               if (!isOpen) {
                 setOpen(null);

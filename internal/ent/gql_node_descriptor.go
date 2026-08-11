@@ -262,7 +262,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     _m.ID,
 		Type:   "Channel",
-		Fields: make([]*Field, 27),
+		Fields: make([]*Field, 28),
 		Edges:  make([]*Edge, 9),
 	}
 	var buf []byte
@@ -410,10 +410,18 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "error_message",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(_m.Remark); err != nil {
+	if buf, err = json.Marshal(_m.AutoDisabledAt); err != nil {
 		return nil, err
 	}
 	node.Fields[18] = &Field{
+		Type:  "time.Time",
+		Name:  "auto_disabled_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Remark); err != nil {
+		return nil, err
+	}
+	node.Fields[19] = &Field{
 		Type:  "string",
 		Name:  "remark",
 		Value: string(buf),
@@ -421,7 +429,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Endpoints); err != nil {
 		return nil, err
 	}
-	node.Fields[19] = &Field{
+	node.Fields[20] = &Field{
 		Type:  "[]objects.ChannelEndpoint",
 		Name:  "endpoints",
 		Value: string(buf),
@@ -429,7 +437,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.ClientRestriction); err != nil {
 		return nil, err
 	}
-	node.Fields[20] = &Field{
+	node.Fields[21] = &Field{
 		Type:  "channel.ClientRestriction",
 		Name:  "client_restriction",
 		Value: string(buf),
@@ -437,7 +445,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.AutoDisableConfig); err != nil {
 		return nil, err
 	}
-	node.Fields[21] = &Field{
+	node.Fields[22] = &Field{
 		Type:  "*objects.ChannelAutoDisableConfig",
 		Name:  "auto_disable_config",
 		Value: string(buf),
@@ -445,7 +453,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.OwnerID); err != nil {
 		return nil, err
 	}
-	node.Fields[22] = &Field{
+	node.Fields[23] = &Field{
 		Type:  "int",
 		Name:  "owner_id",
 		Value: string(buf),
@@ -453,7 +461,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.Visibility); err != nil {
 		return nil, err
 	}
-	node.Fields[23] = &Field{
+	node.Fields[24] = &Field{
 		Type:  "channel.Visibility",
 		Name:  "visibility",
 		Value: string(buf),
@@ -461,7 +469,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.SharedWith); err != nil {
 		return nil, err
 	}
-	node.Fields[24] = &Field{
+	node.Fields[25] = &Field{
 		Type:  "[]int",
 		Name:  "shared_with",
 		Value: string(buf),
@@ -469,7 +477,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.QuotaBindingReady); err != nil {
 		return nil, err
 	}
-	node.Fields[25] = &Field{
+	node.Fields[26] = &Field{
 		Type:  "bool",
 		Name:  "quota_binding_ready",
 		Value: string(buf),
@@ -477,7 +485,7 @@ func (_m *Channel) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(_m.QuotaMultiMonitorStrategy); err != nil {
 		return nil, err
 	}
-	node.Fields[26] = &Field{
+	node.Fields[27] = &Field{
 		Type:  "channel.QuotaMultiMonitorStrategy",
 		Name:  "quota_multi_monitor_strategy",
 		Value: string(buf),

@@ -208,11 +208,11 @@ func init() {
 	// channel.DefaultOrderingWeight holds the default value on creation for the ordering_weight field.
 	channel.DefaultOrderingWeight = channelDescOrderingWeight.Default.(int)
 	// channelDescEndpoints is the schema descriptor for endpoints field.
-	channelDescEndpoints := channelFields[17].Descriptor()
+	channelDescEndpoints := channelFields[18].Descriptor()
 	// channel.DefaultEndpoints holds the default value on creation for the endpoints field.
 	channel.DefaultEndpoints = channelDescEndpoints.Default.([]objects.ChannelEndpoint)
 	// channelDescQuotaBindingReady is the schema descriptor for quota_binding_ready field.
-	channelDescQuotaBindingReady := channelFields[23].Descriptor()
+	channelDescQuotaBindingReady := channelFields[24].Descriptor()
 	// channel.DefaultQuotaBindingReady holds the default value on creation for the quota_binding_ready field.
 	channel.DefaultQuotaBindingReady = channelDescQuotaBindingReady.Default.(bool)
 	channelmodelpriceMixin := schema.ChannelModelPrice{}.Mixin()

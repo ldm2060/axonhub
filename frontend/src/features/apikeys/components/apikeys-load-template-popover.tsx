@@ -118,11 +118,14 @@ export function ApiKeyLoadTemplatePopover({ apiKeyID, projectID, onLoadComplete 
     const targetId = deleteTarget.id;
     setDeletingTemplateId(targetId);
     setDeleteTarget(null);
-    deleteTemplate.mutate(targetId, {
-      onSettled: () => {
-        setDeletingTemplateId(null);
-      },
-    });
+    deleteTemplate.mutate(
+      { id: targetId, projectID: deleteTarget.projectID },
+      {
+        onSettled: () => {
+          setDeletingTemplateId(null);
+        },
+      }
+    );
   };
 
   const templateList = templates ?? [];

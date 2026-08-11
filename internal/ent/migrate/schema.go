@@ -100,7 +100,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "updated_at", Type: field.TypeTime, Default: schema.Expr("CURRENT_TIMESTAMP")},
 		{Name: "deleted_at", Type: field.TypeInt, Default: 0},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"openai", "openai_responses", "openai_image_generation", "atlascloud", "cline", "codex", "vercel", "anthropic", "anthropic_aws", "anthropic_gcp", "gemini_openai", "gemini", "gemini_vertex", "deepseek", "deepseek_anthropic", "deepinfra", "qiniu", "fireworks", "doubao", "doubao_anthropic", "moonshot", "moonshot_anthropic", "zhipu", "zai", "zhipu_anthropic", "zai_anthropic", "anthropic_fake", "openai_fake", "openrouter", "xiaomi", "xiaomi_anthropic", "xai", "ppio", "siliconflow", "volcengine", "volcengine_anthropic", "longcat", "longcat_anthropic", "minimax", "minimax_anthropic", "aihubmix", "aihubmix_anthropic", "burncloud", "modelscope", "bailian", "bailian_anthropic", "moonshot_coding", "kimi_code", "jina", "github", "github_copilot", "claudecode", "cerebras", "antigravity", "nanogpt", "nanogpt_responses", "opencode_go", "opencode_go_anthropic", "ollama", "ollama_anthropic", "evolink", "evolink_anthropic", "groq"}},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"openai", "openai_responses", "openai_image_generation", "atlascloud", "cline", "codex", "vercel", "anthropic", "anthropic_aws", "anthropic_gcp", "gemini_openai", "gemini", "gemini_vertex", "deepseek", "deepseek_anthropic", "deepinfra", "qiniu", "fireworks", "doubao", "doubao_anthropic", "moonshot", "moonshot_anthropic", "zhipu", "zai", "zhipu_anthropic", "zai_anthropic", "anthropic_fake", "openai_fake", "openrouter", "xiaomi", "xiaomi_anthropic", "xai", "ppio", "siliconflow", "volcengine", "volcengine_anthropic", "longcat", "longcat_anthropic", "minimax", "minimax_anthropic", "aihubmix", "aihubmix_anthropic", "burncloud", "modelscope", "bailian", "bailian_anthropic", "moonshot_coding", "kimi_code", "jina", "github", "github_copilot", "claudecode", "cerebras", "antigravity", "nanogpt", "nanogpt_responses", "opencode_go", "opencode_go_anthropic", "ollama", "ollama_anthropic", "evolink", "evolink_anthropic", "groq", "qiniu_anthropic", "fenno"}},
 		{Name: "base_url", Type: field.TypeString, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled", "archived"}, Default: "disabled"},
@@ -116,6 +116,7 @@ var (
 		{Name: "settings", Type: field.TypeJSON, Nullable: true},
 		{Name: "ordering_weight", Type: field.TypeInt, Default: 0},
 		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "auto_disabled_at", Type: field.TypeTime, Nullable: true},
 		{Name: "remark", Type: field.TypeString, Nullable: true},
 		{Name: "endpoints", Type: field.TypeJSON, Nullable: true},
 		{Name: "client_restriction", Type: field.TypeEnum, Nullable: true, Enums: []string{"off", "lenient", "strict", "strict_anthropic", "strict_openai", "strict_gemini"}},
@@ -134,7 +135,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "channels_users_owned_channels",
-				Columns:    []*schema.Column{ChannelsColumns[28]},
+				Columns:    []*schema.Column{ChannelsColumns[29]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -148,7 +149,7 @@ var (
 			{
 				Name:    "channels_by_owner_id",
 				Unique:  false,
-				Columns: []*schema.Column{ChannelsColumns[28], ChannelsColumns[3]},
+				Columns: []*schema.Column{ChannelsColumns[29], ChannelsColumns[3]},
 			},
 		},
 	}

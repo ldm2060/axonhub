@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import { enUS, zhCN } from 'date-fns/locale';
@@ -15,11 +15,13 @@ import { JsonViewer } from '@/components/json-tree-view';
 import { useGeneralSettings } from '@/features/system/data/system';
 import { type RequestMetadata, useRequestContent, useRequestExecutions } from '../data';
 import { generateRequestCurl } from '../utils/curl-generator';
+import { parseRequestConversation } from '../utils/request-conversation';
 import { parseResponse } from '../utils/response-parser';
 import { ChunksDialog } from './chunks-dialog';
 import { CurlPreviewDialog } from './curl-preview-dialog';
 import { getStatusColor } from './help';
 import { nextExpandedExecution, type RequestDetailTab } from './request-content-state';
+import { RequestConversationViewer } from './request-conversation-viewer';
 import { RequestExecutionContentPanel } from './request-execution-content';
 import { formatRequestUsageCost } from './request-usage-format';
 import { ResponseFlow } from './response-flow';
@@ -108,12 +110,21 @@ function RequestContentPanel({ request, requestId, projectId, includeAdminFields
   });
   const [curlCommand, setCurlCommand] = useState('');
   const [showCurlPreview, setShowCurlPreview] = useState(false);
+  const [requestBodyView, setRequestBodyView] = useState<'conversation' | 'json'>('conversation');
+  const lastAutoBodyRef = useRef<string>('');
+  const requestHeaders = data?.requestHeaders;
+  const requestBody = data?.requestBody;
+
+  useEffect(() => {
+    const bodyKey = JSON.stringify({ id: request.id, body: requestBody, format: request.format });
+    if (bodyKey === lastAutoBodyRef.current) return;
+
+    lastAutoBodyRef.current = bodyKey;
+    setRequestBodyView(parseRequestConversation(requestBody, request.format) ? 'conversation' : 'json');
+  }, [request.id, request.format, requestBody]);
 
   if (isLoading) return <ContentLoading />;
   if (isError) return <ContentError retry={() => void refetch()} />;
-
-  const requestHeaders = data?.requestHeaders;
-  const requestBody = data?.requestBody;
 
   return (
     <div className='space-y-6'>
@@ -163,39 +174,57 @@ function RequestContentPanel({ request, requestId, projectId, includeAdminFields
       )}
 
       <section className='space-y-4'>
-        <div className='flex items-center justify-between gap-4'>
+        <div className='flex flex-wrap items-center justify-between gap-4'>
           <h4 className='flex items-center gap-2 font-semibold'>
             <FileText className='text-primary h-4 w-4' />
             {t('requests.columns.requestBody')}
           </h4>
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              disabled={!requestBody}
-              onClick={() => copyToClipboard(formatJson(requestBody), t('requests.actions.copy'))}
+          <div className='flex flex-wrap items-center gap-2'>
+            <Tabs
+              value={requestBodyView}
+              onValueChange={(value) => setRequestBodyView(value as 'conversation' | 'json')}
+              className='w-auto'
             >
-              <Copy className='mr-2 h-4 w-4' />
-              {t('requests.dialogs.jsonViewer.copy')}
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              disabled={!requestBody}
-              onClick={() => downloadFile(formatJson(requestBody), `request-body-${request.id}.json`, t('requests.actions.download'))}
-            >
-              <Download className='mr-2 h-4 w-4' />
-              {t('requests.dialogs.jsonViewer.download')}
-            </Button>
+              <TabsList className='grid w-[220px] grid-cols-2'>
+                <TabsTrigger value='conversation'>{t('requests.detail.tabs.conversation')}</TabsTrigger>
+                <TabsTrigger value='json'>{t('requests.detail.tabs.json')}</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!requestBody}
+                onClick={() => copyToClipboard(formatJson(requestBody), t('requests.actions.copy'))}
+              >
+                <Copy className='mr-2 h-4 w-4' />
+                {t('requests.dialogs.jsonViewer.copy')}
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                disabled={!requestBody}
+                onClick={() => downloadFile(formatJson(requestBody), `request-body-${request.id}.json`, t('requests.actions.download'))}
+              >
+                <Download className='mr-2 h-4 w-4' />
+                {t('requests.dialogs.jsonViewer.download')}
+              </Button>
+            </div>
           </div>
         </div>
-        <div className='bg-muted/20 h-[500px] overflow-auto rounded-lg border p-4'>
-          {requestBody ? (
-            <JsonViewer data={requestBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
+        {requestBody ? (
+          requestBodyView === 'conversation' ? (
+            <RequestConversationViewer body={requestBody} format={request.format} />
           ) : (
-            <div className='text-muted-foreground flex h-full items-center justify-center'>{t('requests.drawer.noRequestBody')}</div>
-          )}
-        </div>
+            <div className='bg-muted/20 h-[500px] overflow-auto rounded-lg border p-4'>
+              <JsonViewer data={requestBody} rootName='' defaultExpanded expandDepth='all' hideArrayIndices className='text-sm' />
+            </div>
+          )
+        ) : (
+          <div className='bg-muted/20 text-muted-foreground flex h-48 items-center justify-center rounded-lg border'>
+            {t('requests.drawer.noRequestBody')}
+          </div>
+        )}
       </section>
 
       <CurlPreviewDialog

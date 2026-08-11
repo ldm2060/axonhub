@@ -146,6 +146,8 @@ type ComplexityRoot struct {
 	APIKeyAutoDisableRule struct {
 		Action                 func(childComplexity int) int
 		DisableDurationMinutes func(childComplexity int) int
+		DisableUntilCron       func(childComplexity int) int
+		DisableUntilTimezone   func(childComplexity int) int
 		KeywordPatterns        func(childComplexity int) int
 		StatusCodes            func(childComplexity int) int
 		Times                  func(childComplexity int) int
@@ -171,6 +173,8 @@ type ComplexityRoot struct {
 		ModelMappings        func(childComplexity int) int
 		Name                 func(childComplexity int) int
 		Quota                func(childComplexity int) int
+		TemplateID           func(childComplexity int) int
+		TemplateName         func(childComplexity int) int
 		TraceStickyMode      func(childComplexity int) int
 	}
 
@@ -182,14 +186,15 @@ type ComplexityRoot struct {
 	}
 
 	APIKeyProfileTemplate struct {
-		CreatedAt   func(childComplexity int) int
-		Description func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Profile     func(childComplexity int) int
-		Project     func(childComplexity int) int
-		ProjectID   func(childComplexity int) int
-		UpdatedAt   func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		Description         func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		LinkedProfilesCount func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Profile             func(childComplexity int) int
+		Project             func(childComplexity int) int
+		ProjectID           func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 	}
 
 	APIKeyProfileTemplateConnection struct {
@@ -362,6 +367,7 @@ type ComplexityRoot struct {
 	Channel struct {
 		AllModelEntries           func(childComplexity int) int
 		AutoDisableConfig         func(childComplexity int) int
+		AutoDisabledAt            func(childComplexity int) int
 		AutoSyncModelPattern      func(childComplexity int) int
 		AutoSyncSupportedModels   func(childComplexity int) int
 		BaseURL                   func(childComplexity int) int
@@ -2597,6 +2603,8 @@ type APIKeyProfileTemplateResolver interface {
 	ID(ctx context.Context, obj *ent.APIKeyProfileTemplate) (*objects.GUID, error)
 
 	ProjectID(ctx context.Context, obj *ent.APIKeyProfileTemplate) (*objects.GUID, error)
+
+	LinkedProfilesCount(ctx context.Context, obj *ent.APIKeyProfileTemplate) (int, error)
 }
 type ChannelResolver interface {
 	ID(ctx context.Context, obj *ent.Channel) (*objects.GUID, error)
@@ -3277,6 +3285,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKeyAutoDisableRule.DisableDurationMinutes(childComplexity), true
+	case "APIKeyAutoDisableRule.disableUntilCron":
+		if e.complexity.APIKeyAutoDisableRule.DisableUntilCron == nil {
+			break
+		}
+
+		return e.complexity.APIKeyAutoDisableRule.DisableUntilCron(childComplexity), true
+	case "APIKeyAutoDisableRule.disableUntilTimezone":
+		if e.complexity.APIKeyAutoDisableRule.DisableUntilTimezone == nil {
+			break
+		}
+
+		return e.complexity.APIKeyAutoDisableRule.DisableUntilTimezone(childComplexity), true
 	case "APIKeyAutoDisableRule.keywordPatterns":
 		if e.complexity.APIKeyAutoDisableRule.KeywordPatterns == nil {
 			break
@@ -3376,6 +3396,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKeyProfile.Quota(childComplexity), true
+	case "APIKeyProfile.templateID":
+		if e.complexity.APIKeyProfile.TemplateID == nil {
+			break
+		}
+
+		return e.complexity.APIKeyProfile.TemplateID(childComplexity), true
+	case "APIKeyProfile.templateName":
+		if e.complexity.APIKeyProfile.TemplateName == nil {
+			break
+		}
+
+		return e.complexity.APIKeyProfile.TemplateName(childComplexity), true
 	case "APIKeyProfile.traceStickyMode":
 		if e.complexity.APIKeyProfile.TraceStickyMode == nil {
 			break
@@ -3426,6 +3458,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKeyProfileTemplate.ID(childComplexity), true
+	case "APIKeyProfileTemplate.linkedProfilesCount":
+		if e.complexity.APIKeyProfileTemplate.LinkedProfilesCount == nil {
+			break
+		}
+
+		return e.complexity.APIKeyProfileTemplate.LinkedProfilesCount(childComplexity), true
 	case "APIKeyProfileTemplate.name":
 		if e.complexity.APIKeyProfileTemplate.Name == nil {
 			break
@@ -4046,6 +4084,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Channel.AutoDisableConfig(childComplexity), true
+	case "Channel.autoDisabledAt":
+		if e.complexity.Channel.AutoDisabledAt == nil {
+			break
+		}
+
+		return e.complexity.Channel.AutoDisabledAt(childComplexity), true
 	case "Channel.autoSyncModelPattern":
 		if e.complexity.Channel.AutoSyncModelPattern == nil {
 			break
@@ -19416,6 +19460,64 @@ func (ec *executionContext) fieldContext_APIKeyAutoDisableRule_disableDurationMi
 	return fc, nil
 }
 
+func (ec *executionContext) _APIKeyAutoDisableRule_disableUntilCron(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyAutoDisableRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyAutoDisableRule_disableUntilCron,
+		func(ctx context.Context) (any, error) {
+			return obj.DisableUntilCron, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyAutoDisableRule_disableUntilCron(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyAutoDisableRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyAutoDisableRule_disableUntilTimezone(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyAutoDisableRule) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyAutoDisableRule_disableUntilTimezone,
+		func(ctx context.Context) (any, error) {
+			return obj.DisableUntilTimezone, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyAutoDisableRule_disableUntilTimezone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyAutoDisableRule",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _APIKeyConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.APIKeyConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -19626,6 +19728,64 @@ func (ec *executionContext) _APIKeyProfile_name(ctx context.Context, field graph
 }
 
 func (ec *executionContext) fieldContext_APIKeyProfile_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyProfile_templateID(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyProfile_templateID,
+		func(ctx context.Context) (any, error) {
+			return obj.TemplateID, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyProfile_templateID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyProfile_templateName(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyProfile_templateName,
+		func(ctx context.Context) (any, error) {
+			return obj.TemplateName, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyProfile_templateName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "APIKeyProfile",
 		Field:      field,
@@ -20226,6 +20386,10 @@ func (ec *executionContext) fieldContext_APIKeyProfileTemplate_profile(_ context
 			switch field.Name {
 			case "name":
 				return ec.fieldContext_APIKeyProfile_name(ctx, field)
+			case "templateID":
+				return ec.fieldContext_APIKeyProfile_templateID(ctx, field)
+			case "templateName":
+				return ec.fieldContext_APIKeyProfile_templateName(ctx, field)
 			case "modelMappings":
 				return ec.fieldContext_APIKeyProfile_modelMappings(ctx, field)
 			case "channelIDs":
@@ -20309,6 +20473,35 @@ func (ec *executionContext) fieldContext_APIKeyProfileTemplate_project(_ context
 				return ec.fieldContext_Project_projectUsers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Project", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyProfileTemplate_linkedProfilesCount(ctx context.Context, field graphql.CollectedField, obj *ent.APIKeyProfileTemplate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyProfileTemplate_linkedProfilesCount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.APIKeyProfileTemplate().LinkedProfilesCount(ctx, obj)
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyProfileTemplate_linkedProfilesCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyProfileTemplate",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20457,6 +20650,8 @@ func (ec *executionContext) fieldContext_APIKeyProfileTemplateEdge_node(_ contex
 				return ec.fieldContext_APIKeyProfileTemplate_profile(ctx, field)
 			case "project":
 				return ec.fieldContext_APIKeyProfileTemplate_project(ctx, field)
+			case "linkedProfilesCount":
+				return ec.fieldContext_APIKeyProfileTemplate_linkedProfilesCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type APIKeyProfileTemplate", field.Name)
 		},
@@ -20548,6 +20743,10 @@ func (ec *executionContext) fieldContext_APIKeyProfiles_profiles(_ context.Conte
 			switch field.Name {
 			case "name":
 				return ec.fieldContext_APIKeyProfile_name(ctx, field)
+			case "templateID":
+				return ec.fieldContext_APIKeyProfile_templateID(ctx, field)
+			case "templateName":
+				return ec.fieldContext_APIKeyProfile_templateName(ctx, field)
 			case "modelMappings":
 				return ec.fieldContext_APIKeyProfile_modelMappings(ctx, field)
 			case "channelIDs":
@@ -22022,6 +22221,8 @@ func (ec *executionContext) fieldContext_ApplyChannelOverrideTemplatePayload_cha
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -23102,6 +23303,8 @@ func (ec *executionContext) fieldContext_BulkImportChannelsResult_channels(_ con
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -23271,6 +23474,8 @@ func (ec *executionContext) fieldContext_BulkUpdateChannelOrderingResult_channel
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -23860,6 +24065,35 @@ func (ec *executionContext) fieldContext_Channel_errorMessage(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Channel_autoDisabledAt(ctx context.Context, field graphql.CollectedField, obj *ent.Channel) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Channel_autoDisabledAt,
+		func(ctx context.Context) (any, error) {
+			return obj.AutoDisabledAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_Channel_autoDisabledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Channel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -25448,6 +25682,8 @@ func (ec *executionContext) fieldContext_ChannelEdge_node(_ context.Context, fie
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -26203,6 +26439,8 @@ func (ec *executionContext) fieldContext_ChannelModelPrice_channel(_ context.Con
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -27929,6 +28167,10 @@ func (ec *executionContext) fieldContext_ChannelPolicies_apiKeyAutoDisableRules(
 				return ec.fieldContext_APIKeyAutoDisableRule_action(ctx, field)
 			case "disableDurationMinutes":
 				return ec.fieldContext_APIKeyAutoDisableRule_disableDurationMinutes(ctx, field)
+			case "disableUntilCron":
+				return ec.fieldContext_APIKeyAutoDisableRule_disableUntilCron(ctx, field)
+			case "disableUntilTimezone":
+				return ec.fieldContext_APIKeyAutoDisableRule_disableUntilTimezone(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type APIKeyAutoDisableRule", field.Name)
 		},
@@ -28197,6 +28439,8 @@ func (ec *executionContext) fieldContext_ChannelProbe_channel(_ context.Context,
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -30435,6 +30679,8 @@ func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_channel(_ co
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -31060,6 +31306,8 @@ func (ec *executionContext) fieldContext_ClearChannelOverrideTemplatesPayload_ch
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -37325,6 +37573,8 @@ func (ec *executionContext) fieldContext_ModelChannelConnection_channel(_ contex
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -38516,6 +38766,8 @@ func (ec *executionContext) fieldContext_Mutation_createChannel(ctx context.Cont
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -38639,6 +38891,8 @@ func (ec *executionContext) fieldContext_Mutation_duplicateChannel(ctx context.C
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -38762,6 +39016,8 @@ func (ec *executionContext) fieldContext_Mutation_bulkCreateChannels(ctx context
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -38885,6 +39141,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -39008,6 +39266,8 @@ func (ec *executionContext) fieldContext_Mutation_saveChannelEndpoints(ctx conte
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -39131,6 +39391,8 @@ func (ec *executionContext) fieldContext_Mutation_updateChannelStatus(ctx contex
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -42011,6 +42273,8 @@ func (ec *executionContext) fieldContext_Mutation_createApiKeyProfileTemplate(ct
 				return ec.fieldContext_APIKeyProfileTemplate_profile(ctx, field)
 			case "project":
 				return ec.fieldContext_APIKeyProfileTemplate_project(ctx, field)
+			case "linkedProfilesCount":
+				return ec.fieldContext_APIKeyProfileTemplate_linkedProfilesCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type APIKeyProfileTemplate", field.Name)
 		},
@@ -42070,6 +42334,8 @@ func (ec *executionContext) fieldContext_Mutation_updateApiKeyProfileTemplate(ct
 				return ec.fieldContext_APIKeyProfileTemplate_profile(ctx, field)
 			case "project":
 				return ec.fieldContext_APIKeyProfileTemplate_project(ctx, field)
+			case "linkedProfilesCount":
+				return ec.fieldContext_APIKeyProfileTemplate_linkedProfilesCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type APIKeyProfileTemplate", field.Name)
 		},
@@ -42129,6 +42395,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteApiKeyProfileTemplate(ct
 				return ec.fieldContext_APIKeyProfileTemplate_profile(ctx, field)
 			case "project":
 				return ec.fieldContext_APIKeyProfileTemplate_project(ctx, field)
+			case "linkedProfilesCount":
+				return ec.fieldContext_APIKeyProfileTemplate_linkedProfilesCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type APIKeyProfileTemplate", field.Name)
 		},
@@ -45607,6 +45875,8 @@ func (ec *executionContext) fieldContext_Mutation_shareChannel(ctx context.Conte
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -45730,6 +46000,8 @@ func (ec *executionContext) fieldContext_Mutation_unshareChannel(ctx context.Con
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -51548,6 +51820,8 @@ func (ec *executionContext) fieldContext_ProviderQuotaStatus_channel(_ context.C
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -53581,6 +53855,8 @@ func (ec *executionContext) fieldContext_Query_allChannelSummarys(ctx context.Co
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -56540,6 +56816,8 @@ func (ec *executionContext) fieldContext_Query_mySharedChannels(_ context.Contex
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -60296,6 +60574,8 @@ func (ec *executionContext) fieldContext_Request_channel(_ context.Context, fiel
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -61482,6 +61762,8 @@ func (ec *executionContext) fieldContext_RequestExecution_channel(_ context.Cont
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -71228,6 +71510,8 @@ func (ec *executionContext) fieldContext_UnassociatedChannel_channel(_ context.C
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -72325,6 +72609,8 @@ func (ec *executionContext) fieldContext_UsageLog_channel(_ context.Context, fie
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -73794,6 +74080,8 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_channel(_ context.C
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -74788,6 +75076,8 @@ func (ec *executionContext) fieldContext_User_ownedChannels(_ context.Context, f
 				return ec.fieldContext_Channel_orderingWeight(ctx, field)
 			case "errorMessage":
 				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
 			case "remark":
 				return ec.fieldContext_Channel_remark(ctx, field)
 			case "endpoints":
@@ -80147,7 +80437,7 @@ func (ec *executionContext) unmarshalInputAPIKeyAutoDisableRuleInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"statusCodes", "keywordPatterns", "times", "action", "disableDurationMinutes"}
+	fieldsInOrder := [...]string{"statusCodes", "keywordPatterns", "times", "action", "disableDurationMinutes", "disableUntilCron", "disableUntilTimezone"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -80189,6 +80479,20 @@ func (ec *executionContext) unmarshalInputAPIKeyAutoDisableRuleInput(ctx context
 				return it, err
 			}
 			it.DisableDurationMinutes = data
+		case "disableUntilCron":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableUntilCron"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DisableUntilCron = data
+		case "disableUntilTimezone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableUntilTimezone"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DisableUntilTimezone = data
 		}
 	}
 
@@ -80240,7 +80544,7 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "modelMappings", "channelIDs", "channelTags", "channelTagsMatchMode", "modelIDs", "quota", "loadBalanceStrategy", "traceStickyMode"}
+	fieldsInOrder := [...]string{"name", "templateID", "templateName", "modelMappings", "channelIDs", "channelTags", "channelTagsMatchMode", "modelIDs", "quota", "loadBalanceStrategy", "traceStickyMode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -80254,6 +80558,20 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 				return it, err
 			}
 			it.Name = data
+		case "templateID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateID"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TemplateID = data
+		case "templateName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateName"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TemplateName = data
 		case "modelMappings":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelMappings"))
 			data, err := ec.unmarshalOModelMappingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx, v)
@@ -85877,7 +86195,7 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "quotaBindingReady", "quotaBindingReadyNEQ", "quotaMultiMonitorStrategy", "quotaMultiMonitorStrategyNEQ", "quotaMultiMonitorStrategyIn", "quotaMultiMonitorStrategyNotIn", "quotaMultiMonitorStrategyIsNil", "quotaMultiMonitorStrategyNotNil", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith", "hasQuotaMonitorBindings", "hasQuotaMonitorBindingsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "type", "typeNEQ", "typeIn", "typeNotIn", "baseURL", "baseURLNEQ", "baseURLIn", "baseURLNotIn", "baseURLGT", "baseURLGTE", "baseURLLT", "baseURLLTE", "baseURLContains", "baseURLHasPrefix", "baseURLHasSuffix", "baseURLIsNil", "baseURLNotNil", "baseURLEqualFold", "baseURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "autoSyncSupportedModels", "autoSyncSupportedModelsNEQ", "autoSyncModelPattern", "autoSyncModelPatternNEQ", "autoSyncModelPatternIn", "autoSyncModelPatternNotIn", "autoSyncModelPatternGT", "autoSyncModelPatternGTE", "autoSyncModelPatternLT", "autoSyncModelPatternLTE", "autoSyncModelPatternContains", "autoSyncModelPatternHasPrefix", "autoSyncModelPatternHasSuffix", "autoSyncModelPatternIsNil", "autoSyncModelPatternNotNil", "autoSyncModelPatternEqualFold", "autoSyncModelPatternContainsFold", "defaultTestModel", "defaultTestModelNEQ", "defaultTestModelIn", "defaultTestModelNotIn", "defaultTestModelGT", "defaultTestModelGTE", "defaultTestModelLT", "defaultTestModelLTE", "defaultTestModelContains", "defaultTestModelHasPrefix", "defaultTestModelHasSuffix", "defaultTestModelEqualFold", "defaultTestModelContainsFold", "orderingWeight", "orderingWeightNEQ", "orderingWeightIn", "orderingWeightNotIn", "orderingWeightGT", "orderingWeightGTE", "orderingWeightLT", "orderingWeightLTE", "errorMessage", "errorMessageNEQ", "errorMessageIn", "errorMessageNotIn", "errorMessageGT", "errorMessageGTE", "errorMessageLT", "errorMessageLTE", "errorMessageContains", "errorMessageHasPrefix", "errorMessageHasSuffix", "errorMessageIsNil", "errorMessageNotNil", "errorMessageEqualFold", "errorMessageContainsFold", "autoDisabledAt", "autoDisabledAtNEQ", "autoDisabledAtIn", "autoDisabledAtNotIn", "autoDisabledAtGT", "autoDisabledAtGTE", "autoDisabledAtLT", "autoDisabledAtLTE", "autoDisabledAtIsNil", "autoDisabledAtNotNil", "remark", "remarkNEQ", "remarkIn", "remarkNotIn", "remarkGT", "remarkGTE", "remarkLT", "remarkLTE", "remarkContains", "remarkHasPrefix", "remarkHasSuffix", "remarkIsNil", "remarkNotNil", "remarkEqualFold", "remarkContainsFold", "clientRestriction", "clientRestrictionNEQ", "clientRestrictionIn", "clientRestrictionNotIn", "clientRestrictionIsNil", "clientRestrictionNotNil", "ownerID", "ownerIDNEQ", "ownerIDIn", "ownerIDNotIn", "ownerIDIsNil", "ownerIDNotNil", "visibility", "visibilityNEQ", "visibilityIn", "visibilityNotIn", "quotaBindingReady", "quotaBindingReadyNEQ", "quotaMultiMonitorStrategy", "quotaMultiMonitorStrategyNEQ", "quotaMultiMonitorStrategyIn", "quotaMultiMonitorStrategyNotIn", "quotaMultiMonitorStrategyIsNil", "quotaMultiMonitorStrategyNotNil", "hasOwner", "hasOwnerWith", "hasRequests", "hasRequestsWith", "hasExecutions", "hasExecutionsWith", "hasUsageLogs", "hasUsageLogsWith", "hasChannelProbes", "hasChannelProbesWith", "hasChannelModelPrices", "hasChannelModelPricesWith", "hasProviderQuotaStatus", "hasProviderQuotaStatusWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith", "hasQuotaMonitorBindings", "hasQuotaMonitorBindingsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86728,6 +87046,76 @@ func (ec *executionContext) unmarshalInputChannelWhereInput(ctx context.Context,
 				return it, err
 			}
 			it.ErrorMessageContainsFold = data
+		case "autoDisabledAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAt = data
+		case "autoDisabledAtNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtNEQ"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtNEQ = data
+		case "autoDisabledAtIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtIn = data
+		case "autoDisabledAtNotIn":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtNotIn"))
+			data, err := ec.unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtNotIn = data
+		case "autoDisabledAtGT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtGT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtGT = data
+		case "autoDisabledAtGTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtGTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtGTE = data
+		case "autoDisabledAtLT":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtLT"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtLT = data
+		case "autoDisabledAtLTE":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtLTE"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtLTE = data
+		case "autoDisabledAtIsNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtIsNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtIsNil = data
+		case "autoDisabledAtNotNil":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoDisabledAtNotNil"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoDisabledAtNotNil = data
 		case "remark":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remark"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -113068,6 +113456,10 @@ func (ec *executionContext) _APIKeyAutoDisableRule(ctx context.Context, sel ast.
 			}
 		case "disableDurationMinutes":
 			out.Values[i] = ec._APIKeyAutoDisableRule_disableDurationMinutes(ctx, field, obj)
+		case "disableUntilCron":
+			out.Values[i] = ec._APIKeyAutoDisableRule_disableUntilCron(ctx, field, obj)
+		case "disableUntilTimezone":
+			out.Values[i] = ec._APIKeyAutoDisableRule_disableUntilTimezone(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -113194,6 +113586,10 @@ func (ec *executionContext) _APIKeyProfile(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "templateID":
+			out.Values[i] = ec._APIKeyProfile_templateID(ctx, field, obj)
+		case "templateName":
+			out.Values[i] = ec._APIKeyProfile_templateName(ctx, field, obj)
 		case "modelMappings":
 			out.Values[i] = ec._APIKeyProfile_modelMappings(ctx, field, obj)
 		case "channelIDs":
@@ -113402,6 +113798,42 @@ func (ec *executionContext) _APIKeyProfileTemplate(ctx context.Context, sel ast.
 					}
 				}()
 				res = ec._APIKeyProfileTemplate_project(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "linkedProfilesCount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._APIKeyProfileTemplate_linkedProfilesCount(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -114869,6 +115301,8 @@ func (ec *executionContext) _Channel(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "errorMessage":
 			out.Values[i] = ec._Channel_errorMessage(ctx, field, obj)
+		case "autoDisabledAt":
+			out.Values[i] = ec._Channel_autoDisabledAt(ctx, field, obj)
 		case "remark":
 			out.Values[i] = ec._Channel_remark(ctx, field, obj)
 		case "endpoints":

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { pageInfoSchema } from '@/gql/pagination';
 
+export const OAUTH_CREDENTIAL_REF = '__oauth__';
+
 export const apiFormatSchema = z.enum([
   'openai/chat_completions',
   'openai/responses',
@@ -60,6 +62,9 @@ export const channelTypeSchema = z.enum([
   'openai_responses',
   'openai_image_generation',
   'atlascloud',
+  'qiniu',
+  'qiniu_anthropic',
+  'fenno',
   'cline',
   'codex',
   'anthropic',
@@ -71,7 +76,6 @@ export const channelTypeSchema = z.enum([
   'deepseek',
   'deepseek_anthropic',
   'deepinfra',
-  'qiniu',
   'doubao',
   'doubao_anthropic',
   'moonshot',
@@ -146,7 +150,12 @@ export const channelAvailabilitySchema = z.object({
 });
 export type ChannelAvailability = z.infer<typeof channelAvailabilitySchema>;
 
-export const apiKeyAutoDisableActionSchema = z.enum(['temporary_disable', 'permanent_disable_delete']);
+export const apiKeyAutoDisableActionSchema = z.enum([
+  'temporary_disable',
+  'disable_until_cron',
+  'permanent_disable',
+  'permanent_disable_delete',
+]);
 export type APIKeyAutoDisableAction = z.infer<typeof apiKeyAutoDisableActionSchema>;
 
 export const apiKeyAutoDisableRuleSchema = z.object({
@@ -155,6 +164,8 @@ export const apiKeyAutoDisableRuleSchema = z.object({
   times: z.number().int().min(1),
   action: apiKeyAutoDisableActionSchema,
   disableDurationMinutes: z.number().int().positive().optional().nullable(),
+  disableUntilCron: z.string().optional().nullable(),
+  disableUntilTimezone: z.string().optional().nullable(),
 });
 export type APIKeyAutoDisableRule = z.infer<typeof apiKeyAutoDisableRuleSchema>;
 
@@ -166,6 +177,10 @@ export const apiKeyAutoDisableRuleFormSchema = apiKeyAutoDisableRuleSchema
   .refine((rule) => rule.action !== 'temporary_disable' || (rule.disableDurationMinutes ?? 0) > 0, {
     message: 'Temporary disable requires a duration',
     path: ['disableDurationMinutes'],
+  })
+  .refine((rule) => rule.action !== 'disable_until_cron' || (rule.disableUntilCron ?? '').trim() !== '', {
+    message: 'Scheduled recovery requires a cron expression',
+    path: ['disableUntilCron'],
   });
 
 export const channelPoliciesSchema = z.object({

@@ -119,6 +119,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			channel.FieldSettings:                  {Type: field.TypeJSON, Column: channel.FieldSettings},
 			channel.FieldOrderingWeight:            {Type: field.TypeInt, Column: channel.FieldOrderingWeight},
 			channel.FieldErrorMessage:              {Type: field.TypeString, Column: channel.FieldErrorMessage},
+			channel.FieldAutoDisabledAt:            {Type: field.TypeTime, Column: channel.FieldAutoDisabledAt},
 			channel.FieldRemark:                    {Type: field.TypeString, Column: channel.FieldRemark},
 			channel.FieldEndpoints:                 {Type: field.TypeJSON, Column: channel.FieldEndpoints},
 			channel.FieldClientRestriction:         {Type: field.TypeEnum, Column: channel.FieldClientRestriction},
@@ -2170,6 +2171,11 @@ func (f *ChannelFilter) WhereOrderingWeight(p entql.IntP) {
 // WhereErrorMessage applies the entql string predicate on the error_message field.
 func (f *ChannelFilter) WhereErrorMessage(p entql.StringP) {
 	f.Where(p.Field(channel.FieldErrorMessage))
+}
+
+// WhereAutoDisabledAt applies the entql time.Time predicate on the auto_disabled_at field.
+func (f *ChannelFilter) WhereAutoDisabledAt(p entql.TimeP) {
+	f.Where(p.Field(channel.FieldAutoDisabledAt))
 }
 
 // WhereRemark applies the entql string predicate on the remark field.

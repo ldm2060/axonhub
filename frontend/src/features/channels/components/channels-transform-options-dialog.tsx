@@ -61,8 +61,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
       forceArrayInstructions: currentRow.settings?.transformOptions?.forceArrayInstructions || false,
       forceArrayInputs: currentRow.settings?.transformOptions?.forceArrayInputs || false,
       replaceDeveloperRoleWithSystem: currentRow.settings?.transformOptions?.replaceDeveloperRoleWithSystem || false,
-      // Default disabled: only an explicit true enables the downgrade.
-      downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem ?? false,
+      downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem || false,
       reasoningEffortMapping: currentRow.settings?.transformOptions?.reasoningEffortMapping || [],
     },
   });
@@ -77,7 +76,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
         forceArrayInstructions: currentRow.settings?.transformOptions?.forceArrayInstructions || false,
         forceArrayInputs: currentRow.settings?.transformOptions?.forceArrayInputs || false,
         replaceDeveloperRoleWithSystem: currentRow.settings?.transformOptions?.replaceDeveloperRoleWithSystem || false,
-        downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem ?? false,
+        downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem || false,
         reasoningEffortMapping: currentRow.settings?.transformOptions?.reasoningEffortMapping || [],
       });
       setDraft({ from: '', to: '' });
@@ -112,8 +111,6 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
         forceArrayInstructions: values.forceArrayInstructions,
         forceArrayInputs: values.forceArrayInputs,
         replaceDeveloperRoleWithSystem: values.replaceDeveloperRoleWithSystem,
-        // The dialog is the sole editor; always send an explicit value so users can
-        // turn the (default-on) downgrade off for this channel.
         downgradeMidConversationSystem: values.downgradeMidConversationSystem,
       };
       // Empty list is treated as "clear": send [] so the backend removes the mapping.
@@ -230,7 +227,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
                     render={({ field }) => (
                       <FormItem className='flex items-center gap-2'>
                         <FormControl>
-                          <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
+                          <Checkbox checked={field.value || false} onCheckedChange={field.onChange} />
                         </FormControl>
                         <div className='space-y-0.5'>
                           <FormLabel className='cursor-pointer text-sm font-normal'>

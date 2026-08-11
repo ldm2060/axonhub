@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { extractNumberID } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -517,6 +518,8 @@ function ProfileCard({
     defaultValue: [],
   });
   const profileName = form.watch(`profiles.${profileIndex}.name`);
+  const templateID = form.watch(`profiles.${profileIndex}.templateID`);
+  const templateName = form.watch(`profiles.${profileIndex}.templateName`);
   const channelTagsMatchMode = form.watch(`profiles.${profileIndex}.channelTagsMatchMode`);
   const isExcludeMode = channelTagsMatchMode === 'none';
   const quotaUsage = profileName ? quotaUsageByProfileName.get(profileName) : undefined;
@@ -612,6 +615,28 @@ function ProfileCard({
             )}
           </div>
         </div>
+        {templateID != null && (
+          <div className='bg-muted/50 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md px-3 py-2'>
+            <div className='flex min-w-0 items-center gap-2'>
+              <Badge variant='secondary' className='shrink-0'>
+                {t('apikeys.profiles.linked')}
+              </Badge>
+              <span className='truncate text-sm font-medium'>{templateName || `#${templateID}`}</span>
+              <span className='text-muted-foreground hidden text-xs md:inline'>{t('apikeys.profiles.linkedHint')}</span>
+            </div>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={() => {
+                form.setValue(`profiles.${profileIndex}.templateID`, null, { shouldDirty: true });
+                form.setValue(`profiles.${profileIndex}.templateName`, null, { shouldDirty: true });
+              }}
+            >
+              {t('apikeys.profiles.detachTemplate')}
+            </Button>
+          </div>
+        )}
       </CardHeader>
       {!isCollapsed && (
         <CardContent className='space-y-6'>

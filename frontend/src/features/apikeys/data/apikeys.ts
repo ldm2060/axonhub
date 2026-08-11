@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
+import { useRequestPermissions } from '@/hooks/useRequestPermissions';
 import type {
   ApiKey,
   ApiKeyConnection,
@@ -27,7 +28,20 @@ import {
 const NOAUTH_API_KEY_TYPE = 'noauth';
 
 // Dynamic GraphQL query builders
-function buildApiKeysQuery() {
+function userSelection(canViewUsers: boolean, indent: string) {
+  if (!canViewUsers) return '';
+
+  return `
+${indent}user {
+${indent}  id
+${indent}  firstName
+${indent}  lastName
+${indent}}`;
+}
+
+function buildApiKeysQuery(canViewUsers: boolean) {
+  const userFields = userSelection(canViewUsers, '            ');
+
   return `
     query GetApiKeys($first: Int, $after: Cursor, $orderBy: APIKeyOrder, $where: APIKeyWhereInput) {
       apiKeys(first: $first, after: $after, orderBy: $orderBy, where: $where) {
@@ -35,18 +49,21 @@ function buildApiKeysQuery() {
           node {
             id
             createdAt
-            updatedAt
-            user {
-              id
-              firstName
-              lastName
-            }
+            updatedAt${userFields}
             key
             name
             type
             status
             scopes
             allowedIps
+            profiles {
+              activeProfile
+              profiles {
+                name
+                templateID
+                templateName
+              }
+            }
           }
           cursor
         }
@@ -62,19 +79,16 @@ function buildApiKeysQuery() {
   `;
 }
 
-function buildApiKeyQuery() {
+function buildApiKeyQuery(canViewUsers: boolean) {
+  const userFields = userSelection(canViewUsers, '        ');
+
   return `
     query GetApiKey($id: ID!) {
       node(id: $id) {
         ... on APIKey {
         id
         createdAt
-        updatedAt
-        user {
-          id
-          firstName
-          lastName
-        }
+        updatedAt${userFields}
         key
         name
         type
@@ -85,6 +99,8 @@ function buildApiKeyQuery() {
           activeProfile
           profiles {
             name
+            templateID
+            templateName
             modelMappings { from to }
             channelIDs
             channelTags
@@ -106,22 +122,19 @@ function buildApiKeyQuery() {
         }
       }
     }
-}
+  }
   `;
 }
 
-function buildCreateApiKeyMutation() {
+function buildCreateApiKeyMutation(canViewUsers: boolean) {
+  const userFields = userSelection(canViewUsers, '        ');
+
   return `
     mutation CreateAPIKey($input: CreateAPIKeyInput!) {
       createAPIKey(input: $input) {
         id
         createdAt
-        updatedAt
-        user {
-          id
-          firstName
-          lastName
-        }
+        updatedAt${userFields}
         key
         name
         type
@@ -133,18 +146,15 @@ function buildCreateApiKeyMutation() {
   `;
 }
 
-function buildUpdateApiKeyMutation() {
+function buildUpdateApiKeyMutation(canViewUsers: boolean) {
+  const userFields = userSelection(canViewUsers, '        ');
+
   return `
     mutation UpdateAPIKey($id: ID!, $input: UpdateAPIKeyInput!) {
       updateAPIKey(id: $id, input: $input) {
         id
         createdAt
-        updatedAt
-        user {
-          id
-          firstName
-          lastName
-        }
+        updatedAt${userFields}
         key
         name
         type
@@ -175,6 +185,8 @@ const UPDATE_APIKEY_PROFILES_MUTATION = `
         activeProfile
         profiles {
           name
+          templateID
+          templateName
           modelMappings {
             from
             to
@@ -293,6 +305,7 @@ const APIKEY_PROFILE_TEMPLATES_QUERY = `
           name
           description
           projectID
+          linkedProfilesCount
           profile {
             name
             modelMappings { from to }
@@ -328,6 +341,7 @@ const CREATE_APIKEY_PROFILE_TEMPLATE_MUTATION = `
       updatedAt
       name
       description
+      linkedProfilesCount
       profile {
         name
       }
@@ -343,6 +357,7 @@ const UPDATE_APIKEY_PROFILE_TEMPLATE_MUTATION = `
       updatedAt
       name
       description
+      linkedProfilesCount
       profile {
         name
       }
@@ -369,6 +384,8 @@ const LOAD_APIKEY_PROFILE_TEMPLATE_MUTATION = `
         activeProfile
         profiles {
           name
+          templateID
+          templateName
           modelMappings { from to }
           channelIDs
           channelTags
@@ -413,23 +430,31 @@ export function useApiKeys(
   }
 ) {
   const selectedProjectId = useSelectedProjectId();
-  const scopeToSelectedProject = options?.scopeToSelectedProject ?? true;
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
+  const scopeToSelectedProject = options?.scopeToSelectedProject ?? true;
+  const permissions = useRequestPermissions({ systemOnly: !scopeToSelectedProject || projectId === null });
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
 
   return useQuery({
-    queryKey: ['apiKeys', variables, projectId, scopeToSelectedProject],
+    queryKey: ['apiKeys', variables, projectId, scopeToSelectedProject, permissions.canViewUsers],
     queryFn: async () => {
-      const query = buildApiKeysQuery();
-      const headers = scopeToSelectedProject && projectId ? { 'X-Project-ID': projectId } : undefined;
-      const mergedVariables = {
-        ...variables,
-        where: {
-          ...variables?.where,
-          typeNotIn: [NOAUTH_API_KEY_TYPE],
-        },
-      };
-      const data = await graphqlRequest<{ apiKeys: ApiKeyConnection }>(query, mergedVariables, headers);
-      return apiKeyConnectionSchema.parse(data?.apiKeys);
+      try {
+        const query = buildApiKeysQuery(permissions.canViewUsers);
+        const headers = scopeToSelectedProject && projectId ? { 'X-Project-ID': projectId } : undefined;
+        const mergedVariables = {
+          ...variables,
+          where: {
+            ...variables?.where,
+            typeNotIn: [NOAUTH_API_KEY_TYPE],
+          },
+        };
+        const data = await graphqlRequest<{ apiKeys: ApiKeyConnection }>(query, mergedVariables, headers);
+        return apiKeyConnectionSchema.parse(data?.apiKeys);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
     },
     enabled: !options?.disableAutoFetch && (!scopeToSelectedProject || !!projectId),
   });
@@ -437,14 +462,22 @@ export function useApiKeys(
 
 export function useApiKey(id: string) {
   const selectedProjectId = useSelectedProjectId();
+  const permissions = useRequestPermissions();
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
 
   return useQuery({
-    queryKey: ['apiKey', id, selectedProjectId],
+    queryKey: ['apiKey', id, selectedProjectId, permissions.canViewUsers],
     queryFn: async () => {
-      const query = buildApiKeyQuery();
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ node: ApiKey }>(query, { id }, headers);
-      return apiKeySchema.parse(data.node);
+      try {
+        const query = buildApiKeyQuery(permissions.canViewUsers);
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ node: ApiKey }>(query, { id }, headers);
+        return apiKeySchema.parse(data.node);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
     },
     enabled: !!id,
   });
@@ -458,13 +491,24 @@ export function useApiKeyQuotaUsages(
   }
 ) {
   const selectedProjectId = useSelectedProjectId();
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
 
   return useQuery({
     queryKey: ['apiKeyQuotaUsages', apiKeyId, selectedProjectId],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ apiKeyQuotaUsages: ApiKeyProfileQuotaUsage[] }>(APIKEY_QUOTA_USAGES_QUERY, { apiKeyId }, headers);
-      return apiKeyProfileQuotaUsageSchema.array().parse(data.apiKeyQuotaUsages);
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ apiKeyQuotaUsages: ApiKeyProfileQuotaUsage[] }>(
+          APIKEY_QUOTA_USAGES_QUERY,
+          { apiKeyId },
+          headers
+        );
+        return apiKeyProfileQuotaUsageSchema.array().parse(data.apiKeyQuotaUsages);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
     },
     enabled: !!apiKeyId && (options?.enabled ?? true),
     refetchInterval: options?.refetchInterval,
@@ -482,17 +526,24 @@ export function useApiKeyTokenUsageStats(
   }
 ) {
   const selectedProjectId = useSelectedProjectId();
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
 
   return useQuery({
     queryKey: ['apiKeyTokenUsageStats', variables, selectedProjectId],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ apiKeyTokenUsageStats: ApiKeyTokenUsageStats[] }>(
-        APIKEY_TOKEN_USAGE_STATS_QUERY,
-        { input: variables && Object.keys(variables).length > 0 ? variables : undefined },
-        headers
-      );
-      return apiKeyTokenUsageStatsSchema.array().parse(data.apiKeyTokenUsageStats);
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ apiKeyTokenUsageStats: ApiKeyTokenUsageStats[] }>(
+          APIKEY_TOKEN_USAGE_STATS_QUERY,
+          { input: variables && Object.keys(variables).length > 0 ? variables : undefined },
+          headers
+        );
+        return apiKeyTokenUsageStatsSchema.array().parse(data.apiKeyTokenUsageStats);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
     },
     enabled: !!selectedProjectId && (options?.enabled ?? true),
     placeholderData: keepPreviousData,
@@ -504,11 +555,12 @@ export function useCreateApiKey() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const permissions = useRequestPermissions();
   const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: (input: CreateApiKeyInput) => {
-      const mutation = buildCreateApiKeyMutation();
+      const mutation = buildCreateApiKeyMutation(permissions.canViewUsers);
       // Automatically add projectID if not provided and a project is selected
       const inputWithProject = {
         ...input,
@@ -531,11 +583,12 @@ export function useUpdateApiKey() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const permissions = useRequestPermissions();
   const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateApiKeyInput }) => {
-      const mutation = buildUpdateApiKeyMutation();
+      const mutation = buildUpdateApiKeyMutation(permissions.canViewUsers);
       const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
       return graphqlRequest<{ updateAPIKey: ApiKey }>(mutation, { id, input }, headers);
     },
@@ -706,21 +759,29 @@ export function useRotateApiKey() {
 }
 
 export function useApiKeyProfileTemplates(projectID: string | null) {
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
   const selectedProjectId = useSelectedProjectId();
+  const requestProjectId = projectID ?? selectedProjectId;
 
   return useQuery({
-    queryKey: ['apiKeyProfileTemplates', projectID, selectedProjectId],
+    queryKey: ['apiKeyProfileTemplates', requestProjectId],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ apiKeyProfileTemplates: { edges: { node: ApiKeyProfileTemplate }[]; totalCount: number } }>(
-        APIKEY_PROFILE_TEMPLATES_QUERY,
-        {},
-        headers
-      );
-      const templates = (data?.apiKeyProfileTemplates?.edges ?? []).map((e) => e.node);
-      return apiKeyProfileTemplateSchema.array().parse(templates);
+      try {
+        const headers = requestProjectId ? { 'X-Project-ID': requestProjectId } : undefined;
+        const data = await graphqlRequest<{ apiKeyProfileTemplates: { edges: { node: ApiKeyProfileTemplate }[]; totalCount: number } }>(
+          APIKEY_PROFILE_TEMPLATES_QUERY,
+          {},
+          headers
+        );
+        const templates = (data?.apiKeyProfileTemplates?.edges ?? []).map((e) => e.node);
+        return apiKeyProfileTemplateSchema.array().parse(templates);
+      } catch (error) {
+        handleError(error, t('common.errors.internalServerError'));
+        throw error;
+      }
     },
-    enabled: !!projectID,
+    enabled: !!requestProjectId,
   });
 }
 
@@ -730,7 +791,8 @@ export function useCreateApiKeyProfileTemplate() {
 
   return useMutation({
     mutationFn: (input: CreateApiKeyProfileTemplateInput) => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+      const requestProjectId = input.projectID ?? selectedProjectId;
+      const headers = requestProjectId ? { 'X-Project-ID': requestProjectId } : undefined;
       const { profile, ...inputFields } = {
         ...input,
         projectID: input.projectID ?? null,
@@ -743,6 +805,8 @@ export function useCreateApiKeyProfileTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apiKeyProfileTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKey'] });
     },
   });
 }
@@ -752,8 +816,9 @@ export function useUpdateApiKeyProfileTemplate() {
   const selectedProjectId = useSelectedProjectId();
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateApiKeyProfileTemplateInput }) => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+    mutationFn: ({ id, input, projectID }: { id: string; input: UpdateApiKeyProfileTemplateInput; projectID?: string | null }) => {
+      const requestProjectId = projectID ?? selectedProjectId;
+      const headers = requestProjectId ? { 'X-Project-ID': requestProjectId } : undefined;
       const { profile, ...inputFields } = input;
       const resolvedProfile = profile ? { ...profile, name: input.name ?? profile.name } : undefined;
       return graphqlRequest<{ updateApiKeyProfileTemplate: ApiKeyProfileTemplate }>(
@@ -764,6 +829,8 @@ export function useUpdateApiKeyProfileTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apiKeyProfileTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKey'] });
     },
   });
 }
@@ -774,8 +841,9 @@ export function useDeleteApiKeyProfileTemplate() {
   const selectedProjectId = useSelectedProjectId();
 
   return useMutation({
-    mutationFn: (id: string) => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+    mutationFn: ({ id, projectID }: { id: string; projectID?: string | null }) => {
+      const requestProjectId = projectID ?? selectedProjectId;
+      const headers = requestProjectId ? { 'X-Project-ID': requestProjectId } : undefined;
       return graphqlRequest<{ deleteApiKeyProfileTemplate: { id: string; name: string } }>(
         DELETE_APIKEY_PROFILE_TEMPLATE_MUTATION,
         { id },
@@ -784,6 +852,8 @@ export function useDeleteApiKeyProfileTemplate() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['apiKeyProfileTemplates'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      queryClient.invalidateQueries({ queryKey: ['apiKey'] });
       toast.success(t('apikeys.templates.deleteSuccessMessage', { name: data.deleteApiKeyProfileTemplate.name }));
     },
     onError: () => {

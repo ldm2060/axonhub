@@ -49,9 +49,9 @@ func RequestFromLLM(r *llm.Request, reasoningField ReasoningField) *Request {
 		return MessageFromLLMWithConfig(m, reasoningField)
 	})
 
-	// Downgrade mid-conversation system messages (e.g. Claude Code reminders) to user so
-	// OpenAI-compatible upstreams keep a stable system prefix for prompt caching.
-	// Disabled by default; a channel opts in via TransformOptions.
+	// Preserve the explicit per-channel compatibility switch for all clients. Claude Code
+	// requests may already have been handled by the format-aware outbound middleware; in
+	// that case this second pass is a no-op.
 	if r.TransformOptions.DowngradeMidConversationSystem != nil && *r.TransformOptions.DowngradeMidConversationSystem {
 		req.Messages = downgradeMidConversationSystem(req.Messages)
 	}
@@ -108,37 +108,19 @@ func RequestFromLLM(r *llm.Request, reasoningField ReasoningField) *Request {
 	return req
 }
 
-// downgradeMidConversationSystem downgrades mid-conversation system messages to user so
-// OpenAI-compatible upstreams keep a stable system prefix for prompt caching.
-//
-// Background: clients like Claude Code inject role=system reminder messages in the middle of
-// the conversation (task tool reminders, hook context, date changes, etc.). OpenAI-compatible
-// upstreams hoist all system messages to the front of the prompt, so every newly injected
-// reminder rewrites the entire system prefix and defeats prompt caching. Downgrading these
-// mid-conversation system messages to user keeps them as conversation content in place, leaving
-// the leading system block (the real system prompt, carried over from the top-level system
-// field by the inbound transformer) stable across turns.
-//
-// Rules:
-//   - The leading contiguous system block is the real system prompt and is left untouched.
-//   - Any system message after it has its role changed to "user"; content and position are kept.
-//   - Non-system messages are unaffected; a no-op when there is no mid-conversation system message.
+// downgradeMidConversationSystem leaves the leading system prompt intact and changes
+// later system messages to user messages so OpenAI-compatible upstreams do not hoist
+// them into a changing prompt prefix.
 func downgradeMidConversationSystem(messages []Message) []Message {
-	end := 0
-	for end < len(messages) && messages[end].Role == "system" {
-		end++
+	leadingSystemEnd := 0
+	for leadingSystemEnd < len(messages) && messages[leadingSystemEnd].Role == "system" {
+		leadingSystemEnd++
 	}
 
-	changed := false
-	for i := end; i < len(messages); i++ {
+	for i := leadingSystemEnd; i < len(messages); i++ {
 		if messages[i].Role == "system" {
 			messages[i].Role = "user"
-			changed = true
 		}
-	}
-
-	if !changed {
-		return messages
 	}
 
 	return messages

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 
@@ -35,6 +35,39 @@ test('Cline is available as a channel type in frontend schemas and configs', () 
   assert.match(providersConfig, /cline:\s*{[\s\S]*channelTypes:\s*\[\s*'cline'\s*\]/, 'PROVIDER_CONFIGS should expose a Cline provider');
 });
 
+test('Qiniu exposes OpenAI and Anthropic channel variants after AtlasCloud', () => {
+  const schema = read('features/channels/data/schema.ts');
+  const channelsConfig = read('features/channels/data/config_channels.ts');
+  const providersConfig = read('features/channels/data/config_providers.ts');
+
+  assert.match(schema, /channelTypeSchema[\s\S]*'qiniu'[\s\S]*'qiniu_anthropic'/);
+  assert.match(channelsConfig, /qiniu:\s*{[\s\S]*baseURL:\s*'https:\/\/api\.qnaigc\.com\/v1'[\s\S]*apiFormat:\s*OPENAI_CHAT_COMPLETIONS/);
+  assert.match(channelsConfig, /qiniu_anthropic:\s*{[\s\S]*baseURL:\s*'https:\/\/api\.qnaigc\.com'[\s\S]*apiFormat:\s*ANTHROPIC_MESSAGES/);
+  assert.match(providersConfig, /qiniu:\s*{[\s\S]*channelTypes:\s*\[\s*'qiniu_anthropic',\s*'qiniu'\s*\]/);
+  assert.ok(channelsConfig.indexOf('atlascloud:') < channelsConfig.indexOf('qiniu:'));
+  assert.ok(providersConfig.indexOf('atlascloud:') < providersConfig.indexOf('qiniu:'));
+});
+
+test('Fenno exposes a third-party Codex channel', () => {
+  const schema = read('features/channels/data/schema.ts');
+  const channelsConfig = read('features/channels/data/config_channels.ts');
+  const providersConfig = read('features/channels/data/config_providers.ts');
+
+  assert.match(schema, /channelTypeSchema[\s\S]*'fenno'/);
+  assert.match(
+    channelsConfig,
+    /fenno:\s*{[\s\S]*baseURL:\s*'https:\/\/api\.fenno\.ai'[\s\S]*apiFormat:\s*OPENAI_RESPONSES[\s\S]*icon:\s*FennoIcon/
+  );
+  assert.match(channelsConfig, /fenno:\s*{[\s\S]*color:\s*'bg-\[#EEF2FF\] text-\[#3155C6\] border-\[#C7D2FE\]'/);
+  assert.match(providersConfig, /fenno:\s*{[\s\S]*icon:\s*FennoIcon[\s\S]*channelTypes:\s*\[\s*'fenno'\s*\]/);
+  const fennoIcon = read('features/channels/components/fenno-icon.tsx');
+  assert.match(fennoIcon, /@\/assets\/fenno-icon\.webp/);
+  assert.doesNotMatch(fennoIcon, /https?:\/\//);
+  assert.ok(existsSync(join(srcRoot, 'assets/fenno-icon.webp')));
+  assert.ok(channelsConfig.indexOf('qiniu_anthropic:') < channelsConfig.indexOf('fenno:'));
+  assert.ok(providersConfig.indexOf('qiniu:') < providersConfig.indexOf('fenno:'));
+});
+
 test('Cline has localized channel and provider labels', () => {
   for (const locale of ['en', 'zh-CN']) {
     const messages = parseLocale(locale);
@@ -60,7 +93,7 @@ test('channel proxy connection reuse setting is submitted, echoed, and localized
   for (const selection of proxySelections) {
     assert.match(selection, /disableConnectionReuse/, 'channel proxy queries should echo disableConnectionReuse');
   }
-  assert.match(channelsData, /proxy\?:\s*ProxyConfig;/, 'channel test input should use the shared ProxyConfig type');
+  assert.match(channelsData, /proxy\?:\s*ProxyConfig\s*}/, 'channel test input should use the shared ProxyConfig type');
 
   assert.match(proxyDialog, /name='disableConnectionReuse'/, 'proxy dialog should render the connection reuse switch');
   const submitSection = proxyDialog.slice(proxyDialog.indexOf('const onSubmit'), proxyDialog.indexOf('const handleTest'));

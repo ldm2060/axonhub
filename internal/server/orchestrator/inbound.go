@@ -25,6 +25,11 @@ import (
 // timeout release the data instead of pinning it on a goroutine indefinitely.
 const persistTimeout = 30 * time.Second
 
+// ErrStreamIncomplete reports an upstream stream that ended without a terminal
+// event and without an aggregated complete response. The same value is persisted
+// on the request and delivered to the client, so both sides agree on the reason.
+var ErrStreamIncomplete = errors.New("stream ended without terminal event or completed response")
+
 // InboundPersistentStream wraps a stream and tracks all responses for final saving to database.
 // It implements the streams.Stream interface and handles persistence in the Close method.
 //
@@ -80,7 +85,7 @@ func (ts *InboundPersistentStream) Current() *httpclient.StreamEvent {
 		// For raw binary audio chunks (TTS stream_format=audio), persist only a size
 		// summary to avoid buffering the full audio payload in memory.
 		ts.responseChunks = append(ts.responseChunks, httpclient.SummarizeBinaryChunk(event))
-		if isTerminalStreamEvent(event) {
+		if IsTerminalStreamEvent(event) {
 			ts.state.StreamCompleted = true
 		}
 	}
@@ -88,9 +93,9 @@ func (ts *InboundPersistentStream) Current() *httpclient.StreamEvent {
 	return event
 }
 
-// isTerminalStreamEvent checks both SSE metadata and JSON data for a successful
+// IsTerminalStreamEvent checks both SSE metadata and JSON data for a successful
 // protocol-level or semantic completion marker.
-func isTerminalStreamEvent(event *httpclient.StreamEvent) bool {
+func IsTerminalStreamEvent(event *httpclient.StreamEvent) bool {
 	if event == nil {
 		return false
 	}
@@ -159,7 +164,10 @@ func (ts *InboundPersistentStream) Close() error {
 	if ts.state.StreamCompleted {
 		// Stream completed successfully - perform final persistence
 		log.Debug(ctx, "Stream completed successfully (received terminal event), performing final persistence")
-		ts.persistResponseChunks(ctx)
+		persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+		ts.persistResponseChunks(persistCtx)
+		cancel()
+		ts.responseChunks = nil
 
 		return ts.stream.Close()
 	}
@@ -176,6 +184,7 @@ func (ts *InboundPersistentStream) Close() error {
 				log.Warn(persistCtx, "Failed to update request status from error", log.Cause(err))
 			}
 		}
+		ts.responseChunks = nil
 
 		return ts.stream.Close()
 	}
@@ -213,6 +222,7 @@ func (ts *InboundPersistentStream) Close() error {
 				log.Warn(persistCtx, "Failed to update request status from error", log.Cause(err))
 			}
 		}
+		ts.responseChunks = nil
 
 		return ts.stream.Close()
 	}
@@ -228,12 +238,13 @@ func (ts *InboundPersistentStream) Close() error {
 			persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
 			defer cancel()
 
-			errToReport := errors.New("stream ended without terminal event or completed response")
+			errToReport := ErrStreamIncomplete
 
 			if err := ts.requestService.UpdateRequestStatusFromError(persistCtx, ts.request.ID, errToReport); err != nil {
 				log.Warn(persistCtx, "Failed to update request status from error", log.Cause(err))
 			}
 		}
+		ts.responseChunks = nil
 
 		return ts.stream.Close()
 	}
@@ -247,7 +258,9 @@ func (ts *InboundPersistentStream) Close() error {
 		ts._persistResponse(persistCtx, responseBody, meta)
 		cancel()
 	} else {
-		ts.persistResponseChunks(ctx)
+		persistCtx, cancel := xcontext.DetachWithTimeout(ctx, persistTimeout)
+		ts.persistResponseChunks(persistCtx)
+		cancel()
 	}
 
 	// Release accumulated chunk references so the GC can reclaim them
@@ -264,17 +277,14 @@ func (ts *InboundPersistentStream) persistResponseChunks(ctx context.Context) {
 		}
 	}()
 
-	// Use context without cancellation to ensure persistence even if client canceled
-	persistCtx := context.WithoutCancel(ctx)
-
 	// Aggregate stream chunks first, then delegate to _persistResponse
-	responseBody, meta, err := ts.transformer.AggregateStreamChunks(persistCtx, ts.responseChunks)
+	responseBody, meta, err := ts.transformer.AggregateStreamChunks(ctx, ts.responseChunks)
 	if err != nil {
-		log.Warn(persistCtx, "Failed to aggregate chunks for main request", log.Cause(err))
-		dumper.DumpStreamEvents(persistCtx, ts.responseChunks, "response_chunks.json")
+		log.Warn(ctx, "Failed to aggregate chunks for main request", log.Cause(err))
+		dumper.DumpStreamEvents(ctx, ts.responseChunks, "response_chunks.json")
 	}
 
-	ts._persistResponse(persistCtx, responseBody, meta)
+	ts._persistResponse(ctx, responseBody, meta)
 }
 
 // _persistResponse performs the actual persistence with pre-aggregated data.
