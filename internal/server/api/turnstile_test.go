@@ -45,7 +45,6 @@ func TestAuthHandlersConfigSanitizesPublicConfiguration(t *testing.T) {
 	}
 	config.Actions.SignIn = biz.TurnstileActionSignIn
 	config.Actions.SignUpCode = biz.TurnstileActionSignUpCode
-	config.Actions.SignUp = biz.TurnstileActionSignUp
 	handler := &AuthHandlers{
 		TurnstileVerifier: stubTurnstileVerifier{config: config},
 	}
@@ -67,8 +66,7 @@ func TestAuthHandlersConfigSanitizesPublicConfiguration(t *testing.T) {
 					"site_key": "public-site-key",
 					"actions": {
 						"signin": "signin",
-						"signup_send_code": "signup_send_code",
-						"signup": "signup"
+						"signup_send_code": "signup_send_code"
 					}
 				}
 			}`, recorder.Body.String())

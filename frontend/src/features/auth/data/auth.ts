@@ -145,10 +145,10 @@ export function useSendVerificationCode(getTurnstileToken?: TurnstileTokenGetter
   });
 }
 
-export function useSignUp(getTurnstileToken?: TurnstileTokenGetter) {
+export function useSignUp() {
   return useMutation({
     mutationFn: async (input: SignUpInput) => {
-      return await authApi.signUp(input, getTurnstileToken?.() ?? undefined);
+      return await authApi.signUp(input);
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to sign up';

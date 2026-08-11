@@ -17,7 +17,6 @@ import (
 const (
 	TurnstileActionSignIn        = "signin"
 	TurnstileActionSignUpCode    = "signup_send_code"
-	TurnstileActionSignUp        = "signup"
 	turnstileSiteverifyURL       = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 	turnstileMaxTokenBytes       = 2048
 	turnstileMaxResponseBodySize = 64 * 1024
@@ -37,7 +36,6 @@ type PublicTurnstileConfig struct {
 	Actions struct {
 		SignIn     string `json:"signin"`
 		SignUpCode string `json:"signup_send_code"`
-		SignUp     string `json:"signup"`
 	} `json:"actions"`
 }
 
@@ -92,7 +90,6 @@ func newPublicTurnstileConfig(settings *StoredTurnstileSettings) *PublicTurnstil
 	}
 	config.Actions.SignIn = TurnstileActionSignIn
 	config.Actions.SignUpCode = TurnstileActionSignUpCode
-	config.Actions.SignUp = TurnstileActionSignUp
 
 	return config
 }

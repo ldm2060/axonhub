@@ -74,7 +74,6 @@ func TestTurnstileSettingsMissingDefaultsDisabled(t *testing.T) {
 	require.Empty(t, config.SiteKey)
 	require.Equal(t, TurnstileActionSignIn, config.Actions.SignIn)
 	require.Equal(t, TurnstileActionSignUpCode, config.Actions.SignUpCode)
-	require.Equal(t, TurnstileActionSignUp, config.Actions.SignUp)
 }
 
 func TestTurnstileSettingsRejectMalformedJSON(t *testing.T) {

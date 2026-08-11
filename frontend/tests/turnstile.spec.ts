@@ -46,7 +46,6 @@ async function mockAuthConfig(page: Page, enabled: boolean) {
           actions: {
             signin: 'signin',
             signup_send_code: 'signup_send_code',
-            signup: 'signup',
           },
         },
       }),
@@ -217,7 +216,7 @@ test.describe('Cloudflare Turnstile authentication', () => {
     await expect(page.getByText(/complete the security check|完成安全验证/i)).toBeVisible()
   })
 
-  test('keeps send-code and signup challenges independent', async ({ page }) => {
+  test('requires a challenge to send the code but none to create the account', async ({ page }) => {
     await mockAuthConfig(page, true)
     await installTurnstileMock(page)
 
@@ -247,7 +246,7 @@ test.describe('Cloudflare Turnstile authentication', () => {
 
     await page.goto('/sign-up')
     await expect(page.getByTestId('turnstile-signup-send-code')).toHaveAttribute('data-action', 'signup_send_code')
-    await expect(page.getByTestId('turnstile-signup')).toHaveAttribute('data-action', 'signup')
+    await expect(page.getByTestId('turnstile-signup')).toHaveCount(0)
 
     await page.getByTestId('sign-up-email').fill('my@example.com')
     await solveTurnstile(page, 'signup_send_code', 'send-code-token-1')
@@ -258,7 +257,6 @@ test.describe('Cloudflare Turnstile authentication', () => {
       turnstile_token: 'send-code-token-1',
     })
     await expect.poll(async () => (await getTurnstileState(page, 'signup_send_code'))?.resetCount).toBe(1)
-    await expect.poll(async () => (await getTurnstileState(page, 'signup'))?.resetCount).toBe(0)
 
     await page.getByTestId('sign-up-send-code').click()
     await expect(page.getByText(/complete the security check|完成安全验证/i).first()).toBeVisible()
@@ -274,7 +272,6 @@ test.describe('Cloudflare Turnstile authentication', () => {
     await page.getByTestId('sign-up-verification-code').fill('123456')
     await page.getByTestId('sign-up-password').fill('pwd123456')
     await page.getByTestId('sign-up-confirm-password').fill('pwd123456')
-    await solveTurnstile(page, 'signup', 'signup-token')
     await page.getByTestId('sign-up-submit').click()
 
     await expect.poll(() => signUpBody).not.toBeNull()
@@ -283,9 +280,8 @@ test.describe('Cloudflare Turnstile authentication', () => {
       first_name: 'Test',
       last_name: 'User',
       verification_code: '123456',
-      turnstile_token: 'signup-token',
     })
-    await expect.poll(async () => (await getTurnstileState(page, 'signup'))?.resetCount).toBe(1)
+    expect(signUpBody).not.toHaveProperty('turnstile_token')
     await expect(page.getByTestId('sign-up-email')).toHaveValue('my@example.com')
   })
 
@@ -374,19 +370,17 @@ test.describe('Cloudflare Turnstile authentication', () => {
     await expect(page.getByText(/security configuration could not be loaded|无法加载安全配置/i)).toBeVisible()
   })
 
-  test('keeps both signup widgets inside a narrow viewport', async ({ page }) => {
+  test('keeps the send-code widget inside a narrow viewport', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 })
     await mockAuthConfig(page, true)
     await installTurnstileMock(page)
 
     await page.goto('/sign-up')
-    for (const testID of ['turnstile-signup-send-code', 'turnstile-signup']) {
-      const widget = page.getByTestId(testID)
-      await expect(widget).toBeVisible()
-      const box = await widget.boundingBox()
-      expect(box).not.toBeNull()
-      expect(box!.x).toBeGreaterThanOrEqual(0)
-      expect(box!.x + box!.width).toBeLessThanOrEqual(320)
-    }
+    const widget = page.getByTestId('turnstile-signup-send-code')
+    await expect(widget).toBeVisible()
+    const box = await widget.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320)
   })
 })
