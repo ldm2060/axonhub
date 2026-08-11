@@ -374,6 +374,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
         modelIDFilter={modelIDFilter}
         userFilter={userFilter}
         dateRange={dateRange}
+        queryWhere={whereClause}
         onNextPage={handleNextPage}
         onPreviousPage={handlePreviousPage}
         onPageSizeChange={handlePageSizeChange}

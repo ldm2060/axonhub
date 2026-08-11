@@ -566,6 +566,7 @@ func writeSSEStreamWithHeartbeat(
 	ctxDone := ctx.Done()
 	eventsAfterCancel := 0
 	terminalSeen := false
+	heartbeatCount := 0
 
 	for {
 		select {
@@ -609,6 +610,13 @@ func writeSSEStreamWithHeartbeat(
 				log.Warn(ctx, "Failed to write SSE heartbeat", log.Cause(err))
 				return
 			}
+
+			heartbeatCount++
+			log.Info(ctx, "SSE heartbeat sent",
+				log.Int("heartbeat_count", heartbeatCount),
+				log.String("heartbeat_format", sseHeartbeatFormatName(heartbeatFormat)),
+				log.Duration("interval", interval),
+			)
 
 			c.Writer.Flush()
 			timer.Reset(interval)
@@ -677,6 +685,17 @@ func writeSSEHeartbeat(writer io.Writer, format sseHeartbeatFormat) error {
 		return err
 	default:
 		return errors.New("unsupported SSE heartbeat format")
+	}
+}
+
+func sseHeartbeatFormatName(format sseHeartbeatFormat) string {
+	switch format {
+	case sseHeartbeatOpenAI:
+		return "openai"
+	case sseHeartbeatAnthropic:
+		return "anthropic"
+	default:
+		return "unknown"
 	}
 }
 
