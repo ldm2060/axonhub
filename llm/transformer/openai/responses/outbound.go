@@ -27,8 +27,8 @@ var (
 
 // Config holds all configuration for the OpenAI Responses outbound transformer.
 const (
-	TransportHTTP       = "http"
-	TransportWebSocket  = "websocket"
+	TransportHTTP      = "http"
+	TransportWebSocket = "websocket"
 	// ResponsesLiteHeader is the Codex Responses Lite signal. It uses the
 	// canonical spelling ("Openai"): http.Header canonicalizes keys, so lookups
 	// match whatever case a Codex client sends.
