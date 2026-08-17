@@ -18,6 +18,7 @@ var urlProviderMap = []urlProviderEntry{
 	{hostPattern: "open.bigmodel.cn", providerType: "zhipu"},
 	{hostPattern: "api.z.ai", providerType: "zhipu"},
 	{hostPattern: "api.apertis.ai", providerType: "apertis"},
+	{hostPattern: "hyper.charm.land", providerType: "charm_hyper"},
 }
 
 func URLDetectedProviders() map[string]struct{} {

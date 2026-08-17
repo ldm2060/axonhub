@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   ColumnFiltersState,
+  ColumnOrderState,
   RowData,
   SortingState,
   VisibilityState,
@@ -15,7 +16,9 @@ import {
 } from '@tanstack/react-table';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { readColumnOrder, writeColumnOrder, reconcileColumnOrder, isReorderableColumn } from '@/lib/column-order';
 import type { DateTimeRangeValue } from '@/utils/date-range';
+import type { AutoRefreshInterval } from '@/hooks/use-auto-refresh-interval';
 import { useIsMobile, MOBILE_BREAKPOINT } from '@/hooks/use-mobile';
 import { useAnimatedList } from '@/hooks/useAnimatedList';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -28,6 +31,9 @@ import { DEFAULT_HIDDEN_COLUMN_IDS, DEFAULT_MOBILE_HIDDEN_COLUMN_IDS, useRequest
 
 const COLUMN_VISIBILITY_STORAGE_KEY = 'requests-table-column-visibility';
 const COLUMN_VISIBILITY_STORAGE_VERSION = 6;
+
+const COLUMN_ORDER_STORAGE_KEY = 'requests-table-column-order';
+const COLUMN_ORDER_STORAGE_VERSION = 1;
 
 const MotionTableRow = motion.create(TableRow);
 
@@ -61,8 +67,9 @@ interface RequestsTableProps {
   onViewDetail: (requestId: string) => void;
   onRefresh: () => void;
   showRefresh: boolean;
-  autoRefresh?: boolean;
-  onAutoRefreshChange?: (enabled: boolean) => void;
+  autoRefreshInterval?: AutoRefreshInterval;
+  autoRefreshResumeKey?: number;
+  onAutoRefreshIntervalChange?: (interval: AutoRefreshInterval) => void;
   adminScope?: boolean;
 }
 
@@ -108,8 +115,9 @@ export function RequestsTable({
   onViewDetail,
   onRefresh,
   showRefresh,
-  autoRefresh = false,
-  onAutoRefreshChange,
+  autoRefreshInterval = null,
+  autoRefreshResumeKey = 0,
+  onAutoRefreshIntervalChange,
   adminScope = false,
 }: RequestsTableProps) {
   const { t } = useTranslation();
@@ -208,7 +216,24 @@ export function RequestsTable({
     });
   }, [isMobile, visibilityReady]);
 
-  const displayedData = useAnimatedList(data, autoRefresh, pageSize);
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
+  const columnOrderRef = useRef<ColumnOrderState>([]);
+
+  useEffect(() => {
+    columnOrderRef.current = columnOrder;
+  }, [columnOrder]);
+
+  const handleColumnOrderChange = useCallback((updater: Updater<ColumnOrderState>) => {
+    const next = typeof updater === 'function' ? updater(columnOrderRef.current) : updater;
+    setColumnOrder(next);
+    writeColumnOrder(COLUMN_ORDER_STORAGE_KEY, COLUMN_ORDER_STORAGE_VERSION, next);
+  }, []);
+
+  const animationResetKey = useMemo(
+    () => JSON.stringify({ queryWhere: queryWhere ?? null, autoRefreshResumeKey }),
+    [queryWhere, autoRefreshResumeKey]
+  );
+  const displayedData = useAnimatedList(data, autoRefreshInterval !== null, pageSize, animationResetKey);
 
   const columnFilters = useMemo<ColumnFiltersState>(() => {
     const filters: ColumnFiltersState = [];
@@ -268,6 +293,7 @@ export function RequestsTable({
     state: {
       sorting,
       columnVisibility,
+      columnOrder,
       rowSelection,
       columnFilters,
     },
@@ -276,6 +302,7 @@ export function RequestsTable({
     onSortingChange: setSorting,
     onColumnFiltersChange: handleColumnFiltersChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
+    onColumnOrderChange: handleColumnOrderChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -286,6 +313,24 @@ export function RequestsTable({
     manualFiltering: true, // Enable manual filtering for server-side filtering
   });
 
+  // Hydrate column order from localStorage once table is mounted
+  useEffect(() => {
+    const allIds = table.getAllLeafColumns().map((c) => c.id);
+    const reorderable = allIds.filter((id) => {
+      const col = table.getColumn(id);
+      return col ? isReorderableColumn(col) : false;
+    });
+    const stored = readColumnOrder(COLUMN_ORDER_STORAGE_KEY, COLUMN_ORDER_STORAGE_VERSION);
+    setColumnOrder(
+      reconcileColumnOrder({
+        allColumnIds: allIds,
+        reorderableColumnIds: reorderable,
+        storedOrder: stored,
+        pinnedLast: ['details'],
+      })
+    );
+  }, [table]);
+
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <DataTableToolbar
@@ -295,8 +340,10 @@ export function RequestsTable({
         onResetFilters={onResetFilters}
         onRefresh={onRefresh}
         showRefresh={showRefresh}
-        autoRefresh={autoRefresh}
-        onAutoRefreshChange={onAutoRefreshChange}
+        autoRefreshInterval={autoRefreshInterval}
+        onAutoRefreshIntervalChange={onAutoRefreshIntervalChange}
+        enableColumnOrdering
+        getColumnLabel={(id) => t(`requests.columns.${id}`, { defaultValue: id })}
         adminScope={adminScope}
       />
       <div className='shadow-soft relative mt-2 flex-1 overflow-auto rounded-2xl border border-[var(--table-border)] sm:mt-4'>

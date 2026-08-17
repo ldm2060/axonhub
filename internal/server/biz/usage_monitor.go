@@ -368,6 +368,8 @@ type UsageMonitorService struct {
 	clineChecker                *provider_quota.ClineQuotaChecker
 	opencodeGoChecker           *provider_quota.OpenCodeGoQuotaChecker
 	minimaxChecker              *provider_quota.MinimaxQuotaChecker
+	xaiSubscriptionChecker      *provider_quota.XAISubscriptionQuotaChecker
+	charmHyperChecker           *provider_quota.CharmHyperQuotaChecker
 	httpClient                  *httpclient.HttpClient
 	defaultDisableThreshold     float64
 	defaultEnableThreshold      float64
@@ -384,6 +386,8 @@ func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorServi
 		clineChecker:                provider_quota.NewClineQuotaChecker(params.HttpClient),
 		opencodeGoChecker:           provider_quota.NewOpenCodeGoQuotaChecker(params.HttpClient),
 		minimaxChecker:              provider_quota.NewMinimaxQuotaChecker(params.HttpClient),
+		xaiSubscriptionChecker:      provider_quota.NewXAISubscriptionQuotaChecker(params.HttpClient),
+		charmHyperChecker:           provider_quota.NewCharmHyperQuotaChecker(params.HttpClient),
 		httpClient:                  params.HttpClient,
 		defaultDisableThreshold:     params.DefaultDisableThreshold,
 		defaultEnableThreshold:      params.DefaultEnableThreshold,
@@ -968,14 +972,19 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var pollData *usage_monitor.PollData
 	var err error
 
-	// Cline, OpenCode Go, and Minimax use dedicated checkers that read credentials from the
-	// bound channel, bypassing the generic HTTP poller entirely.
+	// Cline, OpenCode Go, Minimax, xAI Subscription, and Charm Hyper use dedicated
+	// checkers that read credentials from the bound channel, bypassing the generic
+	// HTTP poller entirely.
 	if ch.ProviderType == usagemonitorchannel.ProviderTypeCline {
 		pollData, err = svc.pollCline(ctx, ch)
 	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeOpencodeGo {
 		pollData, err = svc.pollOpenCodeGo(ctx, ch)
 	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeMinimax {
 		pollData, err = svc.pollMinimax(ctx, ch)
+	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeXaiSubscription {
+		pollData, err = svc.pollXaiSubscription(ctx, ch)
+	} else if ch.ProviderType == usagemonitorchannel.ProviderTypeCharmHyper {
+		pollData, err = svc.pollCharmHyper(ctx, ch)
 	} else if len(ch.Variables) > 0 && len(ch.DisplayFields) > 0 {
 		// Prefer new columns (Variables + DisplayFields) if populated
 		vars := convertMapSliceToVariables(ch.Variables)
@@ -1231,11 +1240,11 @@ func (svc *UsageMonitorService) pollMinimax(ctx context.Context, mon *ent.UsageM
 	}, nil
 }
 
-// pollOpenCodeGo polls an OpenCode Go channel via the dedicated dashboard-scraper
-// checker. Credentials (workspaceId + authCookie) are read from the bound channel's
-// settings.providerQuota.opencodeGo, so the monitor must have a channel_id. The
-// returned QuotaData is converted to ParsedFields for the generic storage + display
-// path; DeriveQuotaStatus then derives routing status from those fields.
+// pollOpenCodeGo polls an OpenCode Go channel via the dedicated checker
+// against the official usage API. The checker reads the channel's own API key,
+// so the monitor must have a channel_id. The returned QuotaData is converted
+// to ParsedFields for the generic storage + display path; DeriveQuotaStatus
+// then derives routing status from those fields.
 func (svc *UsageMonitorService) pollOpenCodeGo(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
 	if mon.ChannelID == nil {
 		return nil, fmt.Errorf("opencode_go monitor %d has no bound channel_id", mon.ID)
@@ -1255,6 +1264,62 @@ func (svc *UsageMonitorService) pollOpenCodeGo(ctx context.Context, mon *ent.Usa
 	return &usage_monitor.PollData{
 		Raw:      usage_monitor.OpenCodeGoQuotaRawJSON(quota),
 		Fields:   usage_monitor.OpenCodeGoQuotaToParsedFields(quota),
+		PolledAt: time.Now(),
+	}, nil
+}
+
+// pollXaiSubscription polls an xAI subscription channel via the dedicated checker
+// against the official billing API. The checker reads OAuth credentials from the
+// bound channel, so the monitor must have a channel_id. The returned QuotaData is
+// converted to ParsedFields for the generic storage + display path; DeriveQuotaStatus
+// then derives routing status from those fields.
+func (svc *UsageMonitorService) pollXaiSubscription(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
+	if mon.ChannelID == nil {
+		return nil, fmt.Errorf("xai_subscription monitor %d has no bound channel_id", mon.ID)
+	}
+
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, *mon.ChannelID)
+	if err != nil {
+		return nil, fmt.Errorf("load bound channel %d for xai_subscription monitor: %w", *mon.ChannelID, err)
+	}
+
+	quota, err := svc.xaiSubscriptionChecker.CheckQuota(ctx, ch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage_monitor.PollData{
+		Raw:      usage_monitor.XaiSubscriptionQuotaRawJSON(quota),
+		Fields:   usage_monitor.XaiSubscriptionQuotaToParsedFields(quota),
+		PolledAt: time.Now(),
+	}, nil
+}
+
+// pollCharmHyper polls a Charm Hyper channel via the dedicated checker against
+// the official credits endpoint. The checker reads the channel's own API key, so
+// the monitor must have a channel_id. The returned QuotaData is converted to
+// ParsedFields for the generic storage + display path; DeriveQuotaStatus then
+// derives routing status from those fields.
+func (svc *UsageMonitorService) pollCharmHyper(ctx context.Context, mon *ent.UsageMonitorChannel) (*usage_monitor.PollData, error) {
+	if mon.ChannelID == nil {
+		return nil, fmt.Errorf("charm_hyper monitor %d has no bound channel_id", mon.ID)
+	}
+
+	client := svc.entFromContext(ctx)
+	ch, err := client.Channel.Get(ctx, *mon.ChannelID)
+	if err != nil {
+		return nil, fmt.Errorf("load bound channel %d for charm_hyper monitor: %w", *mon.ChannelID, err)
+	}
+
+	quota, err := svc.charmHyperChecker.CheckQuota(ctx, ch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage_monitor.PollData{
+		Raw:      usage_monitor.CharmHyperQuotaRawJSON(quota),
+		Fields:   usage_monitor.CharmHyperQuotaToParsedFields(quota),
 		PolledAt: time.Now(),
 	}, nil
 }

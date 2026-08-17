@@ -116,7 +116,6 @@ export function mergeChannelSettingsForUpdate(
     retryableStatusCodes: pick('retryableStatusCodes', existing?.retryableStatusCodes ?? []),
     retryableErrorPatterns: pick('retryableErrorPatterns', existing?.retryableErrorPatterns ?? []),
     minInputTokens: pick('minInputTokens', existing?.minInputTokens ?? null),
-    providerQuota: pick('providerQuota', existing?.providerQuota ?? null),
   };
 }
 

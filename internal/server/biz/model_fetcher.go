@@ -26,6 +26,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/kimicode"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/codex"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/copilot"
+	"github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 )
 
 const providerConfCacheDuration = 1 * time.Hour
@@ -220,6 +221,8 @@ func (f *ModelFetcher) getDefaultModelsByType(ctx context.Context, typ channel.T
 		return lo.Map(codex.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
 	case channel.TypeClaudecode:
 		return lo.Map(claudecode.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
+	case channel.TypeXaiSubscription:
+		return lo.Map(subscription.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
 	case channel.TypeGithubCopilot:
 		return f.fetchCopilotModels(ctx)
 	case channel.TypeGeminiVertex:
@@ -233,7 +236,7 @@ func (f *ModelFetcher) getDefaultModelsByType(ctx context.Context, typ channel.T
 // only be returned for official (OAuth) channels. Non-official channels of these
 // types should fetch models from the provider API instead.
 func isOfficialOnlyType(typ channel.Type) bool {
-	return typ == channel.TypeClaudecode || typ == channel.TypeCodex
+	return typ == channel.TypeClaudecode || typ == channel.TypeCodex || typ == channel.TypeXaiSubscription
 }
 
 // fetchCopilotModels fetches GitHub Copilot models.

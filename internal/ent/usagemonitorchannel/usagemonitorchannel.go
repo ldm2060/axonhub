@@ -221,19 +221,21 @@ type ProviderType string
 
 // ProviderType values.
 const (
-	ProviderTypeClaudecode    ProviderType = "claudecode"
-	ProviderTypeCodex         ProviderType = "codex"
-	ProviderTypeGithubCopilot ProviderType = "github_copilot"
-	ProviderTypeNanogpt       ProviderType = "nanogpt"
-	ProviderTypeCline         ProviderType = "cline"
-	ProviderTypeWafer         ProviderType = "wafer"
-	ProviderTypeSynthetic     ProviderType = "synthetic"
-	ProviderTypeNeuralwatt    ProviderType = "neuralwatt"
-	ProviderTypeZhipu         ProviderType = "zhipu"
-	ProviderTypeAntigravity   ProviderType = "antigravity"
-	ProviderTypeApertis       ProviderType = "apertis"
-	ProviderTypeOpencodeGo    ProviderType = "opencode_go"
-	ProviderTypeMinimax       ProviderType = "minimax"
+	ProviderTypeClaudecode      ProviderType = "claudecode"
+	ProviderTypeCodex           ProviderType = "codex"
+	ProviderTypeGithubCopilot   ProviderType = "github_copilot"
+	ProviderTypeNanogpt         ProviderType = "nanogpt"
+	ProviderTypeCline           ProviderType = "cline"
+	ProviderTypeWafer           ProviderType = "wafer"
+	ProviderTypeSynthetic       ProviderType = "synthetic"
+	ProviderTypeNeuralwatt      ProviderType = "neuralwatt"
+	ProviderTypeZhipu           ProviderType = "zhipu"
+	ProviderTypeAntigravity     ProviderType = "antigravity"
+	ProviderTypeApertis         ProviderType = "apertis"
+	ProviderTypeOpencodeGo      ProviderType = "opencode_go"
+	ProviderTypeMinimax         ProviderType = "minimax"
+	ProviderTypeXaiSubscription ProviderType = "xai_subscription"
+	ProviderTypeCharmHyper      ProviderType = "charm_hyper"
 )
 
 func (pt ProviderType) String() string {
@@ -243,7 +245,7 @@ func (pt ProviderType) String() string {
 // ProviderTypeValidator is a validator for the "provider_type" field enum values. It is called by the builders before save.
 func ProviderTypeValidator(pt ProviderType) error {
 	switch pt {
-	case ProviderTypeClaudecode, ProviderTypeCodex, ProviderTypeGithubCopilot, ProviderTypeNanogpt, ProviderTypeCline, ProviderTypeWafer, ProviderTypeSynthetic, ProviderTypeNeuralwatt, ProviderTypeZhipu, ProviderTypeAntigravity, ProviderTypeApertis, ProviderTypeOpencodeGo, ProviderTypeMinimax:
+	case ProviderTypeClaudecode, ProviderTypeCodex, ProviderTypeGithubCopilot, ProviderTypeNanogpt, ProviderTypeCline, ProviderTypeWafer, ProviderTypeSynthetic, ProviderTypeNeuralwatt, ProviderTypeZhipu, ProviderTypeAntigravity, ProviderTypeApertis, ProviderTypeOpencodeGo, ProviderTypeMinimax, ProviderTypeXaiSubscription, ProviderTypeCharmHyper:
 		return nil
 	default:
 		return fmt.Errorf("usagemonitorchannel: invalid enum value for provider_type field: %q", pt)

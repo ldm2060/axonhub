@@ -43,6 +43,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 	"github.com/ldm2060/axonhub/llm/transformer/openrouter"
 	"github.com/ldm2060/axonhub/llm/transformer/xai"
+	xaisubscription "github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 	"github.com/ldm2060/axonhub/llm/transformer/zai"
 )
 
@@ -214,7 +215,16 @@ func (svc *ChannelService) buildChannelWithOutbounds(c *ent.Channel, apiKeyOverr
 			continue
 		}
 
-		outbounds[ep.APIFormat] = ch.Outbound
+		if c.Type != channel.TypeXai || ep.APIFormat == ch.Outbound.APIFormat().String() {
+			outbounds[ep.APIFormat] = ch.Outbound
+			continue
+		}
+
+		out, err := svc.buildNonDefaultEndpointOutbound(c, ch, ep)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build default outbound for api_format %q on channel %s: %w", ep.APIFormat, c.Name, err)
+		}
+		outbounds[ep.APIFormat] = out
 	}
 
 	for _, ep := range userEndpoints {
@@ -464,7 +474,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		if !c.Credentials.IsOAuth() && len(enabledKeys) == 0 {
 			return nil, fmt.Errorf("missing credentials: oauth or api key required for channel %s", c.Name)
 		}
-	case channel.TypeGithubCopilot, channel.TypeKimiCode:
+	case channel.TypeGithubCopilot, channel.TypeKimiCode, channel.TypeXaiSubscription:
 		// OAuth-only coding channels require a complete persisted OAuth bundle.
 		if !c.Credentials.IsOAuth() {
 			return nil, fmt.Errorf("missing oauth credentials for channel %s", c.Name)
@@ -638,6 +648,36 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		}
 
 		ch.Outbound = transformer
+
+		return ch, nil
+	case channel.TypeXaiResponses:
+		transformer, err := responses.NewOutboundTransformerWithConfig(&responses.Config{
+			BaseURL:        c.BaseURL,
+			APIKeyProvider: getAPIKeyProvider(ch),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
+		}
+
+		ch.Outbound = transformer
+
+		return ch, nil
+	case channel.TypeXaiSubscription:
+		credentials, err := c.Credentials.ResolveOAuthCredentials()
+		if err != nil {
+			return nil, fmt.Errorf("xAI subscription channel %s has invalid credentials: %w", c.Name, err)
+		}
+		tokens := xaisubscription.NewTokenProvider(xaisubscription.TokenProviderParams{
+			Credentials: credentials,
+			HTTPClient:  httpClient,
+			OnRefreshed: svc.onTokenRefreshed(c),
+		})
+		outbound, err := xaisubscription.NewOutboundTransformer(tokens)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create xAI subscription outbound transformer: %w", err)
+		}
+		ch.Outbound = outbound
+		setupAutoRefresh(ch, tokens, oauth.AutoRefreshOptions{})
 
 		return ch, nil
 	case channel.TypeLongcatAnthropic:

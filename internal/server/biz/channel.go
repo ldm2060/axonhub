@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -33,6 +34,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
+	xaisubscription "github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 )
 
 // ChannelModelEntry represents a model that the channel can handle.
@@ -573,6 +575,12 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 		return nil, err
 	}
 
+	if input.Type == channel.TypeXaiSubscription {
+		officialBaseURL := xaisubscription.DefaultBaseURL
+		input.BaseURL = &officialBaseURL
+		input.Endpoints = nil
+	}
+
 	if input.BaseURL != nil {
 		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
 			return nil, err
@@ -848,6 +856,20 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 	if err := NormalizeAPIKeyAutoDisableRules(input.Policies); err != nil {
 		return nil, err
 	}
+	officialBaseURL := xaisubscription.DefaultBaseURL
+	if input.Type != nil && *input.Type == channel.TypeXaiSubscription {
+		input.BaseURL = &officialBaseURL
+		input.Endpoints = []objects.ChannelEndpoint{}
+	} else if input.Type == nil && (input.BaseURL != nil || input.Endpoints != nil) {
+		existing, err := svc.entFromContext(ctx).Channel.Query().Where(channel.IDEQ(id), channel.TypeEQ(channel.TypeXaiSubscription)).Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check xAI subscription channel: %w", err)
+		}
+		if existing {
+			input.BaseURL = &officialBaseURL
+			input.Endpoints = []objects.ChannelEndpoint{}
+		}
+	}
 
 	if input.BaseURL != nil {
 		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
@@ -1093,6 +1115,9 @@ func (svc *ChannelService) SaveChannelEndpoints(ctx context.Context, input SaveC
 	if err != nil {
 		return nil, fmt.Errorf("failed to get channel: %w", err)
 	}
+	if ch.Type == channel.TypeXaiSubscription {
+		return nil, errors.New("xAI subscription channels do not support custom endpoints")
+	}
 
 	ch, err = svc.entFromContext(ctx).Channel.UpdateOne(ch).
 		SetEndpoints(input.Endpoints).
@@ -1243,6 +1268,8 @@ func providerTypeFromChannel(chType channel.Type, baseURL string) string {
 		return "opencode_go"
 	case channel.TypeMinimax, channel.TypeMinimaxAnthropic:
 		return "minimax"
+	case channel.TypeXaiSubscription:
+		return "xai_subscription"
 	case channel.TypeOpenai, channel.TypeOpenaiResponses, channel.TypeOpenaiImageGeneration:
 		return provider_quota.DetectProviderFromURL(baseURL)
 	default:
@@ -1285,16 +1312,12 @@ func (svc *ChannelService) autoCreateUsageMonitorChannel(ctx context.Context, ch
 	channelIDStr := strconv.Itoa(ch.ID)
 	providerTypeStr := providerType
 
-	// OpenCode Go reads its credentials (workspaceId + authCookie) from the
-	// channel's settings.providerQuota.opencodeGo at poll time, not from a single
-	// API key. Skip the apiKey requirement and let the dedicated checker load the
-	// bound channel in pollChannel. Auto-create only if the channel has the
-	// OpenCode quota settings configured.
-	if providerType == "opencode_go" || providerType == "cline" || providerType == "minimax" {
-		if providerType == "opencode_go" && (ch.Settings == nil || ch.Settings.ProviderQuota == nil ||
-			ch.Settings.ProviderQuota.OpencodeGo == nil) {
-			return
-		}
+	// OpenCode Go / Cline / Minimax / xAI Subscription / Charm Hyper read quota
+	// from the channel's own credentials at poll time via a dedicated checker,
+	// not from the generic template. Skip the apiKey requirement and let the
+	// dedicated checker load the bound channel in pollChannel.
+	if providerType == "opencode_go" || providerType == "cline" || providerType == "minimax" ||
+		providerType == "xai_subscription" || providerType == "charm_hyper" {
 		monitorInput := usage_monitor.CreateUsageMonitorChannelInput{
 			Name:         ch.Name + " (Quota)",
 			Source:       "template",

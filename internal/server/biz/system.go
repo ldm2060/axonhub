@@ -188,7 +188,7 @@ type UpdateStoredTurnstileSettings struct {
 
 // SystemGeneralSettings represents general system configuration settings.
 type SystemGeneralSettings struct {
-	// CurrencyCode is the code used for currency display (e.g., USD, RMB).
+	// CurrencyCode is the code used for currency display (e.g., USD, CNY).
 	CurrencyCode string `json:"currency_code"`
 	Timezone     string `json:"timezone"`
 }
@@ -273,6 +273,8 @@ type QuotaEnforcementSettings struct {
 	Enabled bool `json:"enabled"`
 	// Mode defines how quota is enforced.
 	Mode QuotaEnforcementMode `json:"mode"`
+	// AllowedChannelIDs contains channel IDs that bypass quota filtering.
+	AllowedChannelIDs []int `json:"allowedChannelIDs"`
 }
 
 // SecuritySettings represents system-wide request access controls.
@@ -631,6 +633,12 @@ type SystemModelSettings struct {
 	// API output. Configured Model entities are not affected. An empty string
 	// disables the filter. Only effective when QueryAllChannelModels is true.
 	ModelBlacklistRegex string `json:"model_blacklist_regex"`
+
+	// HideUnroutableModelsInList hides configured Model entities from public
+	// model-list APIs when the current API key has no structurally routable
+	// channel for that entity. It does not change request 422 semantics and
+	// does not affect the admin GraphQL models table.
+	HideUnroutableModelsInList bool `json:"hide_unroutable_models_in_list"`
 
 	// DeveloperSettings stores reusable channel association rules keyed by model developer.
 	// Models with the same developer inherit these associations before applying their

@@ -215,11 +215,13 @@ enum QuotaEnforcementMode {
 type QuotaEnforcementSettings {
   enabled: Boolean!
   mode: QuotaEnforcementMode!
+  allowedChannelIDs: [ID!]!
 }
 
 input UpdateQuotaEnforcementSettingsInput {
   enabled: Boolean
   mode: QuotaEnforcementMode
+  allowedChannelIDs: [ID!]
 }
 
 type ProviderQuotaCollectionProvider {
@@ -270,6 +272,7 @@ type SystemModelSettings {
   defaultModelAPIIncludeAll: Boolean!
   autoReasoningEffort: Boolean!
   modelBlacklistRegex: String!
+  hideUnroutableModelsInList: Boolean!
   developerSettings: [DeveloperModelSettings!]!
 }
 
@@ -279,6 +282,7 @@ input UpdateSystemModelSettingsInput {
   defaultModelAPIIncludeAll: Boolean
   autoReasoningEffort: Boolean
   modelBlacklistRegex: String
+  hideUnroutableModelsInList: Boolean
   developerSettings: [DeveloperModelSettingsInput!]
 }
 

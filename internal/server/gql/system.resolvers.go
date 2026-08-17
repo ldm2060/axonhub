@@ -195,14 +195,18 @@ func (r *mutationResolver) UpdateQuotaEnforcementSettings(ctx context.Context, i
 		return false, fmt.Errorf("failed to read current quota enforcement settings: %w", err)
 	}
 	newSettings := biz.QuotaEnforcementSettings{
-		Enabled: current.Enabled,
-		Mode:    current.Mode,
+		Enabled:           current.Enabled,
+		Mode:              current.Mode,
+		AllowedChannelIDs: current.AllowedChannelIDs,
 	}
 	if input.Enabled != nil {
 		newSettings.Enabled = *input.Enabled
 	}
 	if input.Mode != nil {
 		newSettings.Mode = *input.Mode
+	}
+	if input.AllowedChannelIDs != nil {
+		newSettings.AllowedChannelIDs = objects.IntGuids(input.AllowedChannelIDs)
 	}
 
 	err = r.systemService.SetQuotaEnforcementSettings(ctx, newSettings)
@@ -784,6 +788,13 @@ func (r *queryResolver) EmailSettings(ctx context.Context) (*biz.EmailSettings, 
 	return es, nil
 }
 
+// AllowedChannelIDs is the resolver for the allowedChannelIDs field.
+func (r *quotaEnforcementSettingsResolver) AllowedChannelIDs(ctx context.Context, obj *biz.QuotaEnforcementSettings) ([]*objects.GUID, error) {
+	return lo.Map(obj.AllowedChannelIDs, func(id int, _ int) *objects.GUID {
+		return &objects.GUID{Type: "Channel", ID: id}
+	}), nil
+}
+
 // SampleIntervalSeconds is the resolver for the sampleIntervalSeconds field.
 func (r *systemRuntimeOverviewResolver) SampleIntervalSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error) {
 	return obj.SampleInterval, nil
@@ -852,6 +863,11 @@ func (r *Resolver) ProviderQuotaCollectionSettings() ProviderQuotaCollectionSett
 	return &providerQuotaCollectionSettingsResolver{r}
 }
 
+// QuotaEnforcementSettings returns QuotaEnforcementSettingsResolver implementation.
+func (r *Resolver) QuotaEnforcementSettings() QuotaEnforcementSettingsResolver {
+	return &quotaEnforcementSettingsResolver{r}
+}
+
 // SystemRuntimeOverview returns SystemRuntimeOverviewResolver implementation.
 func (r *Resolver) SystemRuntimeOverview() SystemRuntimeOverviewResolver {
 	return &systemRuntimeOverviewResolver{r}
@@ -869,6 +885,7 @@ func (r *Resolver) SystemRuntimeStats() SystemRuntimeStatsResolver {
 
 type emailSettingsResolver struct{ *Resolver }
 type providerQuotaCollectionSettingsResolver struct{ *Resolver }
+type quotaEnforcementSettingsResolver struct{ *Resolver }
 type systemRuntimeOverviewResolver struct{ *Resolver }
 type systemRuntimeSampleResolver struct{ *Resolver }
 type systemRuntimeStatsResolver struct{ *Resolver }

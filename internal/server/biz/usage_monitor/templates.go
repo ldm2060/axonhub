@@ -371,16 +371,16 @@ var channelTemplates = []ChannelTemplate{
 	{
 		ProviderType: "opencode_go",
 		Name:         "OpenCode Go",
-		Description:  "Monitor OpenCode Go usage by scraping the opencode.ai workspace dashboard (auth cookie)",
-		// ApiURL is a placeholder; the dedicated OpenCodeGoQuotaChecker builds the
-		// real URL from the channel's settings.providerQuota.opencodeGo.workspaceId
-		// at poll time. Required non-empty by schema.
-		ApiURL:                "https://opencode.ai/workspace/{workspaceId}/go",
+		Description:  "Monitor OpenCode Go usage via the official usage API",
+		// ApiURL is a placeholder; the dedicated OpenCodeGoQuotaChecker hits the
+		// official usage endpoint with the channel's own API key. Required
+		// non-empty by schema.
+		ApiURL:                "https://opencode.ai/zen/go/v1/usage",
 		ApiMethod:             "GET",
-		HeaderFormat:          "cookie",
+		HeaderFormat:          "bearer",
 		AuthType:              "api_key",
-		CredentialLabel:       "Auth Cookie",
-		CredentialPlaceholder: "auth=...",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "sk-...",
 		// Variables/DisplayFields are unused at poll time (the dedicated checker
 		// owns parsing), but DisplayFields mirror the converter's field keys so the
 		// degraded last_poll_data display path renders window usage and resets.
@@ -391,6 +391,48 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "weekly_reset", Label: "Weekly Reset At", ValueRef: "weekly_reset", Format: "datetime", DisplayOrder: 3, Group: "weekly"},
 			{Key: "monthly_used_pct", Label: "Monthly Usage %", ValueRef: "monthly_used_pct", Format: "percentage", DisplayOrder: 4, Group: "monthly"},
 			{Key: "monthly_reset", Label: "Monthly Reset At", ValueRef: "monthly_reset", Format: "datetime", DisplayOrder: 5, Group: "monthly"},
+		},
+	},
+	// #nosec G101 -- placeholder URL/token only; the dedicated checker reads real credentials from the bound channel.
+	{
+		ProviderType: "xai_subscription",
+		Name:         "xAI Subscription",
+		Description:  "Monitor xAI subscription (SuperGrok) weekly/monthly billing windows via the official billing API",
+		// ApiURL is a placeholder; the dedicated XAISubscriptionQuotaChecker
+		// queries the official billing endpoints with the channel's OAuth
+		// credentials. Required non-empty by schema.
+		ApiURL:                "https://grok.x.com/rest/rate-limits",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		AuthType:              "oauth",
+		CredentialLabel:       "OAuth Token",
+		CredentialPlaceholder: "eyJhbGciOi...",
+		// Variables/DisplayFields are unused at poll time (the dedicated checker
+		// owns parsing), but DisplayFields mirror the converter's field keys so
+		// the degraded last_poll_data display path renders window usage and resets.
+		DisplayFields: []DisplayField{
+			{Key: "weekly_used_pct", Label: "Weekly Usage %", ValueRef: "weekly_used_pct", Format: "percentage", DisplayOrder: 0, Group: "weekly"},
+			{Key: "weekly_reset", Label: "Weekly Reset At", ValueRef: "weekly_reset", Format: "datetime", DisplayOrder: 1, Group: "weekly"},
+			{Key: "monthly_used_pct", Label: "Monthly Usage %", ValueRef: "monthly_used_pct", Format: "percentage", DisplayOrder: 2, Group: "monthly"},
+			{Key: "monthly_reset", Label: "Monthly Reset At", ValueRef: "monthly_reset", Format: "datetime", DisplayOrder: 3, Group: "monthly"},
+			{Key: "plan_type", Label: "Plan", ValueRef: "plan_type", Format: "text", DisplayOrder: 4},
+		},
+	},
+	{
+		ProviderType: "charm_hyper",
+		Name:         "Charm Hyper",
+		Description:  "Monitor Charm Hyper credit balance via the official credits endpoint",
+		// ApiURL is a placeholder; the dedicated CharmHyperQuotaChecker
+		// resolves the real URL from the bound channel's base URL at poll time.
+		// Required non-empty by schema.
+		ApiURL:                "https://hyper.charm.land/v1/credits",
+		ApiMethod:             "GET",
+		HeaderFormat:          "bearer",
+		AuthType:              "api_key",
+		CredentialLabel:       "API Key",
+		CredentialPlaceholder: "sk-...",
+		DisplayFields: []DisplayField{
+			{Key: "balance", Label: "Credit Balance", ValueRef: "balance", Format: "number", DisplayOrder: 0},
 		},
 	},
 }

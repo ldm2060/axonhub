@@ -48,6 +48,10 @@ func DeriveQuotaStatus(providerType string, fields []ParsedField) QuotaDerivedSt
 		return deriveCline(fields)
 	case "minimax":
 		return deriveMinimax(fields)
+	case "xai_subscription":
+		return deriveXaiSubscription(fields)
+	case "charm_hyper":
+		return deriveCharmHyper(fields)
 	default:
 		return deriveGeneric(fields)
 	}
@@ -891,5 +895,86 @@ func deriveGeneric(fields []ParsedField) QuotaDerivedStatus {
 			provider_quota.NewTokenLimitStatus(status, maxRatio, nextReset),
 		},
 		NextResetAt: nextReset,
+	}
+}
+
+// deriveXaiSubscription derives routing status from the xAI subscription
+// billing windows emitted by XaiSubscriptionQuotaToParsedFields. The worst
+// window status wins, matching the checker's own aggregation.
+func deriveXaiSubscription(fields []ParsedField) QuotaDerivedStatus {
+	var limits []provider_quota.QuotaLimitStatus
+	worstStatus := ""
+	var nextReset *time.Time
+
+	for _, key := range []string{"weekly", "monthly"} {
+		if !hasField(fields, key+"_used_pct") {
+			continue
+		}
+		ratio := findFieldPercent(fields, key+"_used_pct") / 100.0
+
+		status := "available"
+		if ratio >= 1.0 {
+			status = "exhausted"
+		} else if ratio >= warningThreshold {
+			status = "warning"
+		}
+		reset := findFieldTime(fields, key+"_reset")
+		limits = append(limits, provider_quota.NewTokenLimitStatus(status, ratio, reset))
+		if nextReset == nil || (reset != nil && reset.Before(*nextReset)) {
+			nextReset = reset
+		}
+		if worstStatus == "" || quotaStatusRank(status) > quotaStatusRank(worstStatus) {
+			worstStatus = status
+		}
+	}
+
+	if worstStatus == "" {
+		return QuotaDerivedStatus{Status: "unknown", Ready: false}
+	}
+
+	return QuotaDerivedStatus{
+		Status:      worstStatus,
+		Ready:       worstStatus != "exhausted",
+		Limits:      limits,
+		NextResetAt: nextReset,
+	}
+}
+
+// deriveCharmHyper derives routing status from the credit balance emitted by
+// CharmHyperQuotaToParsedFields. Balance == 0 is exhausted, balance <= 20 is
+// warning, otherwise available; matches the checker's computeStatus thresholds.
+func deriveCharmHyper(fields []ParsedField) QuotaDerivedStatus {
+	const (
+		charmHyperBaseline         = 100.0
+		charmHyperWarningThreshold = 20.0
+	)
+
+	if !hasField(fields, "balance") {
+		return QuotaDerivedStatus{Status: "unknown", Ready: false}
+	}
+
+	balance := findFieldNumber(fields, "balance")
+
+	usageRatio := 1.0 - balance/charmHyperBaseline
+	if usageRatio < 0 {
+		usageRatio = 0
+	}
+
+	status := "available"
+	ready := true
+	if balance == 0 {
+		status = "exhausted"
+		ready = false
+		usageRatio = 1.0
+	} else if balance <= charmHyperWarningThreshold {
+		status = "warning"
+	}
+
+	return QuotaDerivedStatus{
+		Status: status,
+		Ready:  ready,
+		Limits: []provider_quota.QuotaLimitStatus{
+			provider_quota.NewTokenLimitStatus(status, usageRatio, nil),
+		},
 	}
 }

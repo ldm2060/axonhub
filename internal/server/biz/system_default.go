@@ -44,6 +44,7 @@ var defaultModelSettings = SystemModelSettings{
 	DefaultModelAPIIncludeAll:         false,
 	AutoReasoningEffort:               false,
 	ModelBlacklistRegex:               "",
+	HideUnroutableModelsInList:        false,
 	DeveloperSettings:                 []*DeveloperModelSettings{},
 }
 

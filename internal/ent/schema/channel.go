@@ -69,6 +69,8 @@ func (Channel) Fields() []ent.Field {
 				"xiaomi",
 				"xiaomi_anthropic",
 				"xai",
+				"xai_responses",
+				"xai_subscription",
 				"ppio",
 				"siliconflow",
 				"volcengine",

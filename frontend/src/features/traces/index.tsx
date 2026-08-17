@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { buildDateRangeWhereClause, type DateTimeRangeValue } from '@/utils/date-range';
+import { useAutoRefreshInterval } from '@/hooks/use-auto-refresh-interval';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
@@ -17,7 +18,7 @@ function TracesContent() {
   const [dateRange, setDateRange] = useState<DateTimeRangeValue | undefined>();
   const [traceIdFilter, setTraceIdFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useAutoRefreshInterval('traces-auto-refresh-interval-ms');
   const debouncedTraceIdFilter = useDebounce(traceIdFilter, 300);
 
   // Build where clause with filters
@@ -53,11 +54,12 @@ function TracesContent() {
   const pageInfo = data?.pageInfo;
   const isFirstPage = !paginationArgs.after && cursorHistory.length === 0;
 
-  useInterval(
+  const autoRefreshResumeKey = useInterval(
     () => {
       refetch();
     },
-    autoRefresh && isFirstPage ? 30000 : null
+    isFirstPage ? autoRefreshInterval : null,
+    { refreshOnResume: true }
   );
 
   const handleNextPage = () => {
@@ -123,8 +125,9 @@ function TracesContent() {
         onStatusFilterChange={handleStatusFilterChange}
         onRefresh={refetch}
         showRefresh={isFirstPage}
-        autoRefresh={autoRefresh}
-        onAutoRefreshChange={setAutoRefresh}
+        autoRefreshInterval={autoRefreshInterval}
+        autoRefreshResumeKey={autoRefreshResumeKey}
+        onAutoRefreshIntervalChange={setAutoRefreshInterval}
       />
     </div>
   );

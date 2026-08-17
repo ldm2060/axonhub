@@ -1336,6 +1336,8 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   xiaomi
   xiaomi_anthropic
   xai
+  xai_responses
+  xai_subscription
   ppio
   siliconflow
   volcengine
@@ -4270,6 +4272,7 @@ ProviderQuotaStatusProviderType is enum for the field provider_type
 enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/providerquotastatus.ProviderType") {
   claudecode
   codex
+  xai_subscription
   github_copilot
   nanogpt
   cline
@@ -4281,6 +4284,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   kimi_code
   minimax
   zhipu
+  charm_hyper
 }
 """
 ProviderQuotaStatusStatus is enum for the field status
@@ -7975,6 +7979,8 @@ enum UsageMonitorChannelProviderType @goModel(model: "github.com/ldm2060/axonhub
   apertis
   opencode_go
   minimax
+  xai_subscription
+  charm_hyper
 }
 """
 UsageMonitorChannelQuotaStatus is enum for the field quota_status

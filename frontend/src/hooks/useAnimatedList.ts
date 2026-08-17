@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { reconcileAnimatedQueue } from './animated-list-state';
 import useInterval from './useInterval';
 
 const MAX_ITEMS = 50;
@@ -9,25 +8,50 @@ const ANIMATION_INTERVAL = !isNaN(parsedInterval) && parsedInterval > 0 ? parsed
 export function useAnimatedList<T extends { id: string; createdAt: Date | string }>(
   data: T[],
   autoRefresh: boolean,
-  pageSize: number = MAX_ITEMS
+  pageSize: number = MAX_ITEMS,
+  resetKey?: string
 ) {
-  const [displayedData, setDisplayedData] = useState<T[]>(data);
-  const queueRef = useRef<T[]>([]);
-  const prevDataLengthRef = useRef<number>(data.length);
-
   const getTimestamp = (date: Date | string): number => {
     return date instanceof Date ? date.getTime() : new Date(date).getTime();
   };
+  const dataSignature = data.map((item) => `${item.id}:${getTimestamp(item.createdAt)}`).join('|');
+
+  const [displayedData, setDisplayedData] = useState<T[]>(data);
+  const queueRef = useRef<T[]>([]);
+  const prevDataLengthRef = useRef<number>(data.length);
+  const prevResetKeyRef = useRef(resetKey);
+  const prevDataSignatureRef = useRef(dataSignature);
+  const pendingResetDataSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
+    const resetKeyChanged = resetKey !== prevResetKeyRef.current;
+    if (resetKeyChanged) {
+      prevResetKeyRef.current = resetKey;
+      pendingResetDataSignatureRef.current = prevDataSignatureRef.current;
+    }
+
+    if (pendingResetDataSignatureRef.current !== null) {
+      // The first result after a query change is a new result set, not a poll update.
+      if (dataSignature !== pendingResetDataSignatureRef.current) {
+        pendingResetDataSignatureRef.current = null;
+      }
+      setDisplayedData(data);
+      queueRef.current = [];
+      prevDataLengthRef.current = data.length;
+      prevDataSignatureRef.current = dataSignature;
+      return;
+    }
+
     if (!autoRefresh) {
       setDisplayedData(data);
       queueRef.current = [];
       prevDataLengthRef.current = data.length;
+      prevDataSignatureRef.current = dataSignature;
       return;
     }
 
     setDisplayedData((currentDisplayed) => {
+      const currentIds = new Set(currentDisplayed.map((r) => r.id));
       const newDataMap = new Map(data.map((r) => [r.id, r]));
 
       // Compute the minimum timestamp from incoming data to establish the time window
@@ -54,12 +78,27 @@ export function useAnimatedList<T extends { id: string; createdAt: Date | string
         return newItem ? newItem : item;
       });
 
-      queueRef.current = reconcileAnimatedQueue(queueRef.current, data, currentDisplayed, pageSize);
+      const newestCurrentTime = currentDisplayed.length > 0 ? getTimestamp(currentDisplayed[0].createdAt) : 0;
+
+      const newItems = data.filter((item) => {
+        const isNew = !currentIds.has(item.id);
+        const isNewer = getTimestamp(item.createdAt) > newestCurrentTime;
+        return isNew && isNewer;
+      });
+
+      const sortedNewItems = newItems.sort((a, b) => getTimestamp(a.createdAt) - getTimestamp(b.createdAt));
+
+      sortedNewItems.forEach((item) => {
+        if (!queueRef.current.some((q) => q.id === item.id)) {
+          queueRef.current.push(item);
+        }
+      });
 
       prevDataLengthRef.current = data.length;
       return updatedDisplayed;
     });
-  }, [data, autoRefresh, pageSize]);
+    prevDataSignatureRef.current = dataSignature;
+  }, [data, autoRefresh, resetKey, dataSignature]);
 
   useInterval(
     () => {

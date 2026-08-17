@@ -3,22 +3,10 @@ import { format } from 'date-fns';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { IconArchive, IconPin, IconRotate } from '@tabler/icons-react';
 import { zhCN, enUS } from 'date-fns/locale';
-import {
-  ArrowLeft,
-  FileText,
-  Activity,
-  RefreshCw,
-  List,
-  GitBranch,
-  Waypoints,
-  Maximize2,
-  X,
-  Wrench,
-  MessageSquare,
-  ChevronDown,
-} from 'lucide-react';
+import { ArrowLeft, FileText, Activity, List, GitBranch, Waypoints, Maximize2, X, Wrench, MessageSquare, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn, buildGUID, extractNumberID } from '@/lib/utils';
+import { useAutoRefreshInterval } from '@/hooks/use-auto-refresh-interval';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
 import {
@@ -36,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
+import { AutoRefreshControl } from '@/components/auto-refresh-control';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { useGeneralSettings } from '@/features/system/data/system';
@@ -56,7 +44,7 @@ export default function TraceDetailPage() {
   const [selectedTrace, setSelectedTrace] = useState<Segment | null>(null);
   const [selectedSpan, setSelectedSpan] = useState<Span | null>(null);
   const [selectedSpanType, setSelectedSpanType] = useState<'request' | 'response' | null>(null);
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useAutoRefreshInterval('trace-detail-auto-refresh-interval-ms');
   const [viewMode, setViewMode] = useState<'flat' | 'flow' | 'tree'>('flat');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -123,7 +111,8 @@ export default function TraceDetailPage() {
     () => {
       refetch();
     },
-    autoRefresh ? 30000 : null
+    autoRefreshInterval,
+    { refreshOnResume: true }
   );
 
   const handleSpanSelect = (parentTrace: Segment, span: Span, type: 'request' | 'response') => {
@@ -208,67 +197,63 @@ export default function TraceDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className='flex shrink-0 items-center gap-1 sm:gap-2'>
-                <div className='hidden items-center gap-2 sm:flex'>
-                  <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} id='auto-refresh-switch' />
-                  <label htmlFor='auto-refresh-switch' className='text-muted-foreground cursor-pointer text-sm whitespace-nowrap'>
-                    {t('common.autoRefresh')}
-                  </label>
-                </div>
-                <Button variant='outline' size='sm' onClick={() => refetch()} disabled={isLoading} className='px-2 sm:px-3'>
-                  <RefreshCw className={`h-4 w-4 ${isLoading || autoRefresh ? 'animate-spin' : ''}`} />
-                  <span className='ml-2 hidden sm:inline'>{t('common.refresh')}</span>
-                </Button>
-                {(() => {
-                  const status = trace.status ?? 'active';
-                  if (status === 'active') {
-                    return (
-                      <>
-                        <Button variant='outline' size='sm' onClick={() => setShowArchiveDialog(true)} className='px-2 sm:px-3'>
-                          <IconArchive className='h-4 w-4' />
-                          <span className='ml-2 hidden sm:inline'>{t('common.actions.archive')}</span>
-                        </Button>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => retainMutation.mutate(trace.id, { onSuccess: () => refetch() })}
-                          className='px-2 sm:px-3'
-                        >
-                          <IconPin className='h-4 w-4' />
-                          <span className='ml-2 hidden sm:inline'>{t('common.actions.retain')}</span>
-                        </Button>
-                      </>
-                    );
-                  }
-                  if (status === 'archived') {
-                    return (
+            </div>
+            <div className='flex shrink-0 items-center gap-1 sm:gap-2'>
+              <AutoRefreshControl
+                interval={autoRefreshInterval}
+                onIntervalChange={setAutoRefreshInterval}
+                onRefresh={refetch}
+                disabled={isLoading}
+              />
+              {(() => {
+                const status = trace.status ?? 'active';
+                if (status === 'active') {
+                  return (
+                    <>
+                      <Button variant='outline' size='sm' onClick={() => setShowArchiveDialog(true)} className='px-2 sm:px-3'>
+                        <IconArchive className='h-4 w-4' />
+                        <span className='ml-2 hidden sm:inline'>{t('common.actions.archive')}</span>
+                      </Button>
                       <Button
                         variant='outline'
                         size='sm'
-                        onClick={() => unarchiveMutation.mutate(trace.id, { onSuccess: () => refetch() })}
+                        onClick={() => retainMutation.mutate(trace.id, { onSuccess: () => refetch() })}
                         className='px-2 sm:px-3'
                       >
-                        <IconRotate className='h-4 w-4' />
-                        <span className='ml-2 hidden sm:inline'>{t('common.actions.unarchive')}</span>
+                        <IconPin className='h-4 w-4' />
+                        <span className='ml-2 hidden sm:inline'>{t('common.actions.retain')}</span>
                       </Button>
-                    );
-                  }
-                  if (status === 'retained') {
-                    return (
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => unretainMutation.mutate(trace.id, { onSuccess: () => refetch() })}
-                        className='px-2 sm:px-3'
-                      >
-                        <IconRotate className='h-4 w-4' />
-                        <span className='ml-2 hidden sm:inline'>{t('common.actions.unretain')}</span>
-                      </Button>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
+                    </>
+                  );
+                }
+                if (status === 'archived') {
+                  return (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => unarchiveMutation.mutate(trace.id, { onSuccess: () => refetch() })}
+                      className='px-2 sm:px-3'
+                    >
+                      <IconRotate className='h-4 w-4' />
+                      <span className='ml-2 hidden sm:inline'>{t('common.actions.unarchive')}</span>
+                    </Button>
+                  );
+                }
+                if (status === 'retained') {
+                  return (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => unretainMutation.mutate(trace.id, { onSuccess: () => refetch() })}
+                      className='px-2 sm:px-3'
+                    >
+                      <IconRotate className='h-4 w-4' />
+                      <span className='ml-2 hidden sm:inline'>{t('common.actions.unretain')}</span>
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </Header>
           <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
