@@ -43,7 +43,6 @@ type SignUpInput struct {
 	Email            string `json:"email" binding:"required,email"`
 	Password         string `json:"password" binding:"required,min=8"`
 	VerificationCode string `json:"verification_code" binding:"required,len=6"`
-	TurnstileToken   string `json:"turnstile_token"`
 	FirstName        string `json:"first_name"`
 	LastName         string `json:"last_name"`
 }
@@ -162,11 +161,9 @@ func (s *SignUpService) SendVerificationCode(ctx context.Context, email, turnsti
 }
 
 // SignUp registers a new user after verifying the email code.
+// The Turnstile challenge is only enforced when sending the verification code;
+// possessing a valid emailed code is proof enough to create the account.
 func (s *SignUpService) SignUp(ctx context.Context, input SignUpInput) (*ent.User, string, error) {
-	if err := s.turnstileVerifier.Verify(ctx, input.TurnstileToken, TurnstileActionSignUp); err != nil {
-		return nil, "", err
-	}
-
 	ctx = authz.WithSystemBypass(ctx, "signup")
 	normalizedEmail := normalizeEmail(input.Email)
 

@@ -421,7 +421,6 @@
   "auth.turnstile.widgetError": "安全验证无法完成，请重试。",
   "auth.turnstile.configUnavailable": "由于无法加载安全配置，密码认证暂时不可用。请重试，或使用可用的单点登录。",
   "auth.turnstile.sendCodeLabel": "发送验证码安全验证",
-  "auth.turnstile.signUpLabel": "创建账户安全验证",
   "settings.nav.appearance": "外观",
   "settings.nav.display": "显示",
   "settings.nav.notifications": "通知"

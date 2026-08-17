@@ -154,27 +154,31 @@ func TestSignUp_TurnstileFailurePreventsAllSideEffects(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, tokenCount)
 	require.Empty(t, sender.calls)
+}
 
-	verifier.calls = nil
+// TestSignUp_SkipsTurnstileVerification ensures account creation itself never
+// runs a Turnstile check: the emailed verification code is the only gate.
+func TestSignUp_SkipsTurnstileVerification(t *testing.T) {
+	svc, client := setupTestSignUpService(t)
+	defer client.Close()
+
+	setupCtx := enableTestSignUp(t, svc, client, false)
+	verifier := &recordingTurnstileVerifier{verifyErr: turnstileInvalid("must not be called")}
+	svc.turnstileVerifier = verifier
+
+	code, err := svc.emailTokenService.CreateEmailCode(setupCtx, "nocheck@example.com", emailtoken.TypeVerifyEmail, verificationCodeTTL)
+	require.NoError(t, err)
+
+	plainCtx := ent.NewContext(context.Background(), client)
 	createdUser, _, err := svc.SignUp(plainCtx, SignUpInput{
-		Email:            "signup@example.com",
+		Email:            "nocheck@example.com",
 		Password:         "password123",
-		VerificationCode: "000000",
-		TurnstileToken:   "signup-token",
+		VerificationCode: code,
 	})
-	require.Nil(t, createdUser)
-	require.ErrorIs(t, err, ErrTurnstileInvalid)
-	require.Equal(t, []turnstileVerifyCall{{
-		token:  "signup-token",
-		action: TurnstileActionSignUp,
-	}}, verifier.calls)
-
-	userCount, err := client.User.Query().Count(setupCtx)
 	require.NoError(t, err)
-	require.Zero(t, userCount)
-	tokenCount, err = client.EmailToken.Query().Count(setupCtx)
-	require.NoError(t, err)
-	require.Zero(t, tokenCount)
+	require.NotNil(t, createdUser)
+	require.Empty(t, verifier.calls)
+	require.Equal(t, user.StatusActivated, createdUser.Status)
 }
 
 func TestSignUp_SendVerificationCode_CreatesEmailToken(t *testing.T) {

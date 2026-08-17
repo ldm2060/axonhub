@@ -138,7 +138,6 @@ export interface PublicAuthConfig {
     actions: {
       signin: string;
       signup_send_code: string;
-      signup: string;
     };
   };
 }
@@ -165,25 +164,19 @@ export const authApi = {
       },
     }),
 
-  signUp: (
-    data: {
-      email: string;
-      password: string;
-      first_name: string;
-      last_name: string;
-      verification_code: string;
-    },
-    turnstileToken?: string
-  ): Promise<{
+  signUp: (data: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    verification_code: string;
+  }): Promise<{
     message: string;
     pending: boolean;
   }> =>
     apiRequest('/auth/signup', {
       method: 'POST',
-      body: {
-        ...data,
-        ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
-      },
+      body: data,
     }),
 
   getInvitation: (

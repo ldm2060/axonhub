@@ -44,16 +44,12 @@ const createFormSchema = (t: (key: string) => string) =>
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const { t, i18n } = useTranslation();
   const sendCodeTokenRef = useRef<string | null>(null);
-  const signUpTokenRef = useRef<string | null>(null);
   const sendCodeWidgetRef = useRef<TurnstileWidgetHandle>(null);
-  const signUpWidgetRef = useRef<TurnstileWidgetHandle>(null);
   const getSendCodeToken = useCallback(() => sendCodeTokenRef.current, []);
-  const getSignUpToken = useCallback(() => signUpTokenRef.current, []);
-  const signUpMutation = useSignUp(getSignUpToken);
+  const signUpMutation = useSignUp();
   const sendCodeMutation = useSendVerificationCode(getSendCodeToken);
   const authConfigQuery = useAuthConfig();
   const [sendCodeTurnstileMessage, setSendCodeTurnstileMessage] = useState<string | null>(null);
-  const [signUpTurnstileMessage, setSignUpTurnstileMessage] = useState<string | null>(null);
   const [successState, setSuccessState] = useState<{ pending: boolean } | null>(null);
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -120,12 +116,6 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
   const onSubmit = useCallback(
     async (data: z.infer<typeof formSchema>) => {
-      if (authConfigQuery.isError || (turnstileEnabled && !signUpTokenRef.current)) {
-        setSignUpTurnstileMessage(authConfigQuery.isError ? t('auth.turnstile.configUnavailable') : t('auth.turnstile.required'));
-        return;
-      }
-
-      setSignUpTurnstileMessage(null);
       try {
         const responseData = await signUpMutation.mutateAsync({
           email: data.email,
@@ -137,14 +127,9 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         setSuccessState({ pending: responseData?.pending === true });
       } catch {
         // Error handled by mutation onError.
-      } finally {
-        if (turnstileEnabled) {
-          signUpTokenRef.current = null;
-          signUpWidgetRef.current?.reset();
-        }
       }
     },
-    [authConfigQuery.isError, signUpMutation, t, turnstileEnabled]
+    [signUpMutation]
   );
 
   if (successState) {
@@ -370,46 +355,10 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           )}
         />
 
-        {turnstileConfig?.enabled && (
-          <div className='space-y-2'>
-            <p className='text-sm font-medium text-slate-700'>{t('auth.turnstile.signUpLabel')}</p>
-            <TurnstileWidget
-              ref={signUpWidgetRef}
-              siteKey={turnstileConfig.site_key}
-              action={turnstileConfig.actions.signup}
-              language={i18n.resolvedLanguage ?? i18n.language}
-              testId='turnstile-signup'
-              onTokenChange={(token) => {
-                signUpTokenRef.current = token;
-                if (token) setSignUpTurnstileMessage(null);
-              }}
-              onExpired={() => setSignUpTurnstileMessage(t('auth.turnstile.expired'))}
-              onError={() => setSignUpTurnstileMessage(t('auth.turnstile.widgetError'))}
-            />
-            {signUpTurnstileMessage && (
-              <div className='space-y-2'>
-                <p className='text-sm text-red-600'>{signUpTurnstileMessage}</p>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  onClick={() => {
-                    setSignUpTurnstileMessage(null);
-                    signUpWidgetRef.current?.reset({ reloadScript: true });
-                  }}
-                >
-                  <RefreshCw className='mr-2 h-4 w-4' />
-                  {t('common.buttons.retry')}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
         <Button
           type='submit'
           className='mt-2 w-full rounded-lg bg-slate-800 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-slate-700 hover:shadow-xl focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50'
-          disabled={signUpMutation.isPending || authConfigQuery.isLoading || authConfigQuery.isError}
+          disabled={signUpMutation.isPending}
           data-testid='sign-up-submit'
         >
           {signUpMutation.isPending ? (

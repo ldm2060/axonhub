@@ -421,7 +421,6 @@
   "auth.turnstile.widgetError": "The security check could not be completed. Please try again.",
   "auth.turnstile.configUnavailable": "Password authentication is temporarily unavailable because the security configuration could not be loaded. Retry or use SSO if available.",
   "auth.turnstile.sendCodeLabel": "Security check for sending the verification code",
-  "auth.turnstile.signUpLabel": "Security check for creating your account",
   "settings.nav.appearance": "Appearance",
   "settings.nav.display": "Display",
   "settings.nav.notifications": "Notifications"
