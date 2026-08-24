@@ -3,7 +3,7 @@ import { IconCalendar, IconX, IconFilter } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAnalyticsFilterStore } from '@/stores/analyticsStore';
-import { cn } from '@/lib/utils';
+import { cn, formatUserName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -161,7 +161,7 @@ export function AnalyticsFilterBar({ earliestDate }: AnalyticsFilterBarProps) {
   const userOptions = useMemo(
     () =>
       (usersData?.edges || []).map((edge) => ({
-        label: `${edge.node.firstName || ''} ${edge.node.lastName || ''}`.trim() || edge.node.email,
+        label: formatUserName(edge.node.firstName, edge.node.lastName) || edge.node.email,
         value: String(edge.node.id),
       })),
     [usersData]

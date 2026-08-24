@@ -43,6 +43,28 @@
         查看 Atlas Cloud 的 <a href="https://lj.s.gy/jknt2V" target="_blank">全新 Coding plan 促销</a>，获取更经济实惠的 API 访问方案。
       </p>
     </td>
+    <td width="50%" align="center" valign="top">
+      <a href="https://lj.s.gy/DUq59H" target="_blank">
+        <img src="https://www.infistar.cc/logo.png" alt="无限星河 Infistar.cc" height="50"/>
+        <br/>
+        <strong>无限星河 Infistar.cc</strong>
+      </a>
+      <p align="center">
+        <a href="https://lj.s.gy/DUq59H" target="_blank">
+          <img src="docs/sponsors/infistar-banner.png" alt="Infistar.cc 无限星河" width="100%"/>
+        </a>
+      </p>
+      <p align="left">
+        <strong>AxonHub × Infistar.cc 无限星河｜高可用全模型 API · 赋能下一代 AI 网关与多渠道调度</strong><br/><br/>
+        感谢 Infistar.cc 无限星河 赞助本项目！
+      </p>
+      <p align="left">
+        ⚡ 企业级高并发与稳定调度：价格低至官方 1 折，模型倍率公开透明，毫秒级响应完美契合 AxonHub 智能路由与故障转移机制。提供高可用通道与多节点冗余备份，告别限流、429 与断连困扰；<br/>
+        🧠 全系顶尖模型全面支持：深度适配 Chatgpt、Claude 、Gemini、Kimi、GLM、DeepSeek等全矩阵主流模型，原生支持 Claude Code、Codex、OpenCode 等 AI 编程与 Agent 开发工具。<br/>
+        🎨 全模态与前沿生态接入：不仅覆盖文本对话与代码生成，更一站式接入主流生图、视频与 Embedding/Rerank 模型，一个上游渠道即可满足网关全模态分发需求。<br/>
+        🎁 AxonHub 用户专属福利：通过 <a href="https://lj.s.gy/DUq59H" target="_blank">专属链接</a> 注册即送 [专属赠送额度 / 首充特惠]，即开即用，零门槛接入网关测试！
+      </p>
+    </td>
   </tr>
 </table>
 
@@ -386,15 +408,19 @@ AXONHUB_LOG_LEVEL=info
 git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 
-# 设置环境变量
-export AXONHUB_DB_DIALECT="tidb"
-export AXONHUB_DB_DSN="<USER>.root:<PASSWORD>@tcp(gateway01.us-west-2.prod.aws.tidbcloud.com:4000)/axonhub?tls=true&parseTime=true&multiStatements=true&charset=utf8mb4"
+# 创建本地环境文件（请替换镜像 digest 和密码）
+umask 077
+cat > .env <<'EOF'
+DB_PASSWORD=replace-with-a-long-random-password
+AXONHUB_IMAGE=ldm2060/axonhub@sha256:replace-with-axonhub-digest
+POSTGRES_IMAGE=postgres@sha256:replace-with-postgres-digest
+EOF
 
 # 启动服务
-docker-compose up -d
+docker compose --env-file .env up -d
 
 # 查看状态
-docker-compose ps
+docker compose ps
 ```
 
 #### Helm Kubernetes 部署 | Helm Kubernetes Deployment

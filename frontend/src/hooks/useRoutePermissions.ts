@@ -47,6 +47,11 @@ export function useRoutePermissions() {
 
       const scopeLevel = routeConfig.scopeLevel || groupScopeLevel || 'any';
 
+      // Owner 拥有所有权限
+      if (isOwner) {
+        return true;
+      }
+
       if (isProjectOwner && scopeLevel !== 'system') {
         return true;
       }
@@ -67,7 +72,7 @@ export function useRoutePermissions() {
 
       return routeConfig.requiredScopes.some((scope) => scopesToCheck.includes(scope));
     },
-    [isProjectOwner, projectScopes, systemScopes]
+    [isOwner, isProjectOwner, projectScopes, systemScopes]
   );
 
   const hasGroupAccess = useCallback(

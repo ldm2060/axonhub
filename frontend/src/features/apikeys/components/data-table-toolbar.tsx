@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
+import { formatUserName } from '@/lib/utils';
 import type { DateTimeRangeValue } from '@/utils/date-range';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +45,7 @@ export function DataTableToolbar<TData>({
 
     return usersData.edges.map((edge) => ({
       value: edge.node.id,
-      label: `${edge.node.firstName} ${edge.node.lastName} (${edge.node.email})`,
+      label: `${formatUserName(edge.node.firstName, edge.node.lastName)} (${edge.node.email})`,
     }));
   }, [canViewCreators, usersData]);
 

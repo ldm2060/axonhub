@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { ColumnDef, Table, Row } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
-import { extractNumberID } from '@/lib/utils';
+import { extractNumberID, formatUserName } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import LongText from '@/components/long-text';
@@ -74,7 +74,7 @@ export const createColumns = (
           header: ({ column }) => <DataTableColumnHeader column={column} title={t('apikeys.columns.creator')} />,
           cell: ({ row }) => {
             const creator = row.original.user;
-            const displayName = creator ? `${creator.firstName} ${creator.lastName}` : t('apikeys.user.deleted');
+            const displayName = creator ? formatUserName(creator.firstName, creator.lastName) : t('apikeys.user.deleted');
             return <LongText className='text-muted-foreground max-w-24'>{displayName}</LongText>;
           },
           filterFn: (row, _id, value) => {

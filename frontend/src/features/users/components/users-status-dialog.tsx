@@ -3,6 +3,7 @@
 import { IconUserCheck, IconUserOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { formatUserName } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { User } from '../data/schema';
 import { useUpdateUserStatus } from '../data/users';
@@ -53,7 +54,7 @@ export function UsersStatusDialog({ open, onOpenChange, currentRow }: Props) {
           <p>
             {t('users.dialogs.statusChange.confirmMessage', {
               action: actionText,
-              name: `${currentRow.firstName} ${currentRow.lastName}`,
+              name: formatUserName(currentRow.firstName, currentRow.lastName),
             })}
           </p>
           <p className='text-muted-foreground text-sm'>
