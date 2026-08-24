@@ -12,20 +12,20 @@ import (
 	"github.com/ldm2060/axonhub/internal/log"
 )
 
-// V0_1_69 implements DataMigrator for version 0.1.69 migration.
-type V0_1_69 struct{}
+// V0_2_8 implements DataMigrator for version 0.2.8 migration.
+type V0_2_8 struct{}
 
-// NewV0_1_69 creates the v0.1.69 data migrator.
-func NewV0_1_69() *V0_1_69 {
-	return &V0_1_69{}
+// NewV0_2_8 creates the v0.2.8 data migrator.
+func NewV0_2_8() *V0_2_8 {
+	return &V0_2_8{}
 }
 
 // Version returns the migration version.
-func (v *V0_1_69) Version() string {
-	return "v0.1.69"
+func (v *V0_2_8) Version() string {
+	return "v0.2.8"
 }
 
-// Migrate performs the v0.1.69 data cleanup:
+// Migrate performs the v0.2.8 data cleanup:
 //
 //  1. Purges the stale settings.providerQuota key from channels.
 //     The old OpenCode Go quota checker stored workspaceId and a live auth cookie
@@ -45,7 +45,7 @@ func (v *V0_1_69) Version() string {
 //     string and every update fails with "channel was updated concurrently".
 //     This rewrites affected rows to the same string the driver produces after
 //     a round-trip, making the optimistic-lock comparison consistent again.
-func (v *V0_1_69) Migrate(ctx context.Context, client *ent.Client) (retErr error) {
+func (v *V0_2_8) Migrate(ctx context.Context, client *ent.Client) (retErr error) {
 	ctx = authz.WithSystemBypass(ctx, "database-migrate")
 
 	// Use the dialect.Driver.Exec interface rather than asserting a concrete
@@ -61,7 +61,7 @@ func (v *V0_1_69) Migrate(ctx context.Context, client *ent.Client) (retErr error
 }
 
 // purgeProviderQuota removes the obsolete settings.providerQuota key.
-func (v *V0_1_69) purgeProviderQuota(ctx context.Context, client *ent.Client, dialectName string) error {
+func (v *V0_2_8) purgeProviderQuota(ctx context.Context, client *ent.Client, dialectName string) error {
 	var stmt string
 	switch dialectName {
 	case dialect.Postgres:
@@ -83,7 +83,7 @@ func (v *V0_1_69) purgeProviderQuota(ctx context.Context, client *ent.Client, di
 
 // stripMonotonicUpdatedAt removes the " m=+..." monotonic suffix from
 // channels.updated_at values written by the old channel_price.go time.Now().
-func (v *V0_1_69) stripMonotonicUpdatedAt(ctx context.Context, client *ent.Client, dialectName string) error {
+func (v *V0_2_8) stripMonotonicUpdatedAt(ctx context.Context, client *ent.Client, dialectName string) error {
 	var stmt string
 	switch dialectName {
 	case dialect.SQLite:
@@ -107,7 +107,7 @@ func (v *V0_1_69) stripMonotonicUpdatedAt(ctx context.Context, client *ent.Clien
 }
 
 // execWithAffectedLog runs a raw UPDATE and logs the number of affected rows.
-func (v *V0_1_69) execWithAffectedLog(ctx context.Context, client *ent.Client, stmt, errMsg, logMsg string) error {
+func (v *V0_2_8) execWithAffectedLog(ctx context.Context, client *ent.Client, stmt, errMsg, logMsg string) error {
 	var result sql.Result
 	if err := client.Driver().Exec(ctx, stmt, []any{}, &result); err != nil {
 		return fmt.Errorf("%s: %w", errMsg, err)

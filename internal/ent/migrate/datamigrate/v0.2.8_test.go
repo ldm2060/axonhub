@@ -33,8 +33,8 @@ func extractSettingsJSONField(t *testing.T, driver *entsql.Driver, id int, path 
 	return []byte(null.String)
 }
 
-func TestV0_1_69_StripsProviderQuotaFromSettings(t *testing.T) {
-	client := enttest.NewEntClient(t, "sqlite3", "file:v0-1-69-providerquota?mode=memory&_fk=1")
+func TestV0_2_8_StripsProviderQuotaFromSettings(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:v0-2-8-providerquota?mode=memory&_fk=1")
 	defer client.Close()
 
 	ctx := authz.WithTestBypass(context.Background())
@@ -55,14 +55,14 @@ func TestV0_1_69_StripsProviderQuotaFromSettings(t *testing.T) {
 		"UPDATE channels SET settings = ? WHERE id = ?", legacySettings, ch.ID)
 	require.NoError(t, err)
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	require.Nil(t, extractSettingsJSONField(t, driver, ch.ID, "$.providerQuota"))
 	require.JSONEq(t, `{"rpm":10}`, string(extractSettingsJSONField(t, driver, ch.ID, "$.rateLimit")))
 }
 
-func TestV0_1_69_IsIdempotent(t *testing.T) {
-	client := enttest.NewEntClient(t, "sqlite3", "file:v0-1-69-idempotent?mode=memory&_fk=1")
+func TestV0_2_8_IsIdempotent(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:v0-2-8-idempotent?mode=memory&_fk=1")
 	defer client.Close()
 
 	ctx := authz.WithTestBypass(context.Background())
@@ -80,14 +80,14 @@ func TestV0_1_69_IsIdempotent(t *testing.T) {
 		`{"providerQuota":{"opencodeGo":{"workspaceId":"wk_2"}}}`, ch.ID)
 	require.NoError(t, err)
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	require.Nil(t, extractSettingsJSONField(t, driver, ch.ID, "$.providerQuota"))
 }
 
-func TestV0_1_69_StripsJsonNullProviderQuota(t *testing.T) {
-	client := enttest.NewEntClient(t, "sqlite3", "file:v0-1-69-jsonnull?mode=memory&_fk=1")
+func TestV0_2_8_StripsJsonNullProviderQuota(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:v0-2-8-jsonnull?mode=memory&_fk=1")
 	defer client.Close()
 
 	ctx := authz.WithTestBypass(context.Background())
@@ -108,13 +108,13 @@ func TestV0_1_69_StripsJsonNullProviderQuota(t *testing.T) {
 		`{"providerQuota":null}`, ch.ID)
 	require.NoError(t, err)
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	require.Nil(t, extractSettingsJSONField(t, driver, ch.ID, "$.providerQuota"))
 }
 
-func TestV0_1_69_LeavesUntouchedChannelsAlone(t *testing.T) {
-	client := enttest.NewEntClient(t, "sqlite3", "file:v0-1-69-untouched?mode=memory&_fk=1")
+func TestV0_2_8_LeavesUntouchedChannelsAlone(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:v0-2-8-untouched?mode=memory&_fk=1")
 	defer client.Close()
 
 	ctx := authz.WithTestBypass(context.Background())
@@ -129,7 +129,7 @@ func TestV0_1_69_LeavesUntouchedChannelsAlone(t *testing.T) {
 		SaveX(ctx)
 
 	driver := client.Driver().(*entsql.Driver)
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	require.JSONEq(t, `{"rpm":10}`, string(extractSettingsJSONField(t, driver, ch.ID, "$.rateLimit")))
 	require.Nil(t, extractSettingsJSONField(t, driver, ch.ID, "$.providerQuota"))
@@ -157,7 +157,7 @@ func updatedAtMatches(t *testing.T, driver *entsql.Driver, id int, updatedAt str
 	return n
 }
 
-func TestV0_1_69_StripsMonotonicSuffixFromUpdatedAt(t *testing.T) {
+func TestV0_2_8_StripsMonotonicSuffixFromUpdatedAt(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:beta9-updated-at?mode=memory&_fk=1")
 	defer client.Close()
 
@@ -180,7 +180,7 @@ func TestV0_1_69_StripsMonotonicSuffixFromUpdatedAt(t *testing.T) {
 	// still carries the "m=+..." suffix.
 	require.Equal(t, 0, updatedAtMatches(t, driver, ch.ID, cleanedUpdatedAt))
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	// After migration the cleaned snapshot matches, so UpdateChannel recovers.
 	require.Equal(t, 1, updatedAtMatches(t, driver, ch.ID, cleanedUpdatedAt))
@@ -188,7 +188,7 @@ func TestV0_1_69_StripsMonotonicSuffixFromUpdatedAt(t *testing.T) {
 	require.Equal(t, 0, updatedAtMatches(t, driver, ch.ID, dirtyUpdatedAt))
 }
 
-func TestV0_1_69_PreservesCleanUpdatedAt(t *testing.T) {
+func TestV0_2_8_PreservesCleanUpdatedAt(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:beta9-clean-updated-at?mode=memory&_fk=1")
 	defer client.Close()
 
@@ -208,13 +208,13 @@ func TestV0_1_69_PreservesCleanUpdatedAt(t *testing.T) {
 		"UPDATE channels SET updated_at = ? WHERE id = ?", clean, ch.ID)
 	require.NoError(t, err)
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 
 	// Unaffected rows still satisfy the optimistic lock.
 	require.Equal(t, 1, updatedAtMatches(t, driver, ch.ID, clean))
 }
 
-func TestV0_1_69_StripsMonotonicSuffixIsIdempotent(t *testing.T) {
+func TestV0_2_8_StripsMonotonicSuffixIsIdempotent(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:beta9-updated-at-idem?mode=memory&_fk=1")
 	defer client.Close()
 
@@ -233,11 +233,11 @@ func TestV0_1_69_StripsMonotonicSuffixIsIdempotent(t *testing.T) {
 		"UPDATE channels SET updated_at = ? WHERE id = ?", dirtyUpdatedAt, ch.ID)
 	require.NoError(t, err)
 
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 	require.Equal(t, 1, updatedAtMatches(t, driver, ch.ID, cleanedUpdatedAt))
 
 	// Running again must not corrupt anything further.
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 	require.Equal(t, 1, updatedAtMatches(t, driver, ch.ID, cleanedUpdatedAt))
 	require.Equal(t, 0, updatedAtMatches(t, driver, ch.ID, dirtyUpdatedAt))
 }
@@ -269,13 +269,13 @@ func (d *recordingDriver) Exec(_ context.Context, query string, _ any, v any) er
 	return nil
 }
 
-func TestV0_1_69_PostgresSkipsMonotonicUpdatedAtCleanup(t *testing.T) {
+func TestV0_2_8_PostgresSkipsMonotonicUpdatedAtCleanup(t *testing.T) {
 	drv := &recordingDriver{dialect: dialect.Postgres}
 	client := ent.NewClient(ent.Driver(drv))
 	defer client.Close()
 
 	ctx := authz.WithTestBypass(context.Background())
-	require.NoError(t, datamigrate.NewV0_1_69().Migrate(ctx, client))
+	require.NoError(t, datamigrate.NewV0_2_8().Migrate(ctx, client))
 	require.Equal(t, []string{
 		`UPDATE channels SET settings = settings #- '{providerQuota}' WHERE settings ? 'providerQuota'`,
 	}, drv.execQueries)

@@ -44,25 +44,26 @@ When upstream adds a migration:
 - Check whether the migrated field/column already exists in our schema under a different name or type. If so, the migration must be rewritten to target *our* column, or skipped if it's a no-op against our schema.
 - **Rename the migration to our version track.** This is the #1 mistake in past merges — do it right:
   1. `git fetch --tags`
-  2. `git tag --sort=-v:refname | grep -E '^v0\.1\.' | head -1` → e.g. `v0.1.62`
-  3. New version = that tag + 1 patch → `v0.1.63`
-  4. Rename the migration file: `v1.0.0-beta6.go` → `v0.1.63.go` (and `_test.go`)
-  5. In the `.go` file, replace the struct/func/version string: `V1_0_0_Beta6`/`NewV1_0_0_Beta6`/`"v1.0.0-beta6"` → `V0_1_63`/`NewV0_1_63`/`"v0.1.63"`
-  6. In `migrator.go`, replace `NewV1_0_0_Beta6()` → `NewV0_1_63()`
-  7. Update `internal/build/VERSION` to the same `v0.1.63`
+  2. `git tag --sort=-v:refname | grep -E '^v0\.2\.' | head -1` → e.g. `v0.2.7`
+  3. New version = that tag + 1 patch → `v0.2.8`
+  4. Rename the migration file: `v1.0.0-beta6.go` → `v0.2.8.go` (and `_test.go`)
+  5. In the `.go` file, replace the struct/func/version string: `V1_0_0_Beta6`/`NewV1_0_0_Beta6`/`"v1.0.0-beta6"` → `V0_2_8`/`NewV0_2_8`/`"v0.2.8"`
+  6. In `migrator.go`, replace `NewV1_0_0_Beta6()` → `NewV0_2_8()`
+  7. Update `internal/build/VERSION` to the same `v0.2.8`
   8. `git rm` the old upstream-named files, `git add` the new ones
 
   **Common mistakes to avoid:**
   - ❌ Guessing from existing migration files under `datamigrate/` (they are sparse — `v0.1.10, v0.1.34, v0.1.35` — far behind the real latest release)
-  - ❌ Reusing upstream's label verbatim (`v1.0.0-beta6`, `v0.2.0`, etc.) — different version track, will misfire the semver gate
+  - ❌ Reusing upstream's label verbatim (`v1.0.0-beta6`, etc.) — different version track, will misfire the semver gate
   - ❌ Looking at `internal/build/VERSION` before fixing it — it still holds upstream's label after the merge
+  - ❌ Looking at the `v0.1.x` tags — our release track has moved to `v0.2.x`; deriving from the old `v0.1.x` track yields a version that already exists or is far behind, and the semver gate will never fire
 
 - You must reserve upstream commits. DO NOT DELETE THEM.
 - Register any new `DataMigrator` in `NewMigrator` in version order.
 - If upstream's migration assumes a clean upstream schema (columns we don't have, or columns we added that upstream doesn't know about), adapt the SQL/Go to our actual schema. A migration that `ALTER TABLE`-s a non-existent column will fail at startup.
 - Never delete or reorder existing registered migrations — users on older versions still need them. Only append.
 
-**Why:** the migration runs on startup against whatever schema and system version the user's DB holds. The semver gate means a wrongly-tagged version either runs when it shouldn't or never runs when it should. Past incidents: (1) blindly kept upstream's `v1.0.0-beta6`; (2) derived `v0.1.36` from the highest migration filename instead of the latest git tag (`v0.1.62` → should have been `v0.1.63`). Both were caught by the user post-commit. The correct procedure is always: **latest `v0.1.x` tag + 1**, nothing else.
+**Why:** the migration runs on startup against whatever schema and system version the user's DB holds. The semver gate means a wrongly-tagged version either runs when it shouldn't or never runs when it should. Past incidents: (1) blindly kept upstream's `v1.0.0-beta6`; (2) derived `v0.1.36` from the highest migration filename instead of the latest git tag (`v0.1.62` → should have been `v0.1.63`); (3) derived `v0.1.69` from the old `v0.1.x` tag track when releases had moved to `v0.2.x` (latest `v0.2.7` → should have been `v0.2.8`). All were caught by the user post-commit. The correct procedure is always: **latest `v0.2.x` tag + 1**, nothing else.
 
 ## Hazard 3 — Upstream reimplemented a feature we already shipped
 
@@ -84,7 +85,7 @@ Do not commit until the merge is verified end-to-end on a running instance, incl
 
 Sequence:
 
-1. **Migration version sanity check (do this FIRST, before build/test):** if any migration was added/renamed in Hazard 2, re-run `git tag --sort=-v:refname | grep -E '^v0\.1\.' | head -1` and confirm the migration's `Version()` string, filename, `migrator.go` registration, and `internal/build/VERSION` all equal `latest_tag + 1 patch`. If they don't match, fix before doing anything else — do not build/test/commit a wrongly-versioned migration.
+1. **Migration version sanity check (do this FIRST, before build/test):** if any migration was added/renamed in Hazard 2, re-run `git tag --sort=-v:refname | grep -E '^v0\.2\.' | head -1` and confirm the migration's `Version()` string, filename, `migrator.go` registration, and `internal/build/VERSION` all equal `latest_tag + 1 patch`. If they don't match, fix before doing anything else — do not build/test/commit a wrongly-versioned migration.
 2. `go build ./...` and `cd llm && go build ./...` — both must compile.
 3. `golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && golangci-lint run ...` — must pass.
 4. `go test ./...` and `cd llm && go test ./...` — must pass.
