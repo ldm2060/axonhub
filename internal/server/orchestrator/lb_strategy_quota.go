@@ -99,6 +99,17 @@ func (s *QuotaAwareStrategy) score(ctx context.Context, channel *biz.Channel, de
 		details["mode"] = settings.Mode
 	}
 
+	// Binding-first: channels with effective quota monitor bindings are enforced
+	// solely via QuotaBindingReady (already applied by ProviderQuotaSelector). The
+	// independent quotaStatus-based scoring penalty below is the fallback for
+	// channels without bindings.
+	if s.provider.HasActiveBindings(ctx, channel.ID) {
+		if details != nil {
+			details["binding_first"] = true
+		}
+		return 0, "binding_first_skip"
+	}
+
 	quotaStatus := s.provider.GetQuotaStatus(ctx, channel.ID)
 
 	if quotaStatus == nil {

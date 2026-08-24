@@ -104,8 +104,9 @@ type ProviderQuotaService struct {
 	SystemService *SystemService
 	usageMonitor  *UsageMonitorService
 
-	mu         sync.Mutex
-	quotaCache sync.Map
+	mu                  sync.Mutex
+	quotaCache          sync.Map
+	bindingsActiveCache sync.Map
 }
 
 func NewProviderQuotaService(params ProviderQuotaServiceParams) *ProviderQuotaService {
@@ -120,8 +121,34 @@ func NewProviderQuotaService(params ProviderQuotaServiceParams) *ProviderQuotaSe
 	// Wire the quota cache callback so UsageMonitorService updates
 	// the routing cache in real-time after each poll
 	params.UsageMonitor.SetQuotaCacheCallback(svc.OnUsageMonitorPollComplete)
+	// Wire the binding-presence callback so UsageMonitorService reports whether
+	// each channel is on the binding path (has effective quota_monitor_bindings)
+	// or the legacy fallback path. The orchestrator uses this to decide whether
+	// the independent quotaStatus exhaustion filter applies.
+	params.UsageMonitor.SetBindingsActiveCallback(svc.OnChannelBindingsActive)
 
 	return svc
+}
+
+// OnChannelBindingsActive is called by UsageMonitorService after
+// evaluateAndUpdateChannelQuotaReady runs, reporting whether the channel has
+// effective quota_monitor_bindings rows (binding path) or relies on the legacy
+// auto-disable fallback (no bindings).
+func (svc *ProviderQuotaService) OnChannelBindingsActive(channelID int, hasBindings bool) {
+	if hasBindings {
+		svc.bindingsActiveCache.Store(channelID, struct{}{})
+	} else {
+		svc.bindingsActiveCache.Delete(channelID)
+	}
+}
+
+// HasActiveBindings reports whether the channel currently has effective quota
+// monitor bindings (the binding path). Binding-first channels are enforced
+// solely via QuotaBindingReady; the independent quotaStatus exhaustion filter
+// is the fallback for channels without bindings.
+func (svc *ProviderQuotaService) HasActiveBindings(_ context.Context, channelID int) bool {
+	_, ok := svc.bindingsActiveCache.Load(channelID)
+	return ok
 }
 
 // OnUsageMonitorPollComplete is called by UsageMonitorService after each successful poll

@@ -360,6 +360,13 @@ type QuotaCacheCallback func(channelID int, providerType string, quotaStatus str
 // a stale QuotaBindingReady value until the cache's 1-minute refresh tick.
 type ChannelsReloadCallback func(ctx context.Context, channelID int)
 
+// BindingsActiveCallback is invoked after evaluateAndUpdateChannelQuotaReady runs,
+// reporting whether the channel is on the binding path (has effective
+// quota_monitor_bindings rows) or the legacy auto-disable fallback path. The
+// orchestrator uses this to gate the independent quotaStatus exhaustion filter:
+// binding-first channels are enforced solely via QuotaBindingReady.
+type BindingsActiveCallback func(channelID int, hasBindings bool)
+
 type UsageMonitorService struct {
 	*AbstractService
 
@@ -377,6 +384,7 @@ type UsageMonitorService struct {
 	mu                          sync.Mutex
 	quotaCacheCallback          QuotaCacheCallback
 	channelsReloadCallback      ChannelsReloadCallback
+	bindingsActiveCallback      BindingsActiveCallback
 }
 
 func NewUsageMonitorService(params UsageMonitorServiceParams) *UsageMonitorService {
@@ -457,6 +465,18 @@ func (svc *UsageMonitorService) SetQuotaCacheCallback(cb QuotaCacheCallback) {
 // poll hot-path; concurrent writes during polling would cause a data race.
 func (svc *UsageMonitorService) SetChannelsReloadCallback(cb ChannelsReloadCallback) {
 	svc.channelsReloadCallback = cb
+}
+
+// SetBindingsActiveCallback registers a callback invoked after
+// evaluateAndUpdateChannelQuotaReady runs, reporting whether the channel is on
+// the binding path (has effective quota_monitor_bindings rows) or the legacy
+// fallback path. The ProviderQuotaService stores this in-memory so the
+// orchestrator can gate the independent quotaStatus exhaustion filter.
+// Must be called during initialization only (before Start), not concurrently
+// with pollChannel reads. The callback is read without synchronization in the
+// poll hot-path; concurrent writes during polling would cause a data race.
+func (svc *UsageMonitorService) SetBindingsActiveCallback(cb BindingsActiveCallback) {
+	svc.bindingsActiveCallback = cb
 }
 
 func (svc *UsageMonitorService) loadOne(ctx context.Context, id int) (*ent.UsageMonitorChannel, error) {

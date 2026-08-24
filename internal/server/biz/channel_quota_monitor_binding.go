@@ -598,7 +598,18 @@ func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReady(ctx context.C
 		errorMsg = fmt.Sprintf("Channel temporarily disabled due to quota exhaustion (%s)", reasons)
 	}
 
+	svc.notifyBindingsActive(channelID, true)
 	return svc.updateChannelQuotaBindingReady(ctx, channelID, ready, errorMsg)
+}
+
+// notifyBindingsActive reports whether the channel is on the binding path
+// (hasBindings=true) or the legacy auto-disable fallback path (hasBindings=false)
+// to the registered callback, so ProviderQuotaService can gate the orchestrator's
+// independent quotaStatus exhaustion filter. No-op when no callback is registered.
+func (svc *UsageMonitorService) notifyBindingsActive(channelID int, hasBindings bool) {
+	if svc.bindingsActiveCallback != nil {
+		svc.bindingsActiveCallback(channelID, hasBindings)
+	}
 }
 
 // evaluateAndUpdateChannelQuotaReadyLegacy is the original auto-disable-based
@@ -621,6 +632,7 @@ func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReadyLegacy(ctx con
 
 	// If no monitors with auto-disable, set ready=true
 	if len(monitors) == 0 {
+		svc.notifyBindingsActive(channelID, false)
 		return svc.updateChannelQuotaBindingReady(ctx, channelID, true, "")
 	}
 
@@ -682,6 +694,7 @@ func (svc *UsageMonitorService) evaluateAndUpdateChannelQuotaReadyLegacy(ctx con
 		ready = true
 	}
 
+	svc.notifyBindingsActive(channelID, false)
 	return svc.updateChannelQuotaBindingReady(ctx, channelID, ready, errorMsg)
 }
 

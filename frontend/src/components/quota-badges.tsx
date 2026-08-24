@@ -63,11 +63,19 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
   const status = channel.quotaStatus ?? 'unknown';
   const statusLabel = t(STATUS_LABELS[status]);
 
+  // Binding-first: when effective bindings exist and evaluate ready, the
+  // quotaStatus exhaustion/warning is NOT enforced — don't show blocked/deprioritized.
+  // bindingReady === true  → bindings judged ready, skip enforcement badge.
+  // bindingReady === false → bindings judged not-ready, show enforcement badge.
+  // bindingReady === null  → no bindings, fall back to quotaStatus enforcement.
+  const bindingReady = channel.channelQuotaBindingReady;
   const enforcementEffect =
     enforcementMode && (status === 'exhausted' || (status === 'warning' && enforcementMode === 'DE_PRIORITIZE'))
-      ? enforcementMode === 'EXHAUSTED_ONLY'
-        ? ('blocked' as const)
-        : ('deprioritized' as const)
+      ? bindingReady === true
+        ? null
+        : enforcementMode === 'EXHAUSTED_ONLY'
+          ? ('blocked' as const)
+          : ('deprioritized' as const)
       : null;
 
   const percentage = getOverallPercentage(channel.parsedData);
@@ -118,8 +126,10 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
 function QuotaBadgeTrigger({ channels }: { channels: QuotaChannel[] }) {
   const highestUsed = Math.max(...channels.map((c) => getOverallPercentage(c.parsedData)), 0);
 
-  const hasExhausted = channels.some((c) => c.quotaStatus === 'exhausted');
-  const hasWarning = channels.some((c) => c.quotaStatus === 'warning');
+  // Binding-first: a channel whose bindings judged it ready (bindingReady === true)
+  // does not drive the red exhausted battery — its quotaStatus exhaustion is not enforced.
+  const hasExhausted = channels.some((c) => c.quotaStatus === 'exhausted' && c.channelQuotaBindingReady !== true);
+  const hasWarning = channels.some((c) => c.quotaStatus === 'warning' && c.channelQuotaBindingReady !== true);
 
   let level: BatteryLevel = 'full';
   if (hasExhausted) level = 'warning';

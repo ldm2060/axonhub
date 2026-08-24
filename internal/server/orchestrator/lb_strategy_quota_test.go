@@ -23,6 +23,10 @@ func (m *mockQuotaStatusProvider) GetQuotaStatus(_ context.Context, channelID in
 	return m.statuses[channelID]
 }
 
+func (m *mockQuotaStatusProvider) HasActiveBindings(_ context.Context, _ int) bool {
+	return false
+}
+
 type mockQuotaEnforcementSettingsProvider struct {
 	settings *biz.QuotaEnforcementSettings
 }

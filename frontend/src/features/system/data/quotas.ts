@@ -19,6 +19,7 @@ export type QuotaChannel = {
   providerType: string | null;
   channelName: string | null;
   channelType: string | null;
+  channelQuotaBindingReady: boolean | null;
   quotaStatus: 'available' | 'warning' | 'exhausted' | 'unknown' | null;
   quotaReady: boolean | null;
   nextResetAt: string | null;
@@ -44,6 +45,7 @@ const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
         id
         name
         type
+        quotaBindingReady
       }
       parsedData {
         key
@@ -99,6 +101,7 @@ export function useQuotaChannels(): QuotaChannel[] {
         providerType: ch.providerType ?? null,
         channelName: ch.channel?.name ?? null,
         channelType: ch.channel?.type ?? null,
+        channelQuotaBindingReady: ch.channel?.quotaBindingReady ?? null,
         quotaStatus: ch.quotaStatus ?? null,
         quotaReady: ch.quotaReady ?? null,
         nextResetAt: ch.nextResetAt ?? null,

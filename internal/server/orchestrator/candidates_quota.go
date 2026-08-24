@@ -68,6 +68,13 @@ func (s *ProviderQuotaSelector) Select(ctx context.Context, req *llm.Request) ([
 			return true
 		}
 
+		// Binding-first: channels with effective quota monitor bindings are
+		// enforced solely by the QuotaBindingReady filter above. The independent
+		// quotaStatus exhaustion filter is the fallback for channels without bindings.
+		if s.provider.HasActiveBindings(ctx, c.Channel.ID) {
+			return true
+		}
+
 		quotaStatus := s.provider.GetQuotaStatus(ctx, c.Channel.ID)
 
 		if quotaStatus == nil {
