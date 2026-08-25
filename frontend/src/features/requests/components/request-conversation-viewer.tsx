@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { ArrowUp, ChevronDown, ChevronsDownUp, ChevronsUpDown, FileText, Layers, Search, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,12 @@ function prettyJsonBlock(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function fmtToolChoice(value: unknown): ReactNode {
+  if (value === undefined || value === null) return '—';
+  if (typeof value === 'string') return value;
+  return <small className='font-mono text-[10.5px]'>{prettyJsonBlock(value)}</small>;
 }
 
 function matchesSearch(m: ConversationMessage, q: string): boolean {
@@ -664,7 +670,7 @@ export function RequestConversationViewer({ body, format, className }: RequestCo
         <Stat label={t('requests.conversation.statToolCalls')} value={fmtNum(totalToolCalls, i18n.language)} />
         <Stat label='max_tokens' value={data.maxTokens != null ? fmtNum(data.maxTokens, i18n.language) : '—'} />
         <Stat label='stream' value={String(data.stream ?? '—')} />
-        <Stat label='tool_choice' value={String(data.toolChoice ?? '—')} />
+        <Stat label='tool_choice' value={fmtToolChoice(data.toolChoice)} />
         <Stat label={t('requests.conversation.statChars')} value={fmtNum(totalChars, i18n.language)} />
         <Stat label={t('requests.conversation.statApproxTokens')} value={fmtNum(Math.round(totalChars / 3.5), i18n.language)} />
         <Stat
