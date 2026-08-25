@@ -63,6 +63,11 @@ const modelExperimentalSchema = z
   })
   .passthrough();
 
+// Catalogs mark experimental models either with a boolean flag (models.dev
+// style, e.g. deepseek-v4-flash-vision-exp) or with mode-specific overrides
+// (e.g. Anthropic fast mode).
+const modelExperimentalFlagSchema = z.union([z.boolean(), modelExperimentalSchema]);
+
 // Single model schema
 export const providerModelSchema = z.object({
   id: z.string(),
@@ -82,7 +87,7 @@ export const providerModelSchema = z.object({
   open_weights: z.boolean().optional(),
   cost: modelCostSchema.optional(),
   limit: modelLimitSchema.optional().nullable(),
-  experimental: modelExperimentalSchema.optional(),
+  experimental: modelExperimentalFlagSchema.optional(),
   display_name: z.string().optional(),
   extra_capabilities: z.record(z.string(), z.unknown()).optional(),
   vision: z.boolean().optional(),
