@@ -79,23 +79,34 @@ export const ChannelExpandedRow = memo(({ channel, getApiFormatLabel }: ChannelE
           </div>
         </div>
 
-        {channel.supportedModels && channel.supportedModels.length > 0 && (
-          <div className='space-y-3'>
-            <h4 className='text-sm font-semibold'>{t('channels.expandedRow.supportedModels')}</h4>
-            <div className='flex flex-wrap gap-2'>
-              {channel.supportedModels.slice(0, 5).map((model) => (
-                <Badge key={model} variant='secondary' className='font-mono text-xs'>
-                  {model}
-                </Badge>
-              ))}
-              {channel.supportedModels.length > 5 && (
-                <span className='text-muted-foreground flex items-center text-xs italic'>
-                  {t('channels.expandedRow.moreModels', { count: channel.supportedModels.length - 5 })}
-                </span>
-              )}
+        {(() => {
+          // Prefer the hide-aware allModelEntries so transformed originals are
+          // hidden while untransformed models still display. Fall back to raw
+          // supportedModels when allModelEntries is unavailable.
+          const entries = channel.allModelEntries;
+          const models =
+            entries && entries.length > 0
+              ? entries.map((entry) => entry.requestModel)
+              : channel.supportedModels;
+          if (!models || models.length === 0) return null;
+          return (
+            <div className='space-y-3'>
+              <h4 className='text-sm font-semibold'>{t('channels.expandedRow.supportedModels')}</h4>
+              <div className='flex flex-wrap gap-2'>
+                {models.slice(0, 5).map((model) => (
+                  <Badge key={model} variant='secondary' className='font-mono text-xs'>
+                    {model}
+                  </Badge>
+                ))}
+                {models.length > 5 && (
+                  <span className='text-muted-foreground flex items-center text-xs italic'>
+                    {t('channels.expandedRow.moreModels', { count: models.length - 5 })}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

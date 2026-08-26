@@ -548,7 +548,14 @@ ProxyCell.displayName = 'ProxyCell';
 export const SupportedModelsCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
   const channel = row.original;
-  const models = row.getValue('supportedModels') as string[];
+  // Prefer the hide-aware allModelEntries so transformed originals are hidden
+  // while untransformed models still display. Fall back to raw supportedModels
+  // when allModelEntries is unavailable (e.g. older query without the field).
+  const entries = channel.allModelEntries;
+  const models =
+    entries && entries.length > 0
+      ? entries.map((entry) => entry.requestModel)
+      : (row.getValue('supportedModels') as string[]);
   const { setOpen, setCurrentRow } = useChannels();
 
   const handleOpenModelsDialog = useCallback(() => {

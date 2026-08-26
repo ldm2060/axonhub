@@ -12,6 +12,7 @@ interface PersonalChannelFilterItem {
   type?: string;
   tags?: string[] | null;
   supportedModels?: string[];
+  allModelEntries?: { requestModel: string; actualModel: string; source: string }[];
 }
 
 interface PersonalChannelRowFilters {
@@ -94,8 +95,15 @@ export function filterPersonalChannelRows<T extends PersonalChannelFilterItem>(c
     if (tag && !(channel.tags ?? []).includes(tag)) {
       return false;
     }
-    if (model && !channel.supportedModels?.some((supportedModel) => supportedModel.toLocaleLowerCase().includes(model))) {
-      return false;
+    if (model) {
+      const entries = channel.allModelEntries;
+      const modelList =
+        entries && entries.length > 0
+          ? entries.map((entry) => entry.requestModel)
+          : channel.supportedModels;
+      if (!modelList?.some((m) => m.toLocaleLowerCase().includes(model))) {
+        return false;
+      }
     }
     return true;
   });

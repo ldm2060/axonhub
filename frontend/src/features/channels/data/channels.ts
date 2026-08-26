@@ -930,6 +930,11 @@ const QUERY_CHANNELS_QUERY = `
             }
           }
           supportedModels
+          allModelEntries {
+            requestModel
+            actualModel
+            source
+          }
           autoSyncSupportedModels
           autoSyncModelPattern
           manualModels
