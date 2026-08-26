@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
@@ -60,9 +62,30 @@ func isRetryableTransportError(err error) bool {
 		return true
 	}
 
+	var closeErr *websocket.CloseError
+	if errors.As(err, &closeErr) && isRetryableWebSocketCloseCode(closeErr.Code) {
+		return true
+	}
+
 	var netErr net.Error
 
 	return errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary())
+}
+
+// isRetryableWebSocketCloseCode reports whether a WebSocket close code signals
+// a transient upstream failure that warrants a retry. These codes indicate the
+// connection ended without a usable response rather than a client-initiated
+// clean shutdown, so retrying on a fresh connection cannot duplicate output.
+func isRetryableWebSocketCloseCode(code int) bool {
+	switch code {
+	case websocket.CloseAbnormalClosure, // 1006: no close frame, e.g. TCP reset
+		websocket.CloseInternalServerErr, // 1011: server failed mid-request
+		websocket.CloseServiceRestart,    // 1012: server restarting
+		websocket.CloseTryAgainLater:     // 1013: temporary overload
+		return true
+	default:
+		return false
+	}
 }
 
 func matchesRetryableErrorPattern(err error, patterns []objects.RetryableErrorPattern) bool {

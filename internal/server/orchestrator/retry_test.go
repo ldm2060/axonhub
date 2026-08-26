@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gorilla/websocket"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 
@@ -327,6 +328,36 @@ func TestIsRetryableError(t *testing.T) {
 			err:      &testNetError{message: "non-timeout net error"},
 			expected: false,
 		},
+		{
+			name:     "websocket 1011 close error is retryable",
+			err:      &websocket.CloseError{Code: websocket.CloseInternalServerErr, Text: "internal error"},
+			expected: true,
+		},
+		{
+			name:     "websocket 1006 abnormal closure is retryable",
+			err:      &websocket.CloseError{Code: websocket.CloseAbnormalClosure, Text: ""},
+			expected: true,
+		},
+		{
+			name:     "websocket 1012 service restart is retryable",
+			err:      &websocket.CloseError{Code: websocket.CloseServiceRestart, Text: "restart"},
+			expected: true,
+		},
+		{
+			name:     "websocket 1013 try again later is retryable",
+			err:      &websocket.CloseError{Code: websocket.CloseTryAgainLater, Text: "try again later"},
+			expected: true,
+		},
+		{
+			name:     "websocket 1000 normal closure is not retryable",
+			err:      &websocket.CloseError{Code: websocket.CloseNormalClosure, Text: ""},
+			expected: false,
+		},
+		{
+			name:     "wrapped websocket 1011 close error is retryable",
+			err:      fmt.Errorf("failed to stream request: %w", &websocket.CloseError{Code: websocket.CloseInternalServerErr, Text: "internal error"}),
+			expected: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -399,6 +430,12 @@ func TestIsRetryableErrorForChannel(t *testing.T) {
 			err:      &testNetError{message: "non-timeout net error"},
 			channel:  nil,
 			expected: false,
+		},
+		{
+			name:     "websocket 1011 close error is retryable without channel settings",
+			err:      &websocket.CloseError{Code: websocket.CloseInternalServerErr, Text: "internal error"},
+			channel:  nil,
+			expected: true,
 		},
 		{
 			name: "configured 400 status is retryable",
