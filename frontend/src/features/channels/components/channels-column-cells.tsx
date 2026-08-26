@@ -552,10 +552,7 @@ export const SupportedModelsCell = memo(({ row }: { row: Row<Channel> }) => {
   // while untransformed models still display. Fall back to raw supportedModels
   // when allModelEntries is unavailable (e.g. older query without the field).
   const entries = channel.allModelEntries;
-  const models =
-    entries && entries.length > 0
-      ? entries.map((entry) => entry.requestModel)
-      : (row.getValue('supportedModels') as string[]);
+  const models = entries && entries.length > 0 ? entries.map((entry) => entry.requestModel) : (row.getValue('supportedModels') as string[]);
   const { setOpen, setCurrentRow } = useChannels();
 
   const handleOpenModelsDialog = useCallback(() => {

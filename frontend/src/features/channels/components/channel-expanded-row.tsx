@@ -84,10 +84,7 @@ export const ChannelExpandedRow = memo(({ channel, getApiFormatLabel }: ChannelE
           // hidden while untransformed models still display. Fall back to raw
           // supportedModels when allModelEntries is unavailable.
           const entries = channel.allModelEntries;
-          const models =
-            entries && entries.length > 0
-              ? entries.map((entry) => entry.requestModel)
-              : channel.supportedModels;
+          const models = entries && entries.length > 0 ? entries.map((entry) => entry.requestModel) : channel.supportedModels;
           if (!models || models.length === 0) return null;
           return (
             <div className='space-y-3'>

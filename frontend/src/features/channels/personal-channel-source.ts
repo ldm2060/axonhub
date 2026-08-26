@@ -97,10 +97,7 @@ export function filterPersonalChannelRows<T extends PersonalChannelFilterItem>(c
     }
     if (model) {
       const entries = channel.allModelEntries;
-      const modelList =
-        entries && entries.length > 0
-          ? entries.map((entry) => entry.requestModel)
-          : channel.supportedModels;
+      const modelList = entries && entries.length > 0 ? entries.map((entry) => entry.requestModel) : channel.supportedModels;
       if (!modelList?.some((m) => m.toLocaleLowerCase().includes(model))) {
         return false;
       }
