@@ -7,6 +7,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 var Module = fx.Module("biz",
@@ -66,6 +67,21 @@ var Module = fx.Module("biz",
 			OnStop: func(ctx context.Context) error {
 				if cancel != nil {
 					cancel()
+				}
+				return nil
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, svc *SystemService) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				settings, err := svc.StreamingSettingsForRuntime(ctx)
+				if err != nil {
+					log.Warn(ctx, "failed to load streaming settings for websocket keepalive probe", log.Cause(err))
+					return nil
+				}
+				if settings != nil {
+					responses.SetWebSocketKeepaliveIntervalSeconds(settings.WebSocketKeepaliveIntervalSeconds)
 				}
 				return nil
 			},

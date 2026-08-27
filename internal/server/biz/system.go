@@ -29,6 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 const (
@@ -1402,7 +1403,14 @@ func (s *SystemService) SetStreamingSettings(ctx context.Context, settings *Stre
 		return fmt.Errorf("failed to marshal streaming settings: %w", err)
 	}
 
-	return s.setSystemValue(ctx, SystemKeyStreamingSettings, string(jsonBytes))
+	if err := s.setSystemValue(ctx, SystemKeyStreamingSettings, string(jsonBytes)); err != nil {
+		return err
+	}
+
+	// Keep the pooled upstream WebSocket keepalive probe in sync so runtime
+	// changes apply to newly pooled connections without a restart.
+	responses.SetWebSocketKeepaliveIntervalSeconds(settings.WebSocketKeepaliveIntervalSeconds)
+	return nil
 }
 
 func normalizeStreamingSettings(settings *StreamingSettings) {

@@ -232,7 +232,7 @@
   "system.streaming.title": "流式响应",
   "system.streaming.description": "配置入站 WebSocket 和 HTTP 流式响应行为。",
   "system.streaming.keepalive.label": "WebSocket 保活间隔",
-  "system.streaming.keepalive.description": "WebSocket 流式响应时每隔 N 秒发送 PING 控制帧以防止空闲超时，设置为 0 或留空表示禁用。",
+  "system.streaming.keepalive.description": "每隔 N 秒发送 PING 控制帧：入站 WebSocket 连接（含请求间隙）用于防止空闲超时；上游 WebSocket 连接池用作活性探测，死连接会被及时逐出并在下次请求时重拨。设置为 0 或留空表示禁用。",
   "system.streaming.httpKeepalive.label": "HTTP 流式保活间隔",
   "system.streaming.httpKeepalive.description": "兼容的 HTTP 文本流空闲时每隔 N 秒发送客户端可忽略的透明保活，原始二进制流不会注入数据。设置为 0 或留空表示禁用；使用 Cloudflare 时建议设为 20–30 秒。",
   "system.onboarding.title": "系统引导",

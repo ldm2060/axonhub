@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -47,6 +48,25 @@ const (
 	defaultWebSocketMaxRetainedIn = 1 << 20
 	minWebSocketCleanupDelay      = 10 * time.Millisecond
 )
+
+// webSocketKeepaliveIntervalSeconds mirrors the system streaming setting
+// (WebSocketKeepaliveIntervalSeconds). When positive, every pooled upstream
+// WebSocket sends a PING control frame at that interval. The PING doubles as
+// a liveness probe: an upstream that silently closed an idle pooled
+// connection (e.g. the gateway's inter-turn idle timeout) is detected and
+// evicted, so the next request dials a fresh connection instead of failing
+// on the dead one. The interval is captured when a connection is pooled, so
+// setting changes apply to newly pooled connections.
+var webSocketKeepaliveIntervalSeconds atomic.Int64
+
+// SetWebSocketKeepaliveIntervalSeconds configures the pooled upstream
+// WebSocket PING interval in seconds; values <= 0 disable the probe.
+func SetWebSocketKeepaliveIntervalSeconds(seconds int) {
+	if seconds < 0 {
+		seconds = 0
+	}
+	webSocketKeepaliveIntervalSeconds.Store(int64(seconds))
+}
 
 type WebSocketExecutor struct {
 	inner  pipeline.Executor
@@ -275,6 +295,9 @@ type pooledWebSocketConn struct {
 	createdAt  time.Time
 	lastUsedAt time.Time
 	used       bool
+	// done is closed once when the connection closes; it stops the
+	// keepalive probe goroutine.
+	done chan struct{}
 
 	mu             sync.Mutex
 	closed         bool
@@ -391,6 +414,7 @@ func (e *WebSocketExecutor) getOrDialPooled(ctx context.Context, request *httpcl
 		inFlight:   make(chan struct{}, 1),
 		createdAt:  now,
 		lastUsedAt: now,
+		done:       make(chan struct{}),
 	}
 
 	e.mu.Lock()
@@ -417,7 +441,38 @@ func (e *WebSocketExecutor) getOrDialPooled(ctx context.Context, request *httpcl
 	e.scheduleCleanupLocked(now)
 	e.mu.Unlock()
 
+	e.startKeepaliveProbe(pc)
+
 	return pc, nil
+}
+
+// startKeepaliveProbe periodically PINGs a pooled upstream connection and
+// evicts it once the write fails. WriteControl is safe for concurrent use
+// with the leased connection's reads and writes, so the probe also covers
+// in-flight connections harmlessly.
+func (e *WebSocketExecutor) startKeepaliveProbe(pc *pooledWebSocketConn) {
+	if pc == nil {
+		return
+	}
+	interval := time.Duration(webSocketKeepaliveIntervalSeconds.Load()) * time.Second
+	if interval <= 0 {
+		return
+	}
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-pc.done:
+				return
+			case <-ticker.C:
+				if err := pc.conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
+					e.evict(pc)
+					return
+				}
+			}
+		}
+	}()
 }
 
 func (e *WebSocketExecutor) dial(ctx context.Context, request *httpclient.Request, wsURL string, headers http.Header) (*websocket.Conn, error) {
@@ -744,7 +799,11 @@ func (pc *pooledWebSocketConn) close() {
 	pc.closed = true
 	pc.lastInput = nil
 	pc.lastResponseID = ""
+	done := pc.done
 	pc.mu.Unlock()
+	if done != nil {
+		close(done)
+	}
 	_ = pc.conn.Close()
 }
 

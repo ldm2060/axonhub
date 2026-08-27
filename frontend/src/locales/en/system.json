@@ -232,7 +232,7 @@
   "system.streaming.title": "Streaming",
   "system.streaming.description": "Configure inbound WebSocket and HTTP streaming behavior.",
   "system.streaming.keepalive.label": "WebSocket keepalive interval",
-  "system.streaming.keepalive.description": "Send a PING control frame every N seconds during WebSocket streaming responses to prevent idle timeout. Set to 0 or leave empty to disable.",
+  "system.streaming.keepalive.description": "Send a PING control frame every N seconds: on inbound WebSocket connections (including between requests) to prevent idle timeout, and on the upstream WebSocket pool as a liveness probe that evicts dead connections before the next request. Set to 0 or leave empty to disable.",
   "system.streaming.httpKeepalive.label": "HTTP stream keepalive interval",
   "system.streaming.httpKeepalive.description": "Send a transparent client-ignored keepalive every N seconds while compatible HTTP text streams are idle. Raw binary streams are never modified. Set to 0 or leave empty to disable; 20–30 seconds is recommended behind Cloudflare.",
   "system.onboarding.title": "System Onboarding",

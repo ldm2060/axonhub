@@ -436,6 +436,96 @@ func TestWebSocketExecutorReusesConnectionForSameSession(t *testing.T) {
 	require.Equal(t, int32(1), upgrades.Load())
 }
 
+func TestWebSocketExecutorKeepaliveProbeEvictsDeadPooledConn(t *testing.T) {
+	SetWebSocketKeepaliveIntervalSeconds(0)
+	t.Cleanup(func() { SetWebSocketKeepaliveIntervalSeconds(0) })
+
+	upgrader := websocket.Upgrader{}
+	var upgrades atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrades.Add(1)
+
+		conn, err := upgrader.Upgrade(w, r, nil)
+		require.NoError(t, err)
+
+		var payload map[string]any
+		require.NoError(t, conn.ReadJSON(&payload))
+		require.NoError(t, conn.WriteJSON(map[string]any{
+			"type": "response.completed",
+			"response": map[string]any{
+				"id":         "resp_test",
+				"object":     "response",
+				"created_at": 1700000000,
+				"model":      "gpt-5",
+				"status":     "completed",
+				"output":     []any{},
+			},
+		}))
+
+		if upgrades.Load() == 1 {
+			// Simulate the upstream idle timeout: drop the TCP connection
+			// without a WebSocket close handshake and keep the handler alive
+			// so no clean close frame follows.
+			_ = conn.UnderlyingConn().Close()
+			<-r.Context().Done()
+			return
+		}
+	}))
+	defer server.Close()
+
+	// The probe interval is captured when a connection is pooled, so it must
+	// be configured before the first request. One second is the smallest
+	// expressible interval.
+	SetWebSocketKeepaliveIntervalSeconds(1)
+
+	executor := NewWebSocketExecutor(nil)
+
+	doStream := func() error {
+		stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
+			Method: http.MethodPost,
+			URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
+			Headers: http.Header{
+				webSocketSessionHeader: []string{"session-1"},
+			},
+			Auth: &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: "test-key"},
+			Body:  []byte(`{"model":"gpt-5","instructions":"turn"}`),
+		})
+		if err != nil {
+			return err
+		}
+		defer stream.Close()
+		if !stream.Next() {
+			return stream.Err()
+		}
+		require.Equal(t, "response.completed", stream.Current().Type)
+		return nil
+	}
+
+	// Request 1 pools the connection; the server then kills the TCP
+	// connection silently.
+	require.NoError(t, doStream())
+	require.Equal(t, int32(1), upgrades.Load())
+
+	// The dead connection must sit in the pool until the probe runs, so this
+	// cannot pass by accident through acquire-time eviction.
+	executor.mu.Lock()
+	require.Len(t, executor.pool, 1)
+	executor.mu.Unlock()
+
+	// The keepalive probe evicts the dead pooled connection within a couple
+	// of ticks.
+	require.Eventually(t, func() bool {
+		executor.mu.Lock()
+		defer executor.mu.Unlock()
+		return len(executor.pool) == 0
+	}, 5*time.Second, 20*time.Millisecond)
+
+	// The next request dials a fresh connection instead of failing on the
+	// dead one.
+	require.NoError(t, doStream())
+	require.Equal(t, int32(2), upgrades.Load())
+}
+
 func TestWebSocketExecutorDoesNotPoolWithoutSession(t *testing.T) {
 	upgrader := websocket.Upgrader{}
 	var upgrades atomic.Int32
