@@ -85,6 +85,9 @@ var Module = fx.Module("biz",
 				}
 				return nil
 			},
+			OnStop: func(ctx context.Context) error {
+				return nil
+			},
 		})
 	}),
 	fx.Invoke(func(lc fx.Lifecycle, svc *ChannelService, s *scheduler.Scheduler) {
