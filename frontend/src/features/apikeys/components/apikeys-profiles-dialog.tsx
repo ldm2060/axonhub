@@ -269,6 +269,8 @@ export function ApiKeyProfilesDialog({ open, onOpenChange, onSubmit, loading = f
       channelTags: [],
       channelTagsMatchMode: 'any',
       modelIDs: [],
+      excludedChannelIDs: [],
+      excludedModelIDs: [],
       loadBalanceStrategy: 'default',
       traceStickyMode: 'default',
     });
@@ -1073,6 +1075,65 @@ function ProfileCard({
                         field.onChange(ids);
                       }}
                       placeholder={t('apikeys.profiles.allowedChannels')}
+                      suggestions={channelsData?.edges?.map((edge) => edge.node.name) || []}
+                      className='h-auto min-h-9 py-1'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Excluded Models Section */}
+          <div className='border-t pt-6'>
+            <h4 className='mb-3 text-sm font-medium'>{t('apikeys.profiles.excludedModels')}</h4>
+            <p className='text-muted-foreground mb-3 text-xs'>{t('apikeys.profiles.excludedModelsDescription')}</p>
+            <FormField
+              control={form.control}
+              name={`profiles.${profileIndex}.excludedModelIDs`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <TagsAutocompleteInput
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      placeholder={t('apikeys.profiles.excludedModels')}
+                      suggestions={availableModels}
+                      className='h-auto min-h-9 py-1'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Excluded Channels Section */}
+          <div className='border-t pt-6'>
+            <h4 className='mb-3 text-sm font-medium'>{t('apikeys.profiles.excludedChannels')}</h4>
+            <p className='text-muted-foreground mb-3 text-xs'>{t('apikeys.profiles.excludedChannelsDescription')}</p>
+            <FormField
+              control={form.control}
+              name={`profiles.${profileIndex}.excludedChannelIDs`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <TagsAutocompleteInput
+                      value={(field.value || []).map((id) => {
+                        const channel = channelsData?.edges?.find((edge) => parseInt(extractNumberID(edge.node.id), 10) === id);
+                        return channel?.node.name || id.toString();
+                      })}
+                      onChange={(tags) => {
+                        const ids = tags
+                          .map((tag) => {
+                            const channel = channelsData?.edges?.find((edge) => edge.node.name === tag);
+                            return channel ? parseInt(extractNumberID(channel.node.id), 10) : parseInt(tag);
+                          })
+                          .filter((id) => !isNaN(id));
+                        field.onChange(ids);
+                      }}
+                      placeholder={t('apikeys.profiles.excludedChannels')}
                       suggestions={channelsData?.edges?.map((edge) => edge.node.name) || []}
                       className='h-auto min-h-9 py-1'
                     />

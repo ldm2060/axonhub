@@ -650,6 +650,47 @@ func (s *SelectedChannelsSelector) Select(ctx context.Context, req *llm.Request)
 	return filtered, nil
 }
 
+// ExcludedChannelsSelector is a decorator that filters out candidates by excluded channel IDs.
+type ExcludedChannelsSelector struct {
+	wrapped            CandidateSelector
+	excludedChannelIDs []int
+}
+
+// WithExcludedChannelsSelector creates a selector that removes candidates whose channel ID
+// is in excludedChannelIDs. If excludedChannelIDs is nil or empty, all candidates from the
+// wrapped selector are returned unchanged.
+func WithExcludedChannelsSelector(wrapped CandidateSelector, excludedChannelIDs []int) *ExcludedChannelsSelector {
+	return &ExcludedChannelsSelector{
+		wrapped:            wrapped,
+		excludedChannelIDs: excludedChannelIDs,
+	}
+}
+
+func (s *ExcludedChannelsSelector) Select(ctx context.Context, req *llm.Request) ([]*ChannelModelsCandidate, error) {
+	candidates, err := s.wrapped.Select(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// If no excluded IDs specified, return all candidates
+	if len(s.excludedChannelIDs) == 0 {
+		return candidates, nil
+	}
+
+	// Build excluded set for O(1) lookup
+	excludedSet := lo.SliceToMap(s.excludedChannelIDs, func(id int) (int, struct{}) {
+		return id, struct{}{}
+	})
+
+	// Filter out candidates whose channel ID is excluded
+	filtered := lo.Filter(candidates, func(c *ChannelModelsCandidate, _ int) bool {
+		_, ok := excludedSet[c.Channel.ID]
+		return !ok
+	})
+
+	return filtered, nil
+}
+
 // LoadBalancedSelector is a decorator that sorts candidates using load balancing strategies.
 type LoadBalancedSelector struct {
 	wrapped                 CandidateSelector

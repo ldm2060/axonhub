@@ -27,6 +27,8 @@ type APIKeyProfile struct {
 	ChannelTags          []string             `json:"channelTags,omitempty"`
 	ChannelTagsMatchMode ChannelTagsMatchMode `json:"channelTagsMatchMode,omitempty"`
 	ModelIDs             []string             `json:"modelIDs,omitempty"`
+	ExcludedChannelIDs   []int                `json:"excludedChannelIDs,omitempty"`
+	ExcludedModelIDs     []string             `json:"excludedModelIDs,omitempty"`
 }
 
 // ChannelTagsMatchMode controls how profile channel tags are matched.
@@ -134,6 +136,14 @@ func (p *APIKeyProfile) Clone() *APIKeyProfile {
 	if len(p.ModelIDs) > 0 {
 		cp.ModelIDs = make([]string, len(p.ModelIDs))
 		copy(cp.ModelIDs, p.ModelIDs)
+	}
+	if len(p.ExcludedChannelIDs) > 0 {
+		cp.ExcludedChannelIDs = make([]int, len(p.ExcludedChannelIDs))
+		copy(cp.ExcludedChannelIDs, p.ExcludedChannelIDs)
+	}
+	if len(p.ExcludedModelIDs) > 0 {
+		cp.ExcludedModelIDs = make([]string, len(p.ExcludedModelIDs))
+		copy(cp.ExcludedModelIDs, p.ExcludedModelIDs)
 	}
 	if p.LoadBalanceStrategy != nil {
 		s := *p.LoadBalanceStrategy

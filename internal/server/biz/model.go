@@ -668,6 +668,12 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 					return projectProfile.MatchChannelTags(ch.Tags)
 				})
 			}
+
+			if len(projectProfile.ExcludedChannelIDs) > 0 {
+				channels = lo.Filter(channels, func(ch *Channel, _ int) bool {
+					return !lo.Contains(projectProfile.ExcludedChannelIDs, ch.ID)
+				})
+			}
 		}
 
 		// Key-level profile filtering (narrows further within project scope)
@@ -684,11 +690,26 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 				return profile.MatchChannelTags(ch.Tags)
 			})
 		}
+
+		if profile != nil && len(profile.ExcludedChannelIDs) > 0 {
+			channels = lo.Filter(channels, func(ch *Channel, _ int) bool {
+				return !lo.Contains(profile.ExcludedChannelIDs, ch.ID)
+			})
+		}
 	}
 
 	var allowedModelIDs []string
-	if profile != nil && len(profile.ModelIDs) > 0 {
-		allowedModelIDs = profile.ModelIDs
+	var excludedSet map[string]struct{}
+	if profile != nil {
+		if len(profile.ModelIDs) > 0 {
+			allowedModelIDs = profile.ModelIDs
+		}
+
+		if len(profile.ExcludedModelIDs) > 0 {
+			excludedSet = lo.SliceToMap(profile.ExcludedModelIDs, func(id string) (string, struct{}) {
+				return id, struct{}{}
+			})
+		}
 	}
 
 	// Query configured Model entities (used in both modes)
@@ -699,7 +720,8 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 
 	settings := svc.systemService.ModelSettingsOrDefault(ctx)
 	if !settings.QueryAllChannelModels {
-		return appendProfileMappingAliases(configuredModels, profile), nil
+		models := stripExcludedModelIDs(configuredModels, excludedSet)
+		return appendProfileMappingAliases(models, profile, excludedSet), nil
 	}
 
 	// QueryAllChannelModels=true: merge configured models (higher priority) with channel models
@@ -715,6 +737,10 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 	// Hidden configured IDs must not reappear as channel-derived facades.
 	// Routing still binds those IDs to the configured associations.
 	for id := range suppressedIDs {
+		modelSet[id] = true
+	}
+	// Excluded model IDs must not reappear as channel-derived facades (deny wins).
+	for id := range excludedSet {
 		modelSet[id] = true
 	}
 
@@ -754,7 +780,20 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 		})
 	}
 
-	return appendProfileMappingAliases(models, profile), nil
+	models = stripExcludedModelIDs(models, excludedSet)
+	return appendProfileMappingAliases(models, profile, excludedSet), nil
+}
+
+// stripExcludedModelIDs removes any model facade whose ID is in the excluded set.
+// Deny-list wins regardless of the allow-list, so this runs after allow-filtering.
+func stripExcludedModelIDs(models []ModelFacade, excludedSet map[string]struct{}) []ModelFacade {
+	if len(excludedSet) == 0 {
+		return models
+	}
+	return lo.Filter(models, func(m ModelFacade, _ int) bool {
+		_, ok := excludedSet[m.ID]
+		return !ok
+	})
 }
 
 // appendProfileMappingAliases appends the "From" IDs of the active key profile's
@@ -763,8 +802,10 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 // time, so they must appear in the /v1/models list for model-discovering
 // clients (e.g. Claude Code, Codex) to use them. Aliases are deduplicated
 // against existing models and each other, and bypass the profile's ModelIDs
-// whitelist since they are explicitly configured mappings.
-func appendProfileMappingAliases(models []ModelFacade, profile *objects.APIKeyProfile) []ModelFacade {
+// whitelist since they are explicitly configured mappings. Excluded IDs are
+// honored (deny wins) so clients never discover an excluded alias and then get
+// denied at request time.
+func appendProfileMappingAliases(models []ModelFacade, profile *objects.APIKeyProfile, excludedSet map[string]struct{}) []ModelFacade {
 	if profile == nil || len(profile.ModelMappings) == 0 {
 		return models
 	}
@@ -776,6 +817,9 @@ func appendProfileMappingAliases(models []ModelFacade, profile *objects.APIKeyPr
 
 	for _, mm := range profile.ModelMappings {
 		if mm.From == "" || seen[mm.From] {
+			continue
+		}
+		if _, excluded := excludedSet[mm.From]; excluded {
 			continue
 		}
 		seen[mm.From] = true
@@ -987,4 +1031,3 @@ type ModelFacade struct {
 	// Owned by
 	OwnedBy string `json:"owned_by"`
 }
-

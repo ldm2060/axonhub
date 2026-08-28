@@ -439,6 +439,8 @@ input APIKeyProfileInput {
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
   modelIDs: [String!]
+  excludedChannelIDs: [Int!]
+  excludedModelIDs: [String!]
   quota: APIKeyQuotaInput
   loadBalanceStrategy: String
   traceStickyMode: String
@@ -454,6 +456,7 @@ input ProjectProfileInput {
   channelIDs: [Int!]
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
+  excludedChannelIDs: [Int!]
 }
 
 type ProjectProfiles {
@@ -466,6 +469,7 @@ type ProjectProfile {
   channelIDs: [Int!]
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
+  excludedChannelIDs: [Int!]
 }
 
 input UpdateAPIKeyScopesInput {
@@ -486,6 +490,8 @@ type APIKeyProfile {
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
   modelIDs: [String!]
+  excludedChannelIDs: [Int!]
+  excludedModelIDs: [String!]
   quota: APIKeyQuota
   loadBalanceStrategy: String
   traceStickyMode: String

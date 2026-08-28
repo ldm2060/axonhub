@@ -22,6 +22,8 @@ type APIKeyProfile {
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
   modelIDs: [String!]
+  excludedChannelIDs: [Int!]
+  excludedModelIDs: [String!]
   quota: APIKeyQuota
   loadBalanceStrategy: String
   traceStickyMode: String
@@ -89,6 +91,8 @@ input APIKeyProfileInput {
   channelTags: [String!]
   channelTagsMatchMode: ChannelTagsMatchMode
   modelIDs: [String!]
+  excludedChannelIDs: [Int!]
+  excludedModelIDs: [String!]
   quota: APIKeyQuotaInput
   loadBalanceStrategy: String
   traceStickyMode: String

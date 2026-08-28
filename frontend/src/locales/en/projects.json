@@ -46,6 +46,8 @@
   "projects.profiles.noRestriction": "No Restriction",
   "projects.profiles.allowedChannels": "Allowed Channels",
   "projects.profiles.allowedChannelsDescription": "Only these channels will be used for routing. Leave empty for no restriction.",
+  "projects.profiles.excludedChannels": "Excluded Channels",
+  "projects.profiles.excludedChannelsDescription": "These channels will never be used for routing, even if allowed channels is empty.",
   "projects.profiles.allowedChannelTags": "Allowed Channel Tags",
   "projects.profiles.allowedChannelTagsDescription": "Only channels with matching tags will be used.",
   "projects.profiles.excludedChannelTags": "Excluded Channel Tags",

@@ -10,6 +10,7 @@ type ProjectProfile struct {
 	ChannelIDs           []int                `json:"channelIDs,omitempty"`
 	ChannelTags          []string             `json:"channelTags,omitempty"`
 	ChannelTagsMatchMode ChannelTagsMatchMode `json:"channelTagsMatchMode,omitempty"`
+	ExcludedChannelIDs   []int                `json:"excludedChannelIDs,omitempty"`
 }
 
 func (p *ProjectProfile) MatchChannelTags(tags []string) bool {

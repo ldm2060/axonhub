@@ -74,6 +74,8 @@ export const apiKeySchema = z.object({
             channelTags: z.array(z.string()).optional().nullable(),
             channelTagsMatchMode: channelTagsMatchModeFieldSchema,
             modelIDs: z.array(z.string()).optional().nullable(),
+            excludedChannelIDs: z.array(z.number()).optional().nullable(),
+            excludedModelIDs: z.array(z.string()).optional().nullable(),
             loadBalanceStrategy: z.string().optional().nullable(),
             traceStickyMode: z.string().optional().nullable(),
             quota: z
@@ -176,6 +178,8 @@ export const apiKeyProfileSchema = z.object({
   channelTags: z.array(z.string()).optional().nullable(),
   channelTagsMatchMode: channelTagsMatchModeFieldSchema,
   modelIDs: z.array(z.string()).optional().nullable(),
+  excludedChannelIDs: z.array(z.number()).optional().nullable(),
+  excludedModelIDs: z.array(z.string()).optional().nullable(),
   loadBalanceStrategy: z.string().optional().nullable(),
   traceStickyMode: z.string().optional().nullable(),
   quota: z
@@ -263,6 +267,8 @@ export const updateApiKeyProfilesInputSchemaFactory = (t: (key: string) => strin
             channelTags: z.array(z.string()).optional().nullable(),
             channelTagsMatchMode: channelTagsMatchModeSchema,
             modelIDs: z.array(z.string()).optional().nullable(),
+            excludedChannelIDs: z.array(z.number()).optional().nullable(),
+            excludedModelIDs: z.array(z.string()).optional().nullable(),
             loadBalanceStrategy: z.string().optional().nullable(),
             traceStickyMode: z.string().optional().nullable(),
             quota: z
@@ -366,6 +372,8 @@ export const updateApiKeyProfilesInputSchema = z.object({
       channelTags: z.array(z.string()).optional().nullable(),
       channelTagsMatchMode: channelTagsMatchModeSchema,
       modelIDs: z.array(z.string()).optional().nullable(),
+      excludedChannelIDs: z.array(z.number()).optional().nullable(),
+      excludedModelIDs: z.array(z.string()).optional().nullable(),
       loadBalanceStrategy: z.string().optional().nullable(),
       traceStickyMode: z.string().optional().nullable(),
       quota: z

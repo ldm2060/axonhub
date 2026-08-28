@@ -169,6 +169,8 @@ type ComplexityRoot struct {
 		ChannelIDs           func(childComplexity int) int
 		ChannelTags          func(childComplexity int) int
 		ChannelTagsMatchMode func(childComplexity int) int
+		ExcludedChannelIDs   func(childComplexity int) int
+		ExcludedModelIDs     func(childComplexity int) int
 		LoadBalanceStrategy  func(childComplexity int) int
 		ModelIDs             func(childComplexity int) int
 		ModelMappings        func(childComplexity int) int
@@ -1393,6 +1395,7 @@ type ComplexityRoot struct {
 		ChannelIDs           func(childComplexity int) int
 		ChannelTags          func(childComplexity int) int
 		ChannelTagsMatchMode func(childComplexity int) int
+		ExcludedChannelIDs   func(childComplexity int) int
 		Name                 func(childComplexity int) int
 	}
 
@@ -3362,6 +3365,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.APIKeyProfile.ChannelTagsMatchMode(childComplexity), true
+	case "APIKeyProfile.excludedChannelIDs":
+		if e.complexity.APIKeyProfile.ExcludedChannelIDs == nil {
+			break
+		}
+
+		return e.complexity.APIKeyProfile.ExcludedChannelIDs(childComplexity), true
+	case "APIKeyProfile.excludedModelIDs":
+		if e.complexity.APIKeyProfile.ExcludedModelIDs == nil {
+			break
+		}
+
+		return e.complexity.APIKeyProfile.ExcludedModelIDs(childComplexity), true
 	case "APIKeyProfile.loadBalanceStrategy":
 		if e.complexity.APIKeyProfile.LoadBalanceStrategy == nil {
 			break
@@ -9042,6 +9057,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ProjectProfile.ChannelTagsMatchMode(childComplexity), true
+	case "ProjectProfile.excludedChannelIDs":
+		if e.complexity.ProjectProfile.ExcludedChannelIDs == nil {
+			break
+		}
+
+		return e.complexity.ProjectProfile.ExcludedChannelIDs(childComplexity), true
 	case "ProjectProfile.name":
 		if e.complexity.ProjectProfile.Name == nil {
 			break
@@ -19929,6 +19950,64 @@ func (ec *executionContext) fieldContext_APIKeyProfile_modelIDs(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _APIKeyProfile_excludedChannelIDs(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyProfile_excludedChannelIDs,
+		func(ctx context.Context) (any, error) {
+			return obj.ExcludedChannelIDs, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyProfile_excludedChannelIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _APIKeyProfile_excludedModelIDs(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_APIKeyProfile_excludedModelIDs,
+		func(ctx context.Context) (any, error) {
+			return obj.ExcludedModelIDs, nil
+		},
+		nil,
+		ec.marshalOString2ᚕstringᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_APIKeyProfile_excludedModelIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "APIKeyProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _APIKeyProfile_quota(ctx context.Context, field graphql.CollectedField, obj *objects.APIKeyProfile) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -20380,6 +20459,10 @@ func (ec *executionContext) fieldContext_APIKeyProfileTemplate_profile(_ context
 				return ec.fieldContext_APIKeyProfile_channelTagsMatchMode(ctx, field)
 			case "modelIDs":
 				return ec.fieldContext_APIKeyProfile_modelIDs(ctx, field)
+			case "excludedChannelIDs":
+				return ec.fieldContext_APIKeyProfile_excludedChannelIDs(ctx, field)
+			case "excludedModelIDs":
+				return ec.fieldContext_APIKeyProfile_excludedModelIDs(ctx, field)
 			case "quota":
 				return ec.fieldContext_APIKeyProfile_quota(ctx, field)
 			case "loadBalanceStrategy":
@@ -20737,6 +20820,10 @@ func (ec *executionContext) fieldContext_APIKeyProfiles_profiles(_ context.Conte
 				return ec.fieldContext_APIKeyProfile_channelTagsMatchMode(ctx, field)
 			case "modelIDs":
 				return ec.fieldContext_APIKeyProfile_modelIDs(ctx, field)
+			case "excludedChannelIDs":
+				return ec.fieldContext_APIKeyProfile_excludedChannelIDs(ctx, field)
+			case "excludedModelIDs":
+				return ec.fieldContext_APIKeyProfile_excludedModelIDs(ctx, field)
 			case "quota":
 				return ec.fieldContext_APIKeyProfile_quota(ctx, field)
 			case "loadBalanceStrategy":
@@ -49675,6 +49762,35 @@ func (ec *executionContext) fieldContext_ProjectProfile_channelTagsMatchMode(_ c
 	return fc, nil
 }
 
+func (ec *executionContext) _ProjectProfile_excludedChannelIDs(ctx context.Context, field graphql.CollectedField, obj *objects.ProjectProfile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ProjectProfile_excludedChannelIDs,
+		func(ctx context.Context) (any, error) {
+			return obj.ExcludedChannelIDs, nil
+		},
+		nil,
+		ec.marshalOInt2ᚕintᚄ,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ProjectProfile_excludedChannelIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ProjectProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ProjectProfiles_activeProfile(ctx context.Context, field graphql.CollectedField, obj *objects.ProjectProfiles) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -49736,6 +49852,8 @@ func (ec *executionContext) fieldContext_ProjectProfiles_profiles(_ context.Cont
 				return ec.fieldContext_ProjectProfile_channelTags(ctx, field)
 			case "channelTagsMatchMode":
 				return ec.fieldContext_ProjectProfile_channelTagsMatchMode(ctx, field)
+			case "excludedChannelIDs":
+				return ec.fieldContext_ProjectProfile_excludedChannelIDs(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ProjectProfile", field.Name)
 		},
@@ -80458,7 +80576,7 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "templateID", "templateName", "modelMappings", "channelIDs", "channelTags", "channelTagsMatchMode", "modelIDs", "quota", "loadBalanceStrategy", "traceStickyMode"}
+	fieldsInOrder := [...]string{"name", "templateID", "templateName", "modelMappings", "channelIDs", "channelTags", "channelTagsMatchMode", "modelIDs", "excludedChannelIDs", "excludedModelIDs", "quota", "loadBalanceStrategy", "traceStickyMode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -80521,6 +80639,20 @@ func (ec *executionContext) unmarshalInputAPIKeyProfileInput(ctx context.Context
 				return it, err
 			}
 			it.ModelIDs = data
+		case "excludedChannelIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("excludedChannelIDs"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExcludedChannelIDs = data
+		case "excludedModelIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("excludedModelIDs"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExcludedModelIDs = data
 		case "quota":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quota"))
 			data, err := ec.unmarshalOAPIKeyQuotaInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐAPIKeyQuota(ctx, v)
@@ -94187,7 +94319,7 @@ func (ec *executionContext) unmarshalInputProjectProfileInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "channelIDs", "channelTags", "channelTagsMatchMode"}
+	fieldsInOrder := [...]string{"name", "channelIDs", "channelTags", "channelTagsMatchMode", "excludedChannelIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94222,6 +94354,13 @@ func (ec *executionContext) unmarshalInputProjectProfileInput(ctx context.Contex
 				return it, err
 			}
 			it.ChannelTagsMatchMode = data
+		case "excludedChannelIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("excludedChannelIDs"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExcludedChannelIDs = data
 		}
 	}
 
@@ -113481,6 +113620,10 @@ func (ec *executionContext) _APIKeyProfile(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._APIKeyProfile_channelTagsMatchMode(ctx, field, obj)
 		case "modelIDs":
 			out.Values[i] = ec._APIKeyProfile_modelIDs(ctx, field, obj)
+		case "excludedChannelIDs":
+			out.Values[i] = ec._APIKeyProfile_excludedChannelIDs(ctx, field, obj)
+		case "excludedModelIDs":
+			out.Values[i] = ec._APIKeyProfile_excludedModelIDs(ctx, field, obj)
 		case "quota":
 			out.Values[i] = ec._APIKeyProfile_quota(ctx, field, obj)
 		case "loadBalanceStrategy":
@@ -124248,6 +124391,8 @@ func (ec *executionContext) _ProjectProfile(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ProjectProfile_channelTags(ctx, field, obj)
 		case "channelTagsMatchMode":
 			out.Values[i] = ec._ProjectProfile_channelTagsMatchMode(ctx, field, obj)
+		case "excludedChannelIDs":
+			out.Values[i] = ec._ProjectProfile_excludedChannelIDs(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

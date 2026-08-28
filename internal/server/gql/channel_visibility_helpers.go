@@ -25,5 +25,11 @@ func filterChannelsByProjectProfile(channels []*ent.Channel, projectProfile *obj
 		})
 	}
 
+	if len(projectProfile.ExcludedChannelIDs) > 0 {
+		filtered = lo.Filter(filtered, func(ch *ent.Channel, _ int) bool {
+			return !lo.Contains(projectProfile.ExcludedChannelIDs, ch.ID)
+		})
+	}
+
 	return filtered
 }

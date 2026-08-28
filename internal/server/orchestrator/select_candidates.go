@@ -42,6 +42,10 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 					if len(projectProfile.ChannelTags) > 0 {
 						selector = WithChannelTagsFilterSelector(selector, projectProfile.ChannelTags, projectProfile.ChannelTagsMatchMode)
 					}
+
+					if len(projectProfile.ExcludedChannelIDs) > 0 {
+						selector = WithExcludedChannelsSelector(selector, projectProfile.ExcludedChannelIDs)
+					}
 				}
 			}
 		}
@@ -54,6 +58,10 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 
 			if len(profile.ChannelTags) > 0 {
 				selector = WithChannelTagsFilterSelector(selector, profile.ChannelTags, profile.ChannelTagsMatchMode)
+			}
+
+			if len(profile.ExcludedChannelIDs) > 0 {
+				selector = WithExcludedChannelsSelector(selector, profile.ExcludedChannelIDs)
 			}
 		}
 

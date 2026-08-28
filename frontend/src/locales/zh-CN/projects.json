@@ -46,6 +46,8 @@
   "projects.profiles.noRestriction": "不限制",
   "projects.profiles.allowedChannels": "允许的渠道",
   "projects.profiles.allowedChannelsDescription": "仅使用这些渠道进行路由。留空表示不限制。",
+  "projects.profiles.excludedChannels": "不允许的渠道",
+  "projects.profiles.excludedChannelsDescription": "这些渠道永远不会被用于路由，即使允许的渠道为空。",
   "projects.profiles.allowedChannelTags": "允许的渠道标签",
   "projects.profiles.allowedChannelTagsDescription": "仅使用匹配标签的渠道。",
   "projects.profiles.excludedChannelTags": "排除的渠道标签",

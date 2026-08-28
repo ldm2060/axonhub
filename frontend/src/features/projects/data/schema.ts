@@ -10,6 +10,7 @@ export const projectProfileSchema = z.object({
   channelIDs: z.array(z.number()).optional().nullable(),
   channelTags: z.array(z.string()).optional().nullable(),
   channelTagsMatchMode: channelTagsMatchModeSchema.optional().nullable(),
+  excludedChannelIDs: z.array(z.number()).optional().nullable(),
 });
 export type ProjectProfile = z.infer<typeof projectProfileSchema>;
 
@@ -89,6 +90,7 @@ export const updateProjectProfilesInputSchemaFactory = (t: (key: string) => stri
             channelIDs: z.array(z.number()).optional().nullable(),
             channelTags: z.array(z.string()).optional().nullable(),
             channelTagsMatchMode: channelTagsMatchModeSchema.optional().nullable(),
+            excludedChannelIDs: z.array(z.number()).optional().nullable(),
           })
         )
         .min(1, t('projects.profiles.validation.atLeastOneProfile')),

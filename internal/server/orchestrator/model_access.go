@@ -26,6 +26,20 @@ func checkApiKeyModelAccess(inbound *PersistentInboundTransformer) pipeline.Midd
 			return llmRequest, nil
 		}
 
+		// Deny-list wins even when the allow-list is empty (ModelIDs == 0 means
+		// allow-all, but an excluded model must never be reachable).
+		if len(profile.ExcludedModelIDs) > 0 {
+			if slices.Contains(profile.ExcludedModelIDs, llmRequest.Model) {
+				log.Warn(ctx, "model access denied by API key profile exclude list",
+					log.String("api_key_name", inbound.state.APIKey.Name),
+					log.String("active_profile", inbound.state.APIKey.Profiles.ActiveProfile),
+					log.String("model", llmRequest.Model),
+					log.Any("excluded_models", profile.ExcludedModelIDs))
+
+				return nil, fmt.Errorf("%w: %s", biz.ErrInvalidModel, llmRequest.Model)
+			}
+		}
+
 		if len(profile.ModelIDs) == 0 {
 			return llmRequest, nil
 		}

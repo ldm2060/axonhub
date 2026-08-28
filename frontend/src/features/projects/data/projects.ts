@@ -33,6 +33,7 @@ const PROJECTS_QUERY = `
               channelIDs
               channelTags
               channelTagsMatchMode
+              excludedChannelIDs
             }
           }
         }
@@ -305,6 +306,7 @@ const UPDATE_PROJECT_PROFILES_MUTATION = `
           channelIDs
           channelTags
           channelTagsMatchMode
+          excludedChannelIDs
         }
       }
     }
