@@ -41,6 +41,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewEmailService),
 	fx.Provide(NewPublishRequestService),
 	fx.Provide(NewAPIKeyProfileTemplateService),
+	fx.Provide(NewCatalogService),
 	fx.Provide(NewMemorySampler),
 	fx.Provide(NewUserUsageStatsService),
 	fx.Provide(NewUsageMonitorService),
@@ -139,6 +140,13 @@ var Module = fx.Module("biz",
 		})
 	}),
 	fx.Invoke(func(lc fx.Lifecycle, svc *ProviderQuotaService, s *scheduler.Scheduler) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return svc.RegisterScheduledTasks(ctx, s)
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, svc *CatalogService, s *scheduler.Scheduler) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
 				return svc.RegisterScheduledTasks(ctx, s)

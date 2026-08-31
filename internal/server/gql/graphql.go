@@ -86,6 +86,7 @@ type Dependencies struct {
 	MemorySampler                  *biz.MemorySampler
 	UserUsageStatsService          *biz.UserUsageStatsService
 	UsageMonitorService            *biz.UsageMonitorService
+	CatalogService                 *biz.CatalogService
 }
 
 type GraphqlHandler struct {
@@ -131,6 +132,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.MemorySampler,
 			deps.UserUsageStatsService,
 			deps.UsageMonitorService,
+			deps.CatalogService,
 		),
 	)
 

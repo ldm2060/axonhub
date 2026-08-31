@@ -59,6 +59,7 @@ type Resolver struct {
 	memorySampler                  *biz.MemorySampler
 	userUsageStatsService          *biz.UserUsageStatsService
 	usageMonitorService            *biz.UsageMonitorService
+	catalogService                 *biz.CatalogService
 }
 
 // NewSchema creates a graphql executable schema.
@@ -98,6 +99,7 @@ func NewSchema(
 	memorySampler *biz.MemorySampler,
 	userUsageStatsService *biz.UserUsageStatsService,
 	usageMonitorService *biz.UsageMonitorService,
+	catalogService *biz.CatalogService,
 ) graphql.ExecutableSchema {
 	modelFetcher := biz.NewModelFetcher(httpClient, channelService)
 
@@ -138,6 +140,7 @@ func NewSchema(
 			memorySampler:                  memorySampler,
 			userUsageStatsService:          userUsageStatsService,
 			usageMonitorService:            usageMonitorService,
+			catalogService:                 catalogService,
 		},
 	})
 }

@@ -11,6 +11,7 @@ import { Main } from '@/components/layout/main';
 import { PermissionGuard } from '@/components/permission-guard';
 import { useOnboardingInfo } from '@/features/system/data/system';
 import { LazyModelsDialogs } from './components/lazy-models-dialogs';
+import { ModelsCatalogStatus } from './components/models-catalog-status';
 import { createColumns } from './components/models-columns';
 import { ModelsOnboardingFlow } from './components/models-onboarding-flow';
 import { ModelsTable } from './components/models-table';
@@ -169,6 +170,9 @@ export default function ModelsManagement() {
           <div className='min-w-0'>
             <h2 className='text-xl font-bold tracking-tight'>{t('models.title')}</h2>
             <p className='text-muted-foreground text-sm'>{t('models.description')}</p>
+            <div className='mt-1'>
+              <ModelsCatalogStatus />
+            </div>
           </div>
           <ActionButtons />
         </div>
