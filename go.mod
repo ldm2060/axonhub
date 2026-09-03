@@ -106,7 +106,7 @@ replace github.com/ldm2060/afero-s3 => github.com/looplj/afero-s3 v0.1.0
 replace github.com/ldm2060/afero-webdav => github.com/looplj/afero-webdav v0.0.0-20260128073818-3f60e732e991
 
 require (
-	ariga.io/atlas v0.38.0 // indirect
+	ariga.io/atlas v0.38.0
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.17.0 // indirect

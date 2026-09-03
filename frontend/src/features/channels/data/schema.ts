@@ -597,8 +597,8 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
 
   const isCopilot = type === 'github_copilot';
   const isKimiCode = type === 'kimi_code';
-  const isXaiSubscription = type === 'xai_subscription';
-  if ((isCopilot || isKimiCode || isXaiSubscription) && !apiKey.trim().startsWith('{')) {
+  const requiresJSON = isCopilot || type === 'xai_subscription';
+  if (requiresJSON && !apiKey.trim().startsWith('{')) {
     ctx.addIssue({
       code: 'custom' as const,
       message: isCopilot ? 'channels.dialogs.oauth.errors.copilotCredentialsInvalid' : 'channels.dialogs.oauth.errors.credentialsInvalid',

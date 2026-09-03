@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { apiRequest } from '@/lib/api-client';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { extractNumberIDAsNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -85,7 +86,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
 
   const copyInviteLink = async () => {
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      await copyTextToClipboard(inviteLink);
       setIsCopied(true);
       toast.success(t('users.messages.invitationCopied'));
     } catch {

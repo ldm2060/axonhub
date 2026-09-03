@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Copy, Eye, EyeOff, AlertTriangle, Link, CheckIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,14 +13,10 @@ import { useApiKeysContext } from '../context/apikeys-context';
 
 function CopyBaseUrlButton({ baseUrl }: { baseUrl: string }) {
   const { t } = useTranslation();
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(baseUrl);
-    setIsCopied(true);
-    toast.success(t('apikeys.messages.baseUrlCopied'));
-    setTimeout(() => setIsCopied(false), 2000);
-  };
+  const { isCopied, handleCopy } = useCopyToClipboard({
+    text: baseUrl,
+    copyMessage: t('apikeys.messages.baseUrlCopied'),
+  });
 
   return (
     <Tooltip>
@@ -39,6 +35,10 @@ export function ApiKeysViewDialog() {
   const { isDialogOpen, closeDialog, selectedApiKey } = useApiKeysContext();
   const [isVisible, setIsVisible] = useState(false);
   const [preRenderedCode, setPreRenderedCode] = useState<Record<string, { light: string; dark: string }>>({});
+  const { handleCopy: copyApiKey } = useCopyToClipboard({
+    text: selectedApiKey?.key ?? '',
+    copyMessage: t('apikeys.messages.copied'),
+  });
 
   const apiKey = selectedApiKey?.key || '';
   const maskedApiKey = selectedApiKey?.key ? selectedApiKey.key.slice(0, 3) + '...' + selectedApiKey.key.slice(-4) : '';
@@ -246,13 +246,6 @@ print(response.text)`,
     renderAllCodeBlocks();
   }, [selectedApiKey?.key, codeExamples]);
 
-  const copyToClipboard = () => {
-    if (selectedApiKey?.key) {
-      navigator.clipboard.writeText(selectedApiKey.key);
-      toast.success(t('apikeys.messages.copied'));
-    }
-  };
-
   const maskedKey = selectedApiKey?.key ? selectedApiKey.key.replace(/./g, '*').slice(0, -4) + selectedApiKey.key.slice(-4) : '';
 
   return (
@@ -283,7 +276,7 @@ print(response.text)`,
               <Button variant='outline' size='sm' onClick={() => setIsVisible(!isVisible)} className='flex-shrink-0'>
                 {isVisible ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
               </Button>
-              <Button variant='outline' size='sm' onClick={copyToClipboard} className='flex-shrink-0'>
+              <Button variant='outline' size='sm' onClick={copyApiKey} className='flex-shrink-0'>
                 <Copy className='h-4 w-4' />
               </Button>
             </div>

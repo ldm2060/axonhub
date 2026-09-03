@@ -11,7 +11,6 @@ type Usage struct {
 		CacheWriteTokens int64 `json:"cache_write_tokens"`
 		// CachedTokens is the number of input tokens retrieved from the prompt cache.
 		CachedTokens int64 `json:"cached_tokens"`
-
 	} `json:"input_tokens_details"`
 	OutputTokens       int64 `json:"output_tokens"`
 	OutputTokenDetails struct {
@@ -28,6 +27,10 @@ type Usage struct {
 	CacheWriteTokens         int64 `json:"cache_write_tokens,omitempty"`
 	CacheCreationInputTokens int64 `json:"cache_creation_input_tokens,omitempty"`
 	CacheWriteInputTokens    int64 `json:"cache_write_input_tokens,omitempty"`
+
+	// Cost is the request cost calculated by AxonHub from channel model prices.
+	// Omitted when no matching price is configured.
+	Cost *float64 `json:"cost,omitempty"`
 }
 
 func firstNonZero(values ...int64) int64 {
@@ -87,6 +90,7 @@ func ConvertLLMUsageToResponsesUsage(usage *llm.Usage) *Usage {
 		InputTokens:  usage.PromptTokens,
 		OutputTokens: usage.CompletionTokens,
 		TotalTokens:  usage.TotalTokens,
+		Cost:         usage.Cost,
 	}
 
 	if usage.PromptTokensDetails != nil {

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Copy, ExternalLink, Loader2, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { copilotOAuthPoll, copilotOAuthStart } from '../data/copilot';
@@ -49,6 +50,17 @@ export function CopilotDeviceFlow({ onSuccess, onError, existingCredentials }: C
   const handleReconnect = () => {
     deviceFlow.reset();
     deviceFlow.start();
+  };
+
+  const handleCopyUserCode = async () => {
+    if (!deviceFlow.userCode) return;
+
+    try {
+      await copyTextToClipboard(deviceFlow.userCode);
+      toast.success(t('channels.messages.credentialsCopied'));
+    } catch {
+      toast.error(t('common.errors.copyFailed'));
+    }
   };
 
   // Show already authenticated state
@@ -121,18 +133,7 @@ export function CopilotDeviceFlow({ onSuccess, onError, existingCredentials }: C
                 <span className='font-mono text-2xl font-bold tracking-wider'>{deviceFlow.userCode}</span>
               </div>
 
-              <Button
-                type='button'
-                onClick={() => {
-                  if (deviceFlow.userCode) {
-                    navigator.clipboard.writeText(deviceFlow.userCode);
-                    toast.success(t('channels.messages.credentialsCopied'));
-                  }
-                }}
-                variant='outline'
-                size='icon'
-                title={t('copilot_device.copy_code')}
-              >
+              <Button type='button' onClick={handleCopyUserCode} variant='outline' size='icon' title={t('copilot_device.copy_code')}>
                 <Copy className='h-4 w-4' />
               </Button>
             </div>

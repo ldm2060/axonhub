@@ -7,6 +7,7 @@ import { useQueryModels } from '@/gql/models';
 import { useTranslation } from 'react-i18next';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { extractNumberIDAsNumber, buildGUID } from '@/lib/utils';
+import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -14,7 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { AutoComplete } from '@/components/auto-complete';
-import { useApiKeys } from '@/features/apikeys/data/apikeys';
+import { AutoCompleteSelect } from '@/components/auto-complete-select';
+import { useApiKeyOptions, useApiKeyOptionsByIDs } from '@/features/apikeys/data/apikeys';
 import { usePrompts } from '../context/prompts-context';
 import { useCreatePrompt, useUpdatePrompt } from '../data/prompts';
 import { CreatePromptInput, UpdatePromptInput } from '../data/schema';
@@ -78,6 +80,63 @@ function ModelAutoCompleteWrapper({ field, modelOptions, portalContainer }: Mode
     />
   );
 }
+interface APIKeyAutoCompleteWrapperProps {
+  field: { value: string; onChange: (value: string) => void };
+  portalContainer: HTMLDivElement | null;
+}
+
+function APIKeyAutoCompleteWrapper({ field, portalContainer }: APIKeyAutoCompleteWrapperProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const debouncedSearchValue = useDebounce(searchValue, 300);
+  const {
+    data: apiKeysData,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useApiKeyOptions({
+    search: debouncedSearchValue,
+    includeArchived: true,
+    enabled: open,
+  });
+  const { data: selectedApiKeyData } = useApiKeyOptionsByIDs(field.value ? [field.value] : undefined, {
+    enabled: !!field.value,
+  });
+
+  const apiKeyOptions = useMemo(() => {
+    const options = new Map<string, { value: string; label: string }>();
+    for (const edge of selectedApiKeyData?.edges ?? []) {
+      options.set(edge.node.id, { value: edge.node.id, label: edge.node.name });
+    }
+    for (const page of apiKeysData?.pages ?? []) {
+      for (const edge of page.edges) {
+        options.set(edge.node.id, { value: edge.node.id, label: edge.node.name });
+      }
+    }
+    return Array.from(options.values());
+  }, [apiKeysData, selectedApiKeyData]);
+
+  return (
+    <AutoCompleteSelect
+      selectedValue={field.value || ''}
+      onSelectedValueChange={field.onChange}
+      items={apiKeyOptions}
+      isLoading={isFetching && !apiKeysData}
+      emptyMessage={t('common.noData')}
+      placeholder={t('prompts.fields.apiKeyPlaceholder')}
+      portalContainer={portalContainer}
+      inputClassName='h-10 text-xs'
+      searchValue={searchValue}
+      onSearchValueChange={setSearchValue}
+      hasMore={!!hasNextPage}
+      isLoadingMore={isFetchingNextPage}
+      onLoadMore={fetchNextPage}
+      onOpenChange={setOpen}
+    />
+  );
+}
 
 interface ConditionGroupProps {
   groupIndex: number;
@@ -85,11 +144,10 @@ interface ConditionGroupProps {
   onRemoveGroup: () => void;
   t: any;
   modelOptions: Array<{ value: string; label: string }>;
-  apiKeyOptions: Array<{ value: string; label: string }>;
   dialogContentRef: React.RefObject<HTMLDivElement | null>;
 }
 
-function ConditionGroup({ groupIndex, form, onRemoveGroup, t, modelOptions, apiKeyOptions, dialogContentRef }: ConditionGroupProps) {
+function ConditionGroup({ groupIndex, form, onRemoveGroup, t, modelOptions, dialogContentRef }: ConditionGroupProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: `conditionGroups.${groupIndex}.conditions`,
@@ -177,18 +235,7 @@ function ConditionGroup({ groupIndex, form, onRemoveGroup, t, modelOptions, apiK
                       {conditions?.[conditionIndex]?.type === 'model_id' ? (
                         <ModelAutoCompleteWrapper field={field} modelOptions={modelOptions} portalContainer={dialogContentRef.current} />
                       ) : conditions?.[conditionIndex]?.type === 'api_key' ? (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className='h-10 w-full text-xs'>
-                            <SelectValue placeholder={t('prompts.fields.apiKeyPlaceholder')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {apiKeyOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <APIKeyAutoCompleteWrapper field={field} portalContainer={dialogContentRef.current} />
                       ) : (
                         <Input {...field} placeholder={t('prompts.fields.conditionValuePlaceholder')} className='h-10 text-xs' />
                       )}
@@ -220,7 +267,6 @@ export function PromptsActionDialog() {
   const updatePrompt = useUpdatePrompt();
   const selectedProjectId = useSelectedProjectId();
   const { data: availableModels, mutateAsync: fetchModels } = useQueryModels();
-  const { data: apiKeysData } = useApiKeys({ first: 100 });
   const dialogContentRef = useRef<HTMLDivElement>(null);
 
   const isEdit = open === 'edit';
@@ -233,14 +279,6 @@ export function PromptsActionDialog() {
       label: model.id,
     }));
   }, [availableModels]);
-
-  const apiKeyOptions = useMemo(() => {
-    if (!apiKeysData?.edges) return [];
-    return apiKeysData.edges.map((edge) => ({
-      value: String(edge.node.id),
-      label: edge.node.name || `API Key #${edge.node.id}`,
-    }));
-  }, [apiKeysData]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(isEdit ? updatePromptSchema : createPromptSchema) as any,
@@ -537,7 +575,6 @@ export function PromptsActionDialog() {
                               onRemoveGroup={() => removeGroup(groupIndex)}
                               t={t}
                               modelOptions={modelOptions}
-                              apiKeyOptions={apiKeyOptions}
                               dialogContentRef={dialogContentRef}
                             />
                           </div>

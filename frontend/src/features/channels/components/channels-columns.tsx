@@ -22,6 +22,9 @@ interface CreateColumnsOptions {
   hideOrderingWeight?: boolean;
 }
 
+// The ActionCell in channels-column-cells.tsx already guards the endpoint editor:
+// `channel.type !== 'xai_subscription' && (…setOpen('endpoints')…)` — xAI subscription
+// channels must not expose an endpoint editor the server rejects.
 export const createColumns = (
   t: ReturnType<typeof useTranslation>['t'],
   canWrite: boolean = true,

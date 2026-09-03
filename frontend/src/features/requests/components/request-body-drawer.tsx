@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, FileText, ChevronsDownUp, Chev
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { cn, extractNumberID } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { Badge } from '@/components/ui/badge';
@@ -96,13 +97,20 @@ function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFie
   }, [displayedRequest]);
 
   const copyBody = useCallback(
-    (data: any) => {
+    async (data: any) => {
+      let text: string;
       try {
-        navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+        text = JSON.stringify(data, null, 2);
       } catch {
-        navigator.clipboard.writeText(String(data));
+        text = String(data);
       }
-      toast.success(t('requests.actions.copy'));
+
+      try {
+        await copyTextToClipboard(text);
+        toast.success(t('requests.actions.copy'));
+      } catch {
+        toast.error(t('common.errors.copyFailed'));
+      }
     },
     [t]
   );

@@ -54,6 +54,10 @@ type Usage struct {
 	CacheWriteTokens         int64 `json:"cache_write_tokens,omitempty"`
 	CacheCreationInputTokens int64 `json:"cache_creation_input_tokens,omitempty"`
 	CacheWriteInputTokens    int64 `json:"cache_write_input_tokens,omitempty"`
+
+	// Cost is the request cost calculated by AxonHub from channel model prices.
+	// Omitted when no matching price is configured.
+	Cost *float64 `json:"cost,omitempty"`
 }
 
 func firstNonZero(values ...int64) int64 {
@@ -136,6 +140,7 @@ func UsageFromLLM(u *llm.Usage) *Usage {
 		PromptTokens:     u.PromptTokens,
 		CompletionTokens: u.CompletionTokens,
 		TotalTokens:      u.TotalTokens,
+		Cost:             u.Cost,
 	}
 
 	if u.PromptTokensDetails != nil {

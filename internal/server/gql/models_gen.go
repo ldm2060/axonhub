@@ -697,7 +697,15 @@ type UpdateTurnstileSettingsInput struct {
 	SecretKey *string `json:"secretKey,omitempty"`
 }
 
+type UpdateUsageCostInjectionSettingsInput struct {
+	Enabled bool `json:"enabled"`
+}
+
 type UpdateUserAgentPassThroughSettingsInput struct {
+	Enabled bool `json:"enabled"`
+}
+
+type UsageCostInjectionSettings struct {
 	Enabled bool `json:"enabled"`
 }
 

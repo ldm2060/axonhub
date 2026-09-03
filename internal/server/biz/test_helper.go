@@ -1,10 +1,16 @@
 package biz
 
 import (
+	"context"
+
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 )
+
+func (svc *ChannelService) PreloadModelPricesForTest(ctx context.Context, ch *Channel) {
+	svc.preloadModelPrices(ctx, ch)
+}
 
 func NewChannelServiceForTest(client *ent.Client) *ChannelService {
 	mockSysSvc := &SystemService{

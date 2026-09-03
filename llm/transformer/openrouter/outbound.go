@@ -15,10 +15,10 @@ import (
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/auth"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 	"github.com/ldm2060/axonhub/llm/streams"
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
-	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 // Config holds all configuration for the OpenRouter outbound transformer.
@@ -105,7 +105,7 @@ func (t *OutboundTransformer) TransformRequest(
 		return nil, fmt.Errorf("%w: messages are required", transformer.ErrInvalidRequest)
 	}
 
-	body, err := json.Marshal(openai.RequestFromLLM(llmReq, openai.ReasoningFieldReasoning))
+	body, err := json.Marshal(openai.RequestFromLLM(ctx, llmReq, openai.ReasoningFieldReasoning))
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to transform request: %w", transformer.ErrInvalidRequest, err)
 	}

@@ -422,6 +422,16 @@ func (r *mutationResolver) TestEmailConnection(ctx context.Context) (*TestEmailR
 	}, nil
 }
 
+// UpdateUsageCostInjectionSettings is the resolver for the updateUsageCostInjectionSettings field.
+func (r *mutationResolver) UpdateUsageCostInjectionSettings(ctx context.Context, input UpdateUsageCostInjectionSettingsInput) (bool, error) {
+	err := r.systemService.SetInjectUsageCostEnabled(ctx, input.Enabled)
+	if err != nil {
+		return false, fmt.Errorf("failed to update usage cost injection settings: %w", err)
+	}
+
+	return true, nil
+}
+
 // UpdateCatalogSettings is the resolver for the updateCatalogSettings field.
 func (r *mutationResolver) UpdateCatalogSettings(ctx context.Context, input UpdateCatalogSettingsInput) (bool, error) {
 	if !scopes.UserHasScope(ctx, scopes.ScopeWriteSettings) {
@@ -791,6 +801,18 @@ func (r *queryResolver) PassThroughSettings(ctx context.Context) (*PassThroughSe
 	}
 
 	return &PassThroughSettings{
+		Enabled: enabled,
+	}, nil
+}
+
+// UsageCostInjectionSettings is the resolver for the usageCostInjectionSettings field.
+func (r *queryResolver) UsageCostInjectionSettings(ctx context.Context) (*UsageCostInjectionSettings, error) {
+	enabled, err := r.systemService.InjectUsageCostEnabled(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get usage cost injection settings: %w", err)
+	}
+
+	return &UsageCostInjectionSettings{
 		Enabled: enabled,
 	}, nil
 }

@@ -4,6 +4,7 @@ import { useParams, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft, Copy, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { buildGUID, extractNumberID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -40,8 +41,7 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
 
   const copyRequestID = async () => {
     try {
-      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
-      await navigator.clipboard.writeText(request?.id ?? requestId);
+      await copyTextToClipboard(request?.id ?? requestId);
       toast.success(t('requests.actions.copied'));
     } catch {
       toast.error(t('common.errors.copyFailed'));

@@ -26,6 +26,7 @@ export type QuotaChannel = {
   parsedData: ParsedField[];
   displayFields: DisplayField[];
   lastPollError: string | null;
+  quotaData: ProviderClineQuotaData | null;
 };
 
 const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
@@ -38,6 +39,7 @@ const QUOTA_USAGE_MONITOR_CHANNELS_QUERY = `
       channelID
       status
       lastPollError
+      lastPollData
       quotaStatus
       quotaReady
       nextResetAt
@@ -108,6 +110,7 @@ export function useQuotaChannels(): QuotaChannel[] {
         parsedData: (ch.parsedData ?? []) as ParsedField[],
         displayFields: (ch.displayFields ?? []) as DisplayField[],
         lastPollError: ch.lastPollError ?? null,
+        quotaData: parseClineQuotaData(ch.providerType, ch.lastPollData),
       })
     );
 }
@@ -405,6 +408,19 @@ export function isClineActivePassQuotaData(qd: ProviderClineQuotaData): qd is Pr
 
 export function isClineUnavailablePassQuotaData(qd: ProviderClineQuotaData): qd is ProviderClineUnavailablePassQuotaData {
   return 'pass_state' in qd && qd.pass_state === 'unavailable';
+}
+
+/** Parse the raw Cline quota JSON surfaced through lastPollData for Cline monitors. */
+export function parseClineQuotaData(
+  providerType: string | null | undefined,
+  lastPollData: Record<string, unknown> | null | undefined
+): ProviderClineQuotaData | null {
+  if (providerType !== 'cline' || !lastPollData || typeof lastPollData.raw !== 'string') return null;
+  try {
+    return JSON.parse(lastPollData.raw) as ProviderClineQuotaData;
+  } catch {
+    return null;
+  }
 }
 
 export type ProviderQuotaChannel = {

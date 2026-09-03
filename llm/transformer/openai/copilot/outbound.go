@@ -129,7 +129,7 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, llmReq *llm.
 		return nil, fmt.Errorf("failed to get copilot token: %w", err)
 	}
 
-	oaiReq := openai.RequestFromLLM(llmReq, openai.ReasoningFieldAll)
+	oaiReq := openai.RequestFromLLM(ctx, llmReq, openai.ReasoningFieldAll)
 
 	body, err := json.Marshal(oaiReq)
 	if err != nil {

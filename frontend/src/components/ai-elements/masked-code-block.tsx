@@ -3,6 +3,7 @@
 import { type ComponentProps, createContext, type HTMLAttributes, useContext, useEffect, useRef, useState } from 'react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import type { BundledLanguage } from 'shiki';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { highlightCode } from './code-highlight';
@@ -111,13 +112,8 @@ export const MaskedCodeBlockCopyButton = ({
   const { realCode } = useContext(MaskedCodeBlockContext);
 
   const copyToClipboard = async () => {
-    if (typeof window === 'undefined' || !navigator?.clipboard?.writeText) {
-      onError?.(new Error('Clipboard API not available'));
-      return;
-    }
-
     try {
-      await navigator.clipboard.writeText(realCode);
+      await copyTextToClipboard(realCode);
       setIsCopied(true);
       onCopy?.();
       setTimeout(() => setIsCopied(false), timeout);

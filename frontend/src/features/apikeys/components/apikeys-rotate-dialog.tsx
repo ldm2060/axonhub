@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Copy, RefreshCw, AlertTriangle, CheckIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +13,10 @@ export function ApiKeysRotateDialog() {
   const { isDialogOpen, closeDialog, selectedApiKey, setSelectedApiKey } = useApiKeysContext();
   const rotateApiKey = useRotateApiKey();
   const [newKey, setNewKey] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const { isCopied, handleCopy } = useCopyToClipboard({
+    text: newKey ?? '',
+    copyMessage: t('apikeys.messages.copied'),
+  });
 
   const handleRotate = async () => {
     if (!selectedApiKey) return;
@@ -28,22 +31,8 @@ export function ApiKeysRotateDialog() {
     }
   };
 
-  const handleCopy = async () => {
-    if (!newKey) return;
-
-    try {
-      await navigator.clipboard.writeText(newKey);
-      setIsCopied(true);
-      toast.success(t('apikeys.messages.copied'));
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch {
-      toast.error(t('common.errors.copyFailed'));
-    }
-  };
-
   const handleClose = () => {
     setNewKey(null);
-    setIsCopied(false);
     closeDialog();
   };
 

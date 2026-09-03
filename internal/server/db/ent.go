@@ -82,6 +82,7 @@ func NewEntClient(cfg Config, avatarService *avatar.Service) *ent.Client {
 			migrate.WithDropIndex(true),
 			migrate.WithDropColumn(true),
 			schema.WithHooks(schemahook.V0_3_0),
+			filterEquivalentDefaultChanges(),
 		)
 		if err != nil {
 			panic(err)

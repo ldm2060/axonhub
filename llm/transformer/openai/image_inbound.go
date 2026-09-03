@@ -20,9 +20,9 @@ import (
 
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 	"github.com/ldm2060/axonhub/llm/streams"
 	transformer "github.com/ldm2060/axonhub/llm/transformer"
-	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
 )
 
 const (
@@ -147,6 +147,7 @@ func (t *ImageInboundTransformer) TransformResponse(ctx context.Context, llmResp
 			InputTokens:  llmResp.Usage.PromptTokens,
 			OutputTokens: llmResp.Usage.CompletionTokens,
 			TotalTokens:  llmResp.Usage.TotalTokens,
+			Cost:         llmResp.Usage.Cost,
 		}
 		if llmResp.Usage.PromptTokensDetails != nil {
 			oaiResp.Usage.InputTokensDetails = &ImagesResponseUsageInputTokensDetails{

@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight, Copy, Database, Download, FileText, Key, Lay
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getTokenFromStorage } from '@/stores/authStore';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { extractNumberID } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,8 +57,9 @@ function formatJson(data: any) {
 }
 
 function copyToClipboard(text: string, successMessage: string) {
-  void navigator.clipboard.writeText(text);
-  toast.success(successMessage);
+  void copyTextToClipboard(text)
+    .then(() => toast.success(successMessage))
+    .catch(() => {});
 }
 
 function downloadFile(content: string, filename: string, successMessage: string) {
@@ -71,6 +73,12 @@ function downloadFile(content: string, filename: string, successMessage: string)
   document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
   toast.success(successMessage);
+}
+
+function formatLatencyLabel(latencyMs: number | null) {
+  if (latencyMs == null) return '-';
+  if (latencyMs < 1000) return `${latencyMs}ms`;
+  return `${(latencyMs / 1000).toFixed(2)}s`;
 }
 
 function ContentLoading() {
@@ -580,7 +588,9 @@ function ExecutionSummariesPanel({
               <div className='bg-background rounded-lg border p-3'>
                 <p className='text-muted-foreground text-xs'>{t('requests.columns.firstTokenLatency')}</p>
                 <p className='font-mono text-sm'>
-                  {execution.metricsFirstTokenLatencyMs == null ? '-' : `${execution.metricsFirstTokenLatencyMs}ms`}
+                  {(execution.status === 'completed' || execution.status === 'failed') && execution.metricsFirstTokenLatencyMs != null
+                    ? formatLatencyLabel(execution.metricsFirstTokenLatencyMs)
+                    : '-'}
                 </p>
               </div>
             </div>

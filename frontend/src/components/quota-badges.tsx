@@ -2,7 +2,7 @@ import { Loader2, RefreshCw, Battery, BatteryLow, BatteryMedium, BatteryFull, Ba
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useQuotaChannels, type QuotaChannel } from '@/features/system/data/quotas';
+import { useQuotaChannels, isClineUnavailablePassQuotaData, type QuotaChannel } from '@/features/system/data/quotas';
 import { useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
 import type { ParsedField } from '@/features/usage-monitor/data/schema';
@@ -61,7 +61,9 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
   const { t } = useTranslation();
 
   const status = channel.quotaStatus ?? 'unknown';
-  const statusLabel = t(STATUS_LABELS[status]);
+  const qd = channel.quotaData;
+  const clinePassUnavailable = channel.providerType === 'cline' && qd != null && isClineUnavailablePassQuotaData(qd);
+  const statusLabel = clinePassUnavailable ? t('quota.status.cline_pass_unavailable') : t(STATUS_LABELS[status]);
 
   // Binding-first: when effective bindings exist and evaluate ready, the
   // quotaStatus exhaustion/warning is NOT enforced — don't show blocked/deprioritized.
@@ -114,6 +116,10 @@ function QuotaRow({ channel, enforcementMode }: { channel: QuotaChannel; enforce
         <div className='ml-6 rounded bg-red-500/10 p-2 text-xs break-words text-red-500'>
           <span className='font-medium'>{t('quota.label.error')}:</span> {channel.lastPollError}
         </div>
+      )}
+
+      {clinePassUnavailable && (
+        <div className='bg-muted/40 text-muted-foreground ml-6 rounded p-2 text-[11px]'>{t('quota.label.cline_pass_unavailable')}</div>
       )}
 
       {channel.parsedData && channel.parsedData.length > 0 && (

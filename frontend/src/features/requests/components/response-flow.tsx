@@ -1,5 +1,6 @@
 import { CopyIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import { Badge } from '@/components/ui/badge';
 import { CodeBlock } from '@/components/ai-elements/code-block';
 import { Message, MessageContent } from '@/components/ai-elements/message';
@@ -86,12 +87,16 @@ export function ResponseFlow({ chunks, body, isLive, reasoningDurationMs }: Resp
                         <button
                           type='button'
                           className='text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-xs transition-colors'
-                          onClick={() => {
+                          onClick={async () => {
                             const text =
                               typeof tc.function?.arguments === 'string'
                                 ? tc.function.arguments
                                 : JSON.stringify(parseJson(tc.function?.arguments || '{}'), null, 2);
-                            navigator.clipboard.writeText(text);
+                            try {
+                              await copyTextToClipboard(text);
+                            } catch {
+                              // clipboard unavailable; keep silent
+                            }
                           }}
                         >
                           <CopyIcon className='size-3' />

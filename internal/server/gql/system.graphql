@@ -413,6 +413,13 @@ input UpdatePassThroughSettingsInput {
   enabled: Boolean!
 }
 
+type UsageCostInjectionSettings {
+  enabled: Boolean!
+}
+
+input UpdateUsageCostInjectionSettingsInput {
+  enabled: Boolean!
+}
 
 type ProxyPreset {
   name: String
@@ -533,6 +540,7 @@ extend type Mutation {
   updateRegistrationSettings(input: UpdateRegistrationSettingsInput!): RegistrationSettings!
   updateEmailSettings(input: UpdateEmailSettingsInput!): EmailSettings!
   testEmailConnection: TestEmailResult!
+  updateUsageCostInjectionSettings(input: UpdateUsageCostInjectionSettingsInput!): Boolean!
   updateCatalogSettings(input: UpdateCatalogSettingsInput!): Boolean!
   refreshProvidersCatalog: ProvidersCatalog!
 }
@@ -672,6 +680,7 @@ extend type Query {
   proxyPresets: [ProxyPreset!]!
   userAgentPassThroughSettings: UserAgentPassThroughSettings!
   passThroughSettings: PassThroughSettings!
+  usageCostInjectionSettings: UsageCostInjectionSettings!
   getCacheDiagnostics(input: GetCacheDiagnosticsInput): GetCacheDiagnosticsPayload!
   getMemoryDiagnostics: GetCacheDiagnosticsPayload!
   registrationSettings: RegistrationSettings!
