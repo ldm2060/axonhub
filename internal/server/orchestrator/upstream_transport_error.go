@@ -70,9 +70,11 @@ func ClassifyUpstreamTransportError(err error) error {
 	return &llm.ResponseError{
 		StatusCode: http.StatusBadGateway,
 		Detail: llm.ErrorDetail{
-			Message: "Upstream provider closed the connection before the response completed: " + err.Error(),
-			Type:    ErrTypeUpstreamError,
-			Code:    ErrCodeUpstreamStreamInterrupted,
+			Message:   "Upstream provider closed the connection before the response completed: " + err.Error(),
+			Type:      ErrTypeUpstreamError,
+			Code:      ErrCodeUpstreamStreamInterrupted,
+			Param:     "",
+			RequestID: "",
 		},
 		Cause: err,
 	}

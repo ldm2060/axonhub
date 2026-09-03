@@ -299,7 +299,7 @@ func (ts *OutboundPersistentStream) failureLatencyMetrics() *biz.LatencyMetrics 
 	}
 
 	latencyMs := biz.ClampLatency(endTime.Sub(ts.perf.StartTime).Milliseconds())
-	metrics := &biz.LatencyMetrics{LatencyMs: &latencyMs}
+	metrics := &biz.LatencyMetrics{LatencyMs: &latencyMs, FirstTokenLatencyMs: nil, ReasoningDurationMs: nil}
 
 	if ts.perf.Stream && ts.perf.FirstTokenTime != nil {
 		firstTokenLatencyMs := biz.ClampLatency(ts.perf.FirstTokenTime.Sub(ts.perf.StartTime).Milliseconds())

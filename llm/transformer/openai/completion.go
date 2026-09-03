@@ -48,7 +48,7 @@ type CompletionUsage struct {
 
 func completionUsageFromLLM(u *llm.Usage) CompletionUsage {
 	if u == nil {
-		return CompletionUsage{}
+		return CompletionUsage{PromptTokens: 0, CompletionTokens: 0, TotalTokens: 0, Cost: nil}
 	}
 
 	return CompletionUsage{

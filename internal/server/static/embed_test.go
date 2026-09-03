@@ -154,7 +154,7 @@ func TestRequestsToolbarHandlesMissingFilterState(t *testing.T) {
 	require.NoError(t, err)
 
 	source := string(toolbarSource)
-	require.Contains(t, source, "const columnFilters = table.getState().columnFilters ?? []")
+	require.Contains(t, source, "table.getState().columnFilters ?? []")
 	require.Contains(t, source, "Array.isArray(currentFilter) && currentFilter.length > 0")
 	require.NotContains(t, source, "as string[] | undefined")
 }
