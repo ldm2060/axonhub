@@ -27,7 +27,7 @@ func (e *httpTransportCaptureExecutor) DoStream(_ context.Context, request *http
 	return streams.SliceStream([]*httpclient.StreamEvent{}), nil
 }
 
-func TestHTTPTransportExecutorStripsWebSocketContinuation(t *testing.T) {
+func TestHTTPTransportExecutorStripsWebSocketMetadataAndKeepsContinuation(t *testing.T) {
 	outbound, err := NewOutboundTransformerWithConfig(&Config{
 		BaseURL:        "https://api.example.com/v1",
 		APIKeyProvider: auth.NewStaticKeyProvider("test-key"),
@@ -56,6 +56,18 @@ func TestHTTPTransportExecutorStripsWebSocketContinuation(t *testing.T) {
 	// Transport cleanup must not mutate the request retained by the pipeline.
 	require.Equal(t, WebSocketBetaHeaderValue+", other_beta=v1", request.Headers.Get("Openai-Beta"))
 	require.Equal(t, "resp_ws", gjson.GetBytes(request.Body, "previous_response_id").String())
+}
+
+func TestPrepareHTTPTransportRequestKeepsContinuationWithoutInput(t *testing.T) {
+	request := &httpclient.Request{
+		Headers: http.Header{"Openai-Beta": {WebSocketBetaHeaderValue}},
+		Body:    []byte(`{"model":"gpt-5","previous_response_id":"resp_ws","stream":true}`),
+	}
+
+	prepared := PrepareHTTPTransportRequest(request, false)
+	require.Empty(t, prepared.Headers.Get("Openai-Beta"))
+	require.Equal(t, "resp_ws", gjson.GetBytes(prepared.Body, "previous_response_id").String())
+	require.False(t, gjson.GetBytes(prepared.Body, "input").Exists())
 }
 
 func TestHTTPTransportExecutorKeepsNormalHTTPContinuation(t *testing.T) {

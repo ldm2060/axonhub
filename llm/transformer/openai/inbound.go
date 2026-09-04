@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/ldm2060/axonhub/llm"
@@ -185,11 +186,26 @@ func (t *InboundTransformer) AggregateStreamChunks(
 
 // TransformError transforms LLM error response to HTTP error response.
 func (t *InboundTransformer) TransformError(ctx context.Context, rawErr error) *httpclient.Error {
-	if rawErr == nil {
+	if rawErr == nil || (reflect.ValueOf(rawErr).Kind() == reflect.Pointer && reflect.ValueOf(rawErr).IsNil()) {
 		return &httpclient.Error{
 			StatusCode: http.StatusInternalServerError,
 			Status:     http.StatusText(http.StatusInternalServerError),
-			Body:       xjson.MustMarshal(&OpenAIError{Detail: llm.ErrorDetail{Message: "An unexpected error occurred", Type: "unexpected_error"}}),
+			Body: xjson.MustMarshal(&OpenAIError{
+				StatusCode: http.StatusInternalServerError,
+				Detail:     llm.ErrorDetail{Message: "An unexpected error occurred", Type: "unexpected_error"},
+			}),
+		}
+	}
+
+	llmErr, isLLMError := errors.AsType[*llm.ResponseError](rawErr)
+	if isLLMError && llmErr == nil {
+		return &httpclient.Error{
+			StatusCode: http.StatusInternalServerError,
+			Status:     http.StatusText(http.StatusInternalServerError),
+			Body: xjson.MustMarshal(&OpenAIError{
+				StatusCode: http.StatusInternalServerError,
+				Detail:     llm.ErrorDetail{Message: "An unexpected error occurred", Type: "unexpected_error"},
+			}),
 		}
 	}
 
@@ -197,12 +213,26 @@ func (t *InboundTransformer) TransformError(ctx context.Context, rawErr error) *
 		return &httpclient.Error{
 			StatusCode: http.StatusUnprocessableEntity,
 			Status:     http.StatusText(http.StatusUnprocessableEntity),
-			Body:       xjson.MustMarshal(&OpenAIError{Detail: llm.ErrorDetail{Message: rawErr.Error(), Type: "invalid_model_error"}}),
+			Body: xjson.MustMarshal(&OpenAIError{
+				StatusCode: http.StatusUnprocessableEntity,
+				Detail:     llm.ErrorDetail{Message: rawErr.Error(), Type: "invalid_model_error"},
+			}),
 		}
 	}
 
 	if httpErr, ok := errors.AsType[*httpclient.Error](rawErr); ok {
-		return httpErr
+		if httpErr == nil {
+			return &httpclient.Error{
+				StatusCode: http.StatusInternalServerError,
+				Status:     http.StatusText(http.StatusInternalServerError),
+				Body: xjson.MustMarshal(&OpenAIError{
+					StatusCode: http.StatusInternalServerError,
+					Detail:     llm.ErrorDetail{Message: "An unexpected error occurred", Type: "unexpected_error"},
+				}),
+			}
+		}
+
+		return normalizeHTTPErrorStatus(httpErr)
 	}
 
 	// Handle validation errors
@@ -210,14 +240,24 @@ func (t *InboundTransformer) TransformError(ctx context.Context, rawErr error) *
 		return &httpclient.Error{
 			StatusCode: http.StatusBadRequest,
 			Status:     http.StatusText(http.StatusBadRequest),
-			Body:       xjson.MustMarshal(&OpenAIError{Detail: llm.ErrorDetail{Message: rawErr.Error(), Type: "invalid_request_error"}}),
+			Body: xjson.MustMarshal(&OpenAIError{
+				StatusCode: http.StatusBadRequest,
+				Detail:     llm.ErrorDetail{Message: rawErr.Error(), Type: "invalid_request_error"},
+			}),
 		}
 	}
 
-	if llmErr, ok := errors.AsType[*llm.ResponseError](rawErr); ok {
+	if isLLMError {
+		statusCode := llmErr.StatusCode
+		if statusCode == 0 && llmErr.Detail.Code == "context_length_exceeded" {
+			statusCode = http.StatusBadRequest
+		} else if statusCode < http.StatusBadRequest || statusCode > 599 {
+			statusCode = http.StatusBadGateway
+		}
+
 		return &httpclient.Error{
-			StatusCode: llmErr.StatusCode,
-			Status:     http.StatusText(llmErr.StatusCode),
+			StatusCode: statusCode,
+			Status:     http.StatusText(statusCode),
 			Body:       xjson.MustMarshal(&OpenAIError{Detail: llmErr.Detail}),
 		}
 	}
@@ -227,4 +267,17 @@ func (t *InboundTransformer) TransformError(ctx context.Context, rawErr error) *
 		Status:     http.StatusText(http.StatusInternalServerError),
 		Body:       xjson.MustMarshal(&OpenAIError{Detail: llm.ErrorDetail{Message: rawErr.Error(), Type: "internal_server_error"}}),
 	}
+}
+
+// normalizeHTTPErrorStatus maps invalid error statuses to an upstream failure.
+func normalizeHTTPErrorStatus(httpErr *httpclient.Error) *httpclient.Error {
+	if httpErr.StatusCode >= http.StatusBadRequest && httpErr.StatusCode <= 599 {
+		return httpErr
+	}
+
+	normalized := *httpErr
+	normalized.StatusCode = http.StatusBadGateway
+	normalized.Status = http.StatusText(http.StatusBadGateway)
+
+	return &normalized
 }
