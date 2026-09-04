@@ -1,12 +1,19 @@
 # AxonHub Entity Relationship Diagram (ERD)
 
-## Overview
+## Purpose
 
-AxonHub adopts a multi-level permission management architecture, supporting both Global and Project levels. The system manages user permissions through an RBAC (Role-Based Access Control) model, enabling fine-grained resource access control.
+This document gives a compact view of AxonHub's data domains and core relationships. It intentionally omits field inventories, database types, defaults, and indexes. The Ent schemas under `internal/ent/schema/` are the source of truth for those implementation details.
 
----
+## Domain Overview
 
-## Core Concepts
+| Domain | Main entities | Responsibility |
+|---|---|---|
+| Identity and access | User, Project, UserProject, Role, UserRole, APIKey | Membership, authentication, ownership, and scoped access |
+| Provider configuration | Model, Channel, ChannelModelPrice, ChannelModelPriceVersion | Available models, provider connections, and pricing |
+| Request lifecycle | Request, RequestExecution, UsageLog | Inbound requests, provider attempts, usage, and cost |
+| Observability | Thread, Trace, ChannelProbe, ProviderQuotaStatus | Request grouping and provider health |
+| Storage and configuration | DataStorage, System, Prompt, PromptProtectionRule | Payload storage and reusable system configuration |
+| Supporting access | OIDCIdentity, Invitation, APIKeyProfileTemplate, ChannelOverrideTemplate | Login identities, onboarding, and reusable templates |
 
 ### Hierarchical Structure
 
@@ -474,471 +481,79 @@ AxonHub adopts a multi-level permission management architecture, supporting both
 ## Entity Relationship Diagram
 
 ### Mermaid ERD
+### Mermaid ERD
 
 ```mermaid
 erDiagram
-    AxonHub ||--o{ User : "manages"
-    AxonHub ||--o{ Project : "manages"
-    AxonHub ||--o{ Model : "defines"
-    AxonHub ||--o{ Channel : "manages"
-    AxonHub ||--o{ System : "configures"
-    AxonHub ||--o{ Role : "defines"
-    AxonHub ||--o{ DataStorage : "configures"
+    User ||--o{ UserProject : joins
+    Project ||--o{ UserProject : has_members
+    User ||--o{ UserRole : receives
+    Role ||--o{ UserRole : assigned_through
+    Project o|--o{ Role : defines
 
-    User ||--o{ ProjectUser : "belongs to"
-    Project ||--o{ ProjectUser : "has"
-    User ||--o{ UserRole : "has"
-    Role ||--o{ UserRole : "assigned to"
+    User o|--o{ APIKey : owns
+    Project ||--o{ APIKey : contains
+    Project ||--o{ Prompt : contains
+    Project ||--o{ APIKeyProfileTemplate : contains
+    User ||--o{ ChannelOverrideTemplate : owns
 
-    Project ||--o{ Role : "contains"
-    Project ||--o{ APIKey : "contains"
-    Project ||--o{ Thread : "contains"
-    Project ||--o{ Trace : "contains"
-    Thread ||--o{ Trace : "contains"
-    Trace ||--o{ Request : "contains"
+    Project ||--o{ Thread : contains
+    Project ||--o{ Trace : contains
+    Thread o|--o{ Trace : groups
+    Trace o|--o{ Request : groups
+    Project ||--o{ Request : owns
+    APIKey o|--o{ Request : authenticates
+    Channel o|--o{ Request : routes
+    DataStorage o|--o{ Request : stores
 
-    APIKey }o--|| Project : "belongs to"
-    APIKey ||--o{ Request : "authenticates"
+    Request ||--o{ RequestExecution : attempts
+    Request ||--o{ UsageLog : accounts
+    Channel ||--o{ RequestExecution : executes
+    Channel o|--o{ UsageLog : attributes
+    DataStorage o|--o{ RequestExecution : stores
 
-    Request }o--|| Project : "belongs to"
-    Request }o--o| APIKey : "uses"
-    Request }o--o| Trace : "belongs to"
-    Request }o--o| Channel : "routes to"
-    Request }o--o| DataStorage : "stored in"
-    Request ||--o{ RequestExecution : "has"
-    Request ||--o{ UsageLog : "generates"
-
-    RequestExecution }o--|| Request : "executes"
-    RequestExecution }o--|| Channel : "uses"
-    RequestExecution }o--o| DataStorage : "stored in"
-
-    Channel ||--o{ Request : "processes"
-    Channel ||--o{ RequestExecution : "executes"
-    Channel ||--o{ UsageLog : "tracks"
-    Channel ||--|| ChannelPerformance : "has"
-
-    UsageLog }o--|| Project : "belongs to"
-    UsageLog }o--|| Request : "records"
-    UsageLog }o--o| Channel : "uses"
-
-    User ||--o{ ChannelOverrideTemplate : "creates"
-
-    Role ||--o{ RoleScope : "contains"
-
-    AxonHub {    }
-
-    User {
-        uuid id PK
-        string email UK
-        boolean is_owner
-        jsonb scopes
-    }
-
-    Project {
-        uuid id PK
-        string name UK
-        string status
-    }
-
-    Model {
-        uuid id PK
-        string developer
-        string model_id
-        string type
-        string name
-        string status
-    }
-
-    Channel {
-        uuid id PK
-        string name UK
-        string type
-        string status
-    }
-
-    ChannelPerformance {
-        uuid id PK
-        uuid channel_id FK
-        int success_rate
-        int avg_latency_ms
-    }
-
-    ChannelOverrideTemplate {
-        uuid id PK
-        uuid user_id FK
-        string name
-        string channel_type
-    }
-
-    DataStorage {
-        uuid id PK
-        string name UK
-        string type
-        boolean primary
-        string status
-    }
-
-    System {
-        uuid id PK
-        string key UK
-        jsonb value
-    }
-
-    Role {
-        uuid id PK
-        string name
-        string level
-        uuid project_id FK
-        jsonb scopes
-    }
-
-    Thread {
-        uuid id PK
-        uuid project_id FK
-        string thread_id UK
-    }
-
-    Trace {
-        uuid id PK
-        uuid project_id FK
-        string trace_id UK
-        uuid thread_id FK
-    }
-
-    APIKey {
-        uuid id PK
-        string key UK
-        uuid user_id FK
-        uuid project_id FK
-        jsonb scopes
-    }
-
-    Request {
-        uuid id PK
-        uuid project_id FK
-        uuid trace_id FK
-        uuid api_key_id FK
-        uuid channel_id FK
-        uuid data_storage_id FK
-        string model_id
-        string status
-    }
-
-    RequestExecution {
-        uuid id PK
-        uuid request_id FK
-        uuid channel_id FK
-        uuid data_storage_id FK
-        string status
-    }
-
-    UsageLog {
-        uuid id PK
-        uuid request_id FK
-        uuid project_id FK
-        uuid channel_id FK
-        integer total_tokens
-    }
-
-    ProjectUser {
-        uuid user_id FK
-        uuid project_id FK
-        boolean is_owner
-    }
-
-    UserRole {
-        uuid user_id FK
-        uuid role_id FK
-    }
-
-    RoleScope {
-        uuid role_id FK
-        string scope
-    }
+    Channel ||--o{ ChannelModelPrice : prices
+    ChannelModelPrice ||--o{ ChannelModelPriceVersion : versions
+    Channel ||--o{ ChannelProbe : probes
+    Channel o|--o| ProviderQuotaStatus : reports
 ```
 
-### Global Level Relationships
+## Relationship Notes
 
-```
-Global
-├── Users (Multiple)
-│   ├── is_owner: true (Owner users)
-│   └── scopes + roles (Custom permissions)
-├── Models (Multiple, shared by all Projects)
-├── Channels (Multiple, shared by all Projects)
-│   └── Channel Performance (One per Channel)
-├── Data Storages (Multiple, shared by all Projects)
-├── System Configs (Multiple, shared by all Projects)
-└── Global Roles (Multiple)
-```
+- A user can join multiple projects through `UserProject` and receive roles through `UserRole`.
+- A role may be global or belong to a project; authorization is evaluated from ownership, membership, roles, and scopes.
+- Every request belongs to a project. API key, trace, channel, and data-storage associations may be absent depending on the request source and processing stage.
+- `Request` represents the client-facing operation. `RequestExecution` represents an individual provider attempt, so one request can have multiple executions because of retries or fallback.
+- `UsageLog` records accounting data for a request and may attribute usage to a channel.
+- `Thread` groups traces, and a trace groups related requests.
 
-### Project Level Relationships
+## Request Lifecycle
 
-```
-Project
-├── Users (Multiple project members)
-│   ├── owner: true (Project Owner)
-│   └── project_roles + scopes (Permissions within project)
-├── Project Roles (Multiple)
-├── API Keys (Multiple)
-├── Threads (Multiple)
-├── Traces (Multiple)
-├── Requests (Multiple)
-│   ├── Request Executions (Multiple)
-│   └── Usage Logs (Multiple)
-└── Usage Logs (Multiple)
+```text
+API key or admin request
+  -> Request
+  -> one or more RequestExecution records
+  -> UsageLog
 ```
 
-### Detailed Relationships
+Request and response payloads may remain in the primary database or be stored through `DataStorage`. The entity relationships remain the same in either case.
 
-#### User Relationships
-- **User** → **Projects** (Many-to-Many): Users can join multiple projects
-- **User** → **Roles** (Many-to-Many): Users can have multiple roles (Global and Project)
-- **User** → **API Keys** (One-to-Many): Users can create multiple API Keys
-- **User** → **Channel Override Templates** (One-to-Many): Users can create multiple templates
+## Data Boundaries
 
-#### Project Relationships
-- **Project** → **Users** (Many-to-Many): Projects contain multiple users
-- **Project** → **Roles** (One-to-Many): Projects contain multiple project-level roles
-- **Project** → **API Keys** (One-to-Many): Projects contain multiple API Keys
-- **Project** → **Threads** (One-to-Many): Projects contain multiple threads
-- **Project** → **Traces** (One-to-Many): Projects contain multiple traces
-- **Project** → **Requests** (One-to-Many): Projects contain multiple requests
-- **Project** → **Usage Logs** (One-to-Many): Projects contain multiple usage logs
+- Project-owned records must retain their project scope throughout queries and mutations.
+- Global resources such as channels, models, system settings, and data-storage definitions can be shared across projects, subject to authorization.
+- Soft deletion is applied by the Ent schemas where historical identity or uniqueness must be preserved.
 
-#### Channel Relationships
-- **Channel** → **Requests** (One-to-Many): Channels can process multiple requests
-- **Channel** → **Request Executions** (One-to-Many): Channels can execute multiple requests
-- **Channel** → **Usage Logs** (One-to-Many): Channels associated with multiple usage logs
-- **Channel** → **Channel Performance** (One-to-One): Each channel has one performance record
+## Source of Truth
 
-#### Data Storage Relationships
-- **Data Storage** → **Requests** (One-to-Many): Can store multiple requests
-- **Data Storage** → **Request Executions** (One-to-Many): Can store multiple request executions
+Use this document for domain orientation only. For exact fields, constraints, indexes, and generated database definitions, consult:
 
-#### Request Relationships
-- **Request** → **Project** (Many-to-One): Request belongs to one project
-- **Request** → **API Key** (Many-to-One, Optional): Request may use one API Key
-- **Request** → **Trace** (Many-to-One, Optional): Request may belong to one Trace
-- **Request** → **Channel** (Many-to-One, Optional): Request may use one Channel
-- **Request** → **Data Storage** (Many-to-One, Optional): Request may be stored in one Data Storage
-- **Request** → **Request Executions** (One-to-Many): Request contains multiple execution records
-- **Request** → **Usage Logs** (One-to-Many): Request generates multiple usage logs
-
-#### Role Relationships
-- **Role** → **Users** (Many-to-Many): Roles can be assigned to multiple users
-- **Role** → **Project** (Many-to-One, Optional): Project-level roles belong to one project
-- **Role** → **Scopes** (One-to-Many): Roles contain multiple permission scopes
-
-#### Thread Relationships
-- **Thread** → **Project** (Many-to-One): Thread belongs to one project
-- **Thread** → **Traces** (One-to-Many): Thread contains multiple traces
-
-#### Trace Relationships
-- **Trace** → **Project** (Many-to-One): Trace belongs to one project
-- **Trace** → **Thread** (Many-to-One, Optional): Trace may belong to one thread
-- **Trace** → **Requests** (One-to-Many): Trace contains multiple requests
-
----
-
-## RBAC Permission Model
-
-### Scope Levels
-
-| Scope | Level | Description |
-|-------|-------|-------------|
-| `read_channels` | Global | Read channel information |
-| `write_channels` | Global | Create/modify channels |
-| `read_users` | Global | Read user information |
-| `write_users` | Global | Create/modify users |
-| `read_settings` | Global | Read system settings |
-| `write_settings` | Global | Modify system settings |
-| `read_roles` | Global/Project | Read role information |
-| `write_roles` | Global/Project | Create/modify roles |
-| `read_api_keys` | Project | Read API Keys |
-| `write_api_keys` | Project | Create/modify API Keys |
-| `read_requests` | Project | Read request records |
-| `write_requests` | Project | Create requests |
-
-### Role Level Rules
-
-1. **Global Role**:
-   - Can only configure Global Scopes
-   - Effective in all Projects
-   - Examples: System Admin, Channel Manager
-
-2. **Project Role**:
-   - Can configure both Global and Project Scopes
-   - Only effective in specific Project
-   - Examples: Project Admin, Developer, Viewer
-
-### Permission Inheritance Rules
-
-1. **Global Owner**:
-   - Has all Global and Project permissions
-   - Can manage all resources
-
-2. **Project Owner**:
-   - Has all permissions within the project
-   - Can manage all resources within the project
-
-3. **Custom Roles**:
-   - Get permissions according to Scopes defined in the Role
-   - Global Role permissions are effective in all Projects
-   - Project Role permissions are only effective in specific Project
-
----
-
-## Data Flow Examples
-
-### API Request Flow
-
-```
-1. User initiates request using API Key
-   ↓
-2. System validates API Key permissions (scopes)
-   ↓
-3. Create Request record (associated with User, Project, API Key)
-   ↓
-4. Select appropriate Channel
-   ↓
-5. Create Request Execution record
-   ↓
-6. Call Channel to execute request
-   ↓
-7. Record response to Request Execution
-   ↓
-8. Update Request status and response
-   ↓
-9. Create Usage Log record to track token usage
-```
-
-### Permission Check Flow
-
-```
-1. User initiates operation request
-   ↓
-2. Check if user is Owner
-   ├─ Yes → Allow operation
-   └─ No → Continue checking
-       ↓
-3. Check user's Global Roles and Scopes
-   ├─ Has permission → Allow operation
-   └─ No permission → Continue checking
-       ↓
-4. Check user's Roles and Scopes in current Project
-   ├─ Has permission → Allow operation
-   └─ No permission → Deny operation
-```
-
----
-
-## Indexing Strategy
-
-### Performance Optimization Indexes
-
-1. **User**:
-   - `email` (unique index)
-
-2. **Model**:
-   - `name` + `deleted_at` (unique composite index)
-
-3. **Channel**:
-   - `name` + `deleted_at` (unique composite index)
-
-4. **Channel Performance**:
-   - `channel_id` + `deleted_at` (unique composite index)
-
-5. **Channel Override Template**:
-   - `user_id` + `channel_type` + `name` + `deleted_at` (unique composite index)
-
-6. **Data Storage**:
-   - `name` (unique index)
-
-7. **Role**:
-   - `project_id` + `name` (unique composite index)
-   - `level` (regular index)
-
-8. **API Key**:
-   - `key` (unique index)
-   - `user_id` (regular index)
-   - `project_id` (regular index)
-
-9. **Request**:
-   - `api_key_id` (regular index)
-   - `channel_id` (regular index)
-   - `trace_id` (regular index)
-   - `created_at` (regular index, for time range queries)
-   - `status` (regular index, for status filtering)
-
-10. **Thread**:
-    - `project_id` (regular index)
-    - `thread_id` (unique index)
-
-11. **Trace**:
-    - `project_id` (regular index)
-    - `trace_id` (unique index)
-    - `thread_id` (regular index)
-
-12. **Request Execution**:
-    - `request_id` (regular index)
-    - `channel_id` (regular index)
-
-13. **Usage Log**:
-    - `request_id` (regular index)
-    - `channel_id` (regular index)
-    - `created_at` (regular index)
-    - `model_id` (regular index)
-    - `project_id` + `created_at` (composite index, for project usage analysis)
-    - `channel_id` + `created_at` (composite index, for channel usage analysis)
-
-14. **User Project**:
-    - `user_id` + `project_id` + `deleted_at` (unique composite index)
-    - `project_id` (regular index)
-
-15. **User Role**:
-    - `user_id` + `role_id` + `deleted_at` (unique composite index)
-    - `role_id` (regular index)
-
----
-
-## Soft Delete Mechanism
-
-The following entities support soft delete:
-
-- User
-- Channel
-- System
-- Role
-- API Key
-- Request
-- Usage Log
-- Thread
-- Trace
-
-Soft delete is implemented through the `deleted_at` field. When deleting, a timestamp is set instead of physically deleting the record, facilitating data recovery and auditing.
-
----
-
-## Summary
-
-AxonHub's data model design follows these principles:
-
-1. **Hierarchical Separation**: Clear separation between Global and Project levels with reasonable resource sharing and isolation
-2. **Fine-grained Permissions**: Fine-grained permission control through RBAC model
-3. **Traceability**: Complete records of request execution and usage supporting auditing and analysis
-4. **Observability**: Request chain tracing and observability through Thread and Trace
-5. **Extensibility**: Support for multi-channel, multi-model, multi-project extension requirements
-6. **Performance Optimization**: Reasonable index design supporting efficient queries
-7. **Data Security**: Sensitive field marking and soft delete mechanism ensuring data security
-
-This design provides AxonHub with flexible, secure, and efficient data management capabilities, supporting request tracing, link analysis, and observability requirements.
+- `internal/ent/schema/` — authored entity definitions and relationships
+- `internal/ent/migrate/schema.go` — generated migration schema
+- `internal/server/biz/` — lifecycle and business invariants
 
 ## Related Resources
 
 - [Transformation Flow Architecture](transformation-flow.md)
 - [Fine-grained Permission Guide](../guides/permissions.md)
 - [Tracing Guide](../guides/tracing.md)
-- [OpenAI API](../api-reference/openai-api.md)
-- [Anthropic API](../api-reference/anthropic-api.md)
-- [Gemini API](../api-reference/gemini-api.md)

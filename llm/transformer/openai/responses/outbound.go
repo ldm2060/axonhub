@@ -21,8 +21,9 @@ import (
 )
 
 var (
-	_ transformer.Outbound               = (*OutboundTransformer)(nil)
-	_ pipeline.ChannelCustomizedExecutor = (*OutboundTransformer)(nil)
+	_ transformer.Outbound                  = (*OutboundTransformer)(nil)
+	_ transformer.TransportRequestFinalizer = (*OutboundTransformer)(nil)
+	_ pipeline.ChannelCustomizedExecutor    = (*OutboundTransformer)(nil)
 )
 
 // Config holds all configuration for the OpenAI Responses outbound transformer.
@@ -95,8 +96,11 @@ func NewOutboundTransformerWithConfig(config *Config) (*OutboundTransformer, err
 }
 
 func (t *OutboundTransformer) CustomizeExecutor(executor pipeline.Executor) pipeline.Executor {
-	if t == nil || t.config == nil || t.config.Transport != TransportWebSocket {
+	if t == nil || t.config == nil {
 		return executor
+	}
+	if t.config.Transport != TransportWebSocket {
+		return &httpTransportExecutor{inner: executor, finalize: t.FinalizeTransportRequest}
 	}
 
 	if !ExecutorComparable(executor) {
@@ -117,6 +121,14 @@ func (t *OutboundTransformer) CustomizeExecutor(executor pipeline.Executor) pipe
 	t.webSocketExecutors[executor] = webSocketExecutor
 
 	return webSocketExecutor
+}
+
+func (t *OutboundTransformer) FinalizeTransportRequest(request *httpclient.Request) *httpclient.Request {
+	if t == nil || t.config == nil || t.config.Transport == TransportWebSocket {
+		return request
+	}
+
+	return PrepareHTTPTransportRequest(request, false)
 }
 
 func (t *OutboundTransformer) Stop() {

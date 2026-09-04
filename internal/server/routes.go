@@ -197,14 +197,25 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		openAPIGroup.POST("/webhook/echo", handlers.System.WebhookEcho)
 	}
 
-	apiGroup := server.Group(
-		"/",
+	apiMiddlewares := []gin.HandlerFunc{
 		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
 		middleware.WithSource(request.SourceAPI),
 		middleware.WithThread(server.Config.Trace, services.ThreadService),
 		middleware.WithTrace(server.Config.Trace, services.TraceService),
-	)
+	}
+	apiGroup := server.Group("/", append([]gin.HandlerFunc{
+		middleware.WithTimeout(server.Config.LLMRequestTimeout),
+	}, apiMiddlewares...)...)
+
+	// WebSocket mode owns a long-lived connection and applies its processing
+	// timeout per response.create event, so it must not inherit the ordinary
+	// single-request timeout from apiGroup.
+	responsesWebSocketGroup := server.Group("/", apiMiddlewares...)
+	responsesWebSocketGroup.GET("/v1/responses", handlers.OpenAI.CreateResponseWebSocket)
+	responsesWebSocketGroup.GET("/v1/responses/compact", handlers.OpenAI.CompactResponseWebSocket)
+	responsesWebSocketGroup.GET("/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
+	responsesWebSocketGroup.GET("/v1/chat/completions", handlers.OpenAI.ChatCompletionWebSocket)
 
 	{
 		openaiGroup := apiGroup.Group("/v1")
@@ -230,12 +241,6 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		// OpenAI-compatible Anthropic endpoint
 		openaiGroup.POST("/messages", handlers.Anthropic.CreateMessage)
-
-		// WebSocket upgrade routes (GET only â WS handshake is an HTTP Upgrade)
-		openaiGroup.GET("/chat/completions", handlers.OpenAI.ChatCompletionWebSocket)
-		openaiGroup.GET("/responses", handlers.OpenAI.CreateResponseWebSocket)
-		openaiGroup.GET("/responses/compact", handlers.OpenAI.CompactResponseWebSocket)
-		openaiGroup.GET("/messages", handlers.Anthropic.CreateMessageWebSocket)
 
 		// Compatible with OpenAI API
 		openaiGroup.POST("/rerank", handlers.Jina.Rerank)

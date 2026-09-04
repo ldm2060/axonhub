@@ -115,9 +115,35 @@ export function useQuotaChannels(): QuotaChannel[] {
     );
 }
 
+const RESET_CHANNEL_QUOTA_NOW_MUTATION = `
+  mutation ResetChannelQuotaNow($channelID: ID!) {
+    resetChannelQuotaNow(channelID: $channelID)
+  }
+`;
+
+export async function resetChannelQuotaNow(channelID: string) {
+  return graphqlRequest(RESET_CHANNEL_QUOTA_NOW_MUTATION, { channelID });
+}
+
+export type ProviderQuotaReset = {
+  id: string;
+  status: string;
+  type?: string;
+  grantedAt?: string;
+  expiresAt?: string;
+  title?: string;
+};
+
+export type ProviderQuotaResetList = {
+  supported: boolean;
+  resets: ProviderQuotaReset[];
+  error?: string;
+};
+
 export type ProviderQuotaDataCommon = {
   plan_type?: string;
   error?: string;
+  _resets?: ProviderQuotaResetList;
 };
 
 export type ProviderClaudeQuotaData = ProviderQuotaDataCommon & {

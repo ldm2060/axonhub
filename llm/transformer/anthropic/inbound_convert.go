@@ -340,6 +340,10 @@ func convertToLLMRequest(anthropicReq *MessageRequest) (*llm.Request, error) {
 	if anthropicReq.Thinking != nil {
 		switch anthropicReq.Thinking.Type {
 		case "enabled":
+			// budget_tokens is the client's native expression here: mark it so the
+			// outbound transformer round-trips the budget verbatim instead of
+			// re-deriving a thinking config from the derived effort level.
+			chatReq.TransformerMetadata[TransformerMetadataKeyThinkingType] = "enabled"
 			chatReq.ReasoningEffort = thinkingBudgetToReasoningEffort(anthropicReq.Thinking.BudgetTokens)
 			chatReq.ReasoningBudget = lo.ToPtr(anthropicReq.Thinking.BudgetTokens)
 
@@ -366,6 +370,9 @@ func convertToLLMRequest(anthropicReq *MessageRequest) (*llm.Request, error) {
 	// Convert output_config
 	if anthropicReq.OutputConfig != nil && anthropicReq.OutputConfig.Effort != "" {
 		chatReq.TransformerMetadata[TransformerMetadataKeyOutputConfigEffort] = anthropicReq.OutputConfig.Effort
+		// The client sent an explicit effort level: pass it through verbatim (including
+		// "max") so converted protocols see the exact requested level. The original
+		// value is preserved in TransformerMetadata for native round-trips.
 		chatReq.ReasoningEffort = anthropicReq.OutputConfig.Effort
 	}
 
@@ -633,37 +640,35 @@ func convertToAnthropicResponse(chatResp *llm.Response) *Message {
 				}
 			}
 
+			if message.Refusal != "" {
+				appendOrdered(nil, MessageContentBlock{
+					Type: "text",
+					Text: lo.ToPtr(message.Refusal),
+				})
+			}
 
-				if message.Refusal != "" {
-					appendOrdered(nil, MessageContentBlock{
-						Type: "text",
-						Text: lo.ToPtr(message.Refusal),
-					})
+			for _, toolCall := range message.ToolCalls {
+				var input json.RawMessage
+				if toolCall.Function.Arguments != "" {
+					input = xjson.SafeJSONRawMessage(toolCall.Function.Arguments)
+				} else {
+					input = json.RawMessage("{}")
+				}
+				input = sanitizeReadToolInput(toolCall.Function.Name, input)
+
+				blockType := "tool_use"
+				if at := getAnthropicType(toolCall.TransformerMetadata); at != "" {
+					blockType = at
 				}
 
-				for _, toolCall := range message.ToolCalls {
-					var input json.RawMessage
-					if toolCall.Function.Arguments != "" {
-						input = xjson.SafeJSONRawMessage(toolCall.Function.Arguments)
-					} else {
-						input = json.RawMessage("{}")
-					}
-					input = sanitizeReadToolInput(toolCall.Function.Name, input)
-
-					blockType := "tool_use"
-					if at := getAnthropicType(toolCall.TransformerMetadata); at != "" {
-						blockType = at
-					}
-
-					appendOrdered(toolCall.TransformerMetadata, MessageContentBlock{
-						Type:   blockType,
-						ID:     toolCall.ID,
-						Name:   &toolCall.Function.Name,
-						Input:  input,
-						Caller: getAnthropicCaller(toolCall.TransformerMetadata),
-					})
-				}
-
+				appendOrdered(toolCall.TransformerMetadata, MessageContentBlock{
+					Type:   blockType,
+					ID:     toolCall.ID,
+					Name:   &toolCall.Function.Name,
+					Input:  input,
+					Caller: getAnthropicCaller(toolCall.TransformerMetadata),
+				})
+			}
 
 			for _, ir := range message.InlineToolResults {
 				if block, ok := toolResultBlockFromInline(ir); ok {

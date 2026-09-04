@@ -111,6 +111,7 @@ How to get this right:
   3. `git update-ref refs/heads/<branch> $NEW`
 - Verify the result: `git log --graph --oneline -10` should show the upstream commits as a side branch merged in by your merge commit, and `git merge-base HEAD remote/unstable` should equal the upstream tip you merged.
 - Before pushing, run the frontend CI steps locally so a missing format/lint/typecheck failure doesn't surface only on the runner: `cd frontend && pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm build && pnpm bundle:check`. Past incident: a merge commit passed `pnpm lint` and `pnpm typecheck` locally but failed CI at `pnpm format:check` because we hadn't run prettier on the merged files — fix by running `pnpm format` and committing the result as a follow-up `style(frontend): apply prettier formatting to satisfy format:check`.
+- You mush retain the upstream commits in the merge commit's history. Do not squash them into a single commit or rebase them onto our branch — that breaks future merges and obscures the provenance of upstream changes.
 
 ## When to escalate to the user
 

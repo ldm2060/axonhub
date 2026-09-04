@@ -1,3 +1,4 @@
+//nolint:exhaustruct_v5 // Test fixtures intentionally set only fields relevant to each scenario.
 package orchestrator
 
 import (
@@ -37,6 +38,19 @@ type mockTransformer struct {
 	apiFormat          llm.APIFormat
 	requestAPIFormat   llm.APIFormat
 	includeEffort      bool
+}
+
+type mockTransportFinalizer struct {
+	*mockTransformer
+
+	marker string
+}
+
+func (m *mockTransportFinalizer) FinalizeTransportRequest(request *httpclient.Request) *httpclient.Request {
+	cloned := *request
+	cloned.Headers = request.Headers.Clone()
+	cloned.Headers.Set("X-Test-Transport", m.marker)
+	return &cloned
 }
 
 func (m *mockTransformer) TransformRequest(ctx context.Context, req *llm.Request) (*httpclient.Request, error) {
@@ -110,10 +124,10 @@ func TestPersistentOutboundTransformer_TransformRequest_ClaudeCodeOpenAICompatib
 			wantSecondRole: "user",
 		},
 		{
-			name:           "non Claude Code DeepSeek keeps transformer behavior",
+			name:           "non Claude Code client gets the channel mapping too",
 			channelType:    entchannel.TypeDeepseek,
 			userAgent:      "codex_cli_rs/1.0",
-			wantEffort:     "xhigh",
+			wantEffort:     "max",
 			wantSecondRole: "system",
 		},
 	}
@@ -422,6 +436,51 @@ func TestPersistentOutboundTransformer_PrepareForRetry_UsesCandidateAPIFormatOut
 	require.Same(t, embeddingOutbound, processor.wrapped)
 }
 
+func TestPersistentOutboundTransformer_PrepareForRetry_RefreshesModelAPIFormat(t *testing.T) {
+	ctx := context.Background()
+	ch := &biz.Channel{Channel: &ent.Channel{
+		ID:   1,
+		Name: "multi-model",
+		Endpoints: []objects.ChannelEndpoint{
+			{APIFormat: llm.APIFormatOpenAIChatCompletion.String()},
+			{APIFormat: llm.APIFormatOpenAIResponse.String()},
+			{APIFormat: llm.APIFormatAnthropicMessage.String()},
+		},
+		Settings: &objects.ChannelSettings{ModelProtocols: []objects.ModelProtocol{
+			{Model: "model-a", APIFormats: []string{llm.APIFormatAnthropicMessage.String()}},
+			{Model: "model-b", APIFormats: []string{llm.APIFormatOpenAIResponse.String()}},
+		}},
+	}}
+	req := &llm.Request{
+		Model:       "requested-model",
+		RequestType: llm.RequestTypeChat,
+		APIFormat:   llm.APIFormatOpenAIChatCompletion,
+	}
+	candidate := &ChannelModelsCandidate{
+		Channel: ch,
+		Models: []biz.ChannelModelEntry{
+			{RequestModel: "model-a", ActualModel: "model-a"},
+			{RequestModel: "model-b", ActualModel: "model-b"},
+		},
+	}
+	populateAPIFormat(ctx, []*ChannelModelsCandidate{candidate}, req)
+
+	processor := &PersistentOutboundTransformer{
+		state: &PersistenceState{
+			CurrentCandidate:  candidate,
+			CurrentModelIndex: 0,
+			OriginalModel:     req.Model,
+			LlmRequest:        req,
+			RequestExec:       &ent.RequestExecution{ID: 1},
+		},
+	}
+
+	require.Equal(t, llm.APIFormatAnthropicMessage.String(), candidate.APIFormat)
+	require.NoError(t, processor.PrepareForRetry(ctx))
+	require.Equal(t, 1, processor.state.CurrentModelIndex)
+	require.Equal(t, llm.APIFormatOpenAIResponse.String(), candidate.APIFormat)
+}
+
 func TestPersistentOutboundTransformer_NextChannel_UsesCandidateAPIFormatOutbound(t *testing.T) {
 	ctx := context.Background()
 
@@ -468,6 +527,60 @@ func TestPersistentOutboundTransformer_NextChannel_UsesCandidateAPIFormatOutboun
 	require.Equal(t, 1, processor.state.CurrentCandidateIndex)
 	require.Same(t, embeddingChannel, processor.state.CurrentCandidate.Channel)
 	require.Same(t, embeddingOutbound, processor.wrapped)
+}
+
+func TestFinalizeTransportRequestUsesSwitchedCandidate(t *testing.T) {
+	firstOutbound := new(mockTransportFinalizer)
+	firstOutbound.mockTransformer = new(mockTransformer)
+	firstOutbound.marker = "websocket"
+	secondOutbound := new(mockTransportFinalizer)
+	secondOutbound.mockTransformer = new(mockTransformer)
+	secondOutbound.marker = "http"
+
+	firstEntChannel := new(ent.Channel)
+	firstEntChannel.ID = 1
+	firstEntChannel.Name = "websocket"
+	firstChannel := new(biz.Channel)
+	firstChannel.Channel = firstEntChannel
+	firstChannel.Outbound = firstOutbound
+	var firstModel biz.ChannelModelEntry
+	firstModel.RequestModel = "gpt-5"
+	firstModel.ActualModel = "gpt-5"
+	firstCandidate := new(ChannelModelsCandidate)
+	firstCandidate.Channel = firstChannel
+	firstCandidate.Models = []biz.ChannelModelEntry{firstModel}
+
+	secondEntChannel := new(ent.Channel)
+	secondEntChannel.ID = 2
+	secondEntChannel.Name = "http"
+	secondChannel := new(biz.Channel)
+	secondChannel.Channel = secondEntChannel
+	secondChannel.Outbound = secondOutbound
+	var secondModel biz.ChannelModelEntry
+	secondModel.RequestModel = "gpt-5"
+	secondModel.ActualModel = "gpt-5"
+	secondCandidate := new(ChannelModelsCandidate)
+	secondCandidate.Channel = secondChannel
+	secondCandidate.Models = []biz.ChannelModelEntry{secondModel}
+
+	state := new(PersistenceState)
+	state.CurrentCandidateIndex = 0
+	state.ChannelModelsCandidates = []*ChannelModelsCandidate{firstCandidate, secondCandidate}
+	processor := new(PersistentOutboundTransformer)
+	processor.wrapped = firstOutbound
+	processor.state = state
+	middleware := finalizeTransportRequest(processor)
+	request := new(httpclient.Request)
+	request.Headers = make(http.Header)
+
+	first, err := middleware.OnOutboundRawRequest(context.Background(), request)
+	require.NoError(t, err)
+	require.Equal(t, "websocket", first.Headers.Get("X-Test-Transport"))
+
+	require.NoError(t, processor.NextChannel(context.Background()))
+	second, err := middleware.OnOutboundRawRequest(context.Background(), request)
+	require.NoError(t, err)
+	require.Equal(t, "http", second.Headers.Get("X-Test-Transport"))
 }
 
 func TestSelectOutboundForCandidate(t *testing.T) {

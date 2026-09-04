@@ -3,18 +3,21 @@ package biz
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"go.uber.org/fx"
 
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 type QuotaChannelStatus struct {
@@ -96,6 +99,7 @@ type ProviderQuotaServiceParams struct {
 	Ent           *ent.Client
 	SystemService *SystemService
 	UsageMonitor  *UsageMonitorService
+	HttpClient    *httpclient.HttpClient
 }
 
 type ProviderQuotaService struct {
@@ -103,6 +107,7 @@ type ProviderQuotaService struct {
 
 	SystemService *SystemService
 	usageMonitor  *UsageMonitorService
+	httpClient    *httpclient.HttpClient
 
 	mu                  sync.Mutex
 	quotaCache          sync.Map
@@ -114,6 +119,7 @@ func NewProviderQuotaService(params ProviderQuotaServiceParams) *ProviderQuotaSe
 		AbstractService: &AbstractService{db: params.Ent},
 		SystemService:   params.SystemService,
 		usageMonitor:    params.UsageMonitor,
+		httpClient:      params.HttpClient,
 	}
 
 	go svc.loadQuotaCache(context.Background())
@@ -271,6 +277,148 @@ func (svc *ProviderQuotaService) ManualCheck(ctx context.Context) {
 	svc.usageMonitor.RunPollAll(ctx)
 }
 
+// ListResets returns the reset capability and available resets for a channel.
+// Providers that do not implement Resetter report Supported=false without an
+// error so callers can treat resetting as an optional capability.
+func (svc *ProviderQuotaService) ListResets(ctx context.Context, channelID int) (provider_quota.ResetList, error) {
+	ch, err := svc.db.Channel.Query().Where(channel.IDEQ(channelID)).Only(ctx)
+	if err != nil {
+		return provider_quota.ResetList{}, fmt.Errorf("failed to load channel: %w", err)
+	}
+
+	providerType := getProviderType(ch)
+	resetter, supported := svc.resetCheckerForProvider(providerType)
+	if !supported || resetter == nil {
+		return provider_quota.ResetList{Supported: false, Resets: nil, Error: ""}, nil
+	}
+
+	if enabled, err := svc.SystemService.IsProviderQuotaCollectionEnabled(ctx, providerType); err != nil {
+		return provider_quota.ResetList{}, fmt.Errorf("failed to read provider quota collection settings: %w", err)
+	} else if !enabled {
+		return provider_quota.ResetList{}, fmt.Errorf("provider quota collection is disabled for %s", providerType)
+	}
+
+	if !hasCredentialsForProvider(ch) {
+		return provider_quota.ResetList{}, fmt.Errorf("channel has no credentials")
+	}
+
+	resets, err := resetter.ListResets(ctx, ch)
+	resets.Supported = true
+	if err != nil {
+		return resets, fmt.Errorf("failed to list %s quota resets: %w", providerType, err)
+	}
+
+	return resets, nil
+}
+
+// ResetChannelQuotaNow attempts to redeem a provider-managed reset for a channel.
+func (svc *ProviderQuotaService) ResetChannelQuotaNow(ctx context.Context, channelID int) error {
+	ch, err := svc.db.Channel.Query().Where(channel.IDEQ(channelID)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to load channel: %w", err)
+	}
+
+	providerType := getProviderType(ch)
+	resetter, supported := svc.resetCheckerForProvider(providerType)
+	if !supported || resetter == nil {
+		return fmt.Errorf("%w for provider %q", provider_quota.ErrResetUnsupported, providerType)
+	}
+
+	if enabled, err := svc.SystemService.IsProviderQuotaCollectionEnabled(ctx, providerType); err != nil {
+		return fmt.Errorf("failed to read provider quota collection settings: %w", err)
+	} else if !enabled {
+		return fmt.Errorf("provider quota collection is disabled for %s", providerType)
+	}
+
+	if !hasCredentialsForProvider(ch) {
+		return fmt.Errorf("channel has no credentials")
+	}
+
+	if err := resetter.Reset(ctx, ch); err != nil {
+		return fmt.Errorf("failed to reset %s quota: %w", providerType, err)
+	}
+
+	// Refresh the quota status immediately so the UI reflects the reset. Our
+	// architecture delegates polling to UsageMonitorService, so trigger a full
+	// poll rather than a single-channel check.
+	svc.mu.Lock()
+	svc.usageMonitor.RunPollAll(ctx)
+	svc.mu.Unlock()
+
+	return nil
+}
+
+// resetCheckerForProvider returns a Resetter for the given provider type by
+// instantiating the provider's quota checker directly. Unlike upstream's
+// svc.checkers map, this does not retain a long-lived checker instance — the
+// checker is cheap to construct and only the Reset/ListResets capability is
+// needed here; regular polling is handled by UsageMonitorService.
+func (svc *ProviderQuotaService) resetCheckerForProvider(providerType string) (provider_quota.Resetter, bool) {
+	switch providerType {
+	case "codex":
+		return provider_quota.NewCodexQuotaChecker(svc.httpClient), true
+	default:
+		return nil, false
+	}
+}
+
+func getProviderType(ch *ent.Channel) string {
+	switch ch.Type { //nolint:exhaustive
+	case channel.TypeClaudecode:
+		return "claudecode"
+	case channel.TypeCodex:
+		return "codex"
+	case channel.TypeXaiSubscription:
+		return "xai_subscription"
+	case channel.TypeGithubCopilot:
+		return "github_copilot"
+	case channel.TypeNanogpt, channel.TypeNanogptResponses:
+		return "nanogpt"
+	case channel.TypeCline:
+		return "cline"
+	case channel.TypeOpenai, channel.TypeOpenaiResponses:
+		return provider_quota.DetectProviderFromURL(ch.BaseURL)
+	case channel.TypeOpencodeGo, channel.TypeOpencodeGoAnthropic:
+		return "opencode_go"
+	case channel.TypeMoonshotCoding:
+		return "kimi_code"
+	case channel.TypeMinimax, channel.TypeMinimaxAnthropic:
+		return "minimax"
+	case channel.TypeZhipu, channel.TypeZhipuAnthropic:
+		return "zhipu"
+	default:
+		return ""
+	}
+}
+
+func hasCredentialsForProvider(ch *ent.Channel) bool {
+	if ch.Type == channel.TypeOpenai || ch.Type == channel.TypeOpenaiResponses {
+		providerType := provider_quota.DetectProviderFromURL(ch.BaseURL)
+		if _, ok := provider_quota.URLDetectedProviders()[providerType]; ok {
+			return strings.TrimSpace(ch.Credentials.APIKey) != "" || len(ch.Credentials.APIKeys) > 0
+		}
+	}
+
+	if ch.Type == channel.TypeCodex || ch.Type == channel.TypeClaudecode || ch.Type == channel.TypeXaiSubscription {
+		return ch.Credentials.OAuth != nil || isOAuthJSON(ch.Credentials.APIKey)
+	}
+
+	if ch.Type == channel.TypeCline {
+		if strings.TrimSpace(ch.Credentials.APIKey) != "" {
+			return true
+		}
+		for _, apiKey := range ch.Credentials.APIKeys {
+			if strings.TrimSpace(apiKey) != "" {
+				return true
+			}
+		}
+		return false
+	}
+
+	return ch.Credentials.OAuth != nil || isOAuthJSON(ch.Credentials.APIKey) ||
+		strings.TrimSpace(ch.Credentials.APIKey) != "" || len(ch.Credentials.APIKeys) > 0
+}
+
 // extractLimitsFromQuotaLimits extracts QuotaLimitStatus from the []map[string]any
 // stored in the usage_monitor_channel.quota_limits field.
 func extractLimitsFromQuotaLimits(data []map[string]any) []provider_quota.QuotaLimitStatus {
@@ -278,7 +426,7 @@ func extractLimitsFromQuotaLimits(data []map[string]any) []provider_quota.QuotaL
 		return nil
 	}
 
-	var limits []provider_quota.QuotaLimitStatus
+	limits := make([]provider_quota.QuotaLimitStatus, 0, len(data))
 	for _, m := range data {
 		ls := provider_quota.QuotaLimitStatus{}
 

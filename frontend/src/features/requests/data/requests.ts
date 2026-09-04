@@ -107,7 +107,7 @@ function buildRequestsQuery(
                   id
                   createdAt
                   modelID
-                  reasoningEffort
+                  format
                   status
                   reasoningEffort
                   passThroughApplied${executionChannelFields}

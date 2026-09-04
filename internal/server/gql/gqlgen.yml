@@ -106,6 +106,12 @@ models:
   ModelMappingInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ModelMapping
+  ModelProtocol:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ModelProtocol
+  ModelProtocolInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ModelProtocol
   ReasoningEffortMapping:
     model:
       - github.com/ldm2060/axonhub/llm.ReasoningEffortMapping
