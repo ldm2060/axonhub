@@ -24,7 +24,11 @@ test('Cline Pass unavailable quota does not require active windows', () => {
     /qd\.pool === 'cline_pass' && qd\.windows != null/,
     'the active Cline Pass type guard should require window data'
   );
-  assert.match(quotaBadges, /isClineUnavailablePassQuotaData\(qd\)/, 'the Cline quota row should render unavailable Pass data separately');
+  assert.match(
+    quotaBadges,
+    /isClineUnavailablePassQuotaData\(channel\.quotaStatus\.quotaData\)/,
+    'the Cline quota row should render unavailable Pass data separately'
+  );
   assert.match(quotaBadges, /quota\.status\.cline_pass_unavailable/, 'the status badge should use the Cline Pass unavailable label');
 });
 

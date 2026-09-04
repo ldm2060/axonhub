@@ -30,6 +30,7 @@ import Volcengine from '@lobehub/icons/es/Volcengine/components/Mono.js';
 import XAI from '@lobehub/icons/es/XAI/components/Mono.js';
 import XiaomiMiMo from '@lobehub/icons/es/XiaomiMiMo/components/Mono.js';
 import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
+import ZenMux from '@lobehub/icons/es/ZenMux/components/Mono.js';
 import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
@@ -800,6 +801,38 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     color: 'bg-orange-100 text-orange-800 border-orange-200',
     icon: Groq,
   },
+  zenmux: {
+    channelType: 'zenmux',
+    baseURL: 'https://zenmux.ai/api/v1',
+    defaultModels: ['openai/gpt-5', 'anthropic/claude-sonnet-4.5'],
+    apiFormat: OPENAI_CHAT_COMPLETIONS,
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: ZenMux,
+  },
+  zenmux_responses: {
+    channelType: 'zenmux_responses',
+    baseURL: 'https://zenmux.ai/api/v1',
+    defaultModels: ['openai/gpt-5'],
+    apiFormat: OPENAI_RESPONSES,
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: ZenMux,
+  },
+  zenmux_anthropic: {
+    channelType: 'zenmux_anthropic',
+    baseURL: 'https://zenmux.ai/api/anthropic',
+    defaultModels: ['anthropic/claude-sonnet-4.5'],
+    apiFormat: ANTHROPIC_MESSAGES,
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: ZenMux,
+  },
+  zenmux_gemini: {
+    channelType: 'zenmux_gemini',
+    baseURL: 'https://zenmux.ai/api/vertex-ai',
+    defaultModels: ['google/gemini-2.5-pro'],
+    apiFormat: GEMINI_CONTENTS,
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: ZenMux,
+  },
 };
 
 /**
@@ -860,7 +893,8 @@ export type Provider =
   | 'opencode_go'
   | 'ollama'
   | 'evolink'
-  | 'groq';
+  | 'groq'
+  | 'zenmux';
 
 /**
  * Map channel type to provider
@@ -933,6 +967,10 @@ export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   evolink: 'evolink',
   evolink_anthropic: 'evolink',
   groq: 'groq',
+  zenmux: 'zenmux',
+  zenmux_responses: 'zenmux',
+  zenmux_anthropic: 'zenmux',
+  zenmux_gemini: 'zenmux',
 };
 
 /**

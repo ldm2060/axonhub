@@ -1085,18 +1085,22 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 		}
 
 		if input.Credentials != nil {
-			var typ channel.Type
-			if input.Type != nil {
-				typ = *input.Type
-			} else {
-				existing, err := db.Channel.Get(ctx, id)
-				if err != nil {
-					return fmt.Errorf("get channel for credential validation: %w", err)
-				}
-				typ = existing.Type
-			}
 			credentials := *input.Credentials
-			if err := svc.canonicalizeKimiCodeCredentials(typ, &credentials); err != nil {
+			existing, err := db.Channel.Query().
+				Where(channel.IDEQ(id)).
+				Select(channel.FieldType, channel.FieldCredentials).
+				Only(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to load existing channel credentials: %w", err)
+			}
+			effectiveType := existing.Type
+			if input.Type != nil {
+				effectiveType = *input.Type
+			}
+			if credentials.ManagementAPIKey == "" && isZenmuxChannelType(effectiveType) {
+				credentials.ManagementAPIKey = existing.Credentials.ManagementAPIKey
+			}
+			if err := svc.canonicalizeKimiCodeCredentials(effectiveType, &credentials); err != nil {
 				return err
 			}
 			mut.SetCredentials(credentials)
@@ -1181,6 +1185,15 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 	svc.asyncReloadChannels()
 
 	return updated, nil
+}
+
+func isZenmuxChannelType(channelType channel.Type) bool {
+	switch channelType {
+	case channel.TypeZenmux, channel.TypeZenmuxResponses, channel.TypeZenmuxAnthropic, channel.TypeZenmuxGemini:
+		return true
+	default:
+		return false
+	}
 }
 
 // UpdateChannelStatus updates the status of a channel.

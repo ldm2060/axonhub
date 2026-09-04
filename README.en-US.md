@@ -271,41 +271,40 @@ Here are some screenshots of AxonHub in action:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Deployment Guide
 
-### 30-Second Local Start
+Ask your agent to read and follow [`deploy-axonhub`](https://github.com/looplj/axonhub-skills/blob/main/deploy-axonhub/SKILL.md) to deploy AxonHub.
 
-```bash
-# Download and extract (macOS ARM64 example)
-curl -sSL https://github.com/ldm2060/axonhub/releases/latest/download/axonhub_darwin_arm64.tar.gz | tar xz
-cd axonhub_*
+---
 
-# Run with SQLite (default)
-./axonhub
+## ⚡ Quick Start
 
-# Open http://localhost:8090
-# First run: Follow the setup wizard to initialize the system (create admin account, password must be at least 6 characters)
-```
+After deployment:
 
-That's it! Now configure your first AI channel and start calling models through AxonHub.
-
-### Zero-Code Migration Example
-
-**Your existing code works without any changes.** Just point your SDK to AxonHub:
+1. **Initialize the system**
+   - Open the AxonHub URL returned by your agent.
+   - Follow the initialization wizard to create the administrator account.
+2. **Add a channel**
+   - Add an AI provider and its API key under **Channels**.
+   - Configure supported models, test the connection, and enable the channel.
+3. **Create an API key**
+   - Create an AxonHub API key for your client under **API Keys**.
+4. **Make your first request**
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:8090/v1",  # Point to AxonHub
-    api_key="your-axonhub-api-key"        # Use AxonHub API key
+    base_url="http://localhost:8090/v1",
+    api_key="your-axonhub-api-key"
 )
 
-# Call Claude using OpenAI SDK!
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",  # Or gpt-4, gemini-pro, deepseek-chat...
-    messages=[{"role": "user", "content": "Hello!"}]
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello, AxonHub!"}]
 )
+
+print(response.choices[0].message.content)
 ```
 
 Switch models by changing one line: `model="gpt-4"` → `model="claude-3-5-sonnet"`. No SDK changes needed.
@@ -567,9 +566,34 @@ For detailed SDK usage examples and code samples, please refer to the API docume
 - [Anthropic API](docs/en/api-reference/anthropic-api.md)
 - [Gemini API](docs/en/api-reference/gemini-api.md)
 
+See the [documentation index](docs/en/index.md) for configuration details and more API examples.
+
+---
+
 ## 🛠️ Development Guide
 
 For detailed development instructions, architecture design, and contribution guidelines, please see [docs/en/development/development.md](docs/en/development/development.md).
+
+---
+
+## 👥 Team
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/looplj">
+        <img src="https://github.com/looplj.png?size=100" width="100" alt="looplj"/><br/>
+        <sub><b>looplj</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/llc1123">
+        <img src="https://github.com/llc1123.png?size=100" width="100" alt="llc1123"/><br/>
+        <sub><b>llc1123</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 

@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -27,6 +28,8 @@ func setupProviderQuotaCollectionService(t *testing.T) (*ProviderQuotaService, *
 	service := &ProviderQuotaService{
 		AbstractService: &AbstractService{db: client},
 		SystemService:   systemService,
+		checkers:        make(map[string]provider_quota.QuotaChecker),
+		checkInterval:   5 * time.Minute,
 	}
 
 	return service, systemService, ctx, client

@@ -272,41 +272,40 @@ AxonHubの動作画面をご覧ください：
 
 ---
 
-## 🚀 クイックスタート
+## 🚀 デプロイガイド
 
-### 30秒でローカル起動
+AxonHub をデプロイするには、Agent に [`deploy-axonhub`](https://github.com/looplj/axonhub-skills/blob/main/deploy-axonhub/SKILL.md) を読み、その手順に従うよう依頼してください。
 
-```bash
-# ダウンロードして展開（macOS ARM64の例）
-curl -sSL https://github.com/ldm2060/axonhub/releases/latest/download/axonhub_darwin_arm64.tar.gz | tar xz
-cd axonhub_*
+---
 
-# SQLiteで実行（デフォルト）
-./axonhub
+## ⚡ クイックスタート
 
-# http://localhost:8090 を開く
-# 初回起動時：セットアップウィザードに従ってシステムを初期化してください（管理者アカウントの作成、パスワードは6文字以上）
-```
+デプロイ完了後：
 
-以上です！あとはAIチャネルを設定し、AxonHub経由でモデルの呼び出しを開始できます。
-
-### コード変更ゼロの移行例
-
-**既存のコードはそのまま動作します。** SDKの接続先をAxonHubに向けるだけです：
+1. **システムを初期化する**
+   - Agent から返された AxonHub の URL を開きます。
+   - 初期化ウィザードに従って管理者アカウントを作成します。
+2. **チャネルを追加する**
+   - **Channels（チャネル）** で AI プロバイダーと API キーを追加します。
+   - 対応モデルを設定し、接続をテストしてチャネルを有効にします。
+3. **API キーを作成する**
+   - **API Keys** でクライアント用の AxonHub API キーを作成します。
+4. **最初のリクエストを送信する**
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:8090/v1",  # AxonHubに接続
-    api_key="your-axonhub-api-key"        # AxonHubのAPIキーを使用
+    base_url="http://localhost:8090/v1",
+    api_key="your-axonhub-api-key"
 )
 
-# OpenAI SDKでClaudeを呼び出し！
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",  # またはgpt-4, gemini-pro, deepseek-chat...
-    messages=[{"role": "user", "content": "Hello!"}]
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello, AxonHub!"}]
 )
+
+print(response.choices[0].message.content)
 ```
 
 モデルの切り替えは1行変更するだけ：`model="gpt-4"` → `model="claude-3-5-sonnet"`。SDKの変更は不要です。
@@ -568,9 +567,34 @@ SDKの詳細な使用例とコードサンプルについては、APIドキュ�
 - [Anthropic API](docs/en/api-reference/anthropic-api.md)
 - [Gemini API](docs/en/api-reference/gemini-api.md)
 
+設定の詳細とその他の API 例については、[ドキュメント一覧](docs/en/index.md)を参照してください。
+
+---
+
 ## 🛠️ 開発ガイド
 
 詳細な開発手順、アーキテクチャ設計、コントリビューションガイドラインについては、[docs/en/development/development.md](docs/en/development/development.md)を参照してください。
+
+---
+
+## 👥 チーム
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/looplj">
+        <img src="https://github.com/looplj.png?size=100" width="100" alt="looplj"/><br/>
+        <sub><b>looplj</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/llc1123">
+        <img src="https://github.com/llc1123.png?size=100" width="100" alt="llc1123"/><br/>
+        <sub><b>llc1123</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 

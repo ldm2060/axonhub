@@ -332,6 +332,7 @@ input ChannelCredentialsInput {
   apiKeys: [String!]
   gcp: GCPCredentialInput
   oauth: OAuthCredentialsInput
+  managementApiKey: String
 }
 
 input OAuthCredentialsInput {

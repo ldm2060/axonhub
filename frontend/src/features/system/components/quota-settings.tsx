@@ -38,7 +38,7 @@ export function QuotaSettings() {
   const { t } = useTranslation();
   const { data: quotaSettings, isLoading: isQuotaSettingsLoading } = useQuotaEnforcementSettings();
   const { data: collectionSettings, isLoading: isCollectionSettingsLoading } = useProviderQuotaCollectionSettings();
-  const providerQuotaChannels = useProviderQuotaStatuses();
+  const { channels: providerQuotaChannels } = useProviderQuotaStatuses();
   const updateQuotaEnforcementSettings = useUpdateQuotaEnforcementSettings();
   const updateProviderQuotaCollectionSettings = useUpdateProviderQuotaCollectionSettings();
 
@@ -211,7 +211,7 @@ export function QuotaSettings() {
                   <ChannelMultiSelect
                     value={quotaFormData.allowedChannelIDs}
                     onChange={(ids) => setQuotaFormData((prev) => ({ ...prev, allowedChannelIDs: ids }))}
-                    channels={providerQuotaChannels || []}
+                    channels={providerQuotaChannels}
                   />
                 </div>
               </div>

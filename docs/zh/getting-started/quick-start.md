@@ -2,7 +2,7 @@
 
 ## 概述
 
-本指南将帮助您快速开始使用 AxonHub。只需几分钟，您就可以运行 AxonHub 并发出第一个 API 调用。
+本指南介绍如何在一个已经运行并完成初始化的 AxonHub 实例中配置渠道、创建 API 密钥并发出第一个请求。
 
 ## 先决条件
 
@@ -312,45 +312,6 @@ settings:
    - 为不同的安全要求使用单独的渠道
    - 定期审查和更新覆盖配置
 
-## 配置示例
-
-### 基本配置
-
-```yaml
-# config.yml
-server:
-  port: 8090
-  name: "AxonHub"
-
-db:
-  dialect: "sqlite3"
-  dsn: "file:axonhub.db?cache=shared&_fk=1&_pragma=journal_mode(WAL)"
-
-log:
-  level: "info"
-  encoding: "json"
-```
-
-### 生产配置
-
-```yaml
-server:
-  port: 8090
-  name: "AxonHub Production"
-  debug: false
-
-db:
-  dialect: "postgres"
-  dsn: "postgres://user:pass@localhost/axonhub?sslmode=disable"
-
-log:
-  level: "warn"
-  encoding: "json"
-  output: "file"
-  file:
-    path: "/var/log/axonhub/axonhub.log"
-```
-
 ## 下一步
 
 ### 理解请求流程
@@ -367,25 +328,15 @@ log:
 - [OpenAI API](../api-reference/openai-api.md)
 - [Anthropic API](../api-reference/anthropic-api.md)
 - [Gemini API](../api-reference/gemini-api.md)
-- [部署指南](../deployment/configuration.md)
 
 ## 故障排除
 
 ### 常见问题
 
-**无法连接到 AxonHub**
-- 检查服务是否正在运行：`docker-compose ps`
-- 验证端口 8090 是否可用
-- 检查防火墙设置
-
 **API 密钥身份验证失败**
 - 验证 API 密钥是否正确配置
 - 检查渠道是否已启用
 - 确保提供商 API 密钥有效
-
-**请求超时**
-- 在配置中增加 `server.llm_request_timeout`
-- 检查与 AI 提供商的网络连通性
 
 ### 获取帮助
 
@@ -401,4 +352,3 @@ log:
 - 配置模型映射以优化成本
 - 实施请求追踪以进行调试
 - 设置使用配额和速率限制
-- 与现有的 CI/CD 流水线集成

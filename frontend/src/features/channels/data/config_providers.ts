@@ -30,6 +30,7 @@ import Volcengine from '@lobehub/icons/es/Volcengine/components/Mono.js';
 import XAI from '@lobehub/icons/es/XAI/components/Mono.js';
 import XiaomiMiMo from '@lobehub/icons/es/XiaomiMiMo/components/Mono.js';
 import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
+import ZenMux from '@lobehub/icons/es/ZenMux/components/Mono.js';
 import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
@@ -302,6 +303,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     icon: Groq,
     color: 'bg-orange-100 text-orange-800 border-orange-200',
     channelTypes: ['groq'],
+  },
+  zenmux: {
+    provider: 'zenmux',
+    icon: ZenMux,
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    channelTypes: ['zenmux', 'zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini'],
   },
 };
 

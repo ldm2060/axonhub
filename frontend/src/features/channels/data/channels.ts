@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { z } from 'zod';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
@@ -6,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
+import { shouldNotifyChannelQueryError } from './channel-query-error';
 import {
   Channel,
   ChannelConnection,
@@ -1162,7 +1164,10 @@ export function useQueryChannels(
     disableAutoFetch?: boolean;
   }
 ) {
-  return useQuery({
+  const { handleError } = useErrorHandler();
+  const { t } = useTranslation();
+
+  const query = useQuery({
     enabled: !options?.disableAutoFetch,
     queryKey: [
       'channels',
@@ -1190,6 +1195,14 @@ export function useQueryChannels(
     // so the component never renders with data = undefined and crashes.
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (shouldNotifyChannelQueryError(query.error, query.data !== undefined, query.isPlaceholderData)) {
+      handleError(query.error, t('common.errors.internalServerError'));
+    }
+  }, [handleError, query.data, query.error, query.isPlaceholderData, t]);
+
+  return query;
 }
 
 export function useAllChannelNames(options?: { enabled?: boolean }) {

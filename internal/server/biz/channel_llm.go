@@ -49,6 +49,12 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/zai"
 )
 
+const (
+	zenmuxOpenAIBaseURL    = "https://zenmux.ai/api/v1"
+	zenmuxAnthropicBaseURL = "https://zenmux.ai/api/anthropic"
+	zenmuxGeminiBaseURL    = "https://zenmux.ai/api/vertex-ai"
+)
+
 type AutoRefresher interface {
 	StartAutoRefresh(ctx context.Context, opts oauth.AutoRefreshOptions)
 	StopAutoRefresh()
@@ -376,6 +382,9 @@ func (svc *ChannelService) buildNonDefaultEndpointOutbound(
 	} else {
 		ep.BaseURL = baseURL
 	}
+	if endpointTransport(ep) == objects.ChannelEndpointTransportWebSocket && !supportsWebSocketTransport(ep.APIFormat) {
+		return nil, fmt.Errorf("websocket transport only supports api_format %q", llm.APIFormatOpenAIResponse.String())
+	}
 
 	switch ep.APIFormat {
 	case llm.APIFormatOpenAIChatCompletion.String():
@@ -595,6 +604,18 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		}
 	}
 
+	if c.BaseURL == "" {
+		switch c.Type { //nolint:exhaustive // Only ZenMux types have defaults applied here.
+		case channel.TypeZenmux, channel.TypeZenmuxResponses:
+			c.BaseURL = zenmuxOpenAIBaseURL
+		case channel.TypeZenmuxAnthropic:
+			c.BaseURL = zenmuxAnthropicBaseURL
+		case channel.TypeZenmuxGemini:
+			c.BaseURL = zenmuxGeminiBaseURL
+		default:
+		}
+	}
+
 	httpClient := svc.getHttpClient(c.Settings)
 	ch := buildChannel(c, httpClient)
 	if len(apiKeyOverride) > 0 {
@@ -671,7 +692,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = transformer
 
 		return ch, nil
-	case channel.TypeNanogptResponses:
+	case channel.TypeNanogptResponses, channel.TypeZenmuxResponses:
 		transformer, err := responses.NewOutboundTransformerWithConfig(&responses.Config{
 			BaseURL:        c.BaseURL,
 			APIKeyProvider: getAPIKeyProvider(ch),
@@ -780,7 +801,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = transformer
 
 		return ch, nil
-	case channel.TypeAnthropic, channel.TypeQiniuAnthropic, channel.TypeMinimaxAnthropic, channel.TypeVolcengineAnthropic, channel.TypeAihubmixAnthropic, channel.TypeXiaomiAnthropic, channel.TypeEvolinkAnthropic:
+	case channel.TypeAnthropic, channel.TypeQiniuAnthropic, channel.TypeMinimaxAnthropic, channel.TypeZenmuxAnthropic, channel.TypeVolcengineAnthropic, channel.TypeAihubmixAnthropic, channel.TypeXiaomiAnthropic, channel.TypeEvolinkAnthropic:
 		transformer, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
 			Type:           anthropic.PlatformDirect,
 			BaseURL:        c.BaseURL,
@@ -1158,7 +1179,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		})
 
 		return ch, nil
-	case channel.TypeOpenai, channel.TypeOpenaiImageGeneration, channel.TypeAtlascloud, channel.TypeDeepinfra, channel.TypeQiniu, channel.TypeMinimax,
+	case channel.TypeOpenai, channel.TypeZenmux, channel.TypeOpenaiImageGeneration, channel.TypeAtlascloud, channel.TypeDeepinfra, channel.TypeQiniu, channel.TypeMinimax,
 		channel.TypePpio, channel.TypeSiliconflow,
 		channel.TypeVercel, channel.TypeAihubmix, channel.TypeBurncloud, channel.TypeGithub,
 		channel.TypeEvolink, channel.TypeGroq:
@@ -1187,7 +1208,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = transformer
 
 		return ch, nil
-	case channel.TypeGemini:
+	case channel.TypeGemini, channel.TypeZenmuxGemini:
 		transformer, err := gemini.NewOutboundTransformerWithConfig(gemini.Config{
 			BaseURL:        c.BaseURL,
 			APIKeyProvider: getAPIKeyProvider(ch),

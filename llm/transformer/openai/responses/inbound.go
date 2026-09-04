@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -42,6 +43,19 @@ func (t *InboundTransformer) TransformRequest(ctx context.Context, httpReq *http
 
 	if len(httpReq.Body) == 0 {
 		return nil, fmt.Errorf("%w: request body is empty", transformer.ErrInvalidRequest)
+	}
+	if gjson.GetBytes(httpReq.Body, "stream_id").Exists() {
+		return nil, &llm.ResponseError{
+			StatusCode: http.StatusBadRequest,
+			Detail: llm.ErrorDetail{
+				Message:   "Unsupported parameter: stream_id",
+				Type:      "invalid_request_error",
+				Param:     "stream_id",
+				Code:      "",
+				RequestID: "",
+			},
+			Cause: nil,
+		}
 	}
 
 	// Check content type
@@ -95,6 +109,7 @@ type ResponseErrorDetail struct {
 	Message string `json:"message"`
 	Type    string `json:"type"`
 	Code    string `json:"code,omitempty"`
+	Param   string `json:"param,omitempty"`
 }
 
 // TransformError transforms LLM error response to HTTP error response in Responses API format.
@@ -121,6 +136,7 @@ func (t *InboundTransformer) TransformError(ctx context.Context, rawErr error) *
 				Message: llmErr.Detail.Message,
 				Type:    llmErr.Detail.Type,
 				Code:    llmErr.Detail.Code,
+				Param:   llmErr.Detail.Param,
 			},
 		}
 
@@ -554,6 +570,8 @@ func convertItemToMessage(item *Item) (*llm.Message, error) {
 		}
 
 		return nil, nil
+	case "input_file":
+		return responseInputFileMessage(item), nil
 
 	case "function_call":
 		// Function call from assistant - convert to tool call
@@ -737,12 +755,76 @@ func convertContentItemToPart(item *Item) (*llm.MessageContentPart, error) {
 
 		return nil, nil
 
+	case "input_file":
+		message := responseInputFileMessage(item)
+		if message == nil || len(message.Content.MultipleContent) == 0 {
+			return nil, nil
+		}
+		return &message.Content.MultipleContent[0], nil
+
 	case "compaction", "compaction_summary":
 		return compactionContentPartFromItem(item, item.Type), nil
 
 	default:
 		return nil, nil
 	}
+}
+
+func responseInputFileMessage(item *Item) *llm.Message {
+	document := &llm.DocumentURL{
+		URL:      "",
+		FileID:   lo.FromPtr(item.FileID),
+		Filename: lo.FromPtr(item.Filename),
+		MIMEType: "",
+	}
+	if item.FileData != nil {
+		document.URL = *item.FileData
+	} else if item.FileURL != nil {
+		document.URL = *item.FileURL
+	}
+	if parsed := xurl.ParseDataURL(document.URL); parsed != nil {
+		document.MIMEType = parsed.MediaType
+	}
+	if document.URL == "" && document.FileID == "" {
+		return nil
+	}
+
+	msg := llm.Message{
+		ID:   "",
+		Role: lo.Ternary(item.Role != "", item.Role, "user"),
+		Content: llm.MessageContent{Content: nil, MultipleContent: []llm.MessageContentPart{{
+			ID:       item.ID,
+			Type:     "document",
+			Document: document,
+			Text:     nil,
+
+			ImageURL:            nil,
+			VideoURL:            nil,
+			InputAudio:          nil,
+			Compact:             nil,
+			CacheControl:        nil,
+			TransformerMetadata: nil,
+		}}},
+		Name:                     nil,
+		Refusal:                  "",
+		MessageIndex:             nil,
+		ToolCallID:               nil,
+		ToolCallName:             nil,
+		ToolCallIsError:          nil,
+		ToolCalls:                nil,
+		ReasoningContent:         nil,
+		Reasoning:                nil,
+		ReasoningSignature:       nil,
+		ReasoningItems:           nil,
+		RedactedReasoningContent: nil,
+		CacheControl:             nil,
+		Annotations:              nil,
+		Audio:                    nil,
+		Attribution:              "",
+		InlineToolResults:        nil,
+	}
+
+	return &msg
 }
 
 // convertToolsToLLM converts Responses API tools to llm.Tool slice.

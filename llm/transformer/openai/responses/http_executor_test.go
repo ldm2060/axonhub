@@ -49,7 +49,7 @@ func TestHTTPTransportExecutorStripsWebSocketMetadataAndKeepsContinuation(t *tes
 	require.NoError(t, stream.Close())
 	require.NotNil(t, inner.request)
 	require.Equal(t, "other_beta=v1", inner.request.Headers.Get("Openai-Beta"))
-	require.False(t, gjson.GetBytes(inner.request.Body, "previous_response_id").Exists())
+	require.Equal(t, "resp_ws", gjson.GetBytes(inner.request.Body, "previous_response_id").String())
 	require.True(t, gjson.GetBytes(inner.request.Body, "stream").Bool())
 	require.Equal(t, "hello", gjson.GetBytes(inner.request.Body, "input").String())
 

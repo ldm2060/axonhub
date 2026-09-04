@@ -32,7 +32,7 @@ export function AppHeader() {
       return checkProviderQuotas();
     },
     onSuccess: () => {
-      void queryClient.refetchQueries({ queryKey: ['quota-usage-monitor-channels'] });
+      void queryClient.refetchQueries({ queryKey: ['provider-quotas'] });
       toast.success(t('system.providerQuota.refresh.success'));
     },
     onError: (error: any) => {

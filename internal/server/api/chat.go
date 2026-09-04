@@ -407,6 +407,8 @@ type StreamErrorFormatter func(ctx context.Context, err error) any
 // the cap only guards against implementations that ignore it.
 const maxStreamEventsAfterCancel = 256
 
+const sseWriteTimeout = 30 * time.Second
+
 // WriteSSEStream writes stream events as Server-Sent Events (SSE) with default error formatting.
 func WriteSSEStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
 	WriteSSEStreamWithOptionsAndErrorFormatter(c, stream, StreamWriteOptions{}, FormatStreamError)
@@ -451,6 +453,7 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 	}
 
 	defer func() {
+		clearSSEWriteDeadline(ctx, c.Writer)
 		if clientDisconnected {
 			log.Warn(ctx, "Client disconnected")
 		}
@@ -458,7 +461,12 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 
 	// Set SSE headers
 	setSSEHeaders(c)
-	c.Writer.Flush()
+	if err := flushSSE(ctx, c.Writer); err != nil {
+		clientDisconnected = true
+		log.Warn(ctx, "Failed to flush SSE headers", log.Cause(err))
+
+		return
+	}
 
 	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
 	eventsAfterCancel := 0
@@ -466,12 +474,15 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
-			if _, err := c.Writer.Write([]byte(": keepalive\n\n")); err != nil {
+			if err := writeAndFlushSSE(ctx, c.Writer, func(writer io.Writer) error {
+				_, err := writer.Write([]byte(": keepalive\n\n"))
+
+				return err
+			}); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write SSE keepalive", log.Cause(err))
 				return
 			}
-			c.Writer.Flush()
 			continue
 		}
 		if result.ok {
@@ -479,55 +490,82 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 			if orchestrator.IsTerminalStreamEvent(cur) {
 				terminalSeen = true
 			}
-			c.SSEvent(cur.Type, cur.Data)
+			if ctx.Err() != nil {
+				eventsAfterCancel++
+				if eventsAfterCancel > maxStreamEventsAfterCancel {
+					log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
+						log.Int("events_after_cancel", eventsAfterCancel))
+					writeSSEStreamEnd(c, ctx, ctx.Err(), formatErr, terminalSeen, &clientDisconnected)
+
+					return
+				}
+			}
+			if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
+
+				return
+			}
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
-			c.Writer.Flush()
 			continue
 		}
 
-		if result.err != nil {
-			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
-				// Drain remaining buffered events so the request is marked
-				// completed rather than canceled when the client disconnects
-				// right after the terminal event.
-				if buffered := waiter.DrainBuffered(); buffered.ok {
-					c.SSEvent(buffered.event.Type, buffered.event.Data)
-					c.Writer.Flush()
-				}
-				for stream.Next() {
-					eventsAfterCancel++
-					if eventsAfterCancel > maxStreamEventsAfterCancel {
-						clientDisconnected = true
-						log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
-							log.Int("events_after_cancel", eventsAfterCancel))
-						return
-					}
-					cur := stream.Current()
-					c.SSEvent(cur.Type, cur.Data)
-					c.Writer.Flush()
-				}
-				if err := stream.Err(); err != nil && !errors.Is(err, context.Canceled) {
-					log.Warn(ctx, "Stream error after client disconnected", log.Cause(err))
-				}
-				clientDisconnected = true
-				log.Warn(ctx, "Context done, stopping stream", log.Cause(result.err))
-				return
-			}
+		if result.err != nil && (errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded)) {
+			// The waiter surfaced the request context's cancellation before the
+			// stream's own error. Drain remaining buffered events so the request
+			// is marked completed rather than canceled when the client disconnects
+			// right after the terminal event, then let writeSSEStreamEnd decide
+			// whether the stream's own error or the context deadline is reported.
+			if buffered := waiter.DrainBuffered(); buffered.ok {
+				eventsAfterCancel++
+				if eventsAfterCancel > maxStreamEventsAfterCancel {
+					log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
+						log.Int("events_after_cancel", eventsAfterCancel))
+					writeSSEStreamEnd(c, ctx, ctx.Err(), formatErr, terminalSeen, &clientDisconnected)
 
-			if errors.Is(result.err, ErrStreamIdleTimeout) {
-				log.Warn(ctx, "Stream idle timeout, stopping stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
-			} else {
-				log.Error(ctx, "Error in stream", log.Cause(result.err))
-			}
+					return
+				}
+				if orchestrator.IsTerminalStreamEvent(buffered.event) {
+					terminalSeen = true
+				}
+				if err := writeSSEEvent(ctx, c.Writer, buffered.event.Type, buffered.event.Data); err != nil {
+					clientDisconnected = true
+					log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
 
-			c.SSEvent("error", formatErr(ctx, orchestrator.ClassifyUpstreamTransportError(result.err)))
-		} else if !terminalSeen {
-			log.Error(ctx, "Stream ended without terminal event, reporting incomplete stream to client",
-				log.Cause(orchestrator.ErrStreamIncomplete))
-			c.SSEvent("error", formatErr(ctx, orchestrator.ClassifyUpstreamTransportError(orchestrator.ErrStreamIncomplete)))
+					return
+				}
+			}
+			for stream.Next() {
+				eventsAfterCancel++
+				if eventsAfterCancel > maxStreamEventsAfterCancel {
+					log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
+						log.Int("events_after_cancel", eventsAfterCancel))
+					writeSSEStreamEnd(c, ctx, ctx.Err(), formatErr, terminalSeen, &clientDisconnected)
+
+					return
+				}
+				cur := stream.Current()
+				if orchestrator.IsTerminalStreamEvent(cur) {
+					terminalSeen = true
+				}
+				if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
+					clientDisconnected = true
+					log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
+
+					return
+				}
+			}
+			writeSSEStreamEnd(c, ctx, stream.Err(), formatErr, terminalSeen, &clientDisconnected)
+
+			return
 		}
 
-		c.Writer.Flush()
+		if result.err != nil && errors.Is(result.err, ErrStreamIdleTimeout) {
+			log.Warn(ctx, "Stream idle timeout, stopping stream", log.Duration("idle_timeout", opts.IdleTimeout), log.Cause(result.err))
+		}
+
+		writeSSEStreamEnd(c, ctx, result.err, formatErr, terminalSeen, &clientDisconnected)
+
 		return
 	}
 }
@@ -547,13 +585,19 @@ func writeSSEStreamWithHeartbeat(
 	}
 
 	defer func() {
+		clearSSEWriteDeadline(ctx, c.Writer)
 		if clientDisconnected {
 			log.Warn(ctx, "Client disconnected")
 		}
 	}()
 
 	setSSEHeaders(c)
-	c.Writer.Flush()
+	if err := flushSSE(ctx, c.Writer); err != nil {
+		clientDisconnected = true
+		log.Warn(ctx, "Failed to flush SSE headers", log.Cause(err))
+
+		return
+	}
 
 	reader := newSSEStreamReader(ctx, stream)
 	// The caller closes the stream after this function returns. Wait for the
@@ -572,7 +616,9 @@ func writeSSEStreamWithHeartbeat(
 	for {
 		select {
 		case <-ctxDone:
-			clientDisconnected = true
+			if errors.Is(ctx.Err(), context.Canceled) {
+				clientDisconnected = true
+			}
 			ctxDone = nil
 			stopTimer(timer)
 			timerC = nil
@@ -586,9 +632,9 @@ func writeSSEStreamWithHeartbeat(
 			if ctx.Err() != nil {
 				eventsAfterCancel++
 				if eventsAfterCancel > maxStreamEventsAfterCancel {
-					clientDisconnected = true
 					log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
 						log.Int("events_after_cancel", eventsAfterCancel))
+					writeSSEStreamEnd(c, ctx, ctx.Err(), formatErr, terminalSeen, &clientDisconnected)
 					return
 				}
 			}
@@ -597,16 +643,20 @@ func writeSSEStreamWithHeartbeat(
 			if orchestrator.IsTerminalStreamEvent(cur) {
 				terminalSeen = true
 			}
-			c.SSEvent(cur.Type, cur.Data)
+			if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
+
+				return
+			}
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
-			c.Writer.Flush()
 
 			if timerC != nil {
 				resetTimer(timer, interval)
 			}
 
 		case <-timerC:
-			if err := writeSSEHeartbeat(c.Writer, heartbeatFormat); err != nil {
+			if err := writeSSEHeartbeatEvent(ctx, c.Writer, heartbeatFormat); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write SSE heartbeat", log.Cause(err))
 				return
@@ -619,7 +669,6 @@ func writeSSEStreamWithHeartbeat(
 				log.Duration("interval", interval),
 			)
 
-			c.Writer.Flush()
 			timer.Reset(interval)
 		}
 	}
@@ -634,26 +683,143 @@ func writeSSEStreamEnd(
 	clientDisconnected *bool,
 ) {
 	switch {
-	case streamErr != nil:
-		if errors.Is(streamErr, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
-			*clientDisconnected = true
-
-			if !errors.Is(streamErr, context.Canceled) {
-				log.Warn(ctx, "Stream error after client disconnected", log.Cause(streamErr))
-			}
-		} else {
-			log.Error(ctx, "Error in stream", log.Cause(streamErr))
-			c.SSEvent("error", formatErr(ctx, orchestrator.ClassifyUpstreamTransportError(streamErr)))
-		}
+	case terminalSeen:
 	case errors.Is(ctx.Err(), context.Canceled):
 		*clientDisconnected = true
-	case !terminalSeen:
+
+		if streamErr != nil && !errors.Is(streamErr, context.Canceled) {
+			log.Warn(ctx, "Stream error after client disconnected", log.Cause(streamErr))
+		}
+	case errors.Is(ctx.Err(), context.DeadlineExceeded) &&
+		(streamErr == nil || errors.Is(streamErr, context.Canceled) || errors.Is(streamErr, context.DeadlineExceeded)):
+		streamErr = ctx.Err()
+		log.Error(ctx, "Stream deadline exceeded", log.Cause(streamErr))
+		if err := writeSSEErrorEvent(ctx, c.Writer, formatErr, streamErr); err != nil {
+			*clientDisconnected = true
+			log.Warn(ctx, "Failed to write SSE deadline error", log.Cause(err))
+		}
+	case streamErr != nil:
+		log.Error(ctx, "Error in stream", log.Cause(streamErr))
+		if err := writeSSEErrorEvent(ctx, c.Writer, formatErr, streamErr); err != nil {
+			*clientDisconnected = true
+			log.Warn(ctx, "Failed to write SSE stream error", log.Cause(err))
+		}
+	default:
 		log.Error(ctx, "Stream ended without terminal event, reporting incomplete stream to client",
 			log.Cause(orchestrator.ErrStreamIncomplete))
-		c.SSEvent("error", formatErr(ctx, orchestrator.ClassifyUpstreamTransportError(orchestrator.ErrStreamIncomplete)))
+		if err := writeSSEErrorEvent(ctx, c.Writer, formatErr, orchestrator.ErrStreamIncomplete); err != nil {
+			*clientDisconnected = true
+			log.Warn(ctx, "Failed to write incomplete SSE stream error", log.Cause(err))
+		}
+	}
+}
+
+func writeSSEErrorEvent(ctx context.Context, writer http.ResponseWriter, formatErr StreamErrorFormatter, err error) error {
+	return writeSSEEvent(ctx, writer, "error", formatErr(ctx, orchestrator.ClassifyUpstreamTransportError(err)))
+}
+
+func writeSSEEvent(ctx context.Context, writer http.ResponseWriter, event string, data any) error {
+	return writeAndFlushSSE(ctx, writer, func(writer io.Writer) error {
+		errorWriter := &sseErrorWriter{writer: writer, err: nil}
+		if err := sse.Encode(errorWriter, sse.Event{Id: "", Retry: 0, Event: event, Data: data}); err != nil {
+			return err
+		}
+
+		return errorWriter.err
+	})
+}
+
+type sseErrorWriter struct {
+	writer io.Writer
+	err    error
+}
+
+func (w *sseErrorWriter) Write(data []byte) (int, error) {
+	if w.err != nil {
+		return 0, w.err
 	}
 
-	c.Writer.Flush()
+	n, err := w.writer.Write(data)
+	if err != nil {
+		w.err = err
+	}
+
+	return n, err
+}
+
+func (w *sseErrorWriter) WriteString(data string) (int, error) {
+	if w.err != nil {
+		return 0, w.err
+	}
+
+	n, err := io.WriteString(w.writer, data)
+	if err != nil {
+		w.err = err
+	}
+
+	return n, err
+}
+
+func writeSSEHeartbeatEvent(ctx context.Context, writer http.ResponseWriter, format sseHeartbeatFormat) error {
+	return writeAndFlushSSE(ctx, writer, func(writer io.Writer) error {
+		return writeSSEHeartbeat(writer, format)
+	})
+}
+
+func flushSSE(ctx context.Context, writer http.ResponseWriter) error {
+	return writeAndFlushSSE(ctx, writer, nil)
+}
+
+func writeAndFlushSSE(ctx context.Context, writer http.ResponseWriter, write func(io.Writer) error) error {
+	refreshSSEWriteDeadline(ctx, writer)
+	defer clearSSEWriteDeadline(ctx, writer)
+
+	if write != nil {
+		if err := write(writer); err != nil {
+			return err
+		}
+	}
+
+	return flushResponseWriter(writer)
+}
+
+type responseWriterFlushError interface {
+	FlushError() error
+}
+
+type responseWriterUnwrapper interface {
+	Unwrap() http.ResponseWriter
+}
+
+func flushResponseWriter(writer http.ResponseWriter) error {
+	if flusher, ok := writer.(responseWriterFlushError); ok {
+		return flusher.FlushError()
+	}
+	if unwrapper, ok := writer.(responseWriterUnwrapper); ok {
+		return flushResponseWriter(unwrapper.Unwrap())
+	}
+	if flusher, ok := writer.(http.Flusher); ok {
+		flusher.Flush()
+
+		return nil
+	}
+
+	return http.ErrNotSupported
+}
+
+func refreshSSEWriteDeadline(ctx context.Context, writer http.ResponseWriter) {
+	setSSEWriteDeadline(ctx, writer, time.Now().Add(sseWriteTimeout))
+}
+
+func clearSSEWriteDeadline(ctx context.Context, writer http.ResponseWriter) {
+	setSSEWriteDeadline(ctx, writer, time.Time{})
+}
+
+func setSSEWriteDeadline(ctx context.Context, writer http.ResponseWriter, deadline time.Time) {
+	err := http.NewResponseController(writer).SetWriteDeadline(deadline)
+	if err != nil && !errors.Is(err, http.ErrNotSupported) {
+		log.Warn(ctx, "Failed to set SSE write deadline", log.Cause(err))
+	}
 }
 
 func stopTimer(timer *time.Timer) {

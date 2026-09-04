@@ -7,6 +7,7 @@
 # 2. 配置文件 - 适用于复杂配置 (如缓存、日志、监控等)
 #    创建 config.yml 文件并取消 volumes 配置的注释
 #    配置参考: https://github.com/ldm2060/axonhub/blob/main/docs/deployment/configuration.md
+#    部署说明: https://github.com/looplj/axonhub-skills/blob/main/deploy-axonhub/SKILL.md
 #
 # 3. 简单部署 - 如果不需要复杂配置，可以注释掉 config 的 volumes 配置
 #    仅使用环境变量进行基本配置即可运行

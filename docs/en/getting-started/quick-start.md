@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide will help you get started with AxonHub quickly. In just a few minutes, you'll have AxonHub running and be able to make your first API call.
+This guide explains how to configure a channel, create an API key, and make a first request in an AxonHub instance that is already running and initialized.
 
 ## Prerequisites
 
@@ -312,45 +312,6 @@ settings:
    - Use separate channels for different security requirements
    - Regularly review and update override configurations
 
-## Configuration Examples
-
-### Basic Configuration
-
-```yaml
-# config.yml
-server:
-  port: 8090
-  name: "AxonHub"
-
-db:
-  dialect: "sqlite3"
-  dsn: "file:axonhub.db?cache=shared&_fk=1&_pragma=journal_mode(WAL)"
-
-log:
-  level: "info"
-  encoding: "json"
-```
-
-### Production Configuration
-
-```yaml
-server:
-  port: 8090
-  name: "AxonHub Production"
-  debug: false
-
-db:
-  dialect: "postgres"
-  dsn: "postgres://user:pass@localhost/axonhub?sslmode=disable"
-
-log:
-  level: "warn"
-  encoding: "json"
-  output: "file"
-  file:
-    path: "/var/log/axonhub/axonhub.log"
-```
-
 ## Next Steps
 
 ### Understand the Request Flow
@@ -367,25 +328,15 @@ log:
 - [OpenAI API](../api-reference/openai-api.md)
 - [Anthropic API](../api-reference/anthropic-api.md)
 - [Gemini API](../api-reference/gemini-api.md)
-- [Deployment Guide](../deployment/configuration.md)
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Cannot connect to AxonHub**
-- Check if the service is running: `docker-compose ps`
-- Verify port 8090 is available
-- Check firewall settings
-
 **API key authentication fails**
 - Verify the API key is correctly configured
 - Check if the channel is enabled
 - Ensure the provider API key is valid
-
-**Request timeouts**
-- Increase `server.llm_request_timeout` in config
-- Check network connectivity to AI providers
 
 ### Getting Help
 
@@ -401,4 +352,3 @@ Now that you have AxonHub running, explore these advanced features:
 - Configure model mappings for cost optimization
 - Implement request tracing for debugging
 - Set up usage quotas and rate limits
-- Integrate with your existing CI/CD pipeline

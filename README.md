@@ -275,44 +275,43 @@
 ---
 
 
-## 🚀 快速开始 | Quick Start
+## 🚀 部署指南 | Deployment Guide
 
-### 30 秒本地启动 | 30-Second Local Start
+让你的 Agent 读取并遵循 [`deploy-axonhub`](https://github.com/looplj/axonhub-skills/blob/main/deploy-axonhub/SKILL.md) 来部署 AxonHub。
 
-```bash
-# 下载并解压（以 macOS ARM64 为例）
-curl -sSL https://github.com/ldm2060/axonhub/releases/latest/download/axonhub_darwin_arm64.tar.gz | tar xz
-cd axonhub_*
+---
 
-# 使用 SQLite 运行（默认）
-./axonhub
+## ⚡ 快速开始 | Quick Start
 
-# 打开 http://localhost:8090
-# 首次运行：按照初始化向导设置系统（创建管理员账号，密码至少需要 6 位）
-```
+部署完成后：
 
-就这样！现在配置你的第一个 AI 渠道，开始通过 AxonHub 调用模型。
-
-### 零代码迁移示例 | Zero-Code Migration Example
-
-**你的现有代码无需任何改动。** 只需将 SDK 指向 AxonHub：
+1. **初始化系统**
+   - 打开 Agent 返回的 AxonHub 访问地址。
+   - 按照初始化向导创建管理员账号。
+2. **添加渠道**
+   - 在 **Channels（渠道）** 中添加 AI 提供商及其 API Key。
+   - 配置支持的模型，测试连接并启用渠道。
+3. **创建 API Key**
+   - 在 **API Keys（API 密钥）** 中创建供客户端使用的 AxonHub API Key。
+4. **发起第一个请求**
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:8090/v1",  # 指向 AxonHub
-    api_key="your-axonhub-api-key"        # 使用 AxonHub API 密钥
+    base_url="http://localhost:8090/v1",
+    api_key="your-axonhub-api-key"
 )
 
-# 用 OpenAI SDK 调用 Claude！
 response = client.chat.completions.create(
-    model="claude-3-5-sonnet",  # 或 gpt-4、gemini-pro、deepseek-chat...
-    messages=[{"role": "user", "content": "Hello!"}]
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello, AxonHub!"}]
 )
+
+print(response.choices[0].message.content)
 ```
 
-切换模型只需改一行：`model="gpt-4"` → `model="claude-3-5-sonnet"`。无需改动 SDK。
+更多配置和 API 示例请查看[完整文档索引](docs/zh/index.md)。
 
 ---
 
@@ -545,10 +544,30 @@ AxonHub 提供灵活的模型管理系统，支持通过模型关联将抽象模
 - [Anthropic API](docs/zh/api-reference/anthropic-api.md)
 - [Gemini API](docs/zh/api-reference/gemini-api.md)
 
-
 ## 🛠️ 开发指南
 
 详细的开发说明、架构设计和贡献指南，请查看 [docs/zh/development/development.md](docs/zh/development/development.md)。
+
+---
+
+## 👥 团队 | Team
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/looplj">
+        <img src="https://github.com/looplj.png?size=100" width="100" alt="looplj"/><br/>
+        <sub><b>looplj</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/llc1123">
+        <img src="https://github.com/llc1123.png?size=100" width="100" alt="llc1123"/><br/>
+        <sub><b>llc1123</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -568,6 +587,7 @@ AxonHub 提供灵活的模型管理系统，支持通过模型关联将抽象模
 ## 📄 许可证 | License
 
 本项目采用多种许可证授权（Apache-2.0 和 LGPL-3.0）。详见 [LICENSE](LICENSE) 文件了解详细的项目授权说明与条款。
+
 ---
 
 <div align="center">

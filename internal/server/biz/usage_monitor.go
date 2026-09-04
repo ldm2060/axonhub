@@ -913,7 +913,6 @@ func (svc *UsageMonitorService) RefreshChannel(ctx context.Context, id int) (*en
 }
 
 // RunPollAll forces an immediate poll of all usage monitor channels.
-// Used by ProviderQuotaService.ManualCheck() to trigger a manual refresh.
 func (svc *UsageMonitorService) RunPollAll(ctx context.Context) {
 	svc.runPollAll(ctx)
 }
