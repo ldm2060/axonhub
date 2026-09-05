@@ -15,7 +15,14 @@ import { PersonalChannelsButtons } from './components/channels-personal-buttons'
 import { ChannelsTable } from './components/channels-table';
 import { ChannelsTypeTabs } from './components/channels-type-tabs';
 import ChannelsProvider from './context/channels-context';
-import { useQueryChannels, useChannelTypes, useErrorChannelsCount, useChannelProbeData } from './data/channels';
+import {
+  DEFAULT_CHANNEL_COLUMN_VISIBILITY,
+  useQueryChannels,
+  useChannelTypes,
+  useErrorChannelsCount,
+  useChannelProbeData,
+  type ChannelListColumnVisibility,
+} from './data/channels';
 import { useMySharedChannels } from './data/shared';
 import {
   type PersonalChannelSource,
@@ -63,18 +70,18 @@ function PersonalChannelsContent() {
     }
     return [{ id: 'createdAt', desc: true }];
   });
-  const [isHealthColumnVisible, setIsHealthColumnVisible] = useState<boolean>(() => {
+  const [columnVisibility, setColumnVisibility] = useState<ChannelListColumnVisibility>(() => {
     const stored = localStorage.getItem('my-channels-table-column-visibility');
     if (stored) {
       try {
-        const visibility = JSON.parse(stored);
-        return visibility.health !== false;
+        return { ...DEFAULT_CHANNEL_COLUMN_VISIBILITY, ...JSON.parse(stored) };
       } catch {
-        return true;
+        return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
       }
     }
-    return true;
+    return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
   });
+  const isHealthColumnVisible = columnVisibility.health !== false;
 
   useEffect(() => {
     localStorage.setItem('my-channels-table-sorting', JSON.stringify(sorting));
@@ -151,6 +158,7 @@ function PersonalChannelsContent() {
     orderBy: currentOrderBy,
     hasTag: tagFilter || undefined,
     model: modelFilter || undefined,
+    columnVisibility,
   });
 
   const { data: publicData, isLoading: publicLoading } = useQueryChannels({
@@ -159,6 +167,7 @@ function PersonalChannelsContent() {
     orderBy: currentOrderBy,
     hasTag: tagFilter || undefined,
     model: modelFilter || undefined,
+    columnVisibility,
   });
 
   const { data: sharedRaw = [], isLoading: sharedLoading } = useMySharedChannels();
@@ -358,7 +367,8 @@ function PersonalChannelsContent() {
         onStatusFilterChange={handleStatusFilterChange}
         onTagFilterChange={handleTagFilterChange}
         onModelFilterChange={handleModelFilterChange}
-        onHealthColumnVisibilityChange={setIsHealthColumnVisible}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={setColumnVisibility}
         canWrite={isReadOnly ? false : canWrite}
         showStatusFilter={!isReadOnly}
       />

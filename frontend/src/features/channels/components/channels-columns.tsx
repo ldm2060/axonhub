@@ -13,6 +13,7 @@ import {
   OrderingWeightCell,
   ProviderCell,
   ProxyCell,
+  QuotaCell,
   StatusSwitchCell,
   SupportedModelsCell,
   TagsCell,
@@ -107,6 +108,18 @@ export const createColumns = (
       enableSorting: true,
       enableHiding: false,
     },
+    {
+      id: 'quota',
+      accessorFn: (row) => row.providerQuotaStatus?.status ?? '',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.quota')} className='justify-center' />,
+      cell: QuotaCell,
+      meta: {
+        className: 'w-96 min-w-96 text-center',
+      },
+      enableSorting: false,
+      enableHiding: true,
+    },
+
     {
       accessorKey: 'tags',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.tags')} className='justify-center' />,

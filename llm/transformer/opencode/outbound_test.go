@@ -13,11 +13,18 @@ import (
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/auth"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/deepseek"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 	"github.com/ldm2060/axonhub/llm/transformer/shared"
 )
+
+type stoppableOutbound interface {
+	Stop()
+}
 
 func newTestTransformer(t *testing.T) *OutboundTransformer {
 	t.Helper()
@@ -192,6 +199,19 @@ func TestOutboundTransformer_TransformRequest_GeneratesSessionHeader(t *testing.
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, httpReq.Headers.Get(SessionHeader))
+}
+
+func TestWithSessionHeader_PreservesCustomizedOutboundCapabilities(t *testing.T) {
+	base, err := responses.NewOutboundTransformerWithConfig(&responses.Config{
+		BaseURL:        "https://opencode.ai/zen/go",
+		APIKeyProvider: auth.NewStaticKeyProvider("test-api-key"),
+	})
+	require.NoError(t, err)
+
+	wrapped := WithSessionHeader(base)
+	require.Implements(t, (*pipeline.ChannelCustomizedExecutor)(nil), wrapped)
+	require.Implements(t, (*transformer.TransportRequestFinalizer)(nil), wrapped)
+	require.Implements(t, (*stoppableOutbound)(nil), wrapped)
 }
 
 func TestWithSessionHeader_AnthropicOutbound(t *testing.T) {

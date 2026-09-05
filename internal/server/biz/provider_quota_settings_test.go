@@ -2,14 +2,23 @@ package biz
 
 import (
 	"encoding/json"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 )
+
+func TestProviderQuotaChannelTypes_include_xAI_subscription(t *testing.T) {
+	require.True(t, slices.Contains(providerQuotaChannelTypes, channel.TypeXaiSubscription))
+	require.True(t, slices.Contains(providerQuotaChannelTypes, channel.TypeAntigravity))
+	require.True(t, slices.Contains(providerQuotaChannelTypes, channel.TypeCommandcode))
+	require.True(t, slices.Contains(providerQuotaChannelTypes, channel.TypeCommandcodeAnthropic))
+}
 
 func setupProviderQuotaSettingsTest(t *testing.T) (*SystemService, *ent.Client) {
 	t.Helper()
@@ -28,6 +37,9 @@ func TestSystemService_ProviderQuotaCollectionSettings_DefaultsToEnabled(t *test
 	require.NoError(t, err)
 	require.True(t, settings.Enabled)
 	require.True(t, settings.Providers["codex"])
+	require.True(t, settings.Providers["antigravity"])
+	require.True(t, settings.Providers["xai_subscription"])
+	require.True(t, settings.Providers["commandcode"])
 	require.True(t, settings.Providers["minimax"])
 	require.True(t, settings.Providers["zhipu"])
 }

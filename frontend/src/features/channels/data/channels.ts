@@ -139,6 +139,11 @@ minInputTokens
           apiFormats
           enabled
         }
+        providerQuota {
+          commandCode {
+            authCookie
+          }
+        }
       }
       orderingWeight
       clientRestriction
@@ -236,6 +241,11 @@ minInputTokens
           model
           apiFormats
           enabled
+        }
+        providerQuota {
+          commandCode {
+            authCookie
+          }
         }
       }
       orderingWeight
@@ -335,6 +345,11 @@ minInputTokens
           apiFormats
           enabled
         }
+        providerQuota {
+          commandCode {
+            authCookie
+          }
+        }
       }
       orderingWeight
       clientRestriction
@@ -432,6 +447,11 @@ minInputTokens
           model
           apiFormats
           enabled
+        }
+        providerQuota {
+          commandCode {
+            authCookie
+          }
         }
       }
       orderingWeight
@@ -636,6 +656,11 @@ minInputTokens
             model
             apiFormats
             enabled
+          }
+          providerQuota {
+            commandCode {
+              authCookie
+            }
           }
         }
       }
@@ -871,6 +896,11 @@ minInputTokens
             apiFormats
             enabled
           }
+          providerQuota {
+            commandCode {
+              authCookie
+            }
+          }
         }
       }
     }
@@ -928,11 +958,14 @@ const ALL_CHANNEL_TAGS_QUERY = `
   }
 `;
 
-const QUERY_CHANNELS_QUERY = `
-  query QueryChannels($input: QueryChannelInput!) {
-    queryChannels(input: $input) {
-      edges {
-        node {
+export type ChannelListColumnVisibility = Record<string, boolean>;
+
+export const DEFAULT_CHANNEL_COLUMN_VISIBILITY: ChannelListColumnVisibility = {
+  tags: false,
+  proxy: false,
+};
+
+const CHANNEL_QUERY_FULL_NODE_SELECTION = `
           id
           createdAt
           updatedAt
@@ -1047,6 +1080,11 @@ minInputTokens
               apiFormats
               enabled
             }
+            providerQuota {
+              commandCode {
+                authCookie
+              }
+            }
           }
           orderingWeight
           errorMessage
@@ -1090,6 +1128,105 @@ minInputTokens
           sharedWith
           quotaBindingReady
           quotaMultiMonitorStrategy
+          providerQuotaStatus {
+            status
+            nextResetAt
+            ready
+            quotaData
+            providerType
+          }
+`;
+
+const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
+          id
+          createdAt
+          updatedAt
+          type
+          baseURL
+          name
+          status
+          defaultTestModel
+          errorMessage
+          disabledAPIKeys {
+            key
+            disabledAt
+            errorCode
+            reason
+            expiresAt
+          }
+          ownerID
+          visibility
+          sharedWith
+          quotaBindingReady
+          quotaMultiMonitorStrategy
+`;
+
+const CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION = `
+          supportedModels
+`;
+
+const CHANNEL_QUERY_TAGS_SELECTION = `
+          tags
+`;
+
+const CHANNEL_QUERY_PROXY_SELECTION = `
+          settings {
+            proxy {
+              type
+              url
+              username
+              password
+              disableConnectionReuse
+            }
+          }
+`;
+
+const CHANNEL_QUERY_ORDERING_WEIGHT_SELECTION = `
+          orderingWeight
+`;
+
+const CHANNEL_QUERY_HEALTH_SELECTION = `
+          liveLimiterStats {
+            inFlight
+            waiting
+            capacity
+            queueSize
+          }
+`;
+
+const CHANNEL_QUERY_QUOTA_SELECTION = `
+          providerQuotaStatus {
+            status
+            nextResetAt
+            ready
+            quotaData
+            providerType
+          }
+`;
+
+function isChannelColumnVisible(columnVisibility: ChannelListColumnVisibility | undefined, columnID: string): boolean {
+  return columnVisibility?.[columnID] !== false;
+}
+
+export function buildQueryChannelsQuery(columnVisibility?: ChannelListColumnVisibility, options?: { full?: boolean }): string {
+  const nodeSelection = options?.full
+    ? CHANNEL_QUERY_FULL_NODE_SELECTION
+    : [
+        CHANNEL_QUERY_LIST_NODE_BASE_SELECTION,
+        isChannelColumnVisible(columnVisibility, 'supportedModels') ? CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION : '',
+        isChannelColumnVisible(columnVisibility, 'tags') ? CHANNEL_QUERY_TAGS_SELECTION : '',
+        isChannelColumnVisible(columnVisibility, 'proxy') ? CHANNEL_QUERY_PROXY_SELECTION : '',
+        isChannelColumnVisible(columnVisibility, 'orderingWeight') ? CHANNEL_QUERY_ORDERING_WEIGHT_SELECTION : '',
+        isChannelColumnVisible(columnVisibility, 'health') ? CHANNEL_QUERY_HEALTH_SELECTION : '',
+        isChannelColumnVisible(columnVisibility, 'quota') ? CHANNEL_QUERY_QUOTA_SELECTION : '',
+      ].join('');
+
+  return `
+  query QueryChannels($input: QueryChannelInput!) {
+    queryChannels(input: $input) {
+      edges {
+        node {
+${nodeSelection}
         }
         cursor
       }
@@ -1103,6 +1240,10 @@ minInputTokens
     }
   }
 `;
+}
+
+// Retain a full-field document for callers that do not have column state yet.
+const QUERY_CHANNELS_QUERY = buildQueryChannelsQuery(undefined, { full: true });
 
 export function useChannelModelPrices(channelId: string) {
   return useQuery({
@@ -1159,6 +1300,7 @@ export function useQueryChannels(
     };
     hasTag?: string;
     model?: string;
+    columnVisibility?: ChannelListColumnVisibility;
   },
   options?: {
     disableAutoFetch?: boolean;
@@ -1166,25 +1308,14 @@ export function useQueryChannels(
 ) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
+  const { columnVisibility, ...queryInput } = variables ?? {};
+  const query = buildQueryChannelsQuery(columnVisibility);
 
-  const query = useQuery({
+  const result = useQuery({
     enabled: !options?.disableAutoFetch,
-    queryKey: [
-      'channels',
-      variables?.where,
-      variables?.orderBy?.field,
-      variables?.orderBy?.direction,
-      variables?.hasTag,
-      variables?.model,
-      variables?.first,
-      variables?.last,
-      variables?.after,
-      variables?.before,
-      variables,
-    ],
-    queryFn: async ({ queryKey }) => {
-      const vars = queryKey[queryKey.length - 1] as typeof variables;
-      const data = await graphqlRequest<{ queryChannels: ChannelConnection }>(QUERY_CHANNELS_QUERY, { input: vars });
+    queryKey: ['channels', queryInput, query],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ queryChannels: ChannelConnection }>(query, { input: queryInput });
       return channelConnectionSchema.parse(data?.queryChannels);
     },
     // Poll so the live limiter snapshot (in-flight / queue) stays roughly fresh.
@@ -1197,12 +1328,21 @@ export function useQueryChannels(
   });
 
   useEffect(() => {
-    if (shouldNotifyChannelQueryError(query.error, query.data !== undefined, query.isPlaceholderData)) {
-      handleError(query.error, t('common.errors.internalServerError'));
+    if (shouldNotifyChannelQueryError(result.error, result.data !== undefined, result.isPlaceholderData)) {
+      handleError(result.error, t('common.errors.internalServerError'));
     }
-  }, [handleError, query.data, query.error, query.isPlaceholderData, t]);
+  }, [handleError, result.data, result.error, result.isPlaceholderData, t]);
 
-  return query;
+  return result;
+}
+
+export function useChannelDetails(channelID?: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['channel', channelID],
+    queryFn: () => fetchLatestChannel(channelID as string),
+    enabled: Boolean(channelID) && (options?.enabled ?? true),
+    staleTime: 0,
+  });
 }
 
 export function useAllChannelNames(options?: { enabled?: boolean }) {
@@ -1405,6 +1545,7 @@ export function useUpdateChannelSettings() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
       queryClient.invalidateQueries({ queryKey: ['channel', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['provider-quotas'] });
     },
     onError: (error) => {
       handleError(error, { context: t('channels.dialogs.edit.title') });

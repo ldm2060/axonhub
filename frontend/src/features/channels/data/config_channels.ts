@@ -33,6 +33,7 @@ import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
 import ZenMux from '@lobehub/icons/es/ZenMux/components/Mono.js';
 import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
+import { CommandCodeIcon } from '../components/commandcode-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
 import { FennoIcon } from '../components/fenno-icon';
 import { NanoGPTIcon } from '../components/nanogpt-icon';
@@ -833,6 +834,22 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     color: 'bg-gray-100 text-gray-800 border-gray-200',
     icon: ZenMux,
   },
+  commandcode: {
+    channelType: 'commandcode',
+    baseURL: 'https://api.commandcode.ai/provider/v1',
+    defaultModels: [],
+    apiFormat: OPENAI_CHAT_COMPLETIONS,
+    color: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    icon: CommandCodeIcon,
+  },
+  commandcode_anthropic: {
+    channelType: 'commandcode_anthropic',
+    baseURL: 'https://api.commandcode.ai/provider/v1',
+    defaultModels: [],
+    apiFormat: ANTHROPIC_MESSAGES,
+    color: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    icon: CommandCodeIcon,
+  },
 };
 
 /**
@@ -894,7 +911,8 @@ export type Provider =
   | 'ollama'
   | 'evolink'
   | 'groq'
-  | 'zenmux';
+  | 'zenmux'
+  | 'commandcode';
 
 /**
  * Map channel type to provider
@@ -971,6 +989,8 @@ export const CHANNEL_TYPE_TO_PROVIDER: Record<ChannelType, Provider> = {
   zenmux_responses: 'zenmux',
   zenmux_anthropic: 'zenmux',
   zenmux_gemini: 'zenmux',
+  commandcode: 'commandcode',
+  commandcode_anthropic: 'commandcode',
 };
 
 /**

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import { useChannelDetails } from '../data/channels';
 import { CHANNEL_CONFIGS } from '../data/config_channels';
 import { Channel } from '../data/schema';
 
@@ -10,8 +11,10 @@ interface ChannelExpandedRowProps {
   getApiFormatLabel: (apiFormat?: string) => string;
 }
 
-export const ChannelExpandedRow = memo(({ channel, getApiFormatLabel }: ChannelExpandedRowProps) => {
+export const ChannelExpandedRow = memo(({ channel: listChannel, getApiFormatLabel }: ChannelExpandedRowProps) => {
   const { t } = useTranslation();
+  const { data: detailedChannel } = useChannelDetails(listChannel.id);
+  const channel = detailedChannel ?? listChannel;
   const config = CHANNEL_CONFIGS[channel.type];
 
   return (

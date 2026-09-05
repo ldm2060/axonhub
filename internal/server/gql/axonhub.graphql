@@ -158,6 +158,26 @@ input ModelProtocolInput {
   enabled: Boolean
 }
 
+# ProviderQuota carries credentials used only for provider quota polling
+# (e.g. the Command Code account session cookie). These are sensitive: the
+# output resolver only returns them to operators with write_channels, and the
+# values are never part of ordinary channel reads.
+type CommandCodeQuotaSettings {
+  authCookie: String
+}
+
+input CommandCodeQuotaSettingsInput {
+  authCookie: String
+}
+
+type ChannelProviderQuotaSettings {
+  commandCode: CommandCodeQuotaSettings
+}
+
+input ChannelProviderQuotaSettingsInput {
+  commandCode: CommandCodeQuotaSettingsInput
+}
+
 type ChannelSettings {
   extraModelPrefix: String
   modelMappings: [ModelMapping!]
@@ -178,6 +198,7 @@ type ChannelSettings {
   retryableErrorPatterns: [RetryableErrorPattern!]
   minInputTokens: Int
   modelProtocols: [ModelProtocol!]
+  providerQuota: ChannelProviderQuotaSettings @goField(forceResolver: true)
 }
 
 enum CapabilityPolicy {
@@ -279,6 +300,7 @@ input ChannelSettingsInput {
   retryableErrorPatterns: [RetryableErrorPatternInput!]
   minInputTokens: Int
   modelProtocols: [ModelProtocolInput!]
+  providerQuota: ChannelProviderQuotaSettingsInput
 }
 
 input ChannelRateLimitInput {

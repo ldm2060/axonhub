@@ -6,7 +6,6 @@ import {
   RowData,
   RowSelectionState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
@@ -22,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { ServerSidePagination } from '@/components/server-side-pagination';
 import { useChannels } from '../context/channels-context';
+import type { ChannelListColumnVisibility } from '../data/channels';
 import { Channel, ChannelConnection } from '../data/schema';
 import { ChannelExpandedRow } from './channel-expanded-row';
 import { DataTableToolbar } from './data-table-toolbar';
@@ -61,15 +61,12 @@ interface DataTableProps {
   onStatusFilterChange: (filters: string[]) => void;
   onTagFilterChange: (filter: string) => void;
   onModelFilterChange: (filter: string) => void;
+  columnVisibility: ChannelListColumnVisibility;
+  onColumnVisibilityChange: React.Dispatch<React.SetStateAction<ChannelListColumnVisibility>>;
   onHealthColumnVisibilityChange?: (visible: boolean) => void;
   canWrite?: boolean;
   showStatusFilter?: boolean;
 }
-
-const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
-  tags: false,
-  proxy: false,
-};
 
 export function ChannelsTable({
   columns,
@@ -96,6 +93,8 @@ export function ChannelsTable({
   onStatusFilterChange,
   onTagFilterChange,
   onModelFilterChange,
+  columnVisibility,
+  onColumnVisibilityChange,
   onHealthColumnVisibilityChange,
   canWrite = true,
   showStatusFilter = true,
@@ -105,19 +104,6 @@ export function ChannelsTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
-  // Load column visibility from localStorage with useMemo to avoid re-parsing
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
-    const stored = localStorage.getItem('channels-table-column-visibility');
-    if (stored) {
-      try {
-        return { ...DEFAULT_COLUMN_VISIBILITY, ...JSON.parse(stored) };
-      } catch {
-        return DEFAULT_COLUMN_VISIBILITY;
-      }
-    }
-    return DEFAULT_COLUMN_VISIBILITY; // Hide optional columns by default but keep them available in column settings
-  });
 
   // Sync server state to local column filters using useMemo instead of useEffect
   useEffect(() => {
@@ -224,7 +210,7 @@ export function ChannelsTable({
     onExpandedChange: setExpanded,
     onSortingChange,
     onColumnFiltersChange: handleColumnFiltersChange,
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),

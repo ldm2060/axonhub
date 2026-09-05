@@ -1375,6 +1375,8 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   zenmux_responses
   zenmux_anthropic
   zenmux_gemini
+  commandcode
+  commandcode_anthropic
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!
@@ -4280,6 +4282,7 @@ ProviderQuotaStatusProviderType is enum for the field provider_type
 enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/providerquotastatus.ProviderType") {
   claudecode
   codex
+  antigravity
   xai_subscription
   github_copilot
   nanogpt
@@ -4294,6 +4297,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   zhipu
   charm_hyper
   zenmux
+  commandcode
 }
 """
 ProviderQuotaStatusStatus is enum for the field status

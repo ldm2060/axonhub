@@ -130,6 +130,7 @@ export function mergeChannelSettingsForUpdate(
     retryableErrorPatterns: pick('retryableErrorPatterns', existing?.retryableErrorPatterns ?? []),
     minInputTokens: pick('minInputTokens', existing?.minInputTokens ?? null),
     modelProtocols: pick('modelProtocols', existing?.modelProtocols ?? []),
+    providerQuota: pick('providerQuota', existing?.providerQuota ?? null),
   };
 }
 
