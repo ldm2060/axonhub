@@ -1085,8 +1085,15 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 		if l.NextResetAt != nil {
 			m["nextResetAt"] = l.NextResetAt.Format(time.RFC3339)
 		}
+		if l.Window != "" {
+			m["window"] = l.Window
+		}
+		if l.PeriodStart != nil {
+			m["periodStart"] = l.PeriodStart.Format(time.RFC3339)
+		}
 		quotaLimits = append(quotaLimits, m)
 	}
+	svc.fillMonitorPeriodQuotaEstimates(ctx, ch, derived.Limits, quotaLimits, now)
 
 	// Evaluate auto-disable conditions if enabled
 	if ch.AutoDisableEnabled {

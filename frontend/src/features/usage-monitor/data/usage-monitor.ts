@@ -59,6 +59,10 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
       lastPollError
       createdAt
       updatedAt
+      quotaStatus
+      quotaReady
+      nextResetAt
+      quotaLimits
       channel {
         id
         name
@@ -306,6 +310,10 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     lastPollAt: raw.lastPollAt ?? null,
     parsedData: raw.parsedData ?? null,
     lastPollError: raw.lastPollError ?? null,
+    quotaStatus: raw.quotaStatus || null,
+    quotaReady: raw.quotaReady ?? null,
+    nextResetAt: raw.nextResetAt || null,
+    quotaLimits: raw.quotaLimits ?? null,
     createdAt: raw.createdAt ?? '',
     updatedAt: raw.updatedAt ?? '',
   });

@@ -378,6 +378,7 @@
   "system.autoBackup.triggerSuccess": "已备份",
   "system.autoBackup.triggerFailed": "触发备份失败",
   "system.providerQuota.title": "提供商配额",
+  "system.providerQuota.monitorTitle": "配额监控",
   "system.providerQuota.loading": "正在加载配额状态...",
   "system.providerQuota.error": "加载配额状态失败",
   "system.providerQuota.refresh.success": "配额状态已刷新",

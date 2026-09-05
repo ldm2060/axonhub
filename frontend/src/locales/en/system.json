@@ -378,6 +378,7 @@
   "system.autoBackup.triggerSuccess": "Backup completed",
   "system.autoBackup.triggerFailed": "Failed to trigger backup",
   "system.providerQuota.title": "Provider Quotas",
+  "system.providerQuota.monitorTitle": "Quota Monitors",
   "system.providerQuota.loading": "Loading quota status...",
   "system.providerQuota.error": "Failed to load quota status",
   "system.providerQuota.refresh.success": "Quota status refreshed",

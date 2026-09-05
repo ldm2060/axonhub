@@ -949,6 +949,13 @@ func (svc *ProviderQuotaService) saveQuotaError(
 }
 
 func (svc *ProviderQuotaService) getProviderType(ch *ent.Channel) string {
+	return channelProviderType(ch)
+}
+
+// channelProviderType maps a channel onto the provider type its quota belongs
+// to. Shared with the usage-monitor path so template monitors can find the
+// AxonHub channels whose usage logs price the monitor's quota windows.
+func channelProviderType(ch *ent.Channel) string {
 	switch ch.Type { //nolint:exhaustive
 	case channel.TypeClaudecode:
 		return "claudecode"

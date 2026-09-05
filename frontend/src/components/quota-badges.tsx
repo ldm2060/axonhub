@@ -30,13 +30,30 @@ import {
   isClineUnavailablePassQuotaData,
   ProviderCommandCodeQuotaData,
   CommandCodeQuotaWindow,
+  parseQuotaLimits,
   resetChannelQuotaNow,
   checkProviderQuotas,
 } from '@/features/system/data/quotas';
 import { useGeneralSettings, useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 import { capitalizeZenmuxTier, getZenmuxMonthlyQuotaUSD, getZenmuxUsagePercentage } from '@/features/system/data/zenmux-quota-display';
+import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
+import { useUsageMonitorChannels } from '@/features/usage-monitor/data/usage-monitor';
+import type { UsageMonitorChannel } from '@/features/usage-monitor/data/schema';
 
 const syntheticWeeklyRegenTickPct = 0.02;
+
+type MonitorQuotaEntry = UsageMonitorChannel & {
+  monitorName: string;
+  maxUsagePercent: number;
+  statusLabel: string;
+};
+
+function deriveMonitorQuotaEntry(ch: UsageMonitorChannel): MonitorQuotaEntry | null {
+  const pctFields = (ch.parsedData ?? []).filter((f) => f.format === 'percentage' || f.format === 'fraction');
+  const maxUsagePercent = pctFields.reduce((max, f) => Math.max(max, f.percent ?? 0), 0);
+  const statusLabel = ch.quotaStatus ?? 'unknown';
+  return { ...ch, monitorName: ch.name, maxUsagePercent, statusLabel };
+}
 
 const BADGE_COLOR_CLASSES: Record<string, string> = {
   green: 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20',
@@ -2047,7 +2064,71 @@ function QuotaRow({
   );
 }
 
-function QuotaBadgeTrigger({ channels, isLoading, isError }: { channels: ProviderQuotaChannel[]; isLoading?: boolean; isError?: boolean }) {
+function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
+  const { t } = useTranslation();
+  const statusColor =
+    monitor.statusLabel === 'exhausted'
+      ? 'text-red-500'
+      : monitor.statusLabel === 'warning'
+        ? 'text-yellow-500'
+        : 'text-muted-foreground';
+
+  const batteryLevel = getBatteryLevel(monitor.maxUsagePercent, monitor.statusLabel);
+  const BatteryIcon = getBatteryIcon(batteryLevel);
+
+  // The backend persists derived limits with the same shape the built-in
+  // checkers store under quota_data._limits, so reuse that parser.
+  const limits = parseQuotaLimits({ _limits: (monitor.quotaLimits as { items?: unknown } | null)?.items });
+
+  return (
+    <div className='space-y-3 border-b py-3 first:pt-1 last:border-0 last:pb-1'>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <BatteryIcon className={`h-4 w-4 ${statusColor}`} />
+          <span className='text-foreground font-medium'>{monitor.monitorName}</span>
+        </div>
+        <Badge
+          variant={monitor.statusLabel === 'exhausted' ? 'destructive' : 'outline'}
+          className={
+            monitor.statusLabel === 'available' ? BADGE_COLOR_CLASSES.green : monitor.statusLabel === 'warning' ? BADGE_COLOR_CLASSES.amber : ''
+          }
+        >
+          {t(STATUS_LABELS[monitor.statusLabel as keyof typeof STATUS_LABELS] ?? 'quota.status.unknown')}
+        </Badge>
+      </div>
+
+      {monitor.lastPollError && (
+        <div className='rounded bg-red-500/10 p-2 text-xs break-words text-red-500'>{monitor.lastPollError}</div>
+      )}
+
+      {/* Same renderer as /admin/usage-monitor cards so template badge fields
+          (Plan, Access Type, Chat TRUE, …) keep their gradient badges. */}
+      {monitor.parsedData && monitor.parsedData.length > 0 && (
+        <SharedFieldRenderer fields={monitor.parsedData} displayFields={monitor.displayFields ?? undefined} />
+      )}
+
+      <PeriodQuotaEstimate limits={limits} />
+
+      {monitor.lastPollAt && (
+        <div className='text-muted-foreground pt-1 text-right text-[11px]'>
+          {t('usageMonitor.lastUpdated')} {format(new Date(monitor.lastPollAt), 'HH:mm:ss')}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuotaBadgeTrigger({
+  channels,
+  monitorChannels,
+  isLoading,
+  isError,
+}: {
+  channels: ProviderQuotaChannel[];
+  monitorChannels: MonitorQuotaEntry[];
+  isLoading?: boolean;
+  isError?: boolean;
+}) {
   if (isLoading) {
     return <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />;
   }
@@ -2056,16 +2137,19 @@ function QuotaBadgeTrigger({ channels, isLoading, isError }: { channels: Provide
     return <BatteryWarning className='h-5 w-5 text-red-500 transition-colors' />;
   }
 
-  const highestUsed = Math.max(...channels.map(getChannelPercentage));
+  const allEntries = [...channels.map(getChannelPercentage), ...monitorChannels.map((m) => m.maxUsagePercent)];
+  const highestUsed = allEntries.length > 0 ? Math.max(...allEntries) : 0;
 
   // Binding-first: a channel whose bindings judged it ready does not drive the
   // red exhausted battery — its quotaStatus exhaustion is not enforced.
   const hasExhausted = channels.some((c) => c.quotaStatus.status === 'exhausted' && c.quotaBindingReady !== true);
   const hasWarning = channels.some((c) => c.quotaStatus.status === 'warning' && c.quotaBindingReady !== true);
+  const monitorExhausted = monitorChannels.some((m) => m.statusLabel === 'exhausted');
+  const monitorWarning = monitorChannels.some((m) => m.statusLabel === 'warning');
 
   let level: BatteryLevel = 'full';
-  if (hasExhausted) level = 'warning';
-  else if (hasWarning) level = 'low';
+  if (hasExhausted || monitorExhausted) level = 'warning';
+  else if (hasWarning || monitorWarning) level = 'low';
   else level = getBatteryLevel(highestUsed, 'available');
 
   const BatteryIcon = getBatteryIcon(level);
@@ -2077,12 +2161,26 @@ function QuotaBadgeTrigger({ channels, isLoading, isError }: { channels: Provide
 
 export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean; onRefresh: () => void }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { channels, isLoading, isError, error } = useProviderQuotaStatuses();
   const { data: enforcementSettings } = useQuotaEnforcementSettings();
+  const { data: usageMonitors } = useUsageMonitorChannels();
   const enforcementMode = enforcementSettings?.enabled ? enforcementSettings.mode : null;
   const allowedChannelIDs = enforcementSettings?.enabled ? enforcementSettings.allowedChannelIDs : null;
 
-  if (!isLoading && !isError && channels.length === 0) return null;
+  const monitorChannels = (usageMonitors ?? [])
+    .map(deriveMonitorQuotaEntry)
+    .filter((m): m is MonitorQuotaEntry => m !== null);
+
+  const hasContent = channels.length > 0 || monitorChannels.length > 0;
+  if (!isLoading && !isError && !hasContent) return null;
+
+  const handleRefresh = () => {
+    // The monitor query has no refetch interval of its own; the popover's
+    // refresh is its trigger alongside the checker refresh.
+    void queryClient.invalidateQueries({ queryKey: ['usageMonitorChannels'] });
+    onRefresh();
+  };
 
   const groupedChannels = channels.reduce((acc: ProviderQuotaChannel[], channel: ProviderQuotaChannel) => {
     if (channel.type === 'nanogpt_responses') {
@@ -2131,6 +2229,17 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
       );
     }
 
+    const monitorSection = monitorChannels.length > 0 && (
+      <div className='mt-3 space-y-3'>
+        {groupedChannels.length > 0 && (
+          <div className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>{t('system.providerQuota.monitorTitle')}</div>
+        )}
+        {monitorChannels.map((m) => (
+          <MonitorQuotaRow key={m.id} monitor={m} />
+        ))}
+      </div>
+    );
+
     return (
       <div
         className={`max-h-[60vh] overflow-y-auto pr-1 pl-1 ${groupedChannels.length > 4 ? 'grid grid-cols-1 gap-x-4 sm:grid-cols-2' : ''}`}
@@ -2138,6 +2247,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
         {groupedChannels.map((channel: ProviderQuotaChannel) => (
           <QuotaRow key={channel.id} channel={channel} enforcementMode={enforcementMode} allowedChannelIDs={allowedChannelIDs} />
         ))}
+        {monitorSection}
       </div>
     );
   };
@@ -2146,12 +2256,14 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
     <Popover>
       <PopoverTrigger asChild>
         <button type='button' className='hover:bg-muted relative rounded-md p-2 transition-colors'>
-          <QuotaBadgeTrigger channels={groupedChannels} isLoading={isLoading} isError={isError} />
+          <QuotaBadgeTrigger channels={groupedChannels} monitorChannels={monitorChannels} isLoading={isLoading} isError={isError} />
         </button>
       </PopoverTrigger>
       <PopoverContent
         className={
-          !isLoading && !isError && groupedChannels.length > 4 ? 'w-[640px] max-w-[calc(100vw-2rem)]' : 'w-80 max-w-[calc(100vw-2rem)]'
+          !isLoading && !isError && groupedChannels.length + monitorChannels.length > 4
+            ? 'w-[640px] max-w-[calc(100vw-2rem)]'
+            : 'w-80 max-w-[calc(100vw-2rem)]'
         }
         align='end'
       >
@@ -2159,7 +2271,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
           <div className='mb-2 flex items-center justify-between'>
             <div className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>{t('system.providerQuota.title')}</div>
             <button
-              onClick={onRefresh}
+              onClick={handleRefresh}
               disabled={isRefreshing || isLoading}
               className='text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50'
               aria-label={t('system.providerQuota.refresh.label')}

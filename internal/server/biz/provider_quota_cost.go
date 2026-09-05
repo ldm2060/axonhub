@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
@@ -77,11 +78,24 @@ func (svc *ProviderQuotaService) channelCostSince(
 	since time.Time,
 	until time.Time,
 ) (float64, error) {
+	return aggregateChannelCostSince(ctx, svc.db, channelID, since, until)
+}
+
+// aggregateChannelCostSince is the db-client form of channelCostSince, shared
+// with the usage-monitor polling path so monitor-derived quota data gets the
+// same period quota estimates as the built-in provider checkers.
+func aggregateChannelCostSince(
+	ctx context.Context,
+	client *ent.Client,
+	channelID int,
+	since time.Time,
+	until time.Time,
+) (float64, error) {
 	// Manual checks run from a GraphQL mutation, whose context carries a user
 	// principal that cannot read usage logs across projects; the scheduled path
 	// already runs under a system bypass.
 	metadata, err := authz.RunWithSystemBypass(ctx, "provider-quota-period-cost", func(ctx context.Context) (*UsageMetadata, error) {
-		return aggregateUsageMetadata(ctx, svc.db.UsageLog.Query().Where(
+		return aggregateUsageMetadata(ctx, client.UsageLog.Query().Where(
 			usagelog.ChannelIDEQ(channelID),
 			usagelog.CreatedAtGTE(since),
 			usagelog.CreatedAtLT(until),
