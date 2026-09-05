@@ -7,6 +7,7 @@ import { usePublishRequests, useCancelPublishRequest, useReviewPublishRequest } 
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatUserName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -136,7 +137,7 @@ export default function PublishRequestsPage() {
                       <TableCell>
                         <div>
                           <p className='text-sm font-medium'>
-                            {request.requester.firstName} {request.requester.lastName}
+                            {formatUserName(request.requester.firstName, request.requester.lastName)}
                           </p>
                           <p className='text-muted-foreground text-xs'>{request.requester.email}</p>
                         </div>
@@ -196,7 +197,7 @@ export default function PublishRequestsPage() {
                           {request.status !== 'pending' && request.reviewer && (
                             <span className='text-muted-foreground text-xs'>
                               {t('publishRequests.columns.reviewedBy', {
-                                name: `${request.reviewer.firstName} ${request.reviewer.lastName}`,
+                                name: formatUserName(request.reviewer.firstName, request.reviewer.lastName),
                               })}
                             </span>
                           )}

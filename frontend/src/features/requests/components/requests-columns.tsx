@@ -140,7 +140,7 @@ export function useRequestsColumns(options?: UseRequestsColumnsOptions): ColumnD
             cell: ({ row }) => {
               const user = row.original.apiKey?.user;
               if (!user) return <div className='text-muted-foreground text-xs'>-</div>;
-              const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+              const name = formatUserName(user.firstName, user.lastName);
               return (
                 <div className='text-xs'>
                   <div className='font-medium'>{name || user.email}</div>

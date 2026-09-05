@@ -27,6 +27,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/schema/schematype"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xtext"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/samber/lo"
 )
@@ -1415,8 +1416,7 @@ func (r *queryResolver) MyUsageStatsByUser(ctx context.Context, timeWindow *stri
 	}
 
 	return lo.Map(results, func(item userUsageStats, _ int) *UsageStatsByUser {
-		userName := fmt.Sprintf("%s %s", item.FirstName, item.LastName)
-		userName = strings.TrimSpace(userName)
+		userName := xtext.FormatUserName(item.FirstName, item.LastName)
 		if userName == "" {
 			userName = item.Email
 		}
@@ -1567,7 +1567,7 @@ func (r *queryResolver) MyDailyUsageStatsByUser(ctx context.Context, days *int) 
 			firstName, lastName, email = row.FirstName, row.LastName, row.Email
 			break
 		}
-		userName := strings.TrimSpace(fmt.Sprintf("%s %s", firstName, lastName))
+		userName := xtext.FormatUserName(firstName, lastName)
 		if userName == "" {
 			userName = email
 		}

@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
+	"github.com/ldm2060/axonhub/internal/pkg/xtext"
 )
 
 type UserServiceParams struct {
@@ -818,7 +819,7 @@ func (s *UserService) ApproveUser(ctx context.Context, userID int) error {
 	if s.emailService != nil {
 		baseURL, _ := contexts.GetBaseURL(ctx)
 		signInURL := s.emailService.BuildURLWithBase(ctx, "/sign-in", baseURL)
-		_ = s.emailService.SendApprovedEmail(ctx, u.Email, u.FirstName+" "+u.LastName, signInURL)
+		_ = s.emailService.SendApprovedEmail(ctx, u.Email, xtext.FormatUserName(u.FirstName, u.LastName), signInURL)
 	}
 
 	s.invalidateUserCache(ctx, userID)
@@ -837,7 +838,7 @@ func (s *UserService) RejectUser(ctx context.Context, userID int) error {
 
 	// Send rejection email (best effort, don't fail on error)
 	if s.emailService != nil {
-		_ = s.emailService.SendRejectedEmail(ctx, u.Email, u.FirstName+" "+u.LastName)
+		_ = s.emailService.SendRejectedEmail(ctx, u.Email, xtext.FormatUserName(u.FirstName, u.LastName))
 	}
 
 	err = s.entFromContext(ctx).User.DeleteOneID(userID).Exec(ctx)

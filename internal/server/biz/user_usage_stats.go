@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/userusagestats"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache/live"
+	"github.com/ldm2060/axonhub/internal/pkg/xtext"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
@@ -457,7 +458,7 @@ func (svc *UserUsageStatsService) QueryUserUsageStats(ctx context.Context, input
 				if !ok {
 					continue
 				}
-				fullName := strings.TrimSpace(u.FirstName + " " + u.LastName)
+				fullName := xtext.FormatUserName(u.FirstName, u.LastName)
 				if strings.Contains(strings.ToLower(fullName), searchLower) ||
 					strings.Contains(strings.ToLower(u.Email), searchLower) {
 					filtered = append(filtered, stat)

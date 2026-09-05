@@ -5,6 +5,7 @@ import { Filter, GripVertical, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { formatUserName } from '@/lib/utils';
 import type { DateTimeRangeValue } from '@/utils/date-range';
 import type { AutoRefreshInterval } from '@/hooks/use-auto-refresh-interval';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -347,7 +348,7 @@ export function DataTableToolbar<TData>({
     if (!canViewUsers || !usersData?.edges) return [];
     return usersData.edges.map((edge) => ({
       value: edge.node.id,
-      label: `${edge.node.firstName} ${edge.node.lastName} (${edge.node.email})`,
+      label: `${formatUserName(edge.node.firstName, edge.node.lastName)} (${edge.node.email})`,
     }));
   }, [canViewUsers, usersData]);
 

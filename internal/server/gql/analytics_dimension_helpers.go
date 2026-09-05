@@ -12,6 +12,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
+	"github.com/ldm2060/axonhub/internal/pkg/xtext"
 )
 
 // dimStats holds aggregated dimension statistics from raw SQL queries.
@@ -243,8 +244,7 @@ func (r *queryResolver) queryUserStats(ctx context.Context, filter *AnalyticsFil
 	results := make([]dimStats, 0, len(rawResults))
 
 	for _, raw := range rawResults {
-		userName := fmt.Sprintf("%s %s", raw.FirstName, raw.LastName)
-		userName = trimSpace(userName)
+		userName := xtext.FormatUserName(raw.FirstName, raw.LastName)
 		if userName == "" {
 			userName = raw.Email
 		}

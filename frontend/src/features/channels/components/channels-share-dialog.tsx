@@ -5,6 +5,7 @@ import { IconShare, IconX, IconLoader2, IconUserPlus } from '@tabler/icons-react
 import { useShareChannel, useUnshareChannel, useRequestPublish } from '@/gql/sharing';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
+import { formatUserName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -41,7 +42,7 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
   const userOptions = (usersData?.edges || [])
     .map((edge) => ({
       value: edge.node.id,
-      label: `${edge.node.firstName} ${edge.node.lastName} (${edge.node.email})`.trim(),
+      label: `${formatUserName(edge.node.firstName, edge.node.lastName)} (${edge.node.email})`.trim(),
     }))
     .filter((opt) => !sharedWith.includes(Number(opt.value)) && opt.value !== String(authUser?.id));
 
@@ -49,7 +50,7 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
   const sharedUsers = sharedWith.map((userId) => {
     const user = usersData?.edges?.find((edge) => edge.node.id === String(userId));
     return user
-      ? { id: String(userId), name: `${user.node.firstName} ${user.node.lastName}`.trim(), email: user.node.email }
+      ? { id: String(userId), name: formatUserName(user.node.firstName, user.node.lastName), email: user.node.email }
       : { id: String(userId), name: String(userId), email: '' };
   });
 

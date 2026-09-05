@@ -29,6 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/pkg/xtext"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/internal/scopes"
 	"github.com/ldm2060/axonhub/internal/server/biz"
@@ -1907,8 +1908,7 @@ func (r *queryResolver) UsageStatsByUser(ctx context.Context, timeWindow *string
 	}
 
 	return lo.Map(results, func(item userUsageStats, _ int) *UsageStatsByUser {
-		userName := fmt.Sprintf("%s %s", item.FirstName, item.LastName)
-		userName = strings.TrimSpace(userName)
+		userName := xtext.FormatUserName(item.FirstName, item.LastName)
 		if userName == "" {
 			userName = item.Email
 		}
@@ -2092,7 +2092,7 @@ func (r *queryResolver) DailyUsageStatsByUser(ctx context.Context, days *int) ([
 			firstName, lastName, email = row.FirstName, row.LastName, row.Email
 			break
 		}
-		userName := strings.TrimSpace(fmt.Sprintf("%s %s", firstName, lastName))
+		userName := xtext.FormatUserName(firstName, lastName)
 		if userName == "" {
 			userName = email
 		}
@@ -2172,7 +2172,7 @@ func (r *queryResolver) UserUsageStats(ctx context.Context, timeRange biz.TimeRa
 
 		var userName, userEmail string
 		if u != nil {
-			userName = strings.TrimSpace(u.FirstName + " " + u.LastName)
+			userName = xtext.FormatUserName(u.FirstName, u.LastName)
 			userEmail = u.Email
 		}
 
