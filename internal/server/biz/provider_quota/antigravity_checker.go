@@ -93,7 +93,16 @@ func (c *AntigravityQuotaChecker) credentials(
 
 	credentials := ch.Credentials.OAuth
 	if credentials == nil {
-		credentials = &oauth.OAuthCredentials{}
+		credentials = &oauth.OAuthCredentials{
+			ClientID:     "",
+			AccessToken:  "",
+			RefreshToken: "",
+			IDToken:      "",
+			ExpiresAt:    time.Time{},
+			TokenType:    "",
+			Scopes:       nil,
+			KimiCode:     nil,
+		}
 	} else if credentials.AccessToken != "" &&
 		(!credentials.IsExpired(time.Now()) || (credentials.RefreshToken == "" && refreshToken == "")) {
 		return credentials.AccessToken, projectID, nil
@@ -114,8 +123,12 @@ func (c *AntigravityQuotaChecker) credentials(
 	}
 
 	tokenProvider := antigravity.NewTokenProvider(oauth.TokenProviderParams{
-		Credentials: &credentialsCopy,
-		HTTPClient:  httpClient,
+		Credentials:      &credentialsCopy,
+		HTTPClient:       httpClient,
+		OAuthUrls:        oauth.OAuthUrls{AuthorizeUrl: "", TokenUrl: ""},
+		UserAgent:        "",
+		OnRefreshed:      nil,
+		ExchangeStrategy: nil,
 	})
 	refreshed, err := tokenProvider.Get(ctx)
 	if err != nil {
@@ -174,6 +187,8 @@ func parseAntigravityQuota(body []byte) (QuotaData, error) {
 		RawData:      map[string]any{"models": models},
 		NextResetAt:  nextResetAt,
 		Ready:        IsReadyStatus(overallStatus),
+		Limits:       nil,
+		Resets:       nil,
 	}, nil
 }
 

@@ -1650,7 +1650,7 @@ func clearCommandCodeQuotaSettings(settings *objects.ChannelSettings) *objects.C
 	if sanitized.ProviderQuota != nil {
 		providerQuota := *sanitized.ProviderQuota
 		providerQuota.CommandCode = nil
-		if providerQuota == (objects.ChannelProviderQuotaSettings{}) {
+		if providerQuota == (objects.ChannelProviderQuotaSettings{CommandCode: nil}) {
 			sanitized.ProviderQuota = nil
 		} else {
 			sanitized.ProviderQuota = &providerQuota

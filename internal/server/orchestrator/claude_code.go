@@ -20,7 +20,10 @@ var _ pipeline.OutboundLlmRequestMiddleware = (*billingSystemMessageMiddleware)(
 // newBillingSystemMessageMiddleware preserves Claude Code billing metadata only
 // for the official OAuth channel selected for the current outbound attempt.
 func newBillingSystemMessageMiddleware(state *PersistenceState) pipeline.OutboundLlmRequestMiddleware {
-	return &billingSystemMessageMiddleware{state: state}
+	return &billingSystemMessageMiddleware{
+		DummyMiddleware: pipeline.DummyMiddleware{},
+		state:           state,
+	}
 }
 
 func (m *billingSystemMessageMiddleware) Name() string {

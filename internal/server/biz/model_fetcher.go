@@ -577,8 +577,10 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 	if isCommandCodeChannelType(channelType) {
 		if err := validateCommandCodeBaseURL(input.BaseURL); err != nil {
 			return &FetchModelsResult{
-				Models: []ModelIdentify{},
-				Error:  lo.ToPtr(err.Error()),
+				Models:         []ModelIdentify{},
+				Error:          lo.ToPtr(err.Error()),
+				KimiCodeModels: nil,
+				Fallback:       false,
 			}, nil
 		}
 	}

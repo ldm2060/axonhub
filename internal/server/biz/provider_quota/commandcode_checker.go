@@ -337,6 +337,10 @@ func parseCommandCodeCredits(creditsBody, subscriptionsBody []byte) (QuotaData, 
 			UsageRatio:  ratio,
 			Ready:       IsReadyStatus(status),
 			NextResetAt: resetAt,
+			Window:      "",
+			PeriodStart: nil,
+			PeriodCost:  nil,
+			PeriodQuota: nil,
 		}.WithWindow(window, winLen))
 	}
 
@@ -357,11 +361,15 @@ func parseCommandCodeCredits(creditsBody, subscriptionsBody []byte) (QuotaData, 
 			overall = "exhausted"
 		}
 		limits = append(limits, QuotaLimitStatus{
-			Type:       QuotaLimitTypeSubscriptionCycle,
-			Status:     overall,
-			UsageRatio: 0,
-			Ready:      IsReadyStatus(overall),
-			Window:     QuotaWindowMonthly,
+			Type:        QuotaLimitTypeSubscriptionCycle,
+			Status:      overall,
+			UsageRatio:  0,
+			Ready:       IsReadyStatus(overall),
+			NextResetAt: nil,
+			Window:      QuotaWindowMonthly,
+			PeriodStart: nil,
+			PeriodCost:  nil,
+			PeriodQuota: nil,
 		})
 	}
 
@@ -372,6 +380,7 @@ func parseCommandCodeCredits(creditsBody, subscriptionsBody []byte) (QuotaData, 
 		NextResetAt:  nextResetAt,
 		Ready:        IsReadyStatus(overall),
 		Limits:       limits,
+		Resets:       nil,
 	}, nil
 }
 
@@ -393,7 +402,14 @@ func parseCommandCodeWindow(obj map[string]any, keys ...string) *commandCodeWind
 		return nil
 	}
 
-	w := &commandCodeWindow{}
+	w := &commandCodeWindow{
+		usedUSD:  0,
+		capUSD:   0,
+		usagePct: 0,
+		resetAt:  nil,
+		hasCap:   false,
+		hasUsage: false,
+	}
 	used, usedOK := numFold(raw, "used_usd", "usedUsd", "used")
 	cap, capOK := numFold(raw, "cap_usd", "capUsd", "cap", "limitUsd", "limit_usd")
 	pct, pctOK := numFold(raw, "usage_percent", "usagePercent", "percent")

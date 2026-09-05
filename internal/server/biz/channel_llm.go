@@ -483,10 +483,14 @@ func (svc *ChannelService) buildNonDefaultEndpointOutbound(
 		switch c.Type {
 		case channel.TypeCommandcode, channel.TypeCommandcodeAnthropic:
 			return anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
-				Type:           anthropic.PlatformCommandCode,
-				BaseURL:        baseURL,
-				APIKeyProvider: apiKeyProvider(),
-				EndpointPath:   ep.Path,
+				Type:                    anthropic.PlatformCommandCode,
+				Region:                  "",
+				ProjectID:               "",
+				JSONData:                "",
+				BaseURL:                 baseURL,
+				APIKeyProvider:          apiKeyProvider(),
+				EndpointPath:            ep.Path,
+				ReasoningEffortToBudget: nil,
 			})
 		}
 
@@ -862,9 +866,14 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		return ch, nil
 	case channel.TypeCommandcodeAnthropic:
 		transformer, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
-			Type:           anthropic.PlatformCommandCode,
-			BaseURL:        c.BaseURL,
-			APIKeyProvider: getAPIKeyProvider(ch),
+			Type:                    anthropic.PlatformCommandCode,
+			Region:                  "",
+			ProjectID:               "",
+			JSONData:                "",
+			BaseURL:                 c.BaseURL,
+			APIKeyProvider:          getAPIKeyProvider(ch),
+			EndpointPath:            "",
+			ReasoningEffortToBudget: nil,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
@@ -1135,7 +1144,10 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		transformer, err := openai.NewOutboundTransformerWithConfig(&openai.Config{
 			PlatformType:   openai.PlatformOpenAI,
 			BaseURL:        c.BaseURL,
+			RawURL:         false,
+			EndpointPath:   "",
 			APIKeyProvider: getAPIKeyProvider(ch),
+			ReasoningField: "",
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
