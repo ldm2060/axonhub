@@ -37,8 +37,8 @@ import {
 import { useGeneralSettings, useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
 import { capitalizeZenmuxTier, getZenmuxMonthlyQuotaUSD, getZenmuxUsagePercentage } from '@/features/system/data/zenmux-quota-display';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
-import { useUsageMonitorChannels } from '@/features/usage-monitor/data/usage-monitor';
 import type { UsageMonitorChannel } from '@/features/usage-monitor/data/schema';
+import { useUsageMonitorChannels } from '@/features/usage-monitor/data/usage-monitor';
 
 const syntheticWeeklyRegenTickPct = 0.02;
 
@@ -2067,11 +2067,7 @@ function QuotaRow({
 function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
   const { t } = useTranslation();
   const statusColor =
-    monitor.statusLabel === 'exhausted'
-      ? 'text-red-500'
-      : monitor.statusLabel === 'warning'
-        ? 'text-yellow-500'
-        : 'text-muted-foreground';
+    monitor.statusLabel === 'exhausted' ? 'text-red-500' : monitor.statusLabel === 'warning' ? 'text-yellow-500' : 'text-muted-foreground';
 
   const batteryLevel = getBatteryLevel(monitor.maxUsagePercent, monitor.statusLabel);
   const BatteryIcon = getBatteryIcon(batteryLevel);
@@ -2090,16 +2086,18 @@ function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
         <Badge
           variant={monitor.statusLabel === 'exhausted' ? 'destructive' : 'outline'}
           className={
-            monitor.statusLabel === 'available' ? BADGE_COLOR_CLASSES.green : monitor.statusLabel === 'warning' ? BADGE_COLOR_CLASSES.amber : ''
+            monitor.statusLabel === 'available'
+              ? BADGE_COLOR_CLASSES.green
+              : monitor.statusLabel === 'warning'
+                ? BADGE_COLOR_CLASSES.amber
+                : ''
           }
         >
           {t(STATUS_LABELS[monitor.statusLabel as keyof typeof STATUS_LABELS] ?? 'quota.status.unknown')}
         </Badge>
       </div>
 
-      {monitor.lastPollError && (
-        <div className='rounded bg-red-500/10 p-2 text-xs break-words text-red-500'>{monitor.lastPollError}</div>
-      )}
+      {monitor.lastPollError && <div className='rounded bg-red-500/10 p-2 text-xs break-words text-red-500'>{monitor.lastPollError}</div>}
 
       {/* Same renderer as /admin/usage-monitor cards so template badge fields
           (Plan, Access Type, Chat TRUE, …) keep their gradient badges. */}
@@ -2168,9 +2166,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
   const enforcementMode = enforcementSettings?.enabled ? enforcementSettings.mode : null;
   const allowedChannelIDs = enforcementSettings?.enabled ? enforcementSettings.allowedChannelIDs : null;
 
-  const monitorChannels = (usageMonitors ?? [])
-    .map(deriveMonitorQuotaEntry)
-    .filter((m): m is MonitorQuotaEntry => m !== null);
+  const monitorChannels = (usageMonitors ?? []).map(deriveMonitorQuotaEntry).filter((m): m is MonitorQuotaEntry => m !== null);
 
   const hasContent = channels.length > 0 || monitorChannels.length > 0;
   if (!isLoading && !isError && !hasContent) return null;

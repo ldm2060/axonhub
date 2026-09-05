@@ -6,8 +6,8 @@ import { IconCheck, IconX, IconLoader2 } from '@tabler/icons-react';
 import { usePublishRequests, useCancelPublishRequest, useReviewPublishRequest } from '@/gql/sharing';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
-import { usePermissions } from '@/hooks/usePermissions';
 import { formatUserName } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -136,9 +136,7 @@ export default function PublishRequestsPage() {
                       <TableCell className='font-mono text-sm'>{request.resourceID}</TableCell>
                       <TableCell>
                         <div>
-                          <p className='text-sm font-medium'>
-                            {formatUserName(request.requester.firstName, request.requester.lastName)}
-                          </p>
+                          <p className='text-sm font-medium'>{formatUserName(request.requester.firstName, request.requester.lastName)}</p>
                           <p className='text-muted-foreground text-xs'>{request.requester.email}</p>
                         </div>
                       </TableCell>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ClipboardCheck, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { usePermissions } from '@/hooks/usePermissions';
 import { formatUserName } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -153,9 +153,7 @@ export function ReviewQueue() {
                         <span className='text-sm font-medium'>#{req.resourceID}</span>
                       </div>
                       <div className='text-muted-foreground mt-1 flex items-center gap-2 text-xs'>
-                        <span>
-                          {formatUserName(req.requester.firstName, req.requester.lastName)}
-                        </span>
+                        <span>{formatUserName(req.requester.firstName, req.requester.lastName)}</span>
                         <span>-</span>
                         <span>{formatDate(req.createdAt)}</span>
                         {req.requestComment && (
