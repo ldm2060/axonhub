@@ -61,6 +61,7 @@ func (Channel) Fields() []ent.Field {
 				"moonshot_anthropic",
 				"zhipu",
 				"zai",
+				"zcode",
 				"zhipu_anthropic",
 				"zai_anthropic",
 				"anthropic_fake",

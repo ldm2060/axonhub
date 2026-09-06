@@ -16,6 +16,16 @@ type OAuthCredentials struct {
 	TokenType    string            `json:"token_type,omitempty"`
 	Scopes       []string          `json:"scopes,omitempty"`
 	KimiCode     *KimiCodeMetadata `json:"kimi_code,omitempty"`
+	ZCode        *ZCodeMetadata    `json:"zcode,omitempty"`
+}
+
+// ZCodeMetadata is persisted with OAuth credentials for ZCode (z.ai coding
+// client) channels. The OAuth access token from chat.z.ai is only an
+// intermediate credential: inference calls need the business JWT exchanged
+// from api.z.ai/api/auth/z/login, so both are stored together and the JWT is
+// re-exchanged whenever the access token refreshes.
+type ZCodeMetadata struct {
+	BusinessJWT string `json:"business_jwt"`
 }
 
 // KimiCodeMetadata is persisted with OAuth credentials so Kimi's dynamic

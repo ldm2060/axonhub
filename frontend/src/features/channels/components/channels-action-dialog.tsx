@@ -74,6 +74,7 @@ import {
   type ProxyConfig,
 } from '../data/schema';
 import { xaiDecodeSSO, xaiOAuthExchange, xaiOAuthStart } from '../data/xai';
+import { zcodeOAuthExchange, zcodeOAuthStart } from '../data/zcode';
 import { useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
@@ -485,10 +486,23 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       form.setValue('credentials.apiKey', credentials);
     },
   });
+  const zcodeOAuth = useOAuthFlow({
+    startFn: zcodeOAuthStart,
+    exchangeFn: zcodeOAuthExchange,
+    proxyConfig,
+    onSuccess: (credentials) => {
+      form.setValue('credentials.apiKey', credentials, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    },
+  });
   const { reset: resetCodexOAuth } = codexOAuth;
   const { reset: resetClaudecodeOAuth } = claudecodeOAuth;
   const { reset: resetXaiOAuth } = xaiOAuth;
   const { reset: resetAntigravityOAuth } = antigravityOAuth;
+  const { reset: resetZCodeOAuth } = zcodeOAuth;
 
   // Provider-based selection state
   const [selectedProvider, setSelectedProvider] = useState<string>(() => {
@@ -551,10 +565,11 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       resetClaudecodeOAuth();
       resetAntigravityOAuth();
       resetXaiOAuth();
+      resetZCodeOAuth();
       setCodexAuthJSONText('');
       setXaiSSOToken('');
     }
-  }, [open, resetCodexOAuth, resetClaudecodeOAuth, resetAntigravityOAuth, resetXaiOAuth]);
+  }, [open, resetCodexOAuth, resetClaudecodeOAuth, resetAntigravityOAuth, resetXaiOAuth, resetZCodeOAuth]);
 
   useEffect(() => {
     if (!open) {
@@ -865,6 +880,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const isXAISubscriptionType = activeChannelType === 'xai_subscription';
   const isZenmuxType = ['zenmux', 'zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini'].includes(activeChannelType);
   const isCommandCodeType = activeChannelType === 'commandcode' || activeChannelType === 'commandcode_anthropic';
+  const isZCodeType = activeChannelType === 'zcode';
 
   // OAuth providers cannot have their provider/API format changed during edit.
   // Derived from currentRow credentials so it stays stable across re-renders
@@ -1172,6 +1188,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       resetXaiOAuth();
       setXaiSSOToken('');
     }
+    if (selectedProvider !== 'zcode') {
+      resetZCodeOAuth();
+    }
 
     const providerToChannelType: Partial<Record<string, ChannelType>> = {
       claudecode: authMode === 'official' ? 'claudecode' : undefined,
@@ -1206,6 +1225,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
     resetClaudecodeOAuth,
     resetAntigravityOAuth,
     resetXaiOAuth,
+    resetZCodeOAuth,
     responsesTransport,
   ]);
 
@@ -2429,6 +2449,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           </div>
                         </div>
                       )}
+
+                      {isZCodeType && renderOAuthSection(zcodeOAuth, t('channels.dialogs.fields.apiFormat.zcode.description'))}
 
                       {!isKimiCodeType && (
                         <FormField

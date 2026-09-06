@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 	"github.com/ldm2060/axonhub/llm/transformer/bailian"
 	"github.com/ldm2060/axonhub/llm/transformer/cerebras"
@@ -480,10 +481,23 @@ func (svc *ChannelService) buildNonDefaultEndpointOutbound(
 		// Anthropic-format channel type and the chat-completions channel type
 		// opting into a custom Anthropic endpoint; ordinary Anthropic direct
 		// channels keep X-API-Key.
+		// ZCode 用 OAuth JWT（x-api-key/Bearer 均可）+ 客户端指纹头。
 		switch c.Type {
 		case channel.TypeCommandcode, channel.TypeCommandcodeAnthropic:
 			return anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
 				Type:                    anthropic.PlatformCommandCode,
+				Region:                  "",
+				ProjectID:               "",
+				JSONData:                "",
+				BaseURL:                 baseURL,
+				APIKeyProvider:          apiKeyProvider(),
+				EndpointPath:            ep.Path,
+				ReasoningEffortToBudget: nil,
+			})
+		case channel.TypeZcode:
+			// ZCode（z.ai GLM 编码客户端）自定义 Anthropic 端点同样带客户端指纹头。
+			return anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
+				Type:                    anthropic.PlatformZCode,
 				Region:                  "",
 				ProjectID:               "",
 				JSONData:                "",
@@ -641,6 +655,11 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		// the quota collection cookie is never an inference credential.
 		if len(enabledKeys) == 0 && overrideAPIKey == "" {
 			return nil, fmt.Errorf("missing api key for channel %s", c.Name)
+		}
+	case channel.TypeZcode:
+		// ZCode 走 OAuth JWT（x-api-key 或 Bearer 均可）。
+		if !c.Credentials.IsOAuth() && len(enabledKeys) == 0 && overrideAPIKey == "" {
+			return nil, fmt.Errorf("missing credentials: oauth or api key required for channel %s", c.Name)
 		}
 	default:
 		if len(enabledKeys) == 0 {
@@ -1128,6 +1147,60 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		ch.Outbound = opencode.WithSessionHeader(transformer)
 
 		return ch, nil
+	case channel.TypeZcode:
+		// ZCode（z.ai GLM 编码客户端）：Anthropic Messages 出站。
+		// OAuth 凭证：zcode provider 刷新 access token 并自动换新业务 JWT，
+		// 推理用的 x-api-key 就是该 JWT；非 OAuth（BigModel API Key / 手动粘贴
+		// 的 JWT）走多 key 轮换的 APIKeyProvider。
+		if c.Credentials.IsOAuth() {
+			creds, err := parseZCodeCredentials(c.Credentials)
+			if err != nil {
+				return nil, fmt.Errorf("zcode channel %s has invalid credentials: %w", c.Name, err)
+			}
+
+			tokens := zcode.NewTokenProvider(zcode.TokenProviderParams{
+				Credentials: creds,
+				HTTPClient:  httpClient,
+				OnRefreshed: svc.onTokenRefreshed(c),
+			})
+
+			transformer, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
+				Type:                    anthropic.PlatformZCode,
+				Region:                  "",
+				ProjectID:               "",
+				JSONData:                "",
+				BaseURL:                 c.BaseURL,
+				APIKeyProvider:          zcodeAPIKeyProvider(tokens),
+				EndpointPath:            "",
+				ReasoningEffortToBudget: nil,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to create zcode outbound transformer: %w", err)
+			}
+
+			ch.Outbound = transformer
+			setupAutoRefresh(ch, tokens, oauth.AutoRefreshOptions{Interval: 0, RefreshBefore: 0})
+
+			return ch, nil
+		}
+
+		transformer, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
+			Type:                    anthropic.PlatformZCode,
+			Region:                  "",
+			ProjectID:               "",
+			JSONData:                "",
+			BaseURL:                 c.BaseURL,
+			APIKeyProvider:          getAPIKeyProvider(ch),
+			EndpointPath:            "",
+			ReasoningEffortToBudget: nil,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create zcode outbound transformer: %w", err)
+		}
+
+		ch.Outbound = transformer
+
+		return ch, nil
 	case channel.TypeOpencodeGo:
 		transformer, err := opencode.NewOutboundTransformerWithConfig(&opencode.Config{
 			BaseURL:        c.BaseURL,
@@ -1392,6 +1465,46 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 	}
 }
 
+// zcodeAPIKeyProvider adapts the zcode TokenProvider to the plain
+// APIKeyProvider interface the Anthropic outbound transformer expects: the
+// returned key is the business JWT used as x-api-key.
+func zcodeAPIKeyProvider(tokens *zcode.TokenProvider) auth.APIKeyProvider {
+	return oauth.APIKeyProviderFunc(func(ctx context.Context) string {
+		fresh, err := tokens.Get(ctx)
+		if err != nil {
+			log.Warn(ctx, "failed to get zcode credential", log.Cause(err))
+			return ""
+		}
+		return fresh.AccessToken
+	})
+}
+
+// parseZCodeCredentials loads zcode OAuth credentials from either the OAuth
+// field or the legacy APIKey JSON. Both the refresh token (to renew the z.ai
+// access token) and the business JWT (the actual inference credential) must
+// be present; otherwise the user has to sign in again.
+func parseZCodeCredentials(channelCredentials objects.ChannelCredentials) (*oauth.OAuthCredentials, error) {
+	credsJSON := strings.TrimSpace(channelCredentials.APIKey)
+	if credsJSON == "" && channelCredentials.OAuth != nil {
+		encoded, err := channelCredentials.OAuth.ToJSON()
+		if err != nil {
+			return nil, fmt.Errorf("serialize OAuth credentials: %w", err)
+		}
+		credsJSON = encoded
+	}
+	creds, err := oauth.ParseCredentialsJSON(credsJSON)
+	if err != nil {
+		return nil, err
+	}
+	if creds.RefreshToken == "" {
+		return nil, errors.New("refresh_token is required; sign in again via OAuth")
+	}
+	if creds.ZCode == nil || creds.ZCode.BusinessJWT == "" {
+		return nil, errors.New("zcode business JWT is missing; sign in again via OAuth")
+	}
+	return creds, nil
+}
+
 func parseKimiCodeCredentials(channelCredentials objects.ChannelCredentials) (*oauth.OAuthCredentials, error) {
 	credsJSON := strings.TrimSpace(channelCredentials.APIKey)
 	if credsJSON == "" && channelCredentials.OAuth != nil {
@@ -1439,6 +1552,10 @@ func (svc *ChannelService) refreshOAuthToken(ctx context.Context, ch *ent.Channe
 
 	if ch.Type == channel.TypeKimiCode && refreshed.KimiCode == nil && ch.Credentials.OAuth != nil {
 		refreshed.KimiCode = ch.Credentials.OAuth.KimiCode
+	}
+
+	if ch.Type == channel.TypeZcode && refreshed.ZCode == nil && ch.Credentials.OAuth != nil {
+		refreshed.ZCode = ch.Credentials.OAuth.ZCode
 	}
 
 	updated := ch.Credentials

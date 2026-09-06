@@ -337,6 +337,12 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 		BaseURL:   "",
 		Transport: "",
 	}},
+	channel.TypeZcode: {{
+		APIFormat: llm.APIFormatAnthropicMessage.String(),
+		Path:      "",
+		BaseURL:   "",
+		Transport: "",
+	}},
 }
 
 func DefaultEndpointsForChannelType(t channel.Type) []objects.ChannelEndpoint {

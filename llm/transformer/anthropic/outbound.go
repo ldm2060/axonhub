@@ -39,7 +39,13 @@ const (
 	PlatformClaudeCode  PlatformType = "claudecode"  // Claude Code CLI
 	PlatformOllama      PlatformType = "ollama"      // Ollama with Anthropic format (Bearer auth)
 	PlatformCommandCode PlatformType = "commandcode" // Command Code provider (Bearer auth)
+	PlatformZCode       PlatformType = "zcode"       // ZCode (zcode.z.ai, Z.AI GLM coding client, Bearer JWT)
 )
+
+// zcodeAppVersion is the ZCode desktop client version the zcode channel
+// impersonates; it stamps User-Agent and X-ZCode-App-Version. Track the
+// official releases at https://zcode.z.ai/en/changelog and bump as needed.
+const zcodeAppVersion = "3.11.2"
 
 // Config holds all configuration for the Anthropic outbound transformer.
 type Config struct {
@@ -240,6 +246,22 @@ func (t *OutboundTransformer) TransformRequest(
 				HeaderKey: "X-API-Key",
 			}
 		}
+	}
+
+	// ZCode 渠道按 ZCode 客户端指纹补请求头，逆向自 ZCode 客户端
+	// （vibe-coding-labs/zcode-reverse-engineer 的 protocol/ai-protocol 文档）。
+	// 推理请求的完整指纹为 User-Agent/X-Platform/X-ZCode-App-Version 等一组头；
+	// 版本号取自官方最新发行版（https://zcode.z.ai changelog），随客户端升级更新即可。
+	if t.config.Type == PlatformZCode {
+		headers.Set("User-Agent", "ZCode/"+zcodeAppVersion)
+		headers.Set("Http-Referer", "https://zcode.z.ai")
+		headers.Set("X-Title", "Z Code@electron")
+		headers.Set("X-Platform", "win32-x64")
+		headers.Set("X-Zcode-App-Version", zcodeAppVersion)
+		headers.Set("X-Release-Channel", "production")
+		headers.Set("X-Client-Language", "zh-CN")
+		headers.Set("X-Client-Timezone", "Asia/Shanghai")
+		headers.Set("X-Os-Category", "windows")
 	}
 
 	return &httpclient.Request{

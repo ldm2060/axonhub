@@ -1328,6 +1328,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   moonshot_anthropic
   zhipu
   zai
+  zcode
   zhipu_anthropic
   zai_anthropic
   anthropic_fake

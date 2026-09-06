@@ -34,6 +34,7 @@ type Handlers struct {
 	Codex          *api.CodexHandlers
 	XAI            *api.XAIHandlers
 	ClaudeCode     *api.ClaudeCodeHandlers
+	ZCode          *api.ZCodeHandlers
 	Antigravity    *api.AntigravityHandlers
 	Copilot        *api.CopilotHandlers
 	KimiCode       *api.KimiCodeHandlers
@@ -148,6 +149,9 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		adminGroup.POST("/claudecode/oauth/start", handlers.ClaudeCode.StartOAuth)
 		adminGroup.POST("/claudecode/oauth/exchange", handlers.ClaudeCode.Exchange)
+
+		adminGroup.POST("/zcode/oauth/start", handlers.ZCode.StartOAuth)
+		adminGroup.POST("/zcode/oauth/exchange", handlers.ZCode.Exchange)
 
 		adminGroup.POST("/antigravity/oauth/start", handlers.Antigravity.StartOAuth)
 		adminGroup.POST("/antigravity/oauth/exchange", handlers.Antigravity.Exchange)

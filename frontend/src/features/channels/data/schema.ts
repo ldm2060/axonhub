@@ -134,6 +134,7 @@ export const channelTypeSchema = z.enum([
   'zenmux_gemini',
   'commandcode',
   'commandcode_anthropic',
+  'zcode',
 ]);
 export type ChannelType = z.infer<typeof channelTypeSchema>;
 

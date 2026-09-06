@@ -21,6 +21,7 @@ var Module = fx.Module(
 	fx.Provide(NewCodexHandlers),
 	fx.Provide(NewXAIHandlers),
 	fx.Provide(NewClaudeCodeHandlers),
+	fx.Provide(NewZCodeHandlers),
 	fx.Provide(NewAntigravityHandlers),
 	fx.Provide(NewCopilotHandlers),
 	fx.Provide(NewKimiCodeHandlers),
