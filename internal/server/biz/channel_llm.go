@@ -48,6 +48,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/xai"
 	xaisubscription "github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 	"github.com/ldm2060/axonhub/llm/transformer/zai"
+	zenmuxtransformer "github.com/ldm2060/axonhub/llm/transformer/zenmux"
 )
 
 const (
@@ -221,6 +222,15 @@ func (svc *ChannelService) buildChannelWithOutbounds(c *ent.Channel, apiKeyOverr
 
 	for _, ep := range defaultEndpoints {
 		if ep.APIFormat == "" {
+			continue
+		}
+
+		if c.Type == channel.TypeZenmux && ep.APIFormat == llm.APIFormatZenmuxVideo.String() {
+			out, err := svc.buildNonDefaultEndpointOutbound(c, ch, ep)
+			if err != nil {
+				return nil, fmt.Errorf("failed to build default outbound for api_format %q on channel %s: %w", ep.APIFormat, c.Name, err)
+			}
+			outbounds[ep.APIFormat] = out
 			continue
 		}
 
@@ -475,6 +485,16 @@ func (svc *ChannelService) buildNonDefaultEndpointOutbound(
 			BaseURL:        baseURL,
 			APIKeyProvider: apiKeyProvider(),
 			EndpointPath:   ep.Path,
+		})
+	case llm.APIFormatZenmuxVideo.String():
+		if c.Type != channel.TypeZenmux {
+			return nil, fmt.Errorf("api_format %q is only supported by channel type %q", ep.APIFormat, channel.TypeZenmux)
+		}
+
+		return zenmuxtransformer.NewOutboundTransformerWithConfig(&zenmuxtransformer.Config{
+			BaseURL:        baseURL,
+			EndpointPath:   ep.Path,
+			APIKeyProvider: apiKeyProvider(),
 		})
 	case llm.APIFormatAnthropicMessage.String():
 		// Command Code only accepts Authorization: Bearer, for both the

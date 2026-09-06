@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { Filter, GripVertical, X } from 'lucide-react';
@@ -71,6 +71,9 @@ interface RequestFilterControlsProps {
   onCloseAfterAction?: () => void;
 }
 
+/**
+ * Renders request filters for desktop and mobile layouts, including empty API key results.
+ */
 function RequestFilterControls({
   table,
   dateRange,
@@ -156,7 +159,7 @@ function RequestFilterControls({
           footer={channelFooter}
         />
       )}
-      {canViewApiKeys && table.getColumn('caller') && (apiKeyOptions.length > 0 || isFetchingApiKeys) && (
+      {canViewApiKeys && table.getColumn('caller') && (
         <DataTableFacetedFilter
           column={table.getColumn('caller')}
           title={t('requests.filters.apiKey')}
