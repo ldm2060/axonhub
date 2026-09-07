@@ -123,7 +123,7 @@ func parseVideoMultipartRequest(httpReq *httpclient.Request) (*VideoCreateReques
 		inputReference = buildImageDataURL(referenceFile.ContentType, referenceFile.Data)
 	}
 
-	request := &VideoCreateRequest{
+	request := &VideoCreateRequest{ //nolint:exhaustruct_v5 // Multipart fields only; extensions are applied below.
 		Model:          model,
 		Prompt:         prompt,
 		InputReference: inputReference,

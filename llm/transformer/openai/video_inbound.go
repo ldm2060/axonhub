@@ -88,9 +88,9 @@ func (t *VideoInboundTransformer) TransformRequest(ctx context.Context, httpReq 
 
 	content := req.Content
 	if len(content) == 0 {
-		content = []llm.VideoContent{{Type: "text", Text: req.Prompt}}
+		content = []llm.VideoContent{{Type: "text", Text: req.Prompt}} //nolint:exhaustruct_v5 // Text-only content.
 		if strings.TrimSpace(req.InputReference) != "" {
-			content = append(content, llm.VideoContent{
+			content = append(content, llm.VideoContent{ //nolint:exhaustruct_v5 // First-frame image content.
 				Type:     "image_url",
 				ImageURL: &llm.VideoImageURL{URL: req.InputReference},
 				Role:     "first_frame",

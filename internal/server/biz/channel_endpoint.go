@@ -224,7 +224,7 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 	channel.TypeOpenai: openAIFullDefaultEndpoints,
 	channel.TypeZenmux: append(
 		append([]objects.ChannelEndpoint{}, openAIFullDefaultEndpoints...),
-		objects.ChannelEndpoint{APIFormat: llm.APIFormatZenmuxVideo.String()},
+		objects.ChannelEndpoint{APIFormat: llm.APIFormatZenmuxVideo.String(), Path: "", BaseURL: "", Transport: ""},
 	),
 	channel.TypeOpenaiResponses: {{APIFormat: llm.APIFormatOpenAIResponse.String()}},
 	channel.TypeOpenaiImageGeneration: {

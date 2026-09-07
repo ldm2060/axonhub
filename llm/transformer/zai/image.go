@@ -14,8 +14,8 @@ import (
 
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
-	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/internal/pkg/xurl"
+	"github.com/ldm2060/axonhub/llm/transformer"
 )
 
 // buildImageGenerationAPIRequest builds the HTTP request to call the ZAI Image Generation API.

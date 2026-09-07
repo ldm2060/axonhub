@@ -18,8 +18,8 @@ type ModerationCreateRequest struct {
 
 // ModerationCreateResponse is the OpenAI /v1/moderations response body.
 type ModerationCreateResponse struct {
-	ID      string                        `json:"id"`
-	Model   string                        `json:"model"`
+	ID      string                         `json:"id"`
+	Model   string                         `json:"model"`
 	Results []llm.ModerationClassification `json:"results"`
 }
 

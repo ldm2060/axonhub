@@ -229,7 +229,7 @@ func TestZenMuxNativeVideoValidation(t *testing.T) {
 		"nil response":       nil,
 		"malformed response": []byte(`{"id":`),
 		"missing task id":    []byte(`{"status":"queued"}`),
-		"unknown status":     []byte(`{"id":"task-123","status":"cancelled"}`),
+		"unknown status":     []byte(`{"id":"task-123","status":"cancelled"}`), //nolint:misspell // Deliberately unrecognized provider status.
 	} {
 		t.Run(name, func(t *testing.T) {
 			// When: a malformed provider poll response is parsed.

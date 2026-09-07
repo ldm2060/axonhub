@@ -57,7 +57,7 @@ func toLLMVideoResponse(response *nativeVideoResponse, httpResponse *httpclient.
 			model = requestModel
 		}
 	}
-	video := &llm.VideoResponse{ID: response.ID, Status: response.Status, Model: model}
+	video := &llm.VideoResponse{ID: response.ID, Status: response.Status, Model: model} //nolint:exhaustruct_v5 // Optional fields are filled below.
 	if response.ParsedContent != nil {
 		video.VideoURL = response.ParsedContent.VideoURL
 		video.LastFrameURL = response.ParsedContent.LastFrameURL
@@ -66,7 +66,7 @@ func toLLMVideoResponse(response *nativeVideoResponse, httpResponse *httpclient.
 	if response.Error != nil {
 		video.Error = &llm.VideoError{Code: response.Error.Code, Message: response.Error.Message}
 	}
-	return &llm.Response{
+	return &llm.Response{ //nolint:exhaustruct_v5 // Only video response fields apply.
 		ID:          response.ID,
 		Object:      "video",
 		Model:       model,

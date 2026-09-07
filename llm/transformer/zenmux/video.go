@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"strings"
 
@@ -80,21 +81,19 @@ func (t *OutboundTransformer) buildVideoRequest(ctx context.Context, request *ll
 		if err := json.Unmarshal(body, &nativeFields); err != nil {
 			return nil, fmt.Errorf("failed to decode ZenMux video request: %w", err)
 		}
-		for key, value := range nativeFields {
-			extraFields[key] = value
-		}
+		maps.Copy(extraFields, nativeFields)
 		body, err = json.Marshal(extraFields)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal ZenMux video request: %w", err)
 		}
 	}
 
-	return &httpclient.Request{
+	return &httpclient.Request{ //nolint:exhaustruct_v5 // Only video task fields are set.
 		Method:      http.MethodPost,
 		URL:         t.baseURL + t.videoPath,
 		Headers:     http.Header{"Content-Type": []string{"application/json"}, "Accept": []string{"application/json"}},
 		Body:        body,
-		Auth:        &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: t.apiKeyProvider.Get(ctx)},
+		Auth:        &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: t.apiKeyProvider.Get(ctx)}, //nolint:exhaustruct_v5 // Bearer auth needs no header key.
 		RequestType: llm.RequestTypeVideo.String(),
 		APIFormat:   llm.APIFormatZenmuxVideo.String(),
 		TransformerMetadata: map[string]any{
@@ -106,7 +105,7 @@ func (t *OutboundTransformer) buildVideoRequest(ctx context.Context, request *ll
 func buildNativeContent(content []llm.VideoContent) ([]nativeContent, error) {
 	native := make([]nativeContent, 0, len(content))
 	for index, item := range content {
-		entry := nativeContent{Type: item.Type}
+		entry := nativeContent{Type: item.Type} //nolint:exhaustruct_v5 // Type-specific fields are assigned below.
 		switch item.Type {
 		case "text":
 			if strings.TrimSpace(item.Text) == "" || item.Role != "" || item.ImageURL != nil || item.VideoURL != nil || item.AudioURL != nil {
@@ -157,11 +156,11 @@ func (t *OutboundTransformer) BuildGetVideoTaskRequest(ctx context.Context, prov
 	if strings.TrimSpace(providerTaskID) == "" {
 		return nil, fmt.Errorf("%w: providerTaskID is required", transformer.ErrInvalidRequest)
 	}
-	return &httpclient.Request{
+	return &httpclient.Request{ //nolint:exhaustruct_v5 // Only video task fields are set.
 		Method:      http.MethodGet,
 		URL:         t.baseURL + t.videoPath + "/" + providerTaskID,
 		Headers:     http.Header{"Accept": []string{"application/json"}},
-		Auth:        &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: t.apiKeyProvider.Get(ctx)},
+		Auth:        &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: t.apiKeyProvider.Get(ctx)}, //nolint:exhaustruct_v5 // Bearer auth needs no header key.
 		RequestType: llm.RequestTypeVideo.String(),
 		APIFormat:   llm.APIFormatZenmuxVideo.String(),
 	}, nil

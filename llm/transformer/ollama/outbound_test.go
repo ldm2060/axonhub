@@ -115,8 +115,8 @@ func TestTransformRequestWithMessageToolCalls(t *testing.T) {
 				},
 			},
 			{
-				Role:    "tool",
-				Content: llm.MessageContent{Content: lo.ToPtr("22°C")},
+				Role:       "tool",
+				Content:    llm.MessageContent{Content: lo.ToPtr("22°C")},
 				ToolCallID: lo.ToPtr("call-1"),
 			},
 		},

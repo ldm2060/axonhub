@@ -24,13 +24,14 @@ type Config struct {
 
 type OutboundTransformer struct {
 	transformer.Outbound
+
 	baseURL        string
 	videoPath      string
 	apiKeyProvider auth.APIKeyProvider
 }
 
 func NewOutboundTransformer(baseURL, apiKey string) (transformer.Outbound, error) {
-	return NewOutboundTransformerWithConfig(&Config{
+	return NewOutboundTransformerWithConfig(&Config{ //nolint:exhaustruct_v5 // EndpointPath is optional.
 		BaseURL:        baseURL,
 		APIKeyProvider: auth.NewStaticKeyProvider(apiKey),
 	})
@@ -53,14 +54,14 @@ func NewOutboundTransformerWithConfig(config *Config) (transformer.Outbound, err
 	}
 	endpointPath = "/" + strings.Trim(endpointPath, "/")
 	baseURL := config.BaseURL
-	if strings.HasSuffix(baseURL, "##") {
-		baseURL = strings.TrimSuffix(baseURL, "##")
+	if trimmed, ok := strings.CutSuffix(baseURL, "##"); ok {
+		baseURL = trimmed
 	} else if endpointPath == "/videos" {
 		baseURL = transformer.NormalizeBaseURL(baseURL, "v1")
 	} else {
 		baseURL = transformer.NormalizeBaseURL(baseURL, "")
 	}
-	chatTransformer, err := openai.NewOutboundTransformerWithConfig(&openai.Config{
+	chatTransformer, err := openai.NewOutboundTransformerWithConfig(&openai.Config{ //nolint:exhaustruct_v5 // Only chat completion fields apply.
 		PlatformType:   openai.PlatformOpenAI,
 		BaseURL:        baseURL,
 		EndpointPath:   "/chat/completions",
@@ -106,5 +107,7 @@ func (t *OutboundTransformer) AggregateStreamChunks(ctx context.Context, request
 	return t.Outbound.AggregateStreamChunks(ctx, request, chunks)
 }
 
-var _ transformer.Outbound = (*OutboundTransformer)(nil)
-var _ transformer.VideoTaskOutbound = (*OutboundTransformer)(nil)
+var (
+	_ transformer.Outbound          = (*OutboundTransformer)(nil)
+	_ transformer.VideoTaskOutbound = (*OutboundTransformer)(nil)
+)

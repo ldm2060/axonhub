@@ -716,7 +716,7 @@ func requestToSegment(ctx context.Context, req *ent.Request) (*Segment, error) {
 				// skip it instead of failing the whole trace.
 				log.Warn(ctx, "No outbound transformer for format, skipping response spans", log.Cause(err), log.Int("request_id", req.ID))
 			} else {
-				httpReq := &httpclient.Request{
+				httpReq := &httpclient.Request{ //nolint:exhaustruct_v5 // Only APIFormat and optional metadata matter here.
 					APIFormat: req.Format,
 				}
 				if isImageFormat(apiFormat) {

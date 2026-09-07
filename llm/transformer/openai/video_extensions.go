@@ -3,6 +3,7 @@ package openai
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 	"strings"
 
@@ -92,9 +93,7 @@ func mergeVideoExtraBody(explicit json.RawMessage, extras map[string]json.RawMes
 			return nil, fmt.Errorf("%w: extra_body must be a JSON object", transformer.ErrInvalidRequest)
 		}
 	}
-	for key, value := range extras {
-		merged[key] = value
-	}
+	maps.Copy(merged, extras)
 	if len(merged) == 0 {
 		return nil, nil
 	}

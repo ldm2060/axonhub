@@ -166,9 +166,9 @@ func TestFetchModelsWithInfo(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"data": []map[string]interface{}{
 				{
-					"id":                  "gpt-4.1",
+					"id":                   "gpt-4.1",
 					"model_picker_enabled": true,
-					"policy":              map[string]string{"state": "enabled"},
+					"policy":               map[string]string{"state": "enabled"},
 					"capabilities": map[string]interface{}{
 						"supports": map[string]interface{}{
 							"reasoning_effort": []string{"low", "medium", "high"},
@@ -176,10 +176,10 @@ func TestFetchModelsWithInfo(t *testing.T) {
 					},
 				},
 				{
-					"id":                  "claude-sonnet-4-20250514",
+					"id":                   "claude-sonnet-4-20250514",
 					"model_picker_enabled": true,
-					"policy":              map[string]string{"state": "enabled"},
-					"supported_endpoints": []string{"/v1/messages", "/chat/completions"},
+					"policy":               map[string]string{"state": "enabled"},
+					"supported_endpoints":  []string{"/v1/messages", "/chat/completions"},
 					"capabilities": map[string]interface{}{
 						"supports": map[string]interface{}{
 							"adaptive_thinking": true,
@@ -187,9 +187,9 @@ func TestFetchModelsWithInfo(t *testing.T) {
 					},
 				},
 				{
-					"id":                  "disabled-model",
+					"id":                   "disabled-model",
 					"model_picker_enabled": false,
-					"policy":              map[string]string{"state": "enabled"},
+					"policy":               map[string]string{"state": "enabled"},
 				},
 			},
 		})
@@ -219,15 +219,15 @@ func TestFetchModelInfoMap(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"data": []map[string]interface{}{
 				{
-					"id":                  "gpt-4.1",
+					"id":                   "gpt-4.1",
 					"model_picker_enabled": true,
-					"policy":              map[string]string{"state": "enabled"},
+					"policy":               map[string]string{"state": "enabled"},
 				},
 				{
-					"id":                  "claude-sonnet-4-20250514",
+					"id":                   "claude-sonnet-4-20250514",
 					"model_picker_enabled": true,
-					"policy":              map[string]string{"state": "enabled"},
-					"supported_endpoints": []string{"/v1/messages", "/chat/completions"},
+					"policy":               map[string]string{"state": "enabled"},
+					"supported_endpoints":  []string{"/v1/messages", "/chat/completions"},
 					"capabilities": map[string]interface{}{
 						"supports": map[string]interface{}{
 							"adaptive_thinking": true,
