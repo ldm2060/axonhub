@@ -131,10 +131,10 @@ func (c *NeuralWattQuotaChecker) parseResponse(body []byte) (QuotaData, error) {
 	}
 
 	limits := []QuotaLimitStatus{
-		NewTokenLimitStatus(normalizedStatus, usageRatio, nextResetAt),
+		NewTokenLimitStatus(normalizedStatus, usageRatio, nextResetAt).WithWindow("kwh", 0),
 	}
 
-	return QuotaData{
+	return NormalizeQuotaData(QuotaData{
 		Status:       normalizedStatus,
 		ProviderType: "neuralwatt",
 		RawData:      rawData,
@@ -142,7 +142,7 @@ func (c *NeuralWattQuotaChecker) parseResponse(body []byte) (QuotaData, error) {
 		Ready:        IsReadyStatus(normalizedStatus),
 		Limits:       limits,
 		Resets:       nil,
-	}, nil
+	}), nil
 }
 
 func (c *NeuralWattQuotaChecker) SupportsChannel(ch *ent.Channel) bool {

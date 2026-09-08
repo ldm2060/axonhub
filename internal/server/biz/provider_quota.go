@@ -65,6 +65,7 @@ var providerQuotaChannelTypes = []channel.Type{
 	channel.TypeZenmuxResponses,
 	channel.TypeZenmuxAnthropic,
 	channel.TypeZenmuxGemini,
+	channel.TypeZenmuxVideo,
 	channel.TypeCline,
 	channel.TypeOpenai,
 	channel.TypeOpenaiResponses,
@@ -77,6 +78,8 @@ var providerQuotaChannelTypes = []channel.Type{
 	channel.TypeZhipuAnthropic,
 	channel.TypeCommandcode,
 	channel.TypeCommandcodeAnthropic,
+	channel.TypeOllama,
+	channel.TypeOllamaAnthropic,
 }
 
 // quotaErrorBackoff returns the next-check delay after `failures` consecutive
@@ -148,25 +151,59 @@ func (s *QuotaChannelStatus) EffectiveStatus(limitType provider_quota.QuotaLimit
 	var worstStatus providerquotastatus.Status
 	worstReady := true
 	found := false
+	groupNames := make(map[string]bool)
+	grouped := make(map[string][]provider_quota.QuotaLimitStatus)
 
 	for _, l := range s.Limits {
-		if l.Type != limitType {
+		if l.Type != limitType || l.AvailabilityGroup == "" {
+			continue
+		}
+		groupNames[l.AvailabilityGroup] = true
+	}
+
+	for _, l := range s.Limits {
+		if l.Type != limitType && !groupNames[l.AvailabilityGroup] {
+			continue
+		}
+
+		if groupNames[l.AvailabilityGroup] {
+			grouped[l.AvailabilityGroup] = append(grouped[l.AvailabilityGroup], l)
 			continue
 		}
 
 		ls := providerquotastatus.Status(l.Status)
-		if !found {
+		if !found || quotaStatusRank(ls) > quotaStatusRank(worstStatus) {
 			worstStatus = ls
 			worstReady = l.Ready
 			found = true
-			continue
-		}
-
-		if quotaStatusRank(ls) > quotaStatusRank(worstStatus) {
-			worstStatus = ls
-			worstReady = l.Ready
 		} else if quotaStatusRank(ls) == quotaStatusRank(worstStatus) {
 			worstReady = worstReady && l.Ready
+		}
+	}
+
+	for _, limits := range grouped {
+		bestStatus := providerquotastatus.StatusUnknown
+		bestReady := false
+		groupFound := false
+		for _, l := range limits {
+			ls := providerquotastatus.Status(l.Status)
+			if !groupFound ||
+				(l.Ready && !bestReady) ||
+				(l.Ready == bestReady && quotaStatusRank(ls) < quotaStatusRank(bestStatus)) {
+				bestStatus = ls
+				bestReady = l.Ready
+				groupFound = true
+			} else if quotaStatusRank(ls) == quotaStatusRank(bestStatus) {
+				bestReady = bestReady || l.Ready
+			}
+		}
+
+		if !found || quotaStatusRank(bestStatus) > quotaStatusRank(worstStatus) {
+			worstStatus = bestStatus
+			worstReady = bestReady
+			found = true
+		} else if quotaStatusRank(bestStatus) == quotaStatusRank(worstStatus) {
+			worstReady = worstReady && bestReady
 		}
 	}
 
@@ -319,6 +356,7 @@ func (svc *ProviderQuotaService) registerProviderQuotaSupport() {
 	svc.registerZhipuSupport()
 	svc.registerCharmHyperSupport()
 	svc.registerCommandCodeSupport()
+	svc.registerOllamaSupport()
 }
 
 func (svc *ProviderQuotaService) RegisterScheduledTasks(ctx context.Context, s *scheduler.Scheduler) error {
@@ -338,6 +376,10 @@ func (svc *ProviderQuotaService) registerClaudeCodeSupport() {
 
 func (svc *ProviderQuotaService) registerCommandCodeSupport() {
 	svc.checkers["commandcode"] = provider_quota.NewCommandCodeQuotaChecker(svc.httpClient)
+}
+
+func (svc *ProviderQuotaService) registerOllamaSupport() {
+	svc.checkers["ollama"] = provider_quota.NewOllamaQuotaChecker(svc.httpClient)
 }
 
 func (svc *ProviderQuotaService) registerCodexSupport() {
@@ -772,6 +814,7 @@ func (svc *ProviderQuotaService) checkChannelQuota(ctx context.Context, group qu
 		}
 		return
 	}
+	quotaData = provider_quota.NormalizeQuotaData(quotaData)
 
 	resetList := provider_quota.ResetList{Supported: false, Resets: nil, Error: ""}
 	if resetter, ok := checker.(provider_quota.Resetter); ok {
@@ -969,7 +1012,7 @@ func channelProviderType(ch *ent.Channel) string {
 		return "github_copilot"
 	case channel.TypeNanogpt, channel.TypeNanogptResponses:
 		return "nanogpt"
-	case channel.TypeZenmux, channel.TypeZenmuxResponses, channel.TypeZenmuxAnthropic, channel.TypeZenmuxGemini:
+	case channel.TypeZenmux, channel.TypeZenmuxResponses, channel.TypeZenmuxAnthropic, channel.TypeZenmuxGemini, channel.TypeZenmuxVideo:
 		return "zenmux"
 	case channel.TypeCline:
 		return "cline"
@@ -985,6 +1028,8 @@ func channelProviderType(ch *ent.Channel) string {
 		return "zhipu"
 	case channel.TypeCommandcode, channel.TypeCommandcodeAnthropic:
 		return "commandcode"
+	case channel.TypeOllama, channel.TypeOllamaAnthropic:
+		return "ollama"
 	default:
 		return ""
 	}
@@ -992,7 +1037,7 @@ func channelProviderType(ch *ent.Channel) string {
 
 func hasCredentialsForProvider(ch *ent.Channel) bool {
 	switch ch.Type { //nolint:exhaustive // Only ZenMux uses the separate management credential.
-	case channel.TypeZenmux, channel.TypeZenmuxResponses, channel.TypeZenmuxAnthropic, channel.TypeZenmuxGemini:
+	case channel.TypeZenmux, channel.TypeZenmuxResponses, channel.TypeZenmuxAnthropic, channel.TypeZenmuxGemini, channel.TypeZenmuxVideo:
 		return strings.TrimSpace(ch.Credentials.ManagementAPIKey) != ""
 	default:
 	}
@@ -1028,6 +1073,17 @@ func hasCredentialsForProvider(ch *ent.Channel) bool {
 		}
 
 		_, err := provider_quota.NormalizeCommandCodeCookie(ch.Settings.ProviderQuota.CommandCode.AuthCookie)
+		return err == nil
+	}
+
+	if ch.Type == channel.TypeOllama || ch.Type == channel.TypeOllamaAnthropic {
+		// Ollama Cloud quota collection is authenticated with the account
+		// session cookie, never the inference API key.
+		if ch.Settings == nil || ch.Settings.ProviderQuota == nil || ch.Settings.ProviderQuota.Ollama == nil {
+			return false
+		}
+
+		_, err := provider_quota.NormalizeOllamaCookie(ch.Settings.ProviderQuota.Ollama.AuthCookie)
 		return err == nil
 	}
 

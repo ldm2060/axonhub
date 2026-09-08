@@ -15,6 +15,7 @@ import { ChannelsTypeTabs } from './components/channels-type-tabs';
 import ChannelsProvider, { useChannels } from './context/channels-context';
 import {
   DEFAULT_CHANNEL_COLUMN_VISIBILITY,
+  parseChannelColumnVisibility,
   useQueryChannels,
   useChannelTypes,
   useErrorChannelsCount,
@@ -53,14 +54,12 @@ function ChannelsContent() {
   });
   const [columnVisibility, setColumnVisibility] = useState<ChannelListColumnVisibility>(() => {
     const stored = localStorage.getItem('channels-table-column-visibility');
-    if (stored) {
-      try {
-        return { ...DEFAULT_CHANNEL_COLUMN_VISIBILITY, ...JSON.parse(stored) };
-      } catch {
-        return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
-      }
+    if (!stored) return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
+    try {
+      return parseChannelColumnVisibility(JSON.parse(stored));
+    } catch {
+      return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
     }
-    return DEFAULT_CHANNEL_COLUMN_VISIBILITY;
   });
 
   useEffect(() => {
@@ -262,7 +261,7 @@ function ChannelsContent() {
   const columns = useMemo(() => createColumns(t, channelPermissions.canWrite), [t, channelPermissions.canWrite]);
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
+    <div className='flex min-w-0 flex-1 flex-col overflow-hidden'>
       <ChannelsErrorBanner
         errorCount={errorCount}
         onFilterErrorChannels={handleFilterErrorChannels}

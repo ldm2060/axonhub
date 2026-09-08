@@ -81,7 +81,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.name')} className='justify-center' />,
       cell: NameCell,
       meta: {
-        className: 'md:table-cell min-w-48 text-center',
+        className: 'w-[18%] min-w-0 text-center',
       },
       enableHiding: false,
       enableSorting: true,
@@ -114,7 +114,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.quota')} className='justify-center' />,
       cell: QuotaCell,
       meta: {
-        className: 'w-96 min-w-96 text-center',
+        className: 'hidden min-w-0 2xl:table-cell text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -125,7 +125,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.tags')} className='justify-center' />,
       cell: TagsCell,
       meta: {
-        className: 'text-center',
+        className: 'hidden min-w-0 xl:table-cell text-center',
       },
       filterFn: (row, _id, value) => typeof value === 'string' && (row.original.tags ?? []).includes(value),
       enableSorting: false,
@@ -149,7 +149,7 @@ export const createColumns = (
       ),
       cell: SupportedModelsCell,
       meta: {
-        className: 'max-w-64 text-center',
+        className: 'w-[22%] min-w-0 max-w-none text-center',
       },
       enableSorting: false,
     },
@@ -159,7 +159,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.proxy')} className='justify-center' />,
       cell: ProxyCell,
       meta: {
-        className: 'w-32 min-w-32 text-center',
+        className: 'hidden min-w-0 2xl:table-cell text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -194,7 +194,7 @@ export const createColumns = (
       ),
       cell: OrderingWeightCell,
       meta: {
-        className: 'w-20 min-w-20 text-center',
+        className: 'w-16 min-w-0 text-center',
       },
       sortingFn: 'alphanumeric',
       enableSorting: true,
@@ -219,7 +219,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.actions')} className='justify-center' />,
       cell: ActionCell,
       meta: {
-        className: 'text-center',
+        className: 'hidden min-w-0 xl:table-cell text-center',
       },
       enableSorting: false,
       enableHiding: false,

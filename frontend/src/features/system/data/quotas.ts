@@ -453,6 +453,20 @@ export type ProviderCommandCodeQuotaData = ProviderQuotaDataCommon & {
   };
 };
 
+export type OllamaQuotaWindow = {
+  usage_percent?: number;
+  status?: string;
+  percent_remaining?: number;
+  reset_time?: string;
+};
+
+export type ProviderOllamaQuotaData = ProviderQuotaDataCommon & {
+  windows?: {
+    '5h'?: OllamaQuotaWindow;
+    weekly?: OllamaQuotaWindow;
+  };
+};
+
 /**
  * A single limit window as normalized by the backend and stashed under
  * `quotaData._limits`. `periodCost` is what the channel cost in the current
@@ -480,6 +494,56 @@ function optionalNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+const NORMALIZED_QUOTA_STATUSES = ['available', 'warning', 'exhausted', 'unknown'] as const;
+type NormalizedQuotaStatus = (typeof NORMALIZED_QUOTA_STATUSES)[number];
+
+function isNormalizedQuotaStatus(value: unknown): value is NormalizedQuotaStatus {
+  return NORMALIZED_QUOTA_STATUSES.some((status) => status === value);
+}
+
+function requiredString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() !== '' ? value : undefined;
+}
+
+function parseQuotaLimit(entry: unknown): ProviderQuotaLimit | undefined {
+  if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return undefined;
+
+  const limit = entry as Record<string, unknown>;
+  const type = requiredString(limit.type);
+  const window = requiredString(limit.window);
+  if (!type || !window || !isNormalizedQuotaStatus(limit.status)) return undefined;
+
+  const usageRatio = optionalNumber(limit.usageRatio);
+  if (usageRatio === undefined || usageRatio < 0 || usageRatio > 1) return undefined;
+
+  if (limit.ready !== undefined && typeof limit.ready !== 'boolean') return undefined;
+
+  const nextResetAt = optionalString(limit.nextResetAt);
+  if (limit.nextResetAt !== undefined && nextResetAt === undefined) return undefined;
+  if (nextResetAt !== undefined && Number.isNaN(Date.parse(nextResetAt))) return undefined;
+
+  const periodStart = optionalString(limit.periodStart);
+  if (limit.periodStart !== undefined && periodStart === undefined) return undefined;
+
+  const periodCost = optionalNumber(limit.periodCost);
+  if (limit.periodCost !== undefined && periodCost === undefined) return undefined;
+
+  const periodQuota = optionalNumber(limit.periodQuota);
+  if (limit.periodQuota !== undefined && periodQuota === undefined) return undefined;
+
+  return {
+    type,
+    status: limit.status,
+    usageRatio,
+    ready: limit.ready === true,
+    window,
+    nextResetAt,
+    periodStart,
+    periodCost,
+    periodQuota,
+  };
+}
+
 export function parseQuotaLimits(quotaData: unknown): ProviderQuotaLimit[] {
   if (typeof quotaData !== 'object' || quotaData === null) return [];
 
@@ -487,22 +551,8 @@ export function parseQuotaLimits(quotaData: unknown): ProviderQuotaLimit[] {
   if (!Array.isArray(raw)) return [];
 
   return raw.flatMap((entry) => {
-    if (typeof entry !== 'object' || entry === null) return [];
-    const limit = entry as Record<string, unknown>;
-
-    return [
-      {
-        type: typeof limit.type === 'string' ? limit.type : '',
-        status: typeof limit.status === 'string' ? limit.status : 'unknown',
-        usageRatio: optionalNumber(limit.usageRatio) ?? 0,
-        ready: limit.ready === true,
-        window: optionalString(limit.window),
-        nextResetAt: optionalString(limit.nextResetAt),
-        periodStart: optionalString(limit.periodStart),
-        periodCost: optionalNumber(limit.periodCost),
-        periodQuota: optionalNumber(limit.periodQuota),
-      },
-    ];
+    const parsed = parseQuotaLimit(entry);
+    return parsed ? [parsed] : [];
   });
 }
 
@@ -665,7 +715,7 @@ export type ProviderQuotaChannel = {
       };
     }
   | {
-      type: 'zenmux' | 'zenmux_responses' | 'zenmux_anthropic' | 'zenmux_gemini';
+      type: 'zenmux' | 'zenmux_responses' | 'zenmux_anthropic' | 'zenmux_gemini' | 'zenmux_video';
       quotaStatus: {
         quotaData: ProviderZenmuxQuotaData;
       };
@@ -716,6 +766,12 @@ export type ProviderQuotaChannel = {
       type: 'commandcode' | 'commandcode_anthropic';
       quotaStatus: {
         quotaData: ProviderCommandCodeQuotaData;
+      };
+    }
+  | {
+      type: 'ollama' | 'ollama_anthropic';
+      quotaStatus: {
+        quotaData: ProviderOllamaQuotaData;
       };
     }
 );
@@ -771,10 +827,16 @@ function parseChannelNode(node: QueryChannelNodeWithQuota): ProviderQuotaChannel
     },
   };
 
-  if (node.type === 'zenmux' || node.type === 'zenmux_responses' || node.type === 'zenmux_anthropic' || node.type === 'zenmux_gemini') {
+  if (
+    node.type === 'zenmux' ||
+    node.type === 'zenmux_responses' ||
+    node.type === 'zenmux_anthropic' ||
+    node.type === 'zenmux_gemini' ||
+    node.type === 'zenmux_video'
+  ) {
     return {
       ...base,
-      type: node.type as 'zenmux' | 'zenmux_responses' | 'zenmux_anthropic' | 'zenmux_gemini',
+      type: node.type as 'zenmux' | 'zenmux_responses' | 'zenmux_anthropic' | 'zenmux_gemini' | 'zenmux_video',
       quotaStatus: { ...base.quotaStatus, quotaData: node.providerQuotaStatus.quotaData as ProviderZenmuxQuotaData },
     };
   }
@@ -907,6 +969,13 @@ function parseChannelNode(node: QueryChannelNodeWithQuota): ProviderQuotaChannel
       ...base,
       type: node.type as 'commandcode' | 'commandcode_anthropic',
       quotaStatus: { ...base.quotaStatus, quotaData: node.providerQuotaStatus.quotaData as ProviderCommandCodeQuotaData },
+    };
+  }
+  if (node.type === 'ollama' || node.type === 'ollama_anthropic') {
+    return {
+      ...base,
+      type: node.type as 'ollama' | 'ollama_anthropic',
+      quotaStatus: { ...base.quotaStatus, quotaData: node.providerQuotaStatus.quotaData as ProviderOllamaQuotaData },
     };
   }
   return {

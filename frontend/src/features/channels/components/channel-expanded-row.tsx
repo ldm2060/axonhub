@@ -8,10 +8,11 @@ import { Channel } from '../data/schema';
 
 interface ChannelExpandedRowProps {
   channel: Channel;
+  columnsLength: number;
   getApiFormatLabel: (apiFormat?: string) => string;
 }
 
-export const ChannelExpandedRow = memo(({ channel: listChannel, getApiFormatLabel }: ChannelExpandedRowProps) => {
+export const ChannelExpandedRow = memo(({ channel: listChannel, columnsLength: _columnsLength, getApiFormatLabel }: ChannelExpandedRowProps) => {
   const { t } = useTranslation();
   const { data: detailedChannel } = useChannelDetails(listChannel.id);
   const channel = detailedChannel ?? listChannel;

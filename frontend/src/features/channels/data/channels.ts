@@ -143,6 +143,9 @@ minInputTokens
           commandCode {
             authCookie
           }
+          ollama {
+            authCookie
+          }
         }
       }
       orderingWeight
@@ -244,6 +247,9 @@ minInputTokens
         }
         providerQuota {
           commandCode {
+            authCookie
+          }
+          ollama {
             authCookie
           }
         }
@@ -349,6 +355,9 @@ minInputTokens
           commandCode {
             authCookie
           }
+          ollama {
+            authCookie
+          }
         }
       }
       orderingWeight
@@ -450,6 +459,9 @@ minInputTokens
         }
         providerQuota {
           commandCode {
+            authCookie
+          }
+          ollama {
             authCookie
           }
         }
@@ -659,6 +671,9 @@ minInputTokens
           }
           providerQuota {
             commandCode {
+              authCookie
+            }
+            ollama {
               authCookie
             }
           }
@@ -900,6 +915,9 @@ minInputTokens
             commandCode {
               authCookie
             }
+            ollama {
+              authCookie
+            }
           }
         }
       }
@@ -961,9 +979,17 @@ const ALL_CHANNEL_TAGS_QUERY = `
 export type ChannelListColumnVisibility = Record<string, boolean>;
 
 export const DEFAULT_CHANNEL_COLUMN_VISIBILITY: ChannelListColumnVisibility = {
+  model: false,
   tags: false,
   proxy: false,
 };
+
+const channelListColumnVisibilitySchema = z.record(z.string(), z.boolean());
+
+export function parseChannelColumnVisibility(value: unknown): ChannelListColumnVisibility {
+  const parsed = channelListColumnVisibilitySchema.safeParse(value);
+  return parsed.success ? { ...DEFAULT_CHANNEL_COLUMN_VISIBILITY, ...parsed.data, model: false } : DEFAULT_CHANNEL_COLUMN_VISIBILITY;
+}
 
 const CHANNEL_QUERY_FULL_NODE_SELECTION = `
           id
@@ -1084,6 +1110,9 @@ minInputTokens
               commandCode {
                 authCookie
               }
+              ollama {
+                authCookie
+              }
             }
           }
           orderingWeight
@@ -1134,6 +1163,7 @@ minInputTokens
             ready
             quotaData
             providerType
+            accountKey
           }
 `;
 
@@ -1201,6 +1231,7 @@ const CHANNEL_QUERY_QUOTA_SELECTION = `
             ready
             quotaData
             providerType
+            accountKey
           }
 `;
 
@@ -1310,10 +1341,25 @@ export function useQueryChannels(
   const { t } = useTranslation();
   const { columnVisibility, ...queryInput } = variables ?? {};
   const query = buildQueryChannelsQuery(columnVisibility);
+  const columnVisibilityKey = JSON.stringify(columnVisibility ?? {});
 
   const result = useQuery({
     enabled: !options?.disableAutoFetch,
-    queryKey: ['channels', queryInput, query],
+    queryKey: [
+      'channels',
+      query,
+      queryInput,
+      variables?.where,
+      variables?.orderBy?.field,
+      variables?.orderBy?.direction,
+      variables?.hasTag,
+      variables?.model,
+      variables?.first,
+      variables?.last,
+      variables?.after,
+      variables?.before,
+      columnVisibilityKey,
+    ],
     queryFn: async () => {
       const data = await graphqlRequest<{ queryChannels: ChannelConnection }>(query, { input: queryInput });
       return channelConnectionSchema.parse(data?.queryChannels);

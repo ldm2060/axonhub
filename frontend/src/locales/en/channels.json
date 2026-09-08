@@ -121,6 +121,7 @@
   "channels.types.zenmux_responses": "ZenMux (Responses)",
   "channels.types.zenmux_anthropic": "ZenMux (Anthropic)",
   "channels.types.zenmux_gemini": "ZenMux (Gemini)",
+  "channels.types.zenmux_video": "ZenMux (Video)",
   "channels.types.commandcode": "Command Code",
   "channels.types.commandcode_anthropic": "Command Code (Anthropic)",
   "channels.types.zcode": "ZCode (BigModel)",
@@ -989,5 +990,8 @@
   "channels.dialogs.apiKeyRules.fields.timezone": "Timezone",
   "channels.dialogs.apiKeyRules.fields.timezoneHint": "The cron expression is interpreted in this timezone.",
   "channels.dialogs.disabledAPIKeys.oauthCredential": "OAuth credential",
-  "channels.dialogs.apiKeyRules.actions.permanentDisable": "Disable permanently (keep credential)"
+  "channels.dialogs.apiKeyRules.actions.permanentDisable": "Disable permanently (keep credential)",
+  "channels.dialogs.fields.ollamaQuota.authCookie.label": "Web Cookie",
+  "channels.dialogs.fields.ollamaQuota.authCookie.placeholder": "__Secure-session=... (paste from ollama.com/settings)",
+  "channels.dialogs.fields.ollamaQuota.authCookie.description": "Visit ollama.com/settings, open the Plan & Billing usage page and copy the Cookie request header. Only the __Secure-session cookie is used."
 }

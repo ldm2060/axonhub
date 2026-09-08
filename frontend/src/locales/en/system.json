@@ -399,6 +399,7 @@
   "quota.window.daily": "Daily window",
   "quota.window.weekly": "Weekly window",
   "quota.window.monthly": "Monthly window",
+  "quota.window.cycle": "Cycle window",
   "quota.label.period_quota": "Estimated period quota",
   "quota.label.period_quota_value": "{{used}} used / ≈ {{total}}",
   "quota.label.period_quota_hint": "Estimated from the cost AxonHub logged for this channel in the current window, divided by the usage reported by the provider. Usage outside AxonHub is not counted, so the real quota may be higher.",
@@ -595,5 +596,6 @@
   "system.quota.enforcement.allowedChannels.description": "Channels selected here will continue serving requests even when their provider quota is exhausted.",
   "system.quota.enforcement.allowedChannels.selectedCount_one": "{{count}} channel selected",
   "system.quota.enforcement.allowedChannels.selectedCount_other": "{{count}} channels selected",
-  "system.quota.enforcement.allowedChannels.removeChannel": "Remove {{name}}"
+  "system.quota.enforcement.allowedChannels.removeChannel": "Remove {{name}}",
+  "system.quota.collection.providers.ollama": "Ollama"
 }

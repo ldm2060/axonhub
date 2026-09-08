@@ -3,6 +3,8 @@ import { graphqlRequest } from '@/gql/graphql';
 import { USERS_QUERY, CREATE_USER_MUTATION, UPDATE_USER_MUTATION, UPDATE_USER_STATUS_MUTATION, DELETE_USER_MUTATION } from '@/gql/users';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useErrorHandler } from '@/hooks/use-error-handler';
+import { useSelectedProjectId } from '@/stores/projectStore';
 import { User, UserConnection, CreateUserInput, UpdateUserInput, type UserStatus, userConnectionSchema, userSchema } from './schema';
 
 // Query hooks
@@ -17,16 +19,26 @@ export function useUsers(
     disableAutoFetch?: boolean;
   }
 ) {
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
+  const selectedProjectId = useSelectedProjectId();
+
   const queryVariables = {
     ...variables,
     orderBy: variables?.orderBy || { field: 'CREATED_AT', direction: 'DESC' },
   };
 
   return useQuery({
-    queryKey: ['users', queryVariables],
+    queryKey: ['users', queryVariables, selectedProjectId],
     queryFn: async () => {
-      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, queryVariables);
-      return userConnectionSchema.parse(data?.users);
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, queryVariables, headers);
+        return userConnectionSchema.parse(data?.users);
+      } catch (error) {
+        handleError(error, t('common.errors.loadFailed'));
+        throw error;
+      }
     },
     enabled: !options?.disableAutoFetch,
   });

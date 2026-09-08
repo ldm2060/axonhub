@@ -1376,6 +1376,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   zenmux_responses
   zenmux_anthropic
   zenmux_gemini
+  zenmux_video
   commandcode
   commandcode_anthropic
 }
@@ -4299,6 +4300,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   charm_hyper
   zenmux
   commandcode
+  ollama
 }
 """
 ProviderQuotaStatusStatus is enum for the field status

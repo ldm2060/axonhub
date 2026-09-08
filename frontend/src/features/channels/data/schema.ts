@@ -134,6 +134,7 @@ export const channelTypeSchema = z.enum([
   'zenmux_responses',
   'zenmux_anthropic',
   'zenmux_gemini',
+  'zenmux_video',
   'commandcode',
   'commandcode_anthropic',
   'zcode',
@@ -335,8 +336,14 @@ export const commandCodeQuotaSettingsSchema = z.object({
 });
 export type CommandCodeQuotaSettings = z.infer<typeof commandCodeQuotaSettingsSchema>;
 
+export const ollamaQuotaSettingsSchema = z.object({
+  authCookie: z.string().optional().nullable(),
+});
+export type OllamaQuotaSettings = z.infer<typeof ollamaQuotaSettingsSchema>;
+
 export const channelProviderQuotaSettingsSchema = z.object({
   commandCode: commandCodeQuotaSettingsSchema.optional().nullable(),
+  ollama: ollamaQuotaSettingsSchema.optional().nullable(),
 });
 export type ChannelProviderQuotaSettings = z.infer<typeof channelProviderQuotaSettingsSchema>;
 
@@ -410,6 +417,7 @@ export const providerQuotaStatusSchema = z.object({
   ready: z.boolean(),
   quotaData: z.record(z.string(), z.unknown()),
   providerType: z.string(),
+  accountKey: z.string().optional().nullable(),
 });
 export type ProviderQuotaStatus = z.infer<typeof providerQuotaStatusSchema>;
 

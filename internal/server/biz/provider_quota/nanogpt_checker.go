@@ -191,7 +191,7 @@ func (c *NanoGPTQuotaChecker) parseResponse(body []byte) (QuotaData, error) {
 		rawData["graceUntil"] = *response.GraceUntil
 	}
 
-	return QuotaData{
+	return NormalizeQuotaData(QuotaData{
 		Status:       normalizedStatus,
 		ProviderType: "nanogpt",
 		RawData:      rawData,
@@ -199,7 +199,7 @@ func (c *NanoGPTQuotaChecker) parseResponse(body []byte) (QuotaData, error) {
 		Ready:        IsReadyStatus(normalizedStatus),
 		Limits:       limits,
 		Resets:       nil,
-	}, nil
+	}), nil
 }
 
 func (c *NanoGPTQuotaChecker) SupportsChannel(ch *ent.Channel) bool {

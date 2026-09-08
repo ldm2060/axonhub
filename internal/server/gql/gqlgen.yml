@@ -196,6 +196,12 @@ models:
   CommandCodeQuotaSettingsInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.CommandCodeQuotaSettings
+  OllamaQuotaSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OllamaQuotaSettings
+  OllamaQuotaSettingsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.OllamaQuotaSettings
   ChannelRateLimit:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelRateLimit

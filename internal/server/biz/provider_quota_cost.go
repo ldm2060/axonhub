@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/ldm2060/axonhub/internal/authz"
@@ -44,7 +45,7 @@ func (svc *ProviderQuotaService) fillPeriodQuotas(
 		limit.PeriodCost = nil
 
 		start := limit.PeriodStart
-		if start == nil || !start.Before(now) {
+		if start == nil || !start.Before(now) || limit.UsageRatio <= 0 || math.IsNaN(limit.UsageRatio) || math.IsInf(limit.UsageRatio, 0) {
 			continue
 		}
 
@@ -62,6 +63,10 @@ func (svc *ProviderQuotaService) fillPeriodQuotas(
 
 			cost = aggregated
 			costs[*start] = cost
+		}
+
+		if cost <= 0 {
+			continue
 		}
 
 		limit.PeriodCost = &cost

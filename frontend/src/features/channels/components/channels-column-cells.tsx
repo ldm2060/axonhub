@@ -46,6 +46,7 @@ import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
 import type { Channel, ChannelPolicies } from '../data/schema';
+import { parseQuotaLimits } from '../../system/data/quotas';
 import { ChannelsStatusDialog } from './channels-status-dialog';
 
 const WEIGHT_PRECISION = 4;
@@ -701,117 +702,28 @@ CreatedAtCell.displayName = 'CreatedAtCell';
 
 const QUOTA_VISIBLE_LIMIT = 5;
 
-const OAUTH_CHANNEL_TYPES = new Set<Channel['type']>([
-  'codex',
-  'claudecode',
-  'antigravity',
-  'github_copilot',
-  'xai_subscription',
-  'commandcode',
-  'commandcode_anthropic',
-]);
-
-type QuotaLimit = {
-  window?: string;
-  usageRatio?: number;
-  status?: string;
+const QUOTA_WINDOW_LABEL_KEYS: Record<string, string> = {
+  '5h': 'quota.window.5h',
+  '7d': 'quota.window.7d',
+  '30d': 'quota.window.30d',
+  daily: 'quota.window.daily',
+  weekly: 'quota.window.weekly',
+  monthly: 'quota.window.monthly',
+  pay_as_you_go: 'quota.label.token_usage',
+  credits: 'quota.label.credits_remaining',
+  cycle: 'quota.window.cycle',
+  overage: 'quota.label.overage_window',
 };
 
-function getQuotaLimits(channel: Channel): QuotaLimit[] {
-  const quotaStatus = channel.providerQuotaStatus;
-  if (!quotaStatus) return [];
-
-  const data = quotaStatus.quotaData as Record<string, unknown>;
-  const limits = Array.isArray(data._limits)
-    ? data._limits.filter((limit): limit is Record<string, unknown> => typeof limit === 'object' && limit !== null)
-    : [];
-  const normalized = limits.map((limit) => ({
-    window: typeof limit.window === 'string' ? limit.window : undefined,
-    usageRatio: typeof limit.usageRatio === 'number' ? limit.usageRatio : undefined,
-    status: typeof limit.status === 'string' ? limit.status : undefined,
-  }));
-
-  if (channel.type === 'xai_subscription') {
-    const billing = data.billing as Record<string, unknown> | undefined;
-    for (const [key, label] of [
-      ['weekly', 'weekly'],
-      ['monthly', 'monthly'],
-    ] as const) {
-      const window = billing?.[key] as Record<string, unknown> | undefined;
-      if (typeof window?.usage_percent !== 'number' || normalized.some((limit) => limit.window === label)) {
-        continue;
-      }
-      const usageRatio = window.usage_percent / 100;
-      const unlabeled = normalized.find(
-        (limit) => !limit.window && limit.usageRatio != null && Math.abs(limit.usageRatio - usageRatio) < 0.000001
-      );
-      if (unlabeled) {
-        unlabeled.window = label;
-      } else {
-        normalized.push({ window: label, usageRatio, status: quotaStatus.status });
-      }
-    }
-  }
-
-  if (channel.type === 'claudecode' && normalized.length === 0) {
-    const windows = data.windows as Record<string, unknown> | undefined;
-    for (const label of ['5h', '7d']) {
-      const window = windows?.[label] as Record<string, unknown> | undefined;
-      if (typeof window?.utilization !== 'number') continue;
-      normalized.push({ window: label, usageRatio: window.utilization, status: quotaStatus.status });
-    }
-  }
-
-  if (channel.type === 'antigravity' && normalized.length === 0) {
-    const models = data.models as Record<string, unknown> | undefined;
-    for (const [modelID, value] of Object.entries(models ?? {})) {
-      if (typeof value !== 'object' || value === null) continue;
-      const model = value as Record<string, unknown>;
-      if (typeof model.remainingPercentage !== 'number') continue;
-      normalized.push({
-        window: typeof model.displayName === 'string' && model.displayName ? model.displayName : modelID,
-        usageRatio: 1 - model.remainingPercentage / 100,
-        status: typeof model.status === 'string' ? model.status : undefined,
-      });
-    }
-  }
-
-  if (channel.type === 'codex') {
-    const rateLimit = data.rate_limit as Record<string, unknown> | undefined;
-    for (const [key, label] of [
-      ['primary_window', '5h'],
-      ['secondary_window', '7d'],
-    ] as const) {
-      const window = rateLimit?.[key] as Record<string, unknown> | undefined;
-      if (typeof window?.used_percent !== 'number') continue;
-      const alreadyIncluded = normalized.some(
-        (limit) => limit.window === label || (key === 'primary_window' && limit.window === 'primary')
-      );
-      if (!alreadyIncluded) {
-        normalized.push({
-          window: label,
-          usageRatio: window.used_percent / 100,
-          status: quotaStatus.status,
-        });
-      }
-    }
-  }
-
-  if (channel.type === 'antigravity') {
-    normalized.sort((a, b) => (b.usageRatio ?? 0) - (a.usageRatio ?? 0));
-  }
-
-  return normalized.filter((limit) => limit.usageRatio != null || limit.status === 'exhausted');
+function getQuotaLimits(channel: Channel) {
+  return channel.providerQuotaStatus ? parseQuotaLimits(channel.providerQuotaStatus.quotaData) : [];
 }
 
-function quotaWindowLabel(window: string | undefined): string {
+function quotaWindowLabel(window: string | undefined, t: ReturnType<typeof useTranslation>['t']): string {
   if (!window) return '';
-  if (window === 'primary') return '5h';
-  if (window === 'secondary') return '7d';
-  if (window === 'daily') return '1d';
-  if (window === 'weekly') return '7d';
-  if (window === 'monthly') return '30d';
-  return window;
+  const translationKey = QUOTA_WINDOW_LABEL_KEYS[window];
+  if (translationKey) return t(translationKey);
+  return window === 'primary' || window === 'secondary' ? t('quota.label.token_usage') : window;
 }
 
 const quotaColor = (remaining: number) => {
@@ -824,14 +736,6 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const channel = row.original;
-
-  if (!OAUTH_CHANNEL_TYPES.has(channel.type)) {
-    return (
-      <div className='flex justify-center'>
-        <span className='text-muted-foreground text-xs'>-</span>
-      </div>
-    );
-  }
 
   if (!channel.providerQuotaStatus) {
     return (
@@ -857,7 +761,7 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
       {visibleLimits.map((limit, index) => {
         const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
         const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
-        const label = quotaWindowLabel(limit.window) || t('quota.label.quota');
+        const label = quotaWindowLabel(limit.window, t) || t('quota.label.quota');
         return (
           <div key={`${label}-${index}`} className='flex items-center justify-end gap-2'>
             <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{label}</span>
@@ -897,7 +801,7 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
           const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
           return (
             <div key={`${limit.window}-${index}`} className='text-xs'>
-              {quotaWindowLabel(limit.window) || t('quota.label.quota')}: {remaining}%
+              {quotaWindowLabel(limit.window, t) || t('quota.label.quota')}: {remaining}%
             </div>
           );
         })}
