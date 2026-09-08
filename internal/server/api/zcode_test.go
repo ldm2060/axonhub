@@ -98,8 +98,8 @@ func TestZCodeHandlers_Exchange_replays_redirect_uri_from_callback(t *testing.T)
 	require.NoError(t, json.Unmarshal(start.Body.Bytes(), &session))
 
 	// The pasted callback carries the zcode:// scheme the authorize page
-	// redirected to; the exchange must replay that exact redirect_uri.
-	callback := "zcode://oauth/callback?code=synthetic-code&state=" + session.SessionID
+	// redirected to; BigModel returns the code as `authCode`.
+	callback := "zcode://oauth/callback?authCode=synthetic-code&state=" + session.SessionID
 	payload, err := json.Marshal(ExchangeZCodeOAuthRequest{SessionID: session.SessionID, CallbackURL: callback})
 	require.NoError(t, err)
 

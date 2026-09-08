@@ -114,7 +114,11 @@ func parseZCodeCallbackURL(callbackURL string) (code, state string, err error) {
 
 	q := u.Query()
 
+	// BigModel returns the code as `authCode`; z.ai used `code`. Accept both.
 	code = q.Get("code")
+	if code == "" {
+		code = q.Get("authCode")
+	}
 	if code == "" {
 		return "", "", errors.New("code parameter not found in callback_url")
 	}
