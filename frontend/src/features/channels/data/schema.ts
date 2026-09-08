@@ -647,6 +647,7 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
 
   const isCopilot = type === 'github_copilot';
   const isKimiCode = type === 'kimi_code';
+  const isZCode = type === 'zcode';
   const requiresJSON = isCopilot || type === 'xai_subscription';
   if (requiresJSON && !apiKey.trim().startsWith('{')) {
     ctx.addIssue({
@@ -671,6 +672,24 @@ function validateOAuthCredentials(type: string, apiKey: string | undefined, ctx:
     json = JSON.parse(apiKey);
   } catch {
     ctx.addIssue(issue);
+    return;
+  }
+
+  // ZCode (BigModel) credentials carry the inference credential as
+  // zcode.business_jwt; the provider token exchange does not always return a
+  // refresh_token, so it stays optional here (the backend requires only the
+  // business JWT — see parseZCodeCredentials).
+  if (isZCode) {
+    const zcodeParsed = z
+      .object({
+        access_token: z.string().min(1),
+        refresh_token: z.string().optional(),
+        zcode: z.object({ business_jwt: z.string().min(1) }),
+      })
+      .safeParse(json);
+    if (!zcodeParsed.success) {
+      ctx.addIssue(issue);
+    }
     return;
   }
 
@@ -749,7 +768,8 @@ export const createChannelInputSchema = z
       data.type === 'antigravity' ||
       data.type === 'github_copilot' ||
       data.type === 'kimi_code' ||
-      data.type === 'xai_subscription';
+      data.type === 'xai_subscription' ||
+      data.type === 'zcode';
     const hasApiKey = data.credentials.apiKey && data.credentials.apiKey.trim().length > 0;
     const hasApiKeys = data.credentials.apiKeys && data.credentials.apiKeys.some((k) => k.trim().length > 0);
 

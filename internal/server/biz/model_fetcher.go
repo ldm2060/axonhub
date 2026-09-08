@@ -821,9 +821,10 @@ func (f *ModelFetcher) fetchZCodeModels(ctx context.Context, input FetchModelsIn
 	}
 
 	modelsURL, headers := f.prepareModelsEndpoint(channel.TypeZcode, input.BaseURL)
-	// The z.ai Anthropic /models endpoint authenticates with the JWT via
-	// x-api-key (verified against the live API).
-	headers.Set("X-Api-Key", jwt)
+	// The zcode-plan endpoint family authenticates with the JWT as a Bearer
+	// token (the client sends Authorization: Bearer for coding/start-plan
+	// channels).
+	headers.Set("Authorization", "Bearer "+jwt)
 
 	req := &httpclient.Request{ //nolint:exhaustruct_v5 // only the request plumbing matters here.
 		Method:  http.MethodGet,

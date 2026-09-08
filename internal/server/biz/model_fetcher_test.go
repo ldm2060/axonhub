@@ -50,7 +50,7 @@ func TestModelFetcher_fetchZCodeModels_fetches_live_catalog(t *testing.T) {
 	// Given a z.ai Anthropic /models endpoint that requires the business JWT.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, "/v1/models", r.URL.Path)
-		require.Equal(t, "test-business-jwt", r.Header.Get("X-Api-Key"))
+		require.Equal(t, "Bearer test-business-jwt", r.Header.Get("Authorization"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"data":[{"id":"glm-5.3"},{"id":"glm-4.7"}]}`))
 	}))
