@@ -1168,10 +1168,11 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 
 		return ch, nil
 	case channel.TypeZcode:
-		// ZCode（z.ai GLM 编码客户端）：Anthropic Messages 出站。
-		// OAuth 凭证：zcode provider 刷新 access token 并自动换新业务 JWT，
-		// 推理用的 x-api-key 就是该 JWT；非 OAuth（BigModel API Key / 手动粘贴
-		// 的 JWT）走多 key 轮换的 APIKeyProvider。
+		// ZCode（BigModel coding plan）：Anthropic Messages 出站。OAuth 凭证在
+		// bigmodel 登录时会附带解析出的两段式 coding-plan API key（{id}.{secret}）；
+		// 推理端点（经路由映射到 zcode.z.ai ultra）用它做 x-api-key，并要求
+		// 客户端签名（握手下发的 Ed25519 私钥 + PoW）。无两段式 key 的旧凭证
+		// 回退为 x-api-key JWT（仅适用于 api.z.ai 按量端点）。
 		if c.Credentials.IsOAuth() {
 			creds, err := parseZCodeCredentials(c.Credentials)
 			if err != nil {
@@ -1184,13 +1185,27 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 				OnRefreshed: svc.onTokenRefreshed(c),
 			})
 
+			apiKeyProvider := zcodeAPIKeyProvider(tokens)
+			if creds.ZCode != nil && creds.ZCode.APIKeyID != "" && creds.ZCode.APIKeySecret != "" {
+				twoPartKey := creds.ZCode.APIKeyID + "." + creds.ZCode.APIKeySecret
+				signer := zcode.NewRequestSigner(zcode.SignerParams{
+					HTTPClient:   httpClient,
+					APIKeyID:     creds.ZCode.APIKeyID,
+					APIKeySecret: creds.ZCode.APIKeySecret,
+					Origin:       "",
+					SessionID:    "",
+				})
+				ch.HTTPClient = zcode.NewSigningClient(httpClient, signer, zcode.NewEndpointRouting(httpClient))
+				apiKeyProvider = oauth.APIKeyProviderFunc(func(_ context.Context) string { return twoPartKey })
+			}
+
 			transformer, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
 				Type:                    anthropic.PlatformZCode,
 				Region:                  "",
 				ProjectID:               "",
 				JSONData:                "",
 				BaseURL:                 c.BaseURL,
-				APIKeyProvider:          zcodeAPIKeyProvider(tokens),
+				APIKeyProvider:          apiKeyProvider,
 				EndpointPath:            "",
 				ReasoningEffortToBudget: nil,
 			})

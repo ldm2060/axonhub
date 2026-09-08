@@ -29,6 +29,12 @@ type ZCodeMetadata struct {
 	BusinessJWT string `json:"business_jwt"`
 	// Provider is the ZCode login provider: "zai" (default) or "bigmodel".
 	Provider string `json:"provider,omitempty"`
+	// APIKeyID and APIKeySecret are the two-part BigModel coding-plan API key
+	// ({id}.{secret}) provisioned after the bigmodel OAuth exchange. The
+	// coding-plan inference endpoints (zcode.z.ai ultra) and the request
+	// signing handshake authenticate with this key, not the JWT.
+	APIKeyID     string `json:"api_key_id,omitempty"`
+	APIKeySecret string `json:"api_key_secret,omitempty"`
 }
 
 // KimiCodeMetadata is persisted with OAuth credentials so Kimi's dynamic

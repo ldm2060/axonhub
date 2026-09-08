@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
 	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 	"github.com/ldm2060/axonhub/llm/vertex"
 )
 
@@ -39,13 +40,12 @@ const (
 	PlatformClaudeCode  PlatformType = "claudecode"  // Claude Code CLI
 	PlatformOllama      PlatformType = "ollama"      // Ollama with Anthropic format (Bearer auth)
 	PlatformCommandCode PlatformType = "commandcode" // Command Code provider (Bearer auth)
-	PlatformZCode       PlatformType = "zcode"       // ZCode (zcode.z.ai, Z.AI GLM coding client, Bearer JWT)
+	PlatformZCode       PlatformType = "zcode"       // ZCode (BigModel coding plan via zcode.z.ai ultra, X-Api-Key two-part key + client signing)
 )
 
-// zcodeAppVersion is the ZCode desktop client version the zcode channel
-// impersonates; it stamps User-Agent and X-ZCode-App-Version. Track the
-// official releases at https://zcode.z.ai/en/changelog and bump as needed.
-const zcodeAppVersion = "3.11.2"
+// zcodeAppVersion was the local client-version constant; it moved to
+// zcode.AppVersion so the request signer and the fingerprint headers cannot
+// drift apart. Track the official releases at https://zcode.z.ai/en/changelog.
 
 // Config holds all configuration for the Anthropic outbound transformer.
 type Config struct {
@@ -234,8 +234,7 @@ func (t *OutboundTransformer) TransformRequest(
 
 	if apiKey != "" {
 		// LongCat and Ollama use Bearer token authentication instead of X-API-Key
-		if t.config.Type == PlatformLongCat || t.config.Type == PlatformOllama || t.config.Type == PlatformBedrock || t.config.Type == PlatformCommandCode ||
-			t.config.Type == PlatformZCode {
+		if t.config.Type == PlatformLongCat || t.config.Type == PlatformOllama || t.config.Type == PlatformBedrock || t.config.Type == PlatformCommandCode {
 			authConfig = &httpclient.AuthConfig{
 				Type:   httpclient.AuthTypeBearer,
 				APIKey: apiKey,
@@ -250,15 +249,16 @@ func (t *OutboundTransformer) TransformRequest(
 	}
 
 	// ZCode 渠道按 ZCode 客户端指纹补请求头，逆向自 ZCode 客户端
-	// （vibe-coding-labs/zcode-reverse-engineer 的 protocol/ai-protocol 文档）。
-	// 推理请求的完整指纹为 User-Agent/X-Platform/X-ZCode-App-Version 等一组头；
-	// 版本号取自官方最新发行版（https://zcode.z.ai changelog），随客户端升级更新即可。
+	// （3.10.2 app.asar）。推理请求的完整指纹为 User-Agent/X-Platform/
+	// X-ZCode-App-Version 等一组头；X-ZCode-Agent 与完整身份头集见客户端
+	// buildProviderIdentityHeaders。版本号与请求签名（zcode.AppVersion）必须一致。
 	if t.config.Type == PlatformZCode {
-		headers.Set("User-Agent", "ZCode/"+zcodeAppVersion)
+		headers.Set("User-Agent", "ZCode/"+zcode.AppVersion)
 		headers.Set("Http-Referer", "https://zcode.z.ai")
 		headers.Set("X-Title", "Z Code@electron")
+		headers.Set("X-Zcode-Agent", "glm")
 		headers.Set("X-Platform", "win32-x64")
-		headers.Set("X-Zcode-App-Version", zcodeAppVersion)
+		headers.Set("X-Zcode-App-Version", zcode.AppVersion)
 		headers.Set("X-Release-Channel", "production")
 		headers.Set("X-Client-Language", "zh-CN")
 		headers.Set("X-Client-Timezone", "Asia/Shanghai")

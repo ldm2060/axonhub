@@ -853,7 +853,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
   },
   zcode: {
     channelType: 'zcode',
-    baseURL: 'https://zcode.z.ai/api/v1/zcode-plan/anthropic/v1',
+    baseURL: 'https://open.bigmodel.cn/api/anthropic',
     defaultModels: ['glm-4.7', 'glm-5.3', 'glm-5.3-flash', 'glm-5-turbo'],
     apiFormat: ANTHROPIC_MESSAGES,
     color: 'bg-blue-100 text-blue-800 border-blue-200',

@@ -272,6 +272,12 @@ func buildCreds(envelope *tokenEnvelope, provider, jwt string, previous *oauth.O
 		creds.RefreshToken = previous.RefreshToken
 	}
 
+	// The provisioned coding-plan key outlives token refreshes; carry it over.
+	if creds.ZCode.APIKeyID == "" && previous != nil && previous.ZCode != nil {
+		creds.ZCode.APIKeyID = previous.ZCode.APIKeyID
+		creds.ZCode.APIKeySecret = previous.ZCode.APIKeySecret
+	}
+
 	return creds
 }
 
@@ -312,6 +318,18 @@ func (p *TokenProvider) Exchange(ctx context.Context, params ExchangeParams) (*o
 	}
 
 	creds := buildCreds(envelope, provider, jwt, nil)
+
+	// The BigModel coding-plan endpoints authenticate with a two-part API key,
+	// not the JWT — provision it right after the exchange so the channel is
+	// usable for inference immediately.
+	if provider == BigModelProvider {
+		apiKeyID, apiKeySecret, err := ResolveCodingPlanKey(ctx, p.httpClient, creds.AccessToken)
+		if err != nil {
+			return nil, fmt.Errorf("provision coding-plan key: %w", err)
+		}
+		creds.ZCode.APIKeyID = apiKeyID
+		creds.ZCode.APIKeySecret = apiKeySecret
+	}
 
 	p.mu.Lock()
 	p.creds = creds

@@ -821,10 +821,13 @@ func (f *ModelFetcher) fetchZCodeModels(ctx context.Context, input FetchModelsIn
 	}
 
 	modelsURL, headers := f.prepareModelsEndpoint(channel.TypeZcode, input.BaseURL)
-	// The zcode-plan endpoint family authenticates with the JWT as a Bearer
-	// token (the client sends Authorization: Bearer for coding/start-plan
-	// channels).
-	headers.Set("Authorization", "Bearer "+jwt)
+	// The coding-plan model listing authenticates with the two-part API key
+	// when present; legacy credentials fall back to the Bearer JWT.
+	if creds.ZCode != nil && creds.ZCode.APIKeyID != "" && creds.ZCode.APIKeySecret != "" {
+		headers.Set("X-Api-Key", creds.ZCode.APIKeyID+"."+creds.ZCode.APIKeySecret)
+	} else {
+		headers.Set("Authorization", "Bearer "+jwt)
+	}
 
 	req := &httpclient.Request{ //nolint:exhaustruct_v5 // only the request plumbing matters here.
 		Method:  http.MethodGet,
