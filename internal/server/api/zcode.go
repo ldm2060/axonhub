@@ -59,7 +59,7 @@ func zcodeOAuthCacheKey(sessionID string) string {
 	return fmt.Sprintf("zcode:oauth:%s", sessionID)
 }
 
-// StartOAuth creates an OAuth session and returns the z.ai authorize URL.
+// StartOAuth creates an OAuth session and returns the BigModel authorize URL.
 // POST /admin/zcode/oauth/start.
 func (h *ZCodeHandlers) StartOAuth(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -83,15 +83,16 @@ func (h *ZCodeHandlers) StartOAuth(c *gin.Context) {
 		return
 	}
 
+	// BigModel login uses custom query params (appId/redirect/state), unlike the
+	// standard OAuth2 shape — see the ZCode client's BigModel provider adapter.
 	params := url.Values{}
-	params.Set("response_type", "code")
-	params.Set("client_id", zcode.ClientID)
-	params.Set("redirect_uri", zcode.RedirectURI)
+	params.Set("redirect", zcode.RedirectURI)
+	params.Set("appId", zcode.BigModelAppID)
 	params.Set("state", state)
 
 	c.JSON(http.StatusOK, StartZCodeOAuthResponse{
 		SessionID: state,
-		AuthURL:   fmt.Sprintf("%s?%s", zcode.AuthorizeURL, params.Encode()),
+		AuthURL:   fmt.Sprintf("%s?%s", zcode.BigModelAuthorizeURL, params.Encode()),
 	})
 }
 
@@ -124,6 +125,20 @@ func parseZCodeCallbackURL(callbackURL string) (code, state string, err error) {
 	}
 
 	return code, state, nil
+}
+
+// zcodeCallbackRedirectURI rebuilds the redirect_uri that must accompany the
+// token exchange from the pasted callback URL, mirroring the reference CLI's
+// manual mode (zcode_auth.py cmd_code). The token endpoint validates
+// redirect_uri against the authorize-time value — replaying the pasted URL's
+// scheme://host/path keeps them consistent whatever registration z.ai uses.
+func zcodeCallbackRedirectURI(callbackURL string) string {
+	u, err := url.Parse(callbackURL)
+	if err != nil || u.Scheme == "" || u.Host == "" || u.Path == "" {
+		return zcode.RedirectURI
+	}
+
+	return u.Scheme + "://" + u.Host + u.Path
 }
 
 // Exchange exchanges the callback URL for OAuth credentials JSON.
@@ -172,8 +187,9 @@ func (h *ZCodeHandlers) Exchange(c *gin.Context) {
 
 	creds, err := provider.Exchange(ctx, zcode.ExchangeParams{
 		Code:        code,
-		RedirectURI: zcode.RedirectURI,
+		RedirectURI: zcodeCallbackRedirectURI(req.CallbackURL),
 		State:       callbackState,
+		Provider:    zcode.BigModelProvider,
 	})
 	if err != nil {
 		JSONError(c, http.StatusBadGateway, fmt.Errorf("token exchange failed: %w", err))

@@ -1500,9 +1500,12 @@ func zcodeAPIKeyProvider(tokens *zcode.TokenProvider) auth.APIKeyProvider {
 }
 
 // parseZCodeCredentials loads zcode OAuth credentials from either the OAuth
-// field or the legacy APIKey JSON. Both the refresh token (to renew the z.ai
-// access token) and the business JWT (the actual inference credential) must
-// be present; otherwise the user has to sign in again.
+// field or the legacy APIKey JSON. The business JWT is the actual inference
+// credential and must be present. The refresh token is optional: z.ai's
+// business JWT carries no exp claim and stays valid independent of the
+// short-lived OAuth access token, and the code exchange does not always return
+// a refresh token. When a refresh token is absent the TokenProvider simply
+// keeps using the JWT (needsRefresh is false without a refresh token).
 func parseZCodeCredentials(channelCredentials objects.ChannelCredentials) (*oauth.OAuthCredentials, error) {
 	credsJSON := strings.TrimSpace(channelCredentials.APIKey)
 	if credsJSON == "" && channelCredentials.OAuth != nil {
@@ -1515,9 +1518,6 @@ func parseZCodeCredentials(channelCredentials objects.ChannelCredentials) (*oaut
 	creds, err := oauth.ParseCredentialsJSON(credsJSON)
 	if err != nil {
 		return nil, err
-	}
-	if creds.RefreshToken == "" {
-		return nil, errors.New("refresh_token is required; sign in again via OAuth")
 	}
 	if creds.ZCode == nil || creds.ZCode.BusinessJWT == "" {
 		return nil, errors.New("zcode business JWT is missing; sign in again via OAuth")

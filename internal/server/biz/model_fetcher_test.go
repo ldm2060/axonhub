@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 	"github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 )
 
@@ -31,6 +32,65 @@ func TestModelFetcher_getDefaultModelsByType_returns_xAI_subscription_models(t *
 	// Then
 	require.Len(t, models, len(subscription.DefaultModels()))
 	require.Equal(t, subscription.DefaultModels()[0], models[0].ID)
+}
+
+func TestModelFetcher_getDefaultModelsByType_returns_zcode_models(t *testing.T) {
+	// Given
+	fetcher := NewModelFetcher(httpclient.NewHttpClient(), nil)
+
+	// When
+	models := fetcher.getDefaultModelsByType(t.Context(), channel.TypeZcode)
+
+	// Then
+	require.Len(t, models, len(zcode.DefaultModels()))
+	require.Equal(t, zcode.DefaultModels()[0], models[0].ID)
+}
+
+func TestModelFetcher_fetchZCodeModels_fetches_live_catalog(t *testing.T) {
+	// Given a z.ai Anthropic /models endpoint that requires the business JWT.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/v1/models", r.URL.Path)
+		require.Equal(t, "test-business-jwt", r.Header.Get("X-Api-Key"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":[{"id":"glm-5.3"},{"id":"glm-4.7"}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	fetcher := NewModelFetcher(httpclient.NewHttpClient(), nil)
+	// A not-yet-saved channel carries the OAuth JSON as the apiKey. No refresh
+	// token, so the token provider returns the business JWT without any refresh
+	// HTTP call.
+	apiKey := `{"access_token":"oauth-access","refresh_token":"","zcode":{"business_jwt":"test-business-jwt"}}`
+
+	// When
+	result, err := fetcher.FetchModels(t.Context(), FetchModelsInput{
+		ChannelType: channel.TypeZcode.String(),
+		BaseURL:     server.URL,
+		APIKey:      &apiKey,
+	})
+
+	// Then
+	require.NoError(t, err)
+	require.Nil(t, result.Error)
+	require.False(t, result.Fallback)
+	require.Equal(t, []ModelIdentify{{ID: "glm-5.3"}, {ID: "glm-4.7"}}, result.Models)
+}
+
+func TestModelFetcher_fetchZCodeModels_falls_back_without_credentials(t *testing.T) {
+	// Given no channel id and no OAuth apiKey.
+	fetcher := NewModelFetcher(httpclient.NewHttpClient(), nil)
+
+	// When
+	result, err := fetcher.FetchModels(t.Context(), FetchModelsInput{
+		ChannelType: channel.TypeZcode.String(),
+		BaseURL:     "https://api.z.ai/api/anthropic",
+	})
+
+	// Then
+	require.NoError(t, err)
+	require.Nil(t, result.Error)
+	require.True(t, result.Fallback)
+	require.Len(t, result.Models, len(zcode.DefaultModels()))
 }
 
 // setupProviderConfMockServer creates a mock HTTP server returning provider conf JSON.

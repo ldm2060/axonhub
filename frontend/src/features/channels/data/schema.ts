@@ -762,8 +762,19 @@ export const createChannelInputSchema = z
       });
     }
 
-    // Validate that at least one credential type is provided
-    if (!hasApiKey && !hasApiKeys && data.type !== 'anthropic_aws' && data.type !== 'anthropic_gcp') {
+    // zcode is OAuth-only: the manual multi-key box is hidden, so without the
+    // OAuth JSON there is nothing to submit — point the user at the OAuth flow.
+    if (data.type === 'zcode' && !hasApiKey) {
+      ctx.addIssue({
+        code: 'custom' as const,
+        message: 'channels.dialogs.oauth.errors.zcodeCredentialsRequired',
+        path: ['credentials', 'apiKey'],
+      });
+    }
+
+    // Validate that at least one credential type is provided. zcode is excluded
+    // here because it has a clearer OAuth-specific required message above.
+    if (!hasApiKey && !hasApiKeys && data.type !== 'anthropic_aws' && data.type !== 'anthropic_gcp' && data.type !== 'zcode') {
       ctx.addIssue({
         code: 'custom' as const,
         message: 'At least one API Key is required',

@@ -19,13 +19,16 @@ type OAuthCredentials struct {
 	ZCode        *ZCodeMetadata    `json:"zcode,omitempty"`
 }
 
-// ZCodeMetadata is persisted with OAuth credentials for ZCode (z.ai coding
-// client) channels. The OAuth access token from chat.z.ai is only an
-// intermediate credential: inference calls need the business JWT exchanged
-// from api.z.ai/api/auth/z/login, so both are stored together and the JWT is
-// re-exchanged whenever the access token refreshes.
+// ZCodeMetadata is persisted with OAuth credentials for ZCode channels. The
+// OAuth access token is only an intermediate credential: inference calls use
+// the business JWT, so both are stored together. Provider records which login
+// provider produced the credential ("zai" or "bigmodel") — the two flows differ
+// (Z.AI exchanges the JWT via a business-login call; BigModel returns it inline
+// as data.token), so refresh needs to know which one to re-run.
 type ZCodeMetadata struct {
 	BusinessJWT string `json:"business_jwt"`
+	// Provider is the ZCode login provider: "zai" (default) or "bigmodel".
+	Provider string `json:"provider,omitempty"`
 }
 
 // KimiCodeMetadata is persisted with OAuth credentials so Kimi's dynamic

@@ -27,9 +27,47 @@ const (
 	// Provider is the provider key inside the token endpoint's data envelope.
 	Provider = "zai"
 
-	// RedirectURI is the CLI manual-mode callback the authorize page redirects
-	// to. Nothing listens on that port from the browser's perspective; the
-	// user copies the failed-navigation URL (which carries code + state) back
-	// into the dialog, exactly like the Claude Code OAuth flow.
-	RedirectURI = "http://127.0.0.1:9999/callback"
+	// BigModelAuthorizeURL is the bigmodel.cn login page for the ZCode client's
+	// BigModel provider. Unlike the Z.AI flow it uses custom query params
+	// (appId/redirect/state, no client_id/response_type).
+	BigModelAuthorizeURL = "https://bigmodel.cn/login"
+	// BigModelAppID is the ZCode client's BigModel app id.
+	BigModelAppID = "zcode"
+	// BigModelProvider is the provider key for the BigModel token exchange; the
+	// response nests the provider token under data.bigmodel and returns the
+	// zcode JWT directly as data.token (no separate business-login step).
+	BigModelProvider = "bigmodel"
+
+	// RedirectURI is the z.ai-registered callback the authorize page redirects
+	// to after consent, taken from the current ZCode desktop client (verified
+	// against the 3.10.2 app.asar: both providers share this single value and
+	// register the zcode:// scheme with the OS via setAsDefaultProtocolClient).
+	// The loopback variants from earlier client versions
+	// (http://127.0.0.1:9999/callback, http://127.0.0.1:{port}/oauth/callback/zai)
+	// and the v3.0.1 zcode://zai-auth/callback host are all de-registered —
+	// chat.z.ai rejects them with "Redirect URI not registered for this client".
+	// In the manual flow the browser tries to hand the zcode:// URL to the OS
+	// and the user copies the full link (carrying code + state) back into the
+	// dialog — Firefox shows it in the error page's address bar; Chrome/Edge
+	// log it in the DevTools console after dismissing the "Open ZCode" prompt.
+	RedirectURI = "zcode://oauth/callback"
 )
+
+// DefaultModels returns the z.ai coding-plan model catalog. It is the fallback
+// used when the live /models listing (which authenticates with the business
+// JWT) cannot be fetched — e.g. the credential is not ready yet. Matches the
+// catalog returned by https://api.z.ai/api/anthropic/v1/models.
+func DefaultModels() []string {
+	return []string{
+		"glm-4.5",
+		"glm-4.5-air",
+		"glm-4.6",
+		"glm-4.7",
+		"glm-5",
+		"glm-5-turbo",
+		"glm-5.1",
+		"glm-5.2",
+		"glm-5.3",
+		"glm-5.3-flash",
+	}
+}

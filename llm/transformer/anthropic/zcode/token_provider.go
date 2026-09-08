@@ -46,6 +46,9 @@ type ExchangeParams struct {
 	Code        string
 	RedirectURI string
 	State       string
+	// Provider selects the ZCode login provider: Provider (z.ai, default when
+	// empty) or BigModelProvider (bigmodel.cn coding plan).
+	Provider string
 }
 
 func NewTokenProvider(params TokenProviderParams) *TokenProvider {
@@ -62,17 +65,26 @@ func NewTokenProvider(params TokenProviderParams) *TokenProvider {
 	}
 }
 
-// tokenEnvelope is the z.ai business envelope around the token response:
-// {"code":0,"msg":"","data":{"zai":{"access_token":"...","refresh_token":"..."},"expires_in":3600}}.
+// tokenEnvelope is the z.ai business envelope around the token response. Both
+// providers return the zcode plan JWT as data.token; the provider OAuth token
+// nests under data.zai / data.bigmodel. Z.AI additionally uses a separate
+// business-login call for the JWT; BigModel returns it inline.
+// {"code":0,"msg":"","data":{"token":"<jwt>","zai":{"access_token","refresh_token"},"bigmodel":{...},"user":{"user_id"},"expires_in":3600}}.
 type tokenEnvelope struct {
 	Code *int   `json:"code"`
 	Msg  string `json:"msg"`
 	Data struct {
-		ExpiresIn int64 `json:"expires_in"`
+		// Token is the zcode plan JWT (the inference credential).
+		Token     string `json:"token"`
+		ExpiresIn int64  `json:"expires_in"`
 		ZAI       struct {
 			AccessToken  string `json:"access_token"`
 			RefreshToken string `json:"refresh_token"`
 		} `json:"zai"`
+		BigModel struct {
+			AccessToken  string `json:"access_token"`
+			RefreshToken string `json:"refresh_token"`
+		} `json:"bigmodel"`
 	} `json:"data"`
 }
 
@@ -121,14 +133,16 @@ func decodeJSONResponse[T any](body []byte) (*T, error) {
 }
 
 // exchangeToken exchanges an authorization code (grant == "") or a refresh
-// token (grant == "refresh_token") for the OAuth access token pair.
-func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL string, code, refreshToken, redirectURI, state string) (*tokenEnvelope, error) {
+// token (grant == "refresh_token") for the OAuth access token pair. The
+// provider selects the envelope branch (Provider for z.ai, BigModelProvider for
+// bigmodel.cn).
+func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL, provider, code, refreshToken, redirectURI, state string) (*tokenEnvelope, error) {
 	if client == nil {
 		return nil, errors.New("http client is nil")
 	}
 
 	reqBody := map[string]string{
-		"provider": Provider,
+		"provider": provider,
 	}
 	if refreshToken != "" {
 		reqBody["grant_type"] = "refresh_token"
@@ -166,11 +180,27 @@ func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL 
 		return nil, fmt.Errorf("token request failed: code=%d msg=%s", *envelope.Code, envelope.Msg)
 	}
 
-	if envelope.Data.ZAI.AccessToken == "" {
-		return nil, errors.New("token response missing data.zai.access_token")
+	if providerAccessToken(envelope, provider) == "" {
+		return nil, fmt.Errorf("token response missing data.%s.access_token", provider)
 	}
 
 	return envelope, nil
+}
+
+// providerAccessToken reads the provider-nested access token from the envelope.
+func providerAccessToken(envelope *tokenEnvelope, provider string) string {
+	if provider == BigModelProvider {
+		return envelope.Data.BigModel.AccessToken
+	}
+	return envelope.Data.ZAI.AccessToken
+}
+
+// providerRefreshToken reads the provider-nested refresh token from the envelope.
+func providerRefreshToken(envelope *tokenEnvelope, provider string) string {
+	if provider == BigModelProvider {
+		return envelope.Data.BigModel.RefreshToken
+	}
+	return envelope.Data.ZAI.RefreshToken
 }
 
 // exchangeBusinessJWT trades the OAuth access token for the inference JWT.
@@ -217,18 +247,24 @@ func exchangeBusinessJWT(ctx context.Context, client *httpclient.HttpClient, bus
 }
 
 // buildCreds assembles the persisted credential set from a token envelope
-// plus a freshly exchanged business JWT.
-func buildCreds(envelope *tokenEnvelope, jwt string, previous *oauth.OAuthCredentials) *oauth.OAuthCredentials {
+// plus the business JWT (the inference credential). The provider selects which
+// envelope branch holds the OAuth access/refresh tokens.
+func buildCreds(envelope *tokenEnvelope, provider, jwt string, previous *oauth.OAuthCredentials) *oauth.OAuthCredentials {
+	clientID := ClientID
+	if provider == BigModelProvider {
+		clientID = BigModelAppID
+	}
+
 	creds := &oauth.OAuthCredentials{
-		ClientID:     ClientID,
-		AccessToken:  envelope.Data.ZAI.AccessToken,
-		RefreshToken: envelope.Data.ZAI.RefreshToken,
+		ClientID:     clientID,
+		AccessToken:  providerAccessToken(envelope, provider),
+		RefreshToken: providerRefreshToken(envelope, provider),
 		IDToken:      "",
 		ExpiresAt:    time.Now().Add(expiresIn(envelope)),
 		TokenType:    "",
 		Scopes:       nil,
 		KimiCode:     nil,
-		ZCode:        &oauth.ZCodeMetadata{BusinessJWT: jwt},
+		ZCode:        &oauth.ZCodeMetadata{BusinessJWT: jwt, Provider: provider},
 	}
 
 	// Refresh responses do not always return a new refresh token.
@@ -247,10 +283,17 @@ func expiresIn(envelope *tokenEnvelope) time.Duration {
 }
 
 // Exchange performs the full login flow: authorization code → OAuth access
-// token → business JWT. The credentials are cached in the provider.
+// token → business JWT. The credentials are cached in the provider. The
+// BigModel provider returns the zcode JWT inline (data.token) and skips the
+// business-login step the Z.AI provider needs.
 func (p *TokenProvider) Exchange(ctx context.Context, params ExchangeParams) (*oauth.OAuthCredentials, error) {
 	if params.Code == "" {
 		return nil, errors.New("code is empty")
+	}
+
+	provider := params.Provider
+	if provider == "" {
+		provider = Provider
 	}
 
 	redirectURI := params.RedirectURI
@@ -258,23 +301,37 @@ func (p *TokenProvider) Exchange(ctx context.Context, params ExchangeParams) (*o
 		redirectURI = RedirectURI
 	}
 
-	envelope, err := exchangeToken(ctx, p.httpClient, p.tokenURL, params.Code, "", redirectURI, params.State)
+	envelope, err := exchangeToken(ctx, p.httpClient, p.tokenURL, provider, params.Code, "", redirectURI, params.State)
 	if err != nil {
 		return nil, fmt.Errorf("token exchange failed: %w", err)
 	}
 
-	jwt, err := exchangeBusinessJWT(ctx, p.httpClient, p.businessURL, envelope.Data.ZAI.AccessToken)
+	jwt, err := p.resolveJWT(ctx, provider, envelope)
 	if err != nil {
 		return nil, err
 	}
 
-	creds := buildCreds(envelope, jwt, nil)
+	creds := buildCreds(envelope, provider, jwt, nil)
 
 	p.mu.Lock()
 	p.creds = creds
 	p.mu.Unlock()
 
 	return creds, nil
+}
+
+// resolveJWT obtains the business JWT after a token exchange. BigModel returns
+// it inline as data.token; Z.AI requires the business-login exchange.
+func (p *TokenProvider) resolveJWT(ctx context.Context, provider string, envelope *tokenEnvelope) (string, error) {
+	if provider == BigModelProvider {
+		jwt := strings.TrimSpace(envelope.Data.Token)
+		if jwt == "" {
+			return "", errors.New("bigmodel token response missing data.token")
+		}
+		return jwt, nil
+	}
+
+	return exchangeBusinessJWT(ctx, p.httpClient, p.businessURL, providerAccessToken(envelope, provider))
 }
 
 // jwtExp decodes the business JWT's exp claim without verifying the
@@ -403,17 +460,24 @@ func (p *TokenProvider) refresh(ctx context.Context, creds *oauth.OAuthCredentia
 		return nil, errors.New("refresh_token is empty")
 	}
 
-	envelope, err := exchangeToken(ctx, p.httpClient, p.tokenURL, "", creds.RefreshToken, "", "")
+	// The provider is persisted on the credential so refresh re-runs the same
+	// login flow that produced it (z.ai business-login vs bigmodel inline token).
+	provider := Provider
+	if creds.ZCode != nil && creds.ZCode.Provider != "" {
+		provider = creds.ZCode.Provider
+	}
+
+	envelope, err := exchangeToken(ctx, p.httpClient, p.tokenURL, provider, "", creds.RefreshToken, "", "")
 	if err != nil {
 		return nil, fmt.Errorf("token refresh failed: %w", err)
 	}
 
-	jwt, err := exchangeBusinessJWT(ctx, p.httpClient, p.businessURL, envelope.Data.ZAI.AccessToken)
+	jwt, err := p.resolveJWT(ctx, provider, envelope)
 	if err != nil {
 		return nil, err
 	}
 
-	return buildCreds(envelope, jwt, creds), nil
+	return buildCreds(envelope, provider, jwt, creds), nil
 }
 
 // EnsureFresh refreshes the credentials early when they expire within

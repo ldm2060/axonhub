@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/oauth"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 	"github.com/ldm2060/axonhub/llm/transformer/antigravity"
 	"github.com/ldm2060/axonhub/llm/transformer/cline"
 	"github.com/ldm2060/axonhub/llm/transformer/gemini/vertex"
@@ -248,6 +249,8 @@ func (f *ModelFetcher) getDefaultModelsByType(ctx context.Context, typ channel.T
 		return lo.Map(claudecode.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
 	case channel.TypeXaiSubscription:
 		return lo.Map(subscription.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
+	case channel.TypeZcode:
+		return lo.Map(zcode.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} })
 	case channel.TypeGithubCopilot:
 		return f.fetchCopilotModels(ctx)
 	case channel.TypeGeminiVertex:
@@ -465,6 +468,10 @@ func fetchModelsInputMatchesChannel(input FetchModelsInput, ch *ent.Channel) boo
 func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) (*FetchModelsResult, error) {
 	if input.ChannelType == channel.TypeKimiCode.String() {
 		return f.fetchKimiCodeModels(ctx, input)
+	}
+
+	if input.ChannelType == channel.TypeZcode.String() {
+		return f.fetchZCodeModels(ctx, input)
 	}
 
 	if input.ChannelType == channel.TypeVolcengine.String() {
@@ -743,6 +750,113 @@ func (f *ModelFetcher) fetchKimiCodeModels(ctx context.Context, input FetchModel
 	return &FetchModelsResult{Models: lo.Map(models, func(model kimicode.Model, _ int) ModelIdentify { return ModelIdentify{ID: model.ID} }), KimiCodeModels: models}, nil
 }
 
+// fetchZCodeModels lists the models the z.ai coding plan actually offers by
+// calling the Anthropic /models endpoint with the business JWT (obtained from
+// the zcode TokenProvider, which refreshes when a refresh token is available).
+// The z.ai business JWT carries no exp claim, so a JWT-only credential (no
+// refresh token) still works. On any failure it falls back to the static
+// catalog so model selection stays usable.
+func (f *ModelFetcher) fetchZCodeModels(ctx context.Context, input FetchModelsInput) (*FetchModelsResult, error) {
+	// fallback returns the static catalog. The reason is logged; the credential /
+	// network error is deliberately swallowed because the static list keeps model
+	// selection usable.
+	fallback := func(reason string) *FetchModelsResult {
+		slog.Warn("zcode model fetch fell back to static catalog", "reason", reason)
+		return &FetchModelsResult{
+			Models:         lo.Map(zcode.DefaultModels(), func(id string, _ int) ModelIdentify { return ModelIdentify{ID: id} }),
+			Error:          nil,
+			KimiCodeModels: nil,
+			Fallback:       true,
+		}
+	}
+
+	// Resolve the OAuth credentials: prefer the saved channel, else treat the
+	// submitted apiKey as the OAuth JSON from a not-yet-saved channel.
+	var (
+		creds       *oauth.OAuthCredentials
+		httpClient  = f.httpClient
+		onRefreshed func(ctx context.Context, refreshed *oauth.OAuthCredentials) error
+		err         error
+	)
+
+	if input.ChannelID != nil && f.channelService != nil {
+		ch, getErr := f.channelService.entFromContext(ctx).Channel.Get(ctx, *input.ChannelID)
+		if getErr != nil {
+			return fallback(fmt.Sprintf("get channel: %v", getErr)), nil
+		}
+
+		if ch.Type != channel.TypeZcode {
+			return fallback("stored channel is not zcode"), nil
+		}
+
+		creds, err = parseZCodeCredentials(ch.Credentials)
+		if err != nil {
+			return fallback(fmt.Sprintf("parse credentials: %v", err)), nil
+		}
+
+		if ch.Settings != nil && ch.Settings.Proxy != nil {
+			httpClient = f.httpClient.WithProxy(ch.Settings.Proxy)
+		}
+		// Persist refreshed credentials back to the saved channel.
+		onRefreshed = f.channelService.onTokenRefreshed(ch)
+	} else if input.APIKey != nil && strings.HasPrefix(strings.TrimSpace(*input.APIKey), "{") {
+		creds, err = oauth.ParseCredentialsJSON(*input.APIKey)
+		if err != nil {
+			return fallback(fmt.Sprintf("parse apiKey json: %v", err)), nil
+		}
+	} else {
+		return fallback("no channel id and no oauth apiKey"), nil
+	}
+
+	provider := zcode.NewTokenProvider(zcode.TokenProviderParams{Credentials: creds, HTTPClient: httpClient, OnRefreshed: onRefreshed})
+
+	fresh, err := provider.Get(ctx)
+	if err != nil {
+		return fallback(fmt.Sprintf("token provider get: %v", err)), nil
+	}
+
+	jwt := fresh.AccessToken
+	if jwt == "" {
+		return fallback("empty business jwt"), nil
+	}
+
+	modelsURL, headers := f.prepareModelsEndpoint(channel.TypeZcode, input.BaseURL)
+	// The z.ai Anthropic /models endpoint authenticates with the JWT via
+	// x-api-key (verified against the live API).
+	headers.Set("X-Api-Key", jwt)
+
+	req := &httpclient.Request{ //nolint:exhaustruct_v5 // only the request plumbing matters here.
+		Method:  http.MethodGet,
+		URL:     modelsURL,
+		Headers: headers,
+	}
+
+	resp, err := httpClient.Do(ctx, req)
+	if err != nil {
+		return fallback(fmt.Sprintf("models request: %v", err)), nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fallback(fmt.Sprintf("models status %d: %s", resp.StatusCode, string(resp.Body))), nil
+	}
+
+	models, err := f.parseModelsResponse(resp.Body)
+	if err != nil {
+		return fallback(fmt.Sprintf("parse models response: %v", err)), nil
+	}
+
+	if len(models) == 0 {
+		return fallback("provider returned no models"), nil
+	}
+
+	return &FetchModelsResult{
+		Models:         lo.Uniq(models),
+		Error:          nil,
+		KimiCodeModels: nil,
+		Fallback:       false,
+	}, nil
+}
+
 type geminiListModelsResponse struct {
 	Models        []GeminiModelResponse `json:"models"`
 	NextPageToken string                `json:"nextPageToken"`
@@ -871,6 +985,13 @@ func (f *ModelFetcher) prepareModelsEndpoint(channelType channel.Type, baseURL s
 	case channelType == channel.TypeZai || channelType == channel.TypeZhipu:
 		baseURL = strings.TrimSuffix(baseURL, "/v4")
 		return baseURL + "/v4/models", headers
+	case channelType == channel.TypeZcode:
+		// ZCode targets the z.ai Anthropic endpoint; its model list lives under
+		// the Anthropic /v1/models path.
+		if strings.HasSuffix(baseURL, "/v1") {
+			return baseURL + "/models", headers
+		}
+		return baseURL + "/v1/models", headers
 	case channelType == channel.TypeDoubao || channelType == channel.TypeVolcengine:
 		baseURL = strings.TrimSuffix(baseURL, "/v3")
 		return baseURL + "/v3/models", headers

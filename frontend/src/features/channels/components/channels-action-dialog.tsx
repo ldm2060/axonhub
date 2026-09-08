@@ -2478,7 +2478,25 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         </div>
                       )}
 
-                      {isZCodeType && renderOAuthSection(zcodeOAuth, t('channels.dialogs.fields.apiFormat.zcode.description'))}
+                      {isZCodeType && (
+                        <>
+                          {renderOAuthSection(zcodeOAuth, t('channels.dialogs.fields.apiFormat.zcode.description'))}
+                          {/* credentials.apiKey is the hidden OAuth-JSON field; without a registered
+                              FormField its validation error never renders. FormMessage shows the raw
+                              message (our message is an i18n key), so translate it here. */}
+                          <FormField
+                            control={form.control}
+                            name='credentials.apiKey'
+                            render={({ fieldState }) =>
+                              fieldState.error?.message ? (
+                                <p className='text-destructive mt-1 text-sm'>{t(fieldState.error.message)}</p>
+                              ) : (
+                                <></>
+                              )
+                            }
+                          />
+                        </>
+                      )}
 
                       {!isKimiCodeType && (
                         <FormField
@@ -2511,7 +2529,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         />
                       )}
 
-                      {(!(isCodexType || isClaudeCodeType || isCopilotType || isKimiCodeType || isXAISubscriptionType) ||
+                      {(!(isCodexType || isClaudeCodeType || isCopilotType || isKimiCodeType || isXAISubscriptionType || isZCodeType) ||
                         authMode === 'third-party') &&
                         selectedProvider !== 'antigravity' &&
                         selectedType !== 'anthropic_gcp' && (
