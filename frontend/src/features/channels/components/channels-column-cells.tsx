@@ -42,11 +42,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { parseQuotaLimits } from '../../system/data/quotas';
 import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
 import type { Channel, ChannelPolicies } from '../data/schema';
-import { parseQuotaLimits } from '../../system/data/quotas';
 import { ChannelsStatusDialog } from './channels-status-dialog';
 
 const WEIGHT_PRECISION = 4;

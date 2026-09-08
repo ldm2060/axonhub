@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import test from 'node:test';
 import ts from 'typescript';
 
 const dataDir = import.meta.dirname;
@@ -46,12 +46,12 @@ const channelQueryTranspiled = ts.transpileModule(channelQuerySource, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2023 },
 }).outputText;
 const { buildQueryChannelsQuery } = await import(
-  `data:text/javascript;base64,${Buffer.from(
-    'const { z, pageInfoSchema } = globalThis.__importStubs;\n' + channelQueryTranspiled
-  ).toString('base64')}`
+  `data:text/javascript;base64,${Buffer.from('const { z, pageInfoSchema } = globalThis.__importStubs;\n' + channelQueryTranspiled).toString(
+    'base64'
+  )}`
 );
 
-const columnsSource = read('features/channels/components/channels-columns.tsx');
+const columnsSource = read('features/channels/components/channels-column-cells.tsx');
 
 function channelFixture({ type, providerQuotaStatus }) {
   return {
@@ -96,7 +96,10 @@ test('Codex Pro seven-day-only data keeps its seven-day label', () => {
     _limits: [{ type: 'token', window: '7d', usageRatio: 0.4, status: 'available', ready: true }],
   });
 
-  assert.deepEqual(limits.map((limit) => limit.window), ['7d']);
+  assert.deepEqual(
+    limits.map((limit) => limit.window),
+    ['7d']
+  );
   assert.notEqual(limits[0].window, '5h');
 });
 
@@ -111,7 +114,13 @@ test('normalized limits: unknown window strings pass through neutrally', () => {
 
 test('normalized limits: malformed entries do not throw and are defensively typed', () => {
   const limits = parseQuotaLimits({
-    _limits: [null, 42, 'broken', { window: 7, usageRatio: 'lots' }, { type: 'token', window: 'daily', usageRatio: 0.1, status: 'available' }],
+    _limits: [
+      null,
+      42,
+      'broken',
+      { window: 7, usageRatio: 'lots' },
+      { type: 'token', window: 'daily', usageRatio: 0.1, status: 'available' },
+    ],
   });
 
   assert.ok(Array.isArray(limits));
@@ -192,16 +201,12 @@ test('no provider fallback: channels table renders quota for any channel type wi
     /OAUTH_CHANNEL_TYPES/,
     'the channel table must not gate quota rendering behind an OAuth channel allowlist'
   );
-  assert.match(
-    columnsSource,
-    /parseQuotaLimits/,
-    'the channel table should consume the shared provider-neutral normalized-limit parser'
-  );
+  assert.match(columnsSource, /parseQuotaLimits/, 'the channel table should consume the shared provider-neutral normalized-limit parser');
 });
 
 test('no provider fallback: quota cell has no provider-specific raw-data parsing branches', () => {
   const quotaCellStart = columnsSource.indexOf('const QuotaCell');
-  const quotaCellEnd = columnsSource.indexOf("QuotaCell.displayName", quotaCellStart);
+  const quotaCellEnd = columnsSource.indexOf('QuotaCell.displayName', quotaCellStart);
   assert.ok(quotaCellStart !== -1 && quotaCellEnd > quotaCellStart, 'QuotaCell should exist');
   const quotaCell = columnsSource.slice(quotaCellStart, quotaCellEnd);
 
@@ -272,8 +277,14 @@ test('more than five normalized limits expose the remaining rows for expansion',
   const columns = columnsSource.slice(columnsSource.indexOf('const QuotaCell'), columnsSource.indexOf('QuotaCell.displayName'));
 
   assert.equal(limits.length, 6);
-  assert.deepEqual(limits.slice(0, 5).map((limit) => limit.window), ['5h', '7d', '30d', 'daily', 'weekly']);
-  assert.deepEqual(limits.map((limit) => limit.window), ['5h', '7d', '30d', 'daily', 'weekly', 'monthly']);
+  assert.deepEqual(
+    limits.slice(0, 5).map((limit) => limit.window),
+    ['5h', '7d', '30d', 'daily', 'weekly']
+  );
+  assert.deepEqual(
+    limits.map((limit) => limit.window),
+    ['5h', '7d', '30d', 'daily', 'weekly', 'monthly']
+  );
   assert.match(columns, /const visibleLimits = isExpanded \? limits : limits\.slice\(0, QUOTA_VISIBLE_LIMIT\)/);
   assert.match(columns, /const hiddenCount = limits\.length - QUOTA_VISIBLE_LIMIT/);
 });

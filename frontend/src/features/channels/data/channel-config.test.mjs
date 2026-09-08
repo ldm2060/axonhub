@@ -121,7 +121,11 @@ test('channel table shows normalized provider quota for any channel type', () =>
   assert.match(quotaCell, /channels\.quota\.expand/);
   assert.match(quotaCell, /channels\.quota\.collapse/);
   assert.match(quotaCell, /parseQuotaLimits/, 'the table should consume the shared normalized-limit parser');
-  assert.doesNotMatch(quotaCell, /data\.billing|data\.windows|data\.models|data\.rate_limit/, 'the table must not parse raw provider payloads');
+  assert.doesNotMatch(
+    quotaCell,
+    /data\.billing|data\.windows|data\.models|data\.rate_limit/,
+    'the table must not parse raw provider payloads'
+  );
 });
 
 test('quota selection follows quota column visibility and preserves normalized fields', () => {
@@ -131,7 +135,10 @@ test('quota selection follows quota column visibility and preserves normalized f
   const enSystem = JSON.parse(read('locales/en/system.json'));
   const zhSystem = JSON.parse(read('locales/zh-CN/system.json'));
 
-  assert.match(channelsData, /providerQuotaStatus\s*\{[\s\S]*status[\s\S]*nextResetAt[\s\S]*ready[\s\S]*quotaData[\s\S]*providerType[\s\S]*accountKey[\s\S]*\}/);
+  assert.match(
+    channelsData,
+    /providerQuotaStatus\s*\{[\s\S]*status[\s\S]*nextResetAt[\s\S]*ready[\s\S]*quotaData[\s\S]*providerType[\s\S]*accountKey[\s\S]*\}/
+  );
   assert.match(
     channelsData,
     /isChannelColumnVisible\(columnVisibility, 'quota'\)\s*\?\s*CHANNEL_QUERY_QUOTA_SELECTION\s*:\s*''/,
@@ -139,7 +146,11 @@ test('quota selection follows quota column visibility and preserves normalized f
   );
   assert.match(channelsData, /const \{ columnVisibility, \.\.\.queryInput \} = variables \?\? \{\};/);
   assert.match(channelsData, /channelListColumnVisibilitySchema\s*=\s*z\.record\(z\.string\(\),\s*z\.boolean\(\)\)/);
-  assert.match(channelIndex, /parseChannelColumnVisibility\(JSON\.parse\(stored\)\)/, 'persisted column state must be parsed as boolean visibility');
+  assert.match(
+    channelIndex,
+    /parseChannelColumnVisibility\(JSON\.parse\(stored\)\)/,
+    'persisted column state must be parsed as boolean visibility'
+  );
   assert.match(quotaCell, /quotaWindowLabel\(limit\.window,\s*t\)/, 'window labels should use the active locale');
   assert.equal(enSystem['quota.window.5h'], '5h window');
   assert.equal(enSystem['quota.window.7d'], '7d window');

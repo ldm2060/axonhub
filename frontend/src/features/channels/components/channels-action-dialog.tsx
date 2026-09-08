@@ -1391,22 +1391,14 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
       // duplicate/type-switch flow attach it to an unrelated channel type.
       // Clearing it explicitly sends providerQuota: null so the backend
       // removes the stored cookie.
-      const isCommandCodeSubmit =
-        valuesForSubmit.type === 'commandcode' || valuesForSubmit.type === 'commandcode_anthropic';
-      const commandCodeAuthCookie = isCommandCodeSubmit
-        ? values.settings?.providerQuota?.commandCode?.authCookie?.trim()
-        : undefined;
-      const isOllamaSubmit =
-        valuesForSubmit.type === 'ollama' || valuesForSubmit.type === 'ollama_anthropic';
-      const ollamaAuthCookie = isOllamaSubmit
-        ? values.settings?.providerQuota?.ollama?.authCookie?.trim()
-        : undefined;
+      const isCommandCodeSubmit = valuesForSubmit.type === 'commandcode' || valuesForSubmit.type === 'commandcode_anthropic';
+      const commandCodeAuthCookie = isCommandCodeSubmit ? values.settings?.providerQuota?.commandCode?.authCookie?.trim() : undefined;
+      const isOllamaSubmit = valuesForSubmit.type === 'ollama' || valuesForSubmit.type === 'ollama_anthropic';
+      const ollamaAuthCookie = isOllamaSubmit ? values.settings?.providerQuota?.ollama?.authCookie?.trim() : undefined;
       const settingsForSubmit = values.settings
         ? {
             ...values.settings,
-            ...((isCommandCodeSubmit && commandCodeAuthCookie) || (isOllamaSubmit && ollamaAuthCookie)
-              ? {}
-              : { providerQuota: null }),
+            ...((isCommandCodeSubmit && commandCodeAuthCookie) || (isOllamaSubmit && ollamaAuthCookie) ? {} : { providerQuota: null }),
           }
         : undefined;
 
@@ -1459,13 +1451,9 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         delete updateInput.settings;
 
         const finalChannelType = updateInput.type || currentRow.type;
-        const keepsManagementApiKey = [
-          'zenmux',
-          'zenmux_responses',
-          'zenmux_anthropic',
-          'zenmux_gemini',
-          'zenmux_video',
-        ].includes(finalChannelType);
+        const keepsManagementApiKey = ['zenmux', 'zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini', 'zenmux_video'].includes(
+          finalChannelType
+        );
         if (!keepsManagementApiKey && updateInput.credentials) {
           delete updateInput.credentials.managementApiKey;
         }

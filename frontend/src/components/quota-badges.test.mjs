@@ -28,36 +28,12 @@ test('Codex usage windows render as combined usage and time bars', () => {
 
   // Each window has one shared bar whose fill reflects usage and whose marker
   // reflects the reset-window elapsed time.
-  assert.equal(
-    (codexBlock.match(/<UsageTimeBar\s/g) || []).length,
-    1,
-    'Codex normalized limits should use one combined bar'
-  );
-  assert.match(
-    codexBlock,
-    /quota\.limits\s*\.filter\([\s\S]*?\.map\(\(limit,\s*index\)/,
-    'Codex bars should render normalized limits'
-  );
-  assert.match(
-    codexBlock,
-    /limit\.window === '5h'/,
-    'Codex five-hour label should be selected from the normalized window'
-  );
-  assert.match(
-    codexBlock,
-    /limit\.window === '7d'/,
-    'Codex seven-day label should be selected from the normalized window'
-  );
-  assert.match(
-    codexBlock,
-    /WINDOW_LABEL_KEYS\[limit\.window\]/,
-    'Codex labels should resolve through the shared translation map'
-  );
-  assert.match(
-    codexBlock,
-    /t\('quota\.label\.token_usage'\)/,
-    'Codex unknown windows should use the neutral quota label'
-  );
+  assert.equal((codexBlock.match(/<UsageTimeBar\s/g) || []).length, 1, 'Codex normalized limits should use one combined bar');
+  assert.match(codexBlock, /quota\.limits\s*\.filter\([\s\S]*?\.map\(\(limit,\s*index\)/, 'Codex bars should render normalized limits');
+  assert.match(codexBlock, /limit\.window === '5h'/, 'Codex five-hour label should be selected from the normalized window');
+  assert.match(codexBlock, /limit\.window === '7d'/, 'Codex seven-day label should be selected from the normalized window');
+  assert.match(codexBlock, /WINDOW_LABEL_KEYS\[limit\.window\]/, 'Codex labels should resolve through the shared translation map');
+  assert.match(codexBlock, /t\('quota\.label\.token_usage'\)/, 'Codex unknown windows should use the neutral quota label');
   assert.doesNotMatch(codexBlock, /quota\.label\.primary_window/);
   assert.doesNotMatch(codexBlock, /quota\.label\.secondary_window/);
 });
@@ -111,8 +87,8 @@ test('Ollama badge derives percentage from the heavier of the 5h/weekly windows'
 
 test('Ollama badge renders both the 5h and weekly windows with a reset countdown', () => {
   const source = read('components/quota-badges.tsx');
-  const start = source.indexOf("{isOllamaType(channel.type) &&");
-  const end = source.indexOf("{isCommandCodeType(channel.type) &&", start);
+  const start = source.indexOf('{isOllamaType(channel.type) &&');
+  const end = source.indexOf('{isCommandCodeType(channel.type) &&', start);
   const ollamaBlock = source.slice(start, end);
 
   assert.match(ollamaBlock, /QuotaWindow5h|'5h'/);

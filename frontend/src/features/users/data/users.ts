@@ -3,8 +3,8 @@ import { graphqlRequest } from '@/gql/graphql';
 import { USERS_QUERY, CREATE_USER_MUTATION, UPDATE_USER_MUTATION, UPDATE_USER_STATUS_MUTATION, DELETE_USER_MUTATION } from '@/gql/users';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { useErrorHandler } from '@/hooks/use-error-handler';
 import { User, UserConnection, CreateUserInput, UpdateUserInput, type UserStatus, userConnectionSchema, userSchema } from './schema';
 
 // Query hooks

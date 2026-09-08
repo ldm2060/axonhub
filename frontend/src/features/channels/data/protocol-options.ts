@@ -52,10 +52,7 @@ export function getApiFormatsForProvider(provider: string, configs: ProtocolConf
  * Native video is available as a custom endpoint on every ZenMux channel type.
  * Other custom endpoint formats remain available everywhere.
  */
-export function getConfigurableApiFormatsForChannelType(
-  channelType: ChannelType,
-  configurableFormats: readonly string[]
-): string[] {
+export function getConfigurableApiFormatsForChannelType(channelType: ChannelType, configurableFormats: readonly string[]): string[] {
   if (['zenmux', 'zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini', 'zenmux_video'].includes(channelType)) {
     return [...configurableFormats];
   }

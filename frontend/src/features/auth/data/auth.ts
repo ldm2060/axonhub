@@ -5,8 +5,8 @@ import { graphqlRequest } from '@/gql/graphql';
 import { ME_QUERY } from '@/gql/users';
 import { toast } from 'sonner';
 import { useAuthStore, setTokenToStorage, removeTokenFromStorage } from '@/stores/authStore';
-import { useProjectStore } from '@/stores/projectStore';
 import { AuthUser } from '@/stores/authStore';
+import { useProjectStore } from '@/stores/projectStore';
 import { authApi } from '@/lib/api-client';
 import i18n from '@/lib/i18n';
 

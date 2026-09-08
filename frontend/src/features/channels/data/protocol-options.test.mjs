@@ -43,7 +43,10 @@ test('does not expose ZenMux native video to unrelated providers', () => {
 });
 
 test('does not expose ZenMux native video to a provider lacking the ZenMux video channel type', () => {
-  const openaiOnly = { providerConfigs: { zenmux: { channelTypes: ['zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini'] } }, channelConfigs };
+  const openaiOnly = {
+    providerConfigs: { zenmux: { channelTypes: ['zenmux_responses', 'zenmux_anthropic', 'zenmux_gemini'] } },
+    channelConfigs,
+  };
   assert.deepEqual(getApiFormatsForProvider('zenmux', openaiOnly), ['openai/responses', 'anthropic/messages', 'gemini/contents']);
   assert.equal(getChannelTypeForApiFormat('zenmux', 'zenmux/video', openaiOnly), undefined);
 });

@@ -4,8 +4,8 @@ import test from 'node:test';
 import ts from 'typescript';
 
 // Run the table's pure quota helpers without loading React or its providers.
-const source = readFileSync(new URL('./channels-columns.tsx', import.meta.url), 'utf8');
-const ast = ts.createSourceFile('channels-columns.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const source = readFileSync(new URL('./channels-column-cells.tsx', import.meta.url), 'utf8');
+const ast = ts.createSourceFile('channels-column-cells.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const helperNames = ['getQuotaLimits', 'quotaWindowLabel'];
 const helpers = ast.statements
   .filter((node) => ts.isFunctionDeclaration(node) && helperNames.includes(node.name?.text))
@@ -51,26 +51,46 @@ function codex(limits = [{ type: 'token', status: 'available', ready: true, wind
 test('weekly-only Codex quota is shown once as 7d, with its usage preserved', () => {
   const channel = codex([{ type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0.52 }]);
   const limits = getQuotaLimits(channel);
-  assert.deepEqual(limits.map(({ window, usageRatio, status }) => ({ window, usageRatio, status })), [{ window: '7d', usageRatio: 0.52, status: 'available' }]);
+  assert.deepEqual(
+    limits.map(({ window, usageRatio, status }) => ({ window, usageRatio, status })),
+    [{ window: '7d', usageRatio: 0.52, status: 'available' }]
+  );
   assert.equal(quotaWindowLabel(limits[0].window, t), '7d');
   assert.equal(Math.round(100 - limits[0].usageRatio * 100), 48);
 });
 
 test('Codex dual windows and other durations use reported lengths', () => {
-  for (const [label, usageRatio] of [['5h', 0.2], ['1d', 0.2], ['2h', 0.2], ['90m', 0.2], ['45s', 0.2]]) {
-    const limits = getQuotaLimits(codex([
-      { type: 'token', status: 'available', ready: true, window: label, usageRatio },
-      { type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0.6 },
-    ]));
-    assert.deepEqual(limits.map((limit) => limit.window), [label, '7d']);
-    assert.deepEqual(limits.map((limit) => limit.usageRatio), [usageRatio, 0.6]);
+  for (const [label, usageRatio] of [
+    ['5h', 0.2],
+    ['1d', 0.2],
+    ['2h', 0.2],
+    ['90m', 0.2],
+    ['45s', 0.2],
+  ]) {
+    const limits = getQuotaLimits(
+      codex([
+        { type: 'token', status: 'available', ready: true, window: label, usageRatio },
+        { type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0.6 },
+      ])
+    );
+    assert.deepEqual(
+      limits.map((limit) => limit.window),
+      [label, '7d']
+    );
+    assert.deepEqual(
+      limits.map((limit) => limit.usageRatio),
+      [usageRatio, 0.6]
+    );
   }
 });
 
 test('only persisted normalized Codex windows are displayed', () => {
   assert.deepEqual(getQuotaLimits(codex([])), []);
   const limits = getQuotaLimits(codex([{ type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0 }]));
-  assert.deepEqual(limits.map(({ window, usageRatio, status }) => ({ window, usageRatio, status })), [{ window: '7d', usageRatio: 0, status: 'available' }]);
+  assert.deepEqual(
+    limits.map(({ window, usageRatio, status }) => ({ window, usageRatio, status })),
+    [{ window: '7d', usageRatio: 0, status: 'available' }]
+  );
 });
 
 test('role identifiers use a neutral token label rather than assumed periods', () => {
@@ -83,13 +103,22 @@ test('malformed normalized Codex data is ignored', () => {
 });
 
 test('other provider window labels are preserved', () => {
-  const channel = { type: 'claudecode', providerQuotaStatus: { status: 'available', quotaData: {
-    _limits: [
-      { type: 'token', status: 'available', ready: true, window: '5h', usageRatio: 0.2 },
-      { type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0.4 },
-    ],
-  } } };
-  assert.deepEqual(getQuotaLimits(channel).map((limit) => quotaWindowLabel(limit.window, t)), ['5h', '7d']);
+  const channel = {
+    type: 'claudecode',
+    providerQuotaStatus: {
+      status: 'available',
+      quotaData: {
+        _limits: [
+          { type: 'token', status: 'available', ready: true, window: '5h', usageRatio: 0.2 },
+          { type: 'token', status: 'available', ready: true, window: '7d', usageRatio: 0.4 },
+        ],
+      },
+    },
+  };
+  assert.deepEqual(
+    getQuotaLimits(channel).map((limit) => quotaWindowLabel(limit.window, t)),
+    ['5h', '7d']
+  );
   assert.equal(quotaWindowLabel('weekly', t), 'weekly');
   assert.equal(quotaWindowLabel('monthly', t), 'monthly');
 });

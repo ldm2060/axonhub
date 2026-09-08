@@ -277,7 +277,10 @@ export function ChannelsTable({
         onExitErrorOnlyMode={onExitErrorOnlyMode}
       />
       <div className='shadow-soft relative mt-4 min-w-0 flex-1 overflow-auto overflow-x-hidden rounded-2xl border border-[var(--table-border)]'>
-        <Table data-testid='channels-table' className='w-full table-fixed border-separate border-spacing-0 rounded-2xl bg-[var(--table-background)]'>
+        <Table
+          data-testid='channels-table'
+          className='w-full table-fixed border-separate border-spacing-0 rounded-2xl bg-[var(--table-background)]'
+        >
           <TableHeader className='sticky top-0 z-20 bg-[var(--table-header)] shadow-sm'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className='group/row border-0'>
@@ -330,7 +333,7 @@ export function ChannelsTable({
                           exit={{ opacity: 0 }}
                           className='border-0'
                         >
-                          <TableCell colSpan={columns.length} className='whitespace-normal p-0 border-0'>
+                          <TableCell colSpan={columns.length} className='border-0 p-0 whitespace-normal'>
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
