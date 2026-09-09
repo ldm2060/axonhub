@@ -65,27 +65,30 @@ func NewTokenProvider(params TokenProviderParams) *TokenProvider {
 	}
 }
 
-// tokenEnvelope is the z.ai business envelope around the token response. Both
-// providers return the zcode plan JWT as data.token; the provider OAuth token
-// nests under data.zai / data.bigmodel. Z.AI additionally uses a separate
-// business-login call for the JWT; BigModel returns it inline.
+// TokenEnvelopeData is the payload the z.ai business envelope carries around
+// the token response. Both providers return the zcode plan JWT as data.token;
+// the provider OAuth token nests under data.zai / data.bigmodel. Z.AI
+// additionally uses a separate business-login call for the JWT; BigModel
+// returns it inline.
 // {"code":0,"msg":"","data":{"token":"<jwt>","zai":{"access_token","refresh_token"},"bigmodel":{...},"user":{"user_id"},"expires_in":3600}}.
-type tokenEnvelope struct {
-	Code *int   `json:"code"`
-	Msg  string `json:"msg"`
-	Data struct {
-		// Token is the zcode plan JWT (the inference credential).
-		Token     string `json:"token"`
-		ExpiresIn int64  `json:"expires_in"`
-		ZAI       struct {
-			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"refresh_token"`
-		} `json:"zai"`
-		BigModel struct {
-			AccessToken  string `json:"access_token"`
-			RefreshToken string `json:"refresh_token"`
-		} `json:"bigmodel"`
-	} `json:"data"`
+type TokenEnvelopeData struct {
+	// Token is the zcode plan JWT (the inference credential).
+	Token     string `json:"token"`
+	ExpiresIn int64  `json:"expires_in"`
+	ZAI       struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	} `json:"zai"`
+	BigModel struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	} `json:"bigmodel"`
+}
+
+type TokenEnvelope struct {
+	Code *int              `json:"code"`
+	Msg  string            `json:"msg"`
+	Data TokenEnvelopeData `json:"data"`
 }
 
 // businessLoginEnvelope is the api.z.ai business-login response:
@@ -136,7 +139,7 @@ func decodeJSONResponse[T any](body []byte) (*T, error) {
 // token (grant == "refresh_token") for the OAuth access token pair. The
 // provider selects the envelope branch (Provider for z.ai, BigModelProvider for
 // bigmodel.cn).
-func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL, provider, code, refreshToken, redirectURI, state string) (*tokenEnvelope, error) {
+func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL, provider, code, refreshToken, redirectURI, state string) (*TokenEnvelope, error) {
 	if client == nil {
 		return nil, errors.New("http client is nil")
 	}
@@ -170,7 +173,7 @@ func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL,
 		return nil, wrapHttpError(err)
 	}
 
-	envelope, err := decodeJSONResponse[tokenEnvelope](resp.Body)
+	envelope, err := decodeJSONResponse[TokenEnvelope](resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +191,7 @@ func exchangeToken(ctx context.Context, client *httpclient.HttpClient, tokenURL,
 }
 
 // providerAccessToken reads the provider-nested access token from the envelope.
-func providerAccessToken(envelope *tokenEnvelope, provider string) string {
+func providerAccessToken(envelope *TokenEnvelope, provider string) string {
 	if provider == BigModelProvider {
 		return envelope.Data.BigModel.AccessToken
 	}
@@ -196,7 +199,7 @@ func providerAccessToken(envelope *tokenEnvelope, provider string) string {
 }
 
 // providerRefreshToken reads the provider-nested refresh token from the envelope.
-func providerRefreshToken(envelope *tokenEnvelope, provider string) string {
+func providerRefreshToken(envelope *TokenEnvelope, provider string) string {
 	if provider == BigModelProvider {
 		return envelope.Data.BigModel.RefreshToken
 	}
@@ -249,7 +252,7 @@ func exchangeBusinessJWT(ctx context.Context, client *httpclient.HttpClient, bus
 // buildCreds assembles the persisted credential set from a token envelope
 // plus the business JWT (the inference credential). The provider selects which
 // envelope branch holds the OAuth access/refresh tokens.
-func buildCreds(envelope *tokenEnvelope, provider, jwt string, previous *oauth.OAuthCredentials) *oauth.OAuthCredentials {
+func buildCreds(envelope *TokenEnvelope, provider, jwt string, previous *oauth.OAuthCredentials) *oauth.OAuthCredentials {
 	clientID := ClientID
 	if provider == BigModelProvider {
 		clientID = BigModelAppID
@@ -281,7 +284,7 @@ func buildCreds(envelope *tokenEnvelope, provider, jwt string, previous *oauth.O
 	return creds
 }
 
-func expiresIn(envelope *tokenEnvelope) time.Duration {
+func expiresIn(envelope *TokenEnvelope) time.Duration {
 	if envelope.Data.ExpiresIn > 0 {
 		return time.Duration(envelope.Data.ExpiresIn) * time.Second
 	}
@@ -338,9 +341,38 @@ func (p *TokenProvider) Exchange(ctx context.Context, params ExchangeParams) (*o
 	return creds, nil
 }
 
+// CompleteCliFlow turns a ready cli/poll payload into persisted credentials:
+// the JWT comes inline (data.token) for bigmodel, so the token exchange and
+// business-login steps are skipped entirely.
+func (p *TokenProvider) CompleteCliFlow(ctx context.Context, envelope *TokenEnvelope) (*oauth.OAuthCredentials, error) {
+	provider := CliFlowProvider
+
+	jwt := strings.TrimSpace(envelope.Data.Token)
+	if jwt == "" {
+		return nil, errors.New("bigmodel token response missing data.token")
+	}
+
+	creds := buildCreds(envelope, provider, jwt, nil)
+
+	// The BigModel coding-plan endpoints authenticate with a two-part API key,
+	// not the JWT — provision it so the channel is usable immediately.
+	apiKeyID, apiKeySecret, err := ResolveCodingPlanKey(ctx, p.httpClient, creds.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("provision coding-plan key: %w", err)
+	}
+	creds.ZCode.APIKeyID = apiKeyID
+	creds.ZCode.APIKeySecret = apiKeySecret
+
+	p.mu.Lock()
+	p.creds = creds
+	p.mu.Unlock()
+
+	return creds, nil
+}
+
 // resolveJWT obtains the business JWT after a token exchange. BigModel returns
 // it inline as data.token; Z.AI requires the business-login exchange.
-func (p *TokenProvider) resolveJWT(ctx context.Context, provider string, envelope *tokenEnvelope) (string, error) {
+func (p *TokenProvider) resolveJWT(ctx context.Context, provider string, envelope *TokenEnvelope) (string, error) {
 	if provider == BigModelProvider {
 		jwt := strings.TrimSpace(envelope.Data.Token)
 		if jwt == "" {

@@ -10,7 +10,7 @@ export interface OAuthStartResult {
 
 export interface OAuthExchangeInput {
   session_id: string;
-  callback_url: string;
+  callback_url?: string;
   proxy?: ProxyConfig;
 }
 
@@ -38,6 +38,12 @@ export interface OAuthFlowOptions {
    * Callback when credentials are successfully obtained
    */
   onSuccess?: (credentials: string) => void;
+
+  /**
+   * When true, the flow needs no pasted callback URL — exchange polls the
+   * backend until the browser login completes (e.g. ZCode cli flow).
+   */
+  pollMode?: boolean;
 }
 
 export interface OAuthFlowState {
@@ -46,6 +52,8 @@ export interface OAuthFlowState {
   callbackUrl: string;
   isStarting: boolean;
   isExchanging: boolean;
+  /** True when the flow polls server-side and needs no pasted callback. */
+  pollMode: boolean;
 }
 
 export interface OAuthFlowActions {
@@ -74,7 +82,7 @@ export interface OAuthFlowActions {
  * ```
  */
 export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthFlowActions {
-  const { startFn, exchangeFn, proxyConfig, onSuccess } = options;
+  const { startFn, exchangeFn, proxyConfig, onSuccess, pollMode } = options;
   const { t } = useTranslation();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -102,7 +110,7 @@ export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthF
       return;
     }
 
-    if (!callbackUrl.trim()) {
+    if (!pollMode && !callbackUrl.trim()) {
       toast.error(t('channels.dialogs.oauth.errors.callbackUrlRequired'));
       return;
     }
@@ -111,8 +119,12 @@ export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthF
     try {
       const exchangeInput: OAuthExchangeInput = {
         session_id: sessionId,
-        callback_url: callbackUrl.trim(),
       };
+      // Send the pasted callback URL whenever present — even in pollMode, where
+      // it takes precedence as a fallback path (e.g. ZCode zcode:// callback).
+      if (callbackUrl.trim()) {
+        exchangeInput.callback_url = callbackUrl.trim();
+      }
 
       // Add proxy config if provided and type is not disabled/environment
       if (proxyConfig && proxyConfig.type === ProxyType.URL) {
@@ -136,7 +148,7 @@ export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthF
     } finally {
       setIsExchanging(false);
     }
-  }, [sessionId, callbackUrl, exchangeFn, onSuccess, t, proxyConfig]);
+  }, [sessionId, callbackUrl, pollMode, exchangeFn, onSuccess, t, proxyConfig]);
 
   const reset = useCallback(() => {
     setSessionId(null);
@@ -152,6 +164,7 @@ export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthF
     callbackUrl,
     isStarting,
     isExchanging,
+    pollMode: !!pollMode,
     start,
     exchange,
     setCallbackUrl,

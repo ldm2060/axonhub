@@ -9,6 +9,11 @@
 // business JWT exchanged from api.z.ai/api/auth/z/login.
 package zcode
 
+import (
+	"net/url"
+	"strings"
+)
+
 const (
 	// AuthorizeURL is the z.ai authorization page the user logs in on.
 	AuthorizeURL = "https://chat.z.ai/api/oauth/authorize"
@@ -51,7 +56,74 @@ const (
 	// dialog — Firefox shows it in the error page's address bar; Chrome/Edge
 	// log it in the DevTools console after dismissing the "Open ZCode" prompt.
 	RedirectURI = "zcode://oauth/callback"
+
+	// BigModelDesktopRedirectPath is the path of the desktop OAuth login bridge
+	// on the zcode endpoint origin.
+	BigModelDesktopRedirectPath = "/app/oauth/login"
 )
+
+// Runtime endpoint origins, mirrored from the ZCode desktop client
+// (3.10.2 asar, resolveRuntimeZCodeEndpointOrigin): production and test
+// zcode origins, selected by ZCODE_ENV.
+const (
+	EndpointOriginProduction = "https://zcode.z.ai"
+	EndpointOriginTest       = "https://zcode.chatglm.site"
+)
+
+// Env lookup keys used by the desktop client to resolve the runtime endpoint
+// origin — see EndpointOrigin.
+const (
+	EnvKeyEnv             = "ZCODE_ENV"
+	EnvKeyBaseURL         = "ZCODE_BASE_URL"
+	EnvKeyEndpointOrigin  = "ZCODE_ENDPOINT_ORIGIN"
+	EnvKeyProductionURL   = "ZCODE_PRODUCTION_BASE_URL"
+	EnvKeyTestURL         = "ZCODE_TEST_BASE_URL"
+	EnvValueEnvTest       = "test"
+	EnvValueEnvProduction = "production"
+)
+
+// EndpointOrigin resolves the runtime zcode endpoint origin the same way the
+// desktop client does, via the env chain ZCODE_BASE_URL / ZCODE_ENDPOINT_ORIGIN
+// / per-environment URL, falling back to the production origin. getenv is
+// injected so callers can pass os.Getenv.
+func EndpointOrigin(getenv func(string) string) string {
+	if v := getenv(EnvKeyBaseURL); v != "" {
+		return v
+	}
+	if v := getenv(EnvKeyEndpointOrigin); v != "" {
+		return v
+	}
+	if getenv(EnvKeyEnv) == EnvValueEnvTest {
+		if v := getenv(EnvKeyTestURL); v != "" {
+			return v
+		}
+		return EndpointOriginTest
+	}
+	if v := getenv(EnvKeyProductionURL); v != "" {
+		return v
+	}
+	return EndpointOriginProduction
+}
+
+// DesktopRedirectURI builds the redirect_uri the desktop client actually sends
+// at runtime for both providers (3.10.2+ asar, buildDesktopOAuthRedirectUriFromEnv):
+// the zcode origin's desktop OAuth login bridge carrying the bare callback.
+// It replaces the static zcode://oauth/callback in BOTH the authorize URL and
+// the token exchange — the token endpoint validates redirect_uri against the
+// authorize-time value, and a bare zcode://oauth/callback is rejected with
+// code 2007.
+func DesktopRedirectURI(endpointOrigin string) string {
+	u, err := url.Parse(endpointOrigin)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		u = &url.URL{Scheme: "https", Host: strings.TrimPrefix(EndpointOriginProduction, "https://")}
+	}
+	u.Path = BigModelDesktopRedirectPath
+	q := u.Query()
+	q.Set("redirect", RedirectURI)
+	q.Set("app_version", AppVersion)
+	u.RawQuery = q.Encode()
+	return u.String()
+}
 
 // DefaultModels returns the z.ai coding-plan model catalog. It is the fallback
 // used when the live /models listing (which authenticates with the business

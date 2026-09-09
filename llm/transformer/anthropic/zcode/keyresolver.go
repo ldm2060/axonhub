@@ -13,6 +13,7 @@
 package zcode
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -112,6 +113,51 @@ func (o bizOrganization) id() string {
 	return o.ID
 }
 
+// unmarshalOrganizations decodes the getCustomerInfo data payload. The live
+// API has been observed returning an object (with the org list nested under
+// various keys, or a single organization directly) as well as a bare array —
+// accept every shape instead of failing the whole provisioning chain.
+func unmarshalOrganizations(raw json.RawMessage, rawURL string) ([]bizOrganization, error) {
+	trimmed := bytes.TrimSpace(raw)
+
+	var list []bizOrganization
+	if err := json.Unmarshal(trimmed, &list); err == nil {
+		return list, nil
+	}
+
+	var wrapped struct {
+		Organizations []bizOrganization `json:"organizations"`
+		Organization  []bizOrganization `json:"organization"`
+		Orgs          []bizOrganization `json:"orgs"`
+		Data          []bizOrganization `json:"data"`
+		List          []bizOrganization `json:"list"`
+	}
+	if err := json.Unmarshal(trimmed, &wrapped); err == nil {
+		for _, candidate := range [][]bizOrganization{
+			wrapped.Organizations, wrapped.Organization, wrapped.Orgs, wrapped.Data, wrapped.List,
+		} {
+			if len(candidate) > 0 {
+				return candidate, nil
+			}
+		}
+	}
+
+	var one bizOrganization
+	if err := json.Unmarshal(trimmed, &one); err == nil && one.id() != "" {
+		return []bizOrganization{one}, nil
+	}
+
+	return nil, fmt.Errorf("unrecognized getCustomerInfo data shape from %s: %s", rawURL, truncateForLog(raw))
+}
+
+func truncateForLog(raw json.RawMessage) string {
+	const max = 512
+	if len(raw) > max {
+		return string(raw[:max]) + "...(truncated)"
+	}
+	return string(raw)
+}
+
 // ResolveCodingPlanKey provisions (or finds) the BigModel coding-plan API key
 // and returns its two halves. authorization is the raw BigModel OAuth access
 // token from the zcode exchange.
@@ -119,8 +165,15 @@ func ResolveCodingPlanKey(ctx context.Context, client *httpclient.HttpClient, au
 	ctx, cancel := context.WithTimeout(ctx, keyResolutionTimeout)
 	defer cancel()
 
-	var orgs []bizOrganization
-	if err := requestBiz(ctx, client, http.MethodGet, BigModelBizOrigin+"/api/biz/customer/getCustomerInfo", authorization, nil, &orgs); err != nil {
+	infoURL := BigModelBizOrigin + "/api/biz/customer/getCustomerInfo"
+
+	var raw json.RawMessage
+	if err := requestBiz(ctx, client, http.MethodGet, infoURL, authorization, nil, &raw); err != nil {
+		return "", "", fmt.Errorf("resolve customer info: %w", err)
+	}
+
+	orgs, err := unmarshalOrganizations(raw, infoURL)
+	if err != nil {
 		return "", "", fmt.Errorf("resolve customer info: %w", err)
 	}
 

@@ -492,6 +492,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
     startFn: zcodeOAuthStart,
     exchangeFn: zcodeOAuthExchange,
     proxyConfig,
+    pollMode: true,
     onSuccess: (credentials) => {
       form.setValue('credentials.apiKey', credentials, {
         shouldDirty: true,
@@ -1285,20 +1286,41 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
             </div>
           )}
 
-          <div className='mt-3 space-y-2'>
-            <FormLabel className='text-sm font-medium'>{t('channels.dialogs.oauth.labels.callbackUrl')}</FormLabel>
-            <Textarea
-              value={oauth.callbackUrl}
-              onChange={(e) => oauth.setCallbackUrl(e.target.value)}
-              placeholder={t('channels.dialogs.oauth.placeholders.callbackUrl')}
-              className='min-h-[80px] resize-y font-mono text-xs'
-            />
-            <Button type='button' onClick={oauth.exchange} disabled={oauth.isExchanging || !oauth.sessionId}>
-              {oauth.isExchanging
-                ? t('channels.dialogs.oauth.buttons.exchanging')
-                : t('channels.dialogs.oauth.buttons.exchangeAndFillApiKey')}
-            </Button>
-          </div>
+          {oauth.pollMode ? (
+            <div className='mt-3 space-y-2'>
+              <Button type='button' onClick={oauth.exchange} disabled={oauth.isExchanging || !oauth.sessionId}>
+                {oauth.isExchanging
+                  ? t('channels.dialogs.oauth.buttons.waitingForLogin')
+                  : t('channels.dialogs.oauth.buttons.waitForLogin')}
+              </Button>
+              <p className='text-muted-foreground text-xs'>{t('channels.dialogs.oauth.messages.pollModeHint')}</p>
+              {/* Optional paste fallback: if the browser fired a zcode://oauth/callback
+                  link, pasting it here exchanges the authCode directly instead of waiting. */}
+              <FormLabel className='text-sm font-medium'>{t('channels.dialogs.oauth.labels.callbackUrl')}</FormLabel>
+              <Textarea
+                value={oauth.callbackUrl}
+                onChange={(e) => oauth.setCallbackUrl(e.target.value)}
+                placeholder={t('channels.dialogs.oauth.placeholders.callbackUrl')}
+                className='min-h-[80px] resize-y font-mono text-xs'
+              />
+              <p className='text-muted-foreground text-xs'>{t('channels.dialogs.oauth.messages.pollModeCallbackHint')}</p>
+            </div>
+          ) : (
+            <div className='mt-3 space-y-2'>
+              <FormLabel className='text-sm font-medium'>{t('channels.dialogs.oauth.labels.callbackUrl')}</FormLabel>
+              <Textarea
+                value={oauth.callbackUrl}
+                onChange={(e) => oauth.setCallbackUrl(e.target.value)}
+                placeholder={t('channels.dialogs.oauth.placeholders.callbackUrl')}
+                className='min-h-[80px] resize-y font-mono text-xs'
+              />
+              <Button type='button' onClick={oauth.exchange} disabled={oauth.isExchanging || !oauth.sessionId}>
+                {oauth.isExchanging
+                  ? t('channels.dialogs.oauth.buttons.exchanging')
+                  : t('channels.dialogs.oauth.buttons.exchangeAndFillApiKey')}
+              </Button>
+            </div>
+          )}
 
           <p className='mt-2 text-xs text-amber-600 dark:text-amber-400'>{t('channels.dialogs.proxy.oauthHint')}</p>
           <p className='text-muted-foreground mt-2 text-xs'>{description}</p>

@@ -73,6 +73,18 @@ export default defineConfig({
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
       },
+      '/admin/xai': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/zcode': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
+      '/admin/kimicode': {
+        target: process.env.VITE_API_URL || 'http://localhost:8090',
+        changeOrigin: true,
+      },
       '/admin/claudecode': {
         target: process.env.VITE_API_URL || 'http://localhost:8090',
         changeOrigin: true,
