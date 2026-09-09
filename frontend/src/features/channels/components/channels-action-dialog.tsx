@@ -1288,11 +1288,6 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
           {oauth.pollMode ? (
             <div className='mt-3 space-y-2'>
-              <Button type='button' onClick={oauth.exchange} disabled={oauth.isExchanging || !oauth.sessionId}>
-                {oauth.isExchanging
-                  ? t('channels.dialogs.oauth.buttons.waitingForLogin')
-                  : t('channels.dialogs.oauth.buttons.waitForLogin')}
-              </Button>
               <p className='text-muted-foreground text-xs'>{t('channels.dialogs.oauth.messages.pollModeHint')}</p>
               {/* Optional paste fallback: if the browser fired a zcode://oauth/callback
                   link, pasting it here exchanges the authCode directly instead of waiting. */}

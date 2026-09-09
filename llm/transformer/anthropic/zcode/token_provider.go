@@ -8,11 +8,17 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/sync/singleflight"
+	"golang.org/x/sys/windows"
 
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/oauth"
@@ -102,16 +108,102 @@ type businessLoginEnvelope struct {
 	} `json:"data"`
 }
 
+// osVersion returns a best-effort OS version string the way os.version() does
+// in the Electron client (on Windows: the build number, e.g. "10.0.26200").
+func osVersion() string {
+	switch runtime.GOOS {
+	case "windows":
+		if v := windows.RtlGetVersion(); v != nil {
+			return fmt.Sprintf("%d.%d.%d", v.MajorVersion, v.MinorVersion, v.BuildNumber)
+		}
+	case "darwin":
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if out, err := exec.CommandContext(ctx, "sw_vers", "-productVersion").Output(); err == nil {
+			return strings.TrimSpace(string(out))
+		}
+	default:
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if utsname, err := exec.CommandContext(ctx, "uname", "-r").Output(); err == nil {
+			return strings.TrimSpace(string(utsname))
+		}
+	}
+	return "unknown"
+}
+
+// osCategory maps GOOS to the client's X-Os-Category values
+// (darwin→macos, win32→windows, else linux).
+func osCategory() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "macos"
+	case "windows":
+		return "windows"
+	default:
+		return "linux"
+	}
+}
+
+// zcodeHeaders rebuilds the source-header fingerprint the desktop client's
+// NodeApiClient stamps on every request to the zcode endpoint origin
+// (buildZCodeSourceHeadersFromContext in the 3.11.2 asar) plus the per-request
+// x-request-id UUID (withRequestIdHeader).
 func zcodeHeaders() http.Header {
 	header := http.Header{}
-	// The token endpoints accept the plain client fingerprint; the versioned
-	// User-Agent matters on the inference endpoint (see anthropic outbound).
-	header.Set("User-Agent", "ZCode/unknown")
-	header.Set("Http-Referer", "https://zcode.z.ai")
+	header.Set("User-Agent", "ZCode/"+AppVersion)
+	header.Set("Http-Referer", EndpointOriginProduction)
+	header.Set("X-Zcode-App-Version", AppVersion)
 	header.Set("X-Title", "Z Code@electron")
+	header.Set("X-Platform", runtime.GOOS+"-"+runtime.GOARCH)
+	header.Set("X-Release-Channel", "production")
+	header.Set("X-Client-Language", clientLanguage())
+	header.Set("X-Client-Timezone", clientTimezone())
+	header.Set("X-Os-Category", osCategory())
+	header.Set("X-Os-Version", osVersion())
+	header.Set("X-Device-Mid", deviceMid())
+	header.Set("X-Request-ID", uuid.NewString())
 	header.Set("Content-Type", "application/json")
 	header.Set("Accept", "application/json")
 	return header
+}
+
+// clientLanguage mirrors the client's Intl locale lookup (fallback "unknown").
+func clientLanguage() string {
+	loc := os.Getenv("LANG")
+	if loc == "" {
+		loc = os.Getenv("LC_ALL")
+	}
+	if i := strings.IndexAny(loc, ".@"); i > 0 {
+		loc = loc[:i]
+	}
+	if loc == "" {
+		return "unknown"
+	}
+	return loc
+}
+
+// clientTimezone mirrors the client's Intl timeZone lookup (fallback "unknown").
+func clientTimezone() string {
+	return time.Local.String()
+}
+
+// deviceMid reads the telemetry device id the client copies into X-Device-Mid;
+// the file only exists on real desktop installs, so empty means omit.
+func deviceMid() string {
+	if home, err := os.UserHomeDir(); err == nil {
+		for _, rel := range []string{".zcode/telemetry-state.json", "AppData/Roaming/ZCode/telemetry-state.json"} {
+			if data, err := os.ReadFile(filepath.Join(home, filepath.FromSlash(rel))); err == nil {
+				var state struct {
+					DeviceMid string `json:"deviceMid"`
+				}
+				if json.Unmarshal(data, &state) == nil && state.DeviceMid != "" {
+					return state.DeviceMid
+				}
+			}
+		}
+	}
+	return "unknown"
 }
 
 func wrapHttpError(err error) error {

@@ -118,10 +118,10 @@ func DesktopRedirectURI(endpointOrigin string) string {
 		u = &url.URL{Scheme: "https", Host: strings.TrimPrefix(EndpointOriginProduction, "https://")}
 	}
 	u.Path = BigModelDesktopRedirectPath
-	q := u.Query()
-	q.Set("redirect", RedirectURI)
-	q.Set("app_version", AppVersion)
-	u.RawQuery = q.Encode()
+	// The client builds this via URLSearchParams insertion order (redirect
+	// first, then app_version); keep the exact byte sequence because the token
+	// endpoint compares redirect_uri as a string.
+	u.RawQuery = "redirect=" + url.QueryEscape(RedirectURI) + "&app_version=" + url.QueryEscape(AppVersion)
 	return u.String()
 }
 

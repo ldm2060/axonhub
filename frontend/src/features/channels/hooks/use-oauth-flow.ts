@@ -91,64 +91,75 @@ export function useOAuthFlow(options: OAuthFlowOptions): OAuthFlowState & OAuthF
   const [isStarting, setIsStarting] = useState(false);
   const [isExchanging, setIsExchanging] = useState(false);
 
+  const runExchange = useCallback(
+    async (sid: string, pastedCallbackUrl: string) => {
+      if (!sid) {
+        toast.error(t('channels.dialogs.oauth.errors.sessionMissing'));
+        return;
+      }
+
+      if (!pollMode && !pastedCallbackUrl.trim()) {
+        toast.error(t('channels.dialogs.oauth.errors.callbackUrlRequired'));
+        return;
+      }
+
+      setIsExchanging(true);
+      try {
+        const exchangeInput: OAuthExchangeInput = {
+          session_id: sid,
+        };
+        // Send the pasted callback URL whenever present — even in pollMode, where
+        // it takes precedence as a fallback path (e.g. ZCode zcode:// callback).
+        if (pastedCallbackUrl.trim()) {
+          exchangeInput.callback_url = pastedCallbackUrl.trim();
+        }
+
+        // Add proxy config if provided and type is not disabled/environment
+        if (proxyConfig && proxyConfig.type === ProxyType.URL) {
+          exchangeInput.proxy = {
+            type: proxyConfig.type,
+            url: proxyConfig.url,
+            ...(proxyConfig.username && { username: proxyConfig.username }),
+            ...(proxyConfig.password && { password: proxyConfig.password }),
+          };
+        }
+
+        const result = await exchangeFn(exchangeInput);
+
+        if (onSuccess) {
+          onSuccess(result.credentials);
+        }
+
+        toast.success(t('channels.dialogs.oauth.messages.credentialsImported'));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : String(error));
+      } finally {
+        setIsExchanging(false);
+      }
+    },
+    [pollMode, exchangeFn, onSuccess, t, proxyConfig]
+  );
+
+  const exchange = useCallback(() => runExchange(sessionId ?? '', callbackUrl), [runExchange, sessionId, callbackUrl]);
+
   const start = useCallback(async () => {
     setIsStarting(true);
     try {
       const result = await startFn();
       setSessionId(result.session_id);
       setAuthUrl(result.auth_url);
+      // Mirror the desktop client: once the authorize page is up, poll for the
+      // finished login in the background — credentials auto-fill when it
+      // completes, no button click needed.
+      if (pollMode) {
+        void runExchange(result.session_id, '');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setIsStarting(false);
     }
-  }, [startFn]);
-
-  const exchange = useCallback(async () => {
-    if (!sessionId) {
-      toast.error(t('channels.dialogs.oauth.errors.sessionMissing'));
-      return;
-    }
-
-    if (!pollMode && !callbackUrl.trim()) {
-      toast.error(t('channels.dialogs.oauth.errors.callbackUrlRequired'));
-      return;
-    }
-
-    setIsExchanging(true);
-    try {
-      const exchangeInput: OAuthExchangeInput = {
-        session_id: sessionId,
-      };
-      // Send the pasted callback URL whenever present — even in pollMode, where
-      // it takes precedence as a fallback path (e.g. ZCode zcode:// callback).
-      if (callbackUrl.trim()) {
-        exchangeInput.callback_url = callbackUrl.trim();
-      }
-
-      // Add proxy config if provided and type is not disabled/environment
-      if (proxyConfig && proxyConfig.type === ProxyType.URL) {
-        exchangeInput.proxy = {
-          type: proxyConfig.type,
-          url: proxyConfig.url,
-          ...(proxyConfig.username && { username: proxyConfig.username }),
-          ...(proxyConfig.password && { password: proxyConfig.password }),
-        };
-      }
-
-      const result = await exchangeFn(exchangeInput);
-
-      if (onSuccess) {
-        onSuccess(result.credentials);
-      }
-
-      toast.success(t('channels.dialogs.oauth.messages.credentialsImported'));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsExchanging(false);
-    }
-  }, [sessionId, callbackUrl, pollMode, exchangeFn, onSuccess, t, proxyConfig]);
+  }, [startFn, pollMode, runExchange]);
 
   const reset = useCallback(() => {
     setSessionId(null);
