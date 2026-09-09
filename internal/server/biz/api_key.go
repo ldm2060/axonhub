@@ -457,7 +457,7 @@ func (s *APIKeyService) UpdateAPIKey(ctx context.Context, id int, input ent.Upda
 			if !ok {
 				return fmt.Errorf("user not found in context")
 			}
-			if apiKey.UserID != user.ID {
+			if apiKey.UserID != user.ID && !scopes.HasSystemScope(user, scopes.ScopeWriteAPIKeys) {
 				return fmt.Errorf("personal API key can only be modified by its creator")
 			}
 		}
@@ -557,7 +557,7 @@ func (s *APIKeyService) UpdateAPIKeyStatus(ctx context.Context, id int, status a
 		if !ok {
 			return nil, fmt.Errorf("user not found in context")
 		}
-		if existing.UserID != user.ID {
+		if existing.UserID != user.ID && !scopes.HasSystemScope(user, scopes.ScopeWriteAPIKeys) {
 			return nil, fmt.Errorf("personal API key can only be modified by its creator")
 		}
 	}
@@ -662,7 +662,7 @@ func (s *APIKeyService) UpdateAPIKeyProfiles(ctx context.Context, id int, profil
 		if !ok {
 			return nil, fmt.Errorf("user not found in context")
 		}
-		if existing.UserID != user.ID {
+		if existing.UserID != user.ID && !scopes.HasSystemScope(user, scopes.ScopeWriteAPIKeys) {
 			return nil, fmt.Errorf("personal API key can only be modified by its creator")
 		}
 	}
@@ -1095,9 +1095,11 @@ func (s *APIKeyService) bulkUpdateAPIKeyStatus(ctx context.Context, ids []int, s
 		if !ok {
 			return fmt.Errorf("user not found in context")
 		}
-		for _, k := range personalKeys {
-			if k.UserID != user.ID {
-				return fmt.Errorf("personal API key %q can only be %sd by its creator", k.Name, action)
+		if !scopes.HasSystemScope(user, scopes.ScopeWriteAPIKeys) {
+			for _, k := range personalKeys {
+				if k.UserID != user.ID {
+					return fmt.Errorf("personal API key %q can only be %sd by its creator", k.Name, action)
+				}
 			}
 		}
 	}
@@ -1156,7 +1158,7 @@ func (s *APIKeyService) RotateAPIKey(ctx context.Context, id int) (*ent.APIKey, 
 		if !ok {
 			return nil, fmt.Errorf("user not found in context")
 		}
-		if existing.UserID != user.ID {
+		if existing.UserID != user.ID && !scopes.HasSystemScope(user, scopes.ScopeWriteAPIKeys) {
 			return nil, fmt.Errorf("personal API key can only be rotated by its creator")
 		}
 	}
