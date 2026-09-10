@@ -18,7 +18,7 @@ export async function antigravityOAuthStart(
 export async function antigravityOAuthExchange(
   input: {
     session_id: string;
-    callback_url: string;
+    callback_url?: string;
     proxy?: ProxyConfig;
   },
   headers?: Record<string, string>

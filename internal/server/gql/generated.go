@@ -95,7 +95,6 @@ type ResolverRoot interface {
 	ProviderQuotaStatus() ProviderQuotaStatusResolver
 	PublishRequest() PublishRequestResolver
 	Query() QueryResolver
-	QuotaEnforcementSettings() QuotaEnforcementSettingsResolver
 	QuotaMonitorBindingCondition() QuotaMonitorBindingConditionResolver
 	QuotaMonitorTemplate() QuotaMonitorTemplateResolver
 	Request() RequestResolver
@@ -646,6 +645,7 @@ type ComplexityRoot struct {
 		PassThroughUserAgent     func(childComplexity int) int
 		ProviderQuota            func(childComplexity int) int
 		Proxy                    func(childComplexity int) int
+		QuotaRoutingMode         func(childComplexity int) int
 		RateLimit                func(childComplexity int) int
 		RetryableErrorPatterns   func(childComplexity int) int
 		RetryableStatusCodes     func(childComplexity int) int
@@ -1246,7 +1246,7 @@ type ComplexityRoot struct {
 		UpdatePromptProtectionRuleStatus      func(childComplexity int, id objects.GUID, status promptprotectionrule.Status) int
 		UpdatePromptStatus                    func(childComplexity int, id objects.GUID, status prompt.Status) int
 		UpdateProviderQuotaCollectionSettings func(childComplexity int, input UpdateProviderQuotaCollectionSettingsInput) int
-		UpdateQuotaEnforcementSettings        func(childComplexity int, input UpdateQuotaEnforcementSettingsInput) int
+		UpdateQuotaRoutingSettings            func(childComplexity int, input UpdateQuotaRoutingSettingsInput) int
 		UpdateRegistrationSettings            func(childComplexity int, input biz.RegistrationSettings) int
 		UpdateRetryPolicy                     func(childComplexity int, input biz.RetryPolicy) int
 		UpdateRole                            func(childComplexity int, id objects.GUID, input ent.UpdateRoleInput) int
@@ -1671,8 +1671,8 @@ type ComplexityRoot struct {
 		QueryModelChannelConnections    func(childComplexity int, associations []*objects.ModelAssociation) int
 		QueryModels                     func(childComplexity int, input QueryModelsInput) int
 		QueryUnassociatedChannels       func(childComplexity int) int
-		QuotaEnforcementSettings        func(childComplexity int) int
 		QuotaMonitorTemplates           func(childComplexity int) int
+		QuotaRoutingSettings            func(childComplexity int) int
 		RegistrationSettings            func(childComplexity int) int
 		RequestStats                    func(childComplexity int) int
 		RequestStatsByAPIKey            func(childComplexity int, timeWindow *string) int
@@ -1712,12 +1712,6 @@ type ComplexityRoot struct {
 		WebhookNotifierConfig           func(childComplexity int) int
 	}
 
-	QuotaEnforcementSettings struct {
-		AllowedChannelIDs func(childComplexity int) int
-		Enabled           func(childComplexity int) int
-		Mode              func(childComplexity int) int
-	}
-
 	QuotaMonitorBindingCondition struct {
 		Field    func(childComplexity int) int
 		Operator func(childComplexity int) int
@@ -1738,6 +1732,10 @@ type ComplexityRoot struct {
 		Name                  func(childComplexity int) int
 		ProviderType          func(childComplexity int) int
 		Variables             func(childComplexity int) int
+	}
+
+	QuotaRoutingSettings struct {
+		DefaultMode func(childComplexity int) int
 	}
 
 	ReasoningEffortMapping struct {
@@ -2037,6 +2035,7 @@ type ComplexityRoot struct {
 
 	SyncChannelModelsPayload struct {
 		ChannelID       func(childComplexity int) int
+		ManualModels    func(childComplexity int) int
 		SupportedModels func(childComplexity int) int
 	}
 
@@ -2809,7 +2808,7 @@ type MutationResolver interface {
 	UpdateSystemChannelSettings(ctx context.Context, input biz.UpdateSystemChannelSettings) (bool, error)
 	UpdateSystemGeneralSettings(ctx context.Context, input biz.SystemGeneralSettings) (bool, error)
 	UpdateVideoStorageSettings(ctx context.Context, input biz.VideoStorageSettings) (bool, error)
-	UpdateQuotaEnforcementSettings(ctx context.Context, input UpdateQuotaEnforcementSettingsInput) (bool, error)
+	UpdateQuotaRoutingSettings(ctx context.Context, input UpdateQuotaRoutingSettingsInput) (bool, error)
 	UpdateProviderQuotaCollectionSettings(ctx context.Context, input UpdateProviderQuotaCollectionSettingsInput) (bool, error)
 	UpdateSecuritySettings(ctx context.Context, input UpdateSecuritySettingsInput) (bool, error)
 	UpdateTurnstileSettings(ctx context.Context, input UpdateTurnstileSettingsInput) (*TurnstileSettings, error)
@@ -2975,7 +2974,7 @@ type QueryResolver interface {
 	SystemChannelSettings(ctx context.Context) (*biz.SystemChannelSettings, error)
 	SystemGeneralSettings(ctx context.Context) (*biz.SystemGeneralSettings, error)
 	VideoStorageSettings(ctx context.Context) (*biz.VideoStorageSettings, error)
-	QuotaEnforcementSettings(ctx context.Context) (*biz.QuotaEnforcementSettings, error)
+	QuotaRoutingSettings(ctx context.Context) (*biz.QuotaRoutingSettings, error)
 	ProviderQuotaCollectionSettings(ctx context.Context) (*biz.ProviderQuotaCollectionSettings, error)
 	SecuritySettings(ctx context.Context) (*biz.SecuritySettings, error)
 	TurnstileSettings(ctx context.Context) (*TurnstileSettings, error)
@@ -3024,9 +3023,6 @@ type QueryResolver interface {
 	AnalyticsOverview(ctx context.Context, filter *AnalyticsFilter) (*AnalyticsOverview, error)
 	AnalyticsDailyStats(ctx context.Context, filter *AnalyticsFilter) ([]*AnalyticsDailyStat, error)
 	AnalyticsDimensionStats(ctx context.Context, filter *AnalyticsFilter, dimension string) ([]*AnalyticsDimensionStat, error)
-}
-type QuotaEnforcementSettingsResolver interface {
-	AllowedChannelIDs(ctx context.Context, obj *biz.QuotaEnforcementSettings) ([]*objects.GUID, error)
 }
 type QuotaMonitorBindingConditionResolver interface {
 	Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition) (string, error)
@@ -5274,6 +5270,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelSettings.Proxy(childComplexity), true
+	case "ChannelSettings.quotaRoutingMode":
+		if e.complexity.ChannelSettings.QuotaRoutingMode == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.QuotaRoutingMode(childComplexity), true
 	case "ChannelSettings.rateLimit":
 		if e.complexity.ChannelSettings.RateLimit == nil {
 			break
@@ -8362,17 +8364,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateProviderQuotaCollectionSettings(childComplexity, args["input"].(UpdateProviderQuotaCollectionSettingsInput)), true
-	case "Mutation.updateQuotaEnforcementSettings":
-		if e.complexity.Mutation.UpdateQuotaEnforcementSettings == nil {
+	case "Mutation.updateQuotaRoutingSettings":
+		if e.complexity.Mutation.UpdateQuotaRoutingSettings == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateQuotaEnforcementSettings_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_updateQuotaRoutingSettings_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateQuotaEnforcementSettings(childComplexity, args["input"].(UpdateQuotaEnforcementSettingsInput)), true
+		return e.complexity.Mutation.UpdateQuotaRoutingSettings(childComplexity, args["input"].(UpdateQuotaRoutingSettingsInput)), true
 	case "Mutation.updateRegistrationSettings":
 		if e.complexity.Mutation.UpdateRegistrationSettings == nil {
 			break
@@ -10552,18 +10554,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.QueryUnassociatedChannels(childComplexity), true
-	case "Query.quotaEnforcementSettings":
-		if e.complexity.Query.QuotaEnforcementSettings == nil {
-			break
-		}
-
-		return e.complexity.Query.QuotaEnforcementSettings(childComplexity), true
 	case "Query.quotaMonitorTemplates":
 		if e.complexity.Query.QuotaMonitorTemplates == nil {
 			break
 		}
 
 		return e.complexity.Query.QuotaMonitorTemplates(childComplexity), true
+	case "Query.quotaRoutingSettings":
+		if e.complexity.Query.QuotaRoutingSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.QuotaRoutingSettings(childComplexity), true
 	case "Query.registrationSettings":
 		if e.complexity.Query.RegistrationSettings == nil {
 			break
@@ -10867,25 +10869,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.WebhookNotifierConfig(childComplexity), true
 
-	case "QuotaEnforcementSettings.allowedChannelIDs":
-		if e.complexity.QuotaEnforcementSettings.AllowedChannelIDs == nil {
-			break
-		}
-
-		return e.complexity.QuotaEnforcementSettings.AllowedChannelIDs(childComplexity), true
-	case "QuotaEnforcementSettings.enabled":
-		if e.complexity.QuotaEnforcementSettings.Enabled == nil {
-			break
-		}
-
-		return e.complexity.QuotaEnforcementSettings.Enabled(childComplexity), true
-	case "QuotaEnforcementSettings.mode":
-		if e.complexity.QuotaEnforcementSettings.Mode == nil {
-			break
-		}
-
-		return e.complexity.QuotaEnforcementSettings.Mode(childComplexity), true
-
 	case "QuotaMonitorBindingCondition.field":
 		if e.complexity.QuotaMonitorBindingCondition.Field == nil {
 			break
@@ -10983,6 +10966,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.QuotaMonitorTemplate.Variables(childComplexity), true
+
+	case "QuotaRoutingSettings.defaultMode":
+		if e.complexity.QuotaRoutingSettings.DefaultMode == nil {
+			break
+		}
+
+		return e.complexity.QuotaRoutingSettings.DefaultMode(childComplexity), true
 
 	case "ReasoningEffortMapping.from":
 		if e.complexity.ReasoningEffortMapping.From == nil {
@@ -12129,6 +12119,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SyncChannelModelsPayload.ChannelID(childComplexity), true
+	case "SyncChannelModelsPayload.manualModels":
+		if e.complexity.SyncChannelModelsPayload.ManualModels == nil {
+			break
+		}
+
+		return e.complexity.SyncChannelModelsPayload.ManualModels(childComplexity), true
 	case "SyncChannelModelsPayload.supportedModels":
 		if e.complexity.SyncChannelModelsPayload.SupportedModels == nil {
 			break
@@ -14867,7 +14863,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdatePromptProtectionRuleInput,
 		ec.unmarshalInputUpdateProviderQuotaCollectionSettingsInput,
 		ec.unmarshalInputUpdatePublishRequestInput,
-		ec.unmarshalInputUpdateQuotaEnforcementSettingsInput,
+		ec.unmarshalInputUpdateQuotaRoutingSettingsInput,
 		ec.unmarshalInputUpdateRegistrationSettingsInput,
 		ec.unmarshalInputUpdateRequestInput,
 		ec.unmarshalInputUpdateRetryPolicyInput,
@@ -16759,10 +16755,10 @@ func (ec *executionContext) field_Mutation_updateProviderQuotaCollectionSettings
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateQuotaEnforcementSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_updateQuotaRoutingSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateQuotaRoutingSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaRoutingSettingsInput)
 	if err != nil {
 		return nil, err
 	}
@@ -24383,6 +24379,8 @@ func (ec *executionContext) fieldContext_Channel_settings(_ context.Context, fie
 				return ec.fieldContext_ChannelSettings_modelProtocols(ctx, field)
 			case "providerQuota":
 				return ec.fieldContext_ChannelSettings_providerQuota(ctx, field)
+			case "quotaRoutingMode":
+				return ec.fieldContext_ChannelSettings_quotaRoutingMode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelSettings", field.Name)
 		},
@@ -30362,6 +30360,35 @@ func (ec *executionContext) fieldContext_ChannelSettings_providerQuota(_ context
 				return ec.fieldContext_ChannelProviderQuotaSettings_ollama(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelProviderQuotaSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelSettings_quotaRoutingMode(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_quotaRoutingMode,
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaRoutingMode, nil
+		},
+		nil,
+		ec.marshalOChannelQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_quotaRoutingMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ChannelQuotaRoutingMode does not have child fields")
 		},
 	}
 	return fc, nil
@@ -42780,6 +42807,8 @@ func (ec *executionContext) fieldContext_Mutation_syncChannelModels(ctx context.
 				return ec.fieldContext_SyncChannelModelsPayload_channelID(ctx, field)
 			case "supportedModels":
 				return ec.fieldContext_SyncChannelModelsPayload_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_SyncChannelModelsPayload_manualModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SyncChannelModelsPayload", field.Name)
 		},
@@ -44176,15 +44205,15 @@ func (ec *executionContext) fieldContext_Mutation_updateVideoStorageSettings(ctx
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateQuotaEnforcementSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateQuotaRoutingSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Mutation_updateQuotaEnforcementSettings,
+		ec.fieldContext_Mutation_updateQuotaRoutingSettings,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateQuotaEnforcementSettings(ctx, fc.Args["input"].(UpdateQuotaEnforcementSettingsInput))
+			return ec.resolvers.Mutation().UpdateQuotaRoutingSettings(ctx, fc.Args["input"].(UpdateQuotaRoutingSettingsInput))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -44193,7 +44222,7 @@ func (ec *executionContext) _Mutation_updateQuotaEnforcementSettings(ctx context
 	)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateQuotaEnforcementSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateQuotaRoutingSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -44210,7 +44239,7 @@ func (ec *executionContext) fieldContext_Mutation_updateQuotaEnforcementSettings
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateQuotaEnforcementSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateQuotaRoutingSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -56973,23 +57002,23 @@ func (ec *executionContext) fieldContext_Query_videoStorageSettings(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_quotaEnforcementSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_quotaRoutingSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_quotaEnforcementSettings,
+		ec.fieldContext_Query_quotaRoutingSettings,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().QuotaEnforcementSettings(ctx)
+			return ec.resolvers.Query().QuotaRoutingSettings(ctx)
 		},
 		nil,
-		ec.marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementSettings,
+		ec.marshalNQuotaRoutingSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaRoutingSettings,
 		true,
 		true,
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_quotaEnforcementSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_quotaRoutingSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -56997,14 +57026,10 @@ func (ec *executionContext) fieldContext_Query_quotaEnforcementSettings(_ contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "enabled":
-				return ec.fieldContext_QuotaEnforcementSettings_enabled(ctx, field)
-			case "mode":
-				return ec.fieldContext_QuotaEnforcementSettings_mode(ctx, field)
-			case "allowedChannelIDs":
-				return ec.fieldContext_QuotaEnforcementSettings_allowedChannelIDs(ctx, field)
+			case "defaultMode":
+				return ec.fieldContext_QuotaRoutingSettings_defaultMode(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type QuotaEnforcementSettings", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type QuotaRoutingSettings", field.Name)
 		},
 	}
 	return fc, nil
@@ -59554,93 +59579,6 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _QuotaEnforcementSettings_enabled(ctx context.Context, field graphql.CollectedField, obj *biz.QuotaEnforcementSettings) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_QuotaEnforcementSettings_enabled,
-		func(ctx context.Context) (any, error) {
-			return obj.Enabled, nil
-		},
-		nil,
-		ec.marshalNBoolean2bool,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_QuotaEnforcementSettings_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "QuotaEnforcementSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _QuotaEnforcementSettings_mode(ctx context.Context, field graphql.CollectedField, obj *biz.QuotaEnforcementSettings) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_QuotaEnforcementSettings_mode,
-		func(ctx context.Context) (any, error) {
-			return obj.Mode, nil
-		},
-		nil,
-		ec.marshalNQuotaEnforcementMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_QuotaEnforcementSettings_mode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "QuotaEnforcementSettings",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type QuotaEnforcementMode does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _QuotaEnforcementSettings_allowedChannelIDs(ctx context.Context, field graphql.CollectedField, obj *biz.QuotaEnforcementSettings) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_QuotaEnforcementSettings_allowedChannelIDs,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.QuotaEnforcementSettings().AllowedChannelIDs(ctx, obj)
-		},
-		nil,
-		ec.marshalNID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_QuotaEnforcementSettings_allowedChannelIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "QuotaEnforcementSettings",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _QuotaMonitorBindingCondition_field(ctx context.Context, field graphql.CollectedField, obj *objects.QuotaMonitorBindingCondition) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -60156,6 +60094,35 @@ func (ec *executionContext) fieldContext_QuotaMonitorTemplate_displayFields(_ co
 				return ec.fieldContext_DisplayField_groupLabelRef(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DisplayField", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _QuotaRoutingSettings_defaultMode(ctx context.Context, field graphql.CollectedField, obj *biz.QuotaRoutingSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_QuotaRoutingSettings_defaultMode,
+		func(ctx context.Context) (any, error) {
+			return obj.DefaultMode, nil
+		},
+		nil,
+		ec.marshalNQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_QuotaRoutingSettings_defaultMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "QuotaRoutingSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type QuotaRoutingMode does not have child fields")
 		},
 	}
 	return fc, nil
@@ -66350,6 +66317,35 @@ func (ec *executionContext) _SyncChannelModelsPayload_supportedModels(ctx contex
 }
 
 func (ec *executionContext) fieldContext_SyncChannelModelsPayload_supportedModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SyncChannelModelsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SyncChannelModelsPayload_manualModels(ctx context.Context, field graphql.CollectedField, obj *SyncChannelModelsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SyncChannelModelsPayload_manualModels,
+		func(ctx context.Context) (any, error) {
+			return obj.ManualModels, nil
+		},
+		nil,
+		ec.marshalNString2ᚕstringᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SyncChannelModelsPayload_manualModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SyncChannelModelsPayload",
 		Field:      field,
@@ -86462,7 +86458,7 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "modelProtocols", "providerQuota"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "modelProtocols", "providerQuota", "quotaRoutingMode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -86609,6 +86605,13 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.ProviderQuota = data
+		case "quotaRoutingMode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaRoutingMode"))
+			data, err := ec.unmarshalOChannelQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaRoutingMode = data
 		}
 	}
 
@@ -107061,41 +107064,27 @@ func (ec *executionContext) unmarshalInputUpdatePublishRequestInput(ctx context.
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateQuotaEnforcementSettingsInput(ctx context.Context, obj any) (UpdateQuotaEnforcementSettingsInput, error) {
-	var it UpdateQuotaEnforcementSettingsInput
+func (ec *executionContext) unmarshalInputUpdateQuotaRoutingSettingsInput(ctx context.Context, obj any) (UpdateQuotaRoutingSettingsInput, error) {
+	var it UpdateQuotaRoutingSettingsInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"enabled", "mode", "allowedChannelIDs"}
+	fieldsInOrder := [...]string{"defaultMode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "enabled":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		case "defaultMode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("defaultMode"))
+			data, err := ec.unmarshalOQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Enabled = data
-		case "mode":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mode"))
-			data, err := ec.unmarshalOQuotaEnforcementMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Mode = data
-		case "allowedChannelIDs":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedChannelIDs"))
-			data, err := ec.unmarshalOID2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUIDᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.AllowedChannelIDs = data
+			it.DefaultMode = data
 		}
 	}
 
@@ -119505,6 +119494,8 @@ func (ec *executionContext) _ChannelSettings(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "quotaRoutingMode":
+			out.Values[i] = ec._ChannelSettings_quotaRoutingMode(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -124014,9 +124005,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateQuotaEnforcementSettings":
+		case "updateQuotaRoutingSettings":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateQuotaEnforcementSettings(ctx, field)
+				return ec._Mutation_updateQuotaRoutingSettings(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -129119,7 +129110,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "quotaEnforcementSettings":
+		case "quotaRoutingSettings":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -129128,7 +129119,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_quotaEnforcementSettings(ctx, field)
+				res = ec._Query_quotaRoutingSettings(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -130225,86 +130216,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var quotaEnforcementSettingsImplementors = []string{"QuotaEnforcementSettings"}
-
-func (ec *executionContext) _QuotaEnforcementSettings(ctx context.Context, sel ast.SelectionSet, obj *biz.QuotaEnforcementSettings) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, quotaEnforcementSettingsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("QuotaEnforcementSettings")
-		case "enabled":
-			out.Values[i] = ec._QuotaEnforcementSettings_enabled(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "mode":
-			out.Values[i] = ec._QuotaEnforcementSettings_mode(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "allowedChannelIDs":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._QuotaEnforcementSettings_allowedChannelIDs(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var quotaMonitorBindingConditionImplementors = []string{"QuotaMonitorBindingCondition"}
 
 func (ec *executionContext) _QuotaMonitorBindingCondition(ctx context.Context, sel ast.SelectionSet, obj *objects.QuotaMonitorBindingCondition) graphql.Marshaler {
@@ -130570,6 +130481,45 @@ func (ec *executionContext) _QuotaMonitorTemplate(ctx context.Context, sel ast.S
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var quotaRoutingSettingsImplementors = []string{"QuotaRoutingSettings"}
+
+func (ec *executionContext) _QuotaRoutingSettings(ctx context.Context, sel ast.SelectionSet, obj *biz.QuotaRoutingSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, quotaRoutingSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("QuotaRoutingSettings")
+		case "defaultMode":
+			out.Values[i] = ec._QuotaRoutingSettings_defaultMode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -133603,6 +133553,11 @@ func (ec *executionContext) _SyncChannelModelsPayload(ctx context.Context, sel a
 			}
 		case "supportedModels":
 			out.Values[i] = ec._SyncChannelModelsPayload_supportedModels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "manualModels":
+			out.Values[i] = ec._SyncChannelModelsPayload_manualModels(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -145448,30 +145403,6 @@ func (ec *executionContext) unmarshalNQueryModelsInput2githubᚗcomᚋldm2060ᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNQuotaEnforcementMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode(ctx context.Context, v any) (biz.QuotaEnforcementMode, error) {
-	var res biz.QuotaEnforcementMode
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNQuotaEnforcementMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode(ctx context.Context, sel ast.SelectionSet, v biz.QuotaEnforcementMode) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) marshalNQuotaEnforcementSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementSettings(ctx context.Context, sel ast.SelectionSet, v biz.QuotaEnforcementSettings) graphql.Marshaler {
-	return ec._QuotaEnforcementSettings(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNQuotaEnforcementSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementSettings(ctx context.Context, sel ast.SelectionSet, v *biz.QuotaEnforcementSettings) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._QuotaEnforcementSettings(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNQuotaMonitorBindingCondition2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingCondition(ctx context.Context, sel ast.SelectionSet, v objects.QuotaMonitorBindingCondition) graphql.Marshaler {
 	return ec._QuotaMonitorBindingCondition(ctx, sel, &v)
 }
@@ -145577,6 +145508,30 @@ func (ec *executionContext) marshalNQuotaMonitorTemplate2ᚖgithubᚗcomᚋldm20
 		return graphql.Null
 	}
 	return ec._QuotaMonitorTemplate(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, v any) (objects.QuotaRoutingMode, error) {
+	var res objects.QuotaRoutingMode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, sel ast.SelectionSet, v objects.QuotaRoutingMode) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNQuotaRoutingSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaRoutingSettings(ctx context.Context, sel ast.SelectionSet, v biz.QuotaRoutingSettings) graphql.Marshaler {
+	return ec._QuotaRoutingSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNQuotaRoutingSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaRoutingSettings(ctx context.Context, sel ast.SelectionSet, v *biz.QuotaRoutingSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._QuotaRoutingSettings(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNReasoningEffortMapping2githubᚗcomᚋldm2060ᚋaxonhubᚋllmᚐReasoningEffortMapping(ctx context.Context, sel ast.SelectionSet, v llm.ReasoningEffortMapping) graphql.Marshaler {
@@ -147136,8 +147091,8 @@ func (ec *executionContext) unmarshalNUpdateProviderQuotaCollectionSettingsInput
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateQuotaEnforcementSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaEnforcementSettingsInput(ctx context.Context, v any) (UpdateQuotaEnforcementSettingsInput, error) {
-	res, err := ec.unmarshalInputUpdateQuotaEnforcementSettingsInput(ctx, v)
+func (ec *executionContext) unmarshalNUpdateQuotaRoutingSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateQuotaRoutingSettingsInput(ctx context.Context, v any) (UpdateQuotaRoutingSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateQuotaRoutingSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -149900,6 +149855,16 @@ func (ec *executionContext) marshalOChannelQuotaMultiMonitorStrategy2ᚖgithub�
 	if v == nil {
 		return graphql.Null
 	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOChannelQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, v any) (objects.QuotaRoutingMode, error) {
+	var res objects.QuotaRoutingMode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, sel ast.SelectionSet, v objects.QuotaRoutingMode) graphql.Marshaler {
 	return v
 }
 
@@ -154043,22 +154008,6 @@ func (ec *executionContext) unmarshalOPublishRequestWhereInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOQuotaEnforcementMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode(ctx context.Context, v any) (*biz.QuotaEnforcementMode, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(biz.QuotaEnforcementMode)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOQuotaEnforcementMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐQuotaEnforcementMode(ctx context.Context, sel ast.SelectionSet, v *biz.QuotaEnforcementMode) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) unmarshalOQuotaMonitorBindingConditionInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaMonitorBindingConditionᚄ(ctx context.Context, v any) ([]objects.QuotaMonitorBindingCondition, error) {
 	if v == nil {
 		return nil, nil
@@ -154075,6 +154024,22 @@ func (ec *executionContext) unmarshalOQuotaMonitorBindingConditionInput2ᚕgithu
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, v any) (*objects.QuotaRoutingMode, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(objects.QuotaRoutingMode)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, sel ast.SelectionSet, v *objects.QuotaRoutingMode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOReasoningEffortMapping2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋllmᚐReasoningEffortMappingᚄ(ctx context.Context, sel ast.SelectionSet, v []llm.ReasoningEffortMapping) graphql.Marshaler {

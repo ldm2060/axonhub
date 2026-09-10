@@ -111,6 +111,7 @@ const CREATE_CHANNEL_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        quotaRoutingMode
         proxy {
           type
           url
@@ -217,6 +218,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        quotaRoutingMode
         proxy {
           type
           url
@@ -323,6 +325,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        quotaRoutingMode
         proxy {
           type
           url
@@ -429,6 +432,7 @@ const UPDATE_CHANNEL_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        quotaRoutingMode
         proxy {
           type
           url
@@ -648,6 +652,7 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
           hideOriginalModels
           hideMappedModels
           lowercaseModelId
+          quotaRoutingMode
           transformOptions {
             forceArrayInstructions
             forceArrayInputs
@@ -890,6 +895,7 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
           hideOriginalModels
           hideMappedModels
           lowercaseModelId
+          quotaRoutingMode
           transformOptions {
             forceArrayInstructions
             forceArrayInputs
@@ -1043,6 +1049,7 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             hideOriginalModels
             hideMappedModels
             lowercaseModelId
+            quotaRoutingMode
             bodyOverrideOperations {
               op
               path
@@ -1168,7 +1175,7 @@ minInputTokens
 `;
 
 const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
-          id
+           id
           createdAt
           updatedAt
           type
@@ -1189,6 +1196,15 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
           sharedWith
           quotaBindingReady
           quotaMultiMonitorStrategy
+          settings {
+            quotaRoutingMode
+          }
+          providerQuotaStatus {
+            status
+            ready
+            quotaData
+            providerType
+          }
 `;
 
 const CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION = `
@@ -1201,6 +1217,7 @@ const CHANNEL_QUERY_TAGS_SELECTION = `
 
 const CHANNEL_QUERY_PROXY_SELECTION = `
           settings {
+            quotaRoutingMode
             proxy {
               type
               url
@@ -2031,6 +2048,7 @@ const SYNC_CHANNEL_MODELS_MUTATION = `
     syncChannelModels(channelID: $channelID, pattern: $pattern) {
       channelID
       supportedModels
+      manualModels
     }
   }
 `;
@@ -2038,6 +2056,7 @@ const SYNC_CHANNEL_MODELS_MUTATION = `
 const syncChannelModelsPayloadSchema = z.object({
   channelID: z.string(),
   supportedModels: z.array(z.string()),
+  manualModels: z.array(z.string()),
 });
 
 export function useSyncChannelModels() {

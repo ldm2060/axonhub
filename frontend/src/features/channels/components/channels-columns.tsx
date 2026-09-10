@@ -1,7 +1,8 @@
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Row } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
+import type { QuotaRoutingMode } from '../../system/data/system';
 import { Channel } from '../data/schema';
 import { ChannelHealthCell } from './channel-health-cell';
 import { ChannelLimiterCell } from './channel-limiter-cell';
@@ -29,8 +30,9 @@ interface CreateColumnsOptions {
 export const createColumns = (
   t: ReturnType<typeof useTranslation>['t'],
   canWrite: boolean = true,
-  options?: CreateColumnsOptions
+  options?: CreateColumnsOptions & { globalDefaultMode?: QuotaRoutingMode }
 ): ColumnDef<Channel>[] => {
+  const { globalDefaultMode } = options ?? {};
   const columns: ColumnDef<Channel>[] = [
     {
       id: 'expand',
@@ -79,9 +81,9 @@ export const createColumns = (
     {
       accessorKey: 'name',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.name')} className='justify-center' />,
-      cell: NameCell,
+      cell: ({ row }: { row: Row<Channel> }) => <NameCell row={row} globalDefaultMode={globalDefaultMode} />,
       meta: {
-        className: 'w-[18%] min-w-0 text-center',
+        className: 'w-[13%] min-w-0 text-center',
       },
       enableHiding: false,
       enableSorting: true,
@@ -92,7 +94,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.provider')} className='justify-center' />,
       cell: ProviderCell,
       meta: {
-        className: 'text-center',
+        className: 'w-[9%] min-w-0 text-center',
       },
       filterFn: (row, _id, value) => Array.isArray(value) && value.includes(row.original.type),
       enableSorting: true,
@@ -103,7 +105,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.status')} className='justify-center' />,
       cell: StatusSwitchCell,
       meta: {
-        className: 'text-center',
+        className: 'w-[8%] min-w-0 text-center',
       },
       enableSorting: true,
       enableHiding: false,
@@ -114,7 +116,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.quota')} className='justify-center' />,
       cell: QuotaCell,
       meta: {
-        className: 'hidden min-w-0 2xl:table-cell text-center',
+        className: 'hidden w-[23%] min-w-0 2xl:table-cell text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -149,7 +151,7 @@ export const createColumns = (
       ),
       cell: SupportedModelsCell,
       meta: {
-        className: 'w-[22%] min-w-0 max-w-none text-center',
+        className: 'w-[20%] min-w-0 max-w-none text-center',
       },
       enableSorting: false,
     },
@@ -179,7 +181,7 @@ export const createColumns = (
         );
       },
       meta: {
-        className: 'text-center',
+        className: 'w-32 min-w-32 text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -194,7 +196,7 @@ export const createColumns = (
       ),
       cell: OrderingWeightCell,
       meta: {
-        className: 'w-16 min-w-0 text-center',
+        className: 'w-28 min-w-28 text-center',
       },
       sortingFn: 'alphanumeric',
       enableSorting: true,
@@ -219,7 +221,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.actions')} className='justify-center' />,
       cell: ActionCell,
       meta: {
-        className: 'hidden min-w-0 xl:table-cell text-center',
+        className: 'hidden w-28 min-w-28 xl:table-cell text-center',
       },
       enableSorting: false,
       enableHiding: false,

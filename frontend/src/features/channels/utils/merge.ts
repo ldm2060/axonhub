@@ -1,6 +1,6 @@
 // Utility functions for merging channel override configurations
 // Mirrors backend merge logic in internal/server/biz/channel_merge.go
-import type { ChannelSettings, OverrideOperation } from '../data/schema';
+import type { ChannelQuotaRoutingMode, ChannelSettings, OverrideOperation } from '../data/schema';
 
 /**
  * Normalizes empty or whitespace-only parameter strings to "[]".
@@ -131,7 +131,21 @@ export function mergeChannelSettingsForUpdate(
     minInputTokens: pick('minInputTokens', existing?.minInputTokens ?? null),
     modelProtocols: pick('modelProtocols', existing?.modelProtocols ?? []),
     providerQuota: pick('providerQuota', existing?.providerQuota ?? null),
+    quotaRoutingMode: pick('quotaRoutingMode', existing?.quotaRoutingMode ?? undefined),
   };
+}
+
+// Dialog-init recall for the per-channel quota routing mode: an absent
+// settings field displays as INHERIT (the backend stores "" for inherit).
+export function recallQuotaRoutingMode(settings: ChannelSettings | null | undefined): ChannelQuotaRoutingMode {
+  return settings?.quotaRoutingMode ?? 'INHERIT';
+}
+
+// Single dialog-state -> GraphQL-input mapping: every wire value passes
+// through unchanged. Explicit INHERIT is required to override the merge
+// whitelist's stored-value fallback; the backend maps INHERIT to empty storage.
+export function quotaRoutingModeSettingsPatch(mode: ChannelQuotaRoutingMode): Partial<ChannelSettings> {
+  return mode === 'INHERIT' ? { quotaRoutingMode: 'INHERIT' } : { quotaRoutingMode: mode };
 }
 
 /**

@@ -114,13 +114,6 @@ function buildRequestsQuery(
                 }
                 cursor
               }
-              pageInfo {
-                hasNextPage
-                hasPreviousPage
-                startCursor
-                endCursor
-              }
-              totalCount
             }
             usageLogs(first: 1) {
               edges {
@@ -145,7 +138,6 @@ function buildRequestsQuery(
           startCursor
           endCursor
         }
-        totalCount
       }
     }
   `;

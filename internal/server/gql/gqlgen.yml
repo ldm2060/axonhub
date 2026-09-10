@@ -748,9 +748,15 @@ models:
   AutoSyncFrequency:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.AutoSyncFrequency
-  QuotaEnforcementMode:
+  QuotaRoutingMode:
     model:
-      - github.com/ldm2060/axonhub/internal/server/biz.QuotaEnforcementMode
+      - github.com/ldm2060/axonhub/internal/objects.QuotaRoutingMode
+  QuotaRoutingSettings:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.QuotaRoutingSettings
+  ChannelQuotaRoutingMode:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.QuotaRoutingMode
   TraceStickyMode:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.TraceStickyMode

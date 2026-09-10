@@ -13,7 +13,7 @@ export async function xaiOAuthStart(headers?: Record<string, string>): Promise<{
 export async function xaiOAuthExchange(
   input: {
     readonly session_id: string;
-    readonly callback_url: string;
+    readonly callback_url?: string;
     readonly proxy?: ProxyConfig;
   },
   headers?: Record<string, string>

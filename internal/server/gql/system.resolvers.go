@@ -188,30 +188,19 @@ func (r *mutationResolver) UpdateVideoStorageSettings(ctx context.Context, input
 	return true, nil
 }
 
-// UpdateQuotaEnforcementSettings is the resolver for the updateQuotaEnforcementSettings field.
-func (r *mutationResolver) UpdateQuotaEnforcementSettings(ctx context.Context, input UpdateQuotaEnforcementSettingsInput) (bool, error) {
-	current, err := r.systemService.QuotaEnforcementSettings(ctx)
-	if err != nil {
-		return false, fmt.Errorf("failed to read current quota enforcement settings: %w", err)
-	}
-	newSettings := biz.QuotaEnforcementSettings{
-		Enabled:           current.Enabled,
-		Mode:              current.Mode,
-		AllowedChannelIDs: current.AllowedChannelIDs,
-	}
-	if input.Enabled != nil {
-		newSettings.Enabled = *input.Enabled
-	}
-	if input.Mode != nil {
-		newSettings.Mode = *input.Mode
-	}
-	if input.AllowedChannelIDs != nil {
-		newSettings.AllowedChannelIDs = objects.IntGuids(input.AllowedChannelIDs)
+// UpdateQuotaRoutingSettings is the resolver for the updateQuotaRoutingSettings field.
+func (r *mutationResolver) UpdateQuotaRoutingSettings(ctx context.Context, input UpdateQuotaRoutingSettingsInput) (bool, error) {
+	if !authz.HasScope(ctx, scopes.ScopeWriteSettings) {
+		return false, fmt.Errorf("permission denied: requires write_settings scope")
 	}
 
-	err = r.systemService.SetQuotaEnforcementSettings(ctx, newSettings)
-	if err != nil {
-		return false, fmt.Errorf("failed to update quota enforcement settings: %w", err)
+	settings := r.systemService.QuotaRoutingSettingsOrDefault(ctx)
+	if input.DefaultMode != nil {
+		settings.DefaultMode = *input.DefaultMode
+	}
+
+	if err := r.systemService.SetQuotaRoutingSettings(ctx, settings); err != nil {
+		return false, fmt.Errorf("failed to update quota routing settings: %w", err)
 	}
 
 	return true, nil
@@ -738,9 +727,9 @@ func (r *queryResolver) VideoStorageSettings(ctx context.Context) (*biz.VideoSto
 	return r.systemService.VideoStorageSettings(ctx)
 }
 
-// QuotaEnforcementSettings is the resolver for the quotaEnforcementSettings field.
-func (r *queryResolver) QuotaEnforcementSettings(ctx context.Context) (*biz.QuotaEnforcementSettings, error) {
-	return r.systemService.QuotaEnforcementSettings(ctx)
+// QuotaRoutingSettings is the resolver for the quotaRoutingSettings field.
+func (r *queryResolver) QuotaRoutingSettings(ctx context.Context) (*biz.QuotaRoutingSettings, error) {
+	return r.systemService.QuotaRoutingSettings(ctx)
 }
 
 // ProviderQuotaCollectionSettings is the resolver for the providerQuotaCollectionSettings field.
@@ -892,13 +881,6 @@ func (r *queryResolver) EmailSettings(ctx context.Context) (*biz.EmailSettings, 
 	return es, nil
 }
 
-// AllowedChannelIDs is the resolver for the allowedChannelIDs field.
-func (r *quotaEnforcementSettingsResolver) AllowedChannelIDs(ctx context.Context, obj *biz.QuotaEnforcementSettings) ([]*objects.GUID, error) {
-	return lo.Map(obj.AllowedChannelIDs, func(id int, _ int) *objects.GUID {
-		return &objects.GUID{Type: "Channel", ID: id}
-	}), nil
-}
-
 // SampleIntervalSeconds is the resolver for the sampleIntervalSeconds field.
 func (r *systemRuntimeOverviewResolver) SampleIntervalSeconds(ctx context.Context, obj *biz.SystemRuntimeOverview) (int, error) {
 	return obj.SampleInterval, nil
@@ -967,11 +949,6 @@ func (r *Resolver) ProviderQuotaCollectionSettings() ProviderQuotaCollectionSett
 	return &providerQuotaCollectionSettingsResolver{r}
 }
 
-// QuotaEnforcementSettings returns QuotaEnforcementSettingsResolver implementation.
-func (r *Resolver) QuotaEnforcementSettings() QuotaEnforcementSettingsResolver {
-	return &quotaEnforcementSettingsResolver{r}
-}
-
 // SystemRuntimeOverview returns SystemRuntimeOverviewResolver implementation.
 func (r *Resolver) SystemRuntimeOverview() SystemRuntimeOverviewResolver {
 	return &systemRuntimeOverviewResolver{r}
@@ -989,7 +966,30 @@ func (r *Resolver) SystemRuntimeStats() SystemRuntimeStatsResolver {
 
 type emailSettingsResolver struct{ *Resolver }
 type providerQuotaCollectionSettingsResolver struct{ *Resolver }
-type quotaEnforcementSettingsResolver struct{ *Resolver }
 type systemRuntimeOverviewResolver struct{ *Resolver }
 type systemRuntimeSampleResolver struct{ *Resolver }
 type systemRuntimeStatsResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *mutationResolver) ResetChannelQuotaNow(ctx context.Context, channelID objects.GUID) (bool, error) {
+	if !scopes.UserHasScope(ctx, scopes.ScopeWriteChannels) {
+		return false, fmt.Errorf("permission denied: requires write:channels scope")
+	}
+
+	if r.providerQuotaService == nil {
+		return false, fmt.Errorf("provider quota service is not available")
+	}
+
+	if err := r.providerQuotaService.ResetChannelQuotaNow(ctx, channelID.ID); err != nil {
+		return false, fmt.Errorf("failed to reset channel quota: %w", err)
+	}
+
+	return true, nil
+}
+*/

@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/contrib/entgql"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/scopes"
@@ -151,6 +152,18 @@ func (r *channelResolver) ProviderQuotaStatus(ctx context.Context, obj *ent.Chan
 	}
 	if pqs == nil {
 		return nil, nil
+	}
+	if pqs.ProviderType == "" {
+		provider, err := obj.QueryProviderQuotaStatus().
+			Select(providerquotastatus.FieldProviderType).
+			Only(ctx)
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to load provider quota type: %w", err)
+		}
+		pqs.ProviderType = provider.ProviderType
 	}
 
 	enabled, err := r.systemService.IsProviderQuotaCollectionEnabled(ctx, pqs.ProviderType.String())

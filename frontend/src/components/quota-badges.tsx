@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { ChannelQuotaRoutingMode } from '@/features/channels/data/schema';
+import { getChannelQuotaRoutingIndicator } from '@/features/channels/utils/quota-routing-status';
 import {
   useProviderQuotaStatuses,
   ProviderQuotaChannel,
@@ -33,7 +35,7 @@ import {
   resetChannelQuotaNow,
   checkProviderQuotas,
 } from '@/features/system/data/quotas';
-import { useGeneralSettings, useQuotaEnforcementSettings, type QuotaEnforcementMode } from '@/features/system/data/system';
+import { useGeneralSettings, useQuotaRoutingSettings, type QuotaRoutingMode } from '@/features/system/data/system';
 import { capitalizeZenmuxTier, getZenmuxMonthlyQuotaUSD, getZenmuxUsagePercentage } from '@/features/system/data/zenmux-quota-display';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
 import type { UsageMonitorChannel } from '@/features/usage-monitor/data/schema';
@@ -67,6 +69,30 @@ const STATUS_LABELS = {
   exhausted: 'quota.status.exhausted',
   unknown: 'quota.status.unknown',
 } as const;
+
+// Effective routing mode for a channel: its own mode wins unless it defers
+// via INHERIT to the global default. Null when the global default is
+// unavailable (e.g. the viewer lacks read_settings scope) — the mode badge is
+// then omitted instead of guessing.
+function resolveEffectiveRoutingMode(
+  channelMode: ChannelQuotaRoutingMode,
+  globalDefaultMode?: QuotaRoutingMode | null
+): QuotaRoutingMode | null {
+  if (channelMode && channelMode !== 'INHERIT') return channelMode;
+  return globalDefaultMode ?? null;
+}
+
+// Most restrictive mode wins for grouped labels: a shared account advertises
+// the strictest effective mode across every channel sharing it
+// (BACKPRESSURE > REMOVE_ON_EXHAUSTED > IGNORE_QUOTA).
+function mostRestrictiveRoutingMode(modes: Array<QuotaRoutingMode | null>): QuotaRoutingMode | null {
+  const restrictiveness: Record<QuotaRoutingMode, number> = { BACKPRESSURE: 3, REMOVE_ON_EXHAUSTED: 2, IGNORE_QUOTA: 1 };
+  let best: QuotaRoutingMode | null = null;
+  for (const mode of modes) {
+    if (mode && (!best || restrictiveness[mode] > restrictiveness[best])) best = mode;
+  }
+  return best;
+}
 
 type BatteryLevel = 'full' | 'medium' | 'low' | 'empty' | 'warning';
 
@@ -215,7 +241,7 @@ function getChannelPercentage(channel: ProviderQuotaChannel): number {
   } else if (channel.type === 'minimax' || channel.type === 'minimax_anthropic') {
     const qd = channel.quotaStatus.quotaData as ProviderMinimaxQuotaData | undefined;
     percentage = Math.max(0, ...(qd?.rows ?? []).map((row) => Math.max(row.intervalPercent, row.weeklyPercent)));
-  } else if (channel.type === 'zhipu' || channel.type === 'zhipu_anthropic') {
+  } else if (channel.type === 'zhipu' || channel.type === 'zhipu_anthropic' || channel.type === 'zai' || channel.type === 'zai_anthropic') {
     const qd = channel.quotaStatus.quotaData as ProviderZhipuQuotaData | undefined;
     percentage = Math.max(0, ...(qd?.rows ?? []).map((row) => row.usedPercent));
   } else if (isOpenaiType(channel.type) && channel.providerType === 'wafer') {
@@ -388,15 +414,7 @@ function PeriodQuotaEstimate({ limits }: { limits: ProviderQuotaLimit[] }) {
   );
 }
 
-function QuotaRow({
-  channel,
-  enforcementMode,
-  allowedChannelIDs,
-}: {
-  channel: ProviderQuotaChannel;
-  enforcementMode?: QuotaEnforcementMode | null;
-  allowedChannelIDs?: string[] | null;
-}) {
+function QuotaRow({ channel, effectiveMode }: { channel: ProviderQuotaChannel; effectiveMode: QuotaRoutingMode | null }) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [isResetting, setIsResetting] = useState(false);
@@ -406,23 +424,14 @@ function QuotaRow({
   const clinePassUnavailable = channel.type === 'cline' && isClineUnavailablePassQuotaData(channel.quotaStatus.quotaData);
   const statusLabel = clinePassUnavailable ? t('quota.status.cline_pass_unavailable') : t(STATUS_LABELS[status]);
 
-  const isAllowed = allowedChannelIDs?.includes(channel.id) ?? false;
-  // Binding-first: when effective bindings exist and evaluate ready, the
-  // quotaStatus exhaustion/warning is NOT enforced — don't show blocked/deprioritized.
-  // quotaBindingReady === true  → bindings judged ready, skip enforcement badge.
-  // quotaBindingReady === false → bindings judged not-ready, show enforcement badge.
-  // quotaBindingReady == null   → no bindings, fall back to quotaStatus enforcement.
-  const bindingReady = channel.quotaBindingReady;
-
-  const enforcementEffect =
-    enforcementMode &&
-    !isAllowed &&
-    bindingReady !== true &&
-    (status === 'exhausted' || (status === 'warning' && enforcementMode === 'DE_PRIORITIZE'))
-      ? enforcementMode === 'EXHAUSTED_ONLY'
-        ? ('blocked' as const)
-        : ('deprioritized' as const)
-      : null;
+  // Mode-aware effect badge, shown only under quota pressure: IGNORE_QUOTA
+  // channels are exempt from gating (blue), BACKPRESSURE channels are being
+  // throttled (amber), REMOVE_ON_EXHAUSTED channels are removed once exhausted
+  // (red). Without a resolvable mode the badge is omitted.
+  let modeBadge: { key: string; color: string } | null = null;
+  const routingIndicator = getChannelQuotaRoutingIndicator(channel, undefined, effectiveMode, quota.limits, status);
+  if (routingIndicator === 'exhausted') modeBadge = { key: 'quota.status.remove_on_exhausted', color: 'red' };
+  else if (routingIndicator === 'backpressure') modeBadge = { key: 'quota.status.backpressure', color: 'amber' };
 
   const percentage = getChannelPercentage(channel);
   const batteryLevel = getBatteryLevel(percentage, status);
@@ -560,14 +569,9 @@ function QuotaRow({
           >
             {statusLabel}
           </Badge>
-          {enforcementEffect && (
-            <Badge variant='outline' className={BADGE_COLOR_CLASSES[enforcementEffect === 'blocked' ? 'red' : 'amber']}>
-              {t(`quota.status.${enforcementEffect}`)}
-            </Badge>
-          )}
-          {isAllowed && (status === 'exhausted' || status === 'warning') && (
-            <Badge variant='outline' className={BADGE_COLOR_CLASSES.blue}>
-              {t('quota.status.bypassed')}
+          {modeBadge && (
+            <Badge variant='outline' className={BADGE_COLOR_CLASSES[modeBadge.color]}>
+              {t(modeBadge.key)}
             </Badge>
           )}
         </div>
@@ -1577,7 +1581,7 @@ function QuotaRow({
         </div>
       )}
 
-      {(channel.type === 'zhipu' || channel.type === 'zhipu_anthropic') && (
+      {(channel.type === 'zhipu' || channel.type === 'zhipu_anthropic' || channel.type === 'zai' || channel.type === 'zai_anthropic') && (
         <div className='mt-3 space-y-3'>
           {(() => {
             const qd = channel.quotaStatus.quotaData as ProviderZhipuQuotaData | undefined;
@@ -2306,10 +2310,19 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { channels, isLoading, isError, error } = useProviderQuotaStatuses();
-  const { data: enforcementSettings } = useQuotaEnforcementSettings();
+  const { data: routingSettings } = useQuotaRoutingSettings();
   const { data: usageMonitors } = useUsageMonitorChannels();
-  const enforcementMode = enforcementSettings?.enabled ? enforcementSettings.mode : null;
-  const allowedChannelIDs = enforcementSettings?.enabled ? enforcementSettings.allowedChannelIDs : null;
+
+  // Grouped representatives advertise the most restrictive effective mode
+  // across every channel sharing the account; standalone channels use their
+  // own mode with the global default as INHERIT fallback.
+  const effectiveModeFor = (channel: ProviderQuotaChannel): QuotaRoutingMode | null => {
+    if (!channel.sharedAccountNames) return resolveEffectiveRoutingMode(channel.quotaRoutingMode, routingSettings?.defaultMode);
+    const groupModes = channels
+      .filter((c) => c.accountKey === channel.accountKey)
+      .map((c) => resolveEffectiveRoutingMode(c.quotaRoutingMode, routingSettings?.defaultMode));
+    return mostRestrictiveRoutingMode(groupModes);
+  };
 
   const monitorChannels = (usageMonitors ?? []).map(deriveMonitorQuotaEntry).filter((m): m is MonitorQuotaEntry => m !== null);
 
@@ -2386,7 +2399,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
         className={`max-h-[60vh] overflow-y-auto pr-1 pl-1 ${groupedChannels.length > 4 ? 'grid grid-cols-1 gap-x-4 sm:grid-cols-2' : ''}`}
       >
         {groupedChannels.map((channel: ProviderQuotaChannel) => (
-          <QuotaRow key={channel.id} channel={channel} enforcementMode={enforcementMode} allowedChannelIDs={allowedChannelIDs} />
+          <QuotaRow key={channel.id} channel={channel} effectiveMode={effectiveModeFor(channel)} />
         ))}
         {monitorSection}
       </div>

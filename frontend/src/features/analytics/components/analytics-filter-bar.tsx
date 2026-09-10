@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAnalyticsFilterStore } from '@/stores/analyticsStore';
 import { cn, formatUserName } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -124,6 +125,8 @@ export function AnalyticsFilterBar({ earliestDate }: AnalyticsFilterBarProps) {
   const debouncedApiKeySearch = useDebounce(apiKeySearch, 300);
   const { setStartTime, setEndTime, setProjectIDs, setChannelIDs, setModelIDs, setAPIKeyIDs, setUserIDs, resetFilter } =
     useAnalyticsFilterStore();
+  const { userPermissions } = usePermissions();
+  const canViewUsers = userPermissions.canRead;
 
   // Fetch real data for dropdowns
   const { data: channels, isLoading: isLoadingChannels } = useAllChannelSummarys();
@@ -137,7 +140,7 @@ export function AnalyticsFilterBar({ earliestDate }: AnalyticsFilterBarProps) {
   const { data: selectedApiKeysData } = useApiKeyOptionsByIDs(filter.apiKeyIDs, {
     enabled: !!filter.apiKeyIDs?.length,
   });
-  const { data: usersData, isLoading: isLoadingUsers } = useUsers({ first: 100 });
+  const { data: usersData, isLoading: isLoadingUsers } = useUsers({ first: 100 }, { disableAutoFetch: !canViewUsers });
   const { data: projectsData, isLoading: isLoadingProjects } = useProjects({ first: 100 });
 
   const channelOptions = useMemo(
@@ -321,13 +324,15 @@ export function AnalyticsFilterBar({ earliestDate }: AnalyticsFilterBarProps) {
           onLoadMore={fetchNextApiKeyPage}
         />
 
-        <AnalyticsFacetedFilter
-          title={t('analytics.filter.user')}
-          options={userOptions}
-          selectedValues={filter.userIDs || []}
-          onSelectedValuesChange={setUserIDs}
-          isLoading={isLoadingUsers}
-        />
+        {canViewUsers && (
+          <AnalyticsFacetedFilter
+            title={t('analytics.filter.user')}
+            options={userOptions}
+            selectedValues={filter.userIDs || []}
+            onSelectedValuesChange={setUserIDs}
+            isLoading={isLoadingUsers}
+          />
+        )}
 
         {/* Reset Button */}
         {hasFilters && (

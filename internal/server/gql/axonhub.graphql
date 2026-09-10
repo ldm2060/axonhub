@@ -80,6 +80,7 @@ type TransformOptions {
 type SyncChannelModelsPayload {
   channelID: ID!
   supportedModels: [String!]!
+  manualModels: [String!]!
 }
 
 input ReasoningEffortMappingInput {
@@ -209,6 +210,14 @@ type ChannelSettings {
   minInputTokens: Int
   modelProtocols: [ModelProtocol!]
   providerQuota: ChannelProviderQuotaSettings @goField(forceResolver: true)
+  quotaRoutingMode: ChannelQuotaRoutingMode
+}
+
+enum ChannelQuotaRoutingMode {
+  INHERIT
+  IGNORE_QUOTA
+  REMOVE_ON_EXHAUSTED
+  BACKPRESSURE
 }
 
 enum CapabilityPolicy {
@@ -311,6 +320,7 @@ input ChannelSettingsInput {
   minInputTokens: Int
   modelProtocols: [ModelProtocolInput!]
   providerQuota: ChannelProviderQuotaSettingsInput
+  quotaRoutingMode: ChannelQuotaRoutingMode
 }
 
 input ChannelRateLimitInput {

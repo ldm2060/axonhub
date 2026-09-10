@@ -37,7 +37,6 @@ import { CommandCodeIcon } from '../components/commandcode-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
 import { FennoIcon } from '../components/fenno-icon';
 import { NanoGPTIcon } from '../components/nanogpt-icon';
-import { ZCodeIcon } from '../components/zcode-icon';
 import { BURNCLOUD_DEFAULT_MODELS } from './burncloud-models';
 import { ApiFormat, ChannelType } from './schema';
 
@@ -865,7 +864,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     defaultModels: ['glm-4.7', 'glm-5.3', 'glm-5.3-flash', 'glm-5-turbo'],
     apiFormat: ANTHROPIC_MESSAGES,
     color: 'bg-blue-100 text-blue-800 border-blue-200',
-    icon: ZCodeIcon,
+    icon: ZAI,
   },
 };
 

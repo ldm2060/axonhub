@@ -45,15 +45,25 @@ export function useUsers(
 }
 
 export function useUser(id: string) {
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
+  const selectedProjectId = useSelectedProjectId();
+
   return useQuery({
-    queryKey: ['user', id],
+    queryKey: ['user', id, selectedProjectId],
     queryFn: async () => {
-      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } });
-      const user = data.users.edges[0]?.node;
-      if (!user) {
-        throw new Error('User not found');
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } }, headers);
+        const user = data.users.edges[0]?.node;
+        if (!user) {
+          throw new Error(t('users.messages.userNotFound'));
+        }
+        return userSchema.parse(user);
+      } catch (error) {
+        handleError(error, t('common.errors.loadFailed'));
+        throw error;
       }
-      return userSchema.parse(user);
     },
     enabled: !!id,
   });

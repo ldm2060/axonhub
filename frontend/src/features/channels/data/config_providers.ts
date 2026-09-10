@@ -37,7 +37,6 @@ import { CommandCodeIcon } from '../components/commandcode-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
 import { FennoIcon } from '../components/fenno-icon';
 import { NanoGPTIcon } from '../components/nanogpt-icon';
-import { ZCodeIcon } from '../components/zcode-icon';
 import { CHANNEL_CONFIGS } from './config_channels';
 import {
   getApiFormatsForProvider as getApiFormatsForProviderFromConfigs,
@@ -325,7 +324,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
   zcode: {
     provider: 'zcode',
-    icon: ZCodeIcon,
+    icon: ZAI,
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     channelTypes: ['zcode'],
   },

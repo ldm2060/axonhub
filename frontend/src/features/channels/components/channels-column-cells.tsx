@@ -43,10 +43,12 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { parseQuotaLimits } from '../../system/data/quotas';
+import type { QuotaRoutingMode } from '../../system/data/system';
 import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
 import type { Channel, ChannelPolicies } from '../data/schema';
+import { getChannelQuotaRoutingIndicator } from '../utils/quota-routing-status';
 import { ChannelsStatusDialog } from './channels-status-dialog';
 
 const WEIGHT_PRECISION = 4;
@@ -392,13 +394,14 @@ function getProxyURLSummary(proxyURL: string): { label: string; detail?: string 
 }
 
 // Memoized cell components to avoid recreating on every render
-export const NameCell = memo(({ row }: { row: Row<Channel> }) => {
+export const NameCell = memo(({ row, globalDefaultMode }: { row: Row<Channel>; globalDefaultMode?: QuotaRoutingMode }) => {
   const { t } = useTranslation();
   const channel = row.original;
-  const hasError = !!channel.errorMessage;
+  const hasError = channel.errorMessage != null;
   const disabledKeysCount = channel.disabledAPIKeys?.length ?? 0;
   const hasDisabledKeys = disabledKeysCount > 0;
   const websiteURL = getChannelWebsiteURL(channel.baseURL);
+  const quotaRoutingIndicator = getChannelQuotaRoutingIndicator(channel, globalDefaultMode);
 
   const nameElement = websiteURL ? (
     <a
@@ -419,12 +422,24 @@ export const NameCell = memo(({ row }: { row: Row<Channel> }) => {
       <div className='flex max-w-56 items-center gap-2'>
         {hasError && <IconAlertTriangle className='text-destructive h-4 w-4 shrink-0' />}
         {hasDisabledKeys && <IconKeyOff className='h-4 w-4 shrink-0 text-amber-500' />}
+        {quotaRoutingIndicator === 'exhausted' && (
+          <>
+            <IconCoin className='text-destructive h-4 w-4 shrink-0' aria-hidden='true' />
+            <span className='sr-only'>{t('quota.status.exhausted')}</span>
+          </>
+        )}
+        {quotaRoutingIndicator === 'backpressure' && (
+          <>
+            <IconGauge className='h-4 w-4 shrink-0 text-amber-500' aria-hidden='true' />
+            <span className='sr-only'>{t('quota.status.backpressure')}</span>
+          </>
+        )}
         {nameElement}
       </div>
     </div>
   );
 
-  if (!hasError && !hasDisabledKeys) {
+  if (!hasError && !hasDisabledKeys && !quotaRoutingIndicator) {
     return content;
   }
 
@@ -443,6 +458,8 @@ export const NameCell = memo(({ row }: { row: Row<Channel> }) => {
           {hasDisabledKeys && (
             <p className='text-sm text-amber-500'>{t('channels.actions.disabledAPIKeys', { count: disabledKeysCount })}</p>
           )}
+          {quotaRoutingIndicator === 'exhausted' && <p className='text-destructive text-sm'>{t('quota.status.exhausted')}</p>}
+          {quotaRoutingIndicator === 'backpressure' && <p className='text-sm text-amber-500'>{t('quota.status.backpressure')}</p>}
         </div>
       </TooltipContent>
     </Tooltip>

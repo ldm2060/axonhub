@@ -4297,6 +4297,7 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   kimi_code
   minimax
   zhipu
+  zai
   charm_hyper
   zenmux
   commandcode

@@ -120,6 +120,7 @@ async function readPreviewStream(
   }
 }
 
+/** Request detail page with live preview streaming. */
 export default function RequestDetailPage() {
   const { t } = useTranslation();
   const { requestId } = useParams({ from: '/_authenticated/project/requests/$requestId' });
@@ -139,6 +140,7 @@ export default function RequestDetailPage() {
   const previewCompletedRef = useRef(false);
   const previewChunkCountRef = useRef(0);
   const previewChunksRef = useRef<any[]>([]);
+  const previousRequestIdRef = useRef<string | null>(null);
 
   const isResponseActive = activeTab === 'response';
   const { data: requestData, refetch: refetchRequest } = useRequestMetadata(requestGUID, {
@@ -152,13 +154,29 @@ export default function RequestDetailPage() {
     if (!requestData) {
       setPreviewRequest(null);
       setPreviewFallbackActive(false);
+      previousRequestIdRef.current = null;
       return;
     }
 
+    const isSameRequest = previousRequestIdRef.current === requestData.id;
+    previousRequestIdRef.current = requestData.id;
+
     if (requestData.status !== 'processing' || !requestData.stream) {
-      setPreviewRequest(null);
-      setIsPreviewStreaming(false);
-      setPreviewFallbackActive(false);
+      if (isSameRequest && previewChunksRef.current.length) {
+        setIsPreviewStreaming(false);
+        setPreviewFallbackActive(false);
+        setPreviewRequest((current) => {
+          if (!current) return null;
+          return {
+            ...requestData,
+            responseChunks: previewChunksRef.current,
+          } as RequestMetadata;
+        });
+      } else {
+        setPreviewRequest(null);
+        setIsPreviewStreaming(false);
+        setPreviewFallbackActive(false);
+      }
       previewCompletedRef.current = false;
       previewChunkCountRef.current = 0;
       previewChunksRef.current = [];

@@ -13,7 +13,7 @@ export async function codexOAuthStart(headers?: Record<string, string>): Promise
 export async function codexOAuthExchange(
   input: {
     session_id: string;
-    callback_url: string;
+    callback_url?: string;
     proxy?: ProxyConfig;
   },
   headers?: Record<string, string>
