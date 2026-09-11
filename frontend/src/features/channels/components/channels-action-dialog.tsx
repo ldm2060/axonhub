@@ -2120,7 +2120,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
 
                     {/* Right Side - Form Fields */}
                     <div className='flex-1 space-y-6 overflow-y-auto md:pr-4'>
-                      {selectedProvider !== 'jina' && selectedProvider !== 'codex' && selectedProvider !== 'claudecode' && (
+                      {selectedProvider !== 'jina' &&
+                        selectedProvider !== 'codex' &&
+                        selectedProvider !== 'claudecode' &&
+                        selectedProvider !== 'zcode' && (
                         <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
                           <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
                             {t('channels.dialogs.fields.apiFormat.label')}
@@ -2208,6 +2211,18 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                       )}
 
                       {selectedProvider === 'claudecode' && (
+                        <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                          <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                            {t('channels.dialogs.fields.apiFormat.label')}
+                          </FormLabel>
+                          <div className='space-y-1 md:col-span-6'>
+                            <div className='text-sm'>{getApiFormatLabel(ANTHROPIC_MESSAGES)}</div>
+                            <p className='text-muted-foreground mt-1 text-xs'>{t('channels.dialogs.fields.apiFormat.editDisabled')}</p>
+                          </div>
+                        </FormItem>
+                      )}
+
+                      {selectedProvider === 'zcode' && (
                         <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
                           <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
                             {t('channels.dialogs.fields.apiFormat.label')}
