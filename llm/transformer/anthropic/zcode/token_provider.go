@@ -18,7 +18,6 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/singleflight"
-	"golang.org/x/sys/windows"
 
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/oauth"
@@ -113,8 +112,8 @@ type businessLoginEnvelope struct {
 func osVersion() string {
 	switch runtime.GOOS {
 	case "windows":
-		if v := windows.RtlGetVersion(); v != nil {
-			return fmt.Sprintf("%d.%d.%d", v.MajorVersion, v.MinorVersion, v.BuildNumber)
+		if v := osVersionWindows(); v != "unknown" {
+			return v
 		}
 	case "darwin":
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
