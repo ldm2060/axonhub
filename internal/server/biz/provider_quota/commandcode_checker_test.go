@@ -326,7 +326,10 @@ func TestCommandCodeCamelSnakeAndNestedWindowLimits(t *testing.T) {
 // windowLimits.{fiveHour,weekly}.{used,cap,resetAt(ms)}; subscriptions wraps
 // the subscription under "data" with planId/currentPeriodEnd.
 func TestCommandCodeRealWirePayload(t *testing.T) {
-	credits := `{"credits":{"belowThreshold":false,"creditThreshold":0,"monthlyCredits":24.7335198407,"purchasedCredits":0,"premiumMonthlyCredits":0,"opensourceMonthlyCredits":24.7335198407},"windowLimits":{"limited":true,"exceeded":null,"fiveHour":{"used":0.3185113898,"cap":14,"exceeded":false,"resetAt":1788464063798},"weekly":{"used":1.2796088158,"cap":35,"exceeded":false,"resetAt":1789047746618}}}`
+	// resetAt values are the 2026-09 wire shape (millisecond epochs) shifted to
+	// 2033 so NormalizeQuotaData never drops them as expired regardless of when
+	// this test runs.
+	credits := `{"credits":{"belowThreshold":false,"creditThreshold":0,"monthlyCredits":24.7335198407,"purchasedCredits":0,"premiumMonthlyCredits":0,"opensourceMonthlyCredits":24.7335198407},"windowLimits":{"limited":true,"exceeded":null,"fiveHour":{"used":0.3185113898,"cap":14,"exceeded":false,"resetAt":2000000000000},"weekly":{"used":1.2796088158,"cap":35,"exceeded":false,"resetAt":2000057600000}}}`
 	subs := `{"success":true,"data":{"id":"sub_x","status":"active","planId":"individual-goat","currentPeriodEnd":"2026-09-19T12:02:05.000Z","metadata":{"commandCode":"true"}}}`
 
 	quota, err := parseCommandCodeCredits([]byte(credits), []byte(subs))
