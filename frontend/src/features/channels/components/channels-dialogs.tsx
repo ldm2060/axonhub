@@ -12,6 +12,7 @@ import { ChannelsBulkDeleteDialog } from './channels-bulk-delete-dialog';
 import { ChannelsBulkDisableDialog } from './channels-bulk-disable-dialog';
 import { ChannelsBulkEnableDialog } from './channels-bulk-enable-dialog';
 import { ChannelsBulkImportDialog } from './channels-bulk-import-dialog';
+import { ChannelsBulkManageTagsDialog } from './channels-bulk-manage-tags-dialog';
 import { ChannelsBulkOrderingDialog } from './channels-bulk-ordering-dialog';
 import { ChannelsBulkTestDialog } from './channels-bulk-test-dialog';
 import { ChannelsDeleteDialog } from './channels-delete-dialog';
@@ -64,6 +65,8 @@ export function ChannelsDialogs() {
       <ChannelsBulkTestDialog />
 
       <ChannelsBulkDeleteDialog />
+
+      <ChannelsBulkManageTagsDialog />
 
       <ChannelsBulkApplyTemplateDialog
         open={open === 'bulkApplyTemplate'}

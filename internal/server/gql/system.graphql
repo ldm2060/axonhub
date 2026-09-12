@@ -529,6 +529,7 @@ extend type Mutation {
   updateSecuritySettings(input: UpdateSecuritySettingsInput!): Boolean!
   updateTurnstileSettings(input: UpdateTurnstileSettingsInput!): TurnstileSettings!
   checkProviderQuotas: Boolean!
+  resetChannelQuotaNow(channelID: ID!): Boolean!
   triggerGcCleanup(input: TriggerGcCleanupInput!): Boolean!
   saveProxyPreset(input: SaveProxyPresetInput!): Boolean!
   deleteProxyPreset(url: String!): Boolean!
