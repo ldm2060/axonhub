@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { pageInfoSchema } from '@/gql/pagination';
 import { apiKeySchema } from '@/features/apikeys/data/schema';
 import { channelSchema } from '@/features/channels/data';
-import { projectSchema } from '@/features/projects/data/schema';
 import { usageLogSchema } from './usage-logs-schema';
 
 // Request Status
@@ -27,7 +26,6 @@ export const requestExecutionSchema = z.object({
   // channelID: z.number(),
   channel: channelSchema.partial().nullable().optional(),
   modelID: z.string(),
-  reasoningEffort: z.string().nullable().optional(),
   requestHeaders: z.any().nullable().optional(),
   requestBody: z.any(), // JSONRawMessage
   responseBody: z.any().nullable(), // JSONRawMessage
@@ -36,6 +34,7 @@ export const requestExecutionSchema = z.object({
   responseStatusCode: z.number().nullable().optional(),
   status: requestExecutionStatusSchema,
   format: z.string().optional(),
+  reasoningEffort: z.string().nullable().optional(),
   metricsLatencyMs: z.number().nullable().optional(),
   metricsFirstTokenLatencyMs: z.number().nullable().optional(),
   metricsReasoningDurationMs: z.number().nullable().optional(),
@@ -53,7 +52,6 @@ export const requestSchema = z.object({
   apiKey: apiKeySchema.partial().nullable().optional(),
   // channelID: z.string().optional().nullable(),
   channel: channelSchema.partial().nullable().optional(),
-  project: projectSchema.partial().nullable().optional(),
   source: requestSourceSchema,
   modelID: z.string(),
   reasoningEffort: z.string().nullable().optional(),
@@ -101,44 +99,6 @@ export const requestSchema = z.object({
 
 export type Request = z.infer<typeof requestSchema>;
 
-export const requestMetadataSchema = requestSchema.omit({
-  requestHeaders: true,
-  requestBody: true,
-  responseBody: true,
-  responseChunks: true,
-  executions: true,
-});
-export type RequestMetadata = z.infer<typeof requestMetadataSchema>;
-
-export const requestContentSchema = z.object({
-  id: z.string(),
-  requestHeaders: z.any().nullable().optional(),
-  requestBody: z.any().nullable().optional(),
-  responseBody: z.any().nullable().optional(),
-  responseChunks: z.array(z.any()).nullable().optional(),
-});
-export type RequestContent = z.infer<typeof requestContentSchema>;
-
-export const requestExecutionSummarySchema = requestExecutionSchema.omit({
-  requestHeaders: true,
-  requestBody: true,
-  responseBody: true,
-  responseChunks: true,
-});
-export type RequestExecutionSummary = z.infer<typeof requestExecutionSummarySchema>;
-
-export const requestExecutionContentSchema = requestExecutionSchema.pick({
-  id: true,
-  channel: true,
-  format: true,
-  requestURL: true,
-  requestHeaders: true,
-  requestBody: true,
-  responseBody: true,
-  responseChunks: true,
-});
-export type RequestExecutionContent = z.infer<typeof requestExecutionContentSchema>;
-
 // Request Connection (for pagination)
 export const requestConnectionSchema = z.object({
   edges: z.array(
@@ -164,15 +124,3 @@ export const requestExecutionConnectionSchema = z.object({
   totalCount: z.number(),
 });
 export type RequestExecutionConnection = z.infer<typeof requestExecutionConnectionSchema>;
-
-export const requestExecutionSummaryConnectionSchema = z.object({
-  edges: z.array(
-    z.object({
-      node: requestExecutionSummarySchema,
-      cursor: z.string(),
-    })
-  ),
-  pageInfo: pageInfoSchema,
-  totalCount: z.number(),
-});
-export type RequestExecutionSummaryConnection = z.infer<typeof requestExecutionSummaryConnectionSchema>;

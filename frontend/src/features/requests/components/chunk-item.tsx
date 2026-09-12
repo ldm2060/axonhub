@@ -3,8 +3,8 @@ import { Copy, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { copyTextToClipboard } from '@/lib/clipboard';
-import { Button } from '@/components/ui/button';
 import { JsonViewer } from '@/components/json-tree-view';
+import { Button } from '@/components/ui/button';
 
 interface ChunkItemProps {
   chunk: any;
@@ -13,7 +13,7 @@ interface ChunkItemProps {
 
 export function ChunkItem({ chunk, index }: ChunkItemProps) {
   const { t } = useTranslation();
-  const [_copied, setCopied] = useState(false);
+  const [, setCopied] = useState(false);
 
   const formatJson = (data: any) => {
     if (!data) return '';
@@ -58,10 +58,20 @@ export function ChunkItem({ chunk, index }: ChunkItemProps) {
           <JsonViewer data={chunk} rootName='' defaultExpanded={false} className='text-sm' />
         </div>
         <div className='flex gap-2'>
-          <Button variant='ghost' size='icon' className='h-8 w-8' onClick={copyToClipboard}>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={copyToClipboard}
+          >
             <Copy className='h-4 w-4' />
           </Button>
-          <Button variant='ghost' size='icon' className='h-8 w-8' onClick={downloadChunk}>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8'
+            onClick={downloadChunk}
+          >
             <Download className='h-4 w-4' />
           </Button>
         </div>

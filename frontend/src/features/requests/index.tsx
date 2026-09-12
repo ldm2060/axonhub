@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { extractNumberID } from '@/lib/utils';
 import {
   DEFAULT_END_TIME,
   DEFAULT_START_TIME,
@@ -232,7 +231,6 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
     {
       projectId: isAdminScope ? null : undefined,
       scopeToSelectedProject: !isAdminScope,
-      includeAdminFields: isAdminScope,
     }
   );
 
@@ -342,11 +340,10 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
 
   const handleViewDetail = useCallback(
     (requestId: string) => {
-      const numericId = extractNumberID(requestId) || requestId;
       if (isAdminScope) {
         navigate({
           to: '/admin/requests/$requestId',
-          params: { requestId: numericId },
+          params: { requestId },
           search: currentSearch,
         });
         return;
@@ -354,7 +351,7 @@ function RequestsContent({ scope }: { scope: RequestsScope }) {
 
       navigate({
         to: '/project/requests/$requestId',
-        params: { requestId: numericId },
+        params: { requestId },
         search: currentSearch,
       });
     },

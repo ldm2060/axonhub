@@ -16,5 +16,8 @@ test('uses the Seedance task endpoint for generated cURL', () => {
 });
 
 test('shell-escapes model-derived URLs in generated cURL', () => {
-  assert.equal(escapeShellValue("https://example.com/models/a'b:generateContent"), "https://example.com/models/a'\\''b:generateContent");
+  assert.equal(
+    escapeShellValue("https://example.com/models/a'b:generateContent"),
+    "https://example.com/models/a'\\''b:generateContent",
+  );
 });

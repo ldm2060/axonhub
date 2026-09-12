@@ -1,5 +1,5 @@
 import { CHANNEL_CONFIGS } from '@/features/channels/data/config_channels';
-import { ApiFormat, apiFormatSchema } from '@/features/channels/data/schema';
+import { ApiFormat } from '@/features/channels/data/schema';
 import { getApiPath } from './curl-paths';
 import { escapeShellValue } from './curl-shell';
 
@@ -31,7 +31,9 @@ function resolveExecutionURL(options: CurlGeneratorOptions, apiFormat?: ApiForma
   const apiPath = getApiPath(apiFormat, body, channelType);
 
   if (options.baseUrl) {
-    const baseUrlWithoutMarker = options.baseUrl.endsWith('#') ? options.baseUrl.slice(0, -1) : options.baseUrl;
+    const baseUrlWithoutMarker = options.baseUrl.endsWith('#')
+      ? options.baseUrl.slice(0, -1)
+      : options.baseUrl;
     const cleanBaseUrl = baseUrlWithoutMarker.replace(/\/+$/, '');
     // Avoid path duplication: if baseUrl ends with a prefix of apiPath, strip the overlap.
     let combinedPath = apiPath;
@@ -98,7 +100,7 @@ export function generateCurlCommand(options: CurlGeneratorOptions): string {
   } else if (body && isMultipartImage) {
     appendImageFormParts(curlParts, parsedBody, resolvedApiFormat);
   } else if (body) {
-    const bodyStr = typeof body === 'string' ? body : (JSON.stringify(body) ?? String(body));
+    const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
     const escapedBody = bodyStr.replace(/'/g, "'\\''");
     curlParts.push(`  -d '${escapedBody}'`);
   }
@@ -247,13 +249,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-export function generateRequestCurl(headers: Record<string, unknown> | undefined, body: unknown, apiFormat?: string): string {
-  const parsedApiFormat = apiFormatSchema.safeParse(apiFormat);
-
+export function generateRequestCurl(headers: Record<string, unknown> | undefined, body: unknown, apiFormat?: ApiFormat): string {
   return generateCurlCommand({
-    headers: isRecord(headers) ? headers : undefined,
+    headers,
     body,
-    apiFormat: parsedApiFormat.success ? parsedApiFormat.data : 'openai/chat_completions',
+    apiFormat: apiFormat || 'openai/chat_completions',
   });
 }
 
@@ -261,17 +261,15 @@ export function generateExecutionCurl(
   headers: Record<string, unknown> | undefined,
   body: unknown,
   channel?: { baseURL?: string; type?: ChannelType },
-  apiFormat?: string,
+  apiFormat?: ApiFormat,
   requestURL?: string
 ): string {
-  const parsedApiFormat = apiFormatSchema.safeParse(apiFormat);
-
   return generateCurlCommand({
-    headers: isRecord(headers) ? headers : undefined,
+    headers,
     body,
     baseUrl: channel?.baseURL,
     channelType: channel?.type,
-    apiFormat: parsedApiFormat.success ? parsedApiFormat.data : undefined,
+    apiFormat,
     requestURL,
   });
 }

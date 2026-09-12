@@ -1,42 +1,38 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
-import { useParams, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useParams, useNavigate, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, Copy, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { copyTextToClipboard } from '@/lib/clipboard';
-import { buildGUID, extractNumberID } from '@/lib/utils';
+import { extractNumberID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
-import { useRequestMetadata } from '../data';
-import { DEFAULT_REQUEST_DETAIL_TAB, type RequestDetailTab } from './request-content-state';
+import { useRequest } from '../data';
 import { RequestDetailContent } from './request-detail-content';
 
 interface RequestDetailGlobalPageProps {
+  /** Explicit back target for scopes with their own list page (e.g. /admin/requests). */
   backTo?: '/admin/channels' | '/admin/requests';
 }
 
-export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: RequestDetailGlobalPageProps) {
+export default function RequestDetailGlobalPage({ backTo }: RequestDetailGlobalPageProps) {
   const { t } = useTranslation();
+  // Rendered from both /requests/$requestId and /admin/requests/$requestId,
+  // so the route cannot be pinned via `from`.
   const { requestId } = useParams({ strict: false }) as { requestId: string };
-  const requestGUID = buildGUID('Request', requestId);
+  const router = useRouter();
   const navigate = useNavigate();
-  const currentSearch = useRouterState({
-    select: (state) => (state.location.search ?? {}) as Record<string, unknown>,
-  });
-  const [activeTab, setActiveTab] = useState<RequestDetailTab>(DEFAULT_REQUEST_DETAIL_TAB);
-  const { data: request } = useRequestMetadata(requestGUID, { projectId: null, includeAdminFields: backTo === '/admin/requests' });
+  const { data: request } = useRequest(requestId, { projectId: null });
 
   const handleBack = () => {
-    if (backTo === '/admin/requests') {
-      navigate({ to: backTo, search: currentSearch });
+    if (backTo) {
+      void navigate({ to: backTo });
       return;
     }
-
-    navigate({ to: backTo });
+    router.history.back();
   };
 
   const copyRequestID = async () => {
@@ -64,18 +60,11 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
             <div>
               <div className='flex items-center gap-1'>
                 <h1 className='text-lg leading-none font-semibold'>
-                  {t('requests.detail.title')} #
-                  {request ? extractNumberID(request.id) || request.id : extractNumberID(requestId) || requestId}
+                  {t('requests.detail.title')} #{request ? extractNumberID(request.id) || request.id : extractNumberID(requestId) || requestId}
                 </h1>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant='ghost'
-                      size='icon-sm'
-                      className='h-7 w-7'
-                      onClick={() => void copyRequestID()}
-                      aria-label={t('requests.actions.copyRequestId')}
-                    >
+                    <Button variant='ghost' size='icon-sm' className='h-7 w-7' onClick={() => void copyRequestID()} aria-label={t('requests.actions.copyRequestId')}>
                       <Copy className='h-3.5 w-3.5' />
                     </Button>
                   </TooltipTrigger>
@@ -96,14 +85,7 @@ export default function RequestDetailGlobalPage({ backTo = '/admin/channels' }: 
 
       <Main className='flex-1 overflow-auto'>
         <div className='container mx-auto max-w-7xl p-6'>
-          <RequestDetailContent
-            request={request}
-            requestId={requestGUID}
-            projectId={null}
-            activeTab={activeTab}
-            onActiveTabChange={setActiveTab}
-            includeAdminFields={backTo === '/admin/requests'}
-          />
+          <RequestDetailContent requestId={requestId} projectId={null} />
         </div>
       </Main>
     </div>

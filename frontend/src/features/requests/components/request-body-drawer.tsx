@@ -2,13 +2,22 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { ChevronLeft, ChevronRight, ExternalLink, FileText, ChevronsDownUp, ChevronsUpDown, Copy, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Copy,
+  Terminal,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { useSelectedProjectId } from '@/stores/projectStore';
 import { copyTextToClipboard } from '@/lib/clipboard';
-import { cn, extractNumberID } from '@/lib/utils';
+import { extractNumberID, cn } from '@/lib/utils';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
+import { useSelectedProjectId } from '@/stores/projectStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,12 +28,11 @@ import { JsonViewer } from '@/components/json-tree-view';
 import { useRequestPermissions } from '../../../hooks/useRequestPermissions';
 import { useRequest, fetchAdjacentRequestPage } from '../data';
 import { Request, RequestConnection } from '../data/schema';
+import { CurlPreviewDialog } from './curl-preview-dialog';
+import { RequestConversationViewer } from './request-conversation-viewer';
+import { getStatusColor } from './help';
 import { generateRequestCurl } from '../utils/curl-generator';
 import { parseRequestConversation } from '../utils/request-conversation';
-import { CurlPreviewDialog } from './curl-preview-dialog';
-import { getStatusColor } from './help';
-import { RequestConversationViewer } from './request-conversation-viewer';
-import { createNavigationState, flattenNavigationPages, mergeNavigationPage, type NavigationState } from './request-navigation-state';
 
 interface RequestBodyDrawerProps {
   open: boolean;
@@ -39,62 +47,111 @@ interface RequestBodyDrawerProps {
   /** Optional server-side filter currently applied to the table. */
   queryWhere?: Record<string, any>;
   projectId?: string | null;
-  includeAdminFields?: boolean;
   onViewDetail?: (requestId: string) => void;
 }
 
-interface RequestBodyDrawerContentProps {
-  currentRequestId: string;
-  projectId?: string | null;
-  includeAdminFields: boolean;
-}
-
-type RequestPageInfo = RequestConnection['pageInfo'];
-
 const OPEN_ANIMATION_DELAY_MS = 520;
-const MAX_NAVIGATION_PAGES = 3;
-const EMPTY_PAGE_INFO: RequestPageInfo = {
-  hasNextPage: false,
-  hasPreviousPage: false,
-};
 
-function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFields }: RequestBodyDrawerContentProps) {
+export function RequestBodyDrawer({
+  open,
+  onOpenChange,
+  initialRequestId,
+  initialIndex,
+  initialRequests,
+  pageInfo: initialPageInfo,
+  queryWhere,
+  projectId,
+  onViewDetail,
+}: RequestBodyDrawerProps) {
   const { t } = useTranslation();
-  const {
-    data: request,
-    isLoading,
-    isFetching,
-  } = useRequest(currentRequestId, {
-    projectId,
-    enabled: true,
-    includeAdminFields,
-    gcTime: 0,
-    queryScope: 'quick-view',
-  });
-  const displayedRequestRef = useRef<Request | null>(null);
-  const lastAutoBodyRef = useRef<string>('');
-  const [globalExpanded, setGlobalExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState('request');
-  const [requestBodyView, setRequestBodyView] = useState<'conversation' | 'json'>('conversation');
-  const [showCurlPreview, setShowCurlPreview] = useState(false);
-  const [curlCommand, setCurlCommand] = useState('');
+  const navigate = useNavigate();
+  const { navigateWithSearch } = usePaginationSearch({ defaultPageSize: 20 });
+  const permissions = useRequestPermissions();
+  const selectedProjectId = useSelectedProjectId();
+  const effectiveProjectId = projectId !== undefined ? projectId : selectedProjectId;
 
+  // ── internal navigation state ──────────────────────────────────────────────
+  // The drawer manages its own growing list so it can cross page boundaries.
+  const [allRequests, setAllRequests] = useState<Request[]>(initialRequests);
+  const [navPageInfo, setNavPageInfo] = useState(initialPageInfo);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Reset when the drawer is (re)opened for a different request.
+  const prevOpenRef = useRef(false);
+  const isOpeningBeforeStateSync = open && !prevOpenRef.current;
+  useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (justOpened) {
+      setAllRequests(initialRequests);
+      setNavPageInfo(initialPageInfo);
+      setCurrentIndex(initialIndex);
+    }
+  }, [open, initialRequests, initialPageInfo, initialIndex]);
+
+  const visibleRequests = isOpeningBeforeStateSync ? initialRequests : allRequests;
+  const visibleCurrentIndex = isOpeningBeforeStateSync ? initialIndex : currentIndex;
+  const currentRequestId = visibleRequests[visibleCurrentIndex]?.id ?? initialRequestId;
+
+  // ── toggle for expanding/collapsing all string values ────────────────────
+  const [globalExpanded, setGlobalExpanded] = useState(false);
+
+  // Let the Radix sheet finish its enter animation before fetching and mounting
+  // large request bodies. Query parsing and JSON tree rendering can both block
+  // the main thread enough to make the slide-in animation stutter.
+  const [canRenderBody, setCanRenderBody] = useState(false);
+  useEffect(() => {
+    if (!open) {
+      setCanRenderBody(false);
+      setGlobalExpanded(false);
+      return;
+    }
+
+    setCanRenderBody(false);
+    const timeoutId = setTimeout(() => setCanRenderBody(true), OPEN_ANIMATION_DELAY_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [open, initialRequestId]);
+
+  // ── fetch detail for current request ──────────────────────────────────────
+  const { data: request, isLoading, isFetching } = useRequest(currentRequestId ?? '', {
+    projectId: effectiveProjectId,
+    enabled: open && canRenderBody && !!currentRequestId,
+  });
+
+  // Keep previous request data visible while loading the next one.
+  const displayedRequestRef = useRef<Request | null>(null);
+  useEffect(() => {
+    if (!open) {
+      displayedRequestRef.current = null;
+    }
+  }, [open]);
   if (request) displayedRequestRef.current = request;
   const displayedRequest = displayedRequestRef.current;
 
+  // ── active tab ─────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState('request');
+  const [requestBodyView, setRequestBodyView] = useState<'conversation' | 'json'>('conversation');
+
+  // Use the conversation view only when the body actually parses as a conversation.
+  // Only auto-adjust when the underlying request body changes, so manual toggles stick.
+  const lastAutoBodyRef = useRef<string>('');
   useEffect(() => {
     if (!displayedRequest) return;
-
-    const bodyKey = JSON.stringify({
-      id: displayedRequest.id,
-      body: displayedRequest.requestBody,
-      format: displayedRequest.format,
-    });
+    const bodyKey = JSON.stringify({ id: displayedRequest?.id, body: displayedRequest?.requestBody, format: displayedRequest?.format });
     if (bodyKey === lastAutoBodyRef.current) return;
-
     lastAutoBodyRef.current = bodyKey;
-    setRequestBodyView(parseRequestConversation(displayedRequest.requestBody, displayedRequest.format) ? 'conversation' : 'json');
-  }, [displayedRequest]);
+    const isConversation = !!parseRequestConversation(displayedRequest.requestBody, displayedRequest.format);
+    setRequestBodyView(isConversation ? 'conversation' : 'json');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedRequest?.id, displayedRequest?.requestBody, displayedRequest?.format]);
+
+  // ── copy / curl ───────────────────────────────────────────────────────────
+  const [showCurlPreview, setShowCurlPreview] = useState(false);
+  const [curlCommand, setCurlCommand] = useState('');
 
   const copyBody = useCallback(
     async (data: any) => {
@@ -117,307 +174,114 @@ function RequestBodyDrawerContent({ currentRequestId, projectId, includeAdminFie
 
   const handleCurlPreview = useCallback(() => {
     if (!displayedRequest) return;
-    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format);
+    const curl = generateRequestCurl(displayedRequest.requestHeaders, displayedRequest.requestBody, displayedRequest.format as any);
     setCurlCommand(curl);
     setShowCurlPreview(true);
   }, [displayedRequest]);
 
-  if (!displayedRequest && isLoading) {
-    return (
-      <div className='space-y-4 p-6'>
-        <Skeleton className='h-8 w-full' />
-        <Skeleton className='h-64 w-full' />
-        <Skeleton className='h-32 w-full' />
-      </div>
-    );
-  }
+  // List-level data (always available, no loading flash).
+  const listRequest = visibleRequests[visibleCurrentIndex];
 
-  if (!displayedRequest) return null;
-
-  return (
-    <>
-      <div className='relative flex min-h-0 flex-1 flex-col'>
-        {isFetching && <div className='bg-primary/40 absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse' />}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='flex h-full flex-col'>
-          <div className='mx-6 mt-4 flex flex-shrink-0 items-center gap-2'>
-            <TabsList className='grid flex-1 grid-cols-2'>
-              <TabsTrigger value='request'>{t('requests.detail.tabs.request')}</TabsTrigger>
-              <TabsTrigger value='response'>{t('requests.detail.tabs.response')}</TabsTrigger>
-            </TabsList>
-            <Button
-              variant='outline'
-              size='icon'
-              className='h-9 w-9 flex-shrink-0'
-              onClick={() => setGlobalExpanded((value) => !value)}
-              title={globalExpanded ? t('requests.drawer.collapseAll') : t('requests.drawer.expandAll')}
-            >
-              {globalExpanded ? <ChevronsDownUp className='h-4 w-4' /> : <ChevronsUpDown className='h-4 w-4' />}
-            </Button>
-            <Button
-              variant='outline'
-              size='icon'
-              className='h-9 w-9 flex-shrink-0'
-              onClick={() => copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)}
-              title={t('requests.actions.copy')}
-            >
-              <Copy className='h-4 w-4' />
-            </Button>
-            {activeTab === 'request' && (
-              <Button
-                variant='outline'
-                size='icon'
-                className='h-9 w-9 flex-shrink-0'
-                onClick={handleCurlPreview}
-                title={t('requests.actions.copyCurl')}
-              >
-                <Terminal className='h-4 w-4' />
-              </Button>
-            )}
-          </div>
-
-          <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>
-            <div className='flex h-full min-h-0 flex-col'>
-              <div className='bg-muted/40 border-border mb-3 inline-flex h-8 w-fit shrink-0 items-center rounded-md border p-0.5'>
-                <button
-                  type='button'
-                  className={cn(
-                    'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
-                    requestBodyView === 'conversation' && 'bg-background text-foreground shadow-sm'
-                  )}
-                  onClick={() => setRequestBodyView('conversation')}
-                >
-                  {t('requests.detail.tabs.conversation')}
-                </button>
-                <button
-                  type='button'
-                  className={cn(
-                    'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
-                    requestBodyView === 'json' && 'bg-background text-foreground shadow-sm'
-                  )}
-                  onClick={() => setRequestBodyView('json')}
-                >
-                  {t('requests.detail.tabs.json')}
-                </button>
-              </div>
-              <ScrollArea className='bg-muted/20 min-h-0 flex-1 rounded-lg border p-4'>
-                {displayedRequest.requestBody ? (
-                  requestBodyView === 'conversation' ? (
-                    <RequestConversationViewer
-                      key={`conversation-${currentRequestId}`}
-                      body={displayedRequest.requestBody}
-                      format={displayedRequest.format}
-                    />
-                  ) : (
-                    <JsonViewer
-                      key={`req-${currentRequestId}`}
-                      data={displayedRequest.requestBody}
-                      rootName=''
-                      defaultExpanded={true}
-                      expandDepth='all'
-                      hideArrayIndices={true}
-                      globalStringExpanded={globalExpanded}
-                      className='text-sm'
-                    />
-                  )
-                ) : (
-                  <div className='flex h-32 items-center justify-center'>
-                    <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </TabsContent>
-
-          <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pt-4 pb-6'>
-            <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
-              {displayedRequest.responseBody ? (
-                <JsonViewer
-                  key={`res-${currentRequestId}`}
-                  data={displayedRequest.responseBody}
-                  rootName=''
-                  defaultExpanded={true}
-                  expandDepth='all'
-                  hideArrayIndices={true}
-                  globalStringExpanded={globalExpanded}
-                  className='text-sm'
-                />
-              ) : (
-                <div className='flex h-32 items-center justify-center'>
-                  <p className='text-muted-foreground text-sm'>{t('requests.detail.noResponse')}</p>
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </div>
-      <CurlPreviewDialog open={showCurlPreview} onOpenChange={setShowCurlPreview} curlCommand={curlCommand} />
-    </>
-  );
-}
-
-export function RequestBodyDrawer({
-  open,
-  onOpenChange,
-  initialRequestId,
-  initialIndex,
-  initialRequests,
-  pageInfo: initialPageInfo,
-  queryWhere,
-  projectId,
-  includeAdminFields = false,
-  onViewDetail,
-}: RequestBodyDrawerProps) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { navigateWithSearch } = usePaginationSearch({ defaultPageSize: 20 });
-  const permissions = useRequestPermissions({ systemOnly: projectId === null });
-  const selectedProjectId = useSelectedProjectId();
-  const effectiveProjectId = projectId !== undefined ? projectId : selectedProjectId;
-  const [navigation, setNavigation] = useState<NavigationState<Request, RequestPageInfo>>({
-    pages: [],
-    currentIndex: 0,
-  });
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const prevOpenRef = useRef(false);
-  const navigationGenerationRef = useRef(0);
-
-  const isOpeningBeforeStateSync = open && !prevOpenRef.current;
-  const visibleNavigation = isOpeningBeforeStateSync
-    ? createNavigationState({ items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO }, initialIndex)
-    : navigation;
-  const visibleRequests = flattenNavigationPages(visibleNavigation.pages);
-  const currentIndex = visibleNavigation.currentIndex;
-  const currentRequestId = visibleRequests[currentIndex]?.id ?? initialRequestId;
-  const listRequest = visibleRequests[currentIndex];
-  const firstPageInfo = visibleNavigation.pages[0]?.pageInfo;
-  const lastPageInfo = visibleNavigation.pages.at(-1)?.pageInfo;
-
-  useEffect(() => {
-    const justOpened = open && !prevOpenRef.current;
-    prevOpenRef.current = open;
-
-    if (justOpened) {
-      navigationGenerationRef.current += 1;
-      setNavigation(createNavigationState({ items: initialRequests, pageInfo: initialPageInfo ?? EMPTY_PAGE_INFO }, initialIndex));
-      return;
-    }
-
-    if (!open) {
-      navigationGenerationRef.current += 1;
-      setNavigation({ pages: [], currentIndex: 0 });
-      setIsLoadingMore(false);
-    }
-  }, [open, initialRequests, initialPageInfo, initialIndex]);
-
-  const [canRenderBody, setCanRenderBody] = useState(false);
-  useEffect(() => {
-    if (!open) {
-      setCanRenderBody(false);
-      return;
-    }
-
-    setCanRenderBody(false);
-    const timeoutId = setTimeout(() => setCanRenderBody(true), OPEN_ANIMATION_DELAY_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [open, initialRequestId]);
-
-  const canGoPrev = currentIndex < visibleRequests.length - 1 || !!lastPageInfo?.hasNextPage;
-  const canGoNext = currentIndex > 0 || !!firstPageInfo?.hasPreviousPage;
+  // ── navigation ─────────────────────────────────────────────────────────────
+  // The list is DESC (newest first).
+  // → right arrow = "next" = newer = smaller index.
+  // ← left  arrow = "prev" = older = larger index.
+  const canGoPrev = currentIndex < allRequests.length - 1 || !!navPageInfo?.hasNextPage;
+  const canGoNext = currentIndex > 0 || !!navPageInfo?.hasPreviousPage;
 
   const handlePrev = useCallback(async () => {
-    if (currentIndex < visibleRequests.length - 1) {
-      setNavigation((current) => ({ ...current, currentIndex: current.currentIndex + 1 }));
+    if (currentIndex < allRequests.length - 1) {
+      setCurrentIndex((i) => i + 1);
       return;
     }
-    if (!lastPageInfo?.hasNextPage || !lastPageInfo.endCursor || isLoadingMore) return;
-
-    const generation = navigationGenerationRef.current;
+    // Need to load the next (older) page.
+    if (!navPageInfo?.hasNextPage || !navPageInfo.endCursor || isLoadingMore) return;
     setIsLoadingMore(true);
     try {
       const result = await fetchAdjacentRequestPage({
-        cursor: lastPageInfo.endCursor,
+        cursor: navPageInfo.endCursor,
         direction: 'older',
         pageSize: initialRequests.length || 20,
         where: queryWhere,
         permissions,
         projectId: effectiveProjectId,
-        includeAdminFields,
       });
-      if (generation !== navigationGenerationRef.current) return;
-
-      setNavigation((current) =>
-        mergeNavigationPage(current, { items: result.requests, pageInfo: result.pageInfo }, 'older', MAX_NAVIGATION_PAGES)
+      setAllRequests((prev) => {
+        const merged = [...prev, ...result.requests];
+        setCurrentIndex(prev.length); // first item of the new batch
+        return merged;
+      });
+      setNavPageInfo((p) =>
+        p
+          ? { ...p, hasNextPage: result.pageInfo.hasNextPage, endCursor: result.pageInfo.endCursor }
+          : result.pageInfo
       );
     } finally {
-      if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
+      setIsLoadingMore(false);
     }
-  }, [
-    currentIndex,
-    visibleRequests.length,
-    lastPageInfo,
-    isLoadingMore,
-    initialRequests.length,
-    queryWhere,
-    permissions,
-    effectiveProjectId,
-    includeAdminFields,
-  ]);
+  }, [currentIndex, allRequests.length, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length]);
 
   const handleNext = useCallback(async () => {
     if (currentIndex > 0) {
-      setNavigation((current) => ({ ...current, currentIndex: current.currentIndex - 1 }));
+      setCurrentIndex((i) => i - 1);
       return;
     }
-    if (!firstPageInfo?.hasPreviousPage || !firstPageInfo.startCursor || isLoadingMore) return;
-
-    const generation = navigationGenerationRef.current;
+    // Need to load the previous (newer) page.
+    if (!navPageInfo?.hasPreviousPage || !navPageInfo.startCursor || isLoadingMore) return;
     setIsLoadingMore(true);
     try {
       const result = await fetchAdjacentRequestPage({
-        cursor: firstPageInfo.startCursor,
+        cursor: navPageInfo.startCursor,
         direction: 'newer',
         pageSize: initialRequests.length || 20,
         where: queryWhere,
         permissions,
         projectId: effectiveProjectId,
-        includeAdminFields,
       });
-      if (generation !== navigationGenerationRef.current) return;
-
-      setNavigation((current) =>
-        mergeNavigationPage(current, { items: result.requests, pageInfo: result.pageInfo }, 'newer', MAX_NAVIGATION_PAGES)
+      // Prepend newer items; adjust index for shift.
+      setAllRequests((prev) => {
+        const merged = [...result.requests, ...prev];
+        // Navigate to the newest item in the just-fetched batch.
+        setCurrentIndex(result.requests.length - 1);
+        return merged;
+      });
+      setNavPageInfo((p) =>
+        p
+          ? { ...p, hasPreviousPage: result.pageInfo.hasPreviousPage, startCursor: result.pageInfo.startCursor }
+          : result.pageInfo
       );
     } finally {
-      if (generation === navigationGenerationRef.current) setIsLoadingMore(false);
+      setIsLoadingMore(false);
     }
-  }, [currentIndex, firstPageInfo, isLoadingMore, initialRequests.length, queryWhere, permissions, effectiveProjectId, includeAdminFields]);
+  }, [currentIndex, navPageInfo, isLoadingMore, queryWhere, permissions, effectiveProjectId, initialRequests.length]);
 
   const handleViewDetail = useCallback(() => {
-    if (!currentRequestId) return;
-
-    const numericId = extractNumberID(currentRequestId) || currentRequestId;
-    if (onViewDetail) {
-      onViewDetail(currentRequestId);
-    } else if (effectiveProjectId) {
-      navigateWithSearch({
-        to: '/project/requests/$requestId',
-        params: { requestId: numericId },
-      });
-    } else {
-      navigate({
-        to: '/requests/$requestId',
-        params: { requestId: numericId },
-      });
+    if (currentRequestId) {
+      if (onViewDetail) {
+        onViewDetail(currentRequestId);
+      } else if (effectiveProjectId) {
+        navigateWithSearch({
+          to: '/project/requests/$requestId',
+          params: { requestId: currentRequestId },
+        });
+      } else {
+        navigate({
+          to: '/requests/$requestId',
+          params: { requestId: currentRequestId },
+        });
+      }
+      onOpenChange(false);
     }
-    onOpenChange(false);
   }, [currentRequestId, onViewDetail, effectiveProjectId, navigateWithSearch, navigate, onOpenChange]);
 
+  // ── render ─────────────────────────────────────────────────────────────────
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side='right' className='flex w-[min(100vw,clamp(500px,50vw,800px))] max-w-none flex-col gap-0 p-0 sm:max-w-none'>
+      <SheetContent
+        side='right'
+        className='flex w-[min(100vw,clamp(500px,50vw,800px))] max-w-none flex-col gap-0 p-0 sm:max-w-none'
+      >
+        {/* Header */}
         <SheetHeader className='flex-shrink-0 border-b px-6 py-4'>
           <div className='flex items-center justify-between pr-6'>
             <SheetTitle className='flex items-center gap-2 text-base'>
@@ -429,6 +293,8 @@ export function RequestBodyDrawer({
                     {t(`requests.status.${listRequest.status}`)}
                   </Badge>
                 </>
+              ) : isLoading ? (
+                <Skeleton className='h-4 w-16' />
               ) : null}
             </SheetTitle>
 
@@ -453,7 +319,12 @@ export function RequestBodyDrawer({
               >
                 <ChevronRight className='h-4 w-4' />
               </Button>
-              <Button variant='outline' size='sm' onClick={handleViewDetail} className='ml-1 h-7 text-xs'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleViewDetail}
+                className='ml-1 h-7 text-xs'
+              >
                 <ExternalLink className='mr-1 h-3.5 w-3.5' />
                 {t('requests.drawer.viewDetail')}
               </Button>
@@ -461,14 +332,135 @@ export function RequestBodyDrawer({
           </div>
         </SheetHeader>
 
+        {/* Body */}
         <div className='flex min-h-0 flex-1 flex-col'>
-          {open && canRenderBody && currentRequestId ? (
-            <RequestBodyDrawerContent
-              currentRequestId={currentRequestId}
-              projectId={effectiveProjectId}
-              includeAdminFields={includeAdminFields}
-            />
-          ) : open ? (
+          {displayedRequest && canRenderBody ? (
+            <div className='relative flex min-h-0 flex-1 flex-col'>
+              {isFetching && (
+                <div className='absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary/40' />
+              )}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className='flex h-full flex-col'>
+                {/* Tab bar + action buttons */}
+                <div className='mx-6 mt-4 flex flex-shrink-0 items-center gap-2'>
+                  <TabsList className='grid flex-1 grid-cols-2'>
+                    <TabsTrigger value='request'>{t('requests.detail.tabs.request')}</TabsTrigger>
+                    <TabsTrigger value='response'>{t('requests.detail.tabs.response')}</TabsTrigger>
+                  </TabsList>
+                  <Button
+                    variant='outline'
+                    size='icon'
+                    className='h-9 w-9 flex-shrink-0'
+                    onClick={() => setGlobalExpanded((v) => !v)}
+                    title={globalExpanded ? t('requests.drawer.collapseAll') : t('requests.drawer.expandAll')}
+                  >
+                    {globalExpanded ? (
+                      <ChevronsDownUp className='h-4 w-4' />
+                    ) : (
+                      <ChevronsUpDown className='h-4 w-4' />
+                    )}
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='icon'
+                    className='h-9 w-9 flex-shrink-0'
+                    onClick={() =>
+                      copyBody(activeTab === 'request' ? displayedRequest.requestBody : displayedRequest.responseBody)
+                    }
+                    title={t('requests.actions.copy')}
+                  >
+                    <Copy className='h-4 w-4' />
+                  </Button>
+                  {activeTab === 'request' && (
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='h-9 w-9 flex-shrink-0'
+                      onClick={handleCurlPreview}
+                      title={t('requests.actions.copyCurl')}
+                    >
+                      <Terminal className='h-4 w-4' />
+                    </Button>
+                  )}
+                </div>
+
+                <TabsContent value='request' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+                  <div className='bg-muted/40 border-border mb-3 inline-flex h-8 items-center rounded-md border p-0.5'>
+                    <button
+                      type='button'
+                      className={cn(
+                        'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
+                        requestBodyView === 'conversation' && 'bg-background text-foreground shadow-sm'
+                      )}
+                      onClick={() => setRequestBodyView('conversation')}
+                    >
+                      {t('requests.detail.tabs.conversation')}
+                    </button>
+                    <button
+                      type='button'
+                      className={cn(
+                        'text-muted-foreground hover:text-foreground h-full cursor-pointer rounded-md px-3 text-xs transition-colors',
+                        requestBodyView === 'json' && 'bg-background text-foreground shadow-sm'
+                      )}
+                      onClick={() => setRequestBodyView('json')}
+                    >
+                      {t('requests.detail.tabs.json')}
+                    </button>
+                  </div>
+                  {requestBodyView === 'conversation' ? (
+                    <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
+                      {displayedRequest.requestBody ? (
+                        <RequestConversationViewer body={displayedRequest.requestBody} format={displayedRequest.format} />
+                      ) : (
+                        <div className='flex h-32 items-center justify-center'>
+                          <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  ) : (
+                    <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
+                      {displayedRequest.requestBody ? (
+                        <JsonViewer
+                          key={`req-${currentRequestId}`}
+                          data={displayedRequest.requestBody}
+                          rootName=''
+                          defaultExpanded={true}
+                          expandDepth='all'
+                          hideArrayIndices={true}
+                          globalStringExpanded={globalExpanded}
+                          className='text-sm'
+                        />
+                      ) : (
+                        <div className='flex h-32 items-center justify-center'>
+                          <p className='text-muted-foreground text-sm'>{t('requests.drawer.noRequestBody')}</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  )}
+                </TabsContent>
+
+                <TabsContent value='response' className='m-0 min-h-0 flex-1 px-6 pb-6 pt-4'>
+                  <ScrollArea className='bg-muted/20 h-full w-full rounded-lg border p-4'>
+                    {displayedRequest.responseBody ? (
+                      <JsonViewer
+                        key={`res-${currentRequestId}`}
+                        data={displayedRequest.responseBody}
+                        rootName=''
+                        defaultExpanded={true}
+                        expandDepth='all'
+                        hideArrayIndices={true}
+                        globalStringExpanded={globalExpanded}
+                        className='text-sm'
+                      />
+                    ) : (
+                      <div className='flex h-32 items-center justify-center'>
+                        <p className='text-muted-foreground text-sm'>{t('requests.detail.noResponse')}</p>
+                      </div>
+                    )}
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : isLoading || !canRenderBody ? (
             <div className='space-y-4 p-6'>
               <Skeleton className='h-8 w-full' />
               <Skeleton className='h-64 w-full' />
@@ -477,6 +469,7 @@ export function RequestBodyDrawer({
           ) : null}
         </div>
       </SheetContent>
+      <CurlPreviewDialog open={showCurlPreview} onOpenChange={setShowCurlPreview} curlCommand={curlCommand} />
     </Sheet>
   );
 }

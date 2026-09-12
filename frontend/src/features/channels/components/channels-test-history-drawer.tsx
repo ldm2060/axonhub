@@ -87,7 +87,7 @@ export function ChannelsTestHistoryDrawer({ open, onOpenChange, channel }: Props
 
   const handleCurlPreview = () => {
     if (!request) return;
-    const curl = generateRequestCurl(request.requestHeaders, request.requestBody, request.format);
+    const curl = generateRequestCurl(request.requestHeaders, request.requestBody, request.format as any);
     setCurlCommand(curl);
     setShowCurlPreview(true);
   };
@@ -95,10 +95,9 @@ export function ChannelsTestHistoryDrawer({ open, onOpenChange, channel }: Props
   const handleViewDetail = () => {
     if (!selectedRequestId) return;
     onOpenChange(false);
-    const numericId = extractNumberID(selectedRequestId) || selectedRequestId;
     navigate({
       to: '/requests/$requestId',
-      params: { requestId: numericId },
+      params: { requestId: selectedRequestId },
     });
   };
 
