@@ -432,16 +432,22 @@ func (s *RequestSigner) setBypass() {
 }
 
 // readBodyForRetry buffers (and restores) the response body so a verify
-// rejection can be inspected without consuming it for the caller. It returns
-// nil on error, leaving the body untouched.
+// rejection can be inspected without consuming it for the caller. Verify
+// rejections only ever arrive on 401, so every other response — notably
+// streaming SSE bodies — is left untouched: buffering would block until the
+// limit is reached and replace the body with just those bytes, silently
+// truncating streams larger than the limit (usage is lost with them). The
+// buffered prefix is always re-attached ahead of the remaining stream, so
+// nothing is dropped even when the read fails partway. It returns nil when
+// the body was not buffered or could not be read.
 func readBodyForRetry(resp *http.Response) []byte {
-	if resp.Body == nil {
+	if resp.Body == nil || resp.StatusCode != http.StatusUnauthorized {
 		return nil
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<16))
+	resp.Body = io.NopCloser(io.MultiReader(bytes.NewReader(body), resp.Body))
 	if err != nil {
 		return nil
 	}
-	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return body
 }
