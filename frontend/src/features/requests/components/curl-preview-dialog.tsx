@@ -37,7 +37,7 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
       modified = modified.replace(/,\s*}/g, '}');
       // 3. 清理对象开头多余的逗号: { , "a": 1} -> {"a": 1}
       modified = modified.replace(/{\s*,/g, '{');
-      
+
       await copyTextToClipboard(modified);
       setNonStreamCopied(true);
       setTimeout(() => setNonStreamCopied(false), 2000);
@@ -56,12 +56,7 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    onClick={handleCopy}
-                  >
+                  <Button variant='ghost' size='icon' className='h-8 w-8' onClick={handleCopy}>
                     {copied ? <Check className='h-4 w-4 text-green-500' /> : <Copy className='h-4 w-4' />}
                   </Button>
                 </TooltipTrigger>
@@ -72,17 +67,8 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-8 w-8'
-                    onClick={handleCopyNonStream}
-                  >
-                    {nonStreamCopied ? (
-                      <Check className='h-4 w-4 text-green-500' />
-                    ) : (
-                      <CopyX className='h-4 w-4' />
-                    )}
+                  <Button variant='ghost' size='icon' className='h-8 w-8' onClick={handleCopyNonStream}>
+                    {nonStreamCopied ? <Check className='h-4 w-4 text-green-500' /> : <CopyX className='h-4 w-4' />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -94,7 +80,7 @@ export function CurlPreviewDialog({ open, onOpenChange, curlCommand, title }: Cu
         </DialogHeader>
 
         <div className='bg-muted/30 flex-1 overflow-auto rounded-lg border p-4'>
-          <pre className='whitespace-pre-wrap break-all font-mono text-sm'>{curlCommand}</pre>
+          <pre className='font-mono text-sm break-all whitespace-pre-wrap'>{curlCommand}</pre>
         </div>
       </DialogContent>
     </Dialog>

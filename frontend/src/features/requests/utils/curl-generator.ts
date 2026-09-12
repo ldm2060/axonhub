@@ -31,9 +31,7 @@ function resolveExecutionURL(options: CurlGeneratorOptions, apiFormat?: ApiForma
   const apiPath = getApiPath(apiFormat, body, channelType);
 
   if (options.baseUrl) {
-    const baseUrlWithoutMarker = options.baseUrl.endsWith('#')
-      ? options.baseUrl.slice(0, -1)
-      : options.baseUrl;
+    const baseUrlWithoutMarker = options.baseUrl.endsWith('#') ? options.baseUrl.slice(0, -1) : options.baseUrl;
     const cleanBaseUrl = baseUrlWithoutMarker.replace(/\/+$/, '');
     // Avoid path duplication: if baseUrl ends with a prefix of apiPath, strip the overlap.
     let combinedPath = apiPath;

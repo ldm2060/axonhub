@@ -112,7 +112,13 @@ function normalizeOpenAITools(tools: unknown): ConversationTool[] {
 }
 
 /** Anthropic message content blocks. */
-function parseAnthropicContent(content: unknown): { text: string; reasoning?: string; toolCalls?: ConversationToolCall[]; toolResult?: { id: string; content: string }; parts?: any[] } {
+function parseAnthropicContent(content: unknown): {
+  text: string;
+  reasoning?: string;
+  toolCalls?: ConversationToolCall[];
+  toolResult?: { id: string; content: string };
+  parts?: any[];
+} {
   if (typeof content === 'string') return { text: content };
   if (!Array.isArray(content)) return { text: '' };
 
@@ -179,7 +185,13 @@ function normalizeAnthropicTools(tools: unknown): ConversationTool[] {
 }
 
 /** Gemini content parts. */
-function parseGeminiContent(parts: unknown): { text: string; reasoning?: string; toolCalls?: ConversationToolCall[]; toolResult?: { id: string; content: string }; partsRaw?: any[] } {
+function parseGeminiContent(parts: unknown): {
+  text: string;
+  reasoning?: string;
+  toolCalls?: ConversationToolCall[];
+  toolResult?: { id: string; content: string };
+  partsRaw?: any[];
+} {
   if (!Array.isArray(parts)) return { text: '' };
 
   let text = '';
@@ -244,7 +256,13 @@ function normalizeGeminiTools(tools: unknown): ConversationTool[] {
 }
 
 /** AI SDK message parts. */
-function parseAiSdkContent(parts: unknown): { text: string; reasoning?: string; toolCalls?: ConversationToolCall[]; toolResults?: { id: string; content: string }[]; partsRaw?: any[] } {
+function parseAiSdkContent(parts: unknown): {
+  text: string;
+  reasoning?: string;
+  toolCalls?: ConversationToolCall[];
+  toolResults?: { id: string; content: string }[];
+  partsRaw?: any[];
+} {
   if (!Array.isArray(parts)) return { text: '' };
 
   let text = '';
@@ -295,12 +313,21 @@ function parseAiSdkContent(parts: unknown): { text: string; reasoning?: string; 
 
 function isAiSdkShape(messages: unknown): boolean {
   if (!Array.isArray(messages)) return false;
-  return messages.some((m) => isRecord(m) && Array.isArray(m.parts) && m.parts.length > 0 && m.parts.some((p) => isRecord(p) && typeof p.type === 'string'));
+  return messages.some(
+    (m) => isRecord(m) && Array.isArray(m.parts) && m.parts.length > 0 && m.parts.some((p) => isRecord(p) && typeof p.type === 'string')
+  );
 }
 
 function isAnthropicShape(messages: unknown): boolean {
   if (!Array.isArray(messages)) return false;
-  return messages.some((m) => isRecord(m) && Array.isArray(m.content) && m.content.some((b) => isRecord(b) && typeof b.type === 'string' && ['thinking', 'tool_use', 'tool_result', 'redacted_thinking'].includes(b.type)));
+  return messages.some(
+    (m) =>
+      isRecord(m) &&
+      Array.isArray(m.content) &&
+      m.content.some(
+        (b) => isRecord(b) && typeof b.type === 'string' && ['thinking', 'tool_use', 'tool_result', 'redacted_thinking'].includes(b.type)
+      )
+  );
 }
 
 /**
@@ -331,7 +358,8 @@ export function parseRequestConversation(body: unknown, format?: string): Conver
       body.messages.forEach((m) => {
         if (!isRecord(m)) return;
         const parsed = parseAnthropicContent(m.content);
-        const role = m.role === 'assistant' ? 'assistant' : m.role === 'user' ? 'user' : m.role === 'system' ? 'system' : stringify(m.role) || 'user';
+        const role =
+          m.role === 'assistant' ? 'assistant' : m.role === 'user' ? 'user' : m.role === 'system' ? 'system' : stringify(m.role) || 'user';
         messages.push({
           index: messages.length,
           role,
@@ -366,7 +394,8 @@ export function parseRequestConversation(body: unknown, format?: string): Conver
       body.contents.forEach((c) => {
         if (!isRecord(c)) return;
         const parsed = parseGeminiContent(c.parts);
-        const role = c.role === 'model' ? 'assistant' : c.role === 'user' ? 'user' : c.role === 'system' ? 'system' : stringify(c.role) || 'user';
+        const role =
+          c.role === 'model' ? 'assistant' : c.role === 'user' ? 'user' : c.role === 'system' ? 'system' : stringify(c.role) || 'user';
         messages.push({
           index: messages.length,
           role,
@@ -456,7 +485,14 @@ export function parseRequestConversation(body: unknown, format?: string): Conver
       const extracted = extractOpenAIContent(item.content);
       messages.push({
         index: messages.length,
-        role: item.role === 'assistant' ? 'assistant' : item.role === 'user' ? 'user' : item.role === 'system' ? 'system' : stringify(item.role) || 'user',
+        role:
+          item.role === 'assistant'
+            ? 'assistant'
+            : item.role === 'user'
+              ? 'user'
+              : item.role === 'system'
+                ? 'system'
+                : stringify(item.role) || 'user',
         content: extracted.text,
         contentParts: extracted.parts,
         raw: item,

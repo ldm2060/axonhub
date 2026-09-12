@@ -19,11 +19,15 @@ function buildRequestsQuery(permissions: { canViewApiKeys: boolean; canViewChann
     ? `
           apiKey {
             id
-            name${permissions.canViewCallerUser ? `
+            name${
+              permissions.canViewCallerUser
+                ? `
             user {
               firstName
               lastName
-            }` : ''}
+            }`
+                : ''
+            }
           }`
     : '';
 
@@ -115,11 +119,15 @@ function buildRequestDetailQuery(permissions: { canViewApiKeys: boolean; canView
     ? `
           apiKey {
             id
-            name${permissions.canViewCallerUser ? `
+            name${
+              permissions.canViewCallerUser
+                ? `
             user {
               firstName
               lastName
-            }` : ''}
+            }`
+                : ''
+            }
         }`
     : '';
 
@@ -178,11 +186,15 @@ function buildRequestDetailPollingQuery(permissions: { canViewApiKeys: boolean; 
     ? `
           apiKey {
             id
-            name${permissions.canViewCallerUser ? `
+            name${
+              permissions.canViewCallerUser
+                ? `
             user {
               firstName
               lastName
-            }` : ''}
+            }`
+                : ''
+            }
         }`
     : '';
 
@@ -281,23 +293,26 @@ function buildRequestExecutionsQuery(permissions: { canViewChannels: boolean }) 
 }
 
 // Query hooks
-export function useRequests(variables?: {
-  first?: number;
-  after?: string;
-  last?: number;
-  before?: string;
-  orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
-  where?: {
-    status?: string;
-    source?: string;
-    channelID?: string;
-    channelIDIn?: string[];
-    statusIn?: string[];
-    sourceIn?: string[];
-    projectID?: string;
-    [key: string]: any;
-  };
-}, options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean }) {
+export function useRequests(
+  variables?: {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
+    where?: {
+      status?: string;
+      source?: string;
+      channelID?: string;
+      channelIDIn?: string[];
+      statusIn?: string[];
+      sourceIn?: string[];
+      projectID?: string;
+      [key: string]: any;
+    };
+  },
+  options?: { projectId?: string | null; scopeToSelectedProject?: boolean; enabled?: boolean }
+) {
   const { handleError } = useErrorHandler();
   const { t } = useTranslation();
   const permissions = useRequestPermissions();
@@ -360,9 +375,7 @@ export function useRequest(
         const previousRequest = queryClient.getQueryData<Request>(queryKey);
         const shouldUseLightweightPolling = previousRequest?.status === 'processing';
 
-        const query = shouldUseLightweightPolling
-          ? buildRequestDetailPollingQuery(permissions)
-          : buildRequestDetailQuery(permissions);
+        const query = shouldUseLightweightPolling ? buildRequestDetailPollingQuery(permissions) : buildRequestDetailQuery(permissions);
 
         const data = await graphqlRequest<{ node: Request }>(query, { id }, headers);
         if (!data.node) {
@@ -423,9 +436,7 @@ export async function fetchAdjacentRequestPage(params: {
 }): Promise<{ requests: Request[]; pageInfo: RequestConnection['pageInfo'] }> {
   const query = buildRequestsQuery(params.permissions);
   const variables =
-    params.direction === 'older'
-      ? { first: params.pageSize, after: params.cursor }
-      : { last: params.pageSize, before: params.cursor };
+    params.direction === 'older' ? { first: params.pageSize, after: params.cursor } : { last: params.pageSize, before: params.cursor };
 
   const where: Record<string, any> = { ...params.where };
   if (params.projectId) where.projectID = params.projectId;
