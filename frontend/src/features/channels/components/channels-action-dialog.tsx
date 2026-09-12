@@ -2124,69 +2124,69 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                         selectedProvider !== 'codex' &&
                         selectedProvider !== 'claudecode' &&
                         selectedProvider !== 'zcode' && (
-                        <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
-                          <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
-                            {t('channels.dialogs.fields.apiFormat.label')}
-                          </FormLabel>
-                          <div className='max-w-64 space-y-1 md:col-span-6 md:max-w-none'>
-                            <SelectDropdown
-                              key={selectedProvider}
-                              defaultValue={selectedApiFormatOption}
-                              onValueChange={(value) => handleApiFormatChange(value as ApiFormatOption)}
-                              disabled={!!isOAuthChannel}
-                              placeholder={t('channels.dialogs.fields.apiFormat.placeholder')}
-                              data-testid='api-format-select'
-                              isControlled={true}
-                              items={availableApiFormatOptions.map((format) => ({
-                                value: format,
-                                label: getApiFormatOptionLabel(format),
-                              }))}
-                            />
-                            {selectedApiFormat === 'gemini/contents' && (
-                              <div className='mt-3'>
-                                <label
-                                  className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-                                >
-                                  <Checkbox
-                                    checked={useGeminiVertex}
-                                    onCheckedChange={(checked) => handleGeminiVertexChange(checked === true)}
-                                    disabled={!!isOAuthChannel}
-                                  />
-                                  <span>{t('channels.dialogs.fields.apiFormat.geminiVertex.label')}</span>
-                                </label>
-                              </div>
-                            )}
-                            {selectedApiFormat === 'anthropic/messages' && selectedProvider === 'anthropic' && (
-                              <div className='mt-3 space-y-2'>
-                                <label
-                                  className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-                                >
-                                  <Checkbox
-                                    checked={useAnthropicAws}
-                                    onCheckedChange={(checked) => handleAnthropicAwsChange(checked === true)}
-                                    disabled={!!isOAuthChannel}
-                                  />
-                                  <span>{t('channels.dialogs.fields.apiFormat.anthropicAWS.label')}</span>
-                                </label>
-                              </div>
-                            )}
-                            {selectedApiFormat === 'anthropic/messages' && selectedProvider === 'moonshot' && (
-                              <div className='mt-3 space-y-2'>
-                                <label
-                                  className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-                                >
-                                  <Checkbox
-                                    checked={useKimiCoding}
-                                    onCheckedChange={(checked) => handleKimiCodingChange(checked === true)}
-                                    disabled={!!isOAuthChannel}
-                                  />
-                                  <span>{t('channels.dialogs.fields.apiFormat.kimiCoding.label')}</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                        </FormItem>
-                      )}
+                          <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                            <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
+                              {t('channels.dialogs.fields.apiFormat.label')}
+                            </FormLabel>
+                            <div className='max-w-64 space-y-1 md:col-span-6 md:max-w-none'>
+                              <SelectDropdown
+                                key={selectedProvider}
+                                defaultValue={selectedApiFormatOption}
+                                onValueChange={(value) => handleApiFormatChange(value as ApiFormatOption)}
+                                disabled={!!isOAuthChannel}
+                                placeholder={t('channels.dialogs.fields.apiFormat.placeholder')}
+                                data-testid='api-format-select'
+                                isControlled={true}
+                                items={availableApiFormatOptions.map((format) => ({
+                                  value: format,
+                                  label: getApiFormatOptionLabel(format),
+                                }))}
+                              />
+                              {selectedApiFormat === 'gemini/contents' && (
+                                <div className='mt-3'>
+                                  <label
+                                    className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                                  >
+                                    <Checkbox
+                                      checked={useGeminiVertex}
+                                      onCheckedChange={(checked) => handleGeminiVertexChange(checked === true)}
+                                      disabled={!!isOAuthChannel}
+                                    />
+                                    <span>{t('channels.dialogs.fields.apiFormat.geminiVertex.label')}</span>
+                                  </label>
+                                </div>
+                              )}
+                              {selectedApiFormat === 'anthropic/messages' && selectedProvider === 'anthropic' && (
+                                <div className='mt-3 space-y-2'>
+                                  <label
+                                    className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                                  >
+                                    <Checkbox
+                                      checked={useAnthropicAws}
+                                      onCheckedChange={(checked) => handleAnthropicAwsChange(checked === true)}
+                                      disabled={!!isOAuthChannel}
+                                    />
+                                    <span>{t('channels.dialogs.fields.apiFormat.anthropicAWS.label')}</span>
+                                  </label>
+                                </div>
+                              )}
+                              {selectedApiFormat === 'anthropic/messages' && selectedProvider === 'moonshot' && (
+                                <div className='mt-3 space-y-2'>
+                                  <label
+                                    className={`flex items-center gap-2 text-sm ${isOAuthChannel ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                                  >
+                                    <Checkbox
+                                      checked={useKimiCoding}
+                                      onCheckedChange={(checked) => handleKimiCodingChange(checked === true)}
+                                      disabled={!!isOAuthChannel}
+                                    />
+                                    <span>{t('channels.dialogs.fields.apiFormat.kimiCoding.label')}</span>
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                          </FormItem>
+                        )}
                       {selectedProvider === 'codex' && (
                         <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
                           <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
