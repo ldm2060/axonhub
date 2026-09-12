@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 	responsestransformer "github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
@@ -1993,6 +1994,52 @@ func TestApplyUserAgentPassThroughPreservesKimiIdentity(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, "kimi-code-cli/0.26.0", processed.Headers.Get("User-Agent"))
 			require.Equal(t, "0.26.0", processed.Headers.Get("X-Msh-Version"))
+		})
+	}
+}
+
+// TestApplyUserAgentPassThroughPreservesZcodeIdentity verifies that the ZCode
+// channel keeps its impersonated client fingerprint regardless of the UA
+// pass-through setting: the signing version header must stay consistent with
+// the User-Agent the anthropic outbound stamps.
+func TestApplyUserAgentPassThroughPreservesZcodeIdentity(t *testing.T) {
+	tests := []struct {
+		name             string
+		channelUASetting *bool
+		globalUAEnabled  bool
+	}{
+		{name: "channel disabled", channelUASetting: new(false), globalUAEnabled: true},
+		{name: "channel enabled", channelUASetting: new(true), globalUAEnabled: false},
+		{name: "global disabled", globalUAEnabled: false},
+		{name: "global enabled", globalUAEnabled: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, client := setupTest(t)
+			systemService := newTestSystemService(client)
+			require.NoError(t, systemService.SetUserAgentPassThrough(ctx, tt.globalUAEnabled))
+
+			settings := &objects.ChannelSettings{PassThroughUserAgent: tt.channelUASetting}
+			currentChannel := &biz.Channel{Channel: &ent.Channel{ID: 1, Name: "zcode", Type: entchannel.TypeZcode, Settings: settings}, Outbound: &mockTransformer{}}
+			outbound := &PersistentOutboundTransformer{
+				wrapped: &mockTransformer{},
+				state: &PersistenceState{
+					CurrentCandidate: &ChannelModelsCandidate{Channel: currentChannel},
+					LlmRequest: &llm.Request{RawRequest: &httpclient.Request{Headers: http.Header{
+						"User-Agent": []string{"claude-cli/2.0.0 (external, cli)"},
+					}}},
+				},
+			}
+			rawRequest := &httpclient.Request{Headers: http.Header{
+				"User-Agent":          []string{"ZCode/" + zcode.AppVersion},
+				"X-Zcode-App-Version": []string{zcode.AppVersion},
+				"X-Platform":          []string{"win32-x64"},
+			}}
+			processed, err := applyUserAgentPassThrough(outbound, systemService).OnOutboundRawRequest(ctx, rawRequest)
+			require.NoError(t, err)
+			require.Equal(t, "ZCode/"+zcode.AppVersion, processed.Headers.Get("User-Agent"))
+			require.Equal(t, zcode.AppVersion, processed.Headers.Get("X-Zcode-App-Version"))
+			require.Equal(t, "win32-x64", processed.Headers.Get("X-Platform"))
 		})
 	}
 }

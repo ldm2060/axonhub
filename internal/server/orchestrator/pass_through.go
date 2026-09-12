@@ -273,7 +273,11 @@ func applyUserAgentPassThrough(outbound *PersistentOutboundTransformer, systemSe
 		if currentChannel == nil {
 			return request, nil
 		}
-		if currentChannel.Type == channel.TypeKimiCode {
+		// Impersonating channels (Kimi Code, ZCode) stamp the official client
+		// identity — User-Agent plus matching version/platform headers — in their
+		// transformer. The fingerprint must stay consistent regardless of the UA
+		// pass-through setting, so the middleware leaves these channels untouched.
+		if currentChannel.Type == channel.TypeKimiCode || currentChannel.Type == channel.TypeZcode {
 			return request, nil
 		}
 

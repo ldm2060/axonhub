@@ -252,6 +252,7 @@ func (t *OutboundTransformer) TransformRequest(
 	// （3.10.2 app.asar）。推理请求的完整指纹为 User-Agent/X-Platform/
 	// X-ZCode-App-Version 等一组头；X-ZCode-Agent 与完整身份头集见客户端
 	// buildProviderIdentityHeaders。版本号与请求签名（zcode.AppVersion）必须一致。
+	var preserveIdentityHeaders []string
 	if t.config.Type == PlatformZCode {
 		headers.Set("User-Agent", "ZCode/"+zcode.AppVersion)
 		headers.Set("Http-Referer", "https://zcode.z.ai")
@@ -263,16 +264,33 @@ func (t *OutboundTransformer) TransformRequest(
 		headers.Set("X-Client-Language", "zh-CN")
 		headers.Set("X-Client-Timezone", "Asia/Shanghai")
 		headers.Set("X-Os-Category", "windows")
+
+		// 指纹头集合必须整体一致：入站合并（MergeInboundRequest）会用下游客户端
+		// 的同名头覆盖这里的值，导致 UA 与签名版本头不匹配。声明后这些头以
+		// transformer 为准，不受透传设置影响；显式 Header 覆写仍在其后生效。
+		preserveIdentityHeaders = []string{
+			"User-Agent",
+			"Http-Referer",
+			"X-Title",
+			"X-Zcode-Agent",
+			"X-Platform",
+			"X-Zcode-App-Version",
+			"X-Release-Channel",
+			"X-Client-Language",
+			"X-Client-Timezone",
+			"X-Os-Category",
+		}
 	}
 
 	return &httpclient.Request{
-		Method:    http.MethodPost,
-		URL:       url,
-		Headers:   headers,
-		Body:      body,
-		Auth:      authConfig,
-		APIFormat: string(llm.APIFormatAnthropicMessage),
-		Metadata:  nil,
+		Method:                        http.MethodPost,
+		URL:                           url,
+		Headers:                       headers,
+		Body:                          body,
+		Auth:                          authConfig,
+		APIFormat:                     string(llm.APIFormatAnthropicMessage),
+		Metadata:                      nil,
+		PreserveHeadersOnInboundMerge: preserveIdentityHeaders,
 	}, nil
 }
 

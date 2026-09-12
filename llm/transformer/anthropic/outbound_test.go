@@ -15,6 +15,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/internal/pkg/xjson"
 	"github.com/ldm2060/axonhub/llm/internal/pkg/xtest"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic/zcode"
 )
 
 func TestOutboundTransformer_TransformRequest(t *testing.T) {
@@ -1841,4 +1842,68 @@ func TestOutboundTransformer_OllamaNoAuthWhenKeyAbsent(t *testing.T) {
 
 	// No auth config should be produced when there is no key to send.
 	require.Nil(t, httpReq.Auth, "no Authorization header should be set without an API key")
+}
+
+// TestOutboundTransformer_ZcodeIdentityHeadersPreservedOnInboundMerge verifies
+// that the ZCode fingerprint headers survive the pipeline's inbound header merge:
+// the z.ai ultra gateway validates the client fingerprint, so the impersonated
+// User-Agent and version headers must stay consistent with the signing headers
+// regardless of what the downstream client sent.
+func TestOutboundTransformer_ZcodeIdentityHeadersPreservedOnInboundMerge(t *testing.T) {
+	transformer, err := NewOutboundTransformerWithConfig(&Config{
+		Type:           PlatformZCode,
+		BaseURL:        "https://api.z.ai/api/anthropic",
+		APIKeyProvider: auth.NewStaticKeyProvider("test-key"),
+	})
+	require.NoError(t, err)
+
+	req := &llm.Request{
+		Model:     "glm-5.3",
+		MaxTokens: lo.ToPtr(int64(1024)),
+		Messages: []llm.Message{
+			{
+				Role:    "user",
+				Content: llm.MessageContent{Content: lo.ToPtr("Hello")},
+			},
+		},
+	}
+
+	httpReq, err := transformer.TransformRequest(context.Background(), req)
+	require.NoError(t, err)
+	require.NotNil(t, httpReq)
+
+	// The transformer stamps the full ZCode fingerprint.
+	require.Equal(t, "ZCode/"+zcode.AppVersion, httpReq.Headers.Get("User-Agent"))
+	require.Equal(t, zcode.AppVersion, httpReq.Headers.Get("X-Zcode-App-Version"))
+	require.Equal(t, "win32-x64", httpReq.Headers.Get("X-Platform"))
+
+	// The fingerprint is declared as transformer-owned: inbound values must not win.
+	for _, header := range []string{
+		"User-Agent",
+		"Http-Referer",
+		"X-Title",
+		"X-Zcode-Agent",
+		"X-Platform",
+		"X-Zcode-App-Version",
+		"X-Release-Channel",
+		"X-Client-Language",
+		"X-Client-Timezone",
+		"X-Os-Category",
+	} {
+		require.Contains(t, httpReq.PreserveHeadersOnInboundMerge, header)
+	}
+
+	// Simulate the pipeline merge with a hostile inbound request.
+	inbound := &httpclient.Request{Headers: http.Header{
+		"User-Agent":           []string{"claude-cli/2.0.0 (external, cli)"},
+		"X-Zcode-App-Version":  []string{"9.9.9"},
+		"X-Custom-From-Client": []string{"passthrough"},
+	}}
+	merged := httpclient.MergeInboundRequest(httpReq, inbound)
+
+	// Fingerprint headers keep the transformer's values; ordinary headers merge.
+	require.Equal(t, "ZCode/"+zcode.AppVersion, merged.Headers.Get("User-Agent"))
+	require.Equal(t, zcode.AppVersion, merged.Headers.Get("X-Zcode-App-Version"))
+	require.Equal(t, "win32-x64", merged.Headers.Get("X-Platform"))
+	require.Equal(t, "passthrough", merged.Headers.Get("X-Custom-From-Client"))
 }
