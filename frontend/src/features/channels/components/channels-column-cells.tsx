@@ -418,8 +418,9 @@ export const NameCell = memo(({ row, globalDefaultMode }: { row: Row<Channel>; g
   );
 
   const content = (
-    <div className='flex justify-center'>
-      <div className='flex max-w-56 items-center gap-2'>
+    <div className='flex min-w-0 justify-start'>
+      <div className='flex max-w-56 min-w-0 items-center gap-2'>
+        {nameElement}
         {hasError && <IconAlertTriangle className='text-destructive h-4 w-4 shrink-0' />}
         {hasDisabledKeys && <IconKeyOff className='h-4 w-4 shrink-0 text-amber-500' />}
         {quotaRoutingIndicator === 'exhausted' && (
@@ -434,7 +435,6 @@ export const NameCell = memo(({ row, globalDefaultMode }: { row: Row<Channel>; g
             <span className='sr-only'>{t('quota.status.backpressure')}</span>
           </>
         )}
-        {nameElement}
       </div>
     </div>
   );
