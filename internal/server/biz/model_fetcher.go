@@ -17,6 +17,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/oauth"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic/claudecode"
@@ -504,8 +505,9 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 	}
 
 	var (
-		apiKey      string
-		proxyConfig *httpclient.ProxyConfig
+		apiKey            string
+		proxyConfig       *httpclient.ProxyConfig
+		headerOverrideOps []objects.OverrideOperation
 	)
 
 	if input.APIKey != nil && *input.APIKey != "" {
@@ -545,6 +547,15 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 
 		if ch.Settings != nil {
 			proxyConfig = ch.Settings.Proxy
+
+			// The new schema field takes precedence; the legacy OverrideHeaders list is
+			// converted when the new field is absent (same precedence as
+			// (*Channel).GetHeaderOverrideOperations).
+			if ch.Settings.HeaderOverrideOperations != nil {
+				headerOverrideOps = ch.Settings.HeaderOverrideOperations
+			} else {
+				headerOverrideOps = objects.HeaderEntriesToOverrideOperations(ch.Settings.OverrideHeaders)
+			}
 		}
 	}
 
@@ -625,6 +636,13 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 	} else {
 		req.Headers.Set("Authorization", "Bearer "+apiKey)
 	}
+
+	if req.Headers == nil {
+		req.Headers = make(http.Header)
+	}
+	// Channel header overrides win over the standard auth headers, matching the
+	// chat/completion path.
+	ApplyModelFetchHeaderOverrides(req.Headers, headerOverrideOps)
 
 	httpClient := f.httpClient
 	if proxyConfig != nil {
@@ -984,10 +1002,28 @@ func (f *ModelFetcher) prepareModelsEndpoint(channelType channel.Type, baseURL s
 
 		return baseURL + "/v1/models", headers
 	case channelType == channel.TypeZhipuAnthropic || channelType == channel.TypeZaiAnthropic:
+		if useRawURL {
+			return baseURL + "/models", headers
+		}
+
 		baseURL = strings.TrimSuffix(baseURL, "/anthropic")
+
+		if strings.HasSuffix(baseURL, "/v1") {
+			return baseURL + "/models", headers
+		}
+
 		return baseURL + "/paas/v4/models", headers
 	case channelType == channel.TypeZai || channelType == channel.TypeZhipu:
+		if useRawURL {
+			return baseURL + "/models", headers
+		}
+
 		baseURL = strings.TrimSuffix(baseURL, "/v4")
+
+		if strings.HasSuffix(baseURL, "/v1") {
+			return baseURL + "/models", headers
+		}
+
 		return baseURL + "/v4/models", headers
 	case channelType == channel.TypeZcode:
 		// ZCode targets the z.ai Anthropic endpoint; its model list lives under
@@ -998,9 +1034,11 @@ func (f *ModelFetcher) prepareModelsEndpoint(channelType channel.Type, baseURL s
 		return baseURL + "/v1/models", headers
 	case channelType == channel.TypeDoubao || channelType == channel.TypeVolcengine:
 		baseURL = strings.TrimSuffix(baseURL, "/v3")
+
 		return baseURL + "/v3/models", headers
 	case channelType == channel.TypeDoubaoAnthropic:
 		baseURL = strings.TrimSuffix(baseURL, "/compatible")
+
 		return baseURL + "/v3/models", headers
 	case isCommandCodeChannelType(channelType):
 		baseURL = strings.TrimSuffix(baseURL, "/anthropic")

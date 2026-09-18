@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -348,64 +347,9 @@ func (svc *ChannelService) RecordPerformance(ctx context.Context, perf *Performa
 	}()
 
 	if perf.Success {
-		svc.channelErrorCountsLock.Lock()
-		delete(svc.channelErrorCounts, perf.ChannelID)
-		svc.channelErrorCountsLock.Unlock()
-
-		// Also clear API key error counts on success
-		if perf.APIKey != "" {
-			svc.apiKeyErrorCountsLock.Lock()
-
-			rulePrefix := perf.APIKey + ":rule:"
-			if svc.apiKeyErrorCounts[perf.ChannelID] != nil {
-				delete(svc.apiKeyErrorCounts[perf.ChannelID], perf.APIKey)
-				for key := range svc.apiKeyErrorCounts[perf.ChannelID] {
-					if strings.HasPrefix(key, rulePrefix) {
-						delete(svc.apiKeyErrorCounts[perf.ChannelID], key)
-					}
-				}
-			}
-			for key := range svc.apiKeyRuleActionsInFlight[perf.ChannelID] {
-				if strings.HasPrefix(key, rulePrefix) {
-					svc.apiKeyRuleActionsInFlight[perf.ChannelID][key] = true
-				}
-			}
-
-			svc.apiKeyErrorCountsLock.Unlock()
-		}
+		svc.clearAutoDisableCountsOnSuccess(perf)
 	} else if !perf.Canceled {
-		// Check per-channel API key rule actions first (upstream feature).
-		matched := false
-		if perf.APIKey != "" {
-			matched, _ = svc.checkAndHandleChannelAPIKeyRules(ctx, perf)
-		}
-		if !matched {
-			policy := svc.SystemService.RetryPolicyOrDefault(ctx)
-
-			// Resolve the channel so its per-channel auto-disable config is honored.
-			// ResolveChannelAutoDisableConfig merges channel + global settings:
-			// INHERIT_GLOBAL respects the global Enabled flag, while CUSTOM lets a
-			// channel override it. Gating this whole block on the global flag alone
-			// would make CUSTOM overrides unreachable when the global switch is off.
-			channel, err := svc.GetChannel(ctx, perf.ChannelID)
-			if err != nil {
-				log.Warn(ctx, "Failed to get channel for auto-disable check, skipping",
-					log.Int("channel_id", perf.ChannelID),
-					log.Cause(err),
-				)
-			} else {
-				// Check API key error first if available.
-				if perf.APIKey != "" {
-					if svc.checkAndHandleAPIKeyError(ctx, perf, channel, policy) {
-						return
-					}
-				} else {
-					if svc.checkAndHandleChannelError(ctx, perf, channel, policy) {
-						return
-					}
-				}
-			}
-		}
+		svc.evaluateAutoDisableForFailure(ctx, perf)
 	}
 
 	// Get or create channel metrics
@@ -690,11 +634,8 @@ func (svc *ChannelService) PurgeChannelMetrics(channelID int) {
 	delete(svc.channelPerfMetrics, channelID)
 	svc.channelPerfMetricsLock.Unlock()
 
-	svc.channelErrorCountsLock.Lock()
-	delete(svc.channelErrorCounts, channelID)
-	svc.channelErrorCountsLock.Unlock()
-
 	svc.apiKeyErrorCountsLock.Lock()
 	delete(svc.apiKeyErrorCounts, channelID)
+	delete(svc.apiKeyRuleActionsInFlight, channelID)
 	svc.apiKeyErrorCountsLock.Unlock()
 }

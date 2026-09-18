@@ -58,14 +58,9 @@ input CleanupOptionInput {
   cleanupDays: Int!
 }
 
-type AutoDisableChannelStatus {
-  status: Int!
-  times: Int!
-}
-
 type AutoDisableChannel {
   enabled: Boolean!
-  statuses: [AutoDisableChannelStatus!]!
+  rules: [APIKeyAutoDisableRule!]!
 }
 
 enum AutoDisableMode {
@@ -80,10 +75,20 @@ enum ClientRestrictionLevel {
   STRICT
 }
 
+type AutoDisableChannelStatus {
+  status: Int!
+  times: Int!
+}
+
 type ChannelAutoDisableConfig {
   mode: AutoDisableMode!
   enabled: Boolean!
   statuses: [AutoDisableChannelStatus!]!
+}
+
+input AutoDisableChannelStatusInput {
+  status: Int!
+  times: Int!
 }
 
 input ChannelAutoDisableConfigInput {
@@ -167,14 +172,9 @@ input UpstreamErrorPolicyInput {
   customMessage: String
 }
 
-input AutoDisableChannelStatusInput {
-  status: Int!
-  times: Int!
-}
-
 input AutoDisableChannelInput {
   enabled: Boolean
-  statuses: [AutoDisableChannelStatusInput!]
+  rules: [APIKeyAutoDisableRuleInput!]
 }
 
 input UpdateRetryPolicyInput {

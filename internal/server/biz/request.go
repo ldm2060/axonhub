@@ -433,6 +433,13 @@ func (s *RequestService) CreateRequestExecution(
 		mut = mut.SetReasoningEffort(effort)
 	}
 
+	if apiKey, ok := contexts.GetChannelAPIKey(ctx); ok {
+		runes := []rune(apiKey)
+		if len(runes) > 4 {
+			mut = mut.SetChannelAPIKeySuffix(string(runes[len(runes)-4:]))
+		}
+	}
+
 	if channelRequest.URL != "" {
 		mut = mut.SetRequestURL(channelRequest.URL)
 	}

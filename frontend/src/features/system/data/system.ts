@@ -5,7 +5,7 @@ import { getTokenFromStorage, useAuthStore } from '@/stores/authStore';
 import i18n from '@/lib/i18n';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { ProxyConfig } from '@/features/channels/data/schema';
+import type { ProxyConfig, APIKeyAutoDisableRule } from '@/features/channels/data/schema';
 import type { ModelAssociation } from '@/features/models/data/schema';
 
 // GraphQL queries and mutations
@@ -120,9 +120,14 @@ const RETRY_POLICY_QUERY = `
       }
       autoDisableChannel {
         enabled
-        statuses {
-          status
+        rules {
+          statusCodes
+          keywordPatterns
           times
+          action
+          disableDurationMinutes
+          disableUntilCron
+          disableUntilTimezone
         }
       }
     }
@@ -335,9 +340,9 @@ export interface GcCleanupPreviewItem {
   retentionDays: number;
 }
 
-export interface AutoDisableChannelStatus {
-  status: number;
-  times: number;
+export interface AutoDisableChannel {
+  enabled: boolean;
+  rules: APIKeyAutoDisableRule[];
 }
 
 export interface WebhookHeader {
@@ -365,11 +370,6 @@ export interface WebhookNotifierConfig {
   subscriptions: WebhookSubscription[];
 }
 
-export interface AutoDisableChannel {
-  enabled: boolean;
-  statuses: AutoDisableChannelStatus[];
-}
-
 export interface RetryPolicy {
   maxChannelRetries: number;
   maxSingleChannelRetries: number;
@@ -390,14 +390,9 @@ export interface UpstreamErrorPolicy {
   customMessage: string;
 }
 
-export interface AutoDisableChannelStatusInput {
-  status: number;
-  times: number;
-}
-
 export interface AutoDisableChannelInput {
   enabled?: boolean;
-  statuses?: AutoDisableChannelStatusInput[];
+  rules?: APIKeyAutoDisableRule[];
 }
 
 export interface RetryPolicyInput {
@@ -584,6 +579,7 @@ export function useRetryPolicy() {
 
 export function useUpdateRetryPolicy() {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (input: RetryPolicyInput) => {
@@ -594,8 +590,8 @@ export function useUpdateRetryPolicy() {
       queryClient.invalidateQueries({ queryKey: ['retryPolicy'] });
       toast.success(i18n.t('common.success.systemUpdated'));
     },
-    onError: () => {
-      toast.error(i18n.t('common.errors.systemUpdateFailed'));
+    onError: (error) => {
+      handleError(error, i18n.t('common.errors.systemUpdateFailed'));
     },
   });
 }
@@ -1677,15 +1673,21 @@ function useSystemSettingsQueryIdentity() {
 
 export function useUserAgentPassThroughSettings(options?: { enabled?: boolean }) {
   const { authUserId, canReadSystemSettings } = useSystemSettingsQueryIdentity();
+  const { handleError } = useErrorHandler();
 
   return useQuery({
     queryKey: ['userAgentPassThroughSettings', authUserId ?? 'signed-out', canReadSystemSettings],
     enabled: (options?.enabled ?? true) && canReadSystemSettings,
     queryFn: async () => {
-      const data = await graphqlRequest<{ userAgentPassThroughSettings: UserAgentPassThroughSettings }>(
-        USER_AGENT_PASS_THROUGH_SETTINGS_QUERY
-      );
-      return data.userAgentPassThroughSettings;
+      try {
+        const data = await graphqlRequest<{ userAgentPassThroughSettings: UserAgentPassThroughSettings }>(
+          USER_AGENT_PASS_THROUGH_SETTINGS_QUERY
+        );
+        return data.userAgentPassThroughSettings;
+      } catch (error) {
+        handleError(error, i18n.t('common.errors.internalServerError'));
+        throw error;
+      }
     },
   });
 }

@@ -7,6 +7,7 @@ import { ChannelsArchiveDialog } from './channels-archive-dialog';
 import { ChannelsAvailabilityDialog } from './channels-availability-dialog';
 import { ChannelsBulkApplyTemplateDialog } from './channels-bulk-apply-template-dialog';
 import { ChannelsBulkArchiveDialog } from './channels-bulk-archive-dialog';
+import { ChannelsBulkAutoDisableDialog } from './channels-bulk-auto-disable-dialog';
 import { ChannelsBulkClearTemplateDialog } from './channels-bulk-clear-template-dialog';
 import { ChannelsBulkDeleteDialog } from './channels-bulk-delete-dialog';
 import { ChannelsBulkDisableDialog } from './channels-bulk-disable-dialog';
@@ -71,6 +72,12 @@ export function ChannelsDialogs() {
       <ChannelsBulkApplyTemplateDialog
         open={open === 'bulkApplyTemplate'}
         onOpenChange={(isOpen) => setOpen(isOpen ? 'bulkApplyTemplate' : null)}
+        selectedChannels={selectedChannels}
+      />
+
+      <ChannelsBulkAutoDisableDialog
+        open={open === 'bulkAutoDisable'}
+        onOpenChange={(isOpen) => setOpen(isOpen ? 'bulkAutoDisable' : null)}
         selectedChannels={selectedChannels}
       />
 

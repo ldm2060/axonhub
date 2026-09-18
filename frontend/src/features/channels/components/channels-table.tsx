@@ -13,7 +13,18 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { IconArchive, IconBan, IconCheck, IconFlask, IconTag, IconTrash, IconTemplate, IconX, IconEraser } from '@tabler/icons-react';
+import {
+  IconArchive,
+  IconBan,
+  IconCheck,
+  IconFlask,
+  IconTag,
+  IconTrash,
+  IconTemplate,
+  IconX,
+  IconEraser,
+  IconShieldOff,
+} from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -405,6 +416,15 @@ export function ChannelsTable({
               title={t('channels.templates.bulk.applyButton')}
             >
               <IconTemplate className='h-4 w-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 text-violet-600 hover:bg-violet-100 hover:text-violet-700'
+              onClick={() => setOpen('bulkAutoDisable')}
+              title={t('channels.bulkAutoDisable.button')}
+            >
+              <IconShieldOff className='h-4 w-4' />
             </Button>
             <Button
               variant='ghost'

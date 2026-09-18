@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { X, RefreshCw, Search, ChevronLeft, ChevronRight, PanelLeft, Plus, Trash2, Eye, EyeOff, Copy, Play, Info, Ban } from 'lucide-react';
@@ -795,7 +795,10 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
   const formSchema = isEdit ? updateChannelInputSchema : createChannelInputSchema;
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    // zodResolver types values as the schema's z.input, where the
+    // z.preprocess-ed apiKeyAutoDisableMode is a required unknown. The form
+    // only ever carries the z.output shape, so assert the resolver's view.
+    resolver: zodResolver(formSchema) as Resolver<z.infer<typeof formSchema>>,
     defaultValues:
       isEdit && currentRow
         ? {
