@@ -24,10 +24,16 @@ type QueryChannelsInput struct {
 
 // QueryChannels queries channels with the specified input parameters, including model filtering.
 func (svc *ChannelService) QueryChannels(ctx context.Context, input QueryChannelsInput) (*ent.ChannelConnection, error) {
-	// Build the base query
+	// Build the base query. Quota monitor bindings are preloaded with their
+	// monitors so the quota column can show every bound usage monitor without
+	// per-channel edge queries.
 	var (
-		query = svc.entFromContext(ctx).Channel.Query().WithProviderQuotaStatus()
-		err   error
+		query = svc.entFromContext(ctx).Channel.Query().
+			WithProviderQuotaStatus().
+			WithQuotaMonitorBindings(func(q *ent.ChannelUsageMonitorBindingQuery) {
+				q.WithUsageMonitorChannel()
+			})
+		err error
 	)
 
 	// Apply standard filters

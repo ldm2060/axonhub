@@ -25,6 +25,7 @@
   "channels.columns.quota": "Quota",
   "channels.quota.expand": "Show {{count}} more",
   "channels.quota.collapse": "Collapse",
+  "channels.quota.monitorBindingDisabled": "Binding disabled",
   "channels.columns.health": "Health",
   "channels.columns.healthTooltip.probeTime": "Stats Time",
   "channels.columns.healthTooltip.successRate": "Success Rate",

@@ -1386,6 +1386,23 @@ const CHANNEL_QUERY_QUOTA_SELECTION = `
             providerType
             accountKey
           }
+          quotaMonitorBindings {
+            id
+            enabled
+            usageMonitorChannel {
+              id
+              name
+              source
+              providerType
+              status
+              quotaStatus
+              quotaReady
+              quotaLimits
+              lastPollAt
+              lastPollError
+              nextResetAt
+            }
+          }
 `;
 
 function isChannelColumnVisible(columnVisibility: ChannelListColumnVisibility | undefined, columnID: string): boolean {

@@ -472,6 +472,34 @@ export const channelQuotaMonitorBindingSchema = z.object({
 });
 export type ChannelQuotaMonitorBinding = z.infer<typeof channelQuotaMonitorBindingSchema>;
 
+// Usage monitor summary embedded in a channel quota monitor binding (list view).
+export const usageMonitorSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  source: z.enum(['builtin', 'custom', 'template']).optional(),
+  providerType: z.string().nullable().optional(),
+  status: z.enum(['active', 'paused', 'error']).optional().nullable(),
+  quotaStatus: z.enum(['available', 'warning', 'exhausted', 'unknown']).nullable().optional(),
+  quotaReady: z.boolean().nullable().optional(),
+  // Derived per-limit quota statuses; Map scalar shaped as { items: [...] }
+  // with the same keys provider_quota_status stores under quota_data._limits.
+  quotaLimits: z.any().nullable().optional(),
+  lastPollAt: z.string().nullable().optional(),
+  lastPollError: z.string().nullable().optional(),
+  nextResetAt: z.string().nullable().optional(),
+});
+export type UsageMonitorSummary = z.infer<typeof usageMonitorSummarySchema>;
+
+// Channel quota monitor binding as returned by the channel list quota edge.
+// The ent edge exposes the raw binding entity (no usageMonitorName view field),
+// so this is a standalone shape instead of extending channelQuotaMonitorBindingSchema.
+export const channelQuotaMonitorBindingViewSchema = z.object({
+  id: z.string(),
+  enabled: z.boolean(),
+  usageMonitorChannel: usageMonitorSummarySchema.nullable().optional(),
+});
+export type ChannelQuotaMonitorBindingView = z.infer<typeof channelQuotaMonitorBindingViewSchema>;
+
 // Save Channel Quota Monitor Binding Input
 export const saveChannelQuotaMonitorBindingInputSchema = z.object({
   usageMonitorChannelID: z.string(),
@@ -500,6 +528,7 @@ export const channelSchema = z.object({
   policies: channelPoliciesSchema.optional().nullable(),
   credentials: channelCredentialsSchema.optional().nullable(),
   providerQuotaStatus: providerQuotaStatusSchema.optional().nullable(),
+  quotaMonitorBindings: z.array(channelQuotaMonitorBindingViewSchema).optional().nullable(),
   disabledAPIKeys: z.array(disabledAPIKeySchema).optional().nullable(),
   supportedModels: z.array(z.string()).default([]),
   autoSyncSupportedModels: z.boolean().default(false),

@@ -42,12 +42,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { parseQuotaLimits } from '../../system/data/quotas';
+import { parseQuotaLimits, type ProviderQuotaLimit } from '../../system/data/quotas';
 import type { QuotaRoutingMode } from '../../system/data/system';
 import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
-import type { Channel, ChannelPolicies } from '../data/schema';
+import type { Channel, ChannelPolicies, ChannelQuotaMonitorBindingView } from '../data/schema';
 import { getChannelQuotaRoutingIndicator } from '../utils/quota-routing-status';
 import { ChannelsStatusDialog } from './channels-status-dialog';
 
@@ -719,6 +719,8 @@ CreatedAtCell.displayName = 'CreatedAtCell';
 
 const QUOTA_VISIBLE_LIMIT = 5;
 
+type QuotaCellTranslator = ReturnType<typeof useTranslation>['t'];
+
 const QUOTA_WINDOW_LABEL_KEYS: Record<string, string> = {
   '5h': 'quota.window.5h',
   '7d': 'quota.window.7d',
@@ -736,7 +738,13 @@ function getQuotaLimits(channel: Channel) {
   return channel.providerQuotaStatus ? parseQuotaLimits(channel.providerQuotaStatus.quotaData) : [];
 }
 
-function quotaWindowLabel(window: string | undefined, t: ReturnType<typeof useTranslation>['t']): string {
+// Monitor quota limits reuse the same derived `_limits` shape the built-in
+// checkers store, delivered through the Map scalar as { items: [...] }.
+function getMonitorQuotaLimits(quotaLimits: unknown) {
+  return parseQuotaLimits({ _limits: (quotaLimits as { items?: unknown } | null)?.items });
+}
+
+function quotaWindowLabel(window: string | undefined, t: QuotaCellTranslator): string {
   if (!window) return '';
   const translationKey = QUOTA_WINDOW_LABEL_KEYS[window];
   if (translationKey) return t(translationKey);
@@ -749,21 +757,67 @@ const quotaColor = (remaining: number) => {
   return 'text-green-600 dark:text-green-500';
 };
 
+const monitorStatusColor = (status: string) => {
+  if (status === 'exhausted') return 'text-red-500';
+  if (status === 'warning') return 'text-yellow-500';
+  if (status === 'available') return 'text-green-600 dark:text-green-500';
+  return 'text-muted-foreground';
+};
+
+type QuotaCellUnit =
+  | { kind: 'limit'; key: string; limit: ProviderQuotaLimit }
+  | { kind: 'monitor'; key: string; binding: ChannelQuotaMonitorBindingView };
+
+function QuotaLimitRow({ limit, t }: { limit: ProviderQuotaLimit; t: QuotaCellTranslator }) {
+  const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
+  const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
+  const label = quotaWindowLabel(limit.window, t) || t('quota.label.quota');
+  return (
+    <div className='flex items-center justify-end gap-2'>
+      <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{label}</span>
+      <div className='bg-muted h-1.5 w-24 shrink-0 overflow-hidden rounded-full'>
+        <div
+          className={`h-full ${remaining <= 20 ? 'bg-red-500' : remaining <= 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
+          style={{ width: `${remaining}%` }}
+        />
+      </div>
+      <span className={`w-8 text-right font-medium ${quotaColor(remaining)}`}>{remaining}%</span>
+    </div>
+  );
+}
+
+function QuotaMonitorGroup({ binding, showSeparator, t }: { binding: ChannelQuotaMonitorBindingView; showSeparator: boolean; t: QuotaCellTranslator }) {
+  const monitor = binding.usageMonitorChannel;
+  if (!monitor) return null;
+  const status = monitor.quotaStatus ?? 'unknown';
+  const limits = getMonitorQuotaLimits(monitor.quotaLimits);
+  return (
+    <div className={`flex flex-col gap-1 ${showSeparator ? 'border-t pt-1.5' : ''} ${binding.enabled ? '' : 'opacity-50'}`}>
+      <div className='flex items-center justify-end gap-2'>
+        <span className='text-foreground min-w-24 max-w-32 truncate text-left font-medium' title={monitor.name}>
+          {monitor.name}
+        </span>
+        <span
+          className={`min-w-24 text-left font-medium ${binding.enabled ? monitorStatusColor(status) : 'text-muted-foreground'}`}
+        >
+          {binding.enabled ? t(`quota.status.${status}`) : t('channels.quota.monitorBindingDisabled')}
+        </span>
+        <span className='w-8 shrink-0' />
+      </div>
+      {binding.enabled && limits.map((limit, index) => <QuotaLimitRow key={`${monitor.id}-${index}`} limit={limit} t={t} />)}
+    </div>
+  );
+}
+
 export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const channel = row.original;
 
-  if (!channel.providerQuotaStatus) {
-    return (
-      <div className='flex justify-center'>
-        <span className='text-muted-foreground text-xs'>{t('quota.label.unavailable')}</span>
-      </div>
-    );
-  }
-
   const limits = getQuotaLimits(channel);
-  if (limits.length === 0) {
+  const bindings = channel.quotaMonitorBindings ?? [];
+
+  if (limits.length === 0 && bindings.length === 0) {
     return (
       <div className='flex justify-center'>
         <span className='text-muted-foreground text-xs'>{t('quota.label.unavailable')}</span>
@@ -771,27 +825,23 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
     );
   }
 
-  const visibleLimits = isExpanded ? limits : limits.slice(0, QUOTA_VISIBLE_LIMIT);
-  const hiddenCount = limits.length - QUOTA_VISIBLE_LIMIT;
+  const units: QuotaCellUnit[] = [
+    ...limits.map((limit, index) => ({ kind: 'limit', key: `limit-${index}`, limit }) as QuotaCellUnit),
+    ...bindings.map((binding) => ({ kind: 'monitor', key: binding.id, binding }) as QuotaCellUnit),
+  ];
+  const visibleUnits = isExpanded ? units : units.slice(0, QUOTA_VISIBLE_LIMIT);
+  const hiddenCount = units.length - QUOTA_VISIBLE_LIMIT;
+  const showMonitorSeparator = limits.length > 0 && bindings.length > 0;
+
   const content = (
     <div className='flex min-w-80 flex-col items-stretch gap-1.5 text-[11px]'>
-      {visibleLimits.map((limit, index) => {
-        const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
-        const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
-        const label = quotaWindowLabel(limit.window, t) || t('quota.label.quota');
-        return (
-          <div key={`${label}-${index}`} className='flex items-center justify-end gap-2'>
-            <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{label}</span>
-            <div className='bg-muted h-1.5 w-24 shrink-0 overflow-hidden rounded-full'>
-              <div
-                className={`h-full ${remaining <= 20 ? 'bg-red-500' : remaining <= 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                style={{ width: `${remaining}%` }}
-              />
-            </div>
-            <span className={`w-8 text-right font-medium ${quotaColor(remaining)}`}>{remaining}%</span>
-          </div>
-        );
-      })}
+      {visibleUnits.map((unit) =>
+        unit.kind === 'limit' ? (
+          <QuotaLimitRow key={unit.key} limit={unit.limit} t={t} />
+        ) : (
+          <QuotaMonitorGroup key={unit.key} binding={unit.binding} showSeparator={showMonitorSeparator} t={t} />
+        )
+      )}
       {hiddenCount > 0 && (
         <button
           type='button'
@@ -812,13 +862,25 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
     <Tooltip>
       <TooltipTrigger asChild>{content}</TooltipTrigger>
       <TooltipContent className='space-y-1'>
-        <div className='font-medium'>{t(`quota.status.${channel.providerQuotaStatus.status}`)}</div>
+        {channel.providerQuotaStatus && limits.length > 0 && (
+          <div className='font-medium'>{t(`quota.status.${channel.providerQuotaStatus.status}`)}</div>
+        )}
         {limits.map((limit, index) => {
           const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
           const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
           return (
             <div key={`${limit.window}-${index}`} className='text-xs'>
               {quotaWindowLabel(limit.window, t) || t('quota.label.quota')}: {remaining}%
+            </div>
+          );
+        })}
+        {bindings.map((binding) => {
+          const monitor = binding.usageMonitorChannel;
+          if (!monitor) return null;
+          const status = monitor.quotaStatus ?? 'unknown';
+          return (
+            <div key={binding.id} className='text-xs'>
+              {monitor.name}: {binding.enabled ? t(`quota.status.${status}`) : t('channels.quota.monitorBindingDisabled')}
             </div>
           );
         })}
