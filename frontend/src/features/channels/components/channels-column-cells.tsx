@@ -786,7 +786,15 @@ function QuotaLimitRow({ limit, t }: { limit: ProviderQuotaLimit; t: QuotaCellTr
   );
 }
 
-function QuotaMonitorGroup({ binding, showSeparator, t }: { binding: ChannelQuotaMonitorBindingView; showSeparator: boolean; t: QuotaCellTranslator }) {
+function QuotaMonitorGroup({
+  binding,
+  showSeparator,
+  t,
+}: {
+  binding: ChannelQuotaMonitorBindingView;
+  showSeparator: boolean;
+  t: QuotaCellTranslator;
+}) {
   const monitor = binding.usageMonitorChannel;
   if (!monitor) return null;
   const status = monitor.quotaStatus ?? 'unknown';
@@ -794,12 +802,10 @@ function QuotaMonitorGroup({ binding, showSeparator, t }: { binding: ChannelQuot
   return (
     <div className={`flex flex-col gap-1 ${showSeparator ? 'border-t pt-1.5' : ''} ${binding.enabled ? '' : 'opacity-50'}`}>
       <div className='flex items-center justify-end gap-2'>
-        <span className='text-foreground min-w-24 max-w-32 truncate text-left font-medium' title={monitor.name}>
+        <span className='text-foreground max-w-32 min-w-24 truncate text-left font-medium' title={monitor.name}>
           {monitor.name}
         </span>
-        <span
-          className={`min-w-24 text-left font-medium ${binding.enabled ? monitorStatusColor(status) : 'text-muted-foreground'}`}
-        >
+        <span className={`min-w-24 text-left font-medium ${binding.enabled ? monitorStatusColor(status) : 'text-muted-foreground'}`}>
           {binding.enabled ? t(`quota.status.${status}`) : t('channels.quota.monitorBindingDisabled')}
         </span>
         <span className='w-8 shrink-0' />

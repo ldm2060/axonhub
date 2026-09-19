@@ -117,7 +117,7 @@ test('channel table shows normalized provider quota for any channel type', () =>
   assert.doesNotMatch(quotaCell, /OAUTH_CHANNEL_TYPES/, 'quota rendering must not use an OAuth channel type allowlist');
   assert.match(quotaCell, /100\s*-\s*usageRatio\s*\*\s*100/, 'the table should display remaining quota percentage');
   assert.match(quotaCell, /QUOTA_VISIBLE_LIMIT\s*=\s*5/, 'quota cells should initially show at most five rows');
-  assert.match(quotaCell, /isExpanded\s*\?\s*limits\s*:\s*limits\.slice\(0,\s*QUOTA_VISIBLE_LIMIT\)/);
+  assert.match(quotaCell, /isExpanded\s*\?\s*units\s*:\s*units\.slice\(0,\s*QUOTA_VISIBLE_LIMIT\)/);
   assert.match(quotaCell, /channels\.quota\.expand/);
   assert.match(quotaCell, /channels\.quota\.collapse/);
   assert.match(quotaCell, /parseQuotaLimits/, 'the table should consume the shared normalized-limit parser');

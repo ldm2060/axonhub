@@ -5,13 +5,7 @@ import ts from 'typescript';
 
 // Run the dialog's pure prefix/suffix extractors without loading React or its providers.
 const source = readFileSync(new URL('./channels-model-mapping-dialog.tsx', import.meta.url), 'utf8');
-const ast = ts.createSourceFile(
-  'channels-model-mapping-dialog.tsx',
-  source,
-  ts.ScriptTarget.Latest,
-  true,
-  ts.ScriptKind.TSX
-);
+const ast = ts.createSourceFile('channels-model-mapping-dialog.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const helperNames = ['PREFIX_SEPARATORS', 'extractAllPrefixes', 'extractAllSuffixes'];
 const helpers = ast.statements
   .filter((node) => {

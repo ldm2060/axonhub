@@ -287,6 +287,6 @@ test('more than five normalized limits expose the remaining rows for expansion',
     limits.map((limit) => limit.window),
     ['5h', '7d', '30d', 'daily', 'weekly', 'monthly']
   );
-  assert.match(columns, /const visibleLimits = isExpanded \? limits : limits\.slice\(0, QUOTA_VISIBLE_LIMIT\)/);
-  assert.match(columns, /const hiddenCount = limits\.length - QUOTA_VISIBLE_LIMIT/);
+  assert.match(columns, /const visibleUnits = isExpanded \? units : units\.slice\(0, QUOTA_VISIBLE_LIMIT\)/);
+  assert.match(columns, /const hiddenCount = units\.length - QUOTA_VISIBLE_LIMIT/);
 });
