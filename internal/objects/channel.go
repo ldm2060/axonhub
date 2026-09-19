@@ -168,10 +168,13 @@ type ChannelSettings struct {
 	ExtraModelPrefix string `json:"extraModelPrefix"`
 
 	// AutoTrimedModelPrefixes configures prefixes to automatically trim the model name when added to supported models.
+	// The prefix may be written with or without its trailing separator:
 	// e.g. a channel
 	// supported_modles is ["deepseek-ai/deepseek-chat", "openai/gpt-4"]
-	// autoTrimedModelPrefixes is ["openai", "deepseek"]
-	// then the model "openai/gpt-4", "deepseek/deepseek-chat", "deepseek-chat", "gpt-4" will be accepted.
+	// autoTrimedModelPrefixes is ["openai", "deepseek-ai"]
+	// then the model "openai/gpt-4", "deepseek-ai/deepseek-chat", "gpt-4", "deepseek-chat" will be accepted.
+	// A prefix that includes its own separator also works, e.g. "cn:" trims
+	// "cn:deepseek-chat" to "deepseek-chat".
 	AutoTrimedModelPrefixes []string `json:"autoTrimedModelPrefixes"`
 
 	// AutoTrimedModelSuffixes configures suffixes to automatically trim from the model name when matching requests.

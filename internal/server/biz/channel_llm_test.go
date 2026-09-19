@@ -442,3 +442,114 @@ func TestChannel_ChooseModel_AutoTrimedModelPrefixes(t *testing.T) {
 		})
 	}
 }
+
+func TestChannel_GetModelEntries_AutoTrimedPrefixSeparator(t *testing.T) {
+	tests := []struct {
+		name             string
+		channel          *Channel
+		expectedModels   map[string]ChannelModelEntry
+		shouldNotContain []string
+	}{
+		{
+			name: "prefix with its own separator is trimmed verbatim",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					Name:            "Volcengine",
+					SupportedModels: []string{"cn:deepseek-v4.1-flash"},
+					Settings:        &objects.ChannelSettings{AutoTrimedModelPrefixes: []string{"cn:"}},
+				},
+			},
+			expectedModels: map[string]ChannelModelEntry{
+				"cn:deepseek-v4.1-flash": {
+					RequestModel: "cn:deepseek-v4.1-flash",
+					ActualModel:  "cn:deepseek-v4.1-flash",
+					Source:       "direct",
+				},
+				"deepseek-v4.1-flash": {
+					RequestModel: "deepseek-v4.1-flash",
+					ActualModel:  "cn:deepseek-v4.1-flash",
+					Source:       "auto_trim",
+				},
+			},
+		},
+		{
+			name: "prefix without separator still trims slash-separated models",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					Name:            "DeepSeek",
+					SupportedModels: []string{"deepseek-ai/DeepSeek-V3.2"},
+					Settings:        &objects.ChannelSettings{AutoTrimedModelPrefixes: []string{"deepseek-ai"}},
+				},
+			},
+			expectedModels: map[string]ChannelModelEntry{
+				"deepseek-ai/DeepSeek-V3.2": {
+					RequestModel: "deepseek-ai/DeepSeek-V3.2",
+					ActualModel:  "deepseek-ai/DeepSeek-V3.2",
+					Source:       "direct",
+				},
+				"DeepSeek-V3.2": {
+					RequestModel: "DeepSeek-V3.2",
+					ActualModel:  "deepseek-ai/DeepSeek-V3.2",
+					Source:       "auto_trim",
+				},
+			},
+		},
+		{
+			name: "prefix without separator also trims colon-separated models",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					Name:            "Volcengine",
+					SupportedModels: []string{"cn:deepseek-v4.1-flash"},
+					Settings:        &objects.ChannelSettings{AutoTrimedModelPrefixes: []string{"cn"}},
+				},
+			},
+			expectedModels: map[string]ChannelModelEntry{
+				"deepseek-v4.1-flash": {
+					RequestModel: "deepseek-v4.1-flash",
+					ActualModel:  "cn:deepseek-v4.1-flash",
+					Source:       "auto_trim",
+				},
+			},
+		},
+		{
+			name: "hideOriginalModels hides the direct model once a trimmed alias exists",
+			channel: &Channel{
+				Channel: &ent.Channel{
+					Name:            "Volcengine",
+					SupportedModels: []string{"cn:deepseek-v4.1-flash"},
+					Settings: &objects.ChannelSettings{
+						AutoTrimedModelPrefixes: []string{"cn:"},
+						HideOriginalModels:      true,
+					},
+				},
+			},
+			expectedModels: map[string]ChannelModelEntry{
+				"deepseek-v4.1-flash": {
+					RequestModel: "deepseek-v4.1-flash",
+					ActualModel:  "cn:deepseek-v4.1-flash",
+					Source:       "auto_trim",
+				},
+			},
+			shouldNotContain: []string{"cn:deepseek-v4.1-flash"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.channel.GetModelEntries()
+
+			for expectedModel, expectedEntry := range tt.expectedModels {
+				entry, exists := result[expectedModel]
+				require.True(t, exists, "model %s should exist in result", expectedModel)
+				require.Equal(t, expectedEntry.RequestModel, entry.RequestModel)
+				require.Equal(t, expectedEntry.ActualModel, entry.ActualModel)
+				require.Equal(t, expectedEntry.Source, entry.Source)
+			}
+
+			for _, shouldNotContain := range tt.shouldNotContain {
+				_, exists := result[shouldNotContain]
+				require.False(t, exists, "model %s should not exist in result", shouldNotContain)
+			}
+		})
+	}
+}

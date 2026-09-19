@@ -1626,6 +1626,24 @@ func (svc *ChannelService) refreshOAuthToken(ctx context.Context, ch *ent.Channe
 	return nil
 }
 
+// trimModelPrefix cuts prefix from the head of model. The prefix may be written
+// with or without its trailing separator: "cn:" matches "cn:deepseek-chat"
+// verbatim, while "openai" matches "openai/gpt-4" by additionally consuming the
+// leading "/" or ":" separator.
+func trimModelPrefix(model, prefix string) (string, bool) {
+	after, ok := strings.CutPrefix(model, prefix)
+	if !ok || after == "" {
+		return "", false
+	}
+	if after[0] == '/' || after[0] == ':' {
+		after = after[1:]
+	}
+	if after == "" {
+		return "", false
+	}
+	return after, true
+}
+
 // GetModelEntries returns all models this channel can handle, RequestModel -> Entry
 // This unifies:
 // - SupportedModels (direct models)
@@ -1697,7 +1715,7 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 			// fall back to prefix-only trim for this model.
 			hasPrefix := false
 			for _, prefix := range prefixes {
-				after, ok := strings.CutPrefix(model, prefix+"/")
+				after, ok := trimModelPrefix(model, prefix)
 				if !ok {
 					continue
 				}
@@ -1709,7 +1727,7 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 						matched = true
 					}
 				}
-				if !matched && after != "" {
+				if !matched {
 					candidates = append(candidates, after)
 				}
 			}
@@ -1724,7 +1742,7 @@ func (ch *Channel) GetModelEntries() map[string]ChannelModelEntry {
 			}
 		case len(prefixes) > 0:
 			for _, prefix := range prefixes {
-				if after, ok := strings.CutPrefix(model, prefix+"/"); ok && after != "" {
+				if after, ok := trimModelPrefix(model, prefix); ok {
 					candidates = append(candidates, after)
 				}
 			}

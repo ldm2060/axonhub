@@ -1340,6 +1340,11 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
 
 const CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION = `
           supportedModels
+          allModelEntries {
+            requestModel
+            actualModel
+            source
+          }
 `;
 
 const CHANNEL_QUERY_TAGS_SELECTION = `
