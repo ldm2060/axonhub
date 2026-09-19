@@ -71,6 +71,10 @@ const extractAliasFromModelPath = (modelPath: string): string => {
   return segments[segments.length - 1]?.trim() ?? '';
 };
 
+// Prefix separators recognized by the backend trim (see biz.trimModelPrefix):
+// '/' path style ("openai/gpt-4") and ':' region style ("cn:deepseek-chat").
+const PREFIX_SEPARATORS = new Set(['/', ':']);
+
 const extractAllPrefixes = (models: string[]): string[] => {
   if (!models || models.length === 0) {
     return [];
@@ -78,11 +82,12 @@ const extractAllPrefixes = (models: string[]): string[] => {
 
   const prefixes = new Set<string>();
   models.forEach((model) => {
-    const segments = model.split('/');
-    for (let i = 1; i < segments.length; i++) {
-      const prefix = segments.slice(0, i).join('/');
-      if (prefix) {
-        prefixes.add(prefix);
+    for (let i = 0; i < model.length; i++) {
+      if (PREFIX_SEPARATORS.has(model[i])) {
+        const prefix = model.slice(0, i);
+        if (prefix) {
+          prefixes.add(prefix);
+        }
       }
     }
   });
@@ -91,8 +96,8 @@ const extractAllPrefixes = (models: string[]): string[] => {
 };
 
 // extractAllSuffixes detects trailing substrings shared by 2+ leaf model names.
-// Unlike prefixes (which split cleanly on '/'), suffixes have no structural
-// separator, so we anchor candidates at separator characters (- . _) within the
+// Unlike prefixes (which split cleanly on '/' or ':'), suffixes have no structural
+// separator, so we anchor candidates at separator characters (- . _ :) within the
 // leaf name and keep only those recurring across multiple distinct leaves.
 const extractAllSuffixes = (models: string[]): string[] => {
   if (!models || models.length === 0) {
@@ -117,7 +122,7 @@ const extractAllSuffixes = (models: string[]): string[] => {
     return [];
   }
 
-  const SEPARATORS = new Set(['-', '.', '_']);
+  const SEPARATORS = new Set(['-', '.', '_', ':']);
   const supportingLeaves = new Map<string, Set<string>>();
 
   leafNames.forEach((leaf) => {
