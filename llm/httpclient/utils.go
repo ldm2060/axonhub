@@ -34,6 +34,7 @@ func ReadHTTPRequest(rawReq *http.Request) (*Request, error) {
 		Auth:       &AuthConfig{},
 		RequestID:  "",
 		ClientIP:   getClientIP(rawReq),
+		UserAgent:  rawReq.UserAgent(),
 		RawRequest: rawReq,
 	}
 
