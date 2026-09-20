@@ -170,7 +170,7 @@ function PersonalChannelsContent() {
     columnVisibility,
   });
 
-  const { data: sharedRaw = [], isLoading: sharedLoading } = useMySharedChannels();
+  const { data: sharedRaw = [], isLoading: sharedLoading } = useMySharedChannels(columnVisibility);
   const sharedChannels = useMemo(() => filterSharedPersonalChannels(sharedRaw, currentUser?.id), [sharedRaw, currentUser?.id]);
   const sharedFiltered = useMemo(
     () =>

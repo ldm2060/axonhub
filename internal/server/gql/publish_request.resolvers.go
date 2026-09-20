@@ -92,6 +92,30 @@ func (r *queryResolver) MySharedChannels(ctx context.Context) ([]*ent.Channel, e
 	return r.channelService.ListSharedWithUser(ctx, user.ID)
 }
 
+// ShareableUsers is the resolver for the shareableUsers field.
+func (r *queryResolver) ShareableUsers(ctx context.Context, search *string, first *int) ([]*SharedUser, error) {
+	user, ok := contexts.GetUser(ctx)
+	if !ok || user == nil {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	if !canShareResources(ctx) {
+		return nil, fmt.Errorf("permission denied: sharing requires manage_own_channels, manage_own_models or read_users")
+	}
+
+	limit := 0
+	if first != nil {
+		limit = *first
+	}
+
+	infos, err := r.userService.SearchShareableUsers(ctx, derefStr(search), limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return sharedUsersFromInfos(infos), nil
+}
+
 // MyDashboard is the resolver for the myDashboard field.
 func (r *queryResolver) MyDashboard(ctx context.Context) (*DashboardOverview, error) {
 	projectIDs, err := r.getUserProjectIDs(ctx)

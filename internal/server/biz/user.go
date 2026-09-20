@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/samber/lo"
@@ -909,4 +910,87 @@ func (s *UserService) ListOwners(ctx context.Context) ([]*ent.User, error) {
 	return s.entFromContext(ctx).User.Query().
 		Where(user.IsOwner(true), user.StatusEQ(user.StatusActivated)).
 		All(ctx)
+}
+
+// SharedUserInfo is a minimal user identity for sharing pickers and shared-with
+// lists. It deliberately omits scopes, roles and status: the caller only needs to
+// render a name and tell two people apart.
+type SharedUserInfo struct {
+	ID        int
+	Email     string
+	FirstName string
+	LastName  string
+}
+
+// maxShareableUsers bounds how many users a single sharing lookup may return.
+const maxShareableUsers = 200
+
+// SharedUsersByIDs resolves the user IDs stored in a shared_with list, keeping the
+// order of the list. The lookup bypasses privacy on purpose: the owner of a shared
+// resource is not required to hold read_users, but still has to see who they
+// shared it with.
+func (s *UserService) SharedUsersByIDs(ctx context.Context, ids []int) ([]*SharedUserInfo, error) {
+	unique := lo.Uniq(lo.Filter(ids, func(id int, _ int) bool { return id > 0 }))
+	if len(unique) == 0 {
+		return []*SharedUserInfo{}, nil
+	}
+
+	users, err := authz.RunWithSystemBypass(ctx, "shared-users-lookup", func(bypassCtx context.Context) ([]*ent.User, error) {
+		return s.entFromContext(bypassCtx).User.Query().
+			Where(user.IDIn(unique...)).
+			All(bypassCtx)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query shared users: %w", err)
+	}
+
+	byID := lo.Associate(users, func(u *ent.User) (int, *ent.User) { return u.ID, u })
+
+	return lo.FilterMap(unique, func(id int, _ int) (*SharedUserInfo, bool) {
+		u, ok := byID[id]
+		if !ok {
+			return nil, false
+		}
+
+		return sharedUserInfoFromUser(u), true
+	}), nil
+}
+
+// SearchShareableUsers lists users a resource owner may share with. Without the
+// read_users scope the users query only ever returns the caller, which would leave
+// the sharing picker empty, so this path runs under a system bypass and returns
+// identity fields only.
+func (s *UserService) SearchShareableUsers(ctx context.Context, search string, limit int) ([]*SharedUserInfo, error) {
+	if limit <= 0 || limit > maxShareableUsers {
+		limit = maxShareableUsers
+	}
+
+	term := strings.TrimSpace(search)
+
+	users, err := authz.RunWithSystemBypass(ctx, "shareable-users-search", func(bypassCtx context.Context) ([]*ent.User, error) {
+		query := s.entFromContext(bypassCtx).User.Query().Where(user.StatusEQ(user.StatusActivated))
+		if term != "" {
+			query = query.Where(user.Or(
+				user.EmailContainsFold(term),
+				user.FirstNameContainsFold(term),
+				user.LastNameContainsFold(term),
+			))
+		}
+
+		return query.Limit(limit).Order(ent.Asc(user.FieldID)).All(bypassCtx)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query shareable users: %w", err)
+	}
+
+	return lo.Map(users, func(u *ent.User, _ int) *SharedUserInfo { return sharedUserInfoFromUser(u) }), nil
+}
+
+func sharedUserInfoFromUser(u *ent.User) *SharedUserInfo {
+	return &SharedUserInfo{
+		ID:        u.ID,
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+	}
 }

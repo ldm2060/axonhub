@@ -1293,6 +1293,12 @@ minInputTokens
           ownerID
           visibility
           sharedWith
+          sharedUsers {
+            id
+            email
+            firstName
+            lastName
+          }
           quotaBindingReady
           quotaMultiMonitorStrategy
           providerQuotaStatus {
@@ -1325,6 +1331,12 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
           ownerID
           visibility
           sharedWith
+          sharedUsers {
+            id
+            email
+            firstName
+            lastName
+          }
           quotaBindingReady
           quotaMultiMonitorStrategy
           settings {
@@ -1409,18 +1421,36 @@ function isChannelColumnVisible(columnVisibility: ChannelListColumnVisibility | 
   return columnVisibility?.[columnID] !== false;
 }
 
+// buildChannelNodeSelection returns the Channel field set shared by every channel
+// list surface, so the shared-channels tab renders the same columns as the rest.
+export function buildChannelNodeSelection(columnVisibility?: ChannelListColumnVisibility, options?: { full?: boolean }): string {
+  if (options?.full) {
+    return CHANNEL_QUERY_FULL_NODE_SELECTION;
+  }
+
+  return [
+    CHANNEL_QUERY_LIST_NODE_BASE_SELECTION,
+    isChannelColumnVisible(columnVisibility, 'supportedModels') ? CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION : '',
+    isChannelColumnVisible(columnVisibility, 'tags') ? CHANNEL_QUERY_TAGS_SELECTION : '',
+    isChannelColumnVisible(columnVisibility, 'proxy') ? CHANNEL_QUERY_PROXY_SELECTION : '',
+    isChannelColumnVisible(columnVisibility, 'orderingWeight') ? CHANNEL_QUERY_ORDERING_WEIGHT_SELECTION : '',
+    isChannelColumnVisible(columnVisibility, 'health') ? CHANNEL_QUERY_HEALTH_SELECTION : '',
+    isChannelColumnVisible(columnVisibility, 'quota') ? CHANNEL_QUERY_QUOTA_SELECTION : '',
+  ].join('');
+}
+
+export function buildMySharedChannelsQuery(columnVisibility?: ChannelListColumnVisibility): string {
+  return `
+  query MySharedChannels {
+    mySharedChannels {
+${buildChannelNodeSelection(columnVisibility)}
+    }
+  }
+`;
+}
+
 export function buildQueryChannelsQuery(columnVisibility?: ChannelListColumnVisibility, options?: { full?: boolean }): string {
-  const nodeSelection = options?.full
-    ? CHANNEL_QUERY_FULL_NODE_SELECTION
-    : [
-        CHANNEL_QUERY_LIST_NODE_BASE_SELECTION,
-        isChannelColumnVisible(columnVisibility, 'supportedModels') ? CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION : '',
-        isChannelColumnVisible(columnVisibility, 'tags') ? CHANNEL_QUERY_TAGS_SELECTION : '',
-        isChannelColumnVisible(columnVisibility, 'proxy') ? CHANNEL_QUERY_PROXY_SELECTION : '',
-        isChannelColumnVisible(columnVisibility, 'orderingWeight') ? CHANNEL_QUERY_ORDERING_WEIGHT_SELECTION : '',
-        isChannelColumnVisible(columnVisibility, 'health') ? CHANNEL_QUERY_HEALTH_SELECTION : '',
-        isChannelColumnVisible(columnVisibility, 'quota') ? CHANNEL_QUERY_QUOTA_SELECTION : '',
-      ].join('');
+  const nodeSelection = buildChannelNodeSelection(columnVisibility, options);
 
   return `
   query QueryChannels($input: QueryChannelInput!) {

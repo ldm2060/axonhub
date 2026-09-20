@@ -8,6 +8,13 @@ extend type Mutation {
 
 extend type Query {
   mySharedChannels: [Channel!]!
+
+  """
+  Users the caller may pick when sharing a channel or model. Requires one of
+  manage_own_channels, manage_own_models or read_users. Returns identity fields
+  only, so a resource owner without read_users can still share.
+  """
+  shareableUsers(search: String, first: Int): [SharedUser!]!
   myDashboard: DashboardOverview!
   myRequestStats(timeWindow: String): RequestStats!
   myRequestStatsByChannel(timeWindow: String): [RequestStatsByChannel!]!

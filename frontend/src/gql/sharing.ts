@@ -13,6 +13,12 @@ const SHARE_CHANNEL_MUTATION = `
       ownerID
       visibility
       sharedWith
+      sharedUsers {
+        id
+        email
+        firstName
+        lastName
+      }
     }
   }
 `;
@@ -24,6 +30,12 @@ const UNSHARE_CHANNEL_MUTATION = `
       ownerID
       visibility
       sharedWith
+      sharedUsers {
+        id
+        email
+        firstName
+        lastName
+      }
     }
   }
 `;
@@ -36,12 +48,19 @@ export function useShareChannel() {
   return useMutation({
     mutationFn: async ({ id, userIDs }: { id: string; userIDs: string[] }) => {
       const data = await graphqlRequest<{
-        shareChannel: { id: string; ownerID: string; visibility: string; sharedWith: number[] };
+        shareChannel: {
+          id: string;
+          ownerID: string;
+          visibility: string;
+          sharedWith: number[];
+          sharedUsers: SharedUser[];
+        };
       }>(SHARE_CHANNEL_MUTATION, { id, userIDs });
       return data.shareChannel;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['mySharedChannels'] });
       toast.success(t('share.messages.shareSuccess'));
     },
     onError: (error) => {
@@ -58,17 +77,67 @@ export function useUnshareChannel() {
   return useMutation({
     mutationFn: async ({ id, userIDs }: { id: string; userIDs: string[] }) => {
       const data = await graphqlRequest<{
-        unshareChannel: { id: string; ownerID: string; visibility: string; sharedWith: number[] };
+        unshareChannel: {
+          id: string;
+          ownerID: string;
+          visibility: string;
+          sharedWith: number[];
+          sharedUsers: SharedUser[];
+        };
       }>(UNSHARE_CHANNEL_MUTATION, { id, userIDs });
       return data.unshareChannel;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      queryClient.invalidateQueries({ queryKey: ['mySharedChannels'] });
       toast.success(t('share.messages.unshareSuccess'));
     },
     onError: (error) => {
       handleError(error, { context: 'Unshare Channel' });
     },
+  });
+}
+
+// Shareable Users Query
+
+const SHAREABLE_USERS_QUERY = `
+  query ShareableUsers($search: String, $first: Int) {
+    shareableUsers(search: $search, first: $first) {
+      id
+      email
+      firstName
+      lastName
+    }
+  }
+`;
+
+// Matches the server-side cap for a single shareable-users page.
+const SHAREABLE_USERS_LIMIT = 200;
+
+export interface SharedUser {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+/**
+ * Users the current user may share a resource with.
+ *
+ * The regular users query is gated behind read_users and only ever returns the
+ * caller without it, which left the sharing picker empty for resource owners who
+ * are not admins. This query needs a sharing scope instead and returns identity
+ * fields only.
+ */
+export function useShareableUsers(options?: { disableAutoFetch?: boolean }) {
+  return useQuery({
+    queryKey: ['shareableUsers'],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ shareableUsers: SharedUser[] }>(SHAREABLE_USERS_QUERY, { first: SHAREABLE_USERS_LIMIT });
+      return data.shareableUsers ?? [];
+    },
+    enabled: !options?.disableAutoFetch,
+    staleTime: 30_000,
   });
 }
 

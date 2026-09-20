@@ -123,6 +123,24 @@ func (r *channelResolver) LiveLimiterStats(ctx context.Context, obj *ent.Channel
 	}, nil
 }
 
+// SharedUsers is the resolver for the sharedUsers field.
+func (r *channelResolver) SharedUsers(ctx context.Context, obj *ent.Channel) ([]*SharedUser, error) {
+	if obj == nil || len(obj.SharedWith) == 0 {
+		return []*SharedUser{}, nil
+	}
+
+	if !canManageChannelSharing(ctx, obj) {
+		return []*SharedUser{}, nil
+	}
+
+	infos, err := r.userService.SharedUsersByIDs(ctx, obj.SharedWith)
+	if err != nil {
+		return nil, err
+	}
+
+	return sharedUsersFromInfos(infos), nil
+}
+
 // HeaderOverrideOperations is the resolver for the headerOverrideOperations field.
 func (r *channelSettingsResolver) HeaderOverrideOperations(ctx context.Context, obj *objects.ChannelSettings) ([]*objects.OverrideOperation, error) {
 	if obj == nil {

@@ -501,6 +501,15 @@ type ScopeInfo struct {
 	Levels      []string `json:"levels"`
 }
 
+// SharedUser is a minimal user identity for sharing UIs: enough to render a name and
+// tell two people apart, without exposing scopes, roles or account status.
+type SharedUser struct {
+	ID        objects.GUID `json:"id"`
+	Email     string       `json:"email"`
+	FirstName *string      `json:"firstName,omitempty"`
+	LastName  *string      `json:"lastName,omitempty"`
+}
+
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

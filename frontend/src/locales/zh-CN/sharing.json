@@ -6,6 +6,7 @@
   "share.dialog.searchUsers": "搜索用户...",
   "share.dialog.noUsers": "未找到用户。",
   "share.dialog.sharedWith": "已共享给",
+  "share.dialog.unknownUser": "已删除的用户 #{{id}}",
   "share.dialog.notOwner": "只有所有者可以管理此资源的共享。",
   "share.dialog.requestPublish": "申请发布",
   "share.dialog.requestPublishTitle": "申请发布",

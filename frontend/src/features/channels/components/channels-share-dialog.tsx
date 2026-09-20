@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { IconShare, IconX, IconLoader2, IconUserPlus } from '@tabler/icons-react';
-import { useShareChannel, useUnshareChannel, useRequestPublish } from '@/gql/sharing';
+import { useShareChannel, useUnshareChannel, useRequestPublish, useShareableUsers, type SharedUser } from '@/gql/sharing';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
-import { formatUserName } from '@/lib/utils';
+import { buildGUID, extractNumberID, formatUserName } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
-import { useUsers } from '@/features/users/data/users';
 import { Channel } from '../data/schema';
 
 interface Props {
@@ -30,34 +29,70 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [publishComment, setPublishComment] = useState('');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
-
-  // Fetch all users for the sharing dropdown
-  const { data: usersData } = useUsers({ first: 100, where: { statusIn: ['activated'] } }, { disableAutoFetch: false });
+  // The dialog is handed the table row it was opened from, which goes stale as soon
+  // as a share mutation lands. Keep the server's answer and prefer it over the row.
+  const [sharedState, setSharedState] = useState<{
+    sharedWith: number[];
+    sharedUsers: SharedUser[];
+    visibility: string;
+  } | null>(null);
 
   const isOwner = !channel.ownerID || channel.ownerID === String(authUser?.id) || authUser?.isOwner;
-  const sharedWith = channel.sharedWith || [];
-  const visibility = channel.visibility || 'private';
+  // shared_with stores bare user IDs while every user ID that reaches the UI is a
+  // GUID, so compare on the numeric part of either shape.
+  const sharedWithIds = useMemo(() => sharedState?.sharedWith ?? channel.sharedWith ?? [], [sharedState, channel.sharedWith]);
+  const sharedUserList = useMemo(() => sharedState?.sharedUsers ?? channel.sharedUsers ?? [], [sharedState, channel.sharedUsers]);
+  const visibility = sharedState?.visibility ?? channel.visibility ?? 'private';
 
-  // Build user options, excluding already shared users and the owner
-  const userOptions = (usersData?.edges || [])
-    .map((edge) => ({
-      value: edge.node.id,
-      label: `${formatUserName(edge.node.firstName, edge.node.lastName)} (${edge.node.email})`.trim(),
-    }))
-    .filter((opt) => !sharedWith.includes(Number(opt.value)) && opt.value !== String(authUser?.id));
+  useEffect(() => {
+    setSharedState(null);
+  }, [channel.id, open]);
 
-  // Build shared users list
-  const sharedUsers = sharedWith.map((userId) => {
-    const user = usersData?.edges?.find((edge) => edge.node.id === String(userId));
-    return user
-      ? { id: String(userId), name: formatUserName(user.node.firstName, user.node.lastName), email: user.node.email }
-      : { id: String(userId), name: String(userId), email: '' };
+  const { data: shareableUsers = [], isLoading: isLoadingShareableUsers } = useShareableUsers({
+    disableAutoFetch: !open || !isOwner,
   });
+
+  // Build user options, excluding already shared users and the current user
+  const userOptions = useMemo(
+    () =>
+      shareableUsers
+        .filter((user) => !sharedWithIds.includes(Number(extractNumberID(user.id))) && user.id !== authUser?.id)
+        .map((user) => ({
+          value: user.id,
+          label: `${formatUserName(user.firstName, user.lastName) || user.email} (${user.email})`,
+        })),
+    [shareableUsers, sharedWithIds, authUser?.id]
+  );
+
+  // Resolved names come from the server so the list renders even when the caller
+  // cannot list users. A user that no longer exists is still listed, by its ID, so
+  // the owner can drop it from shared_with.
+  const sharedUsers = useMemo(() => {
+    const resolved = sharedUserList.map((user) => ({
+      id: user.id,
+      userId: String(extractNumberID(user.id)),
+      name: formatUserName(user.firstName, user.lastName) || user.email,
+      email: user.email,
+    }));
+    const resolvedIds = resolved.map((user) => user.userId);
+    const unresolved = sharedWithIds
+      .map(String)
+      .filter((userId) => !resolvedIds.includes(userId))
+      .map((userId) => ({
+        id: buildGUID('User', userId),
+        userId,
+        name: t('share.dialog.unknownUser', { id: userId }),
+        email: '',
+      }));
+
+    return [...resolved, ...unresolved];
+  }, [sharedUserList, sharedWithIds, t]);
 
   const handleShare = useCallback(async () => {
     if (!selectedUserId) return;
     try {
-      await shareChannel.mutateAsync({ id: channel.id, userIDs: [selectedUserId] });
+      const updated = await shareChannel.mutateAsync({ id: channel.id, userIDs: [selectedUserId] });
+      setSharedState({ sharedWith: updated.sharedWith, sharedUsers: updated.sharedUsers ?? [], visibility: updated.visibility });
       setSelectedUserId('');
     } catch {
       // Error handled by mutation
@@ -67,7 +102,8 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
   const handleUnshare = useCallback(
     async (userId: string) => {
       try {
-        await unshareChannel.mutateAsync({ id: channel.id, userIDs: [userId] });
+        const updated = await unshareChannel.mutateAsync({ id: channel.id, userIDs: [userId] });
+        setSharedState({ sharedWith: updated.sharedWith, sharedUsers: updated.sharedUsers ?? [], visibility: updated.visibility });
       } catch {
         // Error handled by mutation
       }
@@ -128,7 +164,7 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
                         selectedValue={selectedUserId}
                         onSelectedValueChange={setSelectedUserId}
                         items={userOptions}
-                        isLoading={false}
+                        isLoading={isLoadingShareableUsers}
                         emptyMessage={t('share.dialog.noUsers')}
                         placeholder={t('share.dialog.searchUsers')}
                       />

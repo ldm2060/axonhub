@@ -564,6 +564,17 @@ export const channelSchema = z.object({
   ownerID: z.string().optional().nullable(),
   visibility: z.enum(['private', 'shared', 'published']).default('private'),
   sharedWith: z.array(z.number()).optional().default([]).nullable(),
+  sharedUsers: z
+    .array(
+      z.object({
+        id: z.string(),
+        email: z.string(),
+        firstName: z.string().optional().nullable(),
+        lastName: z.string().optional().nullable(),
+      })
+    )
+    .optional()
+    .default([]),
   quotaBindingReady: z.boolean().optional().default(true),
   quotaMultiMonitorStrategy: z.enum(['any', 'all']).optional().nullable(),
 });

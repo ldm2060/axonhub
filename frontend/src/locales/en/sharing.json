@@ -6,6 +6,7 @@
   "share.dialog.searchUsers": "Search users...",
   "share.dialog.noUsers": "No users found.",
   "share.dialog.sharedWith": "Shared With",
+  "share.dialog.unknownUser": "Deleted user #{{id}}",
   "share.dialog.notOwner": "Only the owner can manage sharing for this resource.",
   "share.dialog.requestPublish": "Request Publish",
   "share.dialog.requestPublishTitle": "Request Publish",
