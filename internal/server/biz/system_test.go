@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
 	"github.com/ldm2060/axonhub/internal/ent/hook"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
@@ -1626,4 +1627,35 @@ func TestSetRetryPolicy_RejectsPermanentDelete(t *testing.T) {
 	require.Error(t, err)
 	var coded *xerrors.CodedError
 	require.ErrorAs(t, err, &coded)
+}
+
+// The owner created by the first-run wizard must be able to sign in right away.
+// This fork defaults user.status to "pending" for self-registration approval, and
+// AuthenticateUser only accepts activated users, so an owner left pending locks
+// everyone out of a freshly initialized instance (nothing can approve them).
+func TestSystemService_Initialize_ActivatesOwner(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
+	defer client.Close()
+
+	service := NewSystemService(SystemServiceParams{})
+	ctx := ent.NewContext(t.Context(), client)
+
+	err := service.Initialize(ctx, &InitializeSystemParams{
+		OwnerEmail:     "owner@example.com",
+		OwnerPassword:  "password123",
+		OwnerFirstName: "System",
+		OwnerLastName:  "Owner",
+		BrandName:      "Test Brand",
+	})
+	require.NoError(t, err)
+
+	ctx = authz.WithTestBypass(ctx)
+
+	owner, err := client.User.Query().
+		Where(user.EmailEQ("owner@example.com")).
+		Only(ctx)
+	require.NoError(t, err)
+	require.True(t, owner.IsOwner)
+	require.Equal(t, user.StatusActivated, owner.Status)
+	require.NotNil(t, owner.EmailVerifiedAt, "owner must not need email verification")
 }

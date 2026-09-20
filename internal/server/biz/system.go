@@ -23,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/system"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
@@ -916,23 +917,30 @@ func (s *SystemService) Initialize(ctx context.Context, params *InitializeSystem
 	if preferLanguage == "" {
 		preferLanguage = "en" // Default to English if not specified
 	}
-	user, err := tx.User.Create().
+	// The instance owner is created already activated and email-verified. This
+	// fork defaults user.status to "pending" for self-registration approval, but a
+	// pending owner can never sign in (AuthenticateUser only accepts activated
+	// users) and there is no admin yet to approve them.
+	now := time.Now()
+	owner, err := tx.User.Create().
 		SetEmail(params.OwnerEmail).
 		SetPassword(hashedPassword).
 		SetFirstName(params.OwnerFirstName).
 		SetLastName(params.OwnerLastName).
 		SetPreferLanguage(preferLanguage).
 		SetIsOwner(true).
+		SetStatus(user.StatusActivated).
+		SetEmailVerifiedAt(now).
 		SetScopes([]string{"*"}). // Give owner all scopes
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create owner user: %w", err)
 	}
 
-	log.Info(ctx, "created owner user", zap.Int("user_id", user.ID))
+	log.Info(ctx, "created owner user", zap.Int("user_id", owner.ID))
 
 	// Set user in context for project creation
-	ctx = contexts.WithUser(ctx, user)
+	ctx = contexts.WithUser(ctx, owner)
 	// Create default project and assign owner
 	projectService := NewProjectService(ProjectServiceParams{})
 	projectInput := ent.CreateProjectInput{

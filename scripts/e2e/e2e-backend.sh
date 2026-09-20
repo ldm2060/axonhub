@@ -8,6 +8,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 E2E_DB="${SCRIPT_DIR}/axonhub-e2e.db"
+# SQLite needs a native path. Under Git Bash/MSYS the DSN would otherwise be built
+# from a POSIX path (/c/...) that the Windows binary cannot open, and the server
+# dies at startup with "unable to open database file". cygpath -m keeps forward
+# slashes, which SQLite accepts on every platform.
+if command -v cygpath > /dev/null 2>&1; then
+  E2E_DB_DSN_PATH="$(cygpath -m "$E2E_DB")"
+else
+  E2E_DB_DSN_PATH="$E2E_DB"
+fi
 E2E_PORT=8099
 BINARY_NAME="axonhub-e2e"
 BINARY_PATH="${SCRIPT_DIR}/${BINARY_NAME}"
@@ -156,7 +165,7 @@ case "${1:-}" in
           rm -f "$E2E_DB"
         fi
         DB_DIALECT="sqlite3"
-        DB_DSN="file:${E2E_DB}?cache=shared&_fk=1"
+        DB_DSN="file:${E2E_DB_DSN_PATH}?cache=shared&_fk=1"
         ;;
       mysql)
         if [ "$USE_EXISTING_DB" = "true" ]; then
