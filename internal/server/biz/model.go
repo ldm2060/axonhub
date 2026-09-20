@@ -654,6 +654,15 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 
 	ctx = authz.WithScopeDecision(ctx, scopes.ScopeReadChannels)
 
+	// Channel ownership decides what a request may route through. Keep the public
+	// model list consistent with it, so a user is not offered models that only
+	// resolve to channels they cannot use.
+	if user, ok := contexts.GetActingUser(ctx); ok && user != nil {
+		channels = lo.Filter(channels, func(ch *Channel, _ int) bool {
+			return scopes.CanRouteThroughChannel(user, ch.Channel)
+		})
+	}
+
 	if apiKey, ok := contexts.GetAPIKey(ctx); ok && apiKey != nil {
 		// Project-level profile filtering (upper boundary)
 		if projectProfile := apiKey.Edges.Project.GetActiveProfile(); projectProfile != nil {

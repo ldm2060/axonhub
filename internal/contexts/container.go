@@ -16,6 +16,11 @@ type contextContainer struct {
 	OperationName *string
 	APIKey        *ent.APIKey
 	User          *ent.User
+	// PrincipalUser is the user a request acts as when the authenticated
+	// principal is an API key rather than a signed-in session. It is kept apart
+	// from User so per-user access rules can be evaluated without making the
+	// request look like a session belonging to that user.
+	PrincipalUser *ent.User
 	Source        *request.Source
 	Thread        *ent.Thread
 	Trace         *ent.Trace

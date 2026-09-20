@@ -59,6 +59,30 @@ func GetUser(ctx context.Context) (*ent.User, bool) {
 	return container.User, container.User != nil
 }
 
+// WithPrincipalUser stores the user an API-key-issued request acts as.
+func WithPrincipalUser(ctx context.Context, user *ent.User) context.Context {
+	container := getContainer(ctx)
+	container.PrincipalUser = user
+
+	return withContainer(ctx, container)
+}
+
+// GetPrincipalUser retrieves the user an API-key-issued request acts as.
+func GetPrincipalUser(ctx context.Context) (*ent.User, bool) {
+	container := getContainer(ctx)
+	return container.PrincipalUser, container.PrincipalUser != nil
+}
+
+// GetActingUser returns the user a request acts as: the signed-in user when
+// there is one, otherwise the user behind the request's API key.
+func GetActingUser(ctx context.Context) (*ent.User, bool) {
+	if user, ok := GetUser(ctx); ok && user != nil {
+		return user, true
+	}
+
+	return GetPrincipalUser(ctx)
+}
+
 // WithTraceID stores the trace id in the context.
 func WithTraceID(ctx context.Context, traceID string) context.Context {
 	container := getContainer(ctx)

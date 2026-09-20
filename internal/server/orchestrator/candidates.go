@@ -114,7 +114,12 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 			// Check if fallback to legacy channel selection is allowed
 			settings := s.SystemService.ModelSettingsOrDefault(ctx)
 			if settings.FallbackToChannelsOnModelNotFound {
-				return s.selectChannelCadidates(ctx, req)
+				legacyCandidates, legacyErr := s.selectChannelCadidates(ctx, req)
+				if legacyErr != nil {
+					return nil, legacyErr
+				}
+
+				return filterCandidatesByChannelAccess(ctx, legacyCandidates), nil
 			}
 
 			return nil, fmt.Errorf("%w: %q", biz.ErrInvalidModel, req.Model)
@@ -123,7 +128,7 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 		return nil, fmt.Errorf("%w: %q", err, req.Model)
 	}
 
-	return candidates, nil
+	return filterCandidatesByChannelAccess(ctx, candidates), nil
 }
 
 // selectChannelCadidates performs the original channel selection logic.

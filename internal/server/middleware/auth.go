@@ -73,6 +73,8 @@ func WithAPIKeyConfig(auth *biz.AuthService, config *APIKeyConfig) gin.HandlerFu
 			return
 		}
 
+		ctx = withAPIKeyPrincipalUser(ctx, auth, apiKey)
+
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -171,6 +173,8 @@ func WithOpenAPIAuth(auth *biz.AuthService) gin.HandlerFunc {
 			return
 		}
 
+		ctx = withAPIKeyPrincipalUser(ctx, auth, apiKey)
+
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
@@ -225,6 +229,8 @@ func WithGeminiKeyAuth(auth *biz.AuthService) gin.HandlerFunc {
 			return
 		}
 
+		ctx = withAPIKeyPrincipalUser(ctx, auth, apiKey)
+
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -238,6 +244,31 @@ func WithSource(source request.Source) gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
+}
+
+// withAPIKeyPrincipalUser records the user an API-key-issued request acts as, so
+// per-user channel access rules can be evaluated on the request path. Keys without
+// a user (service account, noauth) leave the context untouched, which keeps those
+// principals on the system-level path.
+func withAPIKeyPrincipalUser(ctx context.Context, auth *biz.AuthService, key *ent.APIKey) context.Context {
+	if auth == nil || auth.UserService == nil || key == nil || key.UserID == 0 {
+		return ctx
+	}
+
+	user, err := auth.UserService.GetUserByID(authz.WithSystemBypass(ctx, "api-key-user-lookup"), key.UserID)
+	if err != nil {
+		// A missing owner must not fail the request: without an acting user the
+		// request keeps the permissive system-level path.
+		log.Warn(ctx, "failed to load api key owner",
+			log.Int("api_key_id", key.ID),
+			log.Int("user_id", key.UserID),
+			log.Cause(err),
+		)
+
+		return ctx
+	}
+
+	return contexts.WithPrincipalUser(ctx, user)
 }
 
 func withSessionScopeForAPIKey(ctx context.Context, key *ent.APIKey) context.Context {
