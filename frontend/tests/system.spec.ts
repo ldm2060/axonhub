@@ -6,7 +6,7 @@ const memoryDiagnosticsZipBase64 = 'UEsDBBQAAAAIACG2t1iPyUwQCwAAAAkAAAAIAAAAdGVz
 
 test.describe('Admin System Management', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoAndEnsureAuth(page, '/system')
+    await gotoAndEnsureAuth(page, '/admin/system')
   })
 
   test('can view system tabs and update brand settings', async ({ page }) => {

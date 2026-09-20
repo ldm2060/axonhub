@@ -4,7 +4,7 @@ import { gotoAndEnsureAuth } from './auth.utils';
 test.describe('Users Management', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the users page with authentication
-    await gotoAndEnsureAuth(page, '/users');
+    await gotoAndEnsureAuth(page, '/admin/users');
   });
 
   test('should display users table', async ({ page }) => {
@@ -60,7 +60,7 @@ test.describe('Users Management', () => {
 test.describe('Roles Management', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the roles page with authentication
-    await gotoAndEnsureAuth(page, '/roles');
+    await gotoAndEnsureAuth(page, '/admin/roles');
   });
 
   test('should display roles table with improved UI', async ({ page }) => {

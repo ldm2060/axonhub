@@ -3,7 +3,7 @@ import { gotoAndEnsureAuth, waitForGraphQLOperation } from './auth.utils'
 
 test.describe('Admin Roles Management', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoAndEnsureAuth(page, '/roles')
+    await gotoAndEnsureAuth(page, '/admin/roles')
   })
 
   test('can create, edit, and delete a role', async ({ page }) => {

@@ -55,7 +55,7 @@ async function createFilesystemDataStorage(page: Page) {
 test.describe('Admin Data Storage Management', () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    await gotoAndEnsureAuth(page, '/data-storages')
+    await gotoAndEnsureAuth(page, '/admin/data-storages')
     await page.waitForTimeout(1500)
   })
 

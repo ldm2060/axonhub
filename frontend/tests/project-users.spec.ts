@@ -18,7 +18,7 @@ test.describe('Project Users Management', () => {
     const email = `pw-project-test-${uniqueSuffix}@example.com`
     
     // Navigate to users page to create a new user
-    await page.goto('/users')
+    await page.goto('/admin/users')
     await page.waitForTimeout(1000)
     
     const addUserButton = page.getByRole('button', { name: /添加用户|Add User|新增用户|Create User/i })

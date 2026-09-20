@@ -4,7 +4,7 @@ import { gotoAndEnsureAuth, waitForGraphQLOperation } from './auth.utils'
 test.describe('Admin Models Management', () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    await gotoAndEnsureAuth(page, '/models')
+    await gotoAndEnsureAuth(page, '/admin/models')
 
     const modelsTable = page.getByTestId('models-table')
     await modelsTable.waitFor({ state: 'visible', timeout: 20000 })

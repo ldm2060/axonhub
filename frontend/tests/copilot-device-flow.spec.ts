@@ -4,7 +4,7 @@ import { gotoAndEnsureAuth } from './auth.utils'
 test.describe('GitHub Copilot Device Flow', () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    await gotoAndEnsureAuth(page, '/channels')
+    await gotoAndEnsureAuth(page, '/admin/channels')
     await page.waitForTimeout(2000)
     const channelsTable = page.locator('[data-testid="channels-table"]')
     await channelsTable.waitFor({ state: 'visible', timeout: 15000 })
@@ -212,7 +212,7 @@ test.describe('GitHub Copilot Device Flow', () => {
 
   test('device flow requires project selection', async ({ page }) => {
     // Navigate to channels without project context
-    await page.goto('/channels?project=none')
+    await page.goto('/admin/channels?project=none')
     await page.waitForTimeout(2000)
 
     // Try to open create dialog

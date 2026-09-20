@@ -162,7 +162,8 @@ test.describe('Admin API Keys Management', () => {
     await expect(secondProfileInput).toHaveAttribute('aria-invalid', 'true')
 
     // Check that Save button is disabled
-    const saveButton = profilesDialog.getByRole('button', { name: /保存|Save/i })
+    // The fork's profiles dialog also offers "Save as Template", so match the form's own Save button exactly.
+    const saveButton = profilesDialog.getByRole('button', { name: /^(保存|Save)$/ })
     await expect(saveButton).toBeDisabled()
 
     // Change to a unique name
@@ -254,7 +255,7 @@ test.describe('Admin API Keys Management', () => {
     await expect(secondProfileInput).toHaveAttribute('aria-invalid', 'true')
     
     // Save button should be disabled
-    const saveButton = profilesDialog.getByRole('button', { name: /保存|Save/i })
+    const saveButton = profilesDialog.getByRole('button', { name: /^(保存|Save)$/ })
     await expect(saveButton).toBeDisabled()
     
     // Try with whitespace: " default "
@@ -359,7 +360,7 @@ test.describe('Admin API Keys Management', () => {
     await unitSelect.click()
     await page.getByRole('option', { name: /分钟|Minute/i }).first().click()
 
-    const saveButton = profilesDialog.getByRole('button', { name: /保存|Save/i })
+    const saveButton = profilesDialog.getByRole('button', { name: /^(保存|Save)$/ })
     await expect(saveButton).toBeEnabled()
 
     await Promise.all([waitForGraphQLOperation(page, 'UpdateAPIKeyProfiles'), saveButton.click()])

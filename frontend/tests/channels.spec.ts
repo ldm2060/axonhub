@@ -5,7 +5,7 @@ test.describe('Admin Channels Management', () => {
   test.beforeEach(async ({ page }) => {
     // Increase timeout for authentication
     test.setTimeout(60000)
-    await gotoAndEnsureAuth(page, '/channels')
+    await gotoAndEnsureAuth(page, '/admin/channels')
 
     // Wait for page to fully load and channels table to appear
     await page.waitForTimeout(2000)

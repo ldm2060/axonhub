@@ -3,7 +3,7 @@ import { gotoAndEnsureAuth, waitForGraphQLOperation } from './auth.utils'
 
 test.describe('Admin Users Management', () => {
   test.beforeEach(async ({ page }) => {
-    await gotoAndEnsureAuth(page, '/users')
+    await gotoAndEnsureAuth(page, '/admin/users')
   })
 
   test('can create, deactivate, activate, and edit a user', async ({ page }) => {

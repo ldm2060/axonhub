@@ -33,7 +33,7 @@ test.describe('Users - Add to Project', () => {
     await page.waitForTimeout(500)
     
     // Create a test user
-    await page.goto('/users')
+    await page.goto('/admin/users')
     await page.waitForLoadState('domcontentloaded')
     
     testUserEmail = `pw-test-project-user-${uniqueSuffix}@example.com`
@@ -63,7 +63,7 @@ test.describe('Users - Add to Project', () => {
 
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000)
-    await gotoAndEnsureAuth(page, '/users')
+    await gotoAndEnsureAuth(page, '/admin/users')
   })
 
   test('can add user to project with owner permission', async ({ page }) => {

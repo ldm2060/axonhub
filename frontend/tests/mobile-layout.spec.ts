@@ -130,11 +130,12 @@ test.describe('Mobile Header Layout', () => {
       const settingsLink = page.getByRole('link', { name: /system/i }).first();
       await settingsLink.click();
 
-      // Wait for navigation to complete
-      await page.waitForURL(/.*\/system.*/, { timeout: 5000 });
+      // Wait for navigation to complete. The fork surfaces the settings entry as
+      // /admin/system and the runtime entry as /admin/runtime, so accept either.
+      await page.waitForURL(/.*\/(system|runtime).*/, { timeout: 5000 });
 
       // Verify we're on the system page
-      await expect(page).toHaveURL(/.*\/system.*/);
+      await expect(page).toHaveURL(/.*\/(system|runtime).*/);
     });
 
     test('language switch is clickable in sidebar', async ({ page }) => {
