@@ -88,6 +88,7 @@ All detailed rules are in `.agent/rules/`:
 | [frontend-i18n.md](.agent/rules/frontend-i18n.md) | `frontend/src/**/*.ts`, `frontend/src/**/*.tsx`, `frontend/src/locales/*.json` | i18n 与货币格式规则 |
 | [frontend-ui.md](.agent/rules/frontend-ui.md) | `frontend/**/*.tsx` | 前端 UI 组件使用规则 |
 | [quota-header-monitors.md](.agent/rules/quota-header-monitors.md) | header popover + usage monitors | Fork: battery popover lists monitors (no bind gate); reuse `SharedFieldRenderer` for template badges; template period-quota from all matching-provider channels |
+| [channel-access.md](.agent/rules/channel-access.md) | channel sharing + request routing | Fork: visibility vs. usage are separate rules; `CanRouteThroughChannel` gates routing and the model list (owner / shared / published); `shared_with` stores bare IDs while the UI uses GUIDs |
 | [e2e.md](.agent/rules/e2e.md) | `frontend/tests/**/*.ts` | E2E testing rules |
 | [docs.md](.agent/rules/docs.md) | `docs/**/*.md` | Documentation rules |
 | [workflows/add-channel.md](.agent/rules/workflows/add-channel.md) | Manual | Workflow for adding a new channel |

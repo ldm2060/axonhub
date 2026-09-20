@@ -119,6 +119,8 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 					return nil, legacyErr
 				}
 
+				// Fork-specific channel access rule: every candidate path must pass
+				// through the filter (see .agent/rules/channel-access.md).
 				return filterCandidatesByChannelAccess(ctx, legacyCandidates), nil
 			}
 
@@ -128,6 +130,8 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 		return nil, fmt.Errorf("%w: %q", err, req.Model)
 	}
 
+	// Fork-specific channel access rule: candidates are filtered here, after the
+	// selection and association caches, so those caches stay principal-independent.
 	return filterCandidatesByChannelAccess(ctx, candidates), nil
 }
 

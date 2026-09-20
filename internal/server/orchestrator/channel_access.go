@@ -27,6 +27,11 @@ func actingUserForRouting(ctx context.Context) *ent.User {
 // may not route through. The enabled-channel cache holds every enabled channel,
 // so private channels of other users - and shared channels the user is not on
 // the list for - have to be dropped here rather than at load time.
+//
+// Fork-specific: see .agent/rules/channel-access.md. Do not move this filter into
+// resolveAssociations or the channel cache - both are keyed on channel count and
+// timestamps and are shared by every request, so a user-scoped filter there would
+// poison the cache for whoever asks next.
 func filterCandidatesByChannelAccess(ctx context.Context, candidates []*ChannelModelsCandidate) []*ChannelModelsCandidate {
 	if len(candidates) == 0 {
 		return candidates

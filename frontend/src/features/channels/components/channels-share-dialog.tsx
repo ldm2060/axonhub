@@ -39,7 +39,8 @@ export function ChannelsShareDialog({ open, onOpenChange, channel }: Props) {
 
   const isOwner = !channel.ownerID || channel.ownerID === String(authUser?.id) || authUser?.isOwner;
   // shared_with stores bare user IDs while every user ID that reaches the UI is a
-  // GUID, so compare on the numeric part of either shape.
+  // GUID, so compare on the numeric part of either shape. Getting this wrong is
+  // what made sharing look broken (see .agent/rules/channel-access.md).
   const sharedWithIds = useMemo(() => sharedState?.sharedWith ?? channel.sharedWith ?? [], [sharedState, channel.sharedWith]);
   const sharedUserList = useMemo(() => sharedState?.sharedUsers ?? channel.sharedUsers ?? [], [sharedState, channel.sharedUsers]);
   const visibility = sharedState?.visibility ?? channel.visibility ?? 'private';

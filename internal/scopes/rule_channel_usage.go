@@ -8,6 +8,12 @@ import (
 // CanRouteThroughChannel reports whether a request acting as user may be routed
 // through ch.
 //
+// Fork-specific rule (upstream has no channel access control): see
+// .agent/rules/channel-access.md and
+// .agent/summary/2026-09-20-channel-sharing-and-access-design.md. Keep this the
+// single source of truth for routing and model listing, and do not fold
+// read_channels into it - self-registered users hold that scope by default.
+//
 // Visibility decides who may see a channel; this decides who may use it:
 //   - a nil user is a system-level principal (service account, noauth key,
 //     background task) and keeps unrestricted access

@@ -250,6 +250,10 @@ func WithSource(source request.Source) gin.HandlerFunc {
 // per-user channel access rules can be evaluated on the request path. Keys without
 // a user (service account, noauth) leave the context untouched, which keeps those
 // principals on the system-level path.
+//
+// Fork-specific (see .agent/rules/channel-access.md): every API-key authentication
+// path in this file must call it - a missing call silently drops that entry point
+// back to the unrestricted system path.
 func withAPIKeyPrincipalUser(ctx context.Context, auth *biz.AuthService, key *ent.APIKey) context.Context {
 	if auth == nil || auth.UserService == nil || key == nil || key.UserID == 0 {
 		return ctx

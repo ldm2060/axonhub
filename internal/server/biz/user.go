@@ -928,7 +928,7 @@ const maxShareableUsers = 200
 // SharedUsersByIDs resolves the user IDs stored in a shared_with list, keeping the
 // order of the list. The lookup bypasses privacy on purpose: the owner of a shared
 // resource is not required to hold read_users, but still has to see who they
-// shared it with.
+// shared it with. Fork-specific, see .agent/rules/channel-access.md.
 func (s *UserService) SharedUsersByIDs(ctx context.Context, ids []int) ([]*SharedUserInfo, error) {
 	unique := lo.Uniq(lo.Filter(ids, func(id int, _ int) bool { return id > 0 }))
 	if len(unique) == 0 {
@@ -959,7 +959,7 @@ func (s *UserService) SharedUsersByIDs(ctx context.Context, ids []int) ([]*Share
 // SearchShareableUsers lists users a resource owner may share with. Without the
 // read_users scope the users query only ever returns the caller, which would leave
 // the sharing picker empty, so this path runs under a system bypass and returns
-// identity fields only.
+// identity fields only. Fork-specific, see .agent/rules/channel-access.md.
 func (s *UserService) SearchShareableUsers(ctx context.Context, search string, limit int) ([]*SharedUserInfo, error) {
 	if limit <= 0 || limit > maxShareableUsers {
 		limit = maxShareableUsers

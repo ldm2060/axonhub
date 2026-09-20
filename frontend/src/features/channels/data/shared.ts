@@ -7,11 +7,13 @@ import { channelSchema, type Channel } from './schema';
 /**
  * Channels another user shared with the signed-in user.
  *
- * This goes through the dedicated `mySharedChannels` query instead of a
- * `visibility: shared` list query: the channel privacy rule only filters by
- * visibility for callers without read_channels, so a list query either returns
- * every user's shared channels or nothing at all. The server resolves the
- * shared_with membership for the current user.
+ * This goes through the dedicated `mySharedChannels` query: the channel privacy
+ * rule only filters by visibility for callers without read_channels, so a
+ * `where: {visibility: 'shared'}` list query either returns every user's shared
+ * channels or nothing at all. The server resolves the shared_with membership for
+ * the current user.
+ *
+ * Fork-specific (see .agent/rules/channel-access.md): keep it that way.
  */
 export function useMySharedChannels(columnVisibility?: ChannelListColumnVisibility) {
   const query = buildMySharedChannelsQuery(columnVisibility);
