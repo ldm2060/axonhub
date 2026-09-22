@@ -675,9 +675,7 @@ export function useConcurrencyLimitSettings() {
   return useQuery({
     queryKey: ['concurrencyLimitSettings'],
     queryFn: async () => {
-      const data = await graphqlRequest<{ concurrencyLimitSettings: ConcurrencyLimitSettings }>(
-        CONCURRENCY_LIMIT_SETTINGS_QUERY,
-      );
+      const data = await graphqlRequest<{ concurrencyLimitSettings: ConcurrencyLimitSettings }>(CONCURRENCY_LIMIT_SETTINGS_QUERY);
       return data.concurrencyLimitSettings;
     },
   });
@@ -688,10 +686,7 @@ export function useUpdateConcurrencyLimitSettings() {
 
   return useMutation({
     mutationFn: async (input: UpdateConcurrencyLimitSettingsInput) => {
-      const data = await graphqlRequest<{ updateConcurrencyLimitSettings: boolean }>(
-        UPDATE_CONCURRENCY_LIMIT_SETTINGS_MUTATION,
-        { input },
-      );
+      const data = await graphqlRequest<{ updateConcurrencyLimitSettings: boolean }>(UPDATE_CONCURRENCY_LIMIT_SETTINGS_MUTATION, { input });
       return data.updateConcurrencyLimitSettings;
     },
     onSuccess: () => {
