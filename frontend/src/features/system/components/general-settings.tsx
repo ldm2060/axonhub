@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
 import { useSystemContext } from '../context/system-context';
@@ -19,6 +20,8 @@ import {
   useUpdatePassThroughSettings,
   useUsageCostInjectionSettings,
   useUpdateUsageCostInjectionSettings,
+  useConcurrencyLimitSettings,
+  useUpdateConcurrencyLimitSettings,
 } from '../data/system';
 import { GMTTimeZoneOptions } from '../data/timezones';
 import { CatalogSettings } from './catalog-settings';
@@ -42,6 +45,23 @@ export function GeneralSettings() {
   const { data: usageCostSettings, isLoading: isLoadingUsageCostSettings } = useUsageCostInjectionSettings();
   const updateUsageCostSettings = useUpdateUsageCostInjectionSettings();
   const [usageCostInjectionEnabled, setUsageCostInjectionEnabled] = useState(false);
+
+  // Per-user concurrency limit
+  const { data: concurrencyLimitSettings, isLoading: isLoadingConcurrencyLimit } = useConcurrencyLimitSettings();
+  const updateConcurrencyLimit = useUpdateConcurrencyLimitSettings();
+  const [maxConcurrentRequestsPerUser, setMaxConcurrentRequestsPerUser] = useState('0');
+
+  useEffect(() => {
+    if (concurrencyLimitSettings) {
+      setMaxConcurrentRequestsPerUser(String(concurrencyLimitSettings.maxConcurrentRequestsPerUser));
+    }
+  }, [concurrencyLimitSettings]);
+
+  const handleConcurrencyLimitSave = () => {
+    const parsed = Number.parseInt(maxConcurrentRequestsPerUser, 10);
+    const value = Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    updateConcurrencyLimit.mutate({ maxConcurrentRequestsPerUser: value });
+  };
 
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [timezone, setTimezone] = useState('UTC');
@@ -207,6 +227,47 @@ export function GeneralSettings() {
               onCheckedChange={handlePassThroughChange}
               disabled={isLoadingPTSettings || updatePTSettings.isPending}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('system.concurrencyLimit.title')}</CardTitle>
+          <CardDescription>{t('system.concurrencyLimit.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='max-concurrent-requests'>{t('system.concurrencyLimit.label')}</Label>
+            <div className='flex max-w-md items-center gap-2'>
+              <Input
+                id='max-concurrent-requests'
+                type='number'
+                min={0}
+                step={1}
+                value={maxConcurrentRequestsPerUser}
+                onChange={(event) => setMaxConcurrentRequestsPerUser(event.target.value)}
+                disabled={isLoadingConcurrencyLimit}
+              />
+              <Button
+                onClick={handleConcurrencyLimitSave}
+                disabled={isLoadingConcurrencyLimit || updateConcurrencyLimit.isPending}
+                className='min-w-[100px]'
+              >
+                {updateConcurrencyLimit.isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    {t('system.buttons.saving')}
+                  </>
+                ) : (
+                  <>
+                    <Save className='mr-2 h-4 w-4' />
+                    {t('system.buttons.save')}
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className='text-muted-foreground text-sm'>{t('system.concurrencyLimit.helpText')}</div>
           </div>
         </CardContent>
       </Card>

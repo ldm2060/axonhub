@@ -649,6 +649,61 @@ export function useUpdateStreamingSettings() {
   });
 }
 
+const CONCURRENCY_LIMIT_SETTINGS_QUERY = `
+  query ConcurrencyLimitSettings {
+    concurrencyLimitSettings {
+      maxConcurrentRequestsPerUser
+    }
+  }
+`;
+
+const UPDATE_CONCURRENCY_LIMIT_SETTINGS_MUTATION = `
+  mutation UpdateConcurrencyLimitSettings($input: UpdateConcurrencyLimitSettingsInput!) {
+    updateConcurrencyLimitSettings(input: $input)
+  }
+`;
+
+export interface ConcurrencyLimitSettings {
+  maxConcurrentRequestsPerUser: number;
+}
+
+export interface UpdateConcurrencyLimitSettingsInput {
+  maxConcurrentRequestsPerUser?: number;
+}
+
+export function useConcurrencyLimitSettings() {
+  return useQuery({
+    queryKey: ['concurrencyLimitSettings'],
+    queryFn: async () => {
+      const data = await graphqlRequest<{ concurrencyLimitSettings: ConcurrencyLimitSettings }>(
+        CONCURRENCY_LIMIT_SETTINGS_QUERY,
+      );
+      return data.concurrencyLimitSettings;
+    },
+  });
+}
+
+export function useUpdateConcurrencyLimitSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: UpdateConcurrencyLimitSettingsInput) => {
+      const data = await graphqlRequest<{ updateConcurrencyLimitSettings: boolean }>(
+        UPDATE_CONCURRENCY_LIMIT_SETTINGS_MUTATION,
+        { input },
+      );
+      return data.updateConcurrencyLimitSettings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['concurrencyLimitSettings'] });
+      toast.success(i18n.t('common.success.systemUpdated'));
+    },
+    onError: () => {
+      toast.error(i18n.t('common.errors.systemUpdateFailed'));
+    },
+  });
+}
+
 export function useWebhookNotifierConfig() {
   return useQuery({
     queryKey: ['webhookNotifierConfig'],

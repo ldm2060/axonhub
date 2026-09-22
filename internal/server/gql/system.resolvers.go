@@ -81,6 +81,20 @@ func (r *mutationResolver) UpdateStreamingSettings(ctx context.Context, input bi
 	return true, nil
 }
 
+// UpdateConcurrencyLimitSettings is the resolver for the updateConcurrencyLimitSettings field.
+func (r *mutationResolver) UpdateConcurrencyLimitSettings(ctx context.Context, input UpdateConcurrencyLimitSettingsInput) (bool, error) {
+	settings := &biz.ConcurrencyLimitSettings{}
+	if input.MaxConcurrentRequestsPerUser != nil {
+		settings.MaxConcurrentRequestsPerUser = *input.MaxConcurrentRequestsPerUser
+	}
+
+	if err := r.systemService.SetConcurrencyLimitSettings(ctx, settings); err != nil {
+		return false, fmt.Errorf("failed to update concurrency limit settings: %w", err)
+	}
+
+	return true, nil
+}
+
 // UpdateWebhookNotifierConfig is the resolver for the updateWebhookNotifierConfig field.
 func (r *mutationResolver) UpdateWebhookNotifierConfig(ctx context.Context, input biz.WebhookNotifierConfig) (bool, error) {
 	err := r.systemService.SetWebhookNotifierConfig(ctx, &input)
@@ -637,6 +651,16 @@ func (r *queryResolver) RetryPolicy(ctx context.Context) (*biz.RetryPolicy, erro
 // StreamingSettings is the resolver for the streamingSettings field.
 func (r *queryResolver) StreamingSettings(ctx context.Context) (*biz.StreamingSettings, error) {
 	return r.systemService.StreamingSettings(ctx)
+}
+
+// ConcurrencyLimitSettings is the resolver for the concurrencyLimitSettings field.
+func (r *queryResolver) ConcurrencyLimitSettings(ctx context.Context) (*biz.ConcurrencyLimitSettings, error) {
+	settings, err := r.systemService.ConcurrencyLimitSettings(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get concurrency limit settings: %w", err)
+	}
+
+	return settings, nil
 }
 
 // WebhookNotifierConfig is the resolver for the webhookNotifierConfig field.

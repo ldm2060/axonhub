@@ -197,6 +197,14 @@ type StreamingSettings {
   httpStreamKeepaliveIntervalSeconds: Int!
 }
 
+type ConcurrencyLimitSettings {
+  maxConcurrentRequestsPerUser: Int!
+}
+
+input UpdateConcurrencyLimitSettingsInput {
+  maxConcurrentRequestsPerUser: Int
+}
+
 input UpdateStreamingSettingsInput {
   webSocketKeepaliveIntervalSeconds: Int
   httpStreamKeepaliveIntervalSeconds: Int
@@ -515,6 +523,7 @@ extend type Mutation {
   updateStoragePolicy(input: UpdateStoragePolicyInput!): Boolean!
   updateRetryPolicy(input: UpdateRetryPolicyInput!): Boolean!
   updateStreamingSettings(input: UpdateStreamingSettingsInput!): Boolean!
+  updateConcurrencyLimitSettings(input: UpdateConcurrencyLimitSettingsInput!): Boolean!
   updateWebhookNotifierConfig(input: WebhookNotifierConfigInput!): Boolean!
   updateSystemModelSettings(input: UpdateSystemModelSettingsInput!): Boolean!
   updateDefaultDataStorage(input: UpdateDefaultDataStorageInput!): Boolean!
@@ -662,6 +671,7 @@ extend type Query {
   storagePolicy: StoragePolicy!
   retryPolicy: RetryPolicy!
   streamingSettings: StreamingSettings!
+  concurrencyLimitSettings: ConcurrencyLimitSettings!
   webhookNotifierConfig: WebhookNotifierConfig!
   systemModelSettings: SystemModelSettings!
   defaultDataStorageID: ID

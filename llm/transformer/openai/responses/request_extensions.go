@@ -283,6 +283,21 @@ func openAIResponsesRequestExtensions(llmReq *llm.Request) *llm.OpenAIResponsesR
 	return requestExt
 }
 
+// hasRawPayload reports whether the extensions carry anything that must be
+// spliced back into the marshalled body. When they do not, the body produced by
+// json.Marshal(payload) is already final and the map round-trip below would
+// only copy the whole request for nothing.
+func hasRawPayload(e *llm.OpenAIResponsesRequestExtensions) bool {
+	if e == nil {
+		return false
+	}
+
+	return len(e.RawFields) > 0 ||
+		len(e.RawTools) > 0 ||
+		len(e.RawInputItems) > 0 ||
+		len(e.RawToolChoice) > 0
+}
+
 func marshalRequestPayload(payload Request, llmReq *llm.Request) ([]byte, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -290,7 +305,7 @@ func marshalRequestPayload(payload Request, llmReq *llm.Request) ([]byte, error)
 	}
 
 	requestExt := openAIResponsesRequestExtensions(llmReq)
-	if requestExt == nil {
+	if !hasRawPayload(requestExt) {
 		return body, nil
 	}
 
@@ -386,7 +401,9 @@ func mergeRawOnlyInputItems(structuredRaw json.RawMessage, requestExt *llm.OpenA
 		if structuredIndex >= len(structuredItems) {
 			return nil, false
 		}
-		items = append(items, cloneRaw(structuredItems[structuredIndex]))
+		// structuredItems already owns freshly decoded copies from
+		// json.Unmarshal, so cloning again would double the input array.
+		items = append(items, structuredItems[structuredIndex])
 		structuredIndex++
 	}
 
@@ -446,7 +463,9 @@ func mergeRawOnlyTools(structuredRaw json.RawMessage, requestExt *llm.OpenAIResp
 		if structuredIndex >= len(structuredTools) {
 			return nil, false
 		}
-		tools = append(tools, cloneRaw(structuredTools[structuredIndex]))
+		// structuredTools already owns freshly decoded copies from
+		// json.Unmarshal, so cloning again would double the tools array.
+		tools = append(tools, structuredTools[structuredIndex])
 		structuredIndex++
 	}
 

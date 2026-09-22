@@ -207,6 +207,10 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		middleware.WithSource(request.SourceAPI),
 		middleware.WithThread(server.Config.Trace, services.ThreadService),
 		middleware.WithTrace(server.Config.Trace, services.TraceService),
+		// Bound the number of requests whose bodies are resident at once. Each
+		// request holds several copies of its body across the transform
+		// pipeline, so this is the main lever on peak heap.
+		middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 	}
 	apiGroup := server.Group("/", append([]gin.HandlerFunc{
 		middleware.WithTimeout(server.Config.LLMRequestTimeout),

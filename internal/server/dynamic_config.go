@@ -15,3 +15,10 @@ func NewIPAccessControlRuntime(cfg Config) (*middleware.IPAccessControlConfig, e
 		cfg.IPAccessControl.RedirectURL,
 	)
 }
+
+// NewConcurrencyLimitRuntime creates the mutable cap enforced by the per-user
+// concurrency-limit middleware. The limit itself lives in the system settings
+// table (see admin → 系统 → 常规); this object only holds the live snapshot.
+func NewConcurrencyLimitRuntime() *middleware.ConcurrencyLimitConfig {
+	return middleware.NewConcurrencyLimitConfig(0)
+}

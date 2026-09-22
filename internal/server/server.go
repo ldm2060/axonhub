@@ -29,7 +29,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
-func New(config Config) *Server {
+func New(config Config, concurrencyLimit *middleware.ConcurrencyLimitConfig) *Server {
 	if !config.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -53,18 +53,20 @@ func New(config Config) *Server {
 	engine.Use(middleware.Recovery())
 
 	return &Server{
-		Config: config,
-		Engine: engine,
+		Config:           config,
+		Engine:           engine,
+		ConcurrencyLimit: concurrencyLimit,
 	}
 }
 
 type Server struct {
 	*gin.Engine
 
-	Config      Config
-	server      *http.Server
-	pprofServer *http.Server
-	addr        string
+	Config           Config
+	server           *http.Server
+	pprofServer      *http.Server
+	addr             string
+	ConcurrencyLimit *middleware.ConcurrencyLimitConfig
 }
 
 func (srv *Server) newHTTPServer(addr string) *http.Server {
@@ -140,6 +142,7 @@ func Run(opts ...fx.Option) {
 		gc.NewWorker,
 		New,
 		NewIPAccessControlRuntime,
+		NewConcurrencyLimitRuntime,
 	}
 
 	app := fx.New(
@@ -185,6 +188,25 @@ func Run(opts ...fx.Option) {
 				lc.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
 						return worker.RegisterScheduledTasks(ctx, s)
+					},
+				})
+			}),
+			fx.Invoke(func(lc fx.Lifecycle, svc *biz.SystemService, concurrencyLimit *middleware.ConcurrencyLimitConfig) {
+				// Push saved settings into the live snapshot at boot, and keep it
+				// in sync when the panel saves a new value.
+				svc.OnConcurrencyLimitChanged = concurrencyLimit.Apply
+
+				lc.Append(fx.Hook{
+					OnStart: func(ctx context.Context) error {
+						settings, err := svc.ConcurrencyLimitSettings(ctx)
+						if err != nil {
+							log.Warn(ctx, "failed to load concurrency limit settings", log.Cause(err))
+							return nil
+						}
+
+						concurrencyLimit.Apply(settings.MaxConcurrentRequestsPerUser)
+
+						return nil
 					},
 				})
 			}),

@@ -13,6 +13,9 @@ on:
 env:
   GO111MODULE: on
   GOPRIVATE: github.com/ldm2060,github.com/looplj
+  # The Responses transformer streams JSON through encoding/json/v2's
+  # MarshalerTo, which only exists with this experiment on.
+  GOEXPERIMENT: jsonv2
 jobs:
   lint:
     runs-on: ubuntu-latest

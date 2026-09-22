@@ -78,6 +78,11 @@ const (
 	// SystemKeyStreamingSettings is the key used to store the streaming settings.
 	SystemKeyStreamingSettings = "streaming_settings"
 
+	// SystemKeyConcurrencyLimitSettings is the key used to store the per-user
+	// concurrency limit. The value is a JSON-encoded ConcurrencyLimitSettings
+	// struct.
+	SystemKeyConcurrencyLimitSettings = "concurrency_limit_settings"
+
 	// SystemKeyWebhookNotifierConfig is the key used to store the webhook notifier configuration.
 	// The value is JSON-encoded WebhookNotifierConfig struct.
 	SystemKeyWebhookNotifierConfig = "webhook_notifier_config"
@@ -548,6 +553,14 @@ type StreamingSettings struct {
 	HTTPStreamKeepaliveIntervalSeconds int `json:"http_stream_keepalive_interval_seconds"`
 }
 
+// ConcurrencyLimitSettings caps how many LLM API requests a single user may
+// have in flight at once.
+type ConcurrencyLimitSettings struct {
+	// MaxConcurrentRequestsPerUser is the per-user cap. 0 means unlimited, which
+	// is the historical behavior.
+	MaxConcurrentRequestsPerUser int `json:"max_concurrent_requests_per_user"`
+}
+
 type AutoDisableChannel struct {
 	// Enabled controls whether auto-disable channel is active
 	Enabled bool `json:"enabled"`
@@ -846,6 +859,11 @@ type SystemService struct {
 
 	mu           sync.RWMutex
 	timeLocation *time.Location
+
+	// OnConcurrencyLimitChanged is invoked after the per-user concurrency limit
+	// is persisted. The server layer wires this to the middleware snapshot so a
+	// saved value takes effect without a restart.
+	OnConcurrencyLimitChanged func(limit int)
 }
 
 func (s *SystemService) IsInitialized(ctx context.Context) (bool, error) {
@@ -1383,6 +1401,66 @@ func (s *SystemService) StreamingSettingsForRuntime(ctx context.Context) (*Strea
 	return authz.RunWithSystemBypass(ctx, "system-streaming-settings", func(bypassCtx context.Context) (*StreamingSettings, error) {
 		return s.StreamingSettings(bypassCtx)
 	})
+}
+
+// ConcurrencyLimitSettings retrieves the per-user concurrency limit. A limit of
+// 0 means unlimited, which is also what an installation that has never saved the
+// setting gets.
+func (s *SystemService) ConcurrencyLimitSettings(ctx context.Context) (*ConcurrencyLimitSettings, error) {
+	value, err := authz.RunWithSystemBypass(ctx, "system-concurrency-limit-settings", func(bypassCtx context.Context) (string, error) {
+		return s.getSystemValue(bypassCtx, SystemKeyConcurrencyLimitSettings)
+	})
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return &ConcurrencyLimitSettings{}, nil
+		}
+
+		return nil, fmt.Errorf("failed to get concurrency limit settings: %w", err)
+	}
+
+	var settings ConcurrencyLimitSettings
+	if err := json.Unmarshal([]byte(value), &settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal concurrency limit settings: %w", err)
+	}
+
+	normalizeConcurrencyLimitSettings(&settings)
+
+	return &settings, nil
+}
+
+// SetConcurrencyLimitSettings persists the per-user concurrency limit and pushes
+// it into the running middleware snapshot.
+func (s *SystemService) SetConcurrencyLimitSettings(ctx context.Context, settings *ConcurrencyLimitSettings) error {
+	if settings == nil {
+		return errors.New("concurrency limit settings cannot be nil")
+	}
+
+	normalizeConcurrencyLimitSettings(settings)
+
+	jsonBytes, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal concurrency limit settings: %w", err)
+	}
+
+	if err := s.setSystemValue(ctx, SystemKeyConcurrencyLimitSettings, string(jsonBytes)); err != nil {
+		return err
+	}
+
+	if s.OnConcurrencyLimitChanged != nil {
+		s.OnConcurrencyLimitChanged(settings.MaxConcurrentRequestsPerUser)
+	}
+
+	return nil
+}
+
+func normalizeConcurrencyLimitSettings(settings *ConcurrencyLimitSettings) {
+	if settings == nil {
+		return
+	}
+
+	if settings.MaxConcurrentRequestsPerUser < 0 {
+		settings.MaxConcurrentRequestsPerUser = 0
+	}
 }
 
 // SetStreamingSettings sets the streaming settings configuration.

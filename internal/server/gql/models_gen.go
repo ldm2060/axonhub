@@ -663,6 +663,10 @@ type UpdateCatalogSettingsInput struct {
 	RefreshSeconds *int    `json:"refreshSeconds,omitempty"`
 }
 
+type UpdateConcurrencyLimitSettingsInput struct {
+	MaxConcurrentRequestsPerUser *int `json:"maxConcurrentRequestsPerUser,omitempty"`
+}
+
 type UpdateDefaultDataStorageInput struct {
 	DataStorageID objects.GUID `json:"dataStorageID"`
 }

@@ -6,6 +6,11 @@
 	lint lint-privacy \
 	generate-schema
 
+# The Responses transformer streams its JSON through encoding/json/v2's
+# MarshalerTo, which only exists with this experiment on. Exporting it here
+# applies to every target below, including the ones CI invokes.
+export GOEXPERIMENT := jsonv2
+
 # Generate GraphQL and Ent code
 generate:
 	@echo "Generating GraphQL and Ent code..."

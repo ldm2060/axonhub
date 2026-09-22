@@ -60,6 +60,23 @@ git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 ```
 
+### Build Requirement: `GOEXPERIMENT=jsonv2`
+
+The Responses transformer streams its JSON through `encoding/json/v2`'s
+`MarshalerTo`, which only exists when the `jsonv2` experiment is enabled. Every
+Go command needs it:
+
+```bash
+export GOEXPERIMENT=jsonv2
+```
+
+The `Makefile` exports it for you, so `make build`, `make test-backend-all` and
+`make lint-all` work without setting anything. Bare `go` invocations and
+`air` do not, hence the export above.
+
+Without it the build fails with
+`imports encoding/json/jsontext: build constraints exclude all Go files`.
+
 ### Start Backend
 
 ```bash
@@ -122,7 +139,14 @@ make generate
 ### Run Backend Tests
 
 ```bash
-go test ./...
+make test-backend-all
+```
+
+Or, without make:
+
+```bash
+GOEXPERIMENT=jsonv2 go test ./...
+cd llm && GOEXPERIMENT=jsonv2 go test ./...
 ```
 
 ### Run E2E Tests
@@ -136,7 +160,13 @@ bash ./scripts/e2e/e2e-test.sh
 ### Run Go Linter
 
 ```bash
-golangci-lint run -v
+make lint-all
+```
+
+Or, without make:
+
+```bash
+GOEXPERIMENT=jsonv2 golangci-lint run -v
 ```
 
 ### Run Frontend Lint/Format

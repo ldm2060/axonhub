@@ -6,6 +6,11 @@
 
 set -e
 
+# The Responses transformer streams JSON through encoding/json/v2's
+# MarshalerTo, which only exists with this experiment on. Default it here so the
+# script also works when invoked directly rather than through make.
+export GOEXPERIMENT="${GOEXPERIMENT:-jsonv2}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

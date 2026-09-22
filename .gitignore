@@ -138,6 +138,9 @@ coverage.out
 *.test
 *.backup
 
+# Memory diagnostics exports (see admin/system → 诊断)
+memory-diagnostics-*.zip
+
 .playwright-cli/
 
 # E2E testing artifacts

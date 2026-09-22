@@ -60,6 +60,22 @@ git clone https://github.com/ldm2060/axonhub.git
 cd axonhub
 ```
 
+### 构建要求：`GOEXPERIMENT=jsonv2`
+
+Responses 转换器通过 `encoding/json/v2` 的 `MarshalerTo` 流式输出 JSON，该接口
+只有在启用 `jsonv2` 实验时才存在。所有 Go 命令都需要它：
+
+```bash
+export GOEXPERIMENT=jsonv2
+```
+
+`Makefile` 已代为导出，因此 `make build`、`make test-backend-all`、
+`make lint-all` 无需额外设置。但裸 `go` 命令和 `air` 不会继承，所以需要上面
+这个 export。
+
+不开启时构建会失败，报
+`imports encoding/json/jsontext: build constraints exclude all Go files`。
+
 ### 启动后端
 
 ```bash
@@ -122,7 +138,14 @@ make generate
 ### 运行后端测试
 
 ```bash
-go test ./...
+make test-backend-all
+```
+
+或不使用 make：
+
+```bash
+GOEXPERIMENT=jsonv2 go test ./...
+cd llm && GOEXPERIMENT=jsonv2 go test ./...
 ```
 
 ### 运行 E2E 测试
@@ -136,7 +159,13 @@ bash ./scripts/e2e/e2e-test.sh
 ### 运行 Go Linter
 
 ```bash
-golangci-lint run -v
+make lint-all
+```
+
+或不使用 make：
+
+```bash
+GOEXPERIMENT=jsonv2 golangci-lint run -v
 ```
 
 ### 运行前端 Lint/格式化检查

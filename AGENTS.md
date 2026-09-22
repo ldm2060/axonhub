@@ -8,14 +8,16 @@ This file provides guidance to AI coding assistants when working with code in th
 
 1. All summary files should be stored in `.agent/summary` directory if available.
 2. **Before every commit, you MUST run the following verification commands and ensure they all pass:**
-   - **Build**: `go build ./...` and `cd llm && go build ./...`
-   - **Lint**: `golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && golangci-lint run --timeout 10m --max-same-issues 50 ./...`
-   - **Test**: `go test ./...` and `cd llm && go test ./...`
+   - **Build**: `GOEXPERIMENT=jsonv2 go build ./...` and `cd llm && GOEXPERIMENT=jsonv2 go build ./...`
+   - **Lint**: `GOEXPERIMENT=jsonv2 golangci-lint run --timeout 10m --max-same-issues 50 ./...` and `cd llm && GOEXPERIMENT=jsonv2 golangci-lint run --timeout 10m --max-same-issues 50 ./...`
+   - **Test**: `GOEXPERIMENT=jsonv2 go test ./...` and `cd llm && GOEXPERIMENT=jsonv2 go test ./...`
    
    If any command fails, fix the issues before committing. Do NOT commit code that doesn't compile or fails tests.
+   
+   > **`GOEXPERIMENT=jsonv2` is mandatory, not optional.** The Responses transformer streams its JSON through `encoding/json/v2`'s `MarshalerTo`, which only exists with the experiment on. Without it the build fails on `encoding/json/jsontext: build constraints exclude all Go files`. The Docker image sets it in the `backend-builder` stage.
 3. After making code changes, run lint check locally (if tools are available), then commit immediately — do not wait for the user to ask.
 4. **After modifying backend Go code, you MUST rebuild the binary, restart the local server, and verify the changes work in the browser before telling the user "OK" or committing.** Steps:
-   - `go build -o axonhub.exe ./cmd/axonhub/`
+   - `GOEXPERIMENT=jsonv2 go build -o axonhub.exe ./cmd/axonhub/`
    - Stop the running `axonhub.exe` process, then start the new one
    - Verify the fix in the browser (check the affected page, look for errors)
 

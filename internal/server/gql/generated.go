@@ -735,6 +735,10 @@ type ComplexityRoot struct {
 		AuthCookie func(childComplexity int) int
 	}
 
+	ConcurrencyLimitSettings struct {
+		MaxConcurrentRequestsPerUser func(childComplexity int) int
+	}
+
 	CostItem struct {
 		ItemCode      func(childComplexity int) int
 		Quantity      func(childComplexity int) int
@@ -1243,6 +1247,7 @@ type ComplexityRoot struct {
 		UpdateChannel                         func(childComplexity int, id objects.GUID, input ent.UpdateChannelInput) int
 		UpdateChannelOverrideTemplate         func(childComplexity int, id objects.GUID, input ent.UpdateChannelOverrideTemplateInput) int
 		UpdateChannelStatus                   func(childComplexity int, id objects.GUID, status channel.Status) int
+		UpdateConcurrencyLimitSettings        func(childComplexity int, input UpdateConcurrencyLimitSettingsInput) int
 		UpdateDataStorage                     func(childComplexity int, id objects.GUID, input ent.UpdateDataStorageInput) int
 		UpdateDefaultDataStorage              func(childComplexity int, input UpdateDefaultDataStorageInput) int
 		UpdateEmailSettings                   func(childComplexity int, input biz.EmailSettings) int
@@ -1627,6 +1632,7 @@ type ComplexityRoot struct {
 		ChannelUsageMonitorBindings     func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelUsageMonitorBindingOrder, where *ent.ChannelUsageMonitorBindingWhereInput) int
 		Channels                        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOrder, where *ent.ChannelWhereInput) int
 		CheckForUpdate                  func(childComplexity int, includeBeta bool) int
+		ConcurrencyLimitSettings        func(childComplexity int) int
 		CostStatsByAPIKey               func(childComplexity int, timeWindow *string) int
 		CostStatsByChannel              func(childComplexity int, timeWindow *string) int
 		CostStatsByModel                func(childComplexity int, timeWindow *string) int
@@ -2828,6 +2834,7 @@ type MutationResolver interface {
 	UpdateStoragePolicy(ctx context.Context, input biz.StoragePolicy) (bool, error)
 	UpdateRetryPolicy(ctx context.Context, input biz.RetryPolicy) (bool, error)
 	UpdateStreamingSettings(ctx context.Context, input biz.StreamingSettings) (bool, error)
+	UpdateConcurrencyLimitSettings(ctx context.Context, input UpdateConcurrencyLimitSettingsInput) (bool, error)
 	UpdateWebhookNotifierConfig(ctx context.Context, input biz.WebhookNotifierConfig) (bool, error)
 	UpdateSystemModelSettings(ctx context.Context, input biz.SystemModelSettings) (bool, error)
 	UpdateDefaultDataStorage(ctx context.Context, input UpdateDefaultDataStorageInput) (bool, error)
@@ -2995,6 +3002,7 @@ type QueryResolver interface {
 	StoragePolicy(ctx context.Context) (*biz.StoragePolicy, error)
 	RetryPolicy(ctx context.Context) (*biz.RetryPolicy, error)
 	StreamingSettings(ctx context.Context) (*biz.StreamingSettings, error)
+	ConcurrencyLimitSettings(ctx context.Context) (*biz.ConcurrencyLimitSettings, error)
 	WebhookNotifierConfig(ctx context.Context) (*biz.WebhookNotifierConfig, error)
 	SystemModelSettings(ctx context.Context) (*biz.SystemModelSettings, error)
 	DefaultDataStorageID(ctx context.Context) (*objects.GUID, error)
@@ -5626,6 +5634,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.CommandCodeQuotaSettings.AuthCookie(childComplexity), true
+
+	case "ConcurrencyLimitSettings.maxConcurrentRequestsPerUser":
+		if e.complexity.ConcurrencyLimitSettings.MaxConcurrentRequestsPerUser == nil {
+			break
+		}
+
+		return e.complexity.ConcurrencyLimitSettings.MaxConcurrentRequestsPerUser(childComplexity), true
 
 	case "CostItem.itemCode":
 		if e.complexity.CostItem.ItemCode == nil {
@@ -8301,6 +8316,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateChannelStatus(childComplexity, args["id"].(objects.GUID), args["status"].(channel.Status)), true
+	case "Mutation.updateConcurrencyLimitSettings":
+		if e.complexity.Mutation.UpdateConcurrencyLimitSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateConcurrencyLimitSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateConcurrencyLimitSettings(childComplexity, args["input"].(UpdateConcurrencyLimitSettingsInput)), true
 	case "Mutation.updateDataStorage":
 		if e.complexity.Mutation.UpdateDataStorage == nil {
 			break
@@ -10140,6 +10166,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.CheckForUpdate(childComplexity, args["includeBeta"].(bool)), true
+	case "Query.concurrencyLimitSettings":
+		if e.complexity.Query.ConcurrencyLimitSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.ConcurrencyLimitSettings(childComplexity), true
 	case "Query.costStatsByAPIKey":
 		if e.complexity.Query.CostStatsByAPIKey == nil {
 			break
@@ -15021,6 +15053,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateChannelOverrideTemplateInput,
 		ec.unmarshalInputUpdateChannelProbeSettingInput,
 		ec.unmarshalInputUpdateChannelUsageMonitorBindingInput,
+		ec.unmarshalInputUpdateConcurrencyLimitSettingsInput,
 		ec.unmarshalInputUpdateDataStorageInput,
 		ec.unmarshalInputUpdateDefaultDataStorageInput,
 		ec.unmarshalInputUpdateEmailSettingsInput,
@@ -16763,6 +16796,17 @@ func (ec *executionContext) field_Mutation_updateChannel_args(ctx context.Contex
 		return nil, err
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateConcurrencyLimitSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateConcurrencyLimitSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateConcurrencyLimitSettingsInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -32447,6 +32491,35 @@ func (ec *executionContext) fieldContext_CommandCodeQuotaSettings_authCookie(_ c
 	return fc, nil
 }
 
+func (ec *executionContext) _ConcurrencyLimitSettings_maxConcurrentRequestsPerUser(ctx context.Context, field graphql.CollectedField, obj *biz.ConcurrencyLimitSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ConcurrencyLimitSettings_maxConcurrentRequestsPerUser,
+		func(ctx context.Context) (any, error) {
+			return obj.MaxConcurrentRequestsPerUser, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ConcurrencyLimitSettings_maxConcurrentRequestsPerUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ConcurrencyLimitSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CostItem_itemCode(ctx context.Context, field graphql.CollectedField, obj *objects.CostItem) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -44610,6 +44683,47 @@ func (ec *executionContext) fieldContext_Mutation_updateStreamingSettings(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateStreamingSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateConcurrencyLimitSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateConcurrencyLimitSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateConcurrencyLimitSettings(ctx, fc.Args["input"].(UpdateConcurrencyLimitSettingsInput))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateConcurrencyLimitSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateConcurrencyLimitSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -57479,6 +57593,39 @@ func (ec *executionContext) fieldContext_Query_streamingSettings(_ context.Conte
 				return ec.fieldContext_StreamingSettings_httpStreamKeepaliveIntervalSeconds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type StreamingSettings", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_concurrencyLimitSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_concurrencyLimitSettings,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().ConcurrencyLimitSettings(ctx)
+		},
+		nil,
+		ec.marshalNConcurrencyLimitSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐConcurrencyLimitSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_concurrencyLimitSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "maxConcurrentRequestsPerUser":
+				return ec.fieldContext_ConcurrencyLimitSettings_maxConcurrentRequestsPerUser(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ConcurrencyLimitSettings", field.Name)
 		},
 	}
 	return fc, nil
@@ -107563,6 +107710,33 @@ func (ec *executionContext) unmarshalInputUpdateChannelUsageMonitorBindingInput(
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateConcurrencyLimitSettingsInput(ctx context.Context, obj any) (UpdateConcurrencyLimitSettingsInput, error) {
+	var it UpdateConcurrencyLimitSettingsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"maxConcurrentRequestsPerUser"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "maxConcurrentRequestsPerUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxConcurrentRequestsPerUser"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxConcurrentRequestsPerUser = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateDataStorageInput(ctx context.Context, obj any) (ent.UpdateDataStorageInput, error) {
 	var it ent.UpdateDataStorageInput
 	asMap := map[string]any{}
@@ -121645,6 +121819,45 @@ func (ec *executionContext) _CommandCodeQuotaSettings(ctx context.Context, sel a
 	return out
 }
 
+var concurrencyLimitSettingsImplementors = []string{"ConcurrencyLimitSettings"}
+
+func (ec *executionContext) _ConcurrencyLimitSettings(ctx context.Context, sel ast.SelectionSet, obj *biz.ConcurrencyLimitSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, concurrencyLimitSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ConcurrencyLimitSettings")
+		case "maxConcurrentRequestsPerUser":
+			out.Values[i] = ec._ConcurrencyLimitSettings_maxConcurrentRequestsPerUser(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var costItemImplementors = []string{"CostItem"}
 
 func (ec *executionContext) _CostItem(ctx context.Context, sel ast.SelectionSet, obj *objects.CostItem) graphql.Marshaler {
@@ -125373,6 +125586,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateStreamingSettings":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateStreamingSettings(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateConcurrencyLimitSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateConcurrencyLimitSettings(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -130348,6 +130568,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_streamingSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "concurrencyLimitSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_concurrencyLimitSettings(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -143918,6 +144160,20 @@ func (ec *executionContext) unmarshalNCompleteSystemModelSettingOnboardingInput2
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNConcurrencyLimitSettings2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐConcurrencyLimitSettings(ctx context.Context, sel ast.SelectionSet, v biz.ConcurrencyLimitSettings) graphql.Marshaler {
+	return ec._ConcurrencyLimitSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNConcurrencyLimitSettings2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐConcurrencyLimitSettings(ctx context.Context, sel ast.SelectionSet, v *biz.ConcurrencyLimitSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ConcurrencyLimitSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCostItem2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐCostItem(ctx context.Context, sel ast.SelectionSet, v objects.CostItem) graphql.Marshaler {
 	return ec._CostItem(ctx, sel, &v)
 }
@@ -148707,6 +148963,11 @@ func (ec *executionContext) unmarshalNUpdateChannelInput2githubᚗcomᚋldm2060�
 
 func (ec *executionContext) unmarshalNUpdateChannelOverrideTemplateInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUpdateChannelOverrideTemplateInput(ctx context.Context, v any) (ent.UpdateChannelOverrideTemplateInput, error) {
 	res, err := ec.unmarshalInputUpdateChannelOverrideTemplateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateConcurrencyLimitSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateConcurrencyLimitSettingsInput(ctx context.Context, v any) (UpdateConcurrencyLimitSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateConcurrencyLimitSettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

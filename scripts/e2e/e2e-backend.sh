@@ -5,6 +5,11 @@
 
 set -e
 
+# The Responses transformer streams JSON through encoding/json/v2's
+# MarshalerTo, which only exists with this experiment on. Default it here so the
+# script also works when invoked directly rather than through make.
+export GOEXPERIMENT="${GOEXPERIMENT:-jsonv2}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 E2E_DB="${SCRIPT_DIR}/axonhub-e2e.db"
