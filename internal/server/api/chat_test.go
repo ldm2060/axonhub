@@ -26,10 +26,33 @@ import (
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/codex"
 )
 
 func init() {
 	gin.SetMode(gin.TestMode)
+}
+
+func TestPrimeCodexTurnStateHeader(t *testing.T) {
+	first := &httpclient.StreamEvent{
+		Type: "response.created",
+		Data: []byte(`{"type":"response.created"}`),
+		Headers: http.Header{
+			codex.TurnStateHeader: []string{"ts-1"},
+		},
+	}
+	second := &httpclient.StreamEvent{Type: "response.completed", Data: []byte(`{"type":"response.completed"}`)}
+	downstreamHeaders := make(http.Header)
+
+	stream := primeCodexTurnStateHeader(downstreamHeaders, streams.SliceStream([]*httpclient.StreamEvent{first, second}))
+	require.Equal(t, "ts-1", downstreamHeaders.Get(codex.TurnStateHeader))
+
+	var events []*httpclient.StreamEvent
+	for stream.Next() {
+		events = append(events, stream.Current())
+	}
+	require.NoError(t, stream.Err())
+	require.Equal(t, []*httpclient.StreamEvent{first, second}, events)
 }
 
 func setupUpstreamErrorPolicyTest(t *testing.T, policy biz.UpstreamErrorPolicy) (context.Context, *biz.SystemService) {

@@ -426,7 +426,7 @@ func TestCommandCodeRealWirePayload(t *testing.T) {
 }
 
 func TestCommandCodeGoPlanAllowance(t *testing.T) {
-	// Verbatim Go-plan payloads observed 2026-09-12: the Go plan has no monthly
+	// Go-plan payloads observed 2026-09-12: the Go plan has no monthly
 	// limit field, so the $10 denominator comes from the local plan table once
 	// the 5h/weekly caps (3/6) match. Reset epochs are generated relative to
 	// now because NormalizeQuotaData drops resets that are already in the past.

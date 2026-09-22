@@ -433,6 +433,10 @@ type Channel implements Node {
   """
   autoDisabledAt: Time
   """
+  When set together with auto_disabled_at, the cleanup task re-enables the channel after this instant. Operator disables leave this null.
+  """
+  autoDisableExpiresAt: Time
+  """
   User-defined remark or note for the channel
   """
   remark: String
@@ -1328,6 +1332,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   moonshot_anthropic
   zhipu
   zai
+  zcode
   zhipu_anthropic
   zai_anthropic
   anthropic_fake
@@ -1371,6 +1376,13 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   groq
   qiniu_anthropic
   fenno
+  zenmux
+  zenmux_responses
+  zenmux_anthropic
+  zenmux_gemini
+  zenmux_video
+  commandcode
+  commandcode_anthropic
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!
@@ -1722,6 +1734,19 @@ input ChannelWhereInput {
   autoDisabledAtLTE: Time
   autoDisabledAtIsNil: Boolean
   autoDisabledAtNotNil: Boolean
+  """
+  auto_disable_expires_at field predicates
+  """
+  autoDisableExpiresAt: Time
+  autoDisableExpiresAtNEQ: Time
+  autoDisableExpiresAtIn: [Time!]
+  autoDisableExpiresAtNotIn: [Time!]
+  autoDisableExpiresAtGT: Time
+  autoDisableExpiresAtGTE: Time
+  autoDisableExpiresAtLT: Time
+  autoDisableExpiresAtLTE: Time
+  autoDisableExpiresAtIsNil: Boolean
+  autoDisableExpiresAtNotNil: Boolean
   """
   remark field predicates
   """
@@ -2141,12 +2166,17 @@ input CreateRequestInput {
   """
   requestHeaders: JSONRawMessageInput
   requestBody: JSONRawMessageInput!
+  """
+  Response headers sent to the client, with sensitive values masked
+  """
+  responseHeaders: JSONRawMessageInput
   responseBody: JSONRawMessageInput
   responseChunks: [JSONRawMessageInput!]
   externalID: String
   status: RequestStatus!
   stream: Boolean
   clientIP: String
+  userAgent: String
   metricsLatencyMs: Int
   metricsFirstTokenLatencyMs: Int
   """
@@ -4244,6 +4274,10 @@ type ProviderQuotaStatus implements Node {
   Timestamp for next scheduled quota check
   """
   nextCheckAt: Time!
+  """
+  Quota account identity shared by channels drawing from the same provider account (e.g. the same ZenMux management key). Empty means the channel has its own quota account. Never stores the raw credential.
+  """
+  accountKey: String
   channel: Channel!
 }
 """
@@ -4272,6 +4306,7 @@ ProviderQuotaStatusProviderType is enum for the field provider_type
 enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/providerquotastatus.ProviderType") {
   claudecode
   codex
+  antigravity
   xai_subscription
   github_copilot
   nanogpt
@@ -4284,7 +4319,11 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   kimi_code
   minimax
   zhipu
+  zai
   charm_hyper
+  zenmux
+  commandcode
+  ollama
 }
 """
 ProviderQuotaStatusStatus is enum for the field status
@@ -4386,6 +4425,24 @@ input ProviderQuotaStatusWhereInput {
   nextCheckAtGTE: Time
   nextCheckAtLT: Time
   nextCheckAtLTE: Time
+  """
+  account_key field predicates
+  """
+  accountKey: String
+  accountKeyNEQ: String
+  accountKeyIn: [String!]
+  accountKeyNotIn: [String!]
+  accountKeyGT: String
+  accountKeyGTE: String
+  accountKeyLT: String
+  accountKeyLTE: String
+  accountKeyContains: String
+  accountKeyHasPrefix: String
+  accountKeyHasSuffix: String
+  accountKeyIsNil: Boolean
+  accountKeyNotNil: Boolean
+  accountKeyEqualFold: String
+  accountKeyContainsFold: String
   """
   channel edge predicates
   """
@@ -5241,6 +5298,10 @@ type Request implements Node {
   """
   requestHeaders: JSONRawMessage
   requestBody: JSONRawMessage! @goField(forceResolver: true)
+  """
+  Response headers sent to the client, with sensitive values masked
+  """
+  responseHeaders: JSONRawMessage
   responseBody: JSONRawMessage @goField(forceResolver: true)
   responseChunks: [JSONRawMessage!] @goField(forceResolver: true)
   channelID: ID
@@ -5248,6 +5309,7 @@ type Request implements Node {
   status: RequestStatus!
   stream: Boolean!
   clientIP: String!
+  userAgent: String!
   metricsLatencyMs: Int
   metricsFirstTokenLatencyMs: Int
   """
@@ -5386,7 +5448,15 @@ type RequestExecution implements Node {
   Final reasoning effort sent to the upstream provider
   """
   reasoningEffort: String
+  """
+  Last 4 characters of the channel API key used for this execution
+  """
+  channelAPIKeySuffix: String @goField(forceResolver: true)
   requestBody: JSONRawMessage! @goField(forceResolver: true)
+  """
+  Response headers received from the upstream provider, with sensitive values masked
+  """
+  responseHeaders: JSONRawMessage
   responseBody: JSONRawMessage @goField(forceResolver: true)
   responseChunks: [JSONRawMessage!] @goField(forceResolver: true)
   errorMessage: String
@@ -5969,6 +6039,22 @@ input RequestWhereInput {
   clientIPHasSuffix: String
   clientIPEqualFold: String
   clientIPContainsFold: String
+  """
+  user_agent field predicates
+  """
+  userAgent: String
+  userAgentNEQ: String
+  userAgentIn: [String!]
+  userAgentNotIn: [String!]
+  userAgentGT: String
+  userAgentGTE: String
+  userAgentLT: String
+  userAgentLTE: String
+  userAgentContains: String
+  userAgentHasPrefix: String
+  userAgentHasSuffix: String
+  userAgentEqualFold: String
+  userAgentContainsFold: String
   """
   metrics_latency_ms field predicates
   """
@@ -7164,6 +7250,12 @@ input UpdateRequestInput {
   requestHeaders: JSONRawMessageInput
   appendRequestHeaders: JSONRawMessageInput
   clearRequestHeaders: Boolean
+  """
+  Response headers sent to the client, with sensitive values masked
+  """
+  responseHeaders: JSONRawMessageInput
+  appendResponseHeaders: JSONRawMessageInput
+  clearResponseHeaders: Boolean
   responseBody: JSONRawMessageInput
   appendResponseBody: JSONRawMessageInput
   clearResponseBody: Boolean

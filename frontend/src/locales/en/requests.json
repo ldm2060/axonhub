@@ -47,6 +47,7 @@
   "requests.columns.responseBody": "Response Body",
   "requests.columns.responseChunks": "Response Chunks",
   "requests.columns.requestHeaders": "Request Headers",
+  "requests.columns.responseHeaders": "Response Headers",
   "requests.columns.executedModelId": "Executed Model ID",
   "requests.columns.executedReasoningEffort": "Actual Reasoning Effort",
   "requests.columns.retryProcess": "Retry Process",

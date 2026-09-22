@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"time"
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
@@ -46,6 +47,18 @@ func (m *mockMetricsProvider) GetChannelMetrics(ctx context.Context, channelID i
 	}
 
 	return &biz.AggregatedMetrics{}, nil
+}
+
+func (m *mockMetricsProvider) IncrementChannelSelection(channelID int) {
+	metrics, ok := m.metrics[channelID]
+	if !ok {
+		metrics = &biz.AggregatedMetrics{}
+		m.metrics[channelID] = metrics
+	}
+
+	metrics.RequestCount++
+	now := time.Now()
+	metrics.LastSelectedAt = &now
 }
 
 type mockRetryPolicyProvider struct {

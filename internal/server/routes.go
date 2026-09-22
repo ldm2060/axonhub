@@ -48,10 +48,11 @@ type Handlers struct {
 type Services struct {
 	fx.In
 
-	TraceService  *biz.TraceService
-	ThreadService *biz.ThreadService
-	AuthService   *biz.AuthService
-	SystemService *biz.SystemService
+	TraceService   *biz.TraceService
+	ThreadService  *biz.ThreadService
+	AuthService    *biz.AuthService
+	SystemService  *biz.SystemService
+	RequestService *biz.RequestService
 }
 
 func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services Services, ipAccessControl *middleware.IPAccessControlConfig) {
@@ -169,6 +170,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.POST(
 			"/playground/chat",
 			middleware.WithSource(request.SourcePlayground),
+			middleware.WithResponseHeaders(services.RequestService),
 			handlers.Playground.ChatCompletion,
 		)
 
@@ -205,6 +207,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
 		middleware.WithSource(request.SourceAPI),
+		middleware.WithResponseHeaders(services.RequestService),
 		middleware.WithThread(server.Config.Trace, services.ThreadService),
 		middleware.WithTrace(server.Config.Trace, services.TraceService),
 		// Bound the number of requests whose bodies are resident at once. Each
@@ -286,6 +289,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
+			middleware.WithResponseHeaders(services.RequestService),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
 			middleware.WithTrace(server.Config.Trace, services.TraceService),
 		)
@@ -298,6 +302,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
+			middleware.WithResponseHeaders(services.RequestService),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
 			middleware.WithTrace(server.Config.Trace, services.TraceService),
 		)
