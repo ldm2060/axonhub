@@ -525,9 +525,11 @@ var schemaGraph = func() *sqlgraph.Schema {
 			requestexecution.FieldProjectID:                  {Type: field.TypeInt, Column: requestexecution.FieldProjectID},
 			requestexecution.FieldRequestID:                  {Type: field.TypeInt, Column: requestexecution.FieldRequestID},
 			requestexecution.FieldChannelID:                  {Type: field.TypeInt, Column: requestexecution.FieldChannelID},
+			requestexecution.FieldChannelAPIKeyIndex:         {Type: field.TypeInt, Column: requestexecution.FieldChannelAPIKeyIndex},
 			requestexecution.FieldDataStorageID:              {Type: field.TypeInt, Column: requestexecution.FieldDataStorageID},
 			requestexecution.FieldExternalID:                 {Type: field.TypeString, Column: requestexecution.FieldExternalID},
 			requestexecution.FieldModelID:                    {Type: field.TypeString, Column: requestexecution.FieldModelID},
+			requestexecution.FieldUpstreamModelID:            {Type: field.TypeString, Column: requestexecution.FieldUpstreamModelID},
 			requestexecution.FieldFormat:                     {Type: field.TypeString, Column: requestexecution.FieldFormat},
 			requestexecution.FieldReasoningEffort:            {Type: field.TypeString, Column: requestexecution.FieldReasoningEffort},
 			requestexecution.FieldChannelAPIKeySuffix:        {Type: field.TypeString, Column: requestexecution.FieldChannelAPIKeySuffix},
@@ -4400,6 +4402,11 @@ func (f *RequestExecutionFilter) WhereChannelID(p entql.IntP) {
 	f.Where(p.Field(requestexecution.FieldChannelID))
 }
 
+// WhereChannelAPIKeyIndex applies the entql int predicate on the channel_api_key_index field.
+func (f *RequestExecutionFilter) WhereChannelAPIKeyIndex(p entql.IntP) {
+	f.Where(p.Field(requestexecution.FieldChannelAPIKeyIndex))
+}
+
 // WhereDataStorageID applies the entql int predicate on the data_storage_id field.
 func (f *RequestExecutionFilter) WhereDataStorageID(p entql.IntP) {
 	f.Where(p.Field(requestexecution.FieldDataStorageID))
@@ -4413,6 +4420,11 @@ func (f *RequestExecutionFilter) WhereExternalID(p entql.StringP) {
 // WhereModelID applies the entql string predicate on the model_id field.
 func (f *RequestExecutionFilter) WhereModelID(p entql.StringP) {
 	f.Where(p.Field(requestexecution.FieldModelID))
+}
+
+// WhereUpstreamModelID applies the entql string predicate on the upstream_model_id field.
+func (f *RequestExecutionFilter) WhereUpstreamModelID(p entql.StringP) {
+	f.Where(p.Field(requestexecution.FieldUpstreamModelID))
 }
 
 // WhereFormat applies the entql string predicate on the format field.

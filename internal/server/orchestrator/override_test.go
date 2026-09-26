@@ -2035,7 +2035,7 @@ func TestOverrideBodySetIfAbsent(t *testing.T) {
 	}
 }
 
-// TestOverrideBodySetIfAbsentOriginalRequest covers https://github.com/looplj/axonhub/issues/2133:
+// TestOverrideBodySetIfAbsentOriginalRequest covers https://github.com/ldm2060/axonhub/issues/2133:
 // the outbound body is produced by format transformation, so a field the client sent may not
 // survive it (e.g. Anthropic `thinking` mapped to `reasoning_effort`). set_if_absent must treat
 // a field present in the original inbound request body as present.

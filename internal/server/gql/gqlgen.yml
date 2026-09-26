@@ -235,6 +235,15 @@ models:
   SaveChannelEndpointsInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.SaveChannelEndpointsInput
+  DetectChannelEndpointsInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.DetectChannelEndpointsInput
+  DetectedChannelEndpoint:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.DetectedChannelEndpoint
+  DetectChannelEndpointsPayload:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.DetectChannelEndpointsPayload
   QueryChannelInput:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.QueryChannelsInput

@@ -58,6 +58,7 @@ const requestFormatConditionOptions = [
   'aisdk/datastream',
   'jina/rerank',
   'jina/embeddings',
+  'typesafe/systemone',
   'ollama/chat',
   'seedance/video',
 ] as const;

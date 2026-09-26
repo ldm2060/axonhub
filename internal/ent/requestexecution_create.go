@@ -88,6 +88,20 @@ func (_c *RequestExecutionCreate) SetNillableChannelID(v *int) *RequestExecution
 	return _c
 }
 
+// SetChannelAPIKeyIndex sets the "channel_api_key_index" field.
+func (_c *RequestExecutionCreate) SetChannelAPIKeyIndex(v int) *RequestExecutionCreate {
+	_c.mutation.SetChannelAPIKeyIndex(v)
+	return _c
+}
+
+// SetNillableChannelAPIKeyIndex sets the "channel_api_key_index" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableChannelAPIKeyIndex(v *int) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetChannelAPIKeyIndex(*v)
+	}
+	return _c
+}
+
 // SetDataStorageID sets the "data_storage_id" field.
 func (_c *RequestExecutionCreate) SetDataStorageID(v int) *RequestExecutionCreate {
 	_c.mutation.SetDataStorageID(v)
@@ -119,6 +133,20 @@ func (_c *RequestExecutionCreate) SetNillableExternalID(v *string) *RequestExecu
 // SetModelID sets the "model_id" field.
 func (_c *RequestExecutionCreate) SetModelID(v string) *RequestExecutionCreate {
 	_c.mutation.SetModelID(v)
+	return _c
+}
+
+// SetUpstreamModelID sets the "upstream_model_id" field.
+func (_c *RequestExecutionCreate) SetUpstreamModelID(v string) *RequestExecutionCreate {
+	_c.mutation.SetUpstreamModelID(v)
+	return _c
+}
+
+// SetNillableUpstreamModelID sets the "upstream_model_id" field if the given value is not nil.
+func (_c *RequestExecutionCreate) SetNillableUpstreamModelID(v *string) *RequestExecutionCreate {
+	if v != nil {
+		_c.SetUpstreamModelID(*v)
+	}
 	return _c
 }
 
@@ -480,6 +508,10 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 		_spec.SetField(requestexecution.FieldProjectID, field.TypeInt, value)
 		_node.ProjectID = value
 	}
+	if value, ok := _c.mutation.ChannelAPIKeyIndex(); ok {
+		_spec.SetField(requestexecution.FieldChannelAPIKeyIndex, field.TypeInt, value)
+		_node.ChannelAPIKeyIndex = &value
+	}
 	if value, ok := _c.mutation.ExternalID(); ok {
 		_spec.SetField(requestexecution.FieldExternalID, field.TypeString, value)
 		_node.ExternalID = value
@@ -487,6 +519,10 @@ func (_c *RequestExecutionCreate) createSpec() (*RequestExecution, *sqlgraph.Cre
 	if value, ok := _c.mutation.ModelID(); ok {
 		_spec.SetField(requestexecution.FieldModelID, field.TypeString, value)
 		_node.ModelID = value
+	}
+	if value, ok := _c.mutation.UpstreamModelID(); ok {
+		_spec.SetField(requestexecution.FieldUpstreamModelID, field.TypeString, value)
+		_node.UpstreamModelID = value
 	}
 	if value, ok := _c.mutation.Format(); ok {
 		_spec.SetField(requestexecution.FieldFormat, field.TypeString, value)
@@ -686,6 +722,24 @@ func (u *RequestExecutionUpsert) UpdateExternalID() *RequestExecutionUpsert {
 // ClearExternalID clears the value of the "external_id" field.
 func (u *RequestExecutionUpsert) ClearExternalID() *RequestExecutionUpsert {
 	u.SetNull(requestexecution.FieldExternalID)
+	return u
+}
+
+// SetUpstreamModelID sets the "upstream_model_id" field.
+func (u *RequestExecutionUpsert) SetUpstreamModelID(v string) *RequestExecutionUpsert {
+	u.Set(requestexecution.FieldUpstreamModelID, v)
+	return u
+}
+
+// UpdateUpstreamModelID sets the "upstream_model_id" field to the value that was provided on create.
+func (u *RequestExecutionUpsert) UpdateUpstreamModelID() *RequestExecutionUpsert {
+	u.SetExcluded(requestexecution.FieldUpstreamModelID)
+	return u
+}
+
+// ClearUpstreamModelID clears the value of the "upstream_model_id" field.
+func (u *RequestExecutionUpsert) ClearUpstreamModelID() *RequestExecutionUpsert {
+	u.SetNull(requestexecution.FieldUpstreamModelID)
 	return u
 }
 
@@ -940,6 +994,9 @@ func (u *RequestExecutionUpsertOne) UpdateNewValues() *RequestExecutionUpsertOne
 		if _, exists := u.create.mutation.ChannelID(); exists {
 			s.SetIgnore(requestexecution.FieldChannelID)
 		}
+		if _, exists := u.create.mutation.ChannelAPIKeyIndex(); exists {
+			s.SetIgnore(requestexecution.FieldChannelAPIKeyIndex)
+		}
 		if _, exists := u.create.mutation.DataStorageID(); exists {
 			s.SetIgnore(requestexecution.FieldDataStorageID)
 		}
@@ -1024,6 +1081,27 @@ func (u *RequestExecutionUpsertOne) UpdateExternalID() *RequestExecutionUpsertOn
 func (u *RequestExecutionUpsertOne) ClearExternalID() *RequestExecutionUpsertOne {
 	return u.Update(func(s *RequestExecutionUpsert) {
 		s.ClearExternalID()
+	})
+}
+
+// SetUpstreamModelID sets the "upstream_model_id" field.
+func (u *RequestExecutionUpsertOne) SetUpstreamModelID(v string) *RequestExecutionUpsertOne {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.SetUpstreamModelID(v)
+	})
+}
+
+// UpdateUpstreamModelID sets the "upstream_model_id" field to the value that was provided on create.
+func (u *RequestExecutionUpsertOne) UpdateUpstreamModelID() *RequestExecutionUpsertOne {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.UpdateUpstreamModelID()
+	})
+}
+
+// ClearUpstreamModelID clears the value of the "upstream_model_id" field.
+func (u *RequestExecutionUpsertOne) ClearUpstreamModelID() *RequestExecutionUpsertOne {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.ClearUpstreamModelID()
 	})
 }
 
@@ -1481,6 +1559,9 @@ func (u *RequestExecutionUpsertBulk) UpdateNewValues() *RequestExecutionUpsertBu
 			if _, exists := b.mutation.ChannelID(); exists {
 				s.SetIgnore(requestexecution.FieldChannelID)
 			}
+			if _, exists := b.mutation.ChannelAPIKeyIndex(); exists {
+				s.SetIgnore(requestexecution.FieldChannelAPIKeyIndex)
+			}
 			if _, exists := b.mutation.DataStorageID(); exists {
 				s.SetIgnore(requestexecution.FieldDataStorageID)
 			}
@@ -1566,6 +1647,27 @@ func (u *RequestExecutionUpsertBulk) UpdateExternalID() *RequestExecutionUpsertB
 func (u *RequestExecutionUpsertBulk) ClearExternalID() *RequestExecutionUpsertBulk {
 	return u.Update(func(s *RequestExecutionUpsert) {
 		s.ClearExternalID()
+	})
+}
+
+// SetUpstreamModelID sets the "upstream_model_id" field.
+func (u *RequestExecutionUpsertBulk) SetUpstreamModelID(v string) *RequestExecutionUpsertBulk {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.SetUpstreamModelID(v)
+	})
+}
+
+// UpdateUpstreamModelID sets the "upstream_model_id" field to the value that was provided on create.
+func (u *RequestExecutionUpsertBulk) UpdateUpstreamModelID() *RequestExecutionUpsertBulk {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.UpdateUpstreamModelID()
+	})
+}
+
+// ClearUpstreamModelID clears the value of the "upstream_model_id" field.
+func (u *RequestExecutionUpsertBulk) ClearUpstreamModelID() *RequestExecutionUpsertBulk {
+	return u.Update(func(s *RequestExecutionUpsert) {
+		s.ClearUpstreamModelID()
 	})
 }
 

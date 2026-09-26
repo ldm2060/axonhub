@@ -25,6 +25,7 @@ export const apiFormatSchema = z.enum([
   'aisdk/datastream',
   'jina/rerank',
   'jina/embeddings',
+  'typesafe/systemone',
   'ollama/chat',
 ]);
 
@@ -48,6 +49,7 @@ export const configurableChannelEndpointApiFormats = [
   'gemini/embeddings',
   'jina/rerank',
   'jina/embeddings',
+  'typesafe/systemone',
 ] as const;
 
 export const configurableChannelEndpointApiFormatSchema = z.enum(configurableChannelEndpointApiFormats);
@@ -60,6 +62,15 @@ export const channelEndpointSchema = z.object({
   transport: z.enum(['http', 'websocket']).optional().or(z.literal('')),
 });
 export type ChannelEndpoint = z.infer<typeof channelEndpointSchema>;
+
+// Channel endpoint auto-detection result
+export const detectedChannelEndpointSchema = z.object({
+  apiFormat: z.string().min(1),
+  supported: z.boolean(),
+  statusCode: z.number().int().optional().nullable(),
+  reason: z.string(),
+});
+export type DetectedChannelEndpoint = z.infer<typeof detectedChannelEndpointSchema>;
 
 // Channel Types
 export const channelTypeSchema = z.enum([
@@ -115,6 +126,7 @@ export const channelTypeSchema = z.enum([
   'moonshot_coding',
   'kimi_code',
   'jina',
+  'typesafe',
   'github',
   'github_copilot',
   'claudecode',

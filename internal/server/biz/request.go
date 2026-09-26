@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -444,10 +445,24 @@ func (s *RequestService) CreateRequestExecution(
 		mut = mut.SetReasoningEffort(effort)
 	}
 
+	// Record which channel credential served this execution. Both facts are read
+	// from the key actually sent upstream, which is known here while the
+	// credentials are still at hand.
 	if apiKey, ok := contexts.GetChannelAPIKey(ctx); ok {
 		runes := []rune(apiKey)
 		if len(runes) > 4 {
 			mut = mut.SetChannelAPIKeySuffix(string(runes[len(runes)-4:]))
+		}
+
+		// The 1-based position is derived here rather than resolved from the
+		// stored suffix later: a lookup would drift as soon as keys are
+		// reordered or removed, and it cannot tell two keys with the same last-4
+		// characters apart. Single-key and OAuth channels have nothing to
+		// disambiguate, so they stay null.
+		if allKeys := channel.Credentials.GetAllAPIKeys(); len(allKeys) > 1 {
+			if idx := slices.Index(allKeys, apiKey); idx >= 0 {
+				mut = mut.SetChannelAPIKeyIndex(idx + 1)
+			}
 		}
 	}
 
@@ -851,6 +866,7 @@ func (s *RequestService) UpdateRequestExecutionFinalized(
 	externalId string,
 	responseBody any,
 	metrics *LatencyMetrics,
+	upstreamModelID string,
 ) error {
 	// Decide whether to store the final response body for execution
 	storeResponseBody := true
@@ -881,6 +897,10 @@ func (s *RequestService) UpdateRequestExecutionFinalized(
 	upd := client.RequestExecution.UpdateOneID(executionID).
 		SetStatus(status).
 		SetExternalID(externalId)
+
+	if upstreamModelID != "" {
+		upd = upd.SetUpstreamModelID(upstreamModelID)
+	}
 	if errorMessage != "" {
 		upd = upd.SetErrorMessage(errorMessage)
 	}
@@ -968,12 +988,12 @@ func (s *RequestService) UpdateRequestExecutionStatus(
 	errorMsg string,
 	errorInfo *ExecutionErrorInfo,
 ) error {
-	return s.UpdateRequestExecutionStatusWithMetrics(ctx, executionID, status, errorMsg, errorInfo, nil)
+	return s.UpdateRequestExecutionStatusWithMetrics(ctx, executionID, status, errorMsg, errorInfo, nil, "")
 }
 
 // UpdateRequestExecutionStatusWithMetrics is UpdateRequestExecutionStatus plus the latency
-// metrics collected before the execution ended, so a failed execution keeps its
-// time-to-first-token and total latency instead of losing them with the error.
+// metrics and upstream models collected before the execution ended, so a failed
+// execution keeps its metadata even when its response cannot be aggregated.
 func (s *RequestService) UpdateRequestExecutionStatusWithMetrics(
 	ctx context.Context,
 	executionID int,
@@ -981,11 +1001,16 @@ func (s *RequestService) UpdateRequestExecutionStatusWithMetrics(
 	errorMsg string,
 	errorInfo *ExecutionErrorInfo,
 	metrics *LatencyMetrics,
+	upstreamModelID string,
 ) error {
 	client := s.entFromContext(ctx)
 
 	upd := client.RequestExecution.UpdateOneID(executionID).
 		SetStatus(status)
+	// A later status-only update must not clear metadata captured at finalization.
+	if upstreamModelID != "" {
+		upd = upd.SetUpstreamModelID(upstreamModelID)
+	}
 	if errorMsg != "" {
 		upd = upd.SetErrorMessage(errorMsg)
 	}

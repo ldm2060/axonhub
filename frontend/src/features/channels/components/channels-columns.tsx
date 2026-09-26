@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import type { QuotaRoutingMode } from '../../system/data/system';
+import { getChannelRelayProtocols } from '../data/relay-protocols';
 import { Channel } from '../data/schema';
 import { ChannelHealthCell } from './channel-health-cell';
 import { ChannelLimiterCell } from './channel-limiter-cell';
 import {
   ActionCell,
   CreatedAtCell,
+  EndpointProtocolsCell,
   ExpandCell,
   NameCell,
   OrderingWeightCell,
@@ -155,6 +157,19 @@ export const createColumns = (
         className: 'w-[20%] min-w-0 max-w-none text-center',
       },
       enableSorting: false,
+    },
+    {
+      id: 'endpointProtocols',
+      accessorFn: (row) => Array.from(getChannelRelayProtocols(row.defaultEndpoints, row.endpoints)).join(','),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('channels.columns.endpointProtocols')} className='justify-center' />
+      ),
+      cell: ({ row }: { row: Row<Channel> }) => <EndpointProtocolsCell channel={row.original} />,
+      meta: {
+        className: 'w-32 min-w-32 text-center',
+      },
+      enableSorting: false,
+      enableHiding: true,
     },
     {
       id: 'proxy',

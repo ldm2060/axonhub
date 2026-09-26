@@ -19,6 +19,7 @@ import { useUsageLogs } from '../data/usage-logs';
 import { generateRequestCurl, generateExecutionCurl } from '../utils/curl-generator';
 import { parseRequestConversation } from '../utils/request-conversation';
 import { parseResponse } from '../utils/response-parser';
+import { getExecutionModelAuditVerdict, MODEL_AUDIT_VERDICT_CLASS } from '../utils/upstream-model-audit';
 import { getVideoLastFrameURL, isVideoRequestFormat } from '../utils/video-display';
 import { ChunksDialog } from './chunks-dialog';
 import { CurlPreviewDialog } from './curl-preview-dialog';
@@ -866,6 +867,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
                 <div className='space-y-6'>
                   {executions.edges.map((edge: any, index: number) => {
                     const execution = edge.node;
+                    const modelVerdict = getExecutionModelAuditVerdict(execution, t);
                     return (
                       <Card key={execution.id} className='bg-muted/20 border-0 shadow-sm'>
                         <CardHeader className='pb-4'>
@@ -896,13 +898,33 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
                               <p className='text-muted-foreground font-mono text-sm'>
                                 {execution.channel?.name || t('requests.columns.unknown')}
                               </p>
-                              {execution.channelAPIKeySuffix && (
+                              {(execution.channelAPIKeySuffix || execution.channelAPIKeyIndex != null) && (
                                 <div className='text-muted-foreground flex items-center gap-1.5 pt-0.5 text-xs'>
                                   <Key className='h-3.5 w-3.5 shrink-0' />
                                   <span>{t('requests.columns.upstreamApiKey')}</span>
-                                  <span className='font-mono'>••••{execution.channelAPIKeySuffix}</span>
+                                  {execution.channelAPIKeyIndex != null && (
+                                    <span className='font-mono'>key{execution.channelAPIKeyIndex}</span>
+                                  )}
+                                  {execution.channelAPIKeySuffix && <span className='font-mono'>••••{execution.channelAPIKeySuffix}</span>}
                                 </div>
                               )}
+                            </div>
+                            <div className='bg-background space-y-2 rounded-lg border p-3'>
+                              <span className='flex items-center gap-2 text-sm font-medium'>
+                                <Database className='text-primary h-4 w-4' />
+                                {t('requests.columns.modelId')}
+                              </span>
+                              <dl className='space-y-2 text-xs'>
+                                <div>
+                                  <dt className='text-muted-foreground'>{t('requests.detail.routedModel')}</dt>
+                                  <dd className='font-mono break-all'>{execution.modelID || t('requests.columns.unknown')}</dd>
+                                </div>
+                                <div>
+                                  <dt className='text-muted-foreground'>{t('requests.detail.upstreamModels')}</dt>
+                                  <dd className='font-mono break-all'>{execution.upstreamModelID || t('requests.columns.unknown')}</dd>
+                                </div>
+                              </dl>
+                              <p className={MODEL_AUDIT_VERDICT_CLASS[modelVerdict.tone]}>{modelVerdict.message}</p>
                             </div>
                             <div className='bg-background space-y-2 rounded-lg border p-3'>
                               <span className='flex items-center gap-2 text-sm font-medium'>

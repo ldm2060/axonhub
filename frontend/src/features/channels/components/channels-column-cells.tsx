@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import type { Row } from '@tanstack/react-table';
@@ -26,6 +26,7 @@ import {
   IconShare,
   IconClockPlay,
 } from '@tabler/icons-react';
+import { Google } from '@lobehub/icons';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -47,9 +48,11 @@ import type { QuotaRoutingMode } from '../../system/data/system';
 import { useChannels } from '../context/channels-context';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
+import { RELAY_PROTOCOLS, RELAY_PROTOCOL_LABEL_KEYS, getChannelRelayProtocols, type RelayProtocol } from '../data/relay-protocols';
 import type { Channel, ChannelPolicies, ChannelQuotaMonitorBindingView } from '../data/schema';
 import { getChannelQuotaRoutingIndicator } from '../utils/quota-routing-status';
 import { ChannelsStatusDialog } from './channels-status-dialog';
+import { ChatProtocolIcon, MessagesProtocolIcon, ResponsesProtocolIcon } from './endpoint-protocol-icons';
 
 const WEIGHT_PRECISION = 4;
 const MIN_WEIGHT = 0;
@@ -605,6 +608,70 @@ export const SupportedModelsCell = memo(({ row }: { row: Row<Channel> }) => {
 
 SupportedModelsCell.displayName = 'SupportedModelsCell';
 
+const RELAY_PROTOCOL_ICONS: Record<RelayProtocol, React.ComponentType<{ size?: number | string; className?: string }>> = {
+  'openai/chat_completions': ChatProtocolIcon,
+  'openai/responses': ResponsesProtocolIcon,
+  'anthropic/messages': MessagesProtocolIcon,
+  'gemini/contents': Google,
+};
+
+const RELAY_PROTOCOL_ACTIVE_CLASSES: Record<RelayProtocol, string> = {
+  'openai/chat_completions': 'border-sky-500/30 bg-sky-500/15 text-sky-600 dark:text-sky-400',
+  'openai/responses': 'border-violet-500/30 bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  'anthropic/messages': 'border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400',
+  'gemini/contents': 'border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+};
+
+/**
+ * Renders the relay protocols as icons. Configured protocols are colored,
+ * the rest are dimmed, so a channel that speaks all of them is recognizable at a
+ * glance.
+ */
+export const EndpointProtocolsCell = memo(({ channel }: { channel: Channel }) => {
+  const { t } = useTranslation();
+  const protocols = useMemo(
+    () => getChannelRelayProtocols(channel.defaultEndpoints, channel.endpoints),
+    [channel.defaultEndpoints, channel.endpoints]
+  );
+
+  return (
+    <div className='flex items-center justify-center gap-1.5'>
+      {RELAY_PROTOCOLS.map((protocol) => {
+        const active = protocols.has(protocol);
+        const Icon = RELAY_PROTOCOL_ICONS[protocol];
+        const label = t(RELAY_PROTOCOL_LABEL_KEYS[protocol]);
+
+        return (
+          <Tooltip key={protocol}>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  'flex size-6 items-center justify-center rounded-md border transition-colors',
+                  active ? RELAY_PROTOCOL_ACTIVE_CLASSES[protocol] : 'border-border/60 bg-muted/40 text-muted-foreground/35'
+                )}
+                role='img'
+                aria-label={label}
+                data-testid={`endpoint-protocol-${protocol}`}
+              >
+                <Icon size={14} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className='font-medium'>{label}</span>
+              <span className='text-muted-foreground'>
+                {' · '}
+                {t(active ? 'channels.endpoints.detect.configured' : 'channels.endpoints.detect.notConfigured')}
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+});
+
+EndpointProtocolsCell.displayName = 'EndpointProtocolsCell';
+
 export const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
   const channel = row.original;
   const initialWeight = row.getValue('orderingWeight') as number | null;
@@ -738,6 +805,25 @@ function getQuotaLimits(channel: Channel) {
   return channel.providerQuotaStatus ? parseQuotaLimits(channel.providerQuotaStatus.quotaData) : [];
 }
 
+// A channel that draws from several accounts reports one limit per account, so
+// the cell keeps a single row per window (the worst account of that window) and
+// lets the tooltip list every account. Channels without account labels keep
+// their limits untouched.
+function collapseQuotaLimitsByWindow(limits: ReturnType<typeof getQuotaLimits>) {
+  if (!limits.some((limit) => limit.account)) return limits;
+
+  const worstByWindow = new Map<string, (typeof limits)[number]>();
+  for (const limit of limits) {
+    const window = limit.window ?? '';
+    const current = worstByWindow.get(window);
+    if (!current || limit.usageRatio > current.usageRatio) {
+      worstByWindow.set(window, limit);
+    }
+  }
+
+  return [...worstByWindow.values()];
+}
+
 // Monitor quota limits reuse the same derived `_limits` shape the built-in
 // checkers store, delivered through the Map scalar as { items: [...] }.
 function getMonitorQuotaLimits(quotaLimits: unknown) {
@@ -772,9 +858,12 @@ function QuotaLimitRow({ limit, t }: { limit: ProviderQuotaLimit; t: QuotaCellTr
   const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
   const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
   const label = quotaWindowLabel(limit.window, t) || t('quota.label.quota');
+  // Multi-key channels report one limit per account, so the row has to say
+  // which key the bar belongs to.
+  const accountLabel = limit.account ? ` · ${limit.account}` : '';
   return (
     <div className='flex items-center justify-end gap-2'>
-      <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{label}</span>
+      <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{`${label}${accountLabel}`}</span>
       <div className='bg-muted h-1.5 w-24 shrink-0 overflow-hidden rounded-full'>
         <div
           className={`h-full ${remaining <= 20 ? 'bg-red-500' : remaining <= 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
@@ -820,7 +909,11 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const channel = row.original;
 
-  const limits = getQuotaLimits(channel);
+  const allLimits = getQuotaLimits(channel);
+  // Multi-key channels report one limit per account, which would print a row
+  // per key; the cell keeps the worst account per window while the tooltip
+  // still lists every account.
+  const limits = collapseQuotaLimitsByWindow(allLimits);
   const bindings = channel.quotaMonitorBindings ?? [];
 
   if (limits.length === 0 && bindings.length === 0) {
@@ -871,12 +964,13 @@ export const QuotaCell = memo(({ row }: { row: Row<Channel> }) => {
         {channel.providerQuotaStatus && limits.length > 0 && (
           <div className='font-medium'>{t(`quota.status.${channel.providerQuotaStatus.status}`)}</div>
         )}
-        {limits.map((limit, index) => {
+        {allLimits.map((limit, index) => {
           const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);
           const remaining = Math.round(Math.max(0, Math.min(100, 100 - usageRatio * 100)));
           return (
             <div key={`${limit.window}-${index}`} className='text-xs'>
-              {quotaWindowLabel(limit.window, t) || t('quota.label.quota')}: {remaining}%
+              {quotaWindowLabel(limit.window, t) || t('quota.label.quota')}
+              {limit.account ? ` · ${limit.account}` : ''}: {remaining}%
             </div>
           );
         })}

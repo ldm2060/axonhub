@@ -1383,6 +1383,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   zenmux_video
   commandcode
   commandcode_anthropic
+  typesafe
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!
@@ -5438,11 +5439,22 @@ type RequestExecution implements Node {
   requestID: ID!
   channelID: ID
   """
+  1-based position of the channel API key used for this execution
+  """
+  channelAPIKeyIndex: Int @goField(forceResolver: true)
+  """
   Data Storage ID that this request belongs to
   """
   dataStorageID: ID
   externalID: String
+  """
+  Channel model ID selected after model mapping, used for routing and pricing. May differ from the final wire model and the upstream-reported model.
+  """
   modelID: String!
+  """
+  Raw model reported by the upstream provider response, before client-model rewrite
+  """
+  upstreamModelID: String
   format: String!
   """
   Final reasoning effort sent to the upstream provider
@@ -5659,6 +5671,24 @@ input RequestExecutionWhereInput {
   modelIDHasSuffix: String
   modelIDEqualFold: String
   modelIDContainsFold: String
+  """
+  upstream_model_id field predicates
+  """
+  upstreamModelID: String
+  upstreamModelIDNEQ: String
+  upstreamModelIDIn: [String!]
+  upstreamModelIDNotIn: [String!]
+  upstreamModelIDGT: String
+  upstreamModelIDGTE: String
+  upstreamModelIDLT: String
+  upstreamModelIDLTE: String
+  upstreamModelIDContains: String
+  upstreamModelIDHasPrefix: String
+  upstreamModelIDHasSuffix: String
+  upstreamModelIDIsNil: Boolean
+  upstreamModelIDNotNil: Boolean
+  upstreamModelIDEqualFold: String
+  upstreamModelIDContainsFold: String
   """
   format field predicates
   """

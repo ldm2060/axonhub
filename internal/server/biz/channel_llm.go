@@ -45,6 +45,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 	"github.com/ldm2060/axonhub/llm/transformer/opencode"
 	"github.com/ldm2060/axonhub/llm/transformer/openrouter"
+	"github.com/ldm2060/axonhub/llm/transformer/typesafe"
 	"github.com/ldm2060/axonhub/llm/transformer/xai"
 	xaisubscription "github.com/ldm2060/axonhub/llm/transformer/xai/subscription"
 	"github.com/ldm2060/axonhub/llm/transformer/zai"
@@ -541,6 +542,12 @@ func (svc *ChannelService) buildNonDefaultEndpointOutbound(
 		})
 	case llm.APIFormatJinaRerank.String(), llm.APIFormatJinaEmbedding.String():
 		return jina.NewOutboundTransformerWithConfig(&jina.Config{
+			BaseURL:        baseURL,
+			APIKeyProvider: apiKeyProvider(),
+			EndpointPath:   ep.Path,
+		})
+	case llm.APIFormatTypeSafeSystemOne.String():
+		return typesafe.NewOutboundTransformerWithConfig(&typesafe.Config{
 			BaseURL:        baseURL,
 			APIKeyProvider: apiKeyProvider(),
 			EndpointPath:   ep.Path,
@@ -1088,6 +1095,7 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		transformer, err := modelscope.NewOutboundTransformerWithConfig(&modelscope.Config{
 			BaseURL:        c.BaseURL,
 			APIKeyProvider: getAPIKeyProvider(ch),
+			HTTPClient:     ch.HTTPClient,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
@@ -1428,6 +1436,18 @@ func (svc *ChannelService) buildChannelWithTransformer(c *ent.Channel, apiKeyOve
 		return ch, nil
 	case channel.TypeJina:
 		transformer, err := jina.NewOutboundTransformerWithConfig(&jina.Config{
+			BaseURL:        c.BaseURL,
+			APIKeyProvider: getAPIKeyProvider(ch),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create outbound transformer: %w", err)
+		}
+
+		ch.Outbound = transformer
+
+		return ch, nil
+	case channel.TypeTypesafe:
+		transformer, err := typesafe.NewOutboundTransformerWithConfig(&typesafe.Config{
 			BaseURL:        c.BaseURL,
 			APIKeyProvider: getAPIKeyProvider(ch),
 		})

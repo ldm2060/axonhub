@@ -2126,7 +2126,8 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                       {selectedProvider !== 'jina' &&
                         selectedProvider !== 'codex' &&
                         selectedProvider !== 'claudecode' &&
-                        selectedProvider !== 'zcode' && (
+                        selectedProvider !== 'zcode' &&
+                        selectedProvider !== 'typesafe' && (
                           <FormItem className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
                             <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>
                               {t('channels.dialogs.fields.apiFormat.label')}

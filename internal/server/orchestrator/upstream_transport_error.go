@@ -88,6 +88,7 @@ func persistRequestExecutionFailure(
 	executionID int,
 	rawErr error,
 	metrics *biz.LatencyMetrics,
+	upstreamModelID string,
 ) error {
 	status := requestexecution.StatusFailed
 	if errors.Is(rawErr, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
@@ -103,5 +104,6 @@ func persistRequestExecutionFailure(
 		ExtractErrorMessage(failure),
 		ExtractErrorInfo(failure),
 		metrics,
+		upstreamModelID,
 	)
 }

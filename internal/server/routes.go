@@ -31,6 +31,7 @@ type Handlers struct {
 	Avatar         *api.AvatarHandlers
 	Invitation     *api.InvitationHandlers
 	Jina           *api.JinaHandlers
+	TypeSafe       *api.TypeSafeHandlers
 	Codex          *api.CodexHandlers
 	XAI            *api.XAIHandlers
 	ClaudeCode     *api.ClaudeCodeHandlers
@@ -255,12 +256,20 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 		// Compatible with OpenAI API
 		openaiGroup.POST("/rerank", handlers.Jina.Rerank)
+
+		// Native System One endpoint
+		openaiGroup.POST("/systemone", handlers.TypeSafe.SystemOne)
 	}
 
 	{
 		jinaGroup := apiGroup.Group("/jina/v1")
 		jinaGroup.POST("/embeddings", handlers.Jina.CreateEmbedding)
 		jinaGroup.POST("/rerank", handlers.Jina.Rerank)
+	}
+
+	{
+		typesafeGroup := apiGroup.Group("/typesafe/v1")
+		typesafeGroup.POST("/systemone", handlers.TypeSafe.SystemOne)
 	}
 
 	{
