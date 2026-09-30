@@ -63,6 +63,11 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/oauth-applications',
+        requiredScopes: ['read_settings'],
+        mode: 'hidden',
+      },
+      {
         path: '/api-keys',
         requiredScopes: ['read_api_keys'],
         mode: 'hidden',

@@ -87,6 +87,7 @@ type Dependencies struct {
 	UserUsageStatsService          *biz.UserUsageStatsService
 	UsageMonitorService            *biz.UsageMonitorService
 	CatalogService                 *biz.CatalogService
+	OAuthProviderService           *biz.OAuthProviderService
 }
 
 type GraphqlHandler struct {
@@ -133,6 +134,7 @@ func NewGraphqlHandlers(deps Dependencies) *GraphqlHandler {
 			deps.UserUsageStatsService,
 			deps.UsageMonitorService,
 			deps.CatalogService,
+			deps.OAuthProviderService,
 		),
 	)
 

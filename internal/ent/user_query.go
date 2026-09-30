@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -48,6 +49,7 @@ type UserQuery struct {
 	withChannelOverrideTemplates      *ChannelOverrideTemplateQuery
 	withOidcIdentities                *OIDCIdentityQuery
 	withEmailTokens                   *EmailTokenQuery
+	withOauthClients                  *OAuthClientQuery
 	withUserUsageStats                *UserUsageStatsQuery
 	withUsageMonitorChannels          *UsageMonitorChannelQuery
 	withProjectUsers                  *UserProjectQuery
@@ -64,6 +66,7 @@ type UserQuery struct {
 	withNamedChannelOverrideTemplates map[string]*ChannelOverrideTemplateQuery
 	withNamedOidcIdentities           map[string]*OIDCIdentityQuery
 	withNamedEmailTokens              map[string]*EmailTokenQuery
+	withNamedOauthClients             map[string]*OAuthClientQuery
 	withNamedUserUsageStats           map[string]*UserUsageStatsQuery
 	withNamedUsageMonitorChannels     map[string]*UsageMonitorChannelQuery
 	withNamedProjectUsers             map[string]*UserProjectQuery
@@ -339,6 +342,28 @@ func (_q *UserQuery) QueryEmailTokens() *EmailTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(emailtoken.Table, emailtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.EmailTokensTable, user.EmailTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOauthClients chains the current query on the "oauth_clients" edge.
+func (_q *UserQuery) QueryOauthClients() *OAuthClientQuery {
+	query := (&OAuthClientClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(oauthclient.Table, oauthclient.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OauthClientsTable, user.OauthClientsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -637,6 +662,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withChannelOverrideTemplates: _q.withChannelOverrideTemplates.Clone(),
 		withOidcIdentities:           _q.withOidcIdentities.Clone(),
 		withEmailTokens:              _q.withEmailTokens.Clone(),
+		withOauthClients:             _q.withOauthClients.Clone(),
 		withUserUsageStats:           _q.withUserUsageStats.Clone(),
 		withUsageMonitorChannels:     _q.withUsageMonitorChannels.Clone(),
 		withProjectUsers:             _q.withProjectUsers.Clone(),
@@ -769,6 +795,17 @@ func (_q *UserQuery) WithEmailTokens(opts ...func(*EmailTokenQuery)) *UserQuery 
 	return _q
 }
 
+// WithOauthClients tells the query-builder to eager-load the nodes that are connected to
+// the "oauth_clients" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithOauthClients(opts ...func(*OAuthClientQuery)) *UserQuery {
+	query := (&OAuthClientClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOauthClients = query
+	return _q
+}
+
 // WithUserUsageStats tells the query-builder to eager-load the nodes that are connected to
 // the "user_usage_stats" edge. The optional arguments are used to configure the query builder of the edge.
 func (_q *UserQuery) WithUserUsageStats(opts ...func(*UserUsageStatsQuery)) *UserQuery {
@@ -897,7 +934,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [15]bool{
+		loadedTypes = [16]bool{
 			_q.withProjects != nil,
 			_q.withOwnedChannels != nil,
 			_q.withOwnedModels != nil,
@@ -909,6 +946,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withChannelOverrideTemplates != nil,
 			_q.withOidcIdentities != nil,
 			_q.withEmailTokens != nil,
+			_q.withOauthClients != nil,
 			_q.withUserUsageStats != nil,
 			_q.withUsageMonitorChannels != nil,
 			_q.withProjectUsers != nil,
@@ -1014,6 +1052,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withOauthClients; query != nil {
+		if err := _q.loadOauthClients(ctx, query, nodes,
+			func(n *User) { n.Edges.OauthClients = []*OAuthClient{} },
+			func(n *User, e *OAuthClient) { n.Edges.OauthClients = append(n.Edges.OauthClients, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withUserUsageStats; query != nil {
 		if err := _q.loadUserUsageStats(ctx, query, nodes,
 			func(n *User) { n.Edges.UserUsageStats = []*UserUsageStats{} },
@@ -1111,6 +1156,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadEmailTokens(ctx, query, nodes,
 			func(n *User) { n.appendNamedEmailTokens(name) },
 			func(n *User, e *EmailToken) { n.appendNamedEmailTokens(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range _q.withNamedOauthClients {
+		if err := _q.loadOauthClients(ctx, query, nodes,
+			func(n *User) { n.appendNamedOauthClients(name) },
+			func(n *User, e *OAuthClient) { n.appendNamedOauthClients(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1550,6 +1602,36 @@ func (_q *UserQuery) loadEmailTokens(ctx context.Context, query *EmailTokenQuery
 	}
 	return nil
 }
+func (_q *UserQuery) loadOauthClients(ctx context.Context, query *OAuthClientQuery, nodes []*User, init func(*User), assign func(*User, *OAuthClient)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(oauthclient.FieldUserID)
+	}
+	query.Where(predicate.OAuthClient(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.OauthClientsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (_q *UserQuery) loadUserUsageStats(ctx context.Context, query *UserUsageStatsQuery, nodes []*User, init func(*User), assign func(*User, *UserUsageStats)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -1905,6 +1987,20 @@ func (_q *UserQuery) WithNamedEmailTokens(name string, opts ...func(*EmailTokenQ
 		_q.withNamedEmailTokens = make(map[string]*EmailTokenQuery)
 	}
 	_q.withNamedEmailTokens[name] = query
+	return _q
+}
+
+// WithNamedOauthClients tells the query-builder to eager-load the nodes that are connected to the "oauth_clients"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithNamedOauthClients(name string, opts ...func(*OAuthClientQuery)) *UserQuery {
+	query := (&OAuthClientClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if _q.withNamedOauthClients == nil {
+		_q.withNamedOauthClients = make(map[string]*OAuthClientQuery)
+	}
+	_q.withNamedOauthClients[name] = query
 	return _q
 }
 

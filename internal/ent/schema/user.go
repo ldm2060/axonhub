@@ -87,6 +87,11 @@ func (User) Edges() []ent.Edge {
 				entgql.RelayConnection(),
 			),
 		edge.From("email_tokens", EmailToken.Type).Ref("user"),
+		edge.To("oauth_clients", OAuthClient.Type).
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.RelayConnection(),
+			),
 		edge.To("user_usage_stats", UserUsageStats.Type),
 		edge.To("usage_monitor_channels", UsageMonitorChannel.Type),
 	}

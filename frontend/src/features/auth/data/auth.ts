@@ -106,6 +106,14 @@ export function useSignIn(getTurnstileToken?: TurnstileTokenGetter) {
 
       toast.success(i18n.t('common.success.signedIn'));
 
+      // Return to the page that sent the user to sign-in (e.g. the OIDC consent
+      // page). Only internal paths are accepted to avoid open redirects.
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+        window.location.href = redirectParam;
+        return;
+      }
+
       // Redirect based on user role, skipping routes the user hid from the sidebar.
       // Owner users go to dashboard, non-owner users go to requests page.
       const baseRedirectPath = data.user.isOwner ? '/' : '/project/requests';

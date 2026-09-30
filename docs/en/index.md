@@ -25,6 +25,7 @@ Welcome to the AxonHub documentation center! This index will help you quickly fi
 | [Request Override](guides/request-override.md) | Dynamically modify request parameters |
 | [Security](guides/security.md) | IP access control, IP blocklist, and API key IP restriction |
 | [Prompt Protection Rules](guides/prompt-protection-rules.md) | Sensitive information filtering and protection |
+| [OIDC Provider](guides/oidc-provider.md) | Let third-party applications sign users in with AxonHub |
 | [Antigravity](guides/antigravity.md) | Advanced routing and optimization features |
 
 ### 🤖 AI Coding Tools Integration

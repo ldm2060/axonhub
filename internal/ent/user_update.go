@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -381,6 +382,21 @@ func (_u *UserUpdate) AddEmailTokens(v ...*EmailToken) *UserUpdate {
 	return _u.AddEmailTokenIDs(ids...)
 }
 
+// AddOauthClientIDs adds the "oauth_clients" edge to the OAuthClient entity by IDs.
+func (_u *UserUpdate) AddOauthClientIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddOauthClientIDs(ids...)
+	return _u
+}
+
+// AddOauthClients adds the "oauth_clients" edges to the OAuthClient entity.
+func (_u *UserUpdate) AddOauthClients(v ...*OAuthClient) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOauthClientIDs(ids...)
+}
+
 // AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
 func (_u *UserUpdate) AddUserUsageStatIDs(ids ...int) *UserUpdate {
 	_u.mutation.AddUserUsageStatIDs(ids...)
@@ -660,6 +676,27 @@ func (_u *UserUpdate) RemoveEmailTokens(v ...*EmailToken) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveEmailTokenIDs(ids...)
+}
+
+// ClearOauthClients clears all "oauth_clients" edges to the OAuthClient entity.
+func (_u *UserUpdate) ClearOauthClients() *UserUpdate {
+	_u.mutation.ClearOauthClients()
+	return _u
+}
+
+// RemoveOauthClientIDs removes the "oauth_clients" edge to OAuthClient entities by IDs.
+func (_u *UserUpdate) RemoveOauthClientIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveOauthClientIDs(ids...)
+	return _u
+}
+
+// RemoveOauthClients removes "oauth_clients" edges to OAuthClient entities.
+func (_u *UserUpdate) RemoveOauthClients(v ...*OAuthClient) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOauthClientIDs(ids...)
 }
 
 // ClearUserUsageStats clears all "user_usage_stats" edges to the UserUsageStats entity.
@@ -1366,6 +1403,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.OauthClientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOauthClientsIDs(); len(nodes) > 0 && !_u.mutation.OauthClientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OauthClientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _u.mutation.UserUsageStatsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1906,6 +1988,21 @@ func (_u *UserUpdateOne) AddEmailTokens(v ...*EmailToken) *UserUpdateOne {
 	return _u.AddEmailTokenIDs(ids...)
 }
 
+// AddOauthClientIDs adds the "oauth_clients" edge to the OAuthClient entity by IDs.
+func (_u *UserUpdateOne) AddOauthClientIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddOauthClientIDs(ids...)
+	return _u
+}
+
+// AddOauthClients adds the "oauth_clients" edges to the OAuthClient entity.
+func (_u *UserUpdateOne) AddOauthClients(v ...*OAuthClient) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOauthClientIDs(ids...)
+}
+
 // AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
 func (_u *UserUpdateOne) AddUserUsageStatIDs(ids ...int) *UserUpdateOne {
 	_u.mutation.AddUserUsageStatIDs(ids...)
@@ -2185,6 +2282,27 @@ func (_u *UserUpdateOne) RemoveEmailTokens(v ...*EmailToken) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveEmailTokenIDs(ids...)
+}
+
+// ClearOauthClients clears all "oauth_clients" edges to the OAuthClient entity.
+func (_u *UserUpdateOne) ClearOauthClients() *UserUpdateOne {
+	_u.mutation.ClearOauthClients()
+	return _u
+}
+
+// RemoveOauthClientIDs removes the "oauth_clients" edge to OAuthClient entities by IDs.
+func (_u *UserUpdateOne) RemoveOauthClientIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveOauthClientIDs(ids...)
+	return _u
+}
+
+// RemoveOauthClients removes "oauth_clients" edges to OAuthClient entities.
+func (_u *UserUpdateOne) RemoveOauthClients(v ...*OAuthClient) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOauthClientIDs(ids...)
 }
 
 // ClearUserUsageStats clears all "user_usage_stats" edges to the UserUsageStats entity.
@@ -2914,6 +3032,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(emailtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OauthClientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOauthClientsIDs(); len(nodes) > 0 && !_u.mutation.OauthClientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OauthClientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

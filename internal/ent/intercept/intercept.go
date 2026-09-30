@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/invitation"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/predicate"
 	"github.com/ldm2060/axonhub/internal/ent/project"
@@ -419,6 +420,33 @@ func (f TraverseModel) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.ModelQuery", q)
+}
+
+// The OAuthClientFunc type is an adapter to allow the use of ordinary function as a Querier.
+type OAuthClientFunc func(context.Context, *ent.OAuthClientQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f OAuthClientFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.OAuthClientQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.OAuthClientQuery", q)
+}
+
+// The TraverseOAuthClient type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseOAuthClient func(context.Context, *ent.OAuthClientQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseOAuthClient) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseOAuthClient) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.OAuthClientQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.OAuthClientQuery", q)
 }
 
 // The OIDCIdentityFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -934,6 +962,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.InvitationQuery, predicate.Invitation, invitation.OrderOption]{typ: ent.TypeInvitation, tq: q}, nil
 	case *ent.ModelQuery:
 		return &query[*ent.ModelQuery, predicate.Model, model.OrderOption]{typ: ent.TypeModel, tq: q}, nil
+	case *ent.OAuthClientQuery:
+		return &query[*ent.OAuthClientQuery, predicate.OAuthClient, oauthclient.OrderOption]{typ: ent.TypeOAuthClient, tq: q}, nil
 	case *ent.OIDCIdentityQuery:
 		return &query[*ent.OIDCIdentityQuery, predicate.OIDCIdentity, oidcidentity.OrderOption]{typ: ent.TypeOIDCIdentity, tq: q}, nil
 	case *ent.ProjectQuery:

@@ -42,6 +42,9 @@ type Invitation func(*sql.Selector)
 // Model is the predicate function for model builders.
 type Model func(*sql.Selector)
 
+// OAuthClient is the predicate function for oauthclient builders.
+type OAuthClient func(*sql.Selector)
+
 // OIDCIdentity is the predicate function for oidcidentity builders.
 type OIDCIdentity func(*sql.Selector)
 

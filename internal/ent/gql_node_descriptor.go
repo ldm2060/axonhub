@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/datastorage"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
@@ -1357,6 +1358,108 @@ func (_m *Model) Node(ctx context.Context) (node *Node, err error) {
 		Name: "owner",
 	}
 	err = _m.QueryOwner().
+		Select(user.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+// Node implements Noder interface
+func (_m *OAuthClient) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     _m.ID,
+		Type:   "OAuthClient",
+		Fields: make([]*Field, 10),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Description); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "string",
+		Name:  "description",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ClientID); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
+		Type:  "string",
+		Name:  "client_id",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.RedirectUris); err != nil {
+		return nil, err
+	}
+	node.Fields[5] = &Field{
+		Type:  "[]string",
+		Name:  "redirect_uris",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.ClientType); err != nil {
+		return nil, err
+	}
+	node.Fields[6] = &Field{
+		Type:  "oauthclient.ClientType",
+		Name:  "client_type",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.Status); err != nil {
+		return nil, err
+	}
+	node.Fields[7] = &Field{
+		Type:  "oauthclient.Status",
+		Name:  "status",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.LastUsedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[8] = &Field{
+		Type:  "time.Time",
+		Name:  "last_used_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(_m.UserID); err != nil {
+		return nil, err
+	}
+	node.Fields[9] = &Field{
+		Type:  "int",
+		Name:  "user_id",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "User",
+		Name: "user",
+	}
+	err = _m.QueryUser().
 		Select(user.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {
@@ -3321,7 +3424,7 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		ID:     _m.ID,
 		Type:   "User",
 		Fields: make([]*Field, 12),
-		Edges:  make([]*Edge, 15),
+		Edges:  make([]*Edge, 16),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(_m.CreatedAt); err != nil {
@@ -3531,42 +3634,52 @@ func (_m *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Edges[11] = &Edge{
-		Type: "UserUsageStats",
-		Name: "user_usage_stats",
+		Type: "OAuthClient",
+		Name: "oauth_clients",
 	}
-	err = _m.QueryUserUsageStats().
-		Select(userusagestats.FieldID).
+	err = _m.QueryOauthClients().
+		Select(oauthclient.FieldID).
 		Scan(ctx, &node.Edges[11].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[12] = &Edge{
-		Type: "UsageMonitorChannel",
-		Name: "usage_monitor_channels",
+		Type: "UserUsageStats",
+		Name: "user_usage_stats",
 	}
-	err = _m.QueryUsageMonitorChannels().
-		Select(usagemonitorchannel.FieldID).
+	err = _m.QueryUserUsageStats().
+		Select(userusagestats.FieldID).
 		Scan(ctx, &node.Edges[12].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[13] = &Edge{
-		Type: "UserProject",
-		Name: "project_users",
+		Type: "UsageMonitorChannel",
+		Name: "usage_monitor_channels",
 	}
-	err = _m.QueryProjectUsers().
-		Select(userproject.FieldID).
+	err = _m.QueryUsageMonitorChannels().
+		Select(usagemonitorchannel.FieldID).
 		Scan(ctx, &node.Edges[13].IDs)
 	if err != nil {
 		return nil, err
 	}
 	node.Edges[14] = &Edge{
+		Type: "UserProject",
+		Name: "project_users",
+	}
+	err = _m.QueryProjectUsers().
+		Select(userproject.FieldID).
+		Scan(ctx, &node.Edges[14].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[15] = &Edge{
 		Type: "UserRole",
 		Name: "user_roles",
 	}
 	err = _m.QueryUserRoles().
 		Select(userrole.FieldID).
-		Scan(ctx, &node.Edges[14].IDs)
+		Scan(ctx, &node.Edges[15].IDs)
 	if err != nil {
 		return nil, err
 	}

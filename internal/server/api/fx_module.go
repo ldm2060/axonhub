@@ -28,6 +28,7 @@ var Module = fx.Module(
 	fx.Provide(NewKimiCodeHandlers),
 	fx.Provide(NewRequestContentHandlers),
 	fx.Provide(NewOIDCHandlers),
+	fx.Provide(NewOAuthProviderHandlers),
 	fx.Provide(NewSignUpHandlers),
 	fx.Provide(NewEmailTokenAPI),
 	fx.Provide(NewRequestPreviewHandlers),

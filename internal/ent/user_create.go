@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/channeloverridetemplate"
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
@@ -346,6 +347,21 @@ func (_c *UserCreate) AddEmailTokens(v ...*EmailToken) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddEmailTokenIDs(ids...)
+}
+
+// AddOauthClientIDs adds the "oauth_clients" edge to the OAuthClient entity by IDs.
+func (_c *UserCreate) AddOauthClientIDs(ids ...int) *UserCreate {
+	_c.mutation.AddOauthClientIDs(ids...)
+	return _c
+}
+
+// AddOauthClients adds the "oauth_clients" edges to the OAuthClient entity.
+func (_c *UserCreate) AddOauthClients(v ...*OAuthClient) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOauthClientIDs(ids...)
 }
 
 // AddUserUsageStatIDs adds the "user_usage_stats" edge to the UserUsageStats entity by IDs.
@@ -774,6 +790,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(emailtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OauthClientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OauthClientsTable,
+			Columns: []string{user.OauthClientsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(oauthclient.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

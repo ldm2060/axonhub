@@ -66,6 +66,8 @@ const (
 	EdgeOidcIdentities = "oidc_identities"
 	// EdgeEmailTokens holds the string denoting the email_tokens edge name in mutations.
 	EdgeEmailTokens = "email_tokens"
+	// EdgeOauthClients holds the string denoting the oauth_clients edge name in mutations.
+	EdgeOauthClients = "oauth_clients"
 	// EdgeUserUsageStats holds the string denoting the user_usage_stats edge name in mutations.
 	EdgeUserUsageStats = "user_usage_stats"
 	// EdgeUsageMonitorChannels holds the string denoting the usage_monitor_channels edge name in mutations.
@@ -149,6 +151,13 @@ const (
 	EmailTokensInverseTable = "email_tokens"
 	// EmailTokensColumn is the table column denoting the email_tokens relation/edge.
 	EmailTokensColumn = "user_id"
+	// OauthClientsTable is the table that holds the oauth_clients relation/edge.
+	OauthClientsTable = "oauth_clients"
+	// OauthClientsInverseTable is the table name for the OAuthClient entity.
+	// It exists in this package in order to avoid circular dependency with the "oauthclient" package.
+	OauthClientsInverseTable = "oauth_clients"
+	// OauthClientsColumn is the table column denoting the oauth_clients relation/edge.
+	OauthClientsColumn = "user_id"
 	// UserUsageStatsTable is the table that holds the user_usage_stats relation/edge.
 	UserUsageStatsTable = "user_usage_stats"
 	// UserUsageStatsInverseTable is the table name for the UserUsageStats entity.
@@ -487,6 +496,20 @@ func ByEmailTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByOauthClientsCount orders the results by oauth_clients count.
+func ByOauthClientsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOauthClientsStep(), opts...)
+	}
+}
+
+// ByOauthClients orders the results by oauth_clients terms.
+func ByOauthClients(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOauthClientsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserUsageStatsCount orders the results by user_usage_stats count.
 func ByUserUsageStatsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -617,6 +640,13 @@ func newEmailTokensStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EmailTokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, EmailTokensTable, EmailTokensColumn),
+	)
+}
+func newOauthClientsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OauthClientsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OauthClientsTable, OauthClientsColumn),
 	)
 }
 func newUserUsageStatsStep() *sqlgraph.Step {

@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useRouter } from '@tanstack/react-router';
 import { isAuthError } from '@/gql/graphql';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
@@ -12,7 +11,6 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const router = useRouter();
   const { accessToken } = useAuthStore((state) => state.auth);
   const selectedProjectId = useSelectedProjectId();
 
@@ -39,18 +37,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
         !currentPath.startsWith('/forgot-password') &&
         !currentPath.startsWith('/otp')
       ) {
-        router.navigate({ to: '/sign-in' });
+        const redirectTarget = currentPath + window.location.search;
+        window.location.href = `/sign-in?redirect=${encodeURIComponent(redirectTarget)}`;
       }
     }
-  }, [accessToken, router]);
+  }, [accessToken]);
 
   // Handle me query error (e.g., token expired)
   useEffect(() => {
     if (meError && accessToken && isAuthError(meError)) {
       // Token might be expired, redirect to sign-in
-      router.navigate({ to: '/sign-in' });
+      const redirectTarget = window.location.pathname + window.location.search;
+      window.location.href = `/sign-in?redirect=${encodeURIComponent(redirectTarget)}`;
     }
-  }, [meError, accessToken, router]);
+  }, [meError, accessToken]);
 
   // Show loading while checking auth
   if (!accessToken) {

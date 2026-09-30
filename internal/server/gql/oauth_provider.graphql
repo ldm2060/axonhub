@@ -1,0 +1,44 @@
+type OAuthAuthorizationRequest {
+  clientId: String!
+  clientName: String!
+  clientDescription: String!
+  redirectUriHost: String!
+  scopes: [String!]!
+  userEmail: String!
+}
+
+type OAuthAuthorizationDecision {
+  redirectUrl: String!
+}
+
+type OAuthClientSecretPayload {
+  client: OAuthClient!
+  clientSecret: String!
+}
+
+input CreateOAuthClientInput {
+  name: String!
+  description: String
+  redirectUris: [String!]!
+  clientType: String!
+}
+
+input UpdateOAuthClientInput {
+  name: String
+  description: String
+  redirectUris: [String!]
+  status: String
+}
+
+extend type Query {
+  oauthAuthorizationRequest(requestId: String!): OAuthAuthorizationRequest!
+}
+
+extend type Mutation {
+  createOAuthClient(input: CreateOAuthClientInput!): OAuthClientSecretPayload!
+  updateOAuthClient(id: ID!, input: UpdateOAuthClientInput!): OAuthClient!
+  deleteOAuthClient(id: ID!): Boolean!
+  rotateOAuthClientSecret(id: ID!): OAuthClientSecretPayload!
+  approveOAuthAuthorization(requestId: String!): OAuthAuthorizationDecision!
+  denyOAuthAuthorization(requestId: String!): OAuthAuthorizationDecision!
+}

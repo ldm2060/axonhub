@@ -273,6 +273,13 @@ type CountChannelsByTypeInput struct {
 	OwnerID *objects.GUID `json:"ownerID,omitempty"`
 }
 
+type CreateOAuthClientInput struct {
+	Name         string   `json:"name"`
+	Description  *string  `json:"description,omitempty"`
+	RedirectUris []string `json:"redirectUris"`
+	ClientType   string   `json:"clientType"`
+}
+
 type DailyRequestStats struct {
 	Date   string  `json:"date"`
 	Count  int     `json:"count"`
@@ -411,6 +418,24 @@ type ModelTokenUsageStats struct {
 	OutputTokens    int    `json:"outputTokens"`
 	CachedTokens    int    `json:"cachedTokens"`
 	ReasoningTokens int    `json:"reasoningTokens"`
+}
+
+type OAuthAuthorizationDecision struct {
+	RedirectURL string `json:"redirectUrl"`
+}
+
+type OAuthAuthorizationRequest struct {
+	ClientID          string   `json:"clientId"`
+	ClientName        string   `json:"clientName"`
+	ClientDescription string   `json:"clientDescription"`
+	RedirectURIHost   string   `json:"redirectUriHost"`
+	Scopes            []string `json:"scopes"`
+	UserEmail         string   `json:"userEmail"`
+}
+
+type OAuthClientSecretPayload struct {
+	Client       *ent.OAuthClient `json:"client"`
+	ClientSecret string           `json:"clientSecret"`
 }
 
 type OIDCIdentityInfo struct {
@@ -680,6 +705,13 @@ type UpdateMeInput struct {
 type UpdateMyPasswordInput struct {
 	OldPassword *string `json:"oldPassword,omitempty"`
 	NewPassword string  `json:"newPassword"`
+}
+
+type UpdateOAuthClientInput struct {
+	Name         *string  `json:"name,omitempty"`
+	Description  *string  `json:"description,omitempty"`
+	RedirectUris []string `json:"redirectUris,omitempty"`
+	Status       *string  `json:"status,omitempty"`
 }
 
 type UpdatePassThroughSettingsInput struct {

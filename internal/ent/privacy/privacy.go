@@ -399,6 +399,30 @@ func (f ModelMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation)
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.ModelMutation", m)
 }
 
+// The OAuthClientQueryRuleFunc type is an adapter to allow the use of ordinary
+// functions as a query rule.
+type OAuthClientQueryRuleFunc func(context.Context, *ent.OAuthClientQuery) error
+
+// EvalQuery return f(ctx, q).
+func (f OAuthClientQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.OAuthClientQuery); ok {
+		return f(ctx, q)
+	}
+	return Denyf("ent/privacy: unexpected query type %T, expect *ent.OAuthClientQuery", q)
+}
+
+// The OAuthClientMutationRuleFunc type is an adapter to allow the use of ordinary
+// functions as a mutation rule.
+type OAuthClientMutationRuleFunc func(context.Context, *ent.OAuthClientMutation) error
+
+// EvalMutation calls f(ctx, m).
+func (f OAuthClientMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if m, ok := m.(*ent.OAuthClientMutation); ok {
+		return f(ctx, m)
+	}
+	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.OAuthClientMutation", m)
+}
+
 // The OIDCIdentityQueryRuleFunc type is an adapter to allow the use of ordinary
 // functions as a query rule.
 type OIDCIdentityQueryRuleFunc func(context.Context, *ent.OIDCIdentityQuery) error
@@ -890,6 +914,8 @@ func queryFilter(q ent.Query) (Filter, error) {
 		return q.Filter(), nil
 	case *ent.ModelQuery:
 		return q.Filter(), nil
+	case *ent.OAuthClientQuery:
+		return q.Filter(), nil
 	case *ent.OIDCIdentityQuery:
 		return q.Filter(), nil
 	case *ent.ProjectQuery:
@@ -956,6 +982,8 @@ func mutationFilter(m ent.Mutation) (Filter, error) {
 	case *ent.InvitationMutation:
 		return m.Filter(), nil
 	case *ent.ModelMutation:
+		return m.Filter(), nil
+	case *ent.OAuthClientMutation:
 		return m.Filter(), nil
 	case *ent.OIDCIdentityMutation:
 		return m.Filter(), nil

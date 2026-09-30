@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as AuthenticatedPermissionRouteImport } from './routes/_authenticated/permission'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
@@ -59,6 +60,7 @@ import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
 import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
 import { Route as AuthenticatedAdminPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/admin/prompt-protection-rules/index'
+import { Route as AuthenticatedAdminOauthApplicationsIndexRouteImport } from './routes/_authenticated/admin/oauth-applications/index'
 import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
 import { Route as AuthenticatedAdminDataStoragesIndexRouteImport } from './routes/_authenticated/admin/data-storages/index'
 import { Route as AuthenticatedAdminChannelsIndexRouteImport } from './routes/_authenticated/admin/channels/index'
@@ -76,6 +78,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPermissionRoute = AuthenticatedPermissionRouteImport.update({
   id: '/permission',
@@ -348,6 +355,12 @@ const AuthenticatedAdminPromptProtectionRulesIndexRoute =
     path: '/prompt-protection-rules/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminOauthApplicationsIndexRoute =
+  AuthenticatedAdminOauthApplicationsIndexRouteImport.update({
+    id: '/oauth-applications/',
+    path: '/oauth-applications/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminModelsIndexRoute =
   AuthenticatedAdminModelsIndexRouteImport.update({
     id: '/models/',
@@ -414,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/permission': typeof AuthenticatedPermissionRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -438,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/admin/channels/': typeof AuthenticatedAdminChannelsIndexRoute
   '/admin/data-storages/': typeof AuthenticatedAdminDataStoragesIndexRoute
   '/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
+  '/admin/oauth-applications/': typeof AuthenticatedAdminOauthApplicationsIndexRoute
   '/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
@@ -470,6 +485,7 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/permission': typeof AuthenticatedPermissionRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/': typeof AuthenticatedIndexRoute
   '/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -495,6 +511,7 @@ export interface FileRoutesByTo {
   '/admin/channels': typeof AuthenticatedAdminChannelsIndexRoute
   '/admin/data-storages': typeof AuthenticatedAdminDataStoragesIndexRoute
   '/admin/models': typeof AuthenticatedAdminModelsIndexRoute
+  '/admin/oauth-applications': typeof AuthenticatedAdminOauthApplicationsIndexRoute
   '/admin/prompt-protection-rules': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/admin/publish-requests': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsIndexRoute
@@ -531,6 +548,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/permission': typeof AuthenticatedPermissionRoute
+  '/oauth/consent': typeof OauthConsentRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/requests/$requestId': typeof AuthenticatedRequestsRequestIdRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -556,6 +574,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/channels/': typeof AuthenticatedAdminChannelsIndexRoute
   '/_authenticated/admin/data-storages/': typeof AuthenticatedAdminDataStoragesIndexRoute
   '/_authenticated/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
+  '/_authenticated/admin/oauth-applications/': typeof AuthenticatedAdminOauthApplicationsIndexRoute
   '/_authenticated/admin/prompt-protection-rules/': typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   '/_authenticated/admin/publish-requests/': typeof AuthenticatedAdminPublishRequestsIndexRoute
   '/_authenticated/admin/requests/': typeof AuthenticatedAdminRequestsIndexRoute
@@ -593,6 +612,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/permission'
+    | '/oauth/consent'
     | '/requests/$requestId'
     | '/settings/appearance'
     | '/settings/display'
@@ -617,6 +637,7 @@ export interface FileRouteTypes {
     | '/admin/channels/'
     | '/admin/data-storages/'
     | '/admin/models/'
+    | '/admin/oauth-applications/'
     | '/admin/prompt-protection-rules/'
     | '/admin/publish-requests/'
     | '/admin/requests/'
@@ -649,6 +670,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/permission'
+    | '/oauth/consent'
     | '/'
     | '/requests/$requestId'
     | '/settings/appearance'
@@ -674,6 +696,7 @@ export interface FileRouteTypes {
     | '/admin/channels'
     | '/admin/data-storages'
     | '/admin/models'
+    | '/admin/oauth-applications'
     | '/admin/prompt-protection-rules'
     | '/admin/publish-requests'
     | '/admin/requests'
@@ -709,6 +732,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/permission'
+    | '/oauth/consent'
     | '/_authenticated/'
     | '/_authenticated/requests/$requestId'
     | '/_authenticated/settings/appearance'
@@ -734,6 +758,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/channels/'
     | '/_authenticated/admin/data-storages/'
     | '/_authenticated/admin/models/'
+    | '/_authenticated/admin/oauth-applications/'
     | '/_authenticated/admin/prompt-protection-rules/'
     | '/_authenticated/admin/publish-requests/'
     | '/_authenticated/admin/requests/'
@@ -767,6 +792,7 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  OauthConsentRoute: typeof OauthConsentRoute
   OauthOidcIdpCallbackRoute: typeof OauthOidcIdpCallbackRoute
 }
 
@@ -785,6 +811,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/permission': {
       id: '/_authenticated/permission'
@@ -1122,6 +1155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/oauth-applications/': {
+      id: '/_authenticated/admin/oauth-applications/'
+      path: '/oauth-applications'
+      fullPath: '/admin/oauth-applications/'
+      preLoaderRoute: typeof AuthenticatedAdminOauthApplicationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/models/': {
       id: '/_authenticated/admin/models/'
       path: '/models'
@@ -1188,6 +1228,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminChannelsIndexRoute: typeof AuthenticatedAdminChannelsIndexRoute
   AuthenticatedAdminDataStoragesIndexRoute: typeof AuthenticatedAdminDataStoragesIndexRoute
   AuthenticatedAdminModelsIndexRoute: typeof AuthenticatedAdminModelsIndexRoute
+  AuthenticatedAdminOauthApplicationsIndexRoute: typeof AuthenticatedAdminOauthApplicationsIndexRoute
   AuthenticatedAdminPromptProtectionRulesIndexRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRoute
   AuthenticatedAdminPublishRequestsIndexRoute: typeof AuthenticatedAdminPublishRequestsIndexRoute
   AuthenticatedAdminRequestsIndexRoute: typeof AuthenticatedAdminRequestsIndexRoute
@@ -1209,6 +1250,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminDataStoragesIndexRoute:
       AuthenticatedAdminDataStoragesIndexRoute,
     AuthenticatedAdminModelsIndexRoute: AuthenticatedAdminModelsIndexRoute,
+    AuthenticatedAdminOauthApplicationsIndexRoute:
+      AuthenticatedAdminOauthApplicationsIndexRoute,
     AuthenticatedAdminPromptProtectionRulesIndexRoute:
       AuthenticatedAdminPromptProtectionRulesIndexRoute,
     AuthenticatedAdminPublishRequestsIndexRoute:
@@ -1329,6 +1372,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  OauthConsentRoute: OauthConsentRoute,
   OauthOidcIdpCallbackRoute: OauthOidcIdpCallbackRoute,
 }
 export const routeTree = rootRouteImport

@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/invitation"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
@@ -511,6 +512,45 @@ func init() {
 	modelDescDeletedAt := modelMixinFields1[0].Descriptor()
 	// model.DefaultDeletedAt holds the default value on creation for the deleted_at field.
 	model.DefaultDeletedAt = modelDescDeletedAt.Default.(int)
+	oauthclientMixin := schema.OAuthClient{}.Mixin()
+	oauthclient.Policy = privacy.NewPolicies(schema.OAuthClient{})
+	oauthclient.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := oauthclient.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	oauthclientMixinHooks1 := oauthclientMixin[1].Hooks()
+
+	oauthclient.Hooks[1] = oauthclientMixinHooks1[0]
+	oauthclientMixinInters1 := oauthclientMixin[1].Interceptors()
+	oauthclient.Interceptors[0] = oauthclientMixinInters1[0]
+	oauthclientMixinFields0 := oauthclientMixin[0].Fields()
+	_ = oauthclientMixinFields0
+	oauthclientMixinFields1 := oauthclientMixin[1].Fields()
+	_ = oauthclientMixinFields1
+	oauthclientFields := schema.OAuthClient{}.Fields()
+	_ = oauthclientFields
+	// oauthclientDescCreatedAt is the schema descriptor for created_at field.
+	oauthclientDescCreatedAt := oauthclientMixinFields0[0].Descriptor()
+	// oauthclient.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oauthclient.DefaultCreatedAt = oauthclientDescCreatedAt.Default.(func() time.Time)
+	// oauthclientDescUpdatedAt is the schema descriptor for updated_at field.
+	oauthclientDescUpdatedAt := oauthclientMixinFields0[1].Descriptor()
+	// oauthclient.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oauthclient.DefaultUpdatedAt = oauthclientDescUpdatedAt.Default.(func() time.Time)
+	// oauthclient.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	oauthclient.UpdateDefaultUpdatedAt = oauthclientDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// oauthclientDescDeletedAt is the schema descriptor for deleted_at field.
+	oauthclientDescDeletedAt := oauthclientMixinFields1[0].Descriptor()
+	// oauthclient.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	oauthclient.DefaultDeletedAt = oauthclientDescDeletedAt.Default.(int)
+	// oauthclientDescDescription is the schema descriptor for description field.
+	oauthclientDescDescription := oauthclientFields[1].Descriptor()
+	// oauthclient.DefaultDescription holds the default value on creation for the description field.
+	oauthclient.DefaultDescription = oauthclientDescDescription.Default.(string)
 	oidcidentityMixin := schema.OIDCIdentity{}.Mixin()
 	oidcidentity.Policy = privacy.NewPolicies(schema.OIDCIdentity{})
 	oidcidentity.Hooks[0] = func(next ent.Mutator) ent.Mutator {

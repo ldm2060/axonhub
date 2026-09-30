@@ -36,6 +36,8 @@ type Tx struct {
 	Invitation *InvitationClient
 	// Model is the client for interacting with the Model builders.
 	Model *ModelClient
+	// OAuthClient is the client for interacting with the OAuthClient builders.
+	OAuthClient *OAuthClientClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
 	OIDCIdentity *OIDCIdentityClient
 	// Project is the client for interacting with the Project builders.
@@ -215,6 +217,7 @@ func (tx *Tx) init() {
 	tx.EmailToken = NewEmailTokenClient(tx.config)
 	tx.Invitation = NewInvitationClient(tx.config)
 	tx.Model = NewModelClient(tx.config)
+	tx.OAuthClient = NewOAuthClientClient(tx.config)
 	tx.OIDCIdentity = NewOIDCIdentityClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
 	tx.Prompt = NewPromptClient(tx.config)

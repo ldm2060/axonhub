@@ -11,6 +11,7 @@ import {
   IconRobot,
   IconSend,
   IconShield,
+  IconShieldLock,
   IconUsers,
   IconUsersGroup,
 } from '@tabler/icons-react';
@@ -50,6 +51,7 @@ export const NAV_GROUP_DEFS: NavGroupDef[] = [
       { titleKey: 'sidebar.items.dataStorages', url: '/admin/data-storages', icon: IconDatabase },
       { titleKey: 'sidebar.items.users', url: '/admin/users', icon: IconUsers },
       { titleKey: 'sidebar.items.roles', url: '/admin/roles', icon: IconUsersGroup },
+      { titleKey: 'sidebar.items.oauthApplications', url: '/admin/oauth-applications', icon: IconShieldLock },
       { titleKey: 'sidebar.items.system', url: '/admin/runtime', icon: IconActivity },
     ],
   },

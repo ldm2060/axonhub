@@ -19,6 +19,7 @@ schema:
   - publish_request.graphql
   - usage_monitor.graphql
   - analytics.graphql
+  - oauth_provider.graphql
 
 omit_gqlgen_version_in_file_notice: true
 

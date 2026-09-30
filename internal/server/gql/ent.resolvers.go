@@ -338,6 +338,22 @@ func (r *modelResolver) OwnerID(ctx context.Context, obj *ent.Model) (*objects.G
 }
 
 // ID is the resolver for the id field.
+func (r *oAuthClientResolver) ID(ctx context.Context, obj *ent.OAuthClient) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeOAuthClient,
+		ID:   obj.ID,
+	}, nil
+}
+
+// UserID is the resolver for the userID field.
+func (r *oAuthClientResolver) UserID(ctx context.Context, obj *ent.OAuthClient) (*objects.GUID, error) {
+	return &objects.GUID{
+		Type: ent.TypeUser,
+		ID:   obj.UserID,
+	}, nil
+}
+
+// ID is the resolver for the id field.
 func (r *oIDCIdentityResolver) ID(ctx context.Context, obj *ent.OIDCIdentity) (*objects.GUID, error) {
 	return &objects.GUID{
 		Type: ent.TypeOIDCIdentity,
@@ -568,6 +584,18 @@ func (r *queryResolver) Models(ctx context.Context, after *entgql.Cursor[int], f
 	return r.client.Model.Query().Paginate(ctx, after, first, before, last,
 		ent.WithModelOrder(orderBy),
 		ent.WithModelFilter(where.Filter),
+	)
+}
+
+// OauthClients is the resolver for the oauthClients field.
+func (r *queryResolver) OauthClients(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OAuthClientOrder, where *ent.OAuthClientWhereInput) (*ent.OAuthClientConnection, error) {
+	if err := validatePaginationArgs(first, last); err != nil {
+		return nil, err
+	}
+
+	return r.client.OAuthClient.Query().Paginate(ctx, after, first, before, last,
+		ent.WithOAuthClientOrder(orderBy),
+		ent.WithOAuthClientFilter(where.Filter),
 	)
 }
 
@@ -1247,6 +1275,9 @@ func (r *Resolver) EmailToken() EmailTokenResolver { return &emailTokenResolver{
 // Model returns ModelResolver implementation.
 func (r *Resolver) Model() ModelResolver { return &modelResolver{r} }
 
+// OAuthClient returns OAuthClientResolver implementation.
+func (r *Resolver) OAuthClient() OAuthClientResolver { return &oAuthClientResolver{r} }
+
 // OIDCIdentity returns OIDCIdentityResolver implementation.
 func (r *Resolver) OIDCIdentity() OIDCIdentityResolver { return &oIDCIdentityResolver{r} }
 
@@ -1321,6 +1352,7 @@ type channelUsageMonitorBindingResolver struct{ *Resolver }
 type dataStorageResolver struct{ *Resolver }
 type emailTokenResolver struct{ *Resolver }
 type modelResolver struct{ *Resolver }
+type oAuthClientResolver struct{ *Resolver }
 type oIDCIdentityResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type promptResolver struct{ *Resolver }

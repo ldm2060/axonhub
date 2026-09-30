@@ -24,6 +24,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/emailtoken"
 	"github.com/ldm2060/axonhub/internal/ent/invitation"
 	"github.com/ldm2060/axonhub/internal/ent/model"
+	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
@@ -114,6 +115,7 @@ func checkColumn(t, c string) error {
 			emailtoken.Table:                 emailtoken.ValidColumn,
 			invitation.Table:                 invitation.ValidColumn,
 			model.Table:                      model.ValidColumn,
+			oauthclient.Table:                oauthclient.ValidColumn,
 			oidcidentity.Table:               oidcidentity.ValidColumn,
 			project.Table:                    project.ValidColumn,
 			prompt.Table:                     prompt.ValidColumn,

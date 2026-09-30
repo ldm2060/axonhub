@@ -25,6 +25,7 @@ var spaAdminPrefixes = []string{
 	"/admin/dashboard",
 	"/admin/data-storages",
 	"/admin/models",
+	"/admin/oauth-applications",
 	"/admin/prompt-protection-rules",
 	"/admin/publish-requests",
 	"/admin/requests",

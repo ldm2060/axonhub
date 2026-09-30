@@ -41,6 +41,7 @@ type Handlers struct {
 	KimiCode       *api.KimiCodeHandlers
 	RequestContent *api.RequestContentHandlers
 	OIDC           *api.OIDCHandlers
+	OAuthProvider  *api.OAuthProviderHandlers
 	RequestPreview *api.RequestPreviewHandlers
 	SignUp         *api.SignUpHandlers
 	EmailToken     *api.EmailTokenAPI
@@ -129,6 +130,10 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	{
 		handlers.OIDC.RegisterRoutes(oauthGroup)
 	}
+
+	// OIDC provider endpoints (AxonHub acting as the identity provider for
+	// third-party applications): /.well-known/openid-configuration and /oauth2/*.
+	handlers.OAuthProvider.RegisterRoutes(server)
 
 	adminGroup := server.Group("/admin", middleware.WithJWTAuth(services.AuthService), middleware.WithProjectID())
 	// 管理员路由 - 使用 JWT 认证

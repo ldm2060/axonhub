@@ -9,6 +9,7 @@
   "sidebar.items.prompts": "Prompts",
   "sidebar.items.dataStorages": "Payload Storages",
   "sidebar.items.users": "Users",
+  "sidebar.items.oauthApplications": "OAuth Apps",
   "sidebar.items.roles": "Roles",
   "sidebar.items.requests": "Requests",
   "sidebar.items.traces": "Traces",

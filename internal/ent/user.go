@@ -75,6 +75,8 @@ type UserEdges struct {
 	OidcIdentities []*OIDCIdentity `json:"oidc_identities,omitempty"`
 	// EmailTokens holds the value of the email_tokens edge.
 	EmailTokens []*EmailToken `json:"email_tokens,omitempty"`
+	// OauthClients holds the value of the oauth_clients edge.
+	OauthClients []*OAuthClient `json:"oauth_clients,omitempty"`
 	// UserUsageStats holds the value of the user_usage_stats edge.
 	UserUsageStats []*UserUsageStats `json:"user_usage_stats,omitempty"`
 	// UsageMonitorChannels holds the value of the usage_monitor_channels edge.
@@ -85,9 +87,9 @@ type UserEdges struct {
 	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [15]bool
+	loadedTypes [16]bool
 	// totalCount holds the count of the edges above.
-	totalCount [15]map[string]int
+	totalCount [16]map[string]int
 
 	namedProjects                 map[string][]*Project
 	namedOwnedChannels            map[string][]*Channel
@@ -99,6 +101,7 @@ type UserEdges struct {
 	namedChannelOverrideTemplates map[string][]*ChannelOverrideTemplate
 	namedOidcIdentities           map[string][]*OIDCIdentity
 	namedEmailTokens              map[string][]*EmailToken
+	namedOauthClients             map[string][]*OAuthClient
 	namedUserUsageStats           map[string][]*UserUsageStats
 	namedUsageMonitorChannels     map[string][]*UsageMonitorChannel
 	namedProjectUsers             map[string][]*UserProject
@@ -206,10 +209,19 @@ func (e UserEdges) EmailTokensOrErr() ([]*EmailToken, error) {
 	return nil, &NotLoadedError{edge: "email_tokens"}
 }
 
+// OauthClientsOrErr returns the OauthClients value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OauthClientsOrErr() ([]*OAuthClient, error) {
+	if e.loadedTypes[11] {
+		return e.OauthClients, nil
+	}
+	return nil, &NotLoadedError{edge: "oauth_clients"}
+}
+
 // UserUsageStatsOrErr returns the UserUsageStats value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserUsageStatsOrErr() ([]*UserUsageStats, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[12] {
 		return e.UserUsageStats, nil
 	}
 	return nil, &NotLoadedError{edge: "user_usage_stats"}
@@ -218,7 +230,7 @@ func (e UserEdges) UserUsageStatsOrErr() ([]*UserUsageStats, error) {
 // UsageMonitorChannelsOrErr returns the UsageMonitorChannels value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UsageMonitorChannelsOrErr() ([]*UsageMonitorChannel, error) {
-	if e.loadedTypes[12] {
+	if e.loadedTypes[13] {
 		return e.UsageMonitorChannels, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_monitor_channels"}
@@ -227,7 +239,7 @@ func (e UserEdges) UsageMonitorChannelsOrErr() ([]*UsageMonitorChannel, error) {
 // ProjectUsersOrErr returns the ProjectUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
-	if e.loadedTypes[13] {
+	if e.loadedTypes[14] {
 		return e.ProjectUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "project_users"}
@@ -236,7 +248,7 @@ func (e UserEdges) ProjectUsersOrErr() ([]*UserProject, error) {
 // UserRolesOrErr returns the UserRoles value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserRolesOrErr() ([]*UserRole, error) {
-	if e.loadedTypes[14] {
+	if e.loadedTypes[15] {
 		return e.UserRoles, nil
 	}
 	return nil, &NotLoadedError{edge: "user_roles"}
@@ -426,6 +438,11 @@ func (_m *User) QueryOidcIdentities() *OIDCIdentityQuery {
 // QueryEmailTokens queries the "email_tokens" edge of the User entity.
 func (_m *User) QueryEmailTokens() *EmailTokenQuery {
 	return NewUserClient(_m.config).QueryEmailTokens(_m)
+}
+
+// QueryOauthClients queries the "oauth_clients" edge of the User entity.
+func (_m *User) QueryOauthClients() *OAuthClientQuery {
+	return NewUserClient(_m.config).QueryOauthClients(_m)
 }
 
 // QueryUserUsageStats queries the "user_usage_stats" edge of the User entity.
@@ -753,6 +770,30 @@ func (_m *User) appendNamedEmailTokens(name string, edges ...*EmailToken) {
 		_m.Edges.namedEmailTokens[name] = []*EmailToken{}
 	} else {
 		_m.Edges.namedEmailTokens[name] = append(_m.Edges.namedEmailTokens[name], edges...)
+	}
+}
+
+// NamedOauthClients returns the OauthClients named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (_m *User) NamedOauthClients(name string) ([]*OAuthClient, error) {
+	if _m.Edges.namedOauthClients == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := _m.Edges.namedOauthClients[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (_m *User) appendNamedOauthClients(name string, edges ...*OAuthClient) {
+	if _m.Edges.namedOauthClients == nil {
+		_m.Edges.namedOauthClients = make(map[string][]*OAuthClient)
+	}
+	if len(edges) == 0 {
+		_m.Edges.namedOauthClients[name] = []*OAuthClient{}
+	} else {
+		_m.Edges.namedOauthClients[name] = append(_m.Edges.namedOauthClients[name], edges...)
 	}
 }
 
