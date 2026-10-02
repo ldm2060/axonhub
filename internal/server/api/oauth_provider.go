@@ -147,18 +147,30 @@ func (h *OAuthProviderHandlers) UserInfo(c *gin.Context) {
 	}
 
 	if token == "" {
-		c.Header("WWW-Authenticate", `Bearer error="invalid_request"`)
-		writeOAuthError(c, &biz.OAuthError{Code: biz.OAuthErrorInvalidRequest, Description: "bearer token is required"})
+		c.Header("WWW-Authenticate", `Bearer error="invalid_request", error_description="bearer token is required"`)
+		c.Header("Cache-Control", "no-store")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":             biz.OAuthErrorInvalidRequest,
+			"error_description": "bearer token is required",
+		})
 		return
 	}
 
 	claims, err := h.service.UserInfo(c.Request.Context(), token)
 	if err != nil {
+		// RFC 6750 §3.1: a resource server rejects an invalid or expired
+		// bearer token with 401 and error="invalid_token".
+		description := "access token is invalid or expired"
 		if oauthErr, ok := errors.AsType[*biz.OAuthError](err); ok {
-			c.Header("WWW-Authenticate", `Bearer error="`+oauthErr.Code+`"`)
+			description = oauthErr.Description
 		}
 
-		writeOAuthError(c, err)
+		c.Header("WWW-Authenticate", `Bearer error="invalid_token"`)
+		c.Header("Cache-Control", "no-store")
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":             "invalid_token",
+			"error_description": description,
+		})
 		return
 	}
 
