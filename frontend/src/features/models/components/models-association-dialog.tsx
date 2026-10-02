@@ -29,12 +29,16 @@ import {
 import { useAllChannelSummarys, useAllChannelTags } from '@/features/channels/data/channels';
 import { useModelSettings, useUpdateModelSettings } from '@/features/system/data/system';
 import { useModels } from '../context/models-context';
+import {
+  MAX_ASSOCIATION_PRIORITY,
+  associationPrioritySchema,
+  hasInvalidAssociationPriority,
+  nextAssociationPriority,
+} from '../data/association-priority';
 import { useQueryModelChannelConnections, ModelAssociationInput, ModelChannelConnection } from '../data/models';
 import { useUpdateModel } from '../data/models';
 import { ModelAssociation, normalizeModelRoutingPolicyValue } from '../data/schema';
 import { ChannelModelsList } from './channel-models-list';
-
-const MAX_ASSOCIATION_PRIORITY = 10;
 
 const requestFormatConditionOptions = [
   'openai/chat_completions',
@@ -389,10 +393,7 @@ const associationFormSchema = z.object({
     .array(
       z.object({
         type: z.enum(['channel_model', 'channel_regex', 'model', 'regex', 'channel_tags_model', 'channel_tags_regex']),
-        priority: z
-          .number()
-          .min(0, 'Priority must be at least 0')
-          .max(MAX_ASSOCIATION_PRIORITY, `Priority cannot exceed ${MAX_ASSOCIATION_PRIORITY}`),
+        priority: associationPrioritySchema,
         disabled: z.boolean().default(false),
         whenEnabled: z.boolean().default(false),
         whenCondition: z.custom<FilterBuilderGroupListValue>().default(DEFAULT_WHEN_CONDITION),
@@ -815,6 +816,15 @@ export function ModelsAssociationDialog() {
   // Serialize to string for stable comparison in debounce
   const associationsString = JSON.stringify(watchedAssociations);
   const debouncedAssociationsString = useDebounce(associationsString, 500);
+  const debouncedPriorities = useDebounce(JSON.stringify(watchedAssociations.map((assoc) => assoc.priority ?? null)), 500);
+  const debouncedAssociations = useMemo(() => {
+    try {
+      const rows: AssociationFormRow[] = JSON.parse(debouncedAssociationsString) || [];
+      return { rows, hasInvalidPriority: hasInvalidAssociationPriority(JSON.parse(debouncedPriorities) || []) };
+    } catch {
+      return { rows: [], hasInvalidPriority: true };
+    }
+  }, [debouncedAssociationsString, debouncedPriorities]);
 
   // Query connections when associations change
   useEffect(() => {
@@ -823,23 +833,23 @@ export function ModelsAssociationDialog() {
       return;
     }
 
-    let debouncedAssociations: AssociationFormRow[];
-    try {
-      debouncedAssociations = JSON.parse(debouncedAssociationsString) || [];
-    } catch {
-      setConnections([]);
+    const { rows, hasInvalidPriority } = debouncedAssociations;
+
+    // A fractional or out-of-range priority is rejected by the GraphQL Int input,
+    // so the preview stays on the last valid result until the input is corrected.
+    if (hasInvalidPriority) {
       return;
     }
 
     const fetchConnections = async () => {
       try {
         if (isDeveloperMode) {
-          setConnections(buildDeveloperChannelPreview(debouncedAssociations, channelOptions));
+          setConnections(buildDeveloperChannelPreview(rows, channelOptions));
           return;
         }
 
         const inheritedInputs = inheritedAssociations.map((assoc) => modelAssociationToInput(assoc, currentRow?.modelID));
-        const formInputs = sortAssociationsByPriority(debouncedAssociations)
+        const formInputs = sortAssociationsByPriority(rows)
           .map((assoc) => formAssociationToInput(assoc))
           .filter((item): item is ModelAssociationInput => item !== undefined);
         const associations = sortAssociationsByPriority([...formInputs, ...inheritedInputs]);
@@ -850,23 +860,14 @@ export function ModelsAssociationDialog() {
         } else {
           setConnections([]);
         }
-      } catch (_error) {
+      } catch {
         toast.error(t('common.errors.loadFailed'));
         setConnections([]);
       }
     };
 
     fetchConnections();
-  }, [
-    channelOptions,
-    currentRow?.modelID,
-    debouncedAssociationsString,
-    inheritedAssociations,
-    isOpen,
-    isDeveloperMode,
-    queryConnections,
-    t,
-  ]);
+  }, [channelOptions, currentRow?.modelID, debouncedAssociations, inheritedAssociations, isOpen, isDeveloperMode, queryConnections, t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -939,13 +940,11 @@ export function ModelsAssociationDialog() {
   const handleAddAssociation = useCallback(() => {
     if (fields.length >= 10) return;
 
-    // Get the priority of the last rule (highest priority)
     const currentAssociations = form.getValues('associations') || [];
-    const lastPriority = currentAssociations.length > 0 ? Math.max(...currentAssociations.map((a) => a.priority ?? 0)) : 0;
 
     append({
       type: 'channel_model',
-      priority: lastPriority,
+      priority: nextAssociationPriority(currentAssociations.map((a) => a.priority)),
       disabled: false,
       whenEnabled: false,
       whenCondition: DEFAULT_WHEN_CONDITION,
@@ -1167,7 +1166,7 @@ export function ModelsAssociationDialog() {
           </div>
 
           {/* Right Side - Preview */}
-          <div className='flex min-h-0 min-w-0 flex-1 flex-col border-t pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6'>
+          <div className='flex min-w-0 flex-col border-t pt-4 sm:min-h-0 sm:flex-1 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6'>
             <div className='shrink-0 space-y-2 pb-4'>
               <h3 className='text-sm font-semibold'>{t('models.dialogs.association.preview')}</h3>
               <p className='text-muted-foreground text-xs'>
@@ -1472,12 +1471,19 @@ function AssociationRow({
                   min={0}
                   max={MAX_ASSOCIATION_PRIORITY}
                   {...field}
-                  value={field.value ?? 0}
-                  onChange={(e) => field.onChange(Math.max(0, Math.min(MAX_ASSOCIATION_PRIORITY, Number(e.target.value) || 0)))}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    // Keep the raw input so the schema reports out-of-range values instead of clamping them.
+                    // An empty input becomes null (not undefined) so react-hook-form does not fall back to the default value.
+                    field.onChange(e.target.value ? Number(e.target.value) : null);
+                    // The form only validates on submit, but Save is disabled while invalid, so surface the error now.
+                    void form.trigger(field.name);
+                  }}
                   className='h-10 text-center [-moz-appearance:textfield] sm:h-9 [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:hidden [&::-webkit-inner-spin-button]:appearance-none'
                   placeholder='0'
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

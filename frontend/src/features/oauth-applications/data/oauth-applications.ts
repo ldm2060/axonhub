@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '@/gql/graphql';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { graphqlRequest } from '@/gql/graphql';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import {
   oauthApplicationSchema,
@@ -16,7 +16,13 @@ import {
   type UpdateOAuthApplicationInput,
 } from './schema';
 
-export type { OAuthApplication, OAuthApplicationsConnection, OAuthAuthorizationRequest, CreateOAuthApplicationInput, UpdateOAuthApplicationInput };
+export type {
+  OAuthApplication,
+  OAuthApplicationsConnection,
+  OAuthAuthorizationRequest,
+  CreateOAuthApplicationInput,
+  UpdateOAuthApplicationInput,
+};
 
 const OAUTH_APPLICATION_FIELDS = `
   id

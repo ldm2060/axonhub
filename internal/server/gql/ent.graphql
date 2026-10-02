@@ -1356,6 +1356,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   burncloud
   modelscope
   bailian
+  bailian_responses
   bailian_anthropic
   moonshot_coding
   kimi_code

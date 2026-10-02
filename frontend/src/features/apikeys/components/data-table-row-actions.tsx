@@ -4,6 +4,7 @@ import { Row } from '@tanstack/react-table';
 import { IconUserOff, IconUserCheck, IconEdit, IconSettings, IconArchive, IconCheck, IconRefresh, IconTrash } from '@tabler/icons-react';
 import { BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/stores/authStore';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,10 +26,18 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { t } = useTranslation();
   const { openDialog } = useApiKeysContext();
   const { apiKeyPermissions } = usePermissions();
+  const currentUser = useAuthStore((state) => state.auth.user);
   const apiKey = row.original;
   const canRotateApiKey = apiKey.status !== 'archived' && apiKey.type !== 'noauth';
   const [open, setOpen] = React.useState(false);
   const [chartOpen, setChartOpen] = React.useState(false);
+
+  // Personal API keys can only be modified by their creator or a system
+  // owner; hide mutating actions on other users' personal keys for anyone
+  // else instead of letting them fail.
+  const isOthersPersonalKey =
+    apiKey.type === 'personal' && !currentUser?.isOwner && apiKey.user?.id != null && apiKey.user.id !== currentUser?.id;
+  const canMutate = apiKeyPermissions.canWrite && !isOthersPersonalKey;
 
   // Don't show menu if user has no permissions
   if (!apiKeyPermissions.canRead && !apiKeyPermissions.canWrite) {
@@ -83,7 +92,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             <BarChart3 className='mr-2 h-4 w-4' />
             {t('apikeys.actions.viewTokenChart')}
           </DropdownMenuItem>
-          {apiKeyPermissions.canWrite && (
+          {canMutate && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleEdit(apiKey)}>

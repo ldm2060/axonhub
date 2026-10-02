@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DateRangePicker, type DateTimeRangeValue } from '@/components/date-range-picker';
-import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { PageHeader } from '@/components/layout/page-header';
 import { useGeneralSettings } from '@/features/system/data/system';
 import { useUsageStatsByUser } from './data/usage-stats';
 
@@ -73,15 +73,8 @@ export default function UsageStatisticsPage() {
   }
 
   return (
-    <div className='flex flex-1 flex-col overflow-hidden'>
-      <Header fixed>
-        <div className='flex flex-1 items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-bold tracking-tight'>{t('sidebar.items.usageStats')}</h2>
-            <p className='text-muted-foreground text-sm'>{t('usageStats.description')}</p>
-          </div>
-        </div>
-      </Header>
+    <>
+      <PageHeader title={t('sidebar.items.usageStats')} description={t('usageStats.description')} />
 
       <Main fixed className='flex flex-col'>
         <div className='mb-4 flex flex-shrink-0 items-center justify-between gap-4'>
@@ -160,6 +153,6 @@ export default function UsageStatisticsPage() {
           )}
         </div>
       </Main>
-    </div>
+    </>
   );
 }

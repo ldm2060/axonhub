@@ -14,6 +14,7 @@ const transpiled = ts
     },
   })
   .outputText.replaceAll("import { toast } from 'sonner';", 'const toast = { error() {} };')
+  .replaceAll("import { ensureFreshAccessToken } from '@/lib/auth-session';", 'const ensureFreshAccessToken = async () => "";')
   .replaceAll(
     "import { getTokenFromStorage, removeTokenFromStorage } from '@/stores/authStore';",
     'const getTokenFromStorage = () => ""; const removeTokenFromStorage = () => {};'

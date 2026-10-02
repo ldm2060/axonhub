@@ -2,8 +2,12 @@ import { useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useApproveOAuthAuthorization, useDenyOAuthAuthorization, useOAuthAuthorizationRequest } from '@/features/oauth-applications/data/oauth-applications';
 import { useAuthStore } from '@/stores/authStore';
+import {
+  useApproveOAuthAuthorization,
+  useDenyOAuthAuthorization,
+  useOAuthAuthorizationRequest,
+} from '@/features/oauth-applications/data/oauth-applications';
 
 export const Route = createFileRoute('/oauth/consent')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -32,9 +36,7 @@ function OAuthConsentPage() {
 
   const handleDecision = async (approve: boolean) => {
     try {
-      const redirectUrl = approve
-        ? await approveMutation.mutateAsync(request_id)
-        : await denyMutation.mutateAsync(request_id);
+      const redirectUrl = approve ? await approveMutation.mutateAsync(request_id) : await denyMutation.mutateAsync(request_id);
       window.location.href = redirectUrl;
     } catch {
       // Error is surfaced by the query below; keep the page in place.

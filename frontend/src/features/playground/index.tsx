@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { ensureFreshAccessToken } from '@/lib/auth-session';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -187,7 +188,14 @@ export default function Playground() {
         };
       },
       fetch: async (url, init) => {
-        const res = await fetch(url, init);
+        const token = await ensureFreshAccessToken();
+        const headers = new Headers(init?.headers);
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+        } else {
+          headers.delete('Authorization');
+        }
+        const res = await fetch(url, { ...init, headers });
         if (!res.ok) {
           let message = res.statusText || 'Request failed';
           let code: number | undefined = res.status;

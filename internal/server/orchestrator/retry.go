@@ -2,13 +2,9 @@ package orchestrator
 
 import (
 	"errors"
-	"io"
-	"net"
 	"regexp"
 	"slices"
 	"strings"
-
-	"github.com/gorilla/websocket"
 
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/objects"
@@ -22,7 +18,7 @@ func isRetryableError(err error) bool {
 		return false
 	}
 
-	return isRetryableTransportError(err) ||
+	return IsUpstreamTransportError(err) ||
 		httpclient.IsHTTPStatusCodeRetryable(ExtractStatusCodeFromError(err))
 }
 
@@ -30,7 +26,7 @@ func isRetryableErrorForChannel(err error, ch *biz.Channel) bool {
 	if err == nil {
 		return false
 	}
-	if isRetryableTransportError(err) {
+	if IsUpstreamTransportError(err) {
 		return true
 	}
 
@@ -45,47 +41,6 @@ func isRetryableErrorForChannel(err error, ch *biz.Channel) bool {
 
 	return slices.Contains(ch.Settings.RetryableStatusCodes, statusCode) ||
 		matchesRetryableErrorPattern(err, ch.Settings.RetryableErrorPatterns)
-}
-
-// isRetryableTransportError identifies failures where the upstream connection
-// ended before a usable response was received. The streaming pipeline only
-// invokes retry selection before response content is committed, so retrying
-// these transport failures cannot duplicate already-delivered output.
-func isRetryableTransportError(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	if errors.Is(err, io.EOF) ||
-		errors.Is(err, io.ErrUnexpectedEOF) ||
-		errors.Is(err, llm.ErrStreamIncomplete) {
-		return true
-	}
-
-	var closeErr *websocket.CloseError
-	if errors.As(err, &closeErr) && isRetryableWebSocketCloseCode(closeErr.Code) {
-		return true
-	}
-
-	var netErr net.Error
-
-	return errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary())
-}
-
-// isRetryableWebSocketCloseCode reports whether a WebSocket close code signals
-// a transient upstream failure that warrants a retry. These codes indicate the
-// connection ended without a usable response rather than a client-initiated
-// clean shutdown, so retrying on a fresh connection cannot duplicate output.
-func isRetryableWebSocketCloseCode(code int) bool {
-	switch code {
-	case websocket.CloseAbnormalClosure, // 1006: no close frame, e.g. TCP reset
-		websocket.CloseInternalServerErr, // 1011: server failed mid-request
-		websocket.CloseServiceRestart,    // 1012: server restarting
-		websocket.CloseTryAgainLater:     // 1013: temporary overload
-		return true
-	default:
-		return false
-	}
 }
 
 func matchesRetryableErrorPattern(err error, patterns []objects.RetryableErrorPattern) bool {

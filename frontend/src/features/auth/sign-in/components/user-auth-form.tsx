@@ -15,26 +15,31 @@ import { TurnstileWidget } from '@/features/auth/components/turnstile-widget';
 import type { TurnstileWidgetHandle } from '@/features/auth/components/turnstile-widget.types';
 import { useAuthConfig, useSignIn, useOIDCProviders, useOIDCAuthorize } from '@/features/auth/data/auth';
 
-type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
+type UserAuthFormProps = HTMLAttributes<HTMLFormElement> & {
+  redirect?: string;
+};
 
 // Create form schema with dynamic validation messages
 const createFormSchema = (t: (key: string) => string) =>
   z.object({
-    email: z.email().min(1, { message: t('auth.signIn.validation.emailRequired') }),
+    email: z
+      .string()
+      .min(1, { message: t('auth.signIn.validation.emailRequired') })
+      .pipe(z.email({ message: t('auth.signIn.validation.emailInvalid') })),
     password: passwordSchema(t),
   });
 
-export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+export function UserAuthForm({ className, redirect, ...props }: UserAuthFormProps) {
   const { t, i18n } = useTranslation();
   const turnstileTokenRef = useRef<string | null>(null);
   const turnstileWidgetRef = useRef<TurnstileWidgetHandle>(null);
   const getTurnstileToken = useCallback(() => turnstileTokenRef.current, []);
-  const signInMutation = useSignIn(getTurnstileToken);
+  const signInMutation = useSignIn(getTurnstileToken, redirect);
   const authConfigQuery = useAuthConfig();
   const [turnstileMessage, setTurnstileMessage] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const { data: oidcProviders } = useOIDCProviders();
-  const oidcAuthorizeMutation = useOIDCAuthorize();
+  const oidcAuthorizeMutation = useOIDCAuthorize(redirect);
 
   const formSchema = createFormSchema(t);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -65,8 +70,8 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     }
   }
 
-  const turnstileConfig = authConfigQuery.data?.turnstile;
   const isPasswordLoginDisabled = oidcProviders?.some((p) => p.active && p.oidc_login_only);
+  const turnstileConfig = authConfigQuery.data?.turnstile;
 
   return (
     <Form {...form}>
@@ -81,8 +86,9 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 <FormControl>
                   <Input
                     type='email'
+                    autoComplete='username'
                     placeholder={t('auth.signIn.form.email.placeholder')}
-                    className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                    className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:!bg-white'
                     data-testid='sign-in-email'
                     {...field}
                   />
@@ -108,8 +114,9 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 </div>
                 <FormControl>
                   <PasswordInput
+                    autoComplete='current-password'
                     placeholder={t('auth.signIn.form.password.placeholder')}
-                    className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white'
+                    className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:bg-white'
                     data-testid='sign-in-password'
                     {...field}
                   />
@@ -192,7 +199,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           {/* Submit Button */}
           <Button
             type='submit'
-            className='mt-6 w-full rounded-lg bg-slate-800 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-slate-700 hover:shadow-xl focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50'
+            className='mt-2 w-full rounded-lg bg-[#1A2023] px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-[#2A3138] hover:shadow-xl focus:ring-2 focus:ring-[#A8844E] focus:ring-offset-2 disabled:opacity-50'
             disabled={signInMutation.isPending || authConfigQuery.isLoading || authConfigQuery.isError}
             data-testid='sign-in-submit'
           >
@@ -216,7 +223,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 <span className='w-full border-t border-slate-300' />
               </div>
               <div className='relative flex justify-center text-xs uppercase'>
-                <span className='bg-white px-2 text-slate-500'>Or continue with</span>
+                <span className='bg-white px-2 text-slate-500'>{t('auth.signIn.oidc.divider')}</span>
               </div>
             </div>
           )}
@@ -263,13 +270,6 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           </div>
         </div>
       )}
-
-      <p className={cn('text-center text-sm text-slate-600', (!oidcProviders || oidcProviders.length === 0) && 'mt-2')}>
-        {t('auth.signIn.links.noAccount')}{' '}
-        <Link to='/sign-up' className='font-medium text-slate-500 transition-colors hover:text-slate-700 hover:underline'>
-          {t('auth.signIn.links.signUp')}
-        </Link>
-      </p>
     </Form>
   );
 }

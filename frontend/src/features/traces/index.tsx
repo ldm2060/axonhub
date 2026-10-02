@@ -5,8 +5,8 @@ import { useAutoRefreshInterval } from '@/hooks/use-auto-refresh-interval';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import useInterval from '@/hooks/useInterval';
-import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { PageHeader } from '@/components/layout/page-header';
 import { TracesTable } from './components';
 import { useTraces } from './data';
 
@@ -138,14 +138,7 @@ export default function TracesManagement() {
 
   return (
     <>
-      <Header fixed>
-        <div className='flex flex-1 items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-bold tracking-tight'>{t('traces.title')}</h2>
-            <p className='text-muted-foreground text-sm'>{t('traces.description')}</p>
-          </div>
-        </div>
-      </Header>
+      <PageHeader title={t('traces.title')} description={t('traces.description')} />
 
       <Main fixed>
         <TracesContent />

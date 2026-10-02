@@ -6,8 +6,8 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
-import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { PageHeader } from '@/components/layout/page-header';
 import { PermissionGuard } from '@/components/permission-guard';
 import { createColumns } from './components/rules-columns';
 import { RulesDialogs } from './components/rules-dialogs';
@@ -138,7 +138,7 @@ function CreateButton() {
 
 function ActionButtons() {
   return (
-    <div className='flex gap-2'>
+    <div className='flex max-w-full min-w-0 flex-wrap items-center gap-2'>
       <PermissionGuard requiredScope='write_channels'>
         <CreateButton />
       </PermissionGuard>
@@ -151,15 +151,11 @@ export default function PromptProtectionRulesManagement() {
 
   return (
     <PromptProtectionRulesProvider>
-      <Header fixed>
-        <div className='flex flex-1 items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-bold tracking-tight'>{t('promptProtectionRules.title')}</h2>
-            <p className='text-muted-foreground text-sm'>{t('promptProtectionRules.description')}</p>
-          </div>
-          <ActionButtons />
-        </div>
-      </Header>
+      <PageHeader
+        title={t('promptProtectionRules.title')}
+        description={t('promptProtectionRules.description')}
+        actions={<ActionButtons />}
+      />
 
       <Main fixed>
         <RulesContent />

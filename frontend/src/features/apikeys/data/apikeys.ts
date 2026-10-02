@@ -724,6 +724,7 @@ export function useUpdateApiKeyStatus() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: 'enabled' | 'disabled' | 'archived' }) => {
@@ -741,8 +742,8 @@ export function useUpdateApiKeyStatus() {
             : t('apikeys.status.archived');
       toast.success(t('apikeys.messages.statusUpdateSuccess', { status: statusText }));
     },
-    onError: () => {
-      toast.error(t('common.errors.internalServerError'));
+    onError: (error) => {
+      handleError(error);
     },
   });
 }
@@ -772,6 +773,7 @@ export function useUpdateApiKeyProfiles() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateApiKeyProfilesInput }) => {
@@ -783,8 +785,8 @@ export function useUpdateApiKeyProfiles() {
       queryClient.invalidateQueries({ queryKey: ['apiKey', variables.id] });
       toast.success(t('apikeys.messages.profilesUpdateSuccess'));
     },
-    onError: () => {
-      toast.error(t('common.errors.internalServerError'));
+    onError: (error) => {
+      handleError(error);
     },
   });
 }
@@ -793,6 +795,7 @@ export function useBulkDisableApiKeys() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
@@ -804,8 +807,8 @@ export function useBulkDisableApiKeys() {
       queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
       toast.success(t('apikeys.messages.bulkDisableSuccess', { count: variables.length }));
     },
-    onError: () => {
-      toast.error(t('common.errors.internalServerError'));
+    onError: (error) => {
+      handleError(error);
     },
   });
 }
@@ -814,6 +817,7 @@ export function useBulkEnableApiKeys() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
@@ -825,8 +829,8 @@ export function useBulkEnableApiKeys() {
       queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
       toast.success(t('apikeys.messages.bulkEnableSuccess', { count: variables.length }));
     },
-    onError: () => {
-      toast.error(t('common.errors.internalServerError'));
+    onError: (error) => {
+      handleError(error);
     },
   });
 }
@@ -835,6 +839,7 @@ export function useBulkArchiveApiKeys() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedProjectId = useSelectedProjectId();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
@@ -846,8 +851,8 @@ export function useBulkArchiveApiKeys() {
       queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
       toast.success(t('apikeys.messages.bulkArchiveSuccess', { count: variables.length }));
     },
-    onError: () => {
-      toast.error(t('common.errors.internalServerError'));
+    onError: (error) => {
+      handleError(error);
     },
   });
 }

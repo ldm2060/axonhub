@@ -14,6 +14,7 @@ import { ThemeSwitch } from '@/components/theme-switch';
 import { useMyProjects } from '@/features/projects/data/projects';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
+import { BrandLogo } from './brand-logo';
 
 export function AppHeader() {
   const { data: brandSettings } = useBrandSettings();
@@ -60,20 +61,7 @@ export function AppHeader() {
           {/* Logo */}
           <div className='flex items-center gap-2'>
             <div className='flex size-8 shrink-0 items-center justify-center overflow-hidden rounded'>
-              {brandSettings?.brandLogo ? (
-                <img
-                  src={brandSettings.brandLogo}
-                  alt='Brand Logo'
-                  width={24}
-                  height={24}
-                  className='size-8 object-cover'
-                  onError={(e) => {
-                    e.currentTarget.src = '/logo.jpg';
-                  }}
-                />
-              ) : (
-                <img src='/logo.jpg' alt='Default Logo' width={24} height={24} className='size-8 object-cover' />
-              )}
+              <BrandLogo brandLogo={brandSettings?.brandLogo} />
             </div>
             <span className='text-sm leading-none font-semibold'>{displayName}</span>
           </div>

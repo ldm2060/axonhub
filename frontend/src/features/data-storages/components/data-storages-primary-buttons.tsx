@@ -12,7 +12,7 @@ export function DataStoragesPrimaryButtons() {
   const { setIsCreateDialogOpen } = useDataStoragesContext();
 
   return (
-    <div className='flex flex-wrap items-center gap-2'>
+    <div className='flex max-w-full min-w-0 flex-wrap items-center gap-2'>
       <Button variant='outline' onClick={() => navigate({ to: '/admin/system', search: { tab: 'storage' } })}>
         <Settings className='mr-2 h-4 w-4' />
         {t('dataStorages.buttons.openStorageSettings')}

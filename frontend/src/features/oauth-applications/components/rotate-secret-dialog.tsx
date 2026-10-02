@@ -40,7 +40,9 @@ export function RotateSecretDialog() {
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-left'>
           <DialogTitle>{t('oauthApplications.dialogs.rotateSecret.title')}</DialogTitle>
-          <DialogDescription>{t('oauthApplications.dialogs.rotateSecret.description', { name: rotatingApplication.name })}</DialogDescription>
+          <DialogDescription>
+            {t('oauthApplications.dialogs.rotateSecret.description', { name: rotatingApplication.name })}
+          </DialogDescription>
         </DialogHeader>
 
         {newSecret ? (

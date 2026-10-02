@@ -278,7 +278,9 @@ type ComplexityRoot struct {
 		Name              func(childComplexity int) int
 		OutputTokens      func(childComplexity int) int
 		RequestCount      func(childComplexity int) int
+		TokensPerSecond   func(childComplexity int) int
 		TotalTokens       func(childComplexity int) int
+		TtftMs            func(childComplexity int) int
 	}
 
 	AnalyticsMetadata struct {
@@ -1196,7 +1198,7 @@ type ComplexityRoot struct {
 		CreateChannelOverrideTemplate         func(childComplexity int, input ent.CreateChannelOverrideTemplateInput) int
 		CreateDataStorage                     func(childComplexity int, input ent.CreateDataStorageInput) int
 		CreateModel                           func(childComplexity int, input ent.CreateModelInput) int
-		CreateOAuthClient                     func(childComplexity int, input CreateOAuthClientInput) int
+		CreateOAuthClient                     func(childComplexity int, input biz.CreateOAuthClientInput) int
 		CreateProject                         func(childComplexity int, input ent.CreateProjectInput) int
 		CreatePrompt                          func(childComplexity int, input ent.CreatePromptInput) int
 		CreatePromptProtectionRule            func(childComplexity int, input ent.CreatePromptProtectionRuleInput) int
@@ -1275,7 +1277,7 @@ type ComplexityRoot struct {
 		UpdateModel                           func(childComplexity int, id objects.GUID, input ent.UpdateModelInput) int
 		UpdateModelStatus                     func(childComplexity int, id objects.GUID, status model.Status) int
 		UpdateMyPassword                      func(childComplexity int, input UpdateMyPasswordInput) int
-		UpdateOAuthClient                     func(childComplexity int, id objects.GUID, input UpdateOAuthClientInput) int
+		UpdateOAuthClient                     func(childComplexity int, id objects.GUID, input biz.UpdateOAuthClientInput) int
 		UpdatePassThroughSettings             func(childComplexity int, input UpdatePassThroughSettingsInput) int
 		UpdateProject                         func(childComplexity int, id objects.GUID, input ent.UpdateProjectInput) int
 		UpdateProjectProfiles                 func(childComplexity int, id objects.GUID, input objects.ProjectProfiles) int
@@ -2975,8 +2977,8 @@ type MutationResolver interface {
 	TestUsageMonitorChannel(ctx context.Context, input usage_monitor.TestUsageMonitorChannelInput) (*usage_monitor.TestResult, error)
 	RefreshUsageMonitorChannel(ctx context.Context, id objects.GUID) (*ent.UsageMonitorChannel, error)
 	SaveChannelQuotaMonitorBindings(ctx context.Context, channelID objects.GUID, input biz.SaveChannelQuotaMonitorBindingsInput) ([]*biz.ChannelQuotaMonitorBindingView, error)
-	CreateOAuthClient(ctx context.Context, input CreateOAuthClientInput) (*OAuthClientSecretPayload, error)
-	UpdateOAuthClient(ctx context.Context, id objects.GUID, input UpdateOAuthClientInput) (*ent.OAuthClient, error)
+	CreateOAuthClient(ctx context.Context, input biz.CreateOAuthClientInput) (*OAuthClientSecretPayload, error)
+	UpdateOAuthClient(ctx context.Context, id objects.GUID, input biz.UpdateOAuthClientInput) (*ent.OAuthClient, error)
 	DeleteOAuthClient(ctx context.Context, id objects.GUID) (bool, error)
 	RotateOAuthClientSecret(ctx context.Context, id objects.GUID) (*OAuthClientSecretPayload, error)
 	ApproveOAuthAuthorization(ctx context.Context, requestID string) (*OAuthAuthorizationDecision, error)
@@ -3952,12 +3954,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.AnalyticsDimensionStat.RequestCount(childComplexity), true
+	case "AnalyticsDimensionStat.tokensPerSecond":
+		if e.complexity.AnalyticsDimensionStat.TokensPerSecond == nil {
+			break
+		}
+
+		return e.complexity.AnalyticsDimensionStat.TokensPerSecond(childComplexity), true
 	case "AnalyticsDimensionStat.totalTokens":
 		if e.complexity.AnalyticsDimensionStat.TotalTokens == nil {
 			break
 		}
 
 		return e.complexity.AnalyticsDimensionStat.TotalTokens(childComplexity), true
+	case "AnalyticsDimensionStat.ttftMs":
+		if e.complexity.AnalyticsDimensionStat.TtftMs == nil {
+			break
+		}
+
+		return e.complexity.AnalyticsDimensionStat.TtftMs(childComplexity), true
 
 	case "AnalyticsMetadata.earliestDate":
 		if e.complexity.AnalyticsMetadata.EarliestDate == nil {
@@ -7753,7 +7767,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateOAuthClient(childComplexity, args["input"].(CreateOAuthClientInput)), true
+		return e.complexity.Mutation.CreateOAuthClient(childComplexity, args["input"].(biz.CreateOAuthClientInput)), true
 	case "Mutation.createProject":
 		if e.complexity.Mutation.CreateProject == nil {
 			break
@@ -8607,7 +8621,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateOAuthClient(childComplexity, args["id"].(objects.GUID), args["input"].(UpdateOAuthClientInput)), true
+		return e.complexity.Mutation.UpdateOAuthClient(childComplexity, args["id"].(objects.GUID), args["input"].(biz.UpdateOAuthClientInput)), true
 	case "Mutation.updatePassThroughSettings":
 		if e.complexity.Mutation.UpdatePassThroughSettings == nil {
 			break
@@ -16419,7 +16433,7 @@ func (ec *executionContext) field_Mutation_createModel_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_createOAuthClient_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateOAuthClientInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateOAuthClientInput)
 	if err != nil {
 		return nil, err
 	}
@@ -17405,7 +17419,7 @@ func (ec *executionContext) field_Mutation_updateOAuthClient_args(ctx context.Co
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateOAuthClientInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateOAuthClientInput)
 	if err != nil {
 		return nil, err
 	}
@@ -23079,6 +23093,64 @@ func (ec *executionContext) _AnalyticsDimensionStat_cost(ctx context.Context, fi
 }
 
 func (ec *executionContext) fieldContext_AnalyticsDimensionStat_cost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnalyticsDimensionStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnalyticsDimensionStat_tokensPerSecond(ctx context.Context, field graphql.CollectedField, obj *AnalyticsDimensionStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AnalyticsDimensionStat_tokensPerSecond,
+		func(ctx context.Context) (any, error) {
+			return obj.TokensPerSecond, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AnalyticsDimensionStat_tokensPerSecond(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnalyticsDimensionStat",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnalyticsDimensionStat_ttftMs(ctx context.Context, field graphql.CollectedField, obj *AnalyticsDimensionStat) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_AnalyticsDimensionStat_ttftMs,
+		func(ctx context.Context) (any, error) {
+			return obj.TtftMs, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_AnalyticsDimensionStat_ttftMs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AnalyticsDimensionStat",
 		Field:      field,
@@ -49052,7 +49124,7 @@ func (ec *executionContext) _Mutation_createOAuthClient(ctx context.Context, fie
 		ec.fieldContext_Mutation_createOAuthClient,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().CreateOAuthClient(ctx, fc.Args["input"].(CreateOAuthClientInput))
+			return ec.resolvers.Mutation().CreateOAuthClient(ctx, fc.Args["input"].(biz.CreateOAuthClientInput))
 		},
 		nil,
 		ec.marshalNOAuthClientSecretPayload2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐOAuthClientSecretPayload,
@@ -49099,7 +49171,7 @@ func (ec *executionContext) _Mutation_updateOAuthClient(ctx context.Context, fie
 		ec.fieldContext_Mutation_updateOAuthClient,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateOAuthClient(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(UpdateOAuthClientInput))
+			return ec.resolvers.Mutation().UpdateOAuthClient(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(biz.UpdateOAuthClientInput))
 		},
 		nil,
 		ec.marshalNOAuthClient2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐOAuthClient,
@@ -62564,6 +62636,10 @@ func (ec *executionContext) fieldContext_Query_analyticsDimensionStats(ctx conte
 				return ec.fieldContext_AnalyticsDimensionStat_totalTokens(ctx, field)
 			case "cost":
 				return ec.fieldContext_AnalyticsDimensionStat_cost(ctx, field)
+			case "tokensPerSecond":
+				return ec.fieldContext_AnalyticsDimensionStat_tokensPerSecond(ctx, field)
+			case "ttftMs":
+				return ec.fieldContext_AnalyticsDimensionStat_ttftMs(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AnalyticsDimensionStat", field.Name)
 		},
@@ -93143,8 +93219,8 @@ func (ec *executionContext) unmarshalInputCreateModelInput(ctx context.Context, 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateOAuthClientInput(ctx context.Context, obj any) (CreateOAuthClientInput, error) {
-	var it CreateOAuthClientInput
+func (ec *executionContext) unmarshalInputCreateOAuthClientInput(ctx context.Context, obj any) (biz.CreateOAuthClientInput, error) {
+	var it biz.CreateOAuthClientInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -93166,7 +93242,7 @@ func (ec *executionContext) unmarshalInputCreateOAuthClientInput(ctx context.Con
 			it.Name = data
 		case "description":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalOString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -93177,7 +93253,7 @@ func (ec *executionContext) unmarshalInputCreateOAuthClientInput(ctx context.Con
 			if err != nil {
 				return it, err
 			}
-			it.RedirectUris = data
+			it.RedirectURIs = data
 		case "clientType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clientType"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -111341,8 +111417,8 @@ func (ec *executionContext) unmarshalInputUpdateMyPasswordInput(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateOAuthClientInput(ctx context.Context, obj any) (UpdateOAuthClientInput, error) {
-	var it UpdateOAuthClientInput
+func (ec *executionContext) unmarshalInputUpdateOAuthClientInput(ctx context.Context, obj any) (biz.UpdateOAuthClientInput, error) {
+	var it biz.UpdateOAuthClientInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -111375,7 +111451,7 @@ func (ec *executionContext) unmarshalInputUpdateOAuthClientInput(ctx context.Con
 			if err != nil {
 				return it, err
 			}
-			it.RedirectUris = data
+			it.RedirectURIs = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -120646,6 +120722,10 @@ func (ec *executionContext) _AnalyticsDimensionStat(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "tokensPerSecond":
+			out.Values[i] = ec._AnalyticsDimensionStat_tokensPerSecond(ctx, field, obj)
+		case "ttftMs":
+			out.Values[i] = ec._AnalyticsDimensionStat_ttftMs(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -148430,7 +148510,7 @@ func (ec *executionContext) unmarshalNCreateModelInput2ᚖgithubᚗcomᚋldm2060
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐCreateOAuthClientInput(ctx context.Context, v any) (CreateOAuthClientInput, error) {
+func (ec *executionContext) unmarshalNCreateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐCreateOAuthClientInput(ctx context.Context, v any) (biz.CreateOAuthClientInput, error) {
 	res, err := ec.unmarshalInputCreateOAuthClientInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -153214,7 +153294,7 @@ func (ec *executionContext) unmarshalNUpdateMyPasswordInput2githubᚗcomᚋldm20
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐUpdateOAuthClientInput(ctx context.Context, v any) (UpdateOAuthClientInput, error) {
+func (ec *executionContext) unmarshalNUpdateOAuthClientInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateOAuthClientInput(ctx context.Context, v any) (biz.UpdateOAuthClientInput, error) {
 	res, err := ec.unmarshalInputUpdateOAuthClientInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }

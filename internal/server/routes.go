@@ -124,6 +124,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		unSecureAdminGroup.POST("/auth/resend-verification", handlers.EmailToken.ResendVerification)
 		unSecureAdminGroup.POST("/auth/forgot-password", handlers.EmailToken.ForgotPassword)
 		unSecureAdminGroup.POST("/auth/reset-password", handlers.EmailToken.ResetPassword)
+		unSecureAdminGroup.POST("/auth/refresh", handlers.Auth.Refresh)
 	}
 
 	oauthGroup := server.Group("/oauth", middleware.WithTimeout(server.Config.RequestTimeout))
@@ -141,9 +142,6 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.POST("/me/avatar", handlers.Avatar.Upload)
 		adminGroup.GET("/playground", middleware.WithTimeout(server.Config.RequestTimeout), func(c *gin.Context) {
 			handlers.Graphql.Playground.ServeHTTP(c.Writer, c.Request)
-		})
-		adminGroup.POST("/graphql", middleware.WithTimeout(server.Config.RequestTimeout), func(c *gin.Context) {
-			handlers.Graphql.Graphql.ServeHTTP(c.Writer, c.Request)
 		})
 		adminGroup.POST("/invitations", handlers.Invitation.Create)
 
@@ -190,6 +188,20 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithTimeout(server.Config.RequestTimeout),
 			handlers.RequestPreview.PreviewRequest,
 		)
+	}
+
+	// Admin GraphQL accepts both the admin UI's JWT and service_account API keys.
+	// Service account principals are read-only; see middleware.WithAdminGraphqlAuth
+	// and gql.apiKeyReadOnly.
+	adminGraphqlGroup := server.Group(
+		"/admin",
+		middleware.WithAdminGraphqlAuth(services.AuthService),
+		middleware.WithProjectID(),
+	)
+	{
+		adminGraphqlGroup.POST("/graphql", middleware.WithTimeout(server.Config.RequestTimeout), func(c *gin.Context) {
+			handlers.Graphql.Graphql.ServeHTTP(c.Writer, c.Request)
+		})
 	}
 
 	openAPIGroup := server.Group(

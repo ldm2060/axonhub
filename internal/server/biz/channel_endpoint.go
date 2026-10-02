@@ -209,6 +209,11 @@ var openAIChatOnlyDefaultEndpoints = []objects.ChannelEndpoint{
 	{APIFormat: llm.APIFormatOpenAIChatCompletion.String()},
 }
 
+var minimaxDefaultEndpoints = []objects.ChannelEndpoint{
+	{APIFormat: llm.APIFormatOpenAIChatCompletion.String()},
+	{APIFormat: llm.APIFormatOpenAIImageGeneration.String()},
+}
+
 // defaultEndpointsForChannelType defines the built-in default endpoints for
 // each channel type.
 //
@@ -298,7 +303,7 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 	channel.TypeVolcengineAnthropic: {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeLongcat:             {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
 	channel.TypeLongcatAnthropic:    {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
-	channel.TypeMinimax:             openAIChatOnlyDefaultEndpoints,
+	channel.TypeMinimax:             minimaxDefaultEndpoints,
 	channel.TypeMinimaxAnthropic:    {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeAihubmix:            openAICompatibleDefaultEndpoints,
 	channel.TypeAihubmixAnthropic:   {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
@@ -308,6 +313,7 @@ var defaultEndpointsForChannelType = map[channel.Type][]objects.ChannelEndpoint{
 		{APIFormat: llm.APIFormatModelScopeImage.String()},
 	},
 	channel.TypeBailian:          {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},
+	channel.TypeBailianResponses: {{APIFormat: llm.APIFormatOpenAIResponse.String()}},
 	channel.TypeBailianAnthropic: {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeMoonshotCoding:   {{APIFormat: llm.APIFormatAnthropicMessage.String()}},
 	channel.TypeKimiCode:         {{APIFormat: llm.APIFormatOpenAIChatCompletion.String()}},

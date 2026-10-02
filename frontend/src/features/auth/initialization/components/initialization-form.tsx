@@ -75,7 +75,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
               <FormControl>
                 <Input
                   placeholder={t('initialization.form.placeholders.ownerFirstName')}
-                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:!bg-white'
                   {...field}
                 />
               </FormControl>
@@ -92,7 +92,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
               <FormControl>
                 <Input
                   placeholder={t('initialization.form.placeholders.ownerLastName')}
-                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:!bg-white'
                   {...field}
                 />
               </FormControl>
@@ -109,7 +109,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
               <FormControl>
                 <Input
                   placeholder={t('initialization.form.placeholders.ownerEmail')}
-                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:!bg-white'
                   {...field}
                 />
               </FormControl>
@@ -126,7 +126,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
               <FormControl>
                 <PasswordInput
                   placeholder={t('initialization.form.placeholders.ownerPassword')}
-                  className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white'
+                  className='border-slate-300 bg-white text-slate-800 backdrop-blur-sm transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:bg-white'
                   {...field}
                 />
               </FormControl>
@@ -143,7 +143,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
               <FormControl>
                 <Input
                   placeholder={t('initialization.form.placeholders.brandName')}
-                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-slate-500 focus:!bg-white'
+                  className='border-slate-300 !bg-white text-slate-800 transition-all duration-300 placeholder:text-slate-400 focus:border-[#A8844E] focus:!bg-white'
                   {...field}
                 />
               </FormControl>
@@ -153,7 +153,7 @@ export function InitializationForm({ className, ...props }: InitializationFormPr
         />
         <Button
           type='submit'
-          className='mt-6 w-full rounded-lg bg-slate-800 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-slate-700 hover:shadow-xl focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50'
+          className='mt-6 w-full rounded-lg bg-[#1A2023] px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:bg-[#2A3138] hover:shadow-xl focus:ring-2 focus:ring-[#A8844E] focus:ring-offset-2 disabled:opacity-50'
           disabled={initializeSystemMutation.isPending}
         >
           {initializeSystemMutation.isPending ? t('initialization.form.submitting') : t('initialization.form.submit')}

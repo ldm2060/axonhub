@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { getTokenFromStorage } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
+import { ensureFreshAccessToken } from '@/lib/auth-session';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { extractNumberID } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -253,9 +254,15 @@ export default function RequestDetailPage() {
 
     async function connectPreview() {
       try {
+        const currentToken = await ensureFreshAccessToken();
+        if (!currentToken) {
+          setIsPreviewStreaming(false);
+          setPreviewRequest(null);
+          return;
+        }
         const response = await fetch(`/admin/requests/${encodeURIComponent(requestIdNumber)}/preview`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${currentToken}`,
             ...(selectedProjectId ? { 'X-Project-ID': selectedProjectId } : {}),
           },
           signal: controller.signal,

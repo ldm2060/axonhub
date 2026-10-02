@@ -16,18 +16,8 @@ import (
 )
 
 // CreateOAuthClient is the resolver for the createOAuthClient field.
-func (r *mutationResolver) CreateOAuthClient(ctx context.Context, input CreateOAuthClientInput) (*OAuthClientSecretPayload, error) {
-	description := ""
-	if input.Description != nil {
-		description = *input.Description
-	}
-
-	client, secret, err := r.oauthProviderService.CreateClient(ctx, biz.CreateOAuthClientInput{
-		Name:         input.Name,
-		Description:  description,
-		RedirectURIs: input.RedirectUris,
-		ClientType:   input.ClientType,
-	})
+func (r *mutationResolver) CreateOAuthClient(ctx context.Context, input biz.CreateOAuthClientInput) (*OAuthClientSecretPayload, error) {
+	client, secret, err := r.oauthProviderService.CreateClient(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create oauth client: %w", err)
 	}
@@ -39,13 +29,8 @@ func (r *mutationResolver) CreateOAuthClient(ctx context.Context, input CreateOA
 }
 
 // UpdateOAuthClient is the resolver for the updateOAuthClient field.
-func (r *mutationResolver) UpdateOAuthClient(ctx context.Context, id objects.GUID, input UpdateOAuthClientInput) (*ent.OAuthClient, error) {
-	client, err := r.oauthProviderService.UpdateClient(ctx, id.ID, biz.UpdateOAuthClientInput{
-		Name:         input.Name,
-		Description:  input.Description,
-		RedirectURIs: input.RedirectUris,
-		Status:       input.Status,
-	})
+func (r *mutationResolver) UpdateOAuthClient(ctx context.Context, id objects.GUID, input biz.UpdateOAuthClientInput) (*ent.OAuthClient, error) {
+	client, err := r.oauthProviderService.UpdateClient(ctx, id.ID, input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update oauth client: %w", err)
 	}

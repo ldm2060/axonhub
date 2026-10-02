@@ -1,11 +1,10 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useFieldArray, useFormContext, useWatch, type Control, type FieldArrayPath, type FieldPath } from 'react-hook-form';
 import { IconPlus, IconTrash, IconClock, IconCalendar, IconChevronDown, IconCheck } from '@tabler/icons-react';
 import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { useClickOutside } from '@/hooks/use-click-outside';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
@@ -26,46 +25,55 @@ const priceItemCodes = ['prompt_tokens', 'completion_tokens', 'prompt_cached_tok
 
 type DateRangeValue = { start: string; end: string };
 
-type PriceTier = {
-  upTo?: number | null;
-  pricePerUnit: string;
-};
-
-type SchedulePriceItem = {
-  itemCode: (typeof priceItemCodes)[number];
-  pricing: {
-    mode: PricingMode;
-    flatFee?: string | null;
-    usagePerUnit?: string | null;
-    usageTiered?: { tiers: PriceTier[] } | null;
-  };
-};
-
-type PriceOverride = {
-  name: string;
-  priority: number;
-  when: {
-    dailyTime?: { start: string; end: string } | null;
-    weekdays?: number[] | null;
-    dateRange?: DateRangeValue | null;
-  };
-  items: SchedulePriceItem[];
-};
-
-type PriceSchedule = {
-  timezone: string;
-  overrides: PriceOverride[];
-};
-
 type ScheduleFormValues = {
   prices: Array<{
     modelId: string;
     price: {
-      items: SchedulePriceItem[];
-      schedule?: PriceSchedule | null;
+      items: Array<{
+        itemCode: (typeof priceItemCodes)[number];
+        pricing: {
+          mode: PricingMode;
+          flatFee?: string | null;
+          usagePerUnit?: string | null;
+          usageTiered?: {
+            tiers: Array<{
+              upTo?: number | null;
+              pricePerUnit: string;
+            }>;
+          } | null;
+        };
+      }>;
+      schedule?: {
+        timezone: string;
+        overrides: Array<{
+          name: string;
+          priority: number;
+          when: {
+            dailyTime?: { start: string; end: string } | null;
+            weekdays?: number[] | null;
+            dateRange?: DateRangeValue | null;
+          };
+          items: Array<{
+            itemCode: (typeof priceItemCodes)[number];
+            pricing: {
+              mode: PricingMode;
+              flatFee?: string | null;
+              usagePerUnit?: string | null;
+              usageTiered?: {
+                tiers: Array<{
+                  upTo?: number | null;
+                  pricePerUnit: string;
+                }>;
+              } | null;
+            };
+          }>;
+        }>;
+      } | null;
     };
   }>;
 };
+
+type ScheduleOverride = NonNullable<ScheduleFormValues['prices'][number]['price']['schedule']>['overrides'][number];
 
 function asFieldPath(path: string) {
   return path as unknown as FieldPath<ScheduleFormValues>;
@@ -96,6 +104,8 @@ type PriceScheduleEditorProps = {
   priceIndex: number;
   currencyCode?: string;
   defaultTimezone?: string;
+  // Portal target for popups opened inside a dialog; see .agent/rules/frontend-ui.md.
+  portalContainer?: HTMLElement | null;
 };
 
 export const PriceScheduleEditor = memo(function PriceScheduleEditor({
@@ -103,6 +113,7 @@ export const PriceScheduleEditor = memo(function PriceScheduleEditor({
   priceIndex,
   currencyCode,
   defaultTimezone = 'UTC',
+  portalContainer,
 }: PriceScheduleEditorProps) {
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
@@ -138,13 +149,19 @@ export const PriceScheduleEditor = memo(function PriceScheduleEditor({
   return (
     <div className='mt-3 space-y-3'>
       <div className='flex items-center gap-2'>
-        <Switch checked={isEnabled} onCheckedChange={handleToggle} />
+        <Switch data-testid='price-schedule-toggle' checked={isEnabled} onCheckedChange={handleToggle} />
         <IconClock size={14} className={isEnabled ? 'text-primary' : 'text-muted-foreground'} />
         <span className='text-muted-foreground text-sm'>{t('price.schedule.title')}</span>
       </div>
 
       {isEnabled && (
-        <ScheduleContent control={control} priceIndex={priceIndex} currencyCode={currencyCode} defaultTimezone={defaultTimezone} />
+        <ScheduleContent
+          control={control}
+          priceIndex={priceIndex}
+          currencyCode={currencyCode}
+          defaultTimezone={defaultTimezone}
+          portalContainer={portalContainer}
+        />
       )}
     </div>
   );
@@ -157,11 +174,13 @@ const ScheduleContent = memo(function ScheduleContent({
   priceIndex,
   currencyCode,
   defaultTimezone,
+  portalContainer,
 }: {
   control: Control<ScheduleFormValues>;
   priceIndex: number;
   currencyCode?: string;
   defaultTimezone: string;
+  portalContainer?: HTMLElement | null;
 }) {
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
@@ -215,7 +234,7 @@ const ScheduleContent = memo(function ScheduleContent({
       <div className='space-y-3'>
         <div className='flex items-center justify-between'>
           <span className='text-muted-foreground text-xs font-medium'>{t('price.schedule.overrides')}</span>
-          <Button type='button' variant='outline' size='icon-sm' onClick={handleAddOverride}>
+          <Button type='button' variant='outline' size='icon-sm' data-testid='price-schedule-add-override' onClick={handleAddOverride}>
             <IconPlus size={14} />
           </Button>
         </div>
@@ -227,6 +246,7 @@ const ScheduleContent = memo(function ScheduleContent({
             priceIndex={priceIndex}
             overrideIndex={overrideIndex}
             currencyCode={currencyCode}
+            portalContainer={portalContainer}
             onRemove={() => removeOverride(overrideIndex)}
           />
         ))}
@@ -248,27 +268,30 @@ const OverrideCard = memo(function OverrideCard({
   priceIndex,
   overrideIndex,
   currencyCode,
+  portalContainer,
   onRemove,
 }: {
   control: Control<ScheduleFormValues>;
   priceIndex: number;
   overrideIndex: number;
   currencyCode?: string;
+  portalContainer?: HTMLElement | null;
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
 
   const base = `prices.${priceIndex}.price.schedule.overrides.${overrideIndex}`;
-  const when = useScheduleWatch<PriceOverride['when']>(control, `${base}.when`);
+  const when = useScheduleWatch<ScheduleOverride['when']>(control, `${base}.when`);
 
+  // Build condition list from when object
   const conditions = useMemo(() => {
     const result: ConditionType[] = [];
     if (when?.dailyTime) result.push('dailyTime');
     if (when?.weekdays?.length) result.push('weekdays');
     if (when?.dateRange) result.push('dateRange');
     return result;
-  }, [when?.dailyTime, when?.weekdays, when?.dateRange]);
+  }, [when?.dailyTime, when?.weekdays?.length, when?.dateRange]);
 
   const handleAddCondition = useCallback(() => {
     // Add the first available condition type
@@ -417,6 +440,7 @@ const OverrideCard = memo(function OverrideCard({
               type='button'
               variant='outline'
               size='icon-sm'
+              data-testid='price-schedule-add-condition'
               onClick={handleAddCondition}
               disabled={conditions.length >= CONDITION_TYPES.length}
             >
@@ -433,6 +457,7 @@ const OverrideCard = memo(function OverrideCard({
               priceIndex={priceIndex}
               overrideIndex={overrideIndex}
               weekdays={when?.weekdays}
+              portalContainer={portalContainer}
               onTypeChange={(newType) => handleChangeConditionType(condType, newType)}
               onRemove={() => handleRemoveCondition(condType)}
               onToggleWeekday={handleToggleWeekday}
@@ -459,6 +484,7 @@ const ConditionRow = memo(function ConditionRow({
   priceIndex,
   overrideIndex,
   weekdays,
+  portalContainer,
   onTypeChange,
   onRemove,
   onToggleWeekday,
@@ -469,6 +495,7 @@ const ConditionRow = memo(function ConditionRow({
   priceIndex: number;
   overrideIndex: number;
   weekdays?: number[] | null;
+  portalContainer?: HTMLElement | null;
   onTypeChange: (newType: ConditionType) => void;
   onRemove: () => void;
   onToggleWeekday: (day: number) => void;
@@ -497,7 +524,14 @@ const ConditionRow = memo(function ConditionRow({
       </Select>
 
       {/* Col 2: first value */}
-      {type === 'dailyTime' && <HHMMTimePicker control={control} path={`${base}.dailyTime.start`} />}
+      {type === 'dailyTime' && (
+        <HHMMTimePicker
+          control={control}
+          path={`${base}.dailyTime.start`}
+          testId='price-schedule-daily-time-start'
+          portalContainer={portalContainer}
+        />
+      )}
       {type === 'weekdays' && (
         <div className='col-span-3'>
           <WeekdaysEditor weekdays={weekdays} onToggle={onToggleWeekday} />
@@ -511,7 +545,14 @@ const ConditionRow = memo(function ConditionRow({
       {type !== 'weekdays' && <span className='text-muted-foreground text-xs'>→</span>}
 
       {/* Col 4: second value */}
-      {type === 'dailyTime' && <HHMMTimePicker control={control} path={`${base}.dailyTime.end`} />}
+      {type === 'dailyTime' && (
+        <HHMMTimePicker
+          control={control}
+          path={`${base}.dailyTime.end`}
+          testId='price-schedule-daily-time-end'
+          portalContainer={portalContainer}
+        />
+      )}
       {type === 'dateRange' && (
         <DateRangeSinglePicker control={control} path={`${base}.dateRange.end`} placeholder={t('price.schedule.when.dateRange.end')} />
       )}
@@ -526,13 +567,20 @@ const ConditionRow = memo(function ConditionRow({
 
 // HH:MM time picker with the same visual style as TimeField from date-range-picker
 // Reads/writes a single string in "HH:mm" format (e.g. "03:00")
-const HHMMTimePicker = memo(function HHMMTimePicker({ control, path }: { control: Control<ScheduleFormValues>; path: string }) {
+const HHMMTimePicker = memo(function HHMMTimePicker({
+  control,
+  path,
+  testId,
+  portalContainer,
+}: {
+  control: Control<ScheduleFormValues>;
+  path: string;
+  testId: string;
+  portalContainer?: HTMLElement | null;
+}) {
   const { setValue } = useFormContext<ScheduleFormValues>();
   const value = useScheduleWatch<string>(control, path);
   const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside(wrapperRef, () => setOpen(false), open);
 
   const displayValue = value || '00:00';
   const [hh, mm] = displayValue.split(':');
@@ -545,43 +593,82 @@ const HHMMTimePicker = memo(function HHMMTimePicker({ control, path }: { control
   );
 
   return (
-    <div className='relative' ref={wrapperRef}>
-      <button
-        type='button'
-        className={cn(
-          'border-input bg-transparent',
-          'flex h-8 w-full items-center justify-between rounded-md border px-2.5 text-xs',
-          'focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          open && 'ring-ring ring-2 ring-offset-2'
-        )}
-        onClick={() => setOpen(!open)}
-      >
-        <span>{displayValue}</span>
-        <Clock className='h-3.5 w-3.5 opacity-50' />
-      </button>
-
-      {open && (
-        <div
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type='button'
+          data-testid={testId}
           className={cn(
-            'absolute top-[calc(100%+8px)] left-0 z-50 flex h-[220px] w-full overflow-hidden rounded-md',
-            'border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#121214]'
+            'border-input bg-transparent',
+            'flex h-8 w-full items-center justify-between rounded-md border px-2.5 text-xs',
+            'focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            open && 'ring-ring ring-2 ring-offset-2'
           )}
-          role='dialog'
         >
-          <div className='no-scrollbar flex-1 overflow-y-auto p-1 text-center'>
-            <TimeColInner label='HH' items={HOURS} active={hh || '00'} onPick={(h) => handlePick(h, mm || '00')} />
-          </div>
-          <div className='no-scrollbar flex-1 overflow-y-auto border-x border-gray-100 p-1 text-center dark:border-white/5'>
-            <TimeColInner label='MM' items={MINUTES} active={mm || '00'} onPick={(m) => handlePick(hh || '00', m)} />
-          </div>
+          <span>{displayValue}</span>
+          <Clock className='h-3.5 w-3.5 opacity-50' />
+        </button>
+      </PopoverTrigger>
+
+      {/* Rendered in a portal so the row's overflow/scroll containers cannot clip the
+          lower part of the list (hours 22/23 were unreachable), and flipped by popper
+          when there is not enough room below the trigger. The portal target must stay
+          inside the dialog content, otherwise the dialog's scroll lock blocks wheel
+          scrolling inside the list. */}
+      <PopoverContent
+        data-testid={`${testId}-popup`}
+        container={portalContainer}
+        // Radix defaults to the viewport as collision boundary, which lets the popup
+        // spill out of a centered dialog; keep it inside the dialog instead.
+        collisionBoundary={portalContainer ?? undefined}
+        align='start'
+        sideOffset={8}
+        collisionPadding={8}
+        className={cn(
+          'flex h-[220px] w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md p-0',
+          'border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#121214]'
+        )}
+      >
+        <div data-testid={`${testId}-hour-col`} className='no-scrollbar flex-1 overflow-y-auto p-1 text-center'>
+          <TimeColInner
+            label='HH'
+            items={HOURS}
+            active={hh || '00'}
+            testIdPrefix={`${testId}-hour`}
+            onPick={(h) => handlePick(h, mm || '00')}
+          />
         </div>
-      )}
-    </div>
+        <div
+          data-testid={`${testId}-minute-col`}
+          className='no-scrollbar flex-1 overflow-y-auto border-x border-gray-100 p-1 text-center dark:border-white/5'
+        >
+          <TimeColInner
+            label='MM'
+            items={MINUTES}
+            active={mm || '00'}
+            testIdPrefix={`${testId}-minute`}
+            onPick={(m) => handlePick(hh || '00', m)}
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 });
 
-function TimeColInner({ label, items, active, onPick }: { label: string; items: number[]; active: string; onPick: (val: string) => void }) {
+function TimeColInner({
+  label,
+  items,
+  active,
+  testIdPrefix,
+  onPick,
+}: {
+  label: string;
+  items: number[];
+  active: string;
+  testIdPrefix: string;
+  onPick: (val: string) => void;
+}) {
   return (
     <>
       <span className='sr-only'>{label}</span>
@@ -593,6 +680,7 @@ function TimeColInner({ label, items, active, onPick }: { label: string; items: 
           <button
             key={txt}
             type='button'
+            data-testid={`${testIdPrefix}-${txt}`}
             className={cn(
               'w-full rounded-md py-2 text-sm transition-colors',
               isActive
@@ -734,10 +822,12 @@ const OverrideItemsEditor = memo(function OverrideItemsEditor({
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
 
-  const items = useScheduleWatch<PriceOverride['items'] | undefined>(
+  const items = useWatch({
     control,
-    `prices.${priceIndex}.price.schedule.overrides.${overrideIndex}.items`
-  );
+    name: asFieldPath(`prices.${priceIndex}.price.schedule.overrides.${overrideIndex}.items`) as FieldPath<ScheduleFormValues>,
+    compute: (value) => value,
+  }) as unknown as ScheduleOverride['items'] | undefined;
+
   const handleAddItem = useCallback(() => {
     const currentItems = items || [];
     const existingCodes = new Set(currentItems.map((item) => item.itemCode));

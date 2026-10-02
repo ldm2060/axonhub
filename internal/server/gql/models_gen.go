@@ -80,6 +80,10 @@ type AnalyticsDimensionStat struct {
 	OutputTokens      int     `json:"outputTokens"`
 	TotalTokens       int     `json:"totalTokens"`
 	Cost              float64 `json:"cost"`
+	// Output token throughput in tokens per second, null when no valid latency metrics exist
+	TokensPerSecond *float64 `json:"tokensPerSecond,omitempty"`
+	// Average time to first token in milliseconds, null when no streaming request recorded a first token
+	TtftMs *float64 `json:"ttftMs,omitempty"`
 }
 
 // Filter input for analytics queries. All fields are optional and support multi-select.
@@ -271,13 +275,6 @@ type CountChannelsByTypeInput struct {
 	StatusIn []channel.Status `json:"statusIn,omitempty"`
 	// Filter by owner ID to get counts for a specific user's channels.
 	OwnerID *objects.GUID `json:"ownerID,omitempty"`
-}
-
-type CreateOAuthClientInput struct {
-	Name         string   `json:"name"`
-	Description  *string  `json:"description,omitempty"`
-	RedirectUris []string `json:"redirectUris"`
-	ClientType   string   `json:"clientType"`
 }
 
 type DailyRequestStats struct {
@@ -705,13 +702,6 @@ type UpdateMeInput struct {
 type UpdateMyPasswordInput struct {
 	OldPassword *string `json:"oldPassword,omitempty"`
 	NewPassword string  `json:"newPassword"`
-}
-
-type UpdateOAuthClientInput struct {
-	Name         *string  `json:"name,omitempty"`
-	Description  *string  `json:"description,omitempty"`
-	RedirectUris []string `json:"redirectUris,omitempty"`
-	Status       *string  `json:"status,omitempty"`
 }
 
 type UpdatePassThroughSettingsInput struct {

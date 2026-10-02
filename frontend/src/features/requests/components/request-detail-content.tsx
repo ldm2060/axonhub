@@ -5,7 +5,7 @@ import { zhCN, enUS } from 'date-fns/locale';
 import { Copy, Clock, Key, Database, FileText, Layers, Download, Terminal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { getTokenFromStorage } from '@/stores/authStore';
+import { ensureFreshAccessToken } from '@/lib/auth-session';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { extractNumberID } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -165,7 +165,7 @@ export function RequestDetailContent({ requestId, projectId, previewRequest, isP
     const requestIdNumber = extractNumberID(request.id);
     if (!requestIdNumber) return null;
 
-    const token = getTokenFromStorage();
+    const token = await ensureFreshAccessToken();
     if (!token) {
       toast.error(t('common.errors.sessionExpiredSignIn'));
       return null;

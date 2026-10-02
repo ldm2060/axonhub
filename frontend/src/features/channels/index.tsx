@@ -6,8 +6,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { usePaginationSearch } from '@/hooks/use-pagination-search';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { PageHeader } from '@/components/layout/page-header';
 import { useProvidersData } from '@/features/models/data/providers';
 import { useQuotaRoutingSettings } from '@/features/system/data/system';
 import { createColumns } from './components/channels-columns';
@@ -334,15 +334,12 @@ export default function ChannelsManagement() {
 
   return (
     <ChannelsProvider>
-      <Header fixed>
-        <div className='flex w-full flex-1 flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-0'>
-          <div className='min-w-0'>
-            <h2 className='text-xl font-bold tracking-tight'>{t('channels.title')}</h2>
-            <p className='text-muted-foreground text-sm'>{t('channels.description')}</p>
-          </div>
-          <ChannelsPrimaryButtons />
-        </div>
-      </Header>
+      <PageHeader
+        title={t('channels.title')}
+        description={t('channels.description')}
+        actions={<ChannelsPrimaryButtons />}
+        actionLayout='scroll'
+      />
 
       <Main fixed>
         <ChannelsContent />

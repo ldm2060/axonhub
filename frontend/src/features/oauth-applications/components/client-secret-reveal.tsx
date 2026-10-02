@@ -2,9 +2,9 @@
 
 import { CheckIcon, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 interface ClientSecretRevealProps {
   clientSecret: string;
@@ -17,9 +17,7 @@ export function ClientSecretReveal({ clientSecret }: ClientSecretRevealProps) {
   return (
     <div className='space-y-4'>
       <Alert className='border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950'>
-        <AlertDescription className='text-orange-800 dark:text-orange-200'>
-          {t('oauthApplications.secret.warning')}
-        </AlertDescription>
+        <AlertDescription className='text-orange-800 dark:text-orange-200'>{t('oauthApplications.secret.warning')}</AlertDescription>
       </Alert>
 
       <div>

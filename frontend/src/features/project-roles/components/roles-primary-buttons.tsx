@@ -9,7 +9,7 @@ export function RolesPrimaryButtons() {
   const { setIsCreateDialogOpen } = useRolesContext();
 
   return (
-    <div className='flex items-center space-x-2'>
+    <div className='flex max-w-full min-w-0 flex-wrap items-center gap-2'>
       {/* Create Role - requires write_roles permission */}
       <PermissionGuard requiredScope='write_roles'>
         <Button onClick={() => setIsCreateDialogOpen(true)}>

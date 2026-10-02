@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import { pageInfoSchema } from '@/gql/pagination';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useErrorHandler } from '@/hooks/use-error-handler';
@@ -82,6 +83,18 @@ export const clearChannelOverrideTemplatesPayloadSchema = z.object({
   channels: z.array(z.any()),
 });
 export type ClearChannelOverrideTemplatesPayload = z.infer<typeof clearChannelOverrideTemplatesPayloadSchema>;
+
+/**
+ * Template names are unique per user, so create and rename can collide with an
+ * existing template. The backend reports this as a DUPLICATE_NAME conflict and
+ * the generic handler stays silent while a custom callback is supplied, so show
+ * a localized hint naming the conflicting template here.
+ */
+function reportTemplateNameConflict(t: TFunction, name?: string) {
+  return (info: { value?: string }) => {
+    toast.error(t('channels.templates.validation.duplicateName', { name: info.value || name || '' }));
+  };
+}
 
 // GraphQL Fragments
 const TEMPLATE_FRAGMENT = `
@@ -259,7 +272,10 @@ export function useCreateChannelOverrideTemplate() {
         });
         return channelOverrideTemplateSchema.parse(data.createChannelOverrideTemplate);
       } catch (error) {
-        handleError(error, { context: 'Create Channel Template' });
+        handleError(error, {
+          context: 'Create Channel Template',
+          onDuplicate: reportTemplateNameConflict(t, input.name),
+        });
         throw error;
       }
     },
@@ -284,7 +300,10 @@ export function useUpdateChannelOverrideTemplate() {
         });
         return channelOverrideTemplateSchema.parse(data.updateChannelOverrideTemplate);
       } catch (error) {
-        handleError(error, { context: 'Update Channel Template' });
+        handleError(error, {
+          context: 'Update Channel Template',
+          onDuplicate: reportTemplateNameConflict(t, input.name),
+        });
         throw error;
       }
     },

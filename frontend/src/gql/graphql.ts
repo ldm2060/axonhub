@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { getTokenFromStorage, removeTokenFromStorage } from '@/stores/authStore';
+import { ensureFreshAccessToken } from '@/lib/auth-session';
 import i18n from '@/lib/i18n';
 
 export class GraphQLRequestError extends Error {
@@ -42,15 +43,24 @@ export function isUnauthorizedGraphQLError(error: any): boolean {
   return error?.extensions?.code === 'UNAUTHENTICATED';
 }
 
+function redirectToSignIn() {
+  const { pathname, search, hash } = window.location;
+  if (pathname.startsWith('/sign-in')) {
+    window.location.href = '/sign-in';
+    return;
+  }
+  window.location.href = `/sign-in?redirect=${encodeURIComponent(pathname + search + hash)}`;
+}
+
 // GraphQL client function with token support
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, any>,
   customHeaders?: Record<string, string>,
-  signal?: AbortSignal
+  init?: { signal?: AbortSignal }
 ): Promise<T> {
   // Get token from localStorage
-  const token = getTokenFromStorage();
+  const token = await ensureFreshAccessToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -75,7 +85,7 @@ export async function graphqlRequest<T>(
     response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers,
-      signal,
+      signal: init?.signal,
       body: JSON.stringify({
         query,
         variables,
@@ -92,9 +102,11 @@ export async function graphqlRequest<T>(
   // Handle explicit auth failures (401 only — 403 is a permission denial, not a session issue)
   if (response.status === 401) {
     // Clear token and redirect to login
-    removeTokenFromStorage();
-    toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
-    window.location.href = '/sign-in';
+    if (getTokenFromStorage() === token) {
+      removeTokenFromStorage();
+      toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
+      redirectToSignIn();
+    }
     throw new GraphQLRequestError('Unauthorized', { status: response.status, isAuthError: true });
   }
 
@@ -111,7 +123,7 @@ export async function graphqlRequest<T>(
     });
   }
 
-  let result;
+  let result: { data: T; errors?: Array<{ message?: string; extensions?: Record<string, unknown> }> };
   try {
     result = await response.json();
   } catch (_error) {
@@ -134,9 +146,11 @@ export async function graphqlRequest<T>(
 
     if (authError) {
       // Clear token and redirect to login
-      removeTokenFromStorage();
-      toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
-      window.location.href = '/sign-in';
+      if (getTokenFromStorage() === token) {
+        removeTokenFromStorage();
+        toast.error(i18n.t('common.errors.sessionExpiredSignIn'));
+        redirectToSignIn();
+      }
       throw new GraphQLRequestError('Unauthorized', { status: 401, isAuthError: true });
     }
 

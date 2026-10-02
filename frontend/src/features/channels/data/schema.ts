@@ -122,6 +122,7 @@ export const channelTypeSchema = z.enum([
   'burncloud',
   'modelscope',
   'bailian',
+  'bailian_responses',
   'bailian_anthropic',
   'moonshot_coding',
   'kimi_code',

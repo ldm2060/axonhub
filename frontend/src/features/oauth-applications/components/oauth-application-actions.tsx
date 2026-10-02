@@ -2,9 +2,9 @@
 
 import { Ban, KeyRound, MoreHorizontal, Pencil, Play, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useOAuthApplicationsContext } from '../context/oauth-applications-context';
 import { OAuthApplication, useUpdateOAuthApplication } from '../data/oauth-applications';
 

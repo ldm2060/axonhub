@@ -563,7 +563,9 @@ export function usePreviewGcCleanup() {
 }
 
 export async function previewGcCleanup(input: TriggerGcCleanupInput, signal?: AbortSignal): Promise<GcCleanupPreviewItem[]> {
-  const data = await graphqlRequest<{ previewGcCleanup: GcCleanupPreviewItem[] }>(PREVIEW_GC_CLEANUP_QUERY, { input }, undefined, signal);
+  const data = await graphqlRequest<{ previewGcCleanup: GcCleanupPreviewItem[] }>(PREVIEW_GC_CLEANUP_QUERY, { input }, undefined, {
+    signal,
+  });
   return data.previewGcCleanup;
 }
 
