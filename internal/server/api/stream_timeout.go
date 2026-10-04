@@ -17,6 +17,10 @@ type StreamWriteOptions struct {
 	IdleTimeout              time.Duration
 	KeepaliveInterval        time.Duration
 	ResponseAlreadyCommitted bool
+	// Cancel interrupts the context used to create the upstream stream. Writers
+	// join pending reads before the caller closes mutable stream wrappers.
+	Cancel          context.CancelFunc
+	heartbeatFormat sseHeartbeatFormat
 }
 
 type TimeoutConfig struct {
@@ -52,26 +56,27 @@ type streamEventWaiter struct {
 	keepaliveTimer    *time.Timer
 	reading           bool
 	done              bool
+	cancel            context.CancelFunc
 }
 
 func newStreamEventWaiter(
 	ctx context.Context,
 	stream streams.Stream[*httpclient.StreamEvent],
-	idleTimeout time.Duration,
-	keepaliveInterval time.Duration,
+	opts StreamWriteOptions,
 ) *streamEventWaiter {
 	waiter := &streamEventWaiter{
 		ctx:               ctx,
 		stream:            stream,
-		idleTimeout:       idleTimeout,
-		keepaliveInterval: keepaliveInterval,
+		idleTimeout:       opts.IdleTimeout,
+		keepaliveInterval: opts.KeepaliveInterval,
 		resultCh:          make(chan streamNextResult, 1),
+		cancel:            opts.Cancel,
 	}
-	if idleTimeout > 0 {
-		waiter.idleTimer = time.NewTimer(idleTimeout)
+	if opts.IdleTimeout > 0 {
+		waiter.idleTimer = time.NewTimer(opts.IdleTimeout)
 	}
-	if keepaliveInterval > 0 {
-		waiter.keepaliveTimer = time.NewTimer(keepaliveInterval)
+	if opts.KeepaliveInterval > 0 {
+		waiter.keepaliveTimer = time.NewTimer(opts.KeepaliveInterval)
 	}
 
 	return waiter
@@ -126,24 +131,28 @@ func (w *streamEventWaiter) Next() streamNextResult {
 		return streamNextResult{}
 	}
 
-	// Check context before starting a read. If already canceled,
-	// return immediately so the caller can drain the stream directly
-	// without losing events to the background goroutine.
+	// Hand off any pending read before returning cancellation. Stream writers
+	// may drain or close next; neither operation may race with Next/Current.
 	select {
 	case <-w.ctx.Done():
-		w.done = true
-		return streamNextResult{err: w.ctx.Err()}
+		return w.canceled()
 	default:
 	}
 
 	w.startRead()
 	select {
 	case <-w.ctx.Done():
-		w.done = true
-		return streamNextResult{err: w.ctx.Err()}
+		return w.canceled()
 	case <-timerChannel(w.idleTimer):
 		w.done = true
-		_ = w.stream.Close()
+		if w.cancel != nil {
+			w.cancel()
+		} else {
+			// Standalone writers without an upstream cancel function require a
+			// transport stream whose Close unblocks Next.
+			_ = w.stream.Close()
+		}
+		w.joinRead()
 		return streamNextResult{err: fmt.Errorf("%w after %s", ErrStreamIdleTimeout, w.idleTimeout)}
 	case <-timerChannel(w.keepaliveTimer):
 		resetTimer(w.keepaliveTimer, w.keepaliveInterval)
@@ -160,6 +169,37 @@ func (w *streamEventWaiter) Next() streamNextResult {
 	}
 }
 
+func (w *streamEventWaiter) joinRead() {
+	if w.reading {
+		<-w.resultCh
+		w.reading = false
+	}
+}
+
+func (w *streamEventWaiter) Stop() {
+	if w.idleTimer != nil {
+		w.idleTimer.Stop()
+	}
+	if w.keepaliveTimer != nil {
+		w.keepaliveTimer.Stop()
+	}
+	if w.reading && w.cancel != nil {
+		w.cancel()
+	}
+	w.joinRead()
+}
+
+func (w *streamEventWaiter) canceled() streamNextResult {
+	if w.reading {
+		result := <-w.resultCh
+		w.reading = false
+		// Preserve the final buffered event for the cancellation drain.
+		w.resultCh <- result
+	}
+	w.done = true
+	return streamNextResult{err: w.ctx.Err()}
+}
+
 // DrainBuffered returns any event already read by the background goroutine
 // but not yet consumed by Next(). Used after context cancellation to avoid
 // losing events that were read before the cancel was observed.
@@ -173,35 +213,7 @@ func (w *streamEventWaiter) DrainBuffered() streamNextResult {
 }
 
 func nextStreamEvent(ctx context.Context, stream streams.Stream[*httpclient.StreamEvent], idleTimeout time.Duration) streamNextResult {
-	if idleTimeout <= 0 {
-		if stream.Next() {
-			return streamNextResult{event: stream.Current(), ok: true}
-		}
-
-		return streamNextResult{err: stream.Err()}
-	}
-
-	resultCh := make(chan streamNextResult, 1)
-	go func() {
-		if stream.Next() {
-			resultCh <- streamNextResult{event: stream.Current(), ok: true}
-			return
-		}
-
-		resultCh <- streamNextResult{err: stream.Err()}
-	}()
-
-	timer := time.NewTimer(idleTimeout)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		_ = stream.Close()
-		return streamNextResult{err: ctx.Err()}
-	case <-timer.C:
-		_ = stream.Close()
-		return streamNextResult{err: fmt.Errorf("%w after %s", ErrStreamIdleTimeout, idleTimeout)}
-	case result := <-resultCh:
-		return result
-	}
+	waiter := newStreamEventWaiter(ctx, stream, StreamWriteOptions{IdleTimeout: idleTimeout})
+	defer waiter.Stop()
+	return waiter.Next()
 }

@@ -218,7 +218,9 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 }
 
 func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx, cancelStream := context.WithCancel(c.Request.Context())
+	defer cancelStream()
+	c.Request = c.Request.WithContext(ctx)
 
 	genericReq, err := httpclient.ReadHTTPRequest(c.Request)
 	if err != nil {
@@ -364,6 +366,7 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 		WriteJSONStreamWithOptions(c, result.ChatCompletionStream, StreamWriteOptions{
 			IdleTimeout:       handlers.StreamIdleTimeout,
 			KeepaliveInterval: keepaliveInterval,
+			Cancel:            cancelStream,
 		})
 	}
 }

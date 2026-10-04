@@ -91,7 +91,7 @@ func writeWSResponse(conn *websocket.Conn, resp *httpclient.Response) error {
 		return nil
 	}
 
-	return conn.WriteMessage(websocket.TextMessage, resp.Body)
+	return writeWSMessage(conn, resp.Body)
 }
 
 // writeWSStream drains the stream and writes each event to the WS connection
@@ -99,28 +99,30 @@ func writeWSResponse(conn *websocket.Conn, resp *httpclient.Response) error {
 // connection is no longer writable. The stream is always closed. errData, when
 // non-nil, formats a mid-stream upstream error into the endpoint-native error
 // frame; otherwise wsErrorEventData is used.
-func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Stream[*httpclient.StreamEvent], mode WSFrameMode, idleTimeout time.Duration, errData func(error) []byte) {
+func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Stream[*httpclient.StreamEvent], mode WSFrameMode, opts StreamWriteOptions, errData func(error) []byte) error {
 	defer func() {
 		if err := stream.Close(); err != nil {
 			log.Debug(ctx, "close ws stream", log.Cause(err))
 		}
 	}()
 
+	waiter := newStreamEventWaiter(ctx, stream, opts)
+	defer waiter.Stop()
 	for {
-		result := nextStreamEvent(ctx, stream, idleTimeout)
+		result := waiter.Next()
 		if result.ok {
 			if err := writeWSStreamEvent(conn, result.event, mode); err != nil {
 				log.Warn(ctx, "ws write failed, stopping stream", log.Cause(err))
-				return
+				return err
 			}
 
 			continue
 		}
 
 		if result.err != nil {
-			if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
+			if errors.Is(result.err, context.Canceled) {
 				log.Warn(ctx, "ws stream context done", log.Cause(result.err))
-				return
+				return result.err
 			}
 
 			log.Warn(ctx, "ws stream error", log.Cause(result.err))
@@ -128,13 +130,13 @@ func writeWSStream(ctx context.Context, conn *websocket.Conn, stream streams.Str
 			if errData != nil {
 				data = errData(result.err)
 			}
-			_ = writeWSStreamEvent(conn, &httpclient.StreamEvent{
+			return writeWSStreamEvent(conn, &httpclient.StreamEvent{
 				Type: "error",
 				Data: data,
 			}, mode)
 		}
 
-		return
+		return nil
 	}
 }
 
@@ -150,15 +152,23 @@ func writeWSStreamEvent(conn *websocket.Conn, ev *httpclient.StreamEvent, mode W
 			return nil
 		}
 
-		return conn.WriteMessage(websocket.TextMessage, ev.Data)
+		return writeWSMessage(conn, ev.Data)
 	default:
 		var buf bytes.Buffer
 		if err := sse.Encode(&buf, sse.Event{Event: ev.Type, Data: ev.Data}); err != nil {
 			return err
 		}
 
-		return conn.WriteMessage(websocket.TextMessage, buf.Bytes())
+		return writeWSMessage(conn, buf.Bytes())
 	}
+}
+
+func writeWSMessage(conn *websocket.Conn, data []byte) error {
+	// A client that stops reading must not pin a generation slot indefinitely.
+	if err := conn.SetWriteDeadline(time.Now().Add(responsesWebSocketWriteTimeout)); err != nil {
+		return err
+	}
+	return conn.WriteMessage(websocket.TextMessage, data)
 }
 
 // wsErrorEventData returns the error-event payload bytes appropriate for the mode.
@@ -240,7 +250,7 @@ func (h *ChatCompletionHandlers) ChatCompletionWebSocket(c *gin.Context, mode WS
 	}
 
 	defer func() {
-		_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		_ = conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(responsesWebSocketWriteTimeout))
 		_ = conn.Close()
 	}()
 
@@ -293,6 +303,8 @@ func readWSMessages(ctx context.Context, cancel context.CancelFunc, conn *websoc
 // handleWSRequest processes one WS request message. It returns true if the
 // connection should be closed (write failure), false to continue the loop.
 func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *websocket.Conn, c *gin.Context, msg []byte, mode WSFrameMode) bool {
+	ctx, cancelStream := context.WithCancel(ctx)
+	defer cancelStream()
 	if h.RequestTimeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, h.RequestTimeout)
@@ -348,8 +360,7 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 
 	if result.ChatCompletionStream != nil {
 		stream := newUpstreamErrorStream(ctx, result.ChatCompletionStream, h.systemService())
-		writeWSStream(ctx, conn, stream, mode, h.StreamIdleTimeout, func(e error) []byte { return h.wsErrorData(ctx, mode, e) })
-		return false
+		return writeWSStream(ctx, conn, stream, mode, StreamWriteOptions{IdleTimeout: h.StreamIdleTimeout, Cancel: cancelStream}, func(e error) []byte { return h.wsErrorData(ctx, mode, e) }) != nil
 	}
 
 	// No response object and no stream: nothing to send for this request.

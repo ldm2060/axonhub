@@ -101,35 +101,41 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 	c.Header("X-Accel-Buffering", "no")
 
 	if !opts.ResponseAlreadyCommitted {
-		_, _ = c.Writer.Write([]byte("["))
+		if err := writeStreamChunk(ctx, c.Writer, []byte("[")); err != nil {
+			log.Warn(ctx, "Failed to open Gemini stream", log.Cause(err))
+			return
+		}
 	}
 
 	first := true
-	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
+	waiter := newStreamEventWaiter(ctx, stream, opts)
+	defer waiter.Stop()
 
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
-			if _, err := c.Writer.Write([]byte("\n")); err != nil {
+			if err := writeStreamChunk(ctx, c.Writer, []byte("\n")); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write Gemini keepalive", log.Cause(err))
 				return
 			}
-			c.Writer.Flush()
 			continue
 		}
 		if result.ok {
 			cur := result.event
 
+			var separator []byte
 			if !first {
-				_, _ = c.Writer.Write([]byte(","))
+				separator = []byte(",")
 			}
-
-			_, _ = c.Writer.Write(cur.Data)
+			if err := writeStreamChunk(ctx, c.Writer, separator, cur.Data); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write Gemini stream event", log.Cause(err))
+				return
+			}
 			first = false
 
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
-			c.Writer.Flush()
 			continue
 		}
 
@@ -147,7 +153,9 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 			}
 		}
 
-		_, _ = c.Writer.Write([]byte("]"))
+		if err := writeStreamChunk(ctx, c.Writer, []byte("]")); err != nil {
+			log.Warn(ctx, "Failed to close Gemini stream", log.Cause(err))
+		}
 		return
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -59,10 +60,9 @@ func (c *ConcurrencyLimitConfig) Stats() (limit, trackedUsers, rejected int64) {
 func (c *ConcurrencyLimitConfig) acquire(key string) (limit int, admitted bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.limit <= 0 {
-		return 0, true
-	}
-	if c.users[key] >= c.limit {
+	// Track active work even while the cap is disabled, so enabling it cannot
+	// admit a second budget on top of requests that are already running.
+	if c.limit > 0 && c.users[key] >= c.limit {
 		c.rejected++
 		return c.limit, false
 	}
@@ -89,17 +89,25 @@ func (r *requestConcurrency) acquire(ctx context.Context) (func(), *httpclient.E
 		log.Warn(ctx, "per-user concurrency limit reached, rejecting request",
 			log.Int("limit", limit), log.String("user", r.key),
 			log.String("path", r.path), log.String("method", r.method))
-		return nil, &httpclient.Error{
-			StatusCode: http.StatusTooManyRequests,
-			Status:     http.StatusText(http.StatusTooManyRequests),
-			Body:       []byte(`{"error":{"message":"too many concurrent requests for this user, retry shortly","type":"rate_limit_error","code":"concurrency_limit_exceeded"}}`),
-			Headers:    http.Header{"Retry-After": {"1"}},
-		}
-	}
-	if limit == 0 {
-		return func() {}, nil
+		return nil, concurrencyLimitError(r.path)
 	}
 	return sync.OnceFunc(func() { r.config.release(r.key) }), nil
+}
+
+func concurrencyLimitError(path string) *httpclient.Error {
+	body := `{"error":{"message":"too many concurrent requests for this user, retry shortly","type":"rate_limit_error","code":"concurrency_limit_exceeded"}}`
+	switch {
+	case strings.HasSuffix(path, "/messages"):
+		body = `{"type":"error","error":{"message":"too many concurrent requests for this user, retry shortly","type":"rate_limit_error","code":"concurrency_limit_exceeded"}}`
+	case strings.Contains(path, "/gemini/"), strings.Contains(path, "/v1beta/"):
+		body = `{"error":{"code":429,"message":"too many concurrent requests for this user, retry shortly","status":"RESOURCE_EXHAUSTED"}}`
+	}
+	return &httpclient.Error{
+		StatusCode: http.StatusTooManyRequests,
+		Status:     http.StatusText(http.StatusTooManyRequests),
+		Body:       []byte(body),
+		Headers:    http.Header{"Retry-After": {"1"}},
+	}
 }
 
 // AcquireWebSocketConcurrency reserves a user slot for one generation on an
@@ -117,7 +125,10 @@ func AcquireWebSocketConcurrency(ctx context.Context) (func(), *httpclient.Error
 // acquire a slot per generation, so idle connections consume no user budget.
 func WithConcurrencyLimit(cfg *ConcurrencyLimitConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg == nil {
+		isWebSocket := c.Request.Method == http.MethodGet && websocket.IsWebSocketUpgrade(c.Request)
+		if cfg == nil || (!isWebSocket && (c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead || c.Request.Method == http.MethodDelete || c.Request.Method == http.MethodOptions)) {
+			// Model discovery, task polling and cancellation do not start a
+			// generation, and must remain available while its budget is full.
 			c.Next()
 			return
 		}
@@ -131,7 +142,7 @@ func WithConcurrencyLimit(cfg *ConcurrencyLimitConfig) gin.HandlerFunc {
 		}
 
 		request := &requestConcurrency{config: cfg, key: key, path: c.Request.URL.Path, method: c.Request.Method}
-		if c.Request.Method == http.MethodGet && websocket.IsWebSocketUpgrade(c.Request) {
+		if isWebSocket {
 			ctx := context.WithValue(c.Request.Context(), webSocketConcurrencyKey{}, request)
 			c.Request = c.Request.WithContext(ctx)
 			c.Next()
@@ -152,14 +163,17 @@ func WithConcurrencyLimit(cfg *ConcurrencyLimitConfig) gin.HandlerFunc {
 }
 
 // concurrencyKey identifies the user a request acts as. API-key requests are
-// attributed to the key owner, falling back to the key itself when the owner
-// could not be resolved.
+// attributed to the key's owner ID even when loading the user entity failed.
+// Ownerless keys have independent key-level budgets.
 func concurrencyKey(c *gin.Context) (string, bool) {
 	if user, ok := contexts.GetActingUser(c.Request.Context()); ok && user != nil {
 		return "user:" + strconv.Itoa(user.ID), true
 	}
 
 	if apiKey, ok := contexts.GetAPIKey(c.Request.Context()); ok && apiKey != nil {
+		if apiKey.UserID > 0 {
+			return "user:" + strconv.Itoa(apiKey.UserID), true
+		}
 		return "api_key:" + strconv.Itoa(apiKey.ID), true
 	}
 

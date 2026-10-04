@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,30 +17,36 @@ import (
 )
 
 type blockingTestStream struct {
-	nextCh  chan *httpclient.StreamEvent
-	current *httpclient.StreamEvent
-	err     error
-	closed  bool
+	nextCh    chan *httpclient.StreamEvent
+	current   *httpclient.StreamEvent
+	err       error
+	closed    bool
+	closeCh   chan struct{}
+	closeOnce sync.Once
 }
 
 func newBlockingTestStream() *blockingTestStream {
-	return &blockingTestStream{nextCh: make(chan *httpclient.StreamEvent)}
+	return &blockingTestStream{nextCh: make(chan *httpclient.StreamEvent), closeCh: make(chan struct{})}
 }
 
 func (s *blockingTestStream) Next() bool {
-	event, ok := <-s.nextCh
-	if !ok {
+	select {
+	case event, ok := <-s.nextCh:
+		if !ok {
+			return false
+		}
+		s.current = event
+		return true
+	case <-s.closeCh:
 		return false
 	}
-
-	s.current = event
-	return true
 }
 
 func (s *blockingTestStream) Current() *httpclient.StreamEvent { return s.current }
 func (s *blockingTestStream) Err() error                       { return s.err }
 func (s *blockingTestStream) Close() error {
 	s.closed = true
+	s.closeOnce.Do(func() { close(s.closeCh) })
 	return nil
 }
 
@@ -93,7 +100,8 @@ func TestNextStreamEventReturnsUpstreamErrorAtEOF(t *testing.T) {
 
 func TestStreamEventWaiterReturnsHeartbeatBeforeDelayedEvent(t *testing.T) {
 	stream := newBlockingTestStream()
-	waiter := newStreamEventWaiter(t.Context(), stream, time.Second, 10*time.Millisecond)
+	waiter := newStreamEventWaiter(t.Context(), stream, StreamWriteOptions{IdleTimeout: time.Second, KeepaliveInterval: 10 * time.Millisecond})
+	defer waiter.Stop()
 
 	result := waiter.Next()
 	require.True(t, result.heartbeat)
@@ -112,7 +120,8 @@ func TestStreamEventWaiterReturnsHeartbeatBeforeDelayedEvent(t *testing.T) {
 
 func TestStreamEventWaiterHeartbeatDoesNotResetIdleTimeout(t *testing.T) {
 	stream := newBlockingTestStream()
-	waiter := newStreamEventWaiter(t.Context(), stream, 35*time.Millisecond, 5*time.Millisecond)
+	waiter := newStreamEventWaiter(t.Context(), stream, StreamWriteOptions{IdleTimeout: 35 * time.Millisecond, KeepaliveInterval: 5 * time.Millisecond})
+	defer waiter.Stop()
 	started := time.Now()
 	heartbeats := 0
 

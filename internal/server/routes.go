@@ -174,6 +174,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		adminGroup.POST(
 			"/playground/chat",
 			middleware.WithSource(request.SourcePlayground),
+			middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 			middleware.WithResponseHeaders(services.RequestService),
 			handlers.Playground.ChatCompletion,
 		)
@@ -226,16 +227,17 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
 		middleware.WithSource(request.SourceAPI),
 		middleware.WithResponseHeaders(services.RequestService),
-		middleware.WithThread(server.Config.Trace, services.ThreadService),
-		middleware.WithTrace(server.Config.Trace, services.TraceService),
 		// Bound the number of requests whose bodies are resident at once. Each
 		// request holds several copies of its body across the transform
 		// pipeline, so this is the main lever on peak heap.
 		middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
+		middleware.WithThread(server.Config.Trace, services.ThreadService),
+		middleware.WithTrace(server.Config.Trace, services.TraceService),
 	}
-	apiGroup := server.Group("/", append([]gin.HandlerFunc{
-		middleware.WithTimeout(server.Config.LLMRequestTimeout),
-	}, apiMiddlewares...)...)
+	// Generation handlers select total versus stream-idle timeouts after
+	// decoding the request. An outer deadline would also cut off healthy streams.
+	apiGroup := server.Group("/", apiMiddlewares...)
+	nonStreamingTimeout := middleware.WithTimeout(server.Config.LLMRequestTimeout)
 
 	// WebSocket mode owns a long-lived connection and applies its processing
 	// timeout per response.create event, so it must not inherit the ordinary
@@ -244,6 +246,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	responsesWebSocketGroup.GET("/v1/responses", handlers.OpenAI.CreateResponseWebSocket)
 	responsesWebSocketGroup.GET("/v1/responses/compact", handlers.OpenAI.CompactResponseWebSocket)
 	responsesWebSocketGroup.GET("/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
+	responsesWebSocketGroup.GET("/anthropic/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
 	responsesWebSocketGroup.GET("/v1/chat/completions", handlers.OpenAI.ChatCompletionWebSocket)
 
 	{
@@ -252,16 +255,16 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		openaiGroup.POST("/completions", handlers.OpenAI.Completion)
 		openaiGroup.POST("/responses/compact", handlers.OpenAI.CompactResponse)
 		openaiGroup.POST("/responses", handlers.OpenAI.CreateResponse)
-		openaiGroup.GET("/models", handlers.OpenAI.ListModels)
-		openaiGroup.GET("/models/*model", handlers.OpenAI.RetrieveModel)
+		openaiGroup.GET("/models", nonStreamingTimeout, handlers.OpenAI.ListModels)
+		openaiGroup.GET("/models/*model", nonStreamingTimeout, handlers.OpenAI.RetrieveModel)
 		openaiGroup.POST("/embeddings", handlers.OpenAI.CreateEmbedding)
 		openaiGroup.POST("/moderations", handlers.OpenAI.CreateModeration)
 		openaiGroup.POST("/alpha/search", handlers.OpenAI.CreateAlphaSearch)
 		openaiGroup.POST("/images/generations", handlers.OpenAI.CreateImage)
 		openaiGroup.POST("/images/edits", handlers.OpenAI.CreateImageEdit)
-		openaiGroup.POST("/videos", handlers.OpenAI.CreateVideo)
-		openaiGroup.GET("/videos/:id", handlers.OpenAI.GetVideo)
-		openaiGroup.DELETE("/videos/:id", handlers.OpenAI.DeleteVideo)
+		openaiGroup.POST("/videos", nonStreamingTimeout, handlers.OpenAI.CreateVideo)
+		openaiGroup.GET("/videos/:id", nonStreamingTimeout, handlers.OpenAI.GetVideo)
+		openaiGroup.DELETE("/videos/:id", nonStreamingTimeout, handlers.OpenAI.DeleteVideo)
 		openaiGroup.POST("/audio/speech", handlers.OpenAI.CreateSpeech)
 		openaiGroup.POST("/audio/transcriptions", handlers.OpenAI.CreateTranscription)
 		openaiGroup.POST("/audio/translations", handlers.OpenAI.CreateTranslation)
@@ -272,32 +275,31 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		openaiGroup.POST("/messages", handlers.Anthropic.CreateMessage)
 
 		// Compatible with OpenAI API
-		openaiGroup.POST("/rerank", handlers.Jina.Rerank)
+		openaiGroup.POST("/rerank", nonStreamingTimeout, handlers.Jina.Rerank)
 
 		// Native System One endpoint
-		openaiGroup.POST("/systemone", handlers.TypeSafe.SystemOne)
+		openaiGroup.POST("/systemone", nonStreamingTimeout, handlers.TypeSafe.SystemOne)
 	}
 
 	{
-		jinaGroup := apiGroup.Group("/jina/v1")
+		jinaGroup := apiGroup.Group("/jina/v1", nonStreamingTimeout)
 		jinaGroup.POST("/embeddings", handlers.Jina.CreateEmbedding)
 		jinaGroup.POST("/rerank", handlers.Jina.Rerank)
 	}
 
 	{
-		typesafeGroup := apiGroup.Group("/typesafe/v1")
+		typesafeGroup := apiGroup.Group("/typesafe/v1", nonStreamingTimeout)
 		typesafeGroup.POST("/systemone", handlers.TypeSafe.SystemOne)
 	}
 
 	{
 		anthropicGroup := apiGroup.Group("/anthropic/v1")
 		anthropicGroup.POST("/messages", handlers.Anthropic.CreateMessage)
-		anthropicGroup.GET("/messages", handlers.Anthropic.CreateMessageWebSocket)
-		anthropicGroup.GET("/models", handlers.Anthropic.ListModels)
+		anthropicGroup.GET("/models", nonStreamingTimeout, handlers.Anthropic.ListModels)
 	}
 
 	{
-		doubaoGroup := apiGroup.Group("/doubao/v3")
+		doubaoGroup := apiGroup.Group("/doubao/v3", nonStreamingTimeout)
 		doubaoGroup.POST("/contents/generations/tasks", handlers.Doubao.CreateTask)
 		doubaoGroup.GET("/contents/generations/tasks/:id", handlers.Doubao.GetTask)
 		doubaoGroup.DELETE("/contents/generations/tasks/:id", handlers.Doubao.DeleteTask)
@@ -316,6 +318,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithResponseHeaders(services.RequestService),
+			middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
 			middleware.WithTrace(server.Config.Trace, services.TraceService),
 		)
@@ -329,6 +332,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithGeminiKeyAuth(services.AuthService),
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithResponseHeaders(services.RequestService),
+			middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
 			middleware.WithTrace(server.Config.Trace, services.TraceService),
 		)

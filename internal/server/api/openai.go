@@ -332,6 +332,8 @@ func NewOpenAIHandlers(params OpenAIHandlersParams) *OpenAIHandlers {
 	handlers.ResponseCompletionHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.CompactHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.EmbeddingHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.ModerationHandlers.WithTimeouts(params.TimeoutConfig)
+	handlers.AlphaSearchHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.ImageGenerationHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.ImageEditHandlers.WithTimeouts(params.TimeoutConfig)
 	handlers.ImageVariationHandlers.WithTimeouts(params.TimeoutConfig)

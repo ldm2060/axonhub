@@ -222,17 +222,30 @@ func processWithHTTPKeepalive(
 	payload []byte,
 	contentType string,
 ) (orchestrator.ChatCompletionResult, error) {
-	resultCh := make(chan processResult, 1)
+	resultCh := make(chan processResult)
+	abandoned := make(chan struct{})
+	defer close(abandoned)
+	deliver := func(processed processResult) {
+		select {
+		case resultCh <- processed:
+		case <-abandoned:
+			// Process can finish after cancellation or a failed keepalive write.
+			// Nobody will consume its stream then, so release upstream resources.
+			if processed.result.ChatCompletionStream != nil {
+				_ = processed.result.ChatCompletionStream.Close()
+			}
+		}
+	}
 	go func() {
 		defer func() {
 			if cause := recover(); cause != nil {
 				log.Warn(ctx, "Chat completion process panic recovered", log.Any("panic", cause))
-				resultCh <- processResult{err: fmt.Errorf("chat completion process panic: %v", cause)}
+				deliver(processResult{err: fmt.Errorf("chat completion process panic: %v", cause)})
 			}
 		}()
 
 		result, err := processor.Process(ctx, genericReq)
-		resultCh <- processResult{result: result, err: err}
+		deliver(processResult{result: result, err: err})
 	}()
 
 	ticker := time.NewTicker(interval)
@@ -255,11 +268,10 @@ func processWithHTTPKeepalive(
 			if mode == httpStreamKeepaliveJSONWhitespace && wroteKeepalive {
 				payload = []byte("\n")
 			}
-			if _, err := c.Writer.Write(payload); err != nil {
+			if err := writeStreamChunk(ctx, c.Writer, payload); err != nil {
 				return orchestrator.ChatCompletionResult{}, err
 			}
 			wroteKeepalive = true
-			c.Writer.Flush()
 		}
 	}
 }
@@ -294,7 +306,9 @@ func (handlers *ChatCompletionHandlers) writeCommittedProcessError(c *gin.Contex
 }
 
 func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context, genericReq *httpclient.Request) {
-	ctx := c.Request.Context()
+	ctx, cancelStream := context.WithCancel(c.Request.Context())
+	defer cancelStream()
+	c.Request = c.Request.WithContext(ctx)
 
 	if genericReq == nil || len(genericReq.Body) == 0 {
 		JSONError(c, http.StatusBadRequest, errors.New("Request body is empty"))
@@ -388,8 +402,16 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		// When per-API SSE keep-alive is enabled, use the heartbeat-aware SSE
 		// writer (upstream 2d7d7c86). Otherwise use the configured stream writer
 		// with our existing StreamWriteOptions flow.
+		opts := StreamWriteOptions{
+			IdleTimeout:              handlers.StreamIdleTimeout,
+			KeepaliveInterval:        keepaliveInterval,
+			ResponseAlreadyCommitted: responseCommittedByKeepalive,
+			Cancel:                   cancelStream,
+		}
 		if handlers.sseKeepAlive.Enabled && handlers.sseKeepAlive.Interval > 0 && handlers.sseHeartbeatFormat != sseHeartbeatNone {
-			writeSSEStream(c, stream, FormatStreamError, handlers.sseKeepAlive, handlers.sseHeartbeatFormat)
+			opts.KeepaliveInterval = handlers.sseKeepAlive.Interval
+			opts.heartbeatFormat = handlers.sseHeartbeatFormat
+			WriteSSEStreamWithOptions(c, stream, opts)
 			return
 		}
 
@@ -398,11 +420,7 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 			streamWriter = WriteSSEStreamWithOptions
 		}
 
-		streamWriter(c, stream, StreamWriteOptions{
-			IdleTimeout:              handlers.StreamIdleTimeout,
-			KeepaliveInterval:        keepaliveInterval,
-			ResponseAlreadyCommitted: responseCommittedByKeepalive,
-		})
+		streamWriter(c, stream, opts)
 	}
 }
 
@@ -549,17 +567,23 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 		return
 	}
 
-	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
+	waiter := newStreamEventWaiter(ctx, stream, opts)
+	defer waiter.Stop()
 	eventsAfterCancel := 0
 	terminalSeen := false
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
-			if err := writeAndFlushSSE(ctx, c.Writer, func(writer io.Writer) error {
-				_, err := writer.Write([]byte(": keepalive\n\n"))
-
-				return err
-			}); err != nil {
+			var err error
+			if opts.heartbeatFormat != sseHeartbeatNone {
+				err = writeSSEHeartbeatEvent(ctx, c.Writer, opts.heartbeatFormat)
+			} else {
+				err = writeAndFlushSSE(ctx, c.Writer, func(writer io.Writer) error {
+					_, writeErr := writer.Write([]byte(": keepalive\n\n"))
+					return writeErr
+				})
+			}
+			if err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write SSE keepalive", log.Cause(err))
 				return
@@ -658,101 +682,10 @@ func writeSSEStreamWithHeartbeat(
 	interval time.Duration,
 	heartbeatFormat sseHeartbeatFormat,
 ) {
-	ctx := c.Request.Context()
-	clientDisconnected := false
-
-	if formatErr == nil {
-		formatErr = FormatStreamError
-	}
-
-	defer func() {
-		clearSSEWriteDeadline(ctx, c.Writer)
-		if clientDisconnected {
-			log.Warn(ctx, "Client disconnected")
-		}
-	}()
-
-	setSSEHeaders(c)
-	if err := flushSSE(ctx, c.Writer); err != nil {
-		clientDisconnected = true
-		log.Warn(ctx, "Failed to flush SSE headers", log.Cause(err))
-
-		return
-	}
-
-	reader := newSSEStreamReader(ctx, stream)
-	// The caller closes the stream after this function returns. Wait for the
-	// reader first so Close cannot race with Next or Current.
-	defer reader.Stop()
-
-	timer := time.NewTimer(interval)
-	defer timer.Stop()
-
-	timerC := timer.C
-	ctxDone := ctx.Done()
-	eventsAfterCancel := 0
-	terminalSeen := false
-	heartbeatCount := 0
-
-	for {
-		select {
-		case <-ctxDone:
-			if errors.Is(ctx.Err(), context.Canceled) {
-				clientDisconnected = true
-			}
-			ctxDone = nil
-			stopTimer(timer)
-			timerC = nil
-
-		case result := <-reader.Results():
-			if result.done {
-				writeSSEStreamEnd(c, ctx, result.err, formatErr, terminalSeen, &clientDisconnected)
-				return
-			}
-
-			if ctx.Err() != nil {
-				eventsAfterCancel++
-				if eventsAfterCancel > maxStreamEventsAfterCancel {
-					log.Warn(ctx, "Stream still producing after cancellation, aborting drain",
-						log.Int("events_after_cancel", eventsAfterCancel))
-					writeSSEStreamEnd(c, ctx, ctx.Err(), formatErr, terminalSeen, &clientDisconnected)
-					return
-				}
-			}
-
-			cur := result.event
-			if orchestrator.IsTerminalStreamEvent(cur) {
-				terminalSeen = true
-			}
-			if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
-				clientDisconnected = true
-				log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
-
-				return
-			}
-			log.Debug(ctx, "write stream event", log.Any("event", cur))
-
-			if timerC != nil {
-				resetTimer(timer, interval)
-			}
-
-		case <-timerC:
-			if err := writeSSEHeartbeatEvent(ctx, c.Writer, heartbeatFormat); err != nil {
-				clientDisconnected = true
-				log.Warn(ctx, "Failed to write SSE heartbeat", log.Cause(err))
-				return
-			}
-
-			heartbeatCount++
-			log.Info(ctx, "SSE heartbeat sent",
-				log.Int("heartbeat_count", heartbeatCount),
-				log.String("heartbeat_format", sseHeartbeatFormatName(heartbeatFormat)),
-				log.Duration("interval", interval),
-			)
-
-			timer.Reset(interval)
-		}
-	}
+	writeSSEStreamWithoutHeartbeat(c, stream, StreamWriteOptions{
+		KeepaliveInterval: interval,
+		heartbeatFormat:   heartbeatFormat,
+	}, formatErr)
 }
 
 func writeSSEStreamEnd(
@@ -764,6 +697,11 @@ func writeSSEStreamEnd(
 	clientDisconnected *bool,
 ) {
 	switch {
+	case errors.Is(streamErr, ErrStreamIdleTimeout):
+		if err := writeSSEErrorEvent(ctx, c.Writer, formatErr, streamErr); err != nil {
+			*clientDisconnected = true
+			log.Warn(ctx, "Failed to write SSE idle timeout error", log.Cause(err))
+		}
 	case errors.Is(ctx.Err(), context.DeadlineExceeded) &&
 		(streamErr == nil || errors.Is(streamErr, context.Canceled) || errors.Is(streamErr, context.DeadlineExceeded)):
 		streamErr = ctx.Err()
@@ -861,6 +799,19 @@ func flushSSE(ctx context.Context, writer http.ResponseWriter) error {
 	return writeAndFlushSSE(ctx, writer, nil)
 }
 
+// JSON, text and binary streams need the same bounded writes as SSE; a slow
+// downstream must not hold a user slot indefinitely after upstream activity.
+func writeStreamChunk(ctx context.Context, writer http.ResponseWriter, chunks ...[]byte) error {
+	return writeAndFlushSSE(ctx, writer, func(writer io.Writer) error {
+		for _, chunk := range chunks {
+			if _, err := writer.Write(chunk); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func writeAndFlushSSE(ctx context.Context, writer http.ResponseWriter, write func(io.Writer) error) error {
 	refreshSSEWriteDeadline(ctx, writer)
 	defer clearSSEWriteDeadline(ctx, writer)
@@ -913,15 +864,6 @@ func setSSEWriteDeadline(ctx context.Context, writer http.ResponseWriter, deadli
 	}
 }
 
-func stopTimer(timer *time.Timer) {
-	if !timer.Stop() {
-		select {
-		case <-timer.C:
-		default:
-		}
-	}
-}
-
 func setSSEHeaders(c *gin.Context) {
 	setSSEResponseHeaders(c.Writer.Header())
 }
@@ -946,17 +888,6 @@ func writeSSEHeartbeat(writer io.Writer, format sseHeartbeatFormat) error {
 	}
 }
 
-func sseHeartbeatFormatName(format sseHeartbeatFormat) string {
-	switch format {
-	case sseHeartbeatOpenAI:
-		return "openai"
-	case sseHeartbeatAnthropic:
-		return "anthropic"
-	default:
-		return "unknown"
-	}
-}
-
 // WriteBinaryStream writes raw bytes from stream events directly to the response body.
 // The first chunk type is treated as the stream Content-Type when present.
 func WriteBinaryStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent]) {
@@ -975,8 +906,10 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 		}
 	}()
 
+	waiter := newStreamEventWaiter(ctx, stream, opts)
+	defer waiter.Stop()
 	for {
-		result := nextStreamEvent(ctx, stream, opts.IdleTimeout)
+		result := waiter.Next()
 		if !result.ok {
 			if result.err != nil {
 				if errors.Is(result.err, context.Canceled) || errors.Is(result.err, context.DeadlineExceeded) {
@@ -1039,13 +972,11 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 			headersWritten = true
 		}
 
-		if _, err := c.Writer.Write(cur.Data); err != nil {
+		if err := writeStreamChunk(ctx, c.Writer, cur.Data); err != nil {
 			clientDisconnected = true
 			log.Warn(ctx, "Failed to write binary stream chunk", log.Cause(err))
 			return
 		}
-
-		c.Writer.Flush()
 	}
 }
 

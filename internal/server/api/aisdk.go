@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -88,23 +89,26 @@ func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclien
 	c.Header("X-Accel-Buffering", "no")
 	c.Header("X-Vercel-AI-Data-Stream", "v1")
 
-	waiter := newStreamEventWaiter(ctx, stream, opts.IdleTimeout, opts.KeepaliveInterval)
+	waiter := newStreamEventWaiter(ctx, stream, opts)
+	defer waiter.Stop()
 	for {
 		result := waiter.Next()
 		if result.heartbeat {
-			if _, err := c.Writer.Write([]byte("\n")); err != nil {
+			if err := writeStreamChunk(ctx, c.Writer, []byte("\n")); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write AI SDK keepalive", log.Cause(err))
 				return
 			}
-			c.Writer.Flush()
 			continue
 		}
 		if result.ok {
 			cur := result.event
-			_, _ = c.Writer.Write(cur.Data)
+			if err := writeStreamChunk(ctx, c.Writer, cur.Data); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to write AI SDK stream event", log.Cause(err))
+				return
+			}
 			log.Debug(ctx, "write stream event", log.Any("event", cur))
-			c.Writer.Flush()
 			continue
 		}
 
@@ -121,7 +125,9 @@ func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclien
 				log.Error(ctx, "Error in stream", log.Cause(result.err))
 			}
 
-			_, _ = c.Writer.Write([]byte("3:" + `"` + result.err.Error() + `"` + "\n"))
+			if err := writeStreamChunk(ctx, c.Writer, []byte("3:"+strconv.Quote(result.err.Error())+"\n")); err != nil {
+				log.Warn(ctx, "Failed to write AI SDK stream error", log.Cause(err))
+			}
 		}
 
 		return

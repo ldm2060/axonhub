@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
@@ -85,7 +86,7 @@ func TestWithConcurrencyLimit_DisabledByDefault(t *testing.T) {
 
 	limit, tracked, rejected := cfg.Stats()
 	assert.Equal(t, int64(0), limit)
-	assert.Equal(t, int64(0), tracked, "a disabled limiter tracks nobody")
+	assert.Equal(t, int64(0), tracked, "completed requests must leave no tracked users")
 	assert.Equal(t, int64(0), rejected)
 }
 
@@ -280,4 +281,91 @@ func TestConcurrencySlotReleaseIsIdempotent(t *testing.T) {
 	second()
 	_, tracked, _ = cfg.Stats()
 	require.Zero(t, tracked)
+}
+
+func TestConcurrencyLimitEnablingCountsRequestsAdmittedWhileDisabled(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(0)
+	request := &requestConcurrency{config: cfg, key: "user:1"}
+	release, err := request.acquire(t.Context())
+	require.Nil(t, err)
+	cfg.Apply(1)
+	_, limitErr := request.acquire(t.Context())
+	require.NotNil(t, limitErr)
+	require.Equal(t, http.StatusTooManyRequests, limitErr.StatusCode)
+	release()
+	release, err = request.acquire(t.Context())
+	require.Nil(t, err)
+	release()
+}
+
+func TestConcurrencyKeyRetainsOwnerAcrossKeysAndEntryPoints(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ctx  context.Context
+		want string
+	}{
+		{"jwt", contexts.WithUser(t.Context(), &ent.User{ID: 7}), "user:7"},
+		{"personal key", contexts.WithPrincipalUser(t.Context(), &ent.User{ID: 7}), "user:7"},
+		{"first key without loaded user", contexts.WithAPIKey(t.Context(), &ent.APIKey{ID: 1, UserID: 7}), "user:7"},
+		{"second key without loaded user", contexts.WithAPIKey(t.Context(), &ent.APIKey{ID: 2, UserID: 7}), "user:7"},
+		{"ownerless key", contexts.WithAPIKey(t.Context(), &ent.APIKey{ID: 3}), "api_key:3"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, _ := gin.CreateTestContext(httptest.NewRecorder())
+			c.Request = httptest.NewRequestWithContext(tc.ctx, http.MethodPost, "/v1/messages", nil)
+			key, ok := concurrencyKey(c)
+			require.True(t, ok)
+			require.Equal(t, tc.want, key)
+		})
+	}
+}
+
+func TestConcurrencyLimitKeepsDiscoveryAndCancellationAvailable(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(1)
+	_, admitted := cfg.acquire("user:1")
+	require.True(t, admitted)
+	defer cfg.release("user:1")
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Request = c.Request.WithContext(contexts.WithPrincipalUser(c.Request.Context(), &ent.User{ID: 1}))
+	}, WithConcurrencyLimit(cfg))
+	for _, tc := range []struct{ method, path string }{
+		{http.MethodGet, "/v1/models"},
+		{http.MethodGet, "/anthropic/v1/models"},
+		{http.MethodGet, "/v1beta/models"},
+		{http.MethodGet, "/v1/videos/job"},
+		{http.MethodDelete, "/v1/videos/job"},
+		{http.MethodGet, "/doubao/v3/contents/generations/tasks/job"},
+		{http.MethodDelete, "/doubao/v3/contents/generations/tasks/job"},
+	} {
+		router.Handle(tc.method, tc.path, func(c *gin.Context) { c.Status(http.StatusNoContent) })
+		recorder := httptest.NewRecorder()
+		router.ServeHTTP(recorder, httptest.NewRequest(tc.method, tc.path, nil))
+		require.Equal(t, http.StatusNoContent, recorder.Code, "%s %s", tc.method, tc.path)
+	}
+}
+
+func TestConcurrencyLimitUsesNativeProtocolErrors(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(1)
+	_, admitted := cfg.acquire("user:1")
+	require.True(t, admitted)
+	defer cfg.release("user:1")
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Request = c.Request.WithContext(contexts.WithPrincipalUser(c.Request.Context(), &ent.User{ID: 1}))
+	}, WithConcurrencyLimit(cfg))
+	for _, tc := range []struct{ path, field, value string }{
+		{"/v1/chat/completions", "error.code", "concurrency_limit_exceeded"},
+		{"/v1/messages", "type", "error"},
+		{"/anthropic/v1/messages", "error.type", "rate_limit_error"},
+		{"/gemini/v1beta/models/test:generateContent", "error.status", "RESOURCE_EXHAUSTED"},
+		{"/v1beta/models/test:streamGenerateContent", "error.code", "429"},
+	} {
+		router.POST(tc.path, func(*gin.Context) { t.Error("rejected request reached the handler") })
+		recorder := httptest.NewRecorder()
+		router.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, tc.path, nil))
+		require.Equal(t, http.StatusTooManyRequests, recorder.Code, tc.path)
+		require.Equal(t, "1", recorder.Header().Get("Retry-After"))
+		require.Equal(t, tc.value, gjson.GetBytes(recorder.Body.Bytes(), tc.field).String())
+	}
 }

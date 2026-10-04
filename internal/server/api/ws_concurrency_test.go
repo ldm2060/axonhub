@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 type concurrencyTestProcessor responsesWebSocketProcessFunc
@@ -75,7 +76,10 @@ func newConcurrencyWebSocketServer(t *testing.T, cfg *middleware.ConcurrencyLimi
 		router.GET("/v1/responses", func(c *gin.Context) { serveResponsesWebSocket(c, time.Second*5, process, nil) })
 	} else {
 		// Exercise the handler actually registered by the production router.
-		handlers := &OpenAIHandlers{ResponseCompletionHandlers: &ChatCompletionHandlers{Processor: concurrencyTestProcessor(process)}}
+		handlers := &OpenAIHandlers{ResponseCompletionHandlers: &ChatCompletionHandlers{
+			Processor:                  concurrencyTestProcessor(process),
+			ChatCompletionOrchestrator: &orchestrator.ChatCompletionOrchestrator{Inbound: responses.NewInboundTransformer()},
+		}}
 		router.GET("/v1/responses", handlers.CreateResponseWebSocket)
 	}
 	router.POST("/v1/responses", func(c *gin.Context) {
