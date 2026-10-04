@@ -120,7 +120,7 @@ func TestHTTPKeepaliveClosesAbandonedProcessStream(t *testing.T) {
 		<-finish
 		return orchestrator.ChatCompletionResult{ChatCompletionStream: stream}, nil
 	})
-	_, err := processWithHTTPKeepalive(c, ctx, processor, &httpclient.Request{}, time.Hour, httpStreamKeepaliveSSE, nil, "")
+	_, err := processWithHTTPKeepalive(c, ctx, processor, &httpclient.Request{}, StreamWriteOptions{KeepaliveInterval: time.Hour}, httpStreamKeepaliveSSE, nil, "")
 	require.ErrorIs(t, err, context.Canceled)
 	release()
 	select {
@@ -325,6 +325,34 @@ func TestNonSSEWriteFailureStopsConsuming(t *testing.T) {
 			}}
 			writer(c, stream, StreamWriteOptions{})
 			require.LessOrEqual(t, stream.idx, 1, "write failure must stop reading upstream")
+		})
+	}
+}
+
+func TestStreamIdleTimeoutIncludesWaitingForFirstResponse(t *testing.T) {
+	for _, keepalive := range []time.Duration{0, 5 * time.Millisecond} {
+		t.Run(keepalive.String(), func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+			defer cancel()
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequestWithContext(ctx, http.MethodPost, "/v1/chat/completions", nil)
+			handler := &ChatCompletionHandlers{
+				Processor: concurrencyTestProcessor(func(ctx context.Context, _ *httpclient.Request) (orchestrator.ChatCompletionResult, error) {
+					<-ctx.Done()
+					return orchestrator.ChatCompletionResult{}, ctx.Err()
+				}),
+				StreamIdleTimeout:     25 * time.Millisecond,
+				HTTPKeepaliveInterval: keepalive,
+			}
+			started := time.Now()
+			handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true}`)})
+			require.Less(t, time.Since(started), 500*time.Millisecond)
+			if keepalive > 0 {
+				require.Contains(t, w.Body.String(), "stream idle timeout")
+			} else {
+				require.Equal(t, http.StatusInternalServerError, w.Code)
+			}
 		})
 	}
 }

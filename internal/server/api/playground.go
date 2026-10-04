@@ -313,13 +313,13 @@ func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
 	}
 
 	var result orchestrator.ChatCompletionResult
-	if keepaliveInterval > 0 {
+	if keepaliveInterval > 0 || (streaming && handlers.StreamIdleTimeout > 0) {
 		result, err = processWithHTTPKeepalive(
 			c,
 			ctx,
 			processor,
 			genericReq,
-			keepaliveInterval,
+			StreamWriteOptions{KeepaliveInterval: keepaliveInterval, IdleTimeout: handlers.StreamIdleTimeout, Cancel: cancelStream},
 			httpStreamKeepaliveTextWhitespace,
 			[]byte("\n"),
 			"text/plain; charset=utf-8",

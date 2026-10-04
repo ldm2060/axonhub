@@ -338,7 +338,14 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 	}
 	defer release()
 
-	result, err := h.processor().Process(ctx, genericReq)
+	var result orchestrator.ChatCompletionResult
+	if h.StreamIdleTimeout > 0 {
+		result, err = processWithHTTPKeepalive(c, ctx, h.processor(), genericReq,
+			StreamWriteOptions{IdleTimeout: h.StreamIdleTimeout, Cancel: cancelStream},
+			httpStreamKeepaliveDisabled, nil, "")
+	} else {
+		result, err = h.processor().Process(ctx, genericReq)
+	}
 	if err != nil {
 		log.Error(ctx, "ws process error", log.Cause(err))
 		return h.writeWSRequestError(conn, ctx, mode, err)

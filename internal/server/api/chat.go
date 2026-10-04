@@ -217,7 +217,7 @@ func processWithHTTPKeepalive(
 	ctx context.Context,
 	processor ChatCompletionProcessor,
 	genericReq *httpclient.Request,
-	interval time.Duration,
+	opts StreamWriteOptions,
 	mode HTTPStreamKeepaliveMode,
 	payload []byte,
 	contentType string,
@@ -248,17 +248,32 @@ func processWithHTTPKeepalive(
 		deliver(processResult{result: result, err: err})
 	}()
 
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
+	var keepalive <-chan time.Time
+	if opts.KeepaliveInterval > 0 {
+		ticker := time.NewTicker(opts.KeepaliveInterval)
+		defer ticker.Stop()
+		keepalive = ticker.C
+	}
+	var idle <-chan time.Time
+	if opts.IdleTimeout > 0 {
+		timer := time.NewTimer(opts.IdleTimeout)
+		defer timer.Stop()
+		idle = timer.C
+	}
 	wroteKeepalive := false
 
 	for {
 		select {
 		case <-ctx.Done():
 			return orchestrator.ChatCompletionResult{}, ctx.Err()
+		case <-idle:
+			if opts.Cancel != nil {
+				opts.Cancel()
+			}
+			return orchestrator.ChatCompletionResult{}, fmt.Errorf("%w waiting for first response after %s", ErrStreamIdleTimeout, opts.IdleTimeout)
 		case processed := <-resultCh:
 			return processed.result, processed.err
-		case <-ticker.C:
+		case <-keepalive:
 			if contentType != "" {
 				c.Header("Content-Type", contentType)
 			}
@@ -337,13 +352,13 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		result orchestrator.ChatCompletionResult
 		err    error
 	)
-	if keepaliveInterval > 0 {
+	if keepaliveInterval > 0 || (streaming && handlers.StreamIdleTimeout > 0) {
 		result, err = processWithHTTPKeepalive(
 			c,
 			ctx,
 			handlers.processor(),
 			genericReq,
-			keepaliveInterval,
+			StreamWriteOptions{KeepaliveInterval: keepaliveInterval, IdleTimeout: handlers.StreamIdleTimeout, Cancel: cancelStream},
 			keepaliveMode,
 			keepalivePayload,
 			keepaliveContentType,

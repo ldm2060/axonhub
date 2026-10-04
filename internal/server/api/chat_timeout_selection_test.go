@@ -73,8 +73,10 @@ func TestChatCompletionWithRequestLoadsConfiguredKeepaliveWithoutUser(t *testing
 				ChatCompletionStream: streams.SliceStream([]*httpclient.StreamEvent{{Type: "message", Data: []byte(`{"ok":true}`)}}),
 			},
 		},
-		StreamWriter:      WriteSSEStreamWithOptions,
-		StreamIdleTimeout: time.Second,
+		StreamWriter: WriteSSEStreamWithOptions,
+		// This test waits 1.1s to observe the configured 1s heartbeat before
+		// processing returns. Keep the first-response idle limit above that.
+		StreamIdleTimeout: 3 * time.Second,
 	}
 
 	handler.ChatCompletionWithRequest(c, &httpclient.Request{Body: []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)})
