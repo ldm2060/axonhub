@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -185,4 +188,96 @@ func mustLimit(cfg *ConcurrencyLimitConfig) int64 {
 	limit, _, _ := cfg.Stats()
 
 	return limit
+}
+
+func TestConcurrencyLimitApplyKeepsInFlightRequests(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(2)
+	for range 2 {
+		_, admitted := cfg.acquire("user:1")
+		require.True(t, admitted)
+	}
+	for _, limit := range []int{2, 1, 2} {
+		cfg.Apply(limit)
+		_, admitted := cfg.acquire("user:1")
+		require.False(t, admitted, "reloading must retain the active requests")
+	}
+	cfg.Apply(3)
+	_, admitted := cfg.acquire("user:1")
+	require.True(t, admitted)
+	cfg.Apply(0)
+	cfg.Apply(1)
+	for range 3 {
+		_, admitted = cfg.acquire("user:1")
+		require.False(t, admitted)
+		cfg.release("user:1")
+	}
+	_, tracked, _ := cfg.Stats()
+	require.Zero(t, tracked)
+	_, admitted = cfg.acquire("user:1")
+	require.True(t, admitted)
+	cfg.release("user:1")
+}
+
+func TestConcurrencyLimitConcurrentAcquireAndIdleCleanup(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(1)
+	var active atomic.Int64
+	var exceeded atomic.Bool
+	var wg sync.WaitGroup
+	for range 16 {
+		wg.Go(func() {
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					t.Errorf("panic during concurrent slot acquisition: %v", recovered)
+					exceeded.Store(true)
+				}
+			}()
+			for range 1000 {
+				if _, admitted := cfg.acquire("user:1"); !admitted {
+					runtime.Gosched()
+					continue
+				}
+				if active.Add(1) > 1 {
+					exceeded.Store(true)
+				}
+				runtime.Gosched()
+				active.Add(-1)
+				cfg.release("user:1")
+			}
+		})
+	}
+	wg.Wait()
+	require.False(t, exceeded.Load(), "idle cleanup must not detach an active counter")
+	_, tracked, _ := cfg.Stats()
+	require.Zero(t, tracked)
+}
+
+func TestConcurrencyLimitPOSTCannotBypassWithUpgradeHeaders(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(1)
+	_, admitted := cfg.acquire("user:1")
+	require.True(t, admitted)
+	defer cfg.release("user:1")
+
+	router := newConcurrencyRouter(cfg, nil, new(sync.Map))
+	req := httptest.NewRequest(http.MethodPost, "/v1/responses", nil)
+	req.Header.Set("Connection", "Upgrade")
+	req.Header.Set("Upgrade", "websocket")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusTooManyRequests, rec.Code)
+}
+
+func TestConcurrencySlotReleaseIsIdempotent(t *testing.T) {
+	cfg := NewConcurrencyLimitConfig(2)
+	request := &requestConcurrency{config: cfg, key: "user:1"}
+	first, err := request.acquire(context.Background())
+	require.Nil(t, err)
+	second, err := request.acquire(context.Background())
+	require.Nil(t, err)
+	first()
+	first()
+	_, tracked, _ := cfg.Stats()
+	require.Equal(t, int64(1), tracked, "duplicate release must not release another request")
+	second()
+	_, tracked, _ = cfg.Stats()
+	require.Zero(t, tracked)
 }

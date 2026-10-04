@@ -16,6 +16,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
@@ -243,17 +244,47 @@ func (h *ChatCompletionHandlers) ChatCompletionWebSocket(c *gin.Context, mode WS
 		_ = conn.Close()
 	}()
 
-	ctx := c.Request.Context()
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	defer cancel()
+	c.Request = c.Request.WithContext(ctx)
 	stop := startWSKeepalive(ctx, conn, h.keepaliveInterval(ctx))
 	defer stop()
 
+	// Keep reading while a generation is streaming so a client disconnect
+	// cancels its upstream work and releases its slot even before the next token.
+	messages := make(chan []byte, responsesWebSocketMaxPending)
+	go readWSMessages(ctx, cancel, conn, messages)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-messages:
+			if !ok || ctx.Err() != nil || h.handleWSRequest(ctx, conn, c, msg, mode) {
+				return
+			}
+		}
+	}
+}
+
+func readWSMessages(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn, messages chan<- []byte) {
+	defer close(messages)
+	defer cancel()
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			log.Error(ctx, "Panic while reading WebSocket messages", log.Any("panic", recovered))
+		}
+	}()
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			return // client closed or read error
+			return
 		}
-
-		if exit := h.handleWSRequest(ctx, conn, c, msg, mode); exit {
+		select {
+		case messages <- msg:
+		case <-ctx.Done():
+			return
+		default:
+			log.Warn(ctx, "WebSocket pending request limit reached, closing connection")
 			return
 		}
 	}
@@ -262,6 +293,12 @@ func (h *ChatCompletionHandlers) ChatCompletionWebSocket(c *gin.Context, mode WS
 // handleWSRequest processes one WS request message. It returns true if the
 // connection should be closed (write failure), false to continue the loop.
 func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *websocket.Conn, c *gin.Context, msg []byte, mode WSFrameMode) bool {
+	if h.RequestTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, h.RequestTimeout)
+		defer cancel()
+	}
+
 	body, err := prepareWSRequest(mode, msg)
 	if err != nil {
 		log.Warn(ctx, "ws request prepare error", log.Cause(err))
@@ -273,6 +310,21 @@ func (h *ChatCompletionHandlers) handleWSRequest(ctx context.Context, conn *webs
 		log.Warn(ctx, "ws request build error", log.Cause(err))
 		return h.writeWSRequestError(conn, ctx, mode, err)
 	}
+	if genericReq.RawRequest != nil {
+		genericReq.RawRequest = genericReq.RawRequest.WithContext(ctx)
+	}
+
+	release, limitErr := middleware.AcquireWebSocketConcurrency(ctx)
+	if limitErr != nil {
+		// This is a local admission error; do not pass it through the upstream
+		// error policy. Keep Responses' terminal event framing for Codex.
+		data := limitErr.Body
+		if mode == WSFrameResponsesEvents {
+			data = responsesFailedEventData(limitErr, limitErr)
+		}
+		return writeWSStreamEvent(conn, &httpclient.StreamEvent{Type: "error", Data: data}, mode) != nil
+	}
+	defer release()
 
 	result, err := h.processor().Process(ctx, genericReq)
 	if err != nil {

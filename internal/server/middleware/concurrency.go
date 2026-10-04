@@ -1,30 +1,35 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // ConcurrencyLimitConfig holds a reloadable per-user cap on concurrent LLM
-// requests. The snapshot is swapped atomically so a config reload takes effect
-// for new requests without rebuilding routes.
+// requests. HTTP requests and active WebSocket messages share the same budget.
 type ConcurrencyLimitConfig struct {
-	ptr atomic.Pointer[concurrencyLimitState]
+	mu       sync.Mutex
+	limit    int
+	users    map[string]int
+	rejected int64
 }
 
-type concurrencyLimitState struct {
-	limit int
+type webSocketConcurrencyKey struct{}
 
-	mu       sync.Mutex
-	users    map[string]*atomic.Int64
-	rejected atomic.Int64
+type requestConcurrency struct {
+	config *ConcurrencyLimitConfig
+	key    string
+	path   string
+	method string
 }
 
 // NewConcurrencyLimitConfig creates the limiter. A limit <= 0 disables it.
@@ -35,80 +40,84 @@ func NewConcurrencyLimitConfig(limit int) *ConcurrencyLimitConfig {
 	return cfg
 }
 
-// Apply swaps in a new limit. Requests already admitted keep their slot and
-// still decrement the snapshot they acquired from, so shrinking the limit never
-// orphans an in-flight request.
+// Apply updates the cap without forgetting requests that are still in flight.
+// Existing WebSocket connections consult this cap for each new message.
 func (c *ConcurrencyLimitConfig) Apply(limit int) {
-	if limit < 0 {
-		limit = 0
-	}
-
-	c.ptr.Store(&concurrencyLimitState{limit: limit, users: map[string]*atomic.Int64{}})
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.limit = max(limit, 0)
 }
 
 // Stats reports the configured per-user limit, the number of tracked users and
 // the total number of rejections.
 func (c *ConcurrencyLimitConfig) Stats() (limit, trackedUsers, rejected int64) {
-	state := c.ptr.Load()
-	if state == nil {
-		return 0, 0, 0
-	}
-
-	state.mu.Lock()
-	tracked := int64(len(state.users))
-	state.mu.Unlock()
-
-	return int64(state.limit), tracked, state.rejected.Load()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return int64(c.limit), int64(len(c.users)), c.rejected
 }
 
-func (s *concurrencyLimitState) acquire(key string) bool {
-	s.mu.Lock()
-	counter, ok := s.users[key]
-	if !ok {
-		counter = &atomic.Int64{}
-		s.users[key] = counter
+func (c *ConcurrencyLimitConfig) acquire(key string) (limit int, admitted bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.limit <= 0 {
+		return 0, true
 	}
-	s.mu.Unlock()
-
-	for {
-		current := counter.Load()
-		if int(current) >= s.limit {
-			return false
-		}
-
-		if counter.CompareAndSwap(current, current+1) {
-			return true
-		}
+	if c.users[key] >= c.limit {
+		c.rejected++
+		return c.limit, false
 	}
+	if c.users == nil {
+		c.users = make(map[string]int)
+	}
+	c.users[key]++
+	return c.limit, true
 }
 
-func (s *concurrencyLimitState) release(key string) {
-	s.mu.Lock()
-	counter := s.users[key]
-	s.mu.Unlock()
-
-	if counter == nil {
-		return
-	}
-
-	// Drop the entry once the user goes idle so the map stays bounded by the
-	// number of concurrently active users rather than every user ever seen.
-	if counter.Add(-1) == 0 {
-		s.mu.Lock()
-		if counter.Load() == 0 {
-			delete(s.users, key)
-		}
-		s.mu.Unlock()
+func (c *ConcurrencyLimitConfig) release(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.users[key] <= 1 {
+		delete(c.users, key)
+	} else {
+		c.users[key]--
 	}
 }
 
-// WithConcurrencyLimit caps how many requests each individual user may have in
-// flight. Exceeding the cap returns 429 with Retry-After. A limit of 0 leaves
-// the request path untouched.
+func (r *requestConcurrency) acquire(ctx context.Context) (func(), *httpclient.Error) {
+	limit, admitted := r.config.acquire(r.key)
+	if !admitted {
+		log.Warn(ctx, "per-user concurrency limit reached, rejecting request",
+			log.Int("limit", limit), log.String("user", r.key),
+			log.String("path", r.path), log.String("method", r.method))
+		return nil, &httpclient.Error{
+			StatusCode: http.StatusTooManyRequests,
+			Status:     http.StatusText(http.StatusTooManyRequests),
+			Body:       []byte(`{"error":{"message":"too many concurrent requests for this user, retry shortly","type":"rate_limit_error","code":"concurrency_limit_exceeded"}}`),
+			Headers:    http.Header{"Retry-After": {"1"}},
+		}
+	}
+	if limit == 0 {
+		return func() {}, nil
+	}
+	return sync.OnceFunc(func() { r.config.release(r.key) }), nil
+}
+
+// AcquireWebSocketConcurrency reserves a user slot for one generation on an
+// upgraded connection. The caller must release it after writing/closing the
+// entire response stream, including error and cancellation paths.
+func AcquireWebSocketConcurrency(ctx context.Context) (func(), *httpclient.Error) {
+	if request, ok := ctx.Value(webSocketConcurrencyKey{}).(*requestConcurrency); ok {
+		return request.acquire(ctx)
+	}
+	return func() {}, nil
+}
+
+// WithConcurrencyLimit reserves slots for HTTP requests before reading their
+// bodies. WebSocket upgrades only attach the shared limiter: their handlers
+// acquire a slot per generation, so idle connections consume no user budget.
 func WithConcurrencyLimit(cfg *ConcurrencyLimitConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		state := cfg.ptr.Load()
-		if state == nil || state.limit <= 0 {
+		if cfg == nil {
 			c.Next()
 			return
 		}
@@ -121,32 +130,22 @@ func WithConcurrencyLimit(cfg *ConcurrencyLimitConfig) gin.HandlerFunc {
 			return
 		}
 
-		// Reserve the slot before the handler runs so the cap covers the whole
-		// request lifetime, including the body read that dominates memory use.
-		if !state.acquire(key) {
-			state.rejected.Add(1)
-
-			log.Warn(
-				c.Request.Context(),
-				"per-user concurrency limit reached, rejecting request",
-				log.Int("limit", state.limit),
-				log.String("user", key),
-				log.String("path", c.Request.URL.Path),
-				log.String("method", c.Request.Method),
-			)
-
-			c.Header("Retry-After", "1")
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": gin.H{
-					"message": "too many concurrent requests for this user, retry shortly",
-					"type":    "rate_limit_error",
-				},
-			})
-
+		request := &requestConcurrency{config: cfg, key: key, path: c.Request.URL.Path, method: c.Request.Method}
+		if c.Request.Method == http.MethodGet && websocket.IsWebSocketUpgrade(c.Request) {
+			ctx := context.WithValue(c.Request.Context(), webSocketConcurrencyKey{}, request)
+			c.Request = c.Request.WithContext(ctx)
+			c.Next()
 			return
 		}
 
-		defer state.release(key)
+		release, err := request.acquire(c.Request.Context())
+		if err != nil {
+			c.Header("Retry-After", err.Headers.Get("Retry-After"))
+			c.Data(err.StatusCode, "application/json", err.Body)
+			c.Abort()
+			return
+		}
+		defer release()
 
 		c.Next()
 	}

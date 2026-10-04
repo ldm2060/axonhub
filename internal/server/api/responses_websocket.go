@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer/shared"
@@ -259,13 +260,24 @@ func (d *responsesWebSocketDispatcher) dispatch(lane *responsesWebSocketLane, st
 }
 
 func (d *responsesWebSocketDispatcher) processMessage(session *responsesWebSocketSession, streamID string, message []byte) error {
-	request, warmup, requestErr := session.prepareRequest(d.rawRequest, message)
+	// Admission may reject this generation. Preserve its warmup continuation so
+	// the client can retry the same message when a slot becomes available.
+	nextSession := *session
+	request, warmup, requestErr := nextSession.prepareRequest(d.rawRequest, message)
 	if requestErr != nil {
 		return writeResponsesWebSocketError(d.writer, requestErr, streamID)
 	}
 	if warmup != nil {
+		*session = nextSession
 		return writeResponsesWebSocketWarmup(d.writer, warmup, streamID)
 	}
+
+	release, limitErr := middleware.AcquireWebSocketConcurrency(d.ctx)
+	if limitErr != nil {
+		return writeResponsesWebSocketError(d.writer, limitErr, streamID)
+	}
+	defer release()
+	*session = nextSession
 
 	requestCtx := d.ctx
 	cancel := func() {}
