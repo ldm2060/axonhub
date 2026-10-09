@@ -23,7 +23,7 @@ func (f turnstileRoundTripperFunc) RoundTrip(req *http.Request) (*http.Response,
 	return f(req)
 }
 
-func setupTurnstileTestService(t *testing.T, publicURL string) (*TurnstileService, *SystemService, *ent.Client, context.Context) {
+func setupTurnstileTestService(t *testing.T) (*TurnstileService, *SystemService, *ent.Client, context.Context) {
 	t.Helper()
 
 	client := enttest.NewEntClient(t, "sqlite3", "file:ent?mode=memory&_fk=1")
@@ -32,7 +32,7 @@ func setupTurnstileTestService(t *testing.T, publicURL string) (*TurnstileServic
 		Ent:         client,
 	})
 	ctx := authz.WithTestBypass(ent.NewContext(context.Background(), client))
-	service := newTurnstileService(systemService, &http.Client{}, publicURL)
+	service := newTurnstileService(systemService, &http.Client{})
 
 	return service, systemService, client, ctx
 }
@@ -60,7 +60,7 @@ func setTurnstileResponse(service *TurnstileService, status int, body string, in
 }
 
 func TestTurnstileSettingsMissingDefaultsDisabled(t *testing.T) {
-	service, systemService, client, ctx := setupTurnstileTestService(t, "")
+	service, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 
 	settings, err := systemService.TurnstileSettings(ctx)
@@ -77,7 +77,7 @@ func TestTurnstileSettingsMissingDefaultsDisabled(t *testing.T) {
 }
 
 func TestTurnstileSettingsRejectMalformedJSON(t *testing.T) {
-	service, systemService, client, ctx := setupTurnstileTestService(t, "")
+	service, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 	storeTurnstileSettings(t, systemService, ctx, `{not-json`)
 
@@ -92,7 +92,7 @@ func TestTurnstileSettingsRejectMalformedJSON(t *testing.T) {
 }
 
 func TestUpdateTurnstileSettingsValidationAndSecretPreservation(t *testing.T) {
-	_, systemService, client, ctx := setupTurnstileTestService(t, "")
+	_, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 
 	_, err := systemService.UpdateTurnstileSettings(ctx, UpdateStoredTurnstileSettings{
@@ -133,7 +133,7 @@ func TestUpdateTurnstileSettingsValidationAndSecretPreservation(t *testing.T) {
 }
 
 func TestTurnstilePublicConfigFailsClosedForIncompleteEnabledSettings(t *testing.T) {
-	service, systemService, client, ctx := setupTurnstileTestService(t, "")
+	service, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 	storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key"}`)
 
@@ -145,11 +145,11 @@ func TestTurnstilePublicConfigFailsClosedForIncompleteEnabledSettings(t *testing
 }
 
 func TestTurnstileVerifyValidatesRequestAndResponse(t *testing.T) {
-	service, systemService, client, ctx := setupTurnstileTestService(t, "https://AUTH.Example.com:8443/app")
+	service, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 	storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 
-	setTurnstileResponse(service, http.StatusOK, `{"success":true,"hostname":"auth.example.com.","action":"signin"}`, func(req *http.Request) {
+	setTurnstileResponse(service, http.StatusOK, `{"success":true,"hostname":"whatever.example.com","action":"signin"}`, func(req *http.Request) {
 		require.Equal(t, turnstileSiteverifyURL, req.URL.String())
 		require.Equal(t, http.MethodPost, req.Method)
 		require.Equal(t, "application/x-www-form-urlencoded", req.Header.Get("Content-Type"))
@@ -169,7 +169,7 @@ func TestTurnstileVerifyValidatesRequestAndResponse(t *testing.T) {
 }
 
 func TestTurnstileVerifyRejectsMissingAndOversizedTokensWithoutRequest(t *testing.T) {
-	service, systemService, client, ctx := setupTurnstileTestService(t, "")
+	service, systemService, client, ctx := setupTurnstileTestService(t)
 	defer client.Close()
 	storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 
@@ -206,7 +206,7 @@ func TestTurnstileVerifyClassifiesProviderFailures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service, systemService, client, ctx := setupTurnstileTestService(t, "")
+			service, systemService, client, ctx := setupTurnstileTestService(t)
 			defer client.Close()
 			storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 			setTurnstileResponse(service, http.StatusOK, tt.body, nil)
@@ -217,26 +217,14 @@ func TestTurnstileVerifyClassifiesProviderFailures(t *testing.T) {
 	}
 }
 
-func TestTurnstileVerifyRejectsWrongActionAndHostname(t *testing.T) {
-	t.Run("wrong action", func(t *testing.T) {
-		service, systemService, client, ctx := setupTurnstileTestService(t, "")
-		defer client.Close()
-		storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
-		setTurnstileResponse(service, http.StatusOK, `{"success":true,"hostname":"other.example.com","action":"signup"}`, nil)
+func TestTurnstileVerifyRejectsWrongAction(t *testing.T) {
+	service, systemService, client, ctx := setupTurnstileTestService(t)
+	defer client.Close()
+	storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
+	setTurnstileResponse(service, http.StatusOK, `{"success":true,"hostname":"other.example.com","action":"signup"}`, nil)
 
-		err := service.Verify(ctx, "token", TurnstileActionSignIn)
-		require.ErrorIs(t, err, ErrTurnstileInvalid)
-	})
-
-	t.Run("canonical hostname mismatch", func(t *testing.T) {
-		service, systemService, client, ctx := setupTurnstileTestService(t, "https://auth.example.com")
-		defer client.Close()
-		storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
-		setTurnstileResponse(service, http.StatusOK, `{"success":true,"hostname":"evil.example.com","action":"signin"}`, nil)
-
-		err := service.Verify(ctx, "token", TurnstileActionSignIn)
-		require.ErrorIs(t, err, ErrTurnstileInvalid)
-	})
+	err := service.Verify(ctx, "token", TurnstileActionSignIn)
+	require.ErrorIs(t, err, ErrTurnstileInvalid)
 }
 
 func TestTurnstileVerifyFailsClosedOnProviderResponseFailures(t *testing.T) {
@@ -252,7 +240,7 @@ func TestTurnstileVerifyFailsClosedOnProviderResponseFailures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service, systemService, client, ctx := setupTurnstileTestService(t, "")
+			service, systemService, client, ctx := setupTurnstileTestService(t)
 			defer client.Close()
 			storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 			setTurnstileResponse(service, tt.status, tt.body, nil)
@@ -265,7 +253,7 @@ func TestTurnstileVerifyFailsClosedOnProviderResponseFailures(t *testing.T) {
 
 func TestTurnstileVerifyFailsClosedOnTransportAndReadErrors(t *testing.T) {
 	t.Run("transport", func(t *testing.T) {
-		service, systemService, client, ctx := setupTurnstileTestService(t, "")
+		service, systemService, client, ctx := setupTurnstileTestService(t)
 		defer client.Close()
 		storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 		service.httpClient = &http.Client{Transport: turnstileRoundTripperFunc(func(*http.Request) (*http.Response, error) {
@@ -277,7 +265,7 @@ func TestTurnstileVerifyFailsClosedOnTransportAndReadErrors(t *testing.T) {
 	})
 
 	t.Run("body read", func(t *testing.T) {
-		service, systemService, client, ctx := setupTurnstileTestService(t, "")
+		service, systemService, client, ctx := setupTurnstileTestService(t)
 		defer client.Close()
 		storeTurnstileSettings(t, systemService, ctx, `{"enabled":true,"site_key":"site-key","secret_key":"server-secret"}`)
 		service.httpClient = &http.Client{Transport: turnstileRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
@@ -305,10 +293,4 @@ func TestTurnstileHTTPClientRejectsRedirects(t *testing.T) {
 	err := client.CheckRedirect(nil, nil)
 	require.ErrorIs(t, err, http.ErrUseLastResponse)
 	require.Equal(t, turnstileRequestTimeout, client.Timeout)
-}
-
-func TestCanonicalHostname(t *testing.T) {
-	require.Equal(t, "auth.example.com", canonicalHostname(" HTTPS://AUTH.Example.com.:8443/path "))
-	require.Empty(t, canonicalHostname("auth.example.com"))
-	require.Empty(t, canonicalHostname("://invalid"))
 }

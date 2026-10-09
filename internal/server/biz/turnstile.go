@@ -43,25 +43,22 @@ type TurnstileServiceParams struct {
 	fx.In
 
 	SystemService *SystemService
-	PublicURL     string `name:"public_url"`
 }
 
 // TurnstileService performs Cloudflare Siteverify requests using an isolated HTTP client.
 type TurnstileService struct {
-	systemService     *SystemService
-	httpClient        *http.Client
-	canonicalHostname string
+	systemService *SystemService
+	httpClient    *http.Client
 }
 
 func NewTurnstileService(params TurnstileServiceParams) *TurnstileService {
-	return newTurnstileService(params.SystemService, newTurnstileHTTPClient(), params.PublicURL)
+	return newTurnstileService(params.SystemService, newTurnstileHTTPClient())
 }
 
-func newTurnstileService(systemService *SystemService, httpClient *http.Client, publicURL string) *TurnstileService {
+func newTurnstileService(systemService *SystemService, httpClient *http.Client) *TurnstileService {
 	return &TurnstileService{
-		systemService:     systemService,
-		httpClient:        httpClient,
-		canonicalHostname: canonicalHostname(publicURL),
+		systemService: systemService,
+		httpClient:    httpClient,
 	}
 }
 
@@ -72,15 +69,6 @@ func newTurnstileHTTPClient() *http.Client {
 			return http.ErrUseLastResponse
 		},
 	}
-}
-
-func canonicalHostname(publicURL string) string {
-	parsed, err := url.Parse(strings.TrimSpace(publicURL))
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		return ""
-	}
-
-	return strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
 }
 
 func newPublicTurnstileConfig(settings *StoredTurnstileSettings) *PublicTurnstileConfig {
@@ -165,7 +153,6 @@ func (s *TurnstileService) Verify(ctx context.Context, token, expectedAction str
 
 type siteverifyResponse struct {
 	Success    bool     `json:"success"`
-	Hostname   string   `json:"hostname"`
 	Action     string   `json:"action"`
 	ErrorCodes []string `json:"error-codes"`
 }
@@ -196,12 +183,6 @@ func (s *TurnstileService) validateResponse(result siteverifyResponse, expectedA
 
 	if result.Action != expectedAction {
 		return turnstileInvalid("challenge action does not match")
-	}
-	if s.canonicalHostname != "" {
-		actualHostname := strings.ToLower(strings.TrimSuffix(result.Hostname, "."))
-		if actualHostname != s.canonicalHostname {
-			return turnstileInvalid("challenge hostname does not match")
-		}
 	}
 
 	return nil
