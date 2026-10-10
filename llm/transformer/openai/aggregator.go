@@ -317,6 +317,7 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 	sort.Ints(choiceIndexes)
 
 	choices := make([]llm.Choice, len(choiceIndexes))
+	completed := len(choiceIndexes) > 0
 
 	for i, choiceIndex := range choiceIndexes {
 		choiceAgg := choicesAggs[choiceIndex]
@@ -402,6 +403,7 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 		// Determine finish reason
 		finishReason := choiceAgg.finishReason
 		if finishReason == nil {
+			completed = false
 			if len(finalToolCalls) > 0 {
 				finishReason = lo.ToPtr("tool_calls")
 			} else {
@@ -455,8 +457,9 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 	}
 
 	return data, llm.ResponseMeta{
-		ID:    response.ID,
-		Usage: responseUsage,
+		ID:        response.ID,
+		Usage:     responseUsage,
+		Completed: completed,
 	}, nil
 }
 

@@ -789,6 +789,10 @@ const QUOTA_VISIBLE_LIMIT = 5;
 type QuotaCellTranslator = ReturnType<typeof useTranslation>['t'];
 
 const QUOTA_WINDOW_LABEL_KEYS: Record<string, string> = {
+  gemini_5h: 'quota.window.gemini_5h',
+  gemini_7d: 'quota.window.gemini_7d',
+  claude_gpt_5h: 'quota.window.claude_gpt_5h',
+  claude_gpt_7d: 'quota.window.claude_gpt_7d',
   '5h': 'quota.window.5h',
   '7d': 'quota.window.7d',
   '30d': 'quota.window.30d',
@@ -863,7 +867,9 @@ function QuotaLimitRow({ limit, t }: { limit: ProviderQuotaLimit; t: QuotaCellTr
   const accountLabel = limit.account ? ` · ${limit.account}` : '';
   return (
     <div className='flex items-center justify-end gap-2'>
-      <span className='text-muted-foreground min-w-24 text-left whitespace-nowrap'>{`${label}${accountLabel}`}</span>
+      <span className='text-muted-foreground min-w-28 text-left whitespace-nowrap' title={`${label}${accountLabel}`}>
+        {`${label}${accountLabel}`}
+      </span>
       <div className='bg-muted h-1.5 w-24 shrink-0 overflow-hidden rounded-full'>
         <div
           className={`h-full ${remaining <= 20 ? 'bg-red-500' : remaining <= 50 ? 'bg-yellow-500' : 'bg-green-500'}`}

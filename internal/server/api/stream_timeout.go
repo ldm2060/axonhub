@@ -19,7 +19,11 @@ type StreamWriteOptions struct {
 	ResponseAlreadyCommitted bool
 	// Cancel interrupts the context used to create the upstream stream. Writers
 	// join pending reads before the caller closes mutable stream wrappers.
-	Cancel          context.CancelFunc
+	Cancel context.CancelFunc
+	// ErrorEncoder renders terminal stream errors as complete SSE events. When
+	// nil the writers fall back to encoding FormatStreamError. Stream adapters
+	// (e.g. the Responses API stream adapter) supply protocol-shaped encoders.
+	ErrorEncoder    StreamErrorEncoder
 	heartbeatFormat sseHeartbeatFormat
 }
 
