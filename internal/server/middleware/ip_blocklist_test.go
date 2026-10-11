@@ -81,6 +81,86 @@ func TestIsBlockedIP(t *testing.T) {
 	}
 }
 
+func TestBlocklistIPCandidates(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	newContext := func(t *testing.T, remoteAddr string, headers map[string]string) *gin.Context {
+		t.Helper()
+
+		recorder := httptest.NewRecorder()
+		ctx, engine := gin.CreateTestContext(recorder)
+		if err := engine.SetTrustedProxies(nil); err != nil {
+			t.Fatalf("failed to set trusted proxies: %v", err)
+		}
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.RemoteAddr = remoteAddr
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
+		ctx.Request = req
+
+		return ctx
+	}
+
+	t.Run("forwarded entry joins the trusted peer", func(t *testing.T) {
+		ctx := newContext(t, "10.0.0.1:12345", map[string]string{
+			"X-Forwarded-For": "203.0.113.10, 198.51.100.20",
+			"X-Real-IP":       "192.0.2.30",
+		})
+
+		got := blocklistIPCandidates(ctx)
+		want := []string{"10.0.0.1", "203.0.113.10"}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("blocklistIPCandidates() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("X-Real-IP used when X-Forwarded-For absent", func(t *testing.T) {
+		ctx := newContext(t, "10.0.0.1:12345", map[string]string{
+			"X-Real-IP": "192.0.2.30",
+		})
+
+		got := blocklistIPCandidates(ctx)
+		want := []string{"10.0.0.1", "192.0.2.30"}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("blocklistIPCandidates() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("no forwarded headers keeps the peer only", func(t *testing.T) {
+		ctx := newContext(t, "203.0.113.10:12345", nil)
+
+		got := blocklistIPCandidates(ctx)
+		want := []string{"203.0.113.10"}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("blocklistIPCandidates() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("deduplicates the peer and forwarded address", func(t *testing.T) {
+		ctx := newContext(t, "203.0.113.10:12345", map[string]string{
+			"X-Forwarded-For": "203.0.113.10",
+		})
+
+		got := blocklistIPCandidates(ctx)
+		want := []string{"203.0.113.10"}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("blocklistIPCandidates() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("forwarded candidate is blocked as the logged IP", func(t *testing.T) {
+		ctx := newContext(t, "10.0.0.1:12345", map[string]string{
+			"X-Forwarded-For": "203.0.113.10",
+		})
+
+		if !isBlockedIP(blocklistIPCandidates(ctx), []string{"203.0.113.10"}) {
+			t.Fatal("expected the forwarded candidate to be blocked")
+		}
+	})
+}
+
 func TestClientIPCandidates(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
