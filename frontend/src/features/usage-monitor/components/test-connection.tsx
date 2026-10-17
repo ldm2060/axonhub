@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,18 @@ interface Props {
   apiKey?: string;
 }
 
-export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variables, displayFields, providerType, apiKey }: Props) {
+// Memoized so typing in dialog fields that TestConnection doesn't depend on
+// (e.g. the channel name) doesn't re-render this subtree.
+export const TestConnection = memo(function TestConnection({
+  apiUrl,
+  apiMethod,
+  apiHeaders,
+  apiBody,
+  variables,
+  displayFields,
+  providerType,
+  apiKey,
+}: Props) {
   const { t } = useTranslation();
   const testMutation = useTestUsageMonitorChannel();
   const [result, setResult] = useState<TestResult | null>(null);
@@ -109,4 +120,4 @@ export function TestConnection({ apiUrl, apiMethod, apiHeaders, apiBody, variabl
       )}
     </div>
   );
-}
+});

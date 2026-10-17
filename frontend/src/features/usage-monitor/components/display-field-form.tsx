@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { Plus, Trash2, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import type { DisplayField, Variable } from '../data/schema';
 interface Props {
   displayFields: DisplayField[];
   variables: Variable[];
-  onChange: (displayFields: DisplayField[]) => void;
+  onChange: Dispatch<SetStateAction<DisplayField[]>>;
   readOnly?: boolean;
 }
 
@@ -21,69 +21,26 @@ function generateKey(): string {
   return `df_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function DisplayFieldForm({ displayFields, variables, onChange, readOnly }: Props) {
-  const { t } = useTranslation();
-
-  function updateField(index: number, updates: Partial<DisplayField>) {
-    const next = [...displayFields];
-    next[index] = { ...next[index], ...updates };
-    onChange(next);
-  }
-
-  function removeField(index: number) {
-    onChange(displayFields.filter((_, i) => i !== index));
-  }
-
-  function addField() {
-    const newField: DisplayField = {
-      key: generateKey(),
-      label: '',
-      valueRef: '',
-      format: 'text',
-      displayOrder: displayFields.length,
-    };
-    onChange([...displayFields, newField]);
-  }
-
-  return (
-    <div className='space-y-4'>
-      {displayFields.map((df, index) => (
-        <DisplayFieldItem
-          key={df.key}
-          df={df}
-          index={index}
-          variables={variables}
-          readOnly={readOnly}
-          onUpdate={(updates) => updateField(index, updates)}
-          onRemove={() => removeField(index)}
-        />
-      ))}
-
-      {!readOnly && (
-        <Button type='button' variant='outline' onClick={addField} className='w-full'>
-          <Plus className='mr-1.5 size-4' />
-          {t('usageMonitor.addDisplayField')}
-        </Button>
-      )}
-    </div>
-  );
-}
-
+// Memoized so editing one item (or unrelated dialog state) doesn't re-render every item.
+// `variableKeys` is passed as a joined string (not the array) so its identity stays
+// value-stable while the user edits variable paths — array identity would break the memo.
 interface DisplayFieldItemProps {
   df: DisplayField;
   index: number;
-  variables: Variable[];
+  variableKeys: string;
   readOnly?: boolean;
-  onUpdate: (updates: Partial<DisplayField>) => void;
-  onRemove: () => void;
+  onUpdate: (index: number, updates: Partial<DisplayField>) => void;
+  onRemove: (index: number) => void;
 }
 
-function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }: DisplayFieldItemProps) {
+function DisplayFieldItem({ df, index, variableKeys, readOnly, onUpdate, onRemove }: DisplayFieldItemProps) {
   const { t } = useTranslation();
   const [badgeOpen, setBadgeOpen] = useState(false);
 
+  const keys = useMemo(() => (variableKeys ? variableKeys.split('\n') : []), [variableKeys]);
+
   // Determine if valueRef matches a variable key
-  const isVariableRef = variables.some((v) => v.key === df.valueRef);
+  const isVariableRef = keys.includes(df.valueRef);
 
   return (
     <div className='space-y-3 rounded-lg border p-3'>
@@ -96,7 +53,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
             type='button'
             variant='ghost'
             size='icon-sm'
-            onClick={onRemove}
+            onClick={() => onRemove(index)}
             className='text-destructive hover:text-destructive'
             aria-label={t('usageMonitor.deleteDisplayField')}
           >
@@ -111,7 +68,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           <Label>{t('usageMonitor.field.label')}</Label>
           <Input
             value={df.label}
-            onChange={(e) => onUpdate({ label: e.target.value })}
+            onChange={(e) => onUpdate(index, { label: e.target.value })}
             placeholder={t('usageMonitor.field.label')}
             disabled={readOnly}
           />
@@ -120,7 +77,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
         {/* Display Format */}
         <div className='space-y-1.5'>
           <Label>{t('usageMonitor.field.format')}</Label>
-          <Select value={df.format} onValueChange={(v) => onUpdate({ format: v as DisplayField['format'] })} disabled={readOnly}>
+          <Select value={df.format} onValueChange={(v) => onUpdate(index, { format: v as DisplayField['format'] })} disabled={readOnly}>
             <SelectTrigger className='w-full'>
               <SelectValue />
             </SelectTrigger>
@@ -142,9 +99,9 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
             onValueChange={(val) => {
               if (val === '__expression__') {
                 // Switch to expression mode - clear valueRef so user types expression
-                onUpdate({ valueRef: '' });
+                onUpdate(index, { valueRef: '' });
               } else {
-                onUpdate({ valueRef: val });
+                onUpdate(index, { valueRef: val });
               }
             }}
             disabled={readOnly}
@@ -153,13 +110,11 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
               <SelectValue placeholder={t('usageMonitor.displayField.valueRef')} />
             </SelectTrigger>
             <SelectContent>
-              {variables
-                .filter((v) => v.key)
-                .map((v) => (
-                  <SelectItem key={v.key} value={v.key}>
-                    {v.key}
-                  </SelectItem>
-                ))}
+              {keys.map((k) => (
+                <SelectItem key={k} value={k}>
+                  {k}
+                </SelectItem>
+              ))}
               <SelectItem value='__expression__'>{t('usageMonitor.displayField.expression')}</SelectItem>
             </SelectContent>
           </Select>
@@ -171,7 +126,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
             <Label>{t('usageMonitor.field.expression')}</Label>
             <Input
               value={df.valueRef}
-              onChange={(e) => onUpdate({ valueRef: e.target.value })}
+              onChange={(e) => onUpdate(index, { valueRef: e.target.value })}
               placeholder='${var1}/${var2}*100'
               className='font-mono'
               disabled={readOnly}
@@ -185,7 +140,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           <Label>{t('usageMonitor.field.unit')}</Label>
           <Input
             value={df.unit ?? ''}
-            onChange={(e) => onUpdate({ unit: e.target.value || undefined })}
+            onChange={(e) => onUpdate(index, { unit: e.target.value || undefined })}
             placeholder='%'
             disabled={readOnly}
           />
@@ -196,7 +151,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           <Label>{t('usageMonitor.displayField.group')}</Label>
           <Input
             value={df.group ?? ''}
-            onChange={(e) => onUpdate({ group: e.target.value || undefined })}
+            onChange={(e) => onUpdate(index, { group: e.target.value || undefined })}
             placeholder='primary'
             disabled={readOnly}
           />
@@ -207,7 +162,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
           <Label>{t('usageMonitor.displayField.groupLabelRef')}</Label>
           <Input
             value={df.groupLabelRef ?? ''}
-            onChange={(e) => onUpdate({ groupLabelRef: e.target.value || undefined })}
+            onChange={(e) => onUpdate(index, { groupLabelRef: e.target.value || undefined })}
             placeholder='additional_0_name'
             className='font-mono'
             disabled={readOnly}
@@ -220,7 +175,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
             <Label>{t('usageMonitor.displayField.totalRef')}</Label>
             <Select
               value={df.totalRef || '__none__'}
-              onValueChange={(val) => onUpdate({ totalRef: val === '__none__' ? undefined : val })}
+              onValueChange={(val) => onUpdate(index, { totalRef: val === '__none__' ? undefined : val })}
               disabled={readOnly}
             >
               <SelectTrigger className='w-full'>
@@ -228,13 +183,11 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='__none__'>{t('usageMonitor.displayField.none')}</SelectItem>
-                {variables
-                  .filter((v) => v.key)
-                  .map((v) => (
-                    <SelectItem key={v.key} value={v.key}>
-                      {v.key}
-                    </SelectItem>
-                  ))}
+                {keys.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {k}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -260,7 +213,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
               <Label>{t('usageMonitor.displayField.badgeKey')}</Label>
               <Input
                 value={df.badge ?? ''}
-                onChange={(e) => onUpdate({ badge: e.target.value || undefined })}
+                onChange={(e) => onUpdate(index, { badge: e.target.value || undefined })}
                 placeholder='tier'
                 className='font-mono'
                 disabled={readOnly}
@@ -270,7 +223,7 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
               <Label>{t('usageMonitor.displayField.badgePresets')}</Label>
               <Input
                 value={df.badgePresets ?? ''}
-                onChange={(e) => onUpdate({ badgePresets: e.target.value || undefined })}
+                onChange={(e) => onUpdate(index, { badgePresets: e.target.value || undefined })}
                 placeholder='{"free":"gradient","pro":"blue"}'
                 className='font-mono text-xs'
                 disabled={readOnly}
@@ -282,3 +235,65 @@ function DisplayFieldItem({ df, index, variables, readOnly, onUpdate, onRemove }
     </div>
   );
 }
+
+const MemoizedDisplayFieldItem = memo(DisplayFieldItem);
+
+// Memoized so typing in unrelated dialog fields (name, API key, ...) skips
+// re-rendering the whole display-field list, which is large for template channels.
+export const DisplayFieldForm = memo(function DisplayFieldForm({ displayFields, variables, onChange, readOnly }: Props) {
+  const { t } = useTranslation();
+
+  const updateField = useCallback(
+    (index: number, updates: Partial<DisplayField>) => {
+      onChange((prev) => {
+        const next = [...prev];
+        next[index] = { ...next[index], ...updates };
+        return next;
+      });
+    },
+    [onChange]
+  );
+
+  const removeField = useCallback((index: number) => onChange((prev) => prev.filter((_, i) => i !== index)), [onChange]);
+
+  const addField = useCallback(
+    () =>
+      onChange((prev) => [
+        ...prev,
+        {
+          key: generateKey(),
+          label: '',
+          valueRef: '',
+          format: 'text',
+          displayOrder: prev.length,
+        },
+      ]),
+    [onChange]
+  );
+
+  // Joined string keeps this prop value-stable across variable edits (see DisplayFieldItemProps).
+  const variableKeys = useMemo(() => variables.map((v) => v.key).join('\n'), [variables]);
+
+  return (
+    <div className='space-y-4'>
+      {displayFields.map((df, index) => (
+        <MemoizedDisplayFieldItem
+          key={df.key}
+          df={df}
+          index={index}
+          variableKeys={variableKeys}
+          readOnly={readOnly}
+          onUpdate={updateField}
+          onRemove={removeField}
+        />
+      ))}
+
+      {!readOnly && (
+        <Button type='button' variant='outline' onClick={addField} className='w-full'>
+          <Plus className='mr-1.5 size-4' />
+          {t('usageMonitor.addDisplayField')}
+        </Button>
+      )}
+    </div>
+  );
+});
