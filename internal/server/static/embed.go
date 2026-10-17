@@ -49,6 +49,7 @@ var apiPrefixes = []string{
 	"/admin/oidc",
 	"/auth",
 	"/anthropic",
+	"/codex",
 	"/doubao",
 	"/gemini",
 	"/jina",

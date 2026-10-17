@@ -402,6 +402,9 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 			log.Debug(ctx, "Close chat stream")
 
 			err := result.ChatCompletionStream.Close()
+			if waiter, ok := result.ChatCompletionStream.(streams.FinalizationWaiter); ok {
+				waiter.WaitForFinalization()
+			}
 			if err != nil {
 				logger.Error(ctx, "Error closing stream", log.Cause(err))
 			}
@@ -635,9 +638,6 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 		}
 		if result.ok {
 			cur := result.event
-			if terminalTracker.Observe(cur) {
-				terminalSeen = true
-			}
 			if ctx.Err() != nil {
 				eventsAfterCancel++
 				if eventsAfterCancel > maxStreamEventsAfterCancel {
@@ -648,7 +648,16 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 					return
 				}
 			}
-			if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
+			if err := writeStreamDelivery(ctx, stream, func() (bool, error) {
+				if err := writeSSEEvent(ctx, c.Writer, cur.Type, cur.Data); err != nil {
+					return false, err
+				}
+				terminal := !terminalSeen && terminalTracker.Observe(cur)
+				if terminal {
+					terminalSeen = true
+				}
+				return terminal, nil
+			}); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write SSE event", log.Cause(err))
 
@@ -717,6 +726,7 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 		return
 	}
 }
+
 
 func streamExpectedChoices(stream streams.Stream[*httpclient.StreamEvent]) int {
 	if s, ok := stream.(interface{ ExpectedStreamChoices() int }); ok {
@@ -820,6 +830,9 @@ func (w *sseErrorWriter) Write(data []byte) (int, error) {
 	}
 
 	n, err := w.writer.Write(data)
+	if err == nil && n != len(data) {
+		err = io.ErrShortWrite
+	}
 	if err != nil {
 		w.err = err
 	}
@@ -833,6 +846,9 @@ func (w *sseErrorWriter) WriteString(data string) (int, error) {
 	}
 
 	n, err := io.WriteString(w.writer, data)
+	if err == nil && n != len(data) {
+		err = io.ErrShortWrite
+	}
 	if err != nil {
 		w.err = err
 	}
@@ -868,8 +884,12 @@ func writeAndFlushSSE(ctx context.Context, writer http.ResponseWriter, write fun
 	defer clearSSEWriteDeadline(ctx, writer)
 
 	if write != nil {
-		if err := write(writer); err != nil {
+		errorWriter := &sseErrorWriter{writer: writer}
+		if err := write(errorWriter); err != nil {
 			return err
+		}
+		if errorWriter.err != nil {
+			return errorWriter.err
 		}
 	}
 
@@ -885,6 +905,9 @@ type responseWriterUnwrapper interface {
 }
 
 func flushResponseWriter(writer http.ResponseWriter) error {
+	if headerWriter, ok := writer.(interface{ WriteHeaderNow() }); ok {
+		headerWriter.WriteHeaderNow()
+	}
 	if flusher, ok := writer.(responseWriterFlushError); ok {
 		return flusher.FlushError()
 	}
@@ -959,6 +982,7 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 
 	waiter := newStreamEventWaiter(ctx, stream, opts)
 	defer waiter.Stop()
+	terminalDelivered := false
 	for {
 		result := waiter.Next()
 		if !result.ok {
@@ -998,12 +1022,19 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 				}
 			}
 
-			c.Writer.Flush()
+			if err := writeStreamDelivery(ctx, stream, func() (bool, error) {
+				return terminalDelivered, flushResponseWriter(c.Writer)
+			}); err != nil {
+				clientDisconnected = true
+				log.Warn(ctx, "Failed to flush binary stream", log.Cause(err))
+			}
+
 			return
 		}
 
 		cur := result.event
 		if cur != nil && cur.Type == httpclient.BinaryStreamDoneEventType {
+			terminalDelivered = true
 			continue
 		}
 
@@ -1026,6 +1057,7 @@ func WriteBinaryStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 		if err := writeStreamChunk(ctx, c.Writer, cur.Data); err != nil {
 			clientDisconnected = true
 			log.Warn(ctx, "Failed to write binary stream chunk", log.Cause(err))
+
 			return
 		}
 	}

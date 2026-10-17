@@ -20,6 +20,7 @@ var Module = fx.Module(
 	fx.Provide(NewTypeSafeHandlers),
 	fx.Provide(NewDoubaoHandlers),
 	fx.Provide(NewCodexHandlers),
+	fx.Provide(NewCodexCompatibilityHandlers),
 	fx.Provide(NewXAIHandlers),
 	fx.Provide(NewClaudeCodeHandlers),
 	fx.Provide(NewZCodeHandlers),

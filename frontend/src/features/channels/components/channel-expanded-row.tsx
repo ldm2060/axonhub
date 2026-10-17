@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { useChannelDetails } from '../data/channels';
 import { CHANNEL_CONFIGS } from '../data/config_channels';
+import { getEffectiveResponsesFormats } from '../data/protocol-options';
 import { Channel } from '../data/schema';
 
 interface ChannelExpandedRowProps {
@@ -18,6 +19,7 @@ export const ChannelExpandedRow = memo(
     const { data: detailedChannel } = useChannelDetails(listChannel.id);
     const channel = detailedChannel ?? listChannel;
     const config = CHANNEL_CONFIGS[channel.type];
+    const responsesFormats = config?.apiFormat === 'openai/responses' ? getEffectiveResponsesFormats(channel) : [];
 
     return (
       <div className='bg-muted/30 hover:bg-muted/50 p-6'>
@@ -38,7 +40,11 @@ export const ChannelExpandedRow = memo(
                 </div>
                 <div className='flex items-center justify-between'>
                   <span className='text-muted-foreground'>{t('channels.expandedRow.apiFormat')}:</span>
-                  <span className='font-mono text-xs'>{getApiFormatLabel(config?.apiFormat)}</span>
+                  <span className='font-mono text-xs'>
+                    {responsesFormats.length > 0
+                      ? responsesFormats.map(getApiFormatLabel).join(', ')
+                      : getApiFormatLabel(config?.apiFormat)}
+                  </span>
                 </div>
                 <div className='flex justify-between'>
                   <span className='text-muted-foreground'>{t('common.columns.createdAt')}:</span>
@@ -84,31 +90,23 @@ export const ChannelExpandedRow = memo(
             </div>
           </div>
 
-          {(() => {
-            // Prefer the hide-aware allModelEntries so transformed originals are
-            // hidden while untransformed models still display. Fall back to raw
-            // supportedModels when allModelEntries is unavailable.
-            const entries = channel.allModelEntries;
-            const models = entries && entries.length > 0 ? entries.map((entry) => entry.requestModel) : channel.supportedModels;
-            if (!models || models.length === 0) return null;
-            return (
-              <div className='space-y-3'>
-                <h4 className='text-sm font-semibold'>{t('channels.expandedRow.supportedModels')}</h4>
-                <div className='flex flex-wrap gap-2'>
-                  {models.slice(0, 5).map((model) => (
-                    <Badge key={model} variant='secondary' className='font-mono text-xs'>
-                      {model}
-                    </Badge>
-                  ))}
-                  {models.length > 5 && (
-                    <span className='text-muted-foreground flex items-center text-xs italic'>
-                      {t('channels.expandedRow.moreModels', { count: models.length - 5 })}
-                    </span>
-                  )}
-                </div>
+          {channel.supportedModels && channel.supportedModels.length > 0 && (
+            <div className='space-y-3'>
+              <h4 className='text-sm font-semibold'>{t('channels.expandedRow.supportedModels')}</h4>
+              <div className='flex flex-wrap gap-2'>
+                {channel.supportedModels.slice(0, 5).map((model) => (
+                  <Badge key={model} variant='secondary' className='font-mono text-xs'>
+                    {model}
+                  </Badge>
+                ))}
+                {channel.supportedModels.length > 5 && (
+                  <span className='text-muted-foreground flex items-center text-xs italic'>
+                    {t('channels.expandedRow.moreModels', { count: channel.supportedModels.length - 5 })}
+                  </span>
+                )}
               </div>
-            );
-          })()}
+            </div>
+          )}
         </div>
       </div>
     );

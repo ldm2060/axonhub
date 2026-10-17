@@ -6,8 +6,32 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/llm"
 )
+
+func TestChannelService_BuildResponsesWebSocketOutbound(t *testing.T) {
+	// Given a channel with a WebSocket Responses endpoint and a usable key
+	entity := &ent.Channel{
+		ID:          1,
+		Name:        "responses-ws",
+		Type:        channel.TypeOpenaiResponses,
+		BaseURL:     "https://provider.test",
+		Credentials: objects.ChannelCredentials{APIKeys: []string{"test-key"}},
+	}
+	ch := &Channel{Channel: entity, cachedEnabledAPIKeys: []string{"test-key"}}
+
+	// When the endpoint-specific outbound is built
+	outbound, err := (&ChannelService{}).buildNonDefaultEndpointOutbound(entity, ch, objects.ChannelEndpoint{
+		APIFormat: llm.APIFormatOpenAIResponseWebSocket.String(),
+		BaseURL:   entity.BaseURL,
+	})
+
+	// Then the transformer reports the exact selected protocol
+	require.NoError(t, err)
+	require.Equal(t, llm.APIFormatOpenAIResponseWebSocket, outbound.APIFormat())
+}
 
 func TestChannel_IsModelSupported_WithExtraModelPrefix(t *testing.T) {
 	tests := []struct {

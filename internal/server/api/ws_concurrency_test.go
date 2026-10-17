@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -20,7 +21,6 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/llm/httpclient"
-	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 type concurrencyTestProcessor responsesWebSocketProcessFunc
@@ -72,16 +72,18 @@ func newConcurrencyWebSocketServer(t *testing.T, cfg *middleware.ConcurrencyLimi
 		}
 		c.Request = c.Request.WithContext(contexts.WithPrincipalUser(c.Request.Context(), &ent.User{ID: userID}))
 	}, middleware.WithConcurrencyLimit(cfg))
-	if dispatcher {
-		router.GET("/v1/responses", func(c *gin.Context) { serveResponsesWebSocket(c, time.Second*5, process, nil) })
-	} else {
-		// Exercise the handler actually registered by the production router.
-		handlers := &OpenAIHandlers{ResponseCompletionHandlers: &ChatCompletionHandlers{
-			Processor:                  concurrencyTestProcessor(process),
-			ChatCompletionOrchestrator: &orchestrator.ChatCompletionOrchestrator{Inbound: responses.NewInboundTransformer()},
-		}}
-		router.GET("/v1/responses", handlers.CreateResponseWebSocket)
+	// The production router registers the Responses dispatcher, so both variants
+	// exercise the same handler. Surface the process error message, like the
+	// production transformOrchestratorError does.
+	transformError := func(_ context.Context, err error) *httpclient.Error {
+		body, _ := json.Marshal(map[string]any{"error": map[string]any{"message": err.Error(), "type": "server_error"}})
+		return &httpclient.Error{
+			StatusCode: http.StatusInternalServerError,
+			Status:     http.StatusText(http.StatusInternalServerError),
+			Body:       body,
+		}
 	}
+	router.GET("/v1/responses", func(c *gin.Context) { serveResponsesWebSocket(c, time.Second*5, process, transformError) })
 	router.POST("/v1/responses", func(c *gin.Context) {
 		if c.GetHeader("X-Test-Hold") == "true" {
 			postEntered <- struct{}{}
@@ -159,14 +161,9 @@ func TestWebSocketConcurrencySharedWithHTTP(t *testing.T) {
 				t.Helper()
 				send(conn)
 				event := readConcurrencyEvent(t, conn)
-				if dispatcher {
-					require.Equal(t, "error", gjson.GetBytes(event, "type").String())
-					require.Equal(t, int64(429), gjson.GetBytes(event, "status").Int())
-					require.Equal(t, "concurrency_limit_exceeded", gjson.GetBytes(event, "error.code").String())
-				} else {
-					require.Equal(t, "response.failed", gjson.GetBytes(event, "type").String())
-					require.Equal(t, "concurrency_limit_exceeded", gjson.GetBytes(event, "response.error.code").String())
-				}
+				require.Equal(t, "error", gjson.GetBytes(event, "type").String())
+				require.Equal(t, int64(429), gjson.GetBytes(event, "status").Int())
+				require.Equal(t, "concurrency_limit_exceeded", gjson.GetBytes(event, "error.code").String())
 			}
 
 			send(connections[0])

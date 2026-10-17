@@ -76,6 +76,10 @@ converters:
 
 # This section declares type mapping between the GraphQL and Go type systems.
 models:
+  CodexCompatibilitySettings:
+    model: github.com/ldm2060/axonhub/internal/server/biz.CodexCompatibilitySettings
+  UpdateCodexCompatibilitySettingsInput:
+    model: github.com/ldm2060/axonhub/internal/server/biz.CodexCompatibilitySettings
   # Defines the ID field as Go 'int'.
   ID:
     model:
@@ -392,6 +396,12 @@ models:
   GCPCredentialInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.GCPCredential
+  VertexAPIKey:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.VertexAPIKey
+  VertexAPIKeyInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.VertexAPIKey
   ModelIdentify:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.ModelIdentify

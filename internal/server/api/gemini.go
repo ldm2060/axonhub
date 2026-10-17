@@ -110,6 +110,8 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 	first := true
 	waiter := newStreamEventWaiter(ctx, stream, opts)
 	defer waiter.Stop()
+	terminalSeen := false
+	terminalTracker := orchestrator.NewStreamTerminalTracker(streamExpectedChoices(stream))
 
 	for {
 		result := waiter.Next()
@@ -128,7 +130,15 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 			if !first {
 				separator = []byte(",")
 			}
-			if err := writeStreamChunk(ctx, c.Writer, separator, cur.Data); err != nil {
+			if err := writeStreamDelivery(ctx, stream, func() (bool, error) {
+				if err := writeStreamChunk(ctx, c.Writer, separator, cur.Data); err != nil {
+					return false, err
+				}
+				if terminalTracker.Observe(cur) {
+					terminalSeen = true
+				}
+				return false, nil
+			}); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write Gemini stream event", log.Cause(err))
 				return
@@ -153,8 +163,14 @@ func WriteGeminiStreamWithOptions(c *gin.Context, stream streams.Stream[*httpcli
 			}
 		}
 
-		if err := writeStreamChunk(ctx, c.Writer, []byte("]")); err != nil {
-			log.Warn(ctx, "Failed to close Gemini stream", log.Cause(err))
+		if err := writeStreamDelivery(ctx, stream, func() (bool, error) {
+			if err := writeStreamChunk(ctx, c.Writer, []byte("]")); err != nil {
+				return false, err
+			}
+			return terminalSeen, nil
+		}); err != nil {
+			clientDisconnected = true
+			log.Warn(ctx, "Failed to close Gemini stream JSON array", log.Cause(err))
 		}
 		return
 	}

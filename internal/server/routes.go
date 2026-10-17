@@ -18,33 +18,34 @@ import (
 type Handlers struct {
 	fx.In
 
-	Graphql        *gql.GraphqlHandler
-	OpenAPIGraphql *openapi.GraphqlHandler
-	OpenAI         *api.OpenAIHandlers
-	Doubao         *api.DoubaoHandlers
-	Anthropic      *api.AnthropicHandlers
-	Gemini         *api.GeminiHandlers
-	AiSDK          *api.AiSDKHandlers
-	Playground     *api.PlaygroundHandlers
-	System         *api.SystemHandlers
-	Auth           *api.AuthHandlers
-	Avatar         *api.AvatarHandlers
-	Invitation     *api.InvitationHandlers
-	Jina           *api.JinaHandlers
-	TypeSafe       *api.TypeSafeHandlers
-	Codex          *api.CodexHandlers
-	XAI            *api.XAIHandlers
-	ClaudeCode     *api.ClaudeCodeHandlers
-	ZCode          *api.ZCodeHandlers
-	Antigravity    *api.AntigravityHandlers
-	Copilot        *api.CopilotHandlers
-	KimiCode       *api.KimiCodeHandlers
-	RequestContent *api.RequestContentHandlers
-	OIDC           *api.OIDCHandlers
-	OAuthProvider  *api.OAuthProviderHandlers
-	RequestPreview *api.RequestPreviewHandlers
-	SignUp         *api.SignUpHandlers
-	EmailToken     *api.EmailTokenAPI
+	Graphql            *gql.GraphqlHandler
+	OpenAPIGraphql     *openapi.GraphqlHandler
+	OpenAI             *api.OpenAIHandlers
+	Doubao             *api.DoubaoHandlers
+	Anthropic          *api.AnthropicHandlers
+	Gemini             *api.GeminiHandlers
+	AiSDK              *api.AiSDKHandlers
+	Playground         *api.PlaygroundHandlers
+	System             *api.SystemHandlers
+	Auth               *api.AuthHandlers
+	Avatar             *api.AvatarHandlers
+	Invitation         *api.InvitationHandlers
+	Jina               *api.JinaHandlers
+	TypeSafe           *api.TypeSafeHandlers
+	Codex              *api.CodexHandlers
+	CodexCompatibility *api.CodexCompatibilityHandlers
+	XAI                *api.XAIHandlers
+	ClaudeCode         *api.ClaudeCodeHandlers
+	ZCode              *api.ZCodeHandlers
+	Antigravity        *api.AntigravityHandlers
+	Copilot            *api.CopilotHandlers
+	KimiCode           *api.KimiCodeHandlers
+	RequestContent     *api.RequestContentHandlers
+	OIDC               *api.OIDCHandlers
+	OAuthProvider      *api.OAuthProviderHandlers
+	RequestPreview     *api.RequestPreviewHandlers
+	SignUp             *api.SignUpHandlers
+	EmailToken         *api.EmailTokenAPI
 }
 
 type Services struct {
@@ -222,6 +223,8 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 		openAPIGroup.POST("/webhook/echo", handlers.System.WebhookEcho)
 	}
 
+	registerCodexRoutes(server, handlers, services)
+
 	apiMiddlewares := []gin.HandlerFunc{
 		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
@@ -243,7 +246,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	// timeout per response.create event, so it must not inherit the ordinary
 	// single-request timeout from apiGroup.
 	responsesWebSocketGroup := server.Group("/", apiMiddlewares...)
-	responsesWebSocketGroup.GET("/v1/responses", handlers.OpenAI.CreateResponseWebSocket)
+	responsesWebSocketGroup.GET("/v1/responses", handlers.OpenAI.CreateResponseWebSocket(server.Config.LLMRequestTimeout))
 	responsesWebSocketGroup.GET("/v1/responses/compact", handlers.OpenAI.CompactResponseWebSocket)
 	responsesWebSocketGroup.GET("/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
 	responsesWebSocketGroup.GET("/anthropic/v1/messages", handlers.Anthropic.CreateMessageWebSocket)

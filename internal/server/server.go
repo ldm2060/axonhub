@@ -22,6 +22,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/gc"
 	"github.com/ldm2060/axonhub/internal/server/gql"
 	"github.com/ldm2060/axonhub/internal/server/gql/openapi"
+	"github.com/ldm2060/axonhub/internal/server/lifecycle"
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
@@ -35,6 +36,11 @@ func New(config Config, concurrencyLimit *middleware.ConcurrencyLimitConfig) *Se
 	}
 
 	engine := gin.New()
+	serverLifetime := lifecycle.New()
+	engine.Use(func(c *gin.Context) {
+		c.Request = c.Request.WithContext(serverLifetime.Attach(c.Request.Context()))
+		c.Next()
+	})
 
 	// Gin trusts all proxies by default. Never inherit that unsafe default:
 	// forwarded client IP headers must only be honored for explicitly configured
@@ -56,6 +62,7 @@ func New(config Config, concurrencyLimit *middleware.ConcurrencyLimitConfig) *Se
 		Config:           config,
 		Engine:           engine,
 		ConcurrencyLimit: concurrencyLimit,
+		lifetime:         serverLifetime,
 	}
 }
 
@@ -67,6 +74,7 @@ type Server struct {
 	pprofServer      *http.Server
 	addr             string
 	ConcurrencyLimit *middleware.ConcurrencyLimitConfig
+	lifetime         *lifecycle.Manager
 }
 
 func (srv *Server) newHTTPServer(addr string) *http.Server {
@@ -130,6 +138,13 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 		if err := srv.pprofServer.Shutdown(ctx); err != nil {
 			log.Error(ctx, "pprof server shutdown error", log.Cause(err))
 		}
+	}
+
+	if srv.lifetime != nil {
+		srv.lifetime.Shutdown(context.Cause(ctx))
+	}
+	if srv.server == nil {
+		return nil
 	}
 
 	return srv.server.Shutdown(ctx)

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // Process executes the non-streaming LLM pipeline
@@ -150,6 +151,9 @@ func (p *pipeline) autoAggregateStream(
 		return nil, fmt.Errorf("failed to apply inbound raw response middlewares: %w", err)
 	}
 	resp.Headers = httpclient.MergeForwardResponseHeaders(resp.Headers, responseHeaders)
+	if observer, ok := inboundStream.(streams.DeliveryAcknowledger); ok {
+		observer.AcknowledgeDelivery()
+	}
 
 	return resp, nil
 }

@@ -222,8 +222,8 @@ func TestWebSocketStreamDeadlineSendsTerminalError(t *testing.T) {
 	defer conn.Close()
 	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","model":"test","input":"hi"}`)))
 	message := readConcurrencyEvent(t, conn)
-	require.Equal(t, "response.failed", gjson.GetBytes(message, "type").String())
-	require.Contains(t, gjson.GetBytes(message, "response.error.message").String(), context.DeadlineExceeded.Error())
+	require.Equal(t, "error", gjson.GetBytes(message, "type").String())
+	require.Contains(t, gjson.GetBytes(message, "error.message").String(), context.DeadlineExceeded.Error())
 	requireConcurrencyIdle(t, cfg)
 }
 

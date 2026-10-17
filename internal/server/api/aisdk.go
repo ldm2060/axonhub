@@ -74,6 +74,8 @@ func WriteJSONStream(c *gin.Context, stream streams.Stream[*httpclient.StreamEve
 func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclient.StreamEvent], opts StreamWriteOptions) {
 	ctx := c.Request.Context()
 	clientDisconnected := false
+	terminalTracker := orchestrator.NewStreamTerminalTracker(streamExpectedChoices(stream))
+	terminalSeen := false
 
 	defer func() {
 		if clientDisconnected {
@@ -103,7 +105,16 @@ func WriteJSONStreamWithOptions(c *gin.Context, stream streams.Stream[*httpclien
 		}
 		if result.ok {
 			cur := result.event
-			if err := writeStreamChunk(ctx, c.Writer, cur.Data); err != nil {
+			if err := writeStreamDelivery(ctx, stream, func() (bool, error) {
+				if err := writeStreamChunk(ctx, c.Writer, cur.Data); err != nil {
+					return false, err
+				}
+				terminal := !terminalSeen && terminalTracker.Observe(cur)
+				if terminal {
+					terminalSeen = true
+				}
+				return terminal, nil
+			}); err != nil {
 				clientDisconnected = true
 				log.Warn(ctx, "Failed to write AI SDK stream event", log.Cause(err))
 				return
