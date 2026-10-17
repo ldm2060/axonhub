@@ -727,7 +727,6 @@ func writeSSEStreamWithoutHeartbeat(c *gin.Context, stream streams.Stream[*httpc
 	}
 }
 
-
 func streamExpectedChoices(stream streams.Stream[*httpclient.StreamEvent]) int {
 	if s, ok := stream.(interface{ ExpectedStreamChoices() int }); ok {
 		return s.ExpectedStreamChoices()
