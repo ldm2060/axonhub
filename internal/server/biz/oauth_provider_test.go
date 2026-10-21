@@ -267,7 +267,7 @@ func TestOAuthProviderScopeAndRedirectURIValidation(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = normalizeRedirectURIs([]string{"http://app.example.com/cb"})
-	require.Error(t, err, "http is only allowed for localhost")
+	require.NoError(t, err)
 
 	_, err = normalizeRedirectURIs([]string{"http://localhost:5173/cb"})
 	require.NoError(t, err)

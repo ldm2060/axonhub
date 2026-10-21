@@ -19,7 +19,7 @@
   "oauthApplications.fields.clientType": "客户端类型",
   "oauthApplications.fields.clientTypeHint": "机密客户端通过密钥认证；公开客户端（SPA、原生应用）仅依赖 PKCE。",
   "oauthApplications.fields.redirectUris": "回调地址",
-  "oauthApplications.fields.redirectUrisHint": "每行一个地址，必须完全匹配；除 localhost 外必须使用 https。",
+  "oauthApplications.fields.redirectUrisHint": "每行一个回调地址，支持 http 和 https。",
   "oauthApplications.fields.clientId": "客户端 ID",
   "oauthApplications.fields.clientIdHint": "客户端 ID 创建后不可更改。",
   "oauthApplications.validation.nameRequired": "名称不能为空",

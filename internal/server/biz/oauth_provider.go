@@ -959,22 +959,8 @@ func validateRedirectURI(uri string) error {
 		return fmt.Errorf("redirect URI must not contain a fragment: %s", uri)
 	}
 
-	switch parsed.Scheme {
-	case "https":
-		if parsed.Host == "" {
-			return fmt.Errorf("redirect URI must include a host: %s", uri)
-		}
-	case "http":
-		switch parsed.Hostname() {
-		case "localhost", "127.0.0.1", "::1":
-		default:
-			return fmt.Errorf("redirect URI must use https (http is only allowed for localhost): %s", uri)
-		}
-	default:
-		// Native applications may use a custom scheme, e.g. myapp://callback.
-		if parsed.Host == "" {
-			return fmt.Errorf("redirect URI must include a host: %s", uri)
-		}
+	if parsed.Host == "" {
+		return fmt.Errorf("redirect URI must include a host: %s", uri)
 	}
 
 	return nil

@@ -19,7 +19,7 @@
   "oauthApplications.fields.clientType": "Client type",
   "oauthApplications.fields.clientTypeHint": "Confidential clients authenticate with a secret. Public clients (SPAs, native apps) rely on PKCE only.",
   "oauthApplications.fields.redirectUris": "Redirect URIs",
-  "oauthApplications.fields.redirectUrisHint": "One URI per line. Must match exactly; https is required except for localhost.",
+  "oauthApplications.fields.redirectUrisHint": "One URI per line. Both http and https are supported.",
   "oauthApplications.fields.clientId": "Client ID",
   "oauthApplications.fields.clientIdHint": "Client ID cannot be changed after creation.",
   "oauthApplications.validation.nameRequired": "Name is required",
