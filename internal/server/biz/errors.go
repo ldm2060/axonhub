@@ -23,4 +23,9 @@ var (
 	ErrTurnstileUnavailable   = errors.New("turnstile verification is unavailable")
 	ErrProjectNotFound        = errors.New("project not found")
 	ErrAPIKeyDeleteEnabled    = errors.New("cannot delete an enabled API key, disable or archive it first")
+
+	// ErrChannelUpdatedConcurrently is returned when an optimistic-locked
+	// channel update loses the race against a concurrent commit. Read-merge-
+	// write callers can detect it with errors.Is and retry the merge.
+	ErrChannelUpdatedConcurrently = errors.New("channel was updated concurrently; retry the operation")
 )

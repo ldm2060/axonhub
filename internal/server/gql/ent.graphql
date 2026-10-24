@@ -1385,6 +1385,7 @@ enum ChannelType @goModel(model: "github.com/ldm2060/axonhub/internal/ent/channe
   commandcode
   commandcode_anthropic
   typesafe
+  cloudflare
 }
 type ChannelUsageMonitorBinding implements Node {
   id: ID!

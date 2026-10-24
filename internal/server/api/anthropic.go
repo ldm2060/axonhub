@@ -12,6 +12,7 @@ import (
 	entprivacy "github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 )
@@ -34,6 +35,7 @@ type AnthropicHandlersParams struct {
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
 	TimeoutConfig               TimeoutConfig
 	SSEKeepAliveConfig          SSEKeepAliveConfig
+	SafeguardsConfig            safeguards.Config `optional:"true"`
 }
 
 type AnthropicHandlers struct {
@@ -64,6 +66,8 @@ func NewAnthropicHandlers(params AnthropicHandlersParams) *AnthropicHandlers {
 
 	handler.sseKeepAlive = params.SSEKeepAliveConfig
 	handler.sseHeartbeatFormat = sseHeartbeatAnthropic
+	handler.safeguardsConfig = params.SafeguardsConfig
+	handler.reviewer = newSafeguardsClassifier(handler.ChatCompletionOrchestrator)
 
 	return &AnthropicHandlers{
 		ChatCompletionHandlers: handler,

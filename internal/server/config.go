@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/internal/tracing"
 )
 
@@ -97,6 +98,8 @@ type Config struct {
 
 	// LLMStreamIdleTimeout is the maximum duration a streaming LLM request may wait without chunks.
 	LLMStreamIdleTimeout time.Duration `conf:"llm_stream_idle_timeout" yaml:"llm_stream_idle_timeout" json:"llm_stream_idle_timeout"`
+
+	Safeguards safeguards.Config `conf:"safeguards" yaml:"safeguards" json:"safeguards"`
 
 	SSEKeepAlive SSEKeepAlive `conf:"sse_keep_alive" yaml:"sse_keep_alive" json:"sse_keep_alive"`
 

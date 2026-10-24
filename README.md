@@ -567,6 +567,12 @@ AxonHub 提供灵活的模型管理系统，支持通过模型关联将抽象模
         <sub><b>llc1123</b></sub>
       </a>
     </td>
+    <td align="center">
+      <a href="https://github.com/djdembeck">
+        <img src="https://github.com/djdembeck.png?size=100" width="100" alt="djdembeck"/><br/>
+        <sub><b>djdembeck</b></sub>
+      </a>
+    </td>
   </tr>
 </table>
 

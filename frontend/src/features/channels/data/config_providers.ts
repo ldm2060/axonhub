@@ -6,6 +6,7 @@ import BurnCloud from '@lobehub/icons/es/BurnCloud/components/Mono.js';
 import Cerebras from '@lobehub/icons/es/Cerebras/components/Mono.js';
 import Claude from '@lobehub/icons/es/Claude/components/Mono.js';
 import Cline from '@lobehub/icons/es/Cline/components/Mono.js';
+import Cloudflare from '@lobehub/icons/es/Cloudflare/components/Mono.js';
 import DeepInfra from '@lobehub/icons/es/DeepInfra/components/Mono.js';
 import DeepSeek from '@lobehub/icons/es/DeepSeek/components/Mono.js';
 import Doubao from '@lobehub/icons/es/Doubao/components/Mono.js';
@@ -178,6 +179,12 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     icon: TypeSafeIcon,
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     channelTypes: ['typesafe'],
+  },
+  cloudflare: {
+    provider: 'cloudflare',
+    icon: Cloudflare,
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    channelTypes: ['cloudflare'],
   },
   xai: {
     provider: 'xai',

@@ -25,6 +25,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/lifecycle"
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/internal/server/video_storage"
 	"github.com/ldm2060/axonhub/internal/tracing"
@@ -180,6 +181,7 @@ func Run(opts ...fx.Option) {
 				}
 			}),
 			fx.Provide(fx.Annotate(func(cfg Config) string { return cfg.PublicURL }, fx.ResultTags(`name:"public_url"`))),
+			fx.Provide(func(cfg Config) safeguards.Config { return cfg.Safeguards }),
 			fx.Provide(func(cfg Config) api.SSEKeepAliveConfig {
 				return api.SSEKeepAliveConfig{
 					Enabled:  cfg.SSEKeepAlive.Enabled,

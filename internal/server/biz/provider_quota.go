@@ -173,6 +173,174 @@ func (s *QuotaChannelStatus) EffectiveStatus(limitType provider_quota.QuotaLimit
 	return provider_quota.EffectiveStatus(s.Limits, s.Status, s.Ready, limitType)
 }
 
+// HOW TO ADD A NEW PROVIDER QUOTA CHECKER
+// ========================================
+//
+// There are two patterns depending on whether the provider has its own
+// channel type or shares an existing OpenAI-compatible channel type:
+//
+// ── PATTERN A: Dedicated channel type (e.g. claudecode, codex, nanogpt) ──
+//
+// 1. Create the checker in internal/server/biz/provider_quota/
+//
+//    Implement the QuotaChecker interface:
+//      - CheckQuota(ctx, ch) -> makes the API request and parses the response internally
+//      - Returns normalized QuotaData with:
+//        * Status: "available", "warning", "exhausted", or "unknown"
+//        * Ready: true for available/warning, false for exhausted/unknown
+//        * NextResetAt: optional timestamp of next quota reset
+//        * RawData: provider-specific data (stored in JSON format)
+//
+//    When the provider reports (or the plan fixes) the length of a limit
+//    window, label the limit with QuotaLimitStatus.WithWindow so it also
+//    carries a PeriodStart. That is what lets the service price the period from
+//    usage logs (see provider_quota_cost.go); limits without a period start
+//    simply get no money estimate. Do NOT derive one from a timestamp that is
+//    an incremental regeneration tick rather than a window boundary — see the
+//    synthetic checker for that case.
+//
+//    Counters for capabilities AxonHub does not route (e.g. search requests)
+//    are listed with a QuotaLimitType that no request modality maps to, are
+//    registered in displayOnlyLimitTypes, and carry no AvailabilityGroup, so
+//    they never gate routing or the channel status — only their own table row
+//    and badge entry.
+//
+// 2. Add the provider type to the database schema
+//
+//    In internal/ent/schema/channel.go:
+//      - Add new value to the channel.Type enum (e.g., "myprovider")
+//
+//    In internal/ent/schema/provider_quota_status.go:
+//      - Add new value to the provider_type enum (e.g., "myprovider")
+//
+// 3. Register the provider in ProviderQuotaService and collection settings
+//
+//    a. Create a registration function (e.g., registerMyProviderSupport())
+//    b. Add it to registerProviderQuotaSupport()
+//    c. Add the provider key to supportedProviderQuotaTypes in provider_quota_settings.go
+//    d. Add the provider name to both frontend system locale files under
+//       system.quota.collection.providers
+//    e. Update getProviderType() to map channel.TypeMyprovider -> "myprovider"
+//    f. Update runQuotaCheck() to include channel.TypeMyprovider in TypeIn filter
+//
+//    Example:
+//
+//      func (svc *ProviderQuotaService) registerMyProviderSupport() {
+//        svc.checkers["myprovider"] = provider_quota.NewMyProviderQuotaChecker(svc.httpClient)
+//      }
+//
+// ── PATTERN B: URL-based detection for OpenAI-compatible providers ──
+//
+//    Use this pattern when the provider reuses channel.TypeOpenai or
+//    channel.TypeOpenaiResponses but has its own quota API.
+//
+// 1. Create the checker in internal/server/biz/provider_quota/
+//
+//    Same QuotaChecker interface as Pattern A, plus:
+//      - SupportsChannel(ch) must check URL (e.g., strings.HasSuffix(host, ".wafer.ai"))
+//
+// 2. Add the provider type to the database schema
+//
+//    In internal/ent/schema/provider_quota_status.go:
+//      - Add new value to the provider_type enum (e.g., "wafer")
+//
+//    Do NOT modify channel.Type enum — the provider reuses TypeOpenai.
+//
+// 3. Add URL detection in internal/server/biz/provider_quota/url_detection.go
+//
+//    a. Add the URL pattern to urlProviderMap (e.g., "wafer.ai": "wafer")
+//    b. The DetectProviderFromURL() function handles the mapping
+//
+// 4. Register the provider in ProviderQuotaService and collection settings
+//
+//    a. Create a registration function (e.g., registerWaferSupport())
+//    b. Add it to registerProviderQuotaSupport()
+//    c. Add the provider key to supportedProviderQuotaTypes in provider_quota_settings.go
+//    d. Add the provider name to both frontend system locale files under
+//       system.quota.collection.providers
+//    e. getProviderType() already handles URL-based detection for TypeOpenai
+//    f. hasCredentialsForProvider() already handles API-key-only auth for URL-detected providers
+//
+//    Example:
+//
+//      func (svc *ProviderQuotaService) registerWaferSupport() {
+//        svc.checkers["wafer"] = provider_quota.NewWaferQuotaChecker(svc.httpClient)
+//      }
+//
+// 5. Regenerate Ent schema
+//
+//    make generate
+//
+// 6. Implement the frontend display (optional)
+//
+//    Add provider-specific display logic in frontend/src/components/quota-badges.tsx:
+//      - Update QuotaData type to include provider-specific fields
+//      - Add display logic for the provider type in QuotaRow component
+//
+// EXAMPLE: CLAUDE CODE PROVIDER (Pattern A)
+// =========================================
+//
+// Checker: internal/server/biz/provider_quota/claudecode_checker.go
+//   - Makes minimal request to Claude Code API
+//   - Internally parses rate limit headers (anthropic-ratelimit-unified-status, etc.)
+//   - Normalizes status (allowed -> available, throttled -> exhausted)
+//   - Detects warning state (utilization >= 80%)
+//   - Maps representative claim to reset time
+//
+// EXAMPLE: CODEX PROVIDER (Pattern A)
+// ===================================
+//
+// Checker: internal/server/biz/provider_quota/codex_checker.go
+//   - Makes request to ChatGPT usage endpoint (/backend-api/wham/usage)
+//   - Internally parses JSON response (plan_type, rate_limit)
+//   - Normalizes status based on limit_reached and allowed flags
+//   - Detects warning state (primary_window.used_percent >= 80)
+//
+// EXAMPLE: NANO GPT PROVIDER (Pattern A, simple API key, non-OAuth)
+// ================================================================
+//
+// Checker: internal/server/biz/provider_quota/nanogpt_checker.go
+//   - Makes request to NanoGPT subscription usage endpoint (/api/subscription/v1/usage)
+//   - Uses simple API key authentication (no OAuth required)
+//   - Internally parses JSON response (state, windows, percentUsed)
+//   - Normalizes status: active→available, grace→warning, inactive→exhausted
+//   - Detects high-usage warning state (any window percentUsed >= 0.8)
+//
+// EXAMPLE: WAFER PROVIDER (Pattern B, URL-based detection)
+// ========================================================
+//
+// Checker: internal/server/biz/provider_quota/wafer_checker.go
+//   - Reuses channel.TypeOpenai / TypeOpenaiResponses
+//   - URL detection: host ending in ".wafer.ai" → provider_type "wafer"
+//   - Makes request to /v1/inference/quota endpoint
+//   - Uses simple API key authentication (no OAuth required)
+//   - Internally parses JSON response (current_period_used_percent, remaining_included_requests)
+//   - Normalizes status: percent < 80 → available, >= 80 → warning, no remaining → exhausted
+//
+// EXAMPLE: SYNTHETIC PROVIDER (Pattern B, URL-based detection)
+// =============================================================
+//
+// Checker: internal/server/biz/provider_quota/synthetic_checker.go
+//   - Reuses channel.TypeOpenai / TypeOpenaiResponses
+//   - URL detection: host ending in ".api.synthetic.new" → provider_type "synthetic"
+//   - Makes request to /v2/quotas endpoint
+//   - Uses simple API key authentication (no OAuth required)
+//   - Internally parses nested JSON (subscription, search, freeToolCalls, weeklyTokenLimit, rollingFiveHourLimit)
+//   - Normalizes status: limited=true → exhausted, percentRemaining < 20 → warning, else → available
+//   - The weekly limit carries the provider's own credit money (maxCredits / remainingCredits)
+//
+// EXAMPLE: NEURALWATT PROVIDER (Pattern B, URL-based detection)
+// ==============================================================
+//
+// Checker: internal/server/biz/provider_quota/neuralwatt_checker.go
+//   - Reuses channel.TypeOpenai / TypeOpenaiResponses
+//   - URL detection: host ending in ".api.neuralwatt.com" → provider_type "neuralwatt"
+//   - Makes request to /v1/quota endpoint
+//   - Uses simple API key authentication (no OAuth required)
+//   - Internally parses JSON (kwh_included, kwh_remaining, in_overage)
+//   - Normalizes status: in_overage → exhausted, remaining < 20% → warning, else → available
+//
+
 type ProviderQuotaServiceParams struct {
 	fx.In
 

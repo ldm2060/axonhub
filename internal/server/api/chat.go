@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
@@ -73,6 +74,8 @@ type ChatCompletionHandlers struct {
 	sseKeepAlive               SSEKeepAliveConfig
 	sseHeartbeatFormat         sseHeartbeatFormat
 	streamAdapterFactory       streamAdapterFactory
+	safeguardsConfig           safeguards.Config
+	reviewer                   safeguards.ClassifierFunc
 }
 
 func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestrator) *ChatCompletionHandlers {
@@ -122,17 +125,12 @@ func keepaliveModeForWriter(writer StreamWriter) HTTPStreamKeepaliveMode {
 
 // WithStreamWriter returns a new ChatCompletionHandlers with the specified stream writer.
 func (handlers *ChatCompletionHandlers) WithStreamWriter(writer StreamWriter) *ChatCompletionHandlers {
-	return &ChatCompletionHandlers{
-		ChatCompletionOrchestrator: handlers.ChatCompletionOrchestrator,
-		Processor:                  handlers.processor(),
-		StreamWriter:               writer,
-		RequestTimeout:             handlers.RequestTimeout,
-		StreamIdleTimeout:          handlers.StreamIdleTimeout,
-		HTTPKeepaliveInterval:      handlers.HTTPKeepaliveInterval,
-		HTTPKeepaliveMode:          keepaliveModeForWriter(writer),
-		sseKeepAlive:               handlers.sseKeepAlive,
-		sseHeartbeatFormat:         handlers.sseHeartbeatFormat,
-	}
+	copy := *handlers
+	copy.StreamWriter = writer
+	// Recompute for the new writer instead of carrying a stale mode from the
+	// previous one; effectiveHTTPKeepaliveMode only falls back when unset.
+	copy.HTTPKeepaliveMode = keepaliveModeForWriter(writer)
+	return &copy
 }
 
 func (handlers *ChatCompletionHandlers) ChatCompletion(c *gin.Context) {
@@ -331,12 +329,28 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		return
 	}
 
+	evaluator, prepared, err := prepareSafeguardsRequest(genericReq, handlers.safeguardsConfig, handlers.reviewer)
+	if err != nil {
+		JSONError(c, http.StatusBadRequest, err)
+		return
+	}
+	genericReq = prepared
+
 	streaming := requestBodyWantsStream(genericReq)
 	if !streaming && handlers.RequestTimeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, handlers.RequestTimeout)
 		defer cancel()
 		c.Request = c.Request.WithContext(ctx)
+	}
+
+	// The safeguards reviewer may share a channel with the main request; a
+	// separate cancel lets wrapSafeguardsStream free the upstream slot early.
+	processCtx := ctx
+	var abortUpstream context.CancelFunc
+	if evaluator != nil {
+		processCtx, abortUpstream = context.WithCancel(ctx)
+		defer abortUpstream()
 	}
 
 	// log.Debug(ctx, "Chat completion request", log.Any("request", genericReq))
@@ -356,7 +370,7 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 	if keepaliveInterval > 0 || (streaming && handlers.StreamIdleTimeout > 0) {
 		result, err = processWithHTTPKeepalive(
 			c,
-			ctx,
+			processCtx,
 			handlers.processor(),
 			genericReq,
 			StreamWriteOptions{KeepaliveInterval: keepaliveInterval, IdleTimeout: handlers.StreamIdleTimeout, Cancel: cancelStream},
@@ -366,7 +380,7 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		)
 		responseCommittedByKeepalive = c.Writer.Written()
 	} else {
-		result, err = handlers.processor().Process(ctx, genericReq)
+		result, err = handlers.processor().Process(processCtx, genericReq)
 	}
 	if err != nil {
 		log.Error(ctx, "Error processing chat completion", log.Cause(err))
@@ -392,7 +406,12 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 			contentType = ct
 		}
 
-		c.Data(resp.StatusCode, contentType, resp.Body)
+		body, err := evaluator.AnnotateResponse(ctx, resp.Body)
+		if err != nil {
+			JSONError(c, http.StatusBadGateway, err)
+			return
+		}
+		c.Data(resp.StatusCode, contentType, body)
 
 		return
 	}
@@ -412,7 +431,8 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 
 		c.Header("Access-Control-Allow-Origin", "*")
 
-		stream := newUpstreamErrorStream(ctx, result.ChatCompletionStream, handlers.systemService())
+		source := wrapSafeguardsStream(ctx, result.ChatCompletionStream, evaluator, abortUpstream)
+		stream := newUpstreamErrorStream(ctx, source, handlers.systemService())
 
 		if genericReq != nil && strings.HasSuffix(genericReq.Path, "/responses") {
 			stream = primeCodexTurnStateHeader(c.Writer.Header(), stream)

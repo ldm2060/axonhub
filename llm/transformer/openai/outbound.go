@@ -318,12 +318,17 @@ func (t *OutboundTransformer) TransformStream(ctx context.Context, req *httpclie
 	//
 	// Note: TransformStreamChunk only returns nil for events with explicit "choices":[]
 	// in the raw JSON. Events without a choices key (nil slice) are passed through.
+	indexer := newToolCallIndexer()
+
 	return streams.NoNil(streams.MapErr(stream, func(event *httpclient.StreamEvent) (*llm.Response, error) {
 		resp, err := t.TransformStreamChunk(ctx, event)
 		if err != nil || resp == nil {
 			return resp, err
 		}
 
+		if resp != llm.DoneResponse {
+			indexer.applyToResponse(event.Data, resp)
+		}
 		filterAbortedToolCalls(resp, guard)
 		return resp, nil
 	})), nil

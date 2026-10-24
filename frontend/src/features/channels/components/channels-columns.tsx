@@ -86,7 +86,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.name')} />,
       cell: ({ row }: { row: Row<Channel> }) => <NameCell row={row} globalDefaultMode={globalDefaultMode} />,
       meta: {
-        className: 'w-[13%] min-w-0 text-left',
+        className: 'w-[15%] min-w-40 text-left',
       },
       enableHiding: false,
       enableSorting: true,
@@ -97,7 +97,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.provider')} className='justify-center' />,
       cell: ProviderCell,
       meta: {
-        className: 'w-[9%] min-w-0 text-center',
+        className: 'w-[19%] min-w-28 text-center',
       },
       filterFn: (row, _id, value) => Array.isArray(value) && value.includes(row.original.type),
       enableSorting: true,
@@ -108,7 +108,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.status')} className='justify-center' />,
       cell: StatusSwitchCell,
       meta: {
-        className: 'w-[8%] min-w-0 text-center',
+        className: 'w-[15%] min-w-20 text-center',
       },
       enableSorting: true,
       enableHiding: false,
@@ -119,7 +119,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.quota')} className='justify-center' />,
       cell: QuotaCell,
       meta: {
-        className: 'hidden w-[23%] min-w-0 2xl:table-cell text-center',
+        className: 'w-[10%] min-w-36 text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -130,7 +130,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.tags')} className='justify-center' />,
       cell: TagsCell,
       meta: {
-        className: 'hidden min-w-0 xl:table-cell text-center',
+        className: 'w-[10%] min-w-28 text-center',
       },
       filterFn: (row, _id, value) => typeof value === 'string' && (row.original.tags ?? []).includes(value),
       enableSorting: false,
@@ -154,7 +154,7 @@ export const createColumns = (
       ),
       cell: SupportedModelsCell,
       meta: {
-        className: 'w-[20%] min-w-0 max-w-none text-center',
+        className: 'w-[18%] min-w-48 max-w-none text-center',
       },
       enableSorting: false,
     },
@@ -177,7 +177,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('channels.columns.proxy')} className='justify-center' />,
       cell: ProxyCell,
       meta: {
-        className: 'hidden min-w-0 2xl:table-cell text-center',
+        className: 'w-[13%] min-w-28 text-center',
       },
       enableSorting: false,
       enableHiding: true,
@@ -228,7 +228,7 @@ export const createColumns = (
       className: 'text-center',
     },
     enableSorting: true,
-    enableHiding: false,
+    enableHiding: true,
   });
 
   if (canWrite) {
@@ -237,7 +237,7 @@ export const createColumns = (
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('common.columns.actions')} className='justify-center' />,
       cell: ActionCell,
       meta: {
-        className: 'hidden w-28 min-w-28 xl:table-cell text-center',
+        className: 'w-28 min-w-28 text-center',
       },
       enableSorting: false,
       enableHiding: false,
