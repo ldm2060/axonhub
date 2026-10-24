@@ -1937,7 +1937,6 @@ function QuotaRow({ channel, effectiveMode }: { channel: ProviderQuotaChannel; e
                             <div>
                               {usedCredits}/{maxCredits}
                             </div>
-
                           )}
                           <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
                           {weeklyNextRegenAt && <div>{formatTimeToReset(weeklyNextRegenAt, usedPct, regenTick)}</div>}

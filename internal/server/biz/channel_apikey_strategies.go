@@ -6,10 +6,10 @@ import (
 	"slices"
 	"sync/atomic"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/log"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/llm/auth"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/log"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/llm/auth"
 )
 
 // channelAPIKeyStrategy returns the multi-key strategy configured on a channel.

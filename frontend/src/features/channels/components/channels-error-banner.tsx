@@ -24,7 +24,7 @@ export const ChannelsErrorBanner = memo(function ChannelsErrorBanner({
   }
 
   return (
-    <Alert className='mb-2 sm:mb-4 border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-200 [&>svg]:translate-y-0'>
+    <Alert className='mb-2 border-orange-200 bg-orange-50 text-orange-800 sm:mb-4 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-200 [&>svg]:translate-y-0'>
       <AlertCircle className='h-4 w-4 shrink-0' />
       <AlertDescription className='flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between'>
         <div className='min-w-0'>

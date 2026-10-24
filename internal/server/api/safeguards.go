@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/looplj/axonhub/internal/server/safeguards"
-	"github.com/looplj/axonhub/llm/httpclient"
-	"github.com/looplj/axonhub/llm/streams"
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
+	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/streams"
 )
 
 // Remove only the locally handled safeguard so pass-through channels do not

@@ -27,7 +27,6 @@ import { TagsAutocompleteInput } from '@/components/ui/tags-autocomplete-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AutoComplete } from '@/components/auto-complete';
-import { ApiKeyStrategyFields, type APIKeyStrategyValue } from './channel-api-key-strategy';
 import { SelectDropdown } from '@/components/select-dropdown';
 import {
   usePassThroughSettings,
@@ -96,6 +95,7 @@ import { zcodeOAuthExchange, zcodeOAuthStart } from '../data/zcode';
 import { useOAuthFlow } from '../hooks/use-oauth-flow';
 import { mergeChannelSettingsForUpdate, quotaRoutingModeSettingsPatch, recallQuotaRoutingMode } from '../utils/merge';
 import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
+import { ApiKeyStrategyFields, type APIKeyStrategyValue } from './channel-api-key-strategy';
 import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
 import { ChannelClientRestriction } from './channel-client-restriction';
 import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
@@ -585,9 +585,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
         value: t(passThroughSettings.enabled ? 'channels.dialogs.bodyPassThrough.enabled' : 'channels.dialogs.bodyPassThrough.disabled'),
       })
     : t('channels.dialogs.bodyPassThrough.inherit');
-  const [apiKeyStrategy, setApiKeyStrategy] = useState<APIKeyStrategyValue>(
-    () => initialRow?.settings?.apiKeyStrategy ?? 'sticky'
-  );
+  const [apiKeyStrategy, setApiKeyStrategy] = useState<APIKeyStrategyValue>(() => initialRow?.settings?.apiKeyStrategy ?? 'sticky');
   const [apiKeyRoundRobinSwitchAfter, setApiKeyRoundRobinSwitchAfter] = useState<number>(
     () => initialRow?.settings?.apiKeyRoundRobinSwitchAfter ?? 1
   );
@@ -1689,9 +1687,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           maxSingleChannelRetries,
           apiKeyStrategy,
           apiKeyRoundRobinSwitchAfter:
-            apiKeyStrategy === 'round_robin' || apiKeyStrategy === 'round_robin_success'
-              ? apiKeyRoundRobinSwitchAfter
-              : null,
+            apiKeyStrategy === 'round_robin' || apiKeyStrategy === 'round_robin_success' ? apiKeyRoundRobinSwitchAfter : null,
           // Cookie edits (including clearing the saved cookie) travel through
           // the settings patch; mergeChannelSettingsForUpdate preserves the
           // field when the patch omits it and carries the null clear through.
@@ -1798,9 +1794,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           ...quotaRoutingModeSettingsPatch(quotaRoutingMode),
           apiKeyStrategy,
           apiKeyRoundRobinSwitchAfter:
-            apiKeyStrategy === 'round_robin' || apiKeyStrategy === 'round_robin_success'
-              ? apiKeyRoundRobinSwitchAfter
-              : null,
+            apiKeyStrategy === 'round_robin' || apiKeyStrategy === 'round_robin_success' ? apiKeyRoundRobinSwitchAfter : null,
           ...(selectedApiFormat === 'zenmux/video' ||
           settingsForSubmit?.modelProtocols?.some((protocol) => protocol.apiFormats.includes('zenmux/video'))
             ? {
@@ -3071,7 +3065,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                           />
                         )}
 
-<ApiKeyStrategyFields
+                      <ApiKeyStrategyFields
                         value={apiKeyStrategy}
                         switchAfter={apiKeyRoundRobinSwitchAfter}
                         onChange={(value) => setApiKeyStrategy(value)}

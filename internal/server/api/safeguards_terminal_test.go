@@ -14,11 +14,11 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/ent/request"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/server/safeguards"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/transformer/anthropic"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/safeguards"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 )
 
 // TestSafeguardsCompletedUpstreamStaysOpen verifies semantic completion does not

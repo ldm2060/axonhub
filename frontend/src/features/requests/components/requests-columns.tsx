@@ -68,11 +68,7 @@ export interface TokensColumnCacheDisplay {
   cacheRate: string;
 }
 
-export function tokensColumnCacheDisplay(
-  promptTokens: number,
-  cachedTokens: number,
-  reasoningTokens: number
-): TokensColumnCacheDisplay {
+export function tokensColumnCacheDisplay(promptTokens: number, cachedTokens: number, reasoningTokens: number): TokensColumnCacheDisplay {
   return {
     showReasoning: reasoningTokens > 0,
     showCacheRate: cachedTokens > 0,

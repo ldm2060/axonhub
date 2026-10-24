@@ -287,12 +287,9 @@ export function ChannelsTable({
         showStatusFilter={showStatusFilter}
         onExitErrorOnlyMode={onExitErrorOnlyMode}
       />
-      <div className='shadow-soft relative mt-2 sm:mt-4 min-w-0 min-h-48 flex-1 overflow-auto rounded-2xl border border-[var(--table-border)]'>
+      <div className='shadow-soft relative mt-2 min-h-48 min-w-0 flex-1 overflow-auto rounded-2xl border border-[var(--table-border)] sm:mt-4'>
         <div className='min-w-max'>
-          <Table
-            data-testid='channels-table'
-            className='w-full border-separate border-spacing-0 rounded-2xl bg-[var(--table-background)]'
-          >
+          <Table data-testid='channels-table' className='w-full border-separate border-spacing-0 rounded-2xl bg-[var(--table-background)]'>
             <TableHeader className='sticky top-0 z-20 bg-[var(--table-header)] shadow-sm'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className='group/row border-0'>
@@ -353,7 +350,11 @@ export function ChannelsTable({
                                 transition={{ duration: 0.2, ease: 'easeInOut' }}
                                 className='overflow-hidden'
                               >
-                                <ChannelExpandedRow channel={channel} columnsLength={columns.length} getApiFormatLabel={getApiFormatLabel} />
+                                <ChannelExpandedRow
+                                  channel={channel}
+                                  columnsLength={columns.length}
+                                  getApiFormatLabel={getApiFormatLabel}
+                                />
                               </motion.div>
                             </TableCell>
                           </MotionExpandedRow>
@@ -373,7 +374,7 @@ export function ChannelsTable({
           </Table>
         </div>
       </div>
-      <div className='mt-2 sm:mt-4 flex-shrink-0'>
+      <div className='mt-2 flex-shrink-0 sm:mt-4'>
         <ServerSidePagination
           pageInfo={pageInfo}
           pageSize={pageSize}

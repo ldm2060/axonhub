@@ -356,9 +356,11 @@ test('channel percentage column widths sum to 100', () => {
 });
 
 test('supported models cell bounds badge container width to prevent horizontal stretching', () => {
-  const columnsSource = read('features/channels/components/channels-columns.tsx');
+  // The SupportedModelsCell component lives in channels-column-cells.tsx in
+  // this fork; the badge container must still carry the max-width wrapper.
+  const cellsSource = read('features/channels/components/channels-column-cells.tsx');
   assert.match(
-    columnsSource,
+    cellsSource,
     /max-w-(?:72|80|xs|sm)[^']*flex-wrap/,
     'supported models badge container must have a max-width wrapper so badges wrap instead of stretching the table'
   );

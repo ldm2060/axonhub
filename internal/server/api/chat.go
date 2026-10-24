@@ -364,11 +364,11 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 	}
 
 	var (
-		result orchestrator.ChatCompletionResult
-		err    error
+		result     orchestrator.ChatCompletionResult
+		processErr error
 	)
 	if keepaliveInterval > 0 || (streaming && handlers.StreamIdleTimeout > 0) {
-		result, err = processWithHTTPKeepalive(
+		result, processErr = processWithHTTPKeepalive(
 			c,
 			processCtx,
 			handlers.processor(),
@@ -380,16 +380,16 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 		)
 		responseCommittedByKeepalive = c.Writer.Written()
 	} else {
-		result, err = handlers.processor().Process(processCtx, genericReq)
+		result, processErr = handlers.processor().Process(processCtx, genericReq)
 	}
-	if err != nil {
-		log.Error(ctx, "Error processing chat completion", log.Cause(err))
+	if processErr != nil {
+		log.Error(ctx, "Error processing chat completion", log.Cause(processErr))
 		if c.Writer.Written() {
-			handlers.writeCommittedProcessError(c, ctx, err, keepaliveMode)
+			handlers.writeCommittedProcessError(c, ctx, processErr, keepaliveMode)
 			return
 		}
 
-		httpErr := transformOrchestratorError(ctx, err, handlers.ChatCompletionOrchestrator)
+		httpErr := transformOrchestratorError(ctx, processErr, handlers.ChatCompletionOrchestrator)
 		c.JSON(httpErr.StatusCode, json.RawMessage(httpErr.Body))
 
 		return

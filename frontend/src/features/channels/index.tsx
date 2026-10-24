@@ -341,7 +341,7 @@ export default function ChannelsManagement() {
         actionLayout='scroll'
       />
 
-      <Main fixed className='py-2 sm:py-6 [--page-body-min-height:34rem]'>
+      <Main fixed className='py-2 [--page-body-min-height:34rem] sm:py-6'>
         <ChannelsContent />
       </Main>
       <Suspense fallback={null}>

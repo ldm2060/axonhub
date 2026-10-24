@@ -643,27 +643,30 @@ type ComplexityRoot struct {
 	}
 
 	ChannelSettings struct {
-		AutoTrimedModelPrefixes  func(childComplexity int) int
-		AutoTrimedModelSuffixes  func(childComplexity int) int
-		BodyOverrideOperations   func(childComplexity int) int
-		EnableSameChannelRetry   func(childComplexity int) int
-		ExtraModelPrefix         func(childComplexity int) int
-		HeaderOverrideOperations func(childComplexity int) int
-		HideMappedModels         func(childComplexity int) int
-		HideOriginalModels       func(childComplexity int) int
-		LowercaseModelID         func(childComplexity int) int
-		MinInputTokens           func(childComplexity int) int
-		ModelMappings            func(childComplexity int) int
-		ModelProtocols           func(childComplexity int) int
-		PassThroughBody          func(childComplexity int) int
-		PassThroughUserAgent     func(childComplexity int) int
-		ProviderQuota            func(childComplexity int) int
-		Proxy                    func(childComplexity int) int
-		QuotaRoutingMode         func(childComplexity int) int
-		RateLimit                func(childComplexity int) int
-		RetryableErrorPatterns   func(childComplexity int) int
-		RetryableStatusCodes     func(childComplexity int) int
-		TransformOptions         func(childComplexity int) int
+		APIKeyRoundRobinSwitchAfter func(childComplexity int) int
+		APIKeyStrategy              func(childComplexity int) int
+		AutoTrimedModelPrefixes     func(childComplexity int) int
+		AutoTrimedModelSuffixes     func(childComplexity int) int
+		BodyOverrideOperations      func(childComplexity int) int
+		EnableSameChannelRetry      func(childComplexity int) int
+		ExtraModelPrefix            func(childComplexity int) int
+		HeaderOverrideOperations    func(childComplexity int) int
+		HideMappedModels            func(childComplexity int) int
+		HideOriginalModels          func(childComplexity int) int
+		LowercaseModelID            func(childComplexity int) int
+		MaxSingleChannelRetries     func(childComplexity int) int
+		MinInputTokens              func(childComplexity int) int
+		ModelMappings               func(childComplexity int) int
+		ModelProtocols              func(childComplexity int) int
+		PassThroughBody             func(childComplexity int) int
+		PassThroughUserAgent        func(childComplexity int) int
+		ProviderQuota               func(childComplexity int) int
+		Proxy                       func(childComplexity int) int
+		QuotaRoutingMode            func(childComplexity int) int
+		RateLimit                   func(childComplexity int) int
+		RetryableErrorPatterns      func(childComplexity int) int
+		RetryableStatusCodes        func(childComplexity int) int
+		TransformOptions            func(childComplexity int) int
 	}
 
 	ChannelSuccessRate struct {
@@ -1288,6 +1291,7 @@ type ComplexityRoot struct {
 		UpdateCatalogSettings                 func(childComplexity int, input UpdateCatalogSettingsInput) int
 		UpdateChannel                         func(childComplexity int, id objects.GUID, input ent.UpdateChannelInput) int
 		UpdateChannelOverrideTemplate         func(childComplexity int, id objects.GUID, input ent.UpdateChannelOverrideTemplateInput) int
+		UpdateChannelSettings                 func(childComplexity int, id objects.GUID, input biz.UpdateChannelSettingsInput) int
 		UpdateChannelStatus                   func(childComplexity int, id objects.GUID, status channel.Status) int
 		UpdateCodexCompatibilitySettings      func(childComplexity int, input biz.CodexCompatibilitySettings) int
 		UpdateConcurrencyLimitSettings        func(childComplexity int, input UpdateConcurrencyLimitSettingsInput) int
@@ -2862,6 +2866,7 @@ type MutationResolver interface {
 	DuplicateChannel(ctx context.Context, sourceID objects.GUID, input ent.CreateChannelInput) (*ent.Channel, error)
 	BulkCreateChannels(ctx context.Context, input biz.BulkCreateChannelsInput) ([]*ent.Channel, error)
 	UpdateChannel(ctx context.Context, id objects.GUID, input ent.UpdateChannelInput) (*ent.Channel, error)
+	UpdateChannelSettings(ctx context.Context, id objects.GUID, input biz.UpdateChannelSettingsInput) (*ent.Channel, error)
 	SaveChannelEndpoints(ctx context.Context, input biz.SaveChannelEndpointsInput) (*ent.Channel, error)
 	DetectChannelEndpoints(ctx context.Context, input biz.DetectChannelEndpointsInput) (*biz.DetectChannelEndpointsPayload, error)
 	UpdateChannelStatus(ctx context.Context, id objects.GUID, status channel.Status) (*ent.Channel, error)
@@ -5395,6 +5400,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ChannelRegexAssociation.Pattern(childComplexity), true
 
+	case "ChannelSettings.apiKeyRoundRobinSwitchAfter":
+		if e.complexity.ChannelSettings.APIKeyRoundRobinSwitchAfter == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.APIKeyRoundRobinSwitchAfter(childComplexity), true
+	case "ChannelSettings.apiKeyStrategy":
+		if e.complexity.ChannelSettings.APIKeyStrategy == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.APIKeyStrategy(childComplexity), true
 	case "ChannelSettings.autoTrimedModelPrefixes":
 		if e.complexity.ChannelSettings.AutoTrimedModelPrefixes == nil {
 			break
@@ -5449,6 +5466,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelSettings.LowercaseModelID(childComplexity), true
+	case "ChannelSettings.maxSingleChannelRetries":
+		if e.complexity.ChannelSettings.MaxSingleChannelRetries == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.MaxSingleChannelRetries(childComplexity), true
 	case "ChannelSettings.minInputTokens":
 		if e.complexity.ChannelSettings.MinInputTokens == nil {
 			break
@@ -8621,6 +8644,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.UpdateChannelOverrideTemplate(childComplexity, args["id"].(objects.GUID), args["input"].(ent.UpdateChannelOverrideTemplateInput)), true
+	case "Mutation.updateChannelSettings":
+		if e.complexity.Mutation.UpdateChannelSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateChannelSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateChannelSettings(childComplexity, args["id"].(objects.GUID), args["input"].(biz.UpdateChannelSettingsInput)), true
 	case "Mutation.updateChannelStatus":
 		if e.complexity.Mutation.UpdateChannelStatus == nil {
 			break
@@ -15650,6 +15684,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateChannelModelAutoSyncSettingInput,
 		ec.unmarshalInputUpdateChannelOverrideTemplateInput,
 		ec.unmarshalInputUpdateChannelProbeSettingInput,
+		ec.unmarshalInputUpdateChannelSettingsInput,
 		ec.unmarshalInputUpdateChannelUsageMonitorBindingInput,
 		ec.unmarshalInputUpdateCodexCompatibilitySettingsInput,
 		ec.unmarshalInputUpdateConcurrencyLimitSettingsInput,
@@ -17439,6 +17474,22 @@ func (ec *executionContext) field_Mutation_updateChannelOverrideTemplate_args(ct
 	}
 	args["id"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateChannelOverrideTemplateInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐUpdateChannelOverrideTemplateInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateChannelSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateChannelSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateChannelSettingsInput)
 	if err != nil {
 		return nil, err
 	}
@@ -25731,8 +25782,14 @@ func (ec *executionContext) fieldContext_Channel_settings(_ context.Context, fie
 				return ec.fieldContext_ChannelSettings_retryableErrorPatterns(ctx, field)
 			case "minInputTokens":
 				return ec.fieldContext_ChannelSettings_minInputTokens(ctx, field)
+			case "maxSingleChannelRetries":
+				return ec.fieldContext_ChannelSettings_maxSingleChannelRetries(ctx, field)
 			case "modelProtocols":
 				return ec.fieldContext_ChannelSettings_modelProtocols(ctx, field)
+			case "apiKeyStrategy":
+				return ec.fieldContext_ChannelSettings_apiKeyStrategy(ctx, field)
+			case "apiKeyRoundRobinSwitchAfter":
+				return ec.fieldContext_ChannelSettings_apiKeyRoundRobinSwitchAfter(ctx, field)
 			case "providerQuota":
 				return ec.fieldContext_ChannelSettings_providerQuota(ctx, field)
 			case "quotaRoutingMode":
@@ -31801,6 +31858,35 @@ func (ec *executionContext) fieldContext_ChannelSettings_minInputTokens(_ contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelSettings_maxSingleChannelRetries(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_maxSingleChannelRetries,
+		func(ctx context.Context) (any, error) {
+			return obj.MaxSingleChannelRetries, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_maxSingleChannelRetries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelSettings_modelProtocols(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -31833,6 +31919,64 @@ func (ec *executionContext) fieldContext_ChannelSettings_modelProtocols(_ contex
 				return ec.fieldContext_ModelProtocol_enabled(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ModelProtocol", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelSettings_apiKeyStrategy(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_apiKeyStrategy,
+		func(ctx context.Context) (any, error) {
+			return obj.APIKeyStrategy, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_apiKeyStrategy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelSettings_apiKeyRoundRobinSwitchAfter(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_apiKeyRoundRobinSwitchAfter,
+		func(ctx context.Context) (any, error) {
+			return obj.APIKeyRoundRobinSwitchAfter, nil
+		},
+		nil,
+		ec.marshalOInt2ᚖint,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_apiKeyRoundRobinSwitchAfter(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -41812,6 +41956,135 @@ func (ec *executionContext) fieldContext_Mutation_updateChannel(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateChannel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateChannelSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_updateChannelSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().UpdateChannelSettings(ctx, fc.Args["id"].(objects.GUID), fc.Args["input"].(biz.UpdateChannelSettingsInput))
+		},
+		nil,
+		ec.marshalNChannel2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannel,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateChannelSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Channel_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Channel_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Channel_updatedAt(ctx, field)
+			case "type":
+				return ec.fieldContext_Channel_type(ctx, field)
+			case "baseURL":
+				return ec.fieldContext_Channel_baseURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Channel_name(ctx, field)
+			case "status":
+				return ec.fieldContext_Channel_status(ctx, field)
+			case "supportedModels":
+				return ec.fieldContext_Channel_supportedModels(ctx, field)
+			case "manualModels":
+				return ec.fieldContext_Channel_manualModels(ctx, field)
+			case "autoSyncSupportedModels":
+				return ec.fieldContext_Channel_autoSyncSupportedModels(ctx, field)
+			case "autoSyncModelPattern":
+				return ec.fieldContext_Channel_autoSyncModelPattern(ctx, field)
+			case "tags":
+				return ec.fieldContext_Channel_tags(ctx, field)
+			case "defaultTestModel":
+				return ec.fieldContext_Channel_defaultTestModel(ctx, field)
+			case "policies":
+				return ec.fieldContext_Channel_policies(ctx, field)
+			case "settings":
+				return ec.fieldContext_Channel_settings(ctx, field)
+			case "orderingWeight":
+				return ec.fieldContext_Channel_orderingWeight(ctx, field)
+			case "errorMessage":
+				return ec.fieldContext_Channel_errorMessage(ctx, field)
+			case "autoDisabledAt":
+				return ec.fieldContext_Channel_autoDisabledAt(ctx, field)
+			case "autoDisableExpiresAt":
+				return ec.fieldContext_Channel_autoDisableExpiresAt(ctx, field)
+			case "remark":
+				return ec.fieldContext_Channel_remark(ctx, field)
+			case "endpoints":
+				return ec.fieldContext_Channel_endpoints(ctx, field)
+			case "clientRestriction":
+				return ec.fieldContext_Channel_clientRestriction(ctx, field)
+			case "autoDisableConfig":
+				return ec.fieldContext_Channel_autoDisableConfig(ctx, field)
+			case "ownerID":
+				return ec.fieldContext_Channel_ownerID(ctx, field)
+			case "visibility":
+				return ec.fieldContext_Channel_visibility(ctx, field)
+			case "sharedWith":
+				return ec.fieldContext_Channel_sharedWith(ctx, field)
+			case "quotaBindingReady":
+				return ec.fieldContext_Channel_quotaBindingReady(ctx, field)
+			case "quotaMultiMonitorStrategy":
+				return ec.fieldContext_Channel_quotaMultiMonitorStrategy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Channel_owner(ctx, field)
+			case "requests":
+				return ec.fieldContext_Channel_requests(ctx, field)
+			case "executions":
+				return ec.fieldContext_Channel_executions(ctx, field)
+			case "usageLogs":
+				return ec.fieldContext_Channel_usageLogs(ctx, field)
+			case "channelProbes":
+				return ec.fieldContext_Channel_channelProbes(ctx, field)
+			case "channelModelPrices":
+				return ec.fieldContext_Channel_channelModelPrices(ctx, field)
+			case "providerQuotaStatus":
+				return ec.fieldContext_Channel_providerQuotaStatus(ctx, field)
+			case "usageMonitorChannels":
+				return ec.fieldContext_Channel_usageMonitorChannels(ctx, field)
+			case "quotaMonitorBindings":
+				return ec.fieldContext_Channel_quotaMonitorBindings(ctx, field)
+			case "defaultEndpoints":
+				return ec.fieldContext_Channel_defaultEndpoints(ctx, field)
+			case "allModelEntries":
+				return ec.fieldContext_Channel_allModelEntries(ctx, field)
+			case "credentials":
+				return ec.fieldContext_Channel_credentials(ctx, field)
+			case "disabledAPIKeys":
+				return ec.fieldContext_Channel_disabledAPIKeys(ctx, field)
+			case "liveLimiterStats":
+				return ec.fieldContext_Channel_liveLimiterStats(ctx, field)
+			case "sharedUsers":
+				return ec.fieldContext_Channel_sharedUsers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Channel", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateChannelSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -90915,7 +91188,7 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "modelProtocols", "providerQuota", "quotaRoutingMode"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "maxSingleChannelRetries", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -91048,6 +91321,13 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.MinInputTokens = data
+		case "maxSingleChannelRetries":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxSingleChannelRetries"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxSingleChannelRetries = data
 		case "modelProtocols":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelProtocols"))
 			data, err := ec.unmarshalOModelProtocolInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelProtocolᚄ(ctx, v)
@@ -91055,6 +91335,20 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.ModelProtocols = data
+		case "apiKeyStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyStrategy"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyStrategy = data
+		case "apiKeyRoundRobinSwitchAfter":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyRoundRobinSwitchAfter"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyRoundRobinSwitchAfter = data
 		case "providerQuota":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerQuota"))
 			data, err := ec.unmarshalOChannelProviderQuotaSettingsInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelProviderQuotaSettings(ctx, v)
@@ -111752,6 +112046,166 @@ func (ec *executionContext) unmarshalInputUpdateChannelProbeSettingInput(ctx con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateChannelSettingsInput(ctx context.Context, obj any) (biz.UpdateChannelSettingsInput, error) {
+	var it biz.UpdateChannelSettingsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes", "retryableErrorPatterns", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "extraModelPrefix":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extraModelPrefix"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExtraModelPrefix = data
+		case "modelMappings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelMappings"))
+			data, err := ec.unmarshalOModelMappingInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelMappingᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelMappings = data
+		case "autoTrimedModelPrefixes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("autoTrimedModelPrefixes"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AutoTrimedModelPrefixes = data
+		case "hideOriginalModels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hideOriginalModels"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HideOriginalModels = data
+		case "hideMappedModels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hideMappedModels"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HideMappedModels = data
+		case "lowercaseModelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lowercaseModelId"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LowercaseModelID = data
+		case "proxy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("proxy"))
+			data, err := ec.unmarshalOProxyConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋllmᚋhttpclientᚐProxyConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Proxy = data
+		case "transformOptions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transformOptions"))
+			data, err := ec.unmarshalOTransformOptionsInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐTransformOptions(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TransformOptions = data
+		case "headerOverrideOperations":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headerOverrideOperations"))
+			data, err := ec.unmarshalOOverrideOperationInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐOverrideOperationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HeaderOverrideOperations = data
+		case "bodyOverrideOperations":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bodyOverrideOperations"))
+			data, err := ec.unmarshalOOverrideOperationInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐOverrideOperationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BodyOverrideOperations = data
+		case "passThroughUserAgent":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("passThroughUserAgent"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PassThroughUserAgent = data
+		case "passThroughBody":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("passThroughBody"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PassThroughBody = data
+		case "rateLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateLimit"))
+			data, err := ec.unmarshalOChannelRateLimitInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelRateLimit(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateLimit = data
+		case "retryableStatusCodes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("retryableStatusCodes"))
+			data, err := ec.unmarshalOInt2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RetryableStatusCodes = data
+		case "retryableErrorPatterns":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("retryableErrorPatterns"))
+			data, err := ec.unmarshalORetryableErrorPatternInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐRetryableErrorPatternᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RetryableErrorPatterns = data
+		case "modelProtocols":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("modelProtocols"))
+			data, err := ec.unmarshalOModelProtocolInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐModelProtocolᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ModelProtocols = data
+		case "apiKeyStrategy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyStrategy"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyStrategy = data
+		case "apiKeyRoundRobinSwitchAfter":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apiKeyRoundRobinSwitchAfter"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.APIKeyRoundRobinSwitchAfter = data
+		case "providerQuota":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("providerQuota"))
+			data, err := ec.unmarshalOChannelProviderQuotaSettingsInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelProviderQuotaSettings(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProviderQuota = data
+		case "quotaRoutingMode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quotaRoutingMode"))
+			data, err := ec.unmarshalOChannelQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuotaRoutingMode = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateChannelUsageMonitorBindingInput(ctx context.Context, obj any) (ent.UpdateChannelUsageMonitorBindingInput, error) {
 	var it ent.UpdateChannelUsageMonitorBindingInput
 	asMap := map[string]any{}
@@ -125334,8 +125788,14 @@ func (ec *executionContext) _ChannelSettings(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._ChannelSettings_retryableErrorPatterns(ctx, field, obj)
 		case "minInputTokens":
 			out.Values[i] = ec._ChannelSettings_minInputTokens(ctx, field, obj)
+		case "maxSingleChannelRetries":
+			out.Values[i] = ec._ChannelSettings_maxSingleChannelRetries(ctx, field, obj)
 		case "modelProtocols":
 			out.Values[i] = ec._ChannelSettings_modelProtocols(ctx, field, obj)
+		case "apiKeyStrategy":
+			out.Values[i] = ec._ChannelSettings_apiKeyStrategy(ctx, field, obj)
+		case "apiKeyRoundRobinSwitchAfter":
+			out.Values[i] = ec._ChannelSettings_apiKeyRoundRobinSwitchAfter(ctx, field, obj)
 		case "providerQuota":
 			field := field
 
@@ -129578,6 +130038,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateChannel":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateChannel(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateChannelSettings":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateChannelSettings(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -154467,6 +154934,11 @@ func (ec *executionContext) unmarshalNUpdateChannelOverrideTemplateInput2github�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateChannelSettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐUpdateChannelSettingsInput(ctx context.Context, v any) (biz.UpdateChannelSettingsInput, error) {
+	res, err := ec.unmarshalInputUpdateChannelSettingsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateCodexCompatibilitySettingsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐCodexCompatibilitySettings(ctx context.Context, v any) (biz.CodexCompatibilitySettings, error) {
 	res, err := ec.unmarshalInputUpdateCodexCompatibilitySettingsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -157340,6 +157812,22 @@ func (ec *executionContext) unmarshalOChannelQuotaRoutingMode2githubᚗcomᚋldm
 }
 
 func (ec *executionContext) marshalOChannelQuotaRoutingMode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, sel ast.SelectionSet, v objects.QuotaRoutingMode) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOChannelQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, v any) (*objects.QuotaRoutingMode, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(objects.QuotaRoutingMode)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelQuotaRoutingMode2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐQuotaRoutingMode(ctx context.Context, sel ast.SelectionSet, v *objects.QuotaRoutingMode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
 	return v
 }
 
@@ -163355,6 +163843,14 @@ func (ec *executionContext) marshalOTransformOptions2githubᚗcomᚋldm2060ᚋax
 func (ec *executionContext) unmarshalOTransformOptionsInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐTransformOptions(ctx context.Context, v any) (objects.TransformOptions, error) {
 	res, err := ec.unmarshalInputTransformOptionsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOTransformOptionsInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐTransformOptions(ctx context.Context, v any) (*objects.TransformOptions, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTransformOptionsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOUpdateChannelModelAutoSyncSettingInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelModelAutoSyncSetting(ctx context.Context, v any) (*biz.ChannelModelAutoSyncSetting, error) {

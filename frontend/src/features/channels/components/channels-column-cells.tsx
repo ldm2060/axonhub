@@ -26,7 +26,7 @@ import {
   IconShare,
   IconClockPlay,
 } from '@tabler/icons-react';
-import { Google } from '@lobehub/icons';
+import Google from '@lobehub/icons/es/Google/components/Mono.js';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -584,8 +584,8 @@ export const SupportedModelsCell = memo(({ row }: { row: Row<Channel> }) => {
   }, [channel, setCurrentRow, setOpen]);
 
   return (
-    <div className='flex items-center justify-center gap-2'>
-      <div className='flex flex-wrap justify-center gap-1 overflow-hidden'>
+    <div className='flex min-w-0 items-center justify-center gap-2'>
+      <div className='flex max-w-72 min-w-0 flex-wrap justify-center gap-1 overflow-hidden sm:max-w-80'>
         {models.slice(0, 5).map((model) => (
           <Badge key={model} variant='secondary' className='block max-w-48 truncate text-left text-xs'>
             {model}
@@ -803,6 +803,7 @@ const QUOTA_WINDOW_LABEL_KEYS: Record<string, string> = {
   credits: 'quota.label.credits_remaining',
   cycle: 'quota.window.cycle',
   overage: 'quota.label.overage_window',
+  search_hourly: 'quota.window.search_hourly',
 };
 
 function getQuotaLimits(channel: Channel) {

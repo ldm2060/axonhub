@@ -712,11 +712,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     // Only models the default endpoints (chat completions + embeddings) can
     // serve: decision models need the System One endpoint and a model protocol
     // pin, so they are added by hand instead of being preset here.
-    defaultModels: [
-      '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
-      '@cf/meta/llama-3.1-8b-instruct',
-      '@cf/baai/bge-m3',
-    ],
+    defaultModels: ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct', '@cf/baai/bge-m3'],
     apiFormat: OPENAI_CHAT_COMPLETIONS,
     color: 'bg-orange-100 text-orange-800 border-orange-200',
     icon: Cloudflare,

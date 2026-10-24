@@ -9,17 +9,13 @@ import ts from 'typescript';
 const source = readFileSync(new URL('./requests-columns.tsx', import.meta.url), 'utf8');
 const ast = ts.createSourceFile('requests-columns.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
-const helperNode = ast.statements.find(
-  (node) => ts.isFunctionDeclaration(node) && node.name?.text === 'tokensColumnCacheDisplay'
-);
+const helperNode = ast.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === 'tokensColumnCacheDisplay');
 assert.ok(helperNode, 'tokensColumnCacheDisplay must stay a top-level function in requests-columns.tsx');
 
 const { outputText } = ts.transpileModule(`export ${helperNode.getText(ast).replace(/^export\s+/, '')}`, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2023 },
 });
-const { tokensColumnCacheDisplay } = await import(
-  `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`
-);
+const { tokensColumnCacheDisplay } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
 
 test('the tokens cell renders the rate this helper returns', () => {
   assert.match(
@@ -83,14 +79,6 @@ test('the cache rate rides the input line and the reasoning count the output lin
   assert.ok(outputAt < reasoningAt, 'the reasoning count follows the output count on the output line');
 
   assert.doesNotMatch(tokensColumn, /showSharedRow/, 'the metrics no longer share a row');
-  assert.equal(
-    (tokensColumn.match(/requests\.columns\.cacheRate/g) ?? []).length,
-    1,
-    'the cache rate must render exactly once'
-  );
-  assert.equal(
-    (tokensColumn.match(/requests\.columns\.reasoning/g) ?? []).length,
-    1,
-    'the reasoning count must render exactly once'
-  );
+  assert.equal((tokensColumn.match(/requests\.columns\.cacheRate/g) ?? []).length, 1, 'the cache rate must render exactly once');
+  assert.equal((tokensColumn.match(/requests\.columns\.reasoning/g) ?? []).length, 1, 'the reasoning count must render exactly once');
 });
