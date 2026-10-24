@@ -3,6 +3,7 @@ package kimicode
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -69,7 +70,7 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	outbound, err := NewOutboundTransformer(Params{TokenProvider: provider, Identity: identity, BaseURL: "https://api.kimi.com/coding/v1", Models: []Model{{ID: "kimi", ContextLength: 128}, {ID: "claude", ContextLength: 128, Protocol: ProtocolAnthropic}}})
+	outbound, err := NewOutboundTransformer(Params{TokenProvider: provider, Identity: identity, BaseURL: "https://api.kimi.com/coding/v1", Models: []Model{{ID: "kimi", ContextLength: 128}, {ID: "claude", ContextLength: 128, Protocol: ProtocolAnthropic}, {ID: "kimi-responses", ContextLength: 128, Protocol: ProtocolResponse}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,6 +117,13 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	if !ok || streamOptions["include_usage"] != true {
 		t.Fatalf("stream_options.include_usage missing from body: %s", kimiRequest.Body)
 	}
+	thinking, ok := kimiBody["thinking"].(map[string]any)
+	if !ok || thinking["type"] != "enabled" || thinking["effort"] != "high" {
+		t.Fatalf("Kimi thinking missing from body: %s", kimiRequest.Body)
+	}
+	if _, ok := kimiBody["reasoning_effort"]; ok {
+		t.Fatalf("reasoning_effort should be replaced by thinking: %s", kimiRequest.Body)
+	}
 	anthropicRequest, err := outbound.TransformRequest(context.Background(), request("claude"))
 	if err != nil {
 		t.Fatal(err)
@@ -135,11 +143,30 @@ func TestOutboundRoutesByPerRequestProtocol(t *testing.T) {
 	if err := json.Unmarshal(anthropicRequest.Body, &body); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(anthropicRequest.Body), `"type":"adaptive"`) {
-		t.Fatalf("adaptive thinking missing from body: %s", anthropicRequest.Body)
+	if thinking, ok := body["thinking"].(map[string]any); !ok || thinking["type"] != "enabled" {
+		t.Fatalf("enabled thinking missing from body: %s", anthropicRequest.Body)
 	}
-	if betas, ok := body["betas"].([]any); !ok || len(betas) != 1 {
-		t.Fatalf("betas body field missing: %#v", body["betas"])
+	if _, ok := body["thinking"].(map[string]any); ok {
+		if _, hasBudget := body["thinking"].(map[string]any)["budget_tokens"]; hasBudget {
+			t.Fatalf("budget_tokens must not be sent to Kimi: %s", anthropicRequest.Body)
+		}
+	}
+	if outputConfig, ok := body["output_config"].(map[string]any); !ok || outputConfig["effort"] != "high" {
+		t.Fatalf("output_config.effort missing from body: %s", anthropicRequest.Body)
+	}
+	betas, ok := body["betas"].([]any)
+	if !ok || len(betas) != 1 || betas[0] != ContextManagementBeta {
+		t.Fatalf("betas body field wrong: %#v", body["betas"])
+	}
+	responsesRequest, err := outbound.TransformRequest(context.Background(), request("kimi-responses"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := responsesRequest.URL, "https://api.kimi.com/coding/v1/responses"; got != want {
+		t.Fatalf("Responses URL = %q, want %q", got, want)
+	}
+	if got := responsesRequest.Metadata[protocolMetadataKey]; got != ProtocolResponse {
+		t.Fatalf("Responses protocol = %q", got)
 	}
 }
 
@@ -236,10 +263,115 @@ func TestKimiRequestPreservesExplicitThinkingDisabled(t *testing.T) {
 	if !strings.Contains(string(request.Body), `"type":"disabled"`) {
 		t.Fatalf("explicit disabled thinking not preserved: %s", request.Body)
 	}
+	var body map[string]any
+	if err := json.Unmarshal(request.Body, &body); err != nil {
+		t.Fatal(err)
+	}
+	if betas, ok := body["betas"].([]any); !ok || len(betas) != 1 || betas[0] != ContextManagementBeta {
+		t.Fatalf("disabled thinking should carry the context-management beta: %#v", body["betas"])
+	}
 	if request.Headers.Get("Anthropic-Beta") != "" {
 		t.Fatal("Anthropic-Beta header should not be sent to Kimi")
 	}
 	if request.Method != http.MethodPost {
 		t.Fatalf("method = %s", request.Method)
+	}
+}
+
+func TestAnthropicRequestWithoutThinkingKeepsDefaultBeta(t *testing.T) {
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
+	if err != nil {
+		t.Fatal(err)
+	}
+	outbound, err := NewOutboundTransformer(Params{TokenProvider: provider, Identity: identity, Models: []Model{{ID: "claude", ContextLength: 1, Protocol: ProtocolAnthropic}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := outbound.TransformRequest(context.Background(), &llm.Request{Model: "claude", Messages: []llm.Message{{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("hello")}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(request.Body, &body); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := body["thinking"]; ok {
+		t.Fatalf("thinking should be absent when not requested: %s", request.Body)
+	}
+	if betas, ok := body["betas"].([]any); !ok || len(betas) != 1 || betas[0] != InterleavedThinkingBeta {
+		t.Fatalf("unconfigured thinking should keep the interleaved-thinking beta: %#v", body["betas"])
+	}
+}
+
+func TestAnthropicNativeBudgetRequestBecomesPlainEnabled(t *testing.T) {
+	identity := Identity{UserAgentProduct: CLIUserAgentProduct, Version: CLIVersion, Hostname: "host", DeviceModel: "model", OSVersion: "os", DeviceID: "device"}
+	provider, err := NewTokenProvider(TokenProviderParams{Credentials: &oauth.OAuthCredentials{AccessToken: "access", RefreshToken: "refresh", ExpiresAt: time.Now().Add(time.Hour)}, HTTPClient: httpclient.NewHttpClient(), Identity: identity})
+	if err != nil {
+		t.Fatal(err)
+	}
+	outbound, err := NewOutboundTransformer(Params{TokenProvider: provider, Identity: identity, Models: []Model{{ID: "claude", ContextLength: 1, Protocol: ProtocolAnthropic}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	original := &llm.Request{
+		Model:           "claude",
+		Messages:        []llm.Message{{Role: "user", Content: llm.MessageContent{Content: lo.ToPtr("hello")}}},
+		ReasoningBudget: lo.ToPtr(int64(8000)),
+	}
+	request, err := outbound.TransformRequest(context.Background(), original)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(request.Body, &body); err != nil {
+		t.Fatal(err)
+	}
+	thinking, ok := body["thinking"].(map[string]any)
+	if !ok || thinking["type"] != "enabled" {
+		t.Fatalf("budget request should map to plain enabled thinking: %s", request.Body)
+	}
+	if _, hasBudget := thinking["budget_tokens"]; hasBudget {
+		t.Fatalf("budget_tokens must not be sent to Kimi: %s", request.Body)
+	}
+}
+
+func TestKimiThinkingEffortNormalization(t *testing.T) {
+	tests := []struct {
+		effort string
+		want   map[string]any
+	}{
+		{effort: "none", want: map[string]any{"type": "disabled"}},
+		{effort: "minimal", want: map[string]any{"type": "enabled", "effort": "low"}},
+		{effort: "xhigh", want: map[string]any{"type": "enabled", "effort": "max"}},
+		{effort: "max", want: map[string]any{"type": "enabled", "effort": "max"}},
+		{effort: "high", want: map[string]any{"type": "enabled", "effort": "high"}},
+	}
+	for _, test := range tests {
+		body, err := applyKimiThinking([]byte(`{"reasoning_effort":"high","model":"kimi"}`), test.effort)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var decoded map[string]any
+		if err := json.Unmarshal(body, &decoded); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := decoded["reasoning_effort"]; ok {
+			t.Fatalf("reasoning_effort should be removed for effort %q: %s", test.effort, body)
+		}
+		got, ok := decoded["thinking"].(map[string]any)
+		if !ok {
+			t.Fatalf("thinking missing for effort %q: %s", test.effort, body)
+		}
+		if fmt.Sprint(got) != fmt.Sprint(test.want) {
+			t.Fatalf("thinking for effort %q = %v, want %v", test.effort, got, test.want)
+		}
+	}
+	noEffort, err := applyKimiThinking([]byte(`{"model":"kimi"}`), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(noEffort) != `{"model":"kimi"}` {
+		t.Fatalf("empty effort should leave the body untouched: %s", noEffort)
 	}
 }

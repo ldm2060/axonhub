@@ -81,3 +81,60 @@ func TestKimiCode_CheckQuota_MissingAPIKey(t *testing.T) {
 	_, err := checker.CheckQuota(context.Background(), &ent.Channel{Type: channel.TypeMoonshotCoding})
 	require.ErrorContains(t, err, "channel has no API key")
 }
+
+// TestParseKimiCodeUsageResponseCurrentShape covers the ratio-based usages
+// payload served by the current Kimi Code backend.
+func TestParseKimiCodeUsageResponseCurrentShape(t *testing.T) {
+	body := `{
+		"usages":{
+			"limit_5h":{"used_ratio":0.23,"reset_time":"2099-07-20T12:00:00Z"},
+			"limit_7d":{"used_ratio":"0.42","reset_time":"2099-07-24T00:00:00Z"},
+			"limit_month_total":{"used_ratio":0.95,"reset_time":"2099-07-31T00:00:00Z"},
+			"limit_month_code":{"used_ratio":1.05,"reset_time":"2099-07-31T00:00:00Z"}
+		},
+		"boosterWallet":{
+			"balance":{"type":"BOOSTER","amount":1250000000,"amountLeft":250000000},
+			"monthlyChargeLimitEnabled":true,
+			"monthlyChargeLimit":{"priceInCents":5000,"currency":"USD"},
+			"monthlyUsed":{"priceInCents":1234,"currency":"USD"}
+		}
+	}`
+	quota, err := parseKimiCodeUsageResponse([]byte(body))
+	require.NoError(t, err)
+	require.Equal(t, "exhausted", quota.Status)
+	require.Equal(t, "kimi_code", quota.ProviderType)
+	// The two monthly windows share the 30d window key, so normalization
+	// collapses them into the worse one and caps the ratio at 1.
+	require.Len(t, quota.Limits, 3)
+
+	require.InDelta(t, 0.23, quota.Limits[0].UsageRatio, 0.001)
+	require.Equal(t, "5h", quota.Limits[0].Window)
+	require.InDelta(t, 0.42, quota.Limits[1].UsageRatio, 0.001)
+	require.Equal(t, "7d", quota.Limits[1].Window)
+	require.InDelta(t, 1, quota.Limits[2].UsageRatio, 0.001)
+	require.Equal(t, "30d", quota.Limits[2].Window)
+	require.Equal(t, "exhausted", quota.Limits[2].Status)
+
+	require.NotNil(t, quota.NextResetAt)
+	require.Equal(t, time.Date(2099, 7, 20, 12, 0, 0, 0, time.UTC), *quota.NextResetAt)
+
+	rows, ok := quota.RawData["rows"].([]kimiCodeUsageRow)
+	require.True(t, ok)
+	require.Len(t, rows, 4)
+	require.Equal(t, "5h limit", rows[0].Label)
+	require.Equal(t, int64(23), rows[0].Used)
+	require.Equal(t, int64(100), rows[0].Limit)
+	wallet, ok := quota.RawData["boosterWallet"].(kimiCodeBoosterWallet)
+	require.True(t, ok)
+	require.Equal(t, int64(250), wallet.BalanceCents)
+}
+
+// TestParseKimiCodeUsageResponseIgnoresUnknownEntries verifies unknown usage
+// keys and malformed ratios are skipped instead of failing the whole payload.
+func TestParseKimiCodeUsageResponseIgnoresUnknownEntries(t *testing.T) {
+	body := `{"usages":{"limit_5h":{"used_ratio":0.5},"future_window":{"used_ratio":0.1},"limit_7d":{"used_ratio":"not-a-number"}}}`
+	quota, err := parseKimiCodeUsageResponse([]byte(body))
+	require.NoError(t, err)
+	require.Len(t, quota.Limits, 1)
+	require.Equal(t, "5h", quota.Limits[0].Window)
+}

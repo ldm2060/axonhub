@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
@@ -17,9 +18,19 @@ import (
 const kimiCodeDefaultBaseURL = "https://api.kimi.com/coding/v1"
 
 type kimiCodeUsageResponse struct {
+	// Usages is the current upstream shape: ratio-based entries keyed by
+	// window (limit_5h, limit_7d, limit_month_total, limit_month_code).
+	Usages map[string]kimiCodeUsageEntry `json:"usages"`
+	// Usage and Limits are the legacy absolute-usage shape kept for older
+	// servers.
 	Usage         map[string]any   `json:"usage"`
 	Limits        []map[string]any `json:"limits"`
 	BoosterWallet map[string]any   `json:"boosterWallet"`
+}
+
+type kimiCodeUsageEntry struct {
+	UsedRatio any    `json:"used_ratio"`
+	ResetTime string `json:"reset_time"`
 }
 
 type kimiCodeUsageRow struct {
@@ -107,6 +118,14 @@ func parseKimiCodeUsageResponse(body []byte) (QuotaData, error) {
 		return QuotaData{}, fmt.Errorf("failed to parse kimi code usage response: %w", err)
 	}
 
+	if len(response.Usages) > 0 {
+		rows, windows := parseKimiCodeUsageEntries(response.Usages)
+		if len(rows) == 0 {
+			return QuotaData{}, fmt.Errorf("kimi code usage response contains no quota limits")
+		}
+		return assembleKimiCodeQuota(rows, windows, response.BoosterWallet), nil
+	}
+
 	rows := make([]kimiCodeUsageRow, 0, len(response.Limits)+1)
 	windows := make([]time.Duration, 0, len(response.Limits)+1)
 	if row, ok := parseKimiCodeUsageRow(response.Usage, "Weekly limit"); ok {
@@ -128,6 +147,51 @@ func parseKimiCodeUsageResponse(body []byte) (QuotaData, error) {
 		return QuotaData{}, fmt.Errorf("kimi code usage response contains no quota limits")
 	}
 
+	return assembleKimiCodeQuota(rows, windows, response.BoosterWallet), nil
+}
+
+// kimiCodeUsageWindowDefs lists the ratio-based usage windows reported by the
+// current /usages payload, in display order.
+var kimiCodeUsageWindowDefs = []struct {
+	Key    string
+	Label  string
+	Window time.Duration
+}{
+	{"limit_5h", "5h limit", 5 * time.Hour},
+	{"limit_7d", "7d limit", 7 * 24 * time.Hour},
+	{"limit_month_total", "Monthly limit", 30 * 24 * time.Hour},
+	{"limit_month_code", "Monthly code limit", 30 * 24 * time.Hour},
+}
+
+// parseKimiCodeUsageEntries converts the ratio-based usages map into display
+// rows (used/limit expressed as percent out of 100) plus their window lengths.
+func parseKimiCodeUsageEntries(usages map[string]kimiCodeUsageEntry) ([]kimiCodeUsageRow, []time.Duration) {
+	rows := make([]kimiCodeUsageRow, 0, len(kimiCodeUsageWindowDefs))
+	windows := make([]time.Duration, 0, len(kimiCodeUsageWindowDefs))
+	for _, def := range kimiCodeUsageWindowDefs {
+		entry, ok := usages[def.Key]
+		if !ok {
+			continue
+		}
+		ratio, ok := kimiCodeRatio(entry.UsedRatio)
+		if !ok {
+			continue
+		}
+		percent := max(int64(math.Round(ratio*100)), 0)
+		row := kimiCodeUsageRow{Label: def.Label, Used: percent, Limit: 100}
+		if entry.ResetTime != "" {
+			resetAt := entry.ResetTime
+			row.ResetAt = &resetAt
+		}
+		rows = append(rows, row)
+		windows = append(windows, def.Window)
+	}
+	return rows, windows
+}
+
+// assembleKimiCodeQuota builds the normalized QuotaData shared by the
+// ratio-based and legacy usage shapes.
+func assembleKimiCodeQuota(rows []kimiCodeUsageRow, windows []time.Duration, boosterWallet map[string]any) QuotaData {
 	status := "available"
 	limits := make([]QuotaLimitStatus, 0, len(rows))
 	var nextResetAt *time.Time
@@ -165,7 +229,7 @@ func parseKimiCodeUsageResponse(body []byte) (QuotaData, error) {
 	}
 
 	rawData := map[string]any{"rows": rows}
-	if wallet, ok := parseKimiCodeBoosterWallet(response.BoosterWallet); ok {
+	if wallet, ok := parseKimiCodeBoosterWallet(boosterWallet); ok {
 		rawData["boosterWallet"] = wallet
 	}
 
@@ -176,7 +240,21 @@ func parseKimiCodeUsageResponse(body []byte) (QuotaData, error) {
 		NextResetAt:  nextResetAt,
 		Ready:        IsReadyStatus(status),
 		Limits:       limits,
-	}), nil
+	})
+}
+
+// kimiCodeRatio reads a used_ratio value that upstream serializes as either a
+// JSON number or a numeric string.
+func kimiCodeRatio(value any) (float64, bool) {
+	switch value := value.(type) {
+	case float64:
+		return value, true
+	case string:
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil {
+			return parsed, true
+		}
+	}
+	return 0, false
 }
 
 func parseKimiCodeUsageRow(raw map[string]any, fallbackLabel string) (kimiCodeUsageRow, bool) {

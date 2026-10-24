@@ -18,6 +18,7 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 const protocolMetadataKey = "kimi_code_protocol"
@@ -31,6 +32,7 @@ type OutboundTransformer struct {
 	baseURL   string
 	models    map[string]Model
 	openAI    transformer.Outbound
+	responses transformer.Outbound
 	anthropic transformer.Outbound
 }
 
@@ -73,6 +75,12 @@ func NewOutboundTransformer(params Params) (*OutboundTransformer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create Kimi Code OpenAI transformer: %w", err)
 	}
+	responsesOutbound, err := responses.NewOutboundTransformerWithConfig(&responses.Config{
+		BaseURL: baseURL, APIKeyProvider: auth.NewStaticKeyProvider("placeholder"), EndpointPath: ResponsesPath,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create Kimi Code Responses transformer: %w", err)
+	}
 	anthropicOutbound, err := anthropic.NewOutboundTransformerWithConfig(&anthropic.Config{
 		Type: anthropic.PlatformDirect, BaseURL: baseURL, APIKeyProvider: auth.NewStaticKeyProvider("placeholder"), EndpointPath: MessagesPath,
 	})
@@ -81,7 +89,7 @@ func NewOutboundTransformer(params Params) (*OutboundTransformer, error) {
 	}
 	return &OutboundTransformer{
 		tokens: params.TokenProvider, identity: params.Identity, baseURL: baseURL, models: modelMap,
-		openAI: openAIOutbound, anthropic: anthropicOutbound,
+		openAI: openAIOutbound, responses: responsesOutbound, anthropic: anthropicOutbound,
 	}, nil
 }
 
@@ -99,10 +107,14 @@ func (t *OutboundTransformer) TransformRequest(ctx context.Context, request *llm
 	if err != nil {
 		return nil, err
 	}
-	if model.Protocol == ProtocolAnthropic {
+	switch model.Protocol {
+	case ProtocolAnthropic:
 		return t.transformAnthropicRequest(ctx, request, credentials.AccessToken)
+	case ProtocolResponse:
+		return t.transformResponsesRequest(ctx, request, credentials.AccessToken)
+	default:
+		return t.transformKimiRequest(ctx, request, credentials.AccessToken)
 	}
-	return t.transformKimiRequest(ctx, request, credentials.AccessToken)
 }
 
 func (t *OutboundTransformer) transformKimiRequest(ctx context.Context, original *llm.Request, token string) (*httpclient.Request, error) {
@@ -126,7 +138,24 @@ func (t *OutboundTransformer) transformKimiRequest(ctx context.Context, original
 	if err != nil {
 		return nil, err
 	}
+	// Kimi's chat completions wire carries thinking in a `thinking` object
+	// rather than OpenAI's reasoning_effort.
+	result.Body, err = applyKimiThinking(result.Body, copyRequest.ReasoningEffort)
+	if err != nil {
+		return nil, err
+	}
 	if err := t.applyKimiIdentity(result, token, ProtocolKimi); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (t *OutboundTransformer) transformResponsesRequest(ctx context.Context, original *llm.Request, token string) (*httpclient.Request, error) {
+	result, err := t.responses.TransformRequest(ctx, original)
+	if err != nil {
+		return nil, err
+	}
+	if err := t.applyKimiIdentity(result, token, ProtocolResponse); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -134,13 +163,20 @@ func (t *OutboundTransformer) transformKimiRequest(ctx context.Context, original
 
 func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, original *llm.Request, token string) (*httpclient.Request, error) {
 	copyRequest := *original
-	// Kimi's beta Messages API accepts adaptive thinking but not arbitrary
-	// budget-based thinking. Do not overwrite an explicit disabled request.
 	if copyRequest.TransformerMetadata == nil {
 		copyRequest.TransformerMetadata = make(map[string]any)
 	}
-	if thinkingType, _ := copyRequest.TransformerMetadata[anthropic.TransformerMetadataKeyThinkingType].(string); thinkingType != "disabled" && copyRequest.ReasoningEffort != "none" && (copyRequest.ReasoningEffort != "" || copyRequest.ReasoningBudget != nil) {
-		copyRequest.TransformerMetadata[anthropic.TransformerMetadataKeyThinkingType] = "adaptive"
+	thinkingType, _ := copyRequest.TransformerMetadata[anthropic.TransformerMetadataKeyThinkingType].(string)
+	thinkingDisabled := thinkingType == "disabled" || copyRequest.ReasoningEffort == llm.ReasoningEffortNone
+	thinkingRequested := !thinkingDisabled && (thinkingType == "enabled" || thinkingType == "adaptive" ||
+		copyRequest.ReasoningEffort != "" || copyRequest.ReasoningBudget != nil)
+	if thinkingRequested {
+		// Kimi's beta Messages API takes the plain enabled thinking type with
+		// the effort expressed through output_config; it rejects Anthropic's
+		// budget_tokens. Let the unified path encode the effort, then rewrite
+		// the thinking object below.
+		delete(copyRequest.TransformerMetadata, anthropic.TransformerMetadataKeyThinkingType)
+		delete(copyRequest.TransformerMetadata, anthropic.TransformerMetadataKeyThinkingDisplay)
 		copyRequest.ReasoningBudget = nil
 	}
 	result, err := t.anthropic.TransformRequest(ctx, &copyRequest)
@@ -153,7 +189,7 @@ func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, ori
 	result.Query.Set("beta", "true")
 	// Kimi expects beta features in the JSON body rather than Anthropic-Beta.
 	result.Headers.Del("Anthropic-Beta")
-	result.Body, err = putBetasInBody(result.Body)
+	result.Body, err = putKimiAnthropicBetas(result.Body, thinkingRequested || thinkingDisabled)
 	if err != nil {
 		return nil, err
 	}
@@ -163,15 +199,65 @@ func (t *OutboundTransformer) transformAnthropicRequest(ctx context.Context, ori
 	return result, nil
 }
 
-func putBetasInBody(raw []byte) ([]byte, error) {
+// putKimiAnthropicBetas mirrors the official kimiAnthropicTrait: requests with
+// a thinking configuration (enabled or disabled) carry the context-management
+// beta and a plain thinking object; requests without one keep the
+// interleaved-thinking default beta.
+func putKimiAnthropicBetas(raw []byte, thinkingConfigured bool) ([]byte, error) {
 	var body map[string]any
 	if err := json.Unmarshal(raw, &body); err != nil {
 		return nil, fmt.Errorf("decode Kimi Code Anthropic request: %w", err)
 	}
-	body["betas"] = []string{"interleaved-thinking-2025-05-14"}
+	if thinkingConfigured {
+		thinkingType := "enabled"
+		if current, ok := body["thinking"].(map[string]any); ok {
+			if value, _ := current["type"].(string); value == "disabled" {
+				thinkingType = "disabled"
+			}
+		}
+		body["thinking"] = map[string]any{"type": thinkingType}
+		body["betas"] = []string{ContextManagementBeta}
+	} else {
+		body["betas"] = []string{InterleavedThinkingBeta}
+	}
 	encoded, err := json.Marshal(body)
 	if err != nil {
 		return nil, fmt.Errorf("encode Kimi Code Anthropic request: %w", err)
+	}
+	return encoded, nil
+}
+
+// applyKimiThinking maps the unified reasoning effort onto Kimi's thinking
+// object (`{"type":"enabled","effort":"high"}`), replacing OpenAI's
+// reasoning_effort. Kimi declares model-specific efforts; xhigh/max collapse
+// onto Kimi's "max" and the OpenAI-only minimal maps to low.
+func applyKimiThinking(raw []byte, effort string) ([]byte, error) {
+	if effort == "" {
+		return raw, nil
+	}
+	var body map[string]any
+	if err := json.Unmarshal(raw, &body); err != nil {
+		return nil, fmt.Errorf("decode Kimi Code chat request: %w", err)
+	}
+	delete(body, "reasoning_effort")
+	thinking := map[string]any{}
+	switch effort {
+	case llm.ReasoningEffortNone:
+		thinking["type"] = "disabled"
+	case llm.ReasoningEffortMinimal:
+		thinking["type"] = "enabled"
+		thinking["effort"] = llm.ReasoningEffortLow
+	case llm.ReasoningEffortXHigh:
+		thinking["type"] = "enabled"
+		thinking["effort"] = llm.ReasoningEffortMax
+	default:
+		thinking["type"] = "enabled"
+		thinking["effort"] = effort
+	}
+	body["thinking"] = thinking
+	encoded, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("encode Kimi Code chat request: %w", err)
 	}
 	return encoded, nil
 }
@@ -201,31 +287,33 @@ func (t *OutboundTransformer) applyKimiIdentity(request *httpclient.Request, tok
 }
 
 func (t *OutboundTransformer) protocolForRequest(request *httpclient.Request) string {
-	if request != nil && request.Metadata != nil && request.Metadata[protocolMetadataKey] == ProtocolAnthropic {
-		return ProtocolAnthropic
+	if request != nil && request.Metadata != nil && request.Metadata[protocolMetadataKey] != "" {
+		return request.Metadata[protocolMetadataKey]
 	}
 	return ProtocolKimi
 }
 
-func (t *OutboundTransformer) TransformResponse(ctx context.Context, response *httpclient.Response) (*llm.Response, error) {
-	if t.protocolForRequest(response.Request) == ProtocolAnthropic {
-		return t.anthropic.TransformResponse(ctx, response)
+func (t *OutboundTransformer) outboundForProtocol(protocol string) transformer.Outbound {
+	switch protocol {
+	case ProtocolAnthropic:
+		return t.anthropic
+	case ProtocolResponse:
+		return t.responses
+	default:
+		return t.openAI
 	}
-	return t.openAI.TransformResponse(ctx, response)
+}
+
+func (t *OutboundTransformer) TransformResponse(ctx context.Context, response *httpclient.Response) (*llm.Response, error) {
+	return t.outboundForProtocol(t.protocolForRequest(response.Request)).TransformResponse(ctx, response)
 }
 
 func (t *OutboundTransformer) TransformStream(ctx context.Context, request *httpclient.Request, stream streams.Stream[*httpclient.StreamEvent]) (streams.Stream[*llm.Response], error) {
-	if t.protocolForRequest(request) == ProtocolAnthropic {
-		return t.anthropic.TransformStream(ctx, request, stream)
-	}
-	return t.openAI.TransformStream(ctx, request, stream)
+	return t.outboundForProtocol(t.protocolForRequest(request)).TransformStream(ctx, request, stream)
 }
 
 func (t *OutboundTransformer) AggregateStreamChunks(ctx context.Context, request *httpclient.Request, chunks []*httpclient.StreamEvent) ([]byte, llm.ResponseMeta, error) {
-	if t.protocolForRequest(request) == ProtocolAnthropic {
-		return t.anthropic.AggregateStreamChunks(ctx, request, chunks)
-	}
-	return t.openAI.AggregateStreamChunks(ctx, request, chunks)
+	return t.outboundForProtocol(t.protocolForRequest(request)).AggregateStreamChunks(ctx, request, chunks)
 }
 
 func (t *OutboundTransformer) TransformError(ctx context.Context, rawErr *httpclient.Error) *llm.ResponseError {

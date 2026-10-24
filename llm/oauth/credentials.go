@@ -45,6 +45,7 @@ type KimiCodeMetadata struct {
 
 type KimiCodeModel struct {
 	ID                   string                `json:"id"`
+	DisplayName          string                `json:"display_name,omitempty"`
 	ContextLength        int64                 `json:"context_length"`
 	Protocol             string                `json:"protocol,omitempty"`
 	SupportsReasoning    bool                  `json:"supports_reasoning,omitempty"`
