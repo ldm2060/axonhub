@@ -95,16 +95,9 @@ export function useSidebarData(): SidebarData {
     [filterNavGroups, rawNavGroups, hiddenItems]
   );
 
-  // Admin group only visible to system owners
-  const isSystemOwner = user?.isOwner === true;
-  const finalNavGroups = filteredNavGroups
-    .map((group) => {
-      if (group.title === t('sidebar.groups.admin') && !isSystemOwner) {
-        return { ...group, items: [] };
-      }
-      return group;
-    })
-    .filter((group) => group.items.length > 0);
+  // Permission-filtered groups; drop any left empty (e.g. the Admin group for
+  // a user without any system-level admin scopes).
+  const finalNavGroups = filteredNavGroups.filter((group) => group.items.length > 0);
 
   return {
     user: {

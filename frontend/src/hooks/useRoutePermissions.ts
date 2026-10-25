@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { routeConfigs, type RouteConfig, type RouteGroup, type ScopeLevel } from '@/config/route-permission';
+import { routeConfigs, getRouteConfigByPathWithGroup, type RouteConfig, type RouteGroup, type ScopeLevel } from '@/config/route-permission';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { type NavGroup, type NavItem } from '@/components/layout/types';
@@ -166,25 +166,4 @@ export function useRoutePermissions() {
     filterNavItems,
     filterNavGroups,
   };
-}
-
-// 辅助函数：根据路径查找路由配置及其所属组的 scopeLevel
-function getRouteConfigByPathWithGroup(path: string): {
-  routeConfig?: RouteConfig;
-  groupScopeLevel?: ScopeLevel;
-} {
-  for (const group of routeConfigs) {
-    for (const route of group.routes) {
-      if (route.path === path) {
-        return { routeConfig: route, groupScopeLevel: group.scopeLevel };
-      }
-      if (route.children) {
-        const childConfig = route.children.find((child) => child.path === path);
-        if (childConfig) {
-          return { routeConfig: childConfig, groupScopeLevel: group.scopeLevel };
-        }
-      }
-    }
-  }
-  return {};
 }

@@ -63,6 +63,16 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/users',
+        requiredScopes: ['read_users'],
+        mode: 'hidden',
+      },
+      {
+        path: '/admin/roles',
+        requiredScopes: ['read_roles'],
+        mode: 'hidden',
+      },
+      {
         path: '/admin/oauth-applications',
         requiredScopes: ['read_settings'],
         mode: 'hidden',
@@ -215,4 +225,93 @@ export function hasRouteAccess(userScopes: string[], routeConfig: RouteConfig): 
 // 检查用户是否有访问路由组的权限
 export function hasGroupAccess(userScopes: string[], group: RouteGroup): boolean {
   return group.routes.some((route) => hasRouteAccess(userScopes, route));
+}
+
+// 根据路径查找路由配置及其所属组的 scopeLevel
+export function getRouteConfigByPathWithGroup(path: string): {
+  routeConfig?: RouteConfig;
+  groupScopeLevel?: ScopeLevel;
+} {
+  for (const group of routeConfigs) {
+    for (const route of group.routes) {
+      if (route.path === path) {
+        return { routeConfig: route, groupScopeLevel: group.scopeLevel };
+      }
+      if (route.children) {
+        const childConfig = route.children.find((child) => child.path === path);
+        if (childConfig) {
+          return { routeConfig: childConfig, groupScopeLevel: group.scopeLevel };
+        }
+      }
+    }
+  }
+  return {};
+}
+
+// Detail paths without an explicit config (e.g. /admin/requests/123) inherit
+// the config of their parent page by walking up one segment at a time.
+export function resolveRouteConfigForPath(pathname: string): {
+  routeConfig?: RouteConfig;
+  groupScopeLevel?: ScopeLevel;
+} {
+  let path = pathname;
+  while (path) {
+    const found = getRouteConfigByPathWithGroup(path);
+    if (found.routeConfig) {
+      return found;
+    }
+    const lastSlash = path.lastIndexOf('/');
+    if (lastSlash <= 0) {
+      break;
+    }
+    path = path.slice(0, lastSlash);
+  }
+  return {};
+}
+
+export interface PathAccessUser {
+  isOwner?: boolean;
+  scopes?: string[];
+  projects?: { projectID: string; isOwner: boolean; scopes?: string[]; effectiveScopes?: string[] }[];
+}
+
+// Non-hook variant of useRoutePermissions.hasRouteAccess for use in route
+// beforeLoad guards; reads plain user data so it can run outside React.
+// Paths with no config at all stay owner-only (safe default).
+export function hasPathAccess(user: PathAccessUser | null | undefined, pathname: string, selectedProjectId?: string | null): boolean {
+  const { routeConfig, groupScopeLevel } = resolveRouteConfigForPath(pathname);
+
+  if (!routeConfig) {
+    return user?.isOwner === true;
+  }
+
+  const project = selectedProjectId ? user?.projects?.find((p) => p.projectID === selectedProjectId) : undefined;
+  const isProjectOwner = user?.isOwner === true || project?.isOwner === true;
+
+  if (routeConfig.requireProjectOwner && !isProjectOwner) {
+    return false;
+  }
+
+  if (!routeConfig.requiredScopes || routeConfig.requiredScopes.length === 0) {
+    return true;
+  }
+
+  if (user?.isOwner) {
+    return true;
+  }
+
+  const scopeLevel = routeConfig.scopeLevel || groupScopeLevel || 'any';
+  if (isProjectOwner && scopeLevel !== 'system') {
+    return true;
+  }
+
+  const systemScopes = user?.scopes ?? [];
+  const projectScopes = project?.effectiveScopes || project?.scopes || [];
+  const scopesToCheck = scopeLevel === 'system' ? systemScopes : scopeLevel === 'project' ? projectScopes : [...systemScopes, ...projectScopes];
+
+  if (scopesToCheck.includes('*')) {
+    return true;
+  }
+
+  return routeConfig.requiredScopes.some((scope) => scopesToCheck.includes(scope));
 }
