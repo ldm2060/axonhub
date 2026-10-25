@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { hasPathAccess } from '@/config/route-permission';
 import i18next from 'i18next';
 import { toast } from 'sonner';
-import { hasPathAccess } from '@/config/route-permission';
 import { useAuthStore } from '@/stores/authStore';
 import { useProjectStore } from '@/stores/projectStore';
 

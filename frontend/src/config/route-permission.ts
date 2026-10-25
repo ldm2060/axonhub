@@ -307,7 +307,8 @@ export function hasPathAccess(user: PathAccessUser | null | undefined, pathname:
 
   const systemScopes = user?.scopes ?? [];
   const projectScopes = project?.effectiveScopes || project?.scopes || [];
-  const scopesToCheck = scopeLevel === 'system' ? systemScopes : scopeLevel === 'project' ? projectScopes : [...systemScopes, ...projectScopes];
+  const scopesToCheck =
+    scopeLevel === 'system' ? systemScopes : scopeLevel === 'project' ? projectScopes : [...systemScopes, ...projectScopes];
 
   if (scopesToCheck.includes('*')) {
     return true;
