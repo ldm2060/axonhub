@@ -5,7 +5,10 @@ import type { DashboardMode } from './dashboard';
 
 export type { DashboardMode } from './dashboard';
 
-const REFETCH_INTERVAL_MS = 30000;
+// Throughput rankings are expensive 30-day aggregates. The performance
+// section already refreshes its charts every five minutes, so polling these
+// every 30 seconds only loaded the database.
+const REFETCH_INTERVAL_MS = 5 * 60_000;
 
 export const fastestChannelSchema = z.object({
   channelId: z.string(),
@@ -102,6 +105,8 @@ export function useFastestChannels(timeWindow: string = 'day', limit: number = 5
       return data[fieldName].map((item) => fastestChannelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,
+    staleTime: REFETCH_INTERVAL_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -117,6 +122,8 @@ export function useFastestModels(timeWindow: string = 'day', limit: number = 5, 
       return data[fieldName].map((item) => fastestModelSchema.parse(item));
     },
     refetchInterval: REFETCH_INTERVAL_MS,
+    staleTime: REFETCH_INTERVAL_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }

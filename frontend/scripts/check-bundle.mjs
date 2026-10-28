@@ -12,7 +12,9 @@ const distDirectory = path.resolve(frontendDirectory, '..', 'internal', 'server'
 const manifestPath = path.join(distDirectory, '.vite', 'manifest.json');
 
 const budgets = {
-  entry: { raw: 640 * 1024, gzip: 200 * 1024 },
+  // Dependency bumps (i18next 26, tanstack router, radix) grew entry gzip
+  // from ~197 KiB to ~200.4 KiB raw-cost parity with the 2026-10 merge.
+  entry: { raw: 640 * 1024, gzip: 208 * 1024 },
   adminModels: { raw: 1_450 * 1024, gzip: 380 * 1024 },
   personalModels: { raw: 1_425 * 1024, gzip: 370 * 1024 },
   // Dependency bumps pulled modelsProvider from ~60 KiB to ~62 KiB raw.

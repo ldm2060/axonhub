@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import type { ChannelQuotaRoutingMode } from '@/features/channels/data/schema';
@@ -23,6 +24,7 @@ const PROVIDER_QUOTA_STATUSES_QUERY = `
           name
           type
           quotaBindingReady
+          orderingWeight
           settings {
             quotaRoutingMode
           }
@@ -172,16 +174,6 @@ export type ProviderNanoGPTQuotaData = ProviderQuotaDataCommon & {
     dailyInputTokens?: NanoGPTQuotaWindow | null;
   };
   period?: { currentPeriodEnd?: string };
-};
-
-export type ProviderWaferQuotaData = ProviderQuotaDataCommon & {
-  current_period_used_percent?: number | null;
-  remaining_included_requests?: number | null;
-  included_request_limit?: number | null;
-  overage_request_count?: number | null;
-  window_start?: string | null;
-  window_end?: string | null;
-  plan_tier?: string | null;
 };
 
 export type ProviderSyntheticQuotaData = ProviderQuotaDataCommon & {
@@ -496,8 +488,12 @@ export type OllamaQuotaWindow = {
 
 export type ProviderOllamaQuotaData = ProviderQuotaDataCommon & {
   windows?: {
+    monthly?: OllamaQuotaWindow;
     '5h'?: OllamaQuotaWindow;
     weekly?: OllamaQuotaWindow;
+  };
+  credits?: {
+    purchased_usd?: number;
   };
 };
 
@@ -667,8 +663,12 @@ export type ProviderQuotaChannel = {
   // false means bindings judged not-ready. null/undefined means no bindings, so
   // the independent quotaStatus filter is the fallback.
   quotaBindingReady?: boolean | null;
+  // Display-sort rank set via the channels page "Order channels" dialog; the
+  // load balancer treats higher weight as higher priority, so the quota
+  // popover mirrors that order in its 'preferred' sort mode.
+  orderingWeight: number;
   // Present on OpenAI-compatible channels that share the openai/openai_responses
-  // channel type (wafer, synthetic, neuralwatt, apertis, charm_hyper). Other
+  // channel type (synthetic, neuralwatt, apertis, charm_hyper). Other
   // channel types leave this undefined.
   providerType?: string;
   // Account identity shared by channels drawing from the same provider account
@@ -767,13 +767,6 @@ export type ProviderQuotaChannel = {
     }
   | {
       type: 'openai' | 'openai_responses';
-      providerType: 'wafer';
-      quotaStatus: {
-        quotaData: ProviderWaferQuotaData;
-      };
-    }
-  | {
-      type: 'openai' | 'openai_responses';
       providerType: 'synthetic';
       quotaStatus: {
         quotaData: ProviderSyntheticQuotaData;
@@ -835,6 +828,7 @@ type QueryChannelNode = {
   name: string;
   type: string;
   quotaBindingReady?: boolean | null;
+  orderingWeight: number;
   settings: { quotaRoutingMode: ChannelQuotaRoutingMode } | null;
   providerQuotaStatus: ProviderQuotaStatusNode | null;
 };
@@ -864,6 +858,7 @@ function parseChannelNode(node: QueryChannelNodeWithQuota): ProviderQuotaChannel
     name: node.name,
     quotaBindingReady: node.quotaBindingReady ?? null,
     providerType: optionalString(quotaStatus.providerType),
+    orderingWeight: node.orderingWeight,
     quotaRoutingMode: node.settings?.quotaRoutingMode ?? 'INHERIT',
     accountKey: optionalString(quotaStatus.accountKey),
     quotaStatus: {
@@ -970,14 +965,6 @@ function parseChannelNode(node: QueryChannelNodeWithQuota): ProviderQuotaChannel
   }
   if (node.type === 'openai' || node.type === 'openai_responses') {
     const typeVal = node.type as 'openai' | 'openai_responses';
-    if (providerType === 'wafer') {
-      return {
-        ...base,
-        type: typeVal,
-        providerType: 'wafer' as const,
-        quotaStatus: { ...base.quotaStatus, quotaData: node.providerQuotaStatus.quotaData as ProviderWaferQuotaData },
-      };
-    }
     if (providerType === 'synthetic') {
       return {
         ...base,
@@ -1055,17 +1042,22 @@ export function useProviderQuotaStatuses() {
     refetchIntervalInBackground: true,
   });
 
-  const channels = (query.data?.queryChannels?.edges ?? [])
-    .map((edge) => edge?.node ?? null)
-    .filter(hasProviderQuotaStatus)
-    .filter((c) => {
-      // Skip channels that have no credentials configured, since they cannot be
-      // checked and only add noise to the quota popover. Other failures remain
-      // available with their generic status for administrators to inspect.
-      const quotaData = c.providerQuotaStatus.quotaData as { error?: string; error_code?: string } | undefined;
-      return quotaData?.error_code !== 'missing_credentials' && quotaData?.error !== 'channel has no credentials';
-    })
-    .map(parseChannelNode);
+  const edges = query.data?.queryChannels?.edges;
+  const channels = useMemo(
+    () =>
+      (edges ?? [])
+        .map((edge) => edge?.node ?? null)
+        .filter(hasProviderQuotaStatus)
+        .filter((c) => {
+          // Skip channels that have no credentials configured, since they cannot be
+          // checked and only add noise to the quota popover. Other failures remain
+          // available with their generic status for administrators to inspect.
+          const quotaData = c.providerQuotaStatus.quotaData as { error?: string; error_code?: string } | undefined;
+          return quotaData?.error_code !== 'missing_credentials' && quotaData?.error !== 'channel has no credentials';
+        })
+        .map(parseChannelNode),
+    [edges]
+  );
 
   return {
     channels,

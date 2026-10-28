@@ -4547,7 +4547,6 @@ enum ProviderQuotaStatusProviderType @goModel(model: "github.com/ldm2060/axonhub
   github_copilot
   nanogpt
   cline
-  wafer
   synthetic
   neuralwatt
   apertis

@@ -75,6 +75,14 @@ func NewEntClient(cfg Config, avatarService *avatar.Service) *ent.Client {
 			panic(err)
 		}
 
+		// Purge rows for provider types removed from the enum before the
+		// schema DDL runs: on MySQL/TiDB the enum removal rewrites the
+		// column and a surviving 'wafer' row would abort the ALTER (strict
+		// mode) or be truncated.
+		if err := cleanupRemovedProviderQuotaTypes(context.Background(), masterDB, cfg.Dialect); err != nil {
+			panic(err)
+		}
+
 		err = client.Schema.Create(
 			context.Background(),
 			migrate.WithGlobalUniqueID(false),

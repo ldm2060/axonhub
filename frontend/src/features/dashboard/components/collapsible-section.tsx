@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
@@ -19,6 +19,11 @@ export function CollapsibleSection({ title, icon, children, storageKey, defaultO
       return defaultOpen;
     }
   });
+  // Pre-expanded sections below the fold used to mount every widget (and fire
+  // every aggregate query) during the initial page load. Defer mounting until
+  // the section approaches the viewport; once visible it stays mounted.
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -28,8 +33,33 @@ export function CollapsibleSection({ title, icon, children, storageKey, defaultO
     }
   }, [isOpen, storageKey]);
 
+  useEffect(() => {
+    if (hasBeenVisible) return;
+
+    const node = containerRef.current;
+    if (!node) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setHasBeenVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setHasBeenVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '240px 0px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasBeenVisible]);
+
   return (
-    <div className='space-y-4'>
+    <div ref={containerRef} className='space-y-4'>
       <button
         type='button'
         onClick={() => setIsOpen(!isOpen)}
@@ -44,7 +74,7 @@ export function CollapsibleSection({ title, icon, children, storageKey, defaultO
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
-        {isOpen && (
+        {isOpen && hasBeenVisible && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -33,6 +33,7 @@ import XiaomiMiMo from '@lobehub/icons/es/XiaomiMiMo/components/Mono.js';
 import ZAI from '@lobehub/icons/es/ZAI/components/Mono.js';
 import ZenMux from '@lobehub/icons/es/ZenMux/components/Mono.js';
 import Zhipu from '@lobehub/icons/es/Zhipu/components/Mono.js';
+import { isSuggestedModel } from '../../models/data/model-suggestions';
 import { AtlasCloudIcon } from '../components/atlas-cloud-icon';
 import { CommandCodeIcon } from '../components/commandcode-icon';
 import { EvolinkIcon } from '../components/evolink-icon';
@@ -207,7 +208,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
   minimax: {
     channelType: 'minimax',
     baseURL: 'https://api.minimaxi.com/v1',
-    defaultModels: ['MiniMax-M3', 'MiniMax-M2.7', 'MiniMax-M2.7-highspeed'],
+    defaultModels: ['MiniMax-M3.1-Flash', 'MiniMax-M3'],
     apiFormat: OPENAI_CHAT_COMPLETIONS,
     color: 'bg-red-100 text-red-800 border-red-200',
     icon: Minimax,
@@ -215,7 +216,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
   minimax_anthropic: {
     channelType: 'minimax_anthropic',
     baseURL: 'https://api.minimaxi.com/anthropic',
-    defaultModels: ['MiniMax-M3', 'MiniMax-M2.7', 'MiniMax-M2.7-highspeed'],
+    defaultModels: ['MiniMax-M3.1-Flash', 'MiniMax-M3'],
     apiFormat: ANTHROPIC_MESSAGES,
     color: 'bg-red-100 text-red-800 border-red-200',
     icon: Minimax,
@@ -947,7 +948,7 @@ export const getDefaultBaseURL = (channelType: ChannelType): string => {
  * Get default models for a channel type
  */
 export const getDefaultModels = (channelType: ChannelType): string[] => {
-  return CHANNEL_CONFIGS[channelType]?.defaultModels || [];
+  return (CHANNEL_CONFIGS[channelType]?.defaultModels || []).filter(isSuggestedModel);
 };
 
 /**

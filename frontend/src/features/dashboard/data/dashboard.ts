@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
 import { useSelectedProjectId } from '@/stores/projectStore';
 
+// Dashboard queries poll on these intervals. Keep staleTime in step with the
+// interval so remounting a collapsed section (or returning focus to the tab)
+// does not re-run the same expensive aggregates before their data is due.
+const DASHBOARD_STATS_REFETCH_MS = 30_000;
+const DASHBOARD_AGGREGATE_REFETCH_MS = 60_000;
+const DASHBOARD_SLOW_REFETCH_MS = 5 * 60_000;
+
 // Schema definitions
 export type DashboardMode = 'project' | 'personal';
 
@@ -405,7 +412,9 @@ export function useDailyUsageStatsByUser(days?: number, mode: DashboardMode = 'p
       return data[fieldName].map((item) => dailyUsageStatsByUserSchema.parse(item));
     },
     enabled: isPersonal || !!selectedProjectId,
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -424,7 +433,9 @@ export function useUsageStatsByUser(timeWindow?: string, mode: DashboardMode = '
       return data[fieldName].map((item) => usageStatsByUserSchema.parse(item));
     },
     enabled: isPersonal || !!selectedProjectId,
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -670,7 +681,9 @@ export function useDashboardStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: DashboardStats }>(query);
       return dashboardStatsSchema.parse(data[fieldName]);
     },
-    refetchInterval: 30000,
+    refetchInterval: DASHBOARD_STATS_REFETCH_MS,
+    staleTime: DASHBOARD_STATS_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -684,7 +697,9 @@ export function useRequestsByChannel(timeWindow?: string, mode: DashboardMode = 
       const data = await graphqlRequest<{ [key: string]: RequestsByChannel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => requestsByChannelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -699,7 +714,9 @@ export function useRequestsByModel(timeWindow?: string, mode: DashboardMode = 'p
       const data = await graphqlRequest<{ [key: string]: RequestsByModel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => requestsByModelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -714,7 +731,9 @@ export function useRequestsByAPIKey(timeWindow?: string, mode: DashboardMode = '
       const data = await graphqlRequest<{ [key: string]: RequestsByAPIKey[] }>(query, { timeWindow });
       return data[fieldName].map((item) => requestsByAPIKeySchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -729,7 +748,9 @@ export function useTokensByAPIKey(timeWindow?: string, mode: DashboardMode = 'pr
       const data = await graphqlRequest<{ [key: string]: TokensByAPIKey[] }>(query, { timeWindow });
       return data[fieldName].map((item) => tokensByAPIKeySchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -744,7 +765,9 @@ export function useTokensByChannel(timeWindow?: string, mode: DashboardMode = 'p
       const data = await graphqlRequest<{ [key: string]: TokensByChannel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => tokensByChannelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -759,7 +782,9 @@ export function useTokensByModel(timeWindow?: string, mode: DashboardMode = 'pro
       const data = await graphqlRequest<{ [key: string]: TokensByModel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => tokensByModelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -774,7 +799,9 @@ export function useCostByChannel(timeWindow?: string, mode: DashboardMode = 'pro
       const data = await graphqlRequest<{ [key: string]: CostByChannel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => costByChannelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -789,7 +816,9 @@ export function useCostByModel(timeWindow?: string, mode: DashboardMode = 'proje
       const data = await graphqlRequest<{ [key: string]: CostByModel[] }>(query, { timeWindow });
       return data[fieldName].map((item) => costByModelSchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -804,7 +833,9 @@ export function useCostByAPIKey(timeWindow?: string, mode: DashboardMode = 'proj
       const data = await graphqlRequest<{ [key: string]: CostByAPIKey[] }>(query, { timeWindow });
       return data[fieldName].map((item) => costByAPIKeySchema.parse(item));
     },
-    refetchInterval: 60000,
+    refetchInterval: DASHBOARD_AGGREGATE_REFETCH_MS,
+    staleTime: DASHBOARD_AGGREGATE_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -819,7 +850,9 @@ export function useDailyRequestStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: DailyRequestStats[] }>(query);
       return data[fieldName].map((item) => dailyRequestStatsSchema.parse(item));
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -833,7 +866,9 @@ export function useTokenStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: TokenStats }>(query);
       return tokenStatsSchema.parse(data[fieldName]);
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -844,7 +879,9 @@ export function useTopProjects(limit = 5) {
       const data = await graphqlRequest<{ topRequestsProjects: TopProject[] }>(TOP_PROJECTS_QUERY);
       return data.topRequestsProjects.slice(0, limit).map((item) => topProjectsSchema.parse(item));
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -861,7 +898,9 @@ export function useChannelSuccessRates(limit?: number, timeWindow?: string, mode
       });
       return data[fieldName].map((item) => channelSuccessRateSchema.parse(item));
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -876,7 +915,9 @@ export function useModelPerformanceStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: ModelPerformanceStat[] }>(query);
       return data[fieldName].map((item) => modelPerformanceStatSchema.parse(item));
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -890,6 +931,8 @@ export function useChannelPerformanceStats(mode: DashboardMode = 'project') {
       const data = await graphqlRequest<{ [key: string]: ChannelPerformanceStat[] }>(query);
       return data[fieldName].map((item) => channelPerformanceStatSchema.parse(item));
     },
-    refetchInterval: 300000,
+    refetchInterval: DASHBOARD_SLOW_REFETCH_MS,
+    staleTime: DASHBOARD_SLOW_REFETCH_MS,
+    refetchOnWindowFocus: false,
   });
 }

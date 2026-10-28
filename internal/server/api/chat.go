@@ -75,7 +75,9 @@ type ChatCompletionHandlers struct {
 	sseHeartbeatFormat         sseHeartbeatFormat
 	streamAdapterFactory       streamAdapterFactory
 	safeguardsConfig           safeguards.Config
+	safeguardsConfigProvider   func(context.Context) (safeguards.Config, error)
 	reviewer                   safeguards.ClassifierFunc
+	inputUsageCache            *inputUsageCache
 }
 
 func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestrator) *ChatCompletionHandlers {
@@ -84,6 +86,7 @@ func NewChatCompletionHandlers(orchestrator *orchestrator.ChatCompletionOrchestr
 		Processor:                  orchestrator,
 		StreamWriter:               WriteSSEStreamWithOptions,
 		HTTPKeepaliveMode:          httpStreamKeepaliveSSE,
+		inputUsageCache:            newInputUsageCache(),
 	}
 }
 
@@ -323,13 +326,25 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 	ctx, cancelStream := context.WithCancel(c.Request.Context())
 	defer cancelStream()
 	c.Request = c.Request.WithContext(ctx)
+	started := time.Now()
 
 	if genericReq == nil || len(genericReq.Body) == 0 {
 		JSONError(c, http.StatusBadRequest, errors.New("Request body is empty"))
 		return
 	}
 
-	evaluator, prepared, err := prepareSafeguardsRequest(genericReq, handlers.safeguardsConfig, handlers.reviewer)
+	config := handlers.safeguardsConfig
+	// Only Claude Code requests asking for server-side safeguards need the settings lookup.
+	if handlers.safeguardsConfigProvider != nil && gjson.GetBytes(genericReq.Body, "safeguards.#(type==\"dangerous_tool_use\")").Exists() {
+		var err error
+		config, err = handlers.safeguardsConfigProvider(ctx)
+		if err != nil {
+			log.Error(ctx, "Unable to load Claude Code safeguards settings", log.Cause(err))
+			JSONError(c, http.StatusInternalServerError, errors.New("Unable to load Claude Code safeguards settings"))
+			return
+		}
+	}
+	evaluator, prepared, err := prepareSafeguardsRequest(genericReq, config, handlers.reviewer)
 	if err != nil {
 		JSONError(c, http.StatusBadRequest, err)
 		return
@@ -431,7 +446,8 @@ func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context
 
 		c.Header("Access-Control-Allow-Origin", "*")
 
-		source := wrapSafeguardsStream(ctx, result.ChatCompletionStream, evaluator, abortUpstream)
+		source := wrapAnthropicInputUsage(result.ChatCompletionStream, genericReq, newInputUsageCalibration(ctx, handlers.inputUsageCache, result.Route, started))
+		source = wrapSafeguardsStream(ctx, source, evaluator, abortUpstream)
 		stream := newUpstreamErrorStream(ctx, source, handlers.systemService())
 
 		if genericReq != nil && strings.HasSuffix(genericReq.Path, "/responses") {

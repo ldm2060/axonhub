@@ -559,6 +559,18 @@ func (r *mutationResolver) ClearCache(ctx context.Context, input ClearCacheInput
 	}, nil
 }
 
+// UpdateClaudeCodeSafeguardsSettings is the resolver for the updateClaudeCodeSafeguardsSettings field.
+func (r *mutationResolver) UpdateClaudeCodeSafeguardsSettings(ctx context.Context, input biz.ClaudeCodeSafeguardsConfig) (bool, error) {
+	err := r.systemService.SetClaudeCodeSafeguardsSettings(ctx, input)
+	return err == nil, err
+}
+
+// ResetClaudeCodeSafeguardsSettings is the resolver for the resetClaudeCodeSafeguardsSettings field.
+func (r *mutationResolver) ResetClaudeCodeSafeguardsSettings(ctx context.Context) (bool, error) {
+	err := r.systemService.ResetClaudeCodeSafeguardsSettings(ctx)
+	return err == nil, err
+}
+
 // Providers is the resolver for the providers field.
 func (r *providerQuotaCollectionSettingsResolver) Providers(ctx context.Context, obj *biz.ProviderQuotaCollectionSettings) ([]*biz.ProviderQuotaCollectionProvider, error) {
 	providers := make([]*biz.ProviderQuotaCollectionProvider, 0, len(obj.Providers))
@@ -984,6 +996,11 @@ func (r *queryResolver) EmailSettings(ctx context.Context) (*biz.EmailSettings, 
 		es.SMTPPassword = "••••••••"
 	}
 	return es, nil
+}
+
+// ClaudeCodeSafeguardsSettings is the resolver for the claudeCodeSafeguardsSettings field.
+func (r *queryResolver) ClaudeCodeSafeguardsSettings(ctx context.Context) (*biz.ClaudeCodeSafeguardsSettings, error) {
+	return r.systemService.ClaudeCodeSafeguardsSettings(ctx)
 }
 
 // SampleIntervalSeconds is the resolver for the sampleIntervalSeconds field.

@@ -10,6 +10,7 @@ export const SYSTEM_TAB_KEYS = [
   'webhook',
   'proxy',
   'quota',
+  'claude-code',
   'codex',
   'backup',
   'diagnostics',

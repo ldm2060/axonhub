@@ -123,24 +123,28 @@ export function DimensionDetailTable({ channelStats, modelStats, apiKeyStats, us
                 {currentData.map((item) => (
                   <tr key={item.id} className='hover:bg-muted/50 border-b transition-colors'>
                     <td className='bg-card sticky left-0 z-10 truncate px-4 py-2 text-sm font-medium'>{item.name}</td>
-                    <td className='px-4 py-2 text-right text-sm font-medium whitespace-nowrap'>{formatExactNumber(item.totalTokens)}</td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.inputTokens)}</td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.cachedInputTokens)}</td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
+                    <td className='px-4 py-2 text-right text-sm font-medium whitespace-nowrap tabular-nums'>
+                      {formatExactNumber(item.totalTokens)}
+                    </td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>{formatExactNumber(item.inputTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>
+                      {formatExactNumber(item.cachedInputTokens)}
+                    </td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>
                       {formatExactNumber(item.inputTokens - item.cachedInputTokens)}
                     </td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.outputTokens)}</td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>{formatExactNumber(item.outputTokens)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>
                       {item.inputTokens > 0 ? ((item.cachedInputTokens / item.inputTokens) * 100).toFixed(1) : '0'}%
                     </td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatExactNumber(item.requestCount)}</td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>{formatExactNumber(item.requestCount)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>
                       {item.tokensPerSecond == null ? '—' : item.tokensPerSecond.toFixed(2)}
                     </td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>
                       {item.ttftMs == null ? '—' : Math.round(item.ttftMs).toLocaleString()}
                     </td>
-                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap'>{formatCurrency(item.cost)}</td>
+                    <td className='px-4 py-2 text-right text-sm whitespace-nowrap tabular-nums'>{formatCurrency(item.cost)}</td>
                   </tr>
                 ))}
               </tbody>

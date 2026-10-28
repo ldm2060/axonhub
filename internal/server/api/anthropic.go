@@ -67,6 +67,8 @@ func NewAnthropicHandlers(params AnthropicHandlersParams) *AnthropicHandlers {
 	handler.sseKeepAlive = params.SSEKeepAliveConfig
 	handler.sseHeartbeatFormat = sseHeartbeatAnthropic
 	handler.safeguardsConfig = params.SafeguardsConfig
+	handler.safeguardsConfigProvider = params.SystemService.ClaudeCodeSafeguardsConfig
+	handler.inputUsageCache = newInputUsageCache()
 	handler.reviewer = newSafeguardsClassifier(handler.ChatCompletionOrchestrator)
 
 	return &AnthropicHandlers{
