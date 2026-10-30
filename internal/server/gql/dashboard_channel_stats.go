@@ -12,6 +12,8 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/samber/lo"
+
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
@@ -19,7 +21,6 @@ import (
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 	"github.com/ldm2060/axonhub/internal/server/gql/qb"
-	"github.com/samber/lo"
 )
 
 func normalizeChannelSuccessRatesParams(timeWindow *string, limit *int) (*string, *int) {
@@ -351,10 +352,7 @@ func (r *queryResolver) fastestModels(ctx context.Context, input FastestChannels
 
 	// Build query with dialect-aware timestamp placeholder
 	// Fetch more items than needed to allow confidence-based filtering
-	sqlLimit := *input.Limit * 4
-	if sqlLimit < 20 {
-		sqlLimit = 20
-	}
+	sqlLimit := max(*input.Limit*4, 20)
 
 	query := qb.BuildThroughputQuery(
 		useDollarPlaceholders,

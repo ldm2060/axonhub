@@ -7,14 +7,15 @@ import prettier from 'prettier';
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
 const iconsDirectory = path.join(frontendDirectory, 'node_modules', '@lobehub', 'icons', 'es');
-const tocPath = path.join(iconsDirectory, 'toc.json');
 const namesOutputPath = path.join(frontendDirectory, 'src', 'features', 'models', 'data', 'model-icon-names.generated.ts');
 const loadersOutputPath = path.join(frontendDirectory, 'src', 'features', 'models', 'data', 'model-icon-loaders.generated.ts');
 const checkOnly = process.argv.includes('--check');
 const prettierOptions = await prettier.resolveConfig(namesOutputPath);
 
-function readIconMetadata() {
-  const toc = JSON.parse(fs.readFileSync(tocPath, 'utf8'));
+// @lobehub/icons 5.23 replaced the static es/toc.json with an ESM es/toc module
+// exporting the same { id, group, ... } array.
+async function readIconMetadata() {
+  const { toc } = await import('@lobehub/icons/es/toc');
   const allIcons = toc.map(({ id }) => id).sort((left, right) => left.localeCompare(right));
   const selectorIcons = toc
     .filter(({ group }) => group === 'provider' || group === 'model')
@@ -26,7 +27,10 @@ function readIconMetadata() {
   }
 
   for (const icon of allIcons) {
-    const modulePath = path.join(iconsDirectory, icon, 'components', 'Mono.js');
+    // @lobehub/icons 5.23 renamed the on-disk module from Mono.js to Mono.mjs;
+    // the generated loader keeps the .js specifier, which resolves through the
+    // package's ./es/*.js export mapping on both layouts.
+    const modulePath = path.join(iconsDirectory, icon, 'components', 'Mono.mjs');
     if (!fs.existsSync(modulePath)) {
       throw new Error(`Missing Mono icon module for ${icon}: ${modulePath}`);
     }
@@ -70,7 +74,7 @@ async function updateGeneratedFile(outputPath, source) {
   return true;
 }
 
-const { allIcons, selectorIcons } = readIconMetadata();
+const { allIcons, selectorIcons } = await readIconMetadata();
 const staleFiles = [];
 
 if (await updateGeneratedFile(namesOutputPath, renderNamesModule(selectorIcons))) {
