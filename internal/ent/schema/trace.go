@@ -91,13 +91,15 @@ func (Trace) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
-			scopes.APIKeyScopeQueryRule(scopes.ScopeWriteRequests),
+			// The API key can query traces in its own project if it has the
+			// write requests scope.
+			scopes.APIKeyProjectScopeReadRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeReadRule(scopes.ScopeReadRequests),
 			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
-			scopes.APIKeyScopeMutationRule(scopes.ScopeWriteRequests),
+			scopes.APIKeyProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserWriteScopeRule(scopes.ScopeWriteRequests),
 		},

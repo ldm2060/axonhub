@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/password-input';
 import { TurnstileWidget } from '@/features/auth/components/turnstile-widget';
 import type { TurnstileWidgetHandle } from '@/features/auth/components/turnstile-widget.types';
-import { useAuthConfig, useSignIn, useOIDCProviders, useOIDCAuthorize } from '@/features/auth/data/auth';
+import { useAuthConfig, useSignIn, useOIDCProviders, useOIDCAuthorize, useSignUpAllowed } from '@/features/auth/data/auth';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement> & {
   redirect?: string;
@@ -40,6 +40,7 @@ export function UserAuthForm({ className, redirect, ...props }: UserAuthFormProp
   const [rememberMe, setRememberMe] = useState(false);
   const { data: oidcProviders } = useOIDCProviders();
   const oidcAuthorizeMutation = useOIDCAuthorize(redirect);
+  const { data: signUpAllowed } = useSignUpAllowed();
 
   const formSchema = createFormSchema(t);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -212,6 +213,18 @@ export function UserAuthForm({ className, redirect, ...props }: UserAuthFormProp
               t('auth.signIn.form.signInButton')
             )}
           </Button>
+
+          {signUpAllowed === true && (
+            <p className='text-center text-sm text-slate-500'>
+              {t('auth.signIn.links.noAccount')}{' '}
+              <Link
+                to='/sign-up'
+                className='font-medium text-slate-700 underline underline-offset-4 transition-colors hover:text-[#A8844E]'
+              >
+                {t('auth.signIn.links.signUp')}
+              </Link>
+            </p>
+          )}
         </form>
       )}
 

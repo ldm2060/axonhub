@@ -128,7 +128,7 @@ func (UsageLog) Policy() ent.Policy {
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
-			scopes.APIKeyScopeMutationRule(scopes.ScopeWriteRequests),
+			scopes.APIKeyProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserWriteScopeRule(scopes.ScopeWriteRequests),
 		},

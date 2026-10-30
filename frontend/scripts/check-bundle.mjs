@@ -15,8 +15,10 @@ const budgets = {
   // Dependency bumps (i18next 26, tanstack router, radix) grew entry gzip
   // from ~197 KiB to ~200.4 KiB raw-cost parity with the 2026-10 merge.
   entry: { raw: 640 * 1024, gzip: 208 * 1024 },
-  adminModels: { raw: 1_450 * 1024, gzip: 380 * 1024 },
-  personalModels: { raw: 1_425 * 1024, gzip: 370 * 1024 },
+  // Dependency bumps (lucide-react 1.63, ai 7.0.156 tool-approval states)
+  // grew the model chunks ~9 KiB gzip in the 2026-10-30 upstream merge.
+  adminModels: { raw: 1_450 * 1024, gzip: 392 * 1024 },
+  personalModels: { raw: 1_425 * 1024, gzip: 382 * 1024 },
   // Dependency bumps pulled modelsProvider from ~60 KiB to ~62 KiB raw.
   modelsProvider: { raw: 64 * 1024, gzip: 16 * 1024 },
   modelsDialogs: { raw: 100 * 1024, gzip: 25 * 1024 },

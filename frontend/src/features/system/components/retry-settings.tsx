@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { RESPONSE_TIMEOUT_MAX_SECONDS } from '@/config/retry-policy';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -313,7 +314,7 @@ export function RetrySettings() {
                       id='stream-first-event-timeout'
                       type='number'
                       min='0'
-                      max='600'
+                      max={RESPONSE_TIMEOUT_MAX_SECONDS}
                       value={formData.streamFirstEventTimeoutSeconds}
                       onChange={(e) => handleInputChange('streamFirstEventTimeoutSeconds', parseInt(e.target.value) || 0)}
                       className='w-32'
@@ -330,7 +331,7 @@ export function RetrySettings() {
                       id='non-stream-response-timeout'
                       type='number'
                       min='0'
-                      max='600'
+                      max={RESPONSE_TIMEOUT_MAX_SECONDS}
                       value={formData.nonStreamResponseTimeoutSeconds}
                       onChange={(e) => handleInputChange('nonStreamResponseTimeoutSeconds', parseInt(e.target.value) || 0)}
                       className='w-32'

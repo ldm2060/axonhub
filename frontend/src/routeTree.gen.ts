@@ -10,138 +10,68 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
-import { Route as AuthenticatedPermissionRouteImport } from './routes/_authenticated/permission'
-import { Route as errors503RouteImport } from './routes/(errors)/503'
-import { Route as errors500RouteImport } from './routes/(errors)/500'
-import { Route as errors404RouteImport } from './routes/(errors)/404'
-import { Route as errors403RouteImport } from './routes/(errors)/403'
-import { Route as errors401RouteImport } from './routes/(errors)/401'
-import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
-import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
-import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
-import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
-import { Route as authInviteRouteImport } from './routes/(auth)/invite'
-import { Route as authInitializationRouteImport } from './routes/(auth)/initialization'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as authInitializationRouteImport } from './routes/(auth)/initialization'
+import { Route as authInviteRouteImport } from './routes/(auth)/invite'
+import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
+import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as errors401RouteImport } from './routes/(errors)/401'
+import { Route as errors403RouteImport } from './routes/(errors)/403'
+import { Route as errors404RouteImport } from './routes/(errors)/404'
+import { Route as errors500RouteImport } from './routes/(errors)/500'
+import { Route as errors503RouteImport } from './routes/(errors)/503'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
-import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
-import { Route as AuthenticatedMyModelsIndexRouteImport } from './routes/_authenticated/my-models/index'
-import { Route as AuthenticatedMyChannelsIndexRouteImport } from './routes/_authenticated/my-channels/index'
-import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
-import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
-import { Route as AuthenticatedApiKeysIndexRouteImport } from './routes/_authenticated/api-keys/index'
-import { Route as AuthenticatedAnalyticsIndexRouteImport } from './routes/_authenticated/analytics/index'
+import { Route as AuthenticatedPermissionRouteImport } from './routes/_authenticated/permission'
+import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
-import { Route as OauthOidcIdpCallbackRouteImport } from './routes/oauth/oidc/idp-callback'
-import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
-import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
-import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
-import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
+import { Route as AuthenticatedAnalyticsIndexRouteImport } from './routes/_authenticated/analytics/index'
+import { Route as AuthenticatedApiKeysIndexRouteImport } from './routes/_authenticated/api-keys/index'
+import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
+import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedMyChannelsIndexRouteImport } from './routes/_authenticated/my-channels/index'
+import { Route as AuthenticatedMyModelsIndexRouteImport } from './routes/_authenticated/my-models/index'
+import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
+import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedRequestsRequestIdRouteImport } from './routes/_authenticated/requests/$requestId'
-import { Route as AuthenticatedProjectUsersIndexRouteImport } from './routes/_authenticated/project/users/index'
-import { Route as AuthenticatedProjectUsageStatsIndexRouteImport } from './routes/_authenticated/project/usage-stats/index'
-import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_authenticated/project/traces/index'
-import { Route as AuthenticatedProjectThreadsIndexRouteImport } from './routes/_authenticated/project/threads/index'
-import { Route as AuthenticatedProjectRolesIndexRouteImport } from './routes/_authenticated/project/roles/index'
-import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/_authenticated/project/requests/index'
-import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
-import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
-import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
-import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
-import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
-import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
-import { Route as AuthenticatedAdminRuntimeIndexRouteImport } from './routes/_authenticated/admin/runtime/index'
-import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
-import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
-import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
-import { Route as AuthenticatedAdminPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/admin/prompt-protection-rules/index'
-import { Route as AuthenticatedAdminOauthApplicationsIndexRouteImport } from './routes/_authenticated/admin/oauth-applications/index'
-import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
-import { Route as AuthenticatedAdminDataStoragesIndexRouteImport } from './routes/_authenticated/admin/data-storages/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
+import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
+import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
+import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings/profile'
+import { Route as OauthOidcIdpCallbackRouteImport } from './routes/oauth/oidc/idp-callback'
 import { Route as AuthenticatedAdminChannelsIndexRouteImport } from './routes/_authenticated/admin/channels/index'
-import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
-import { Route as AuthenticatedProjectThreadsThreadIdRouteImport } from './routes/_authenticated/project/threads/$threadId'
-import { Route as AuthenticatedProjectRequestsRequestIdRouteImport } from './routes/_authenticated/project/requests/$requestId'
-import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './routes/_authenticated/admin/requests/$requestId'
 import { Route as AuthenticatedAdminDashboardChannelSuccessRatesRouteImport } from './routes/_authenticated/admin/dashboard/channel-success-rates'
+import { Route as AuthenticatedAdminDataStoragesIndexRouteImport } from './routes/_authenticated/admin/data-storages/index'
+import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
+import { Route as AuthenticatedAdminOauthApplicationsIndexRouteImport } from './routes/_authenticated/admin/oauth-applications/index'
+import { Route as AuthenticatedAdminPromptProtectionRulesIndexRouteImport } from './routes/_authenticated/admin/prompt-protection-rules/index'
+import { Route as AuthenticatedAdminPublishRequestsIndexRouteImport } from './routes/_authenticated/admin/publish-requests/index'
+import { Route as AuthenticatedAdminRequestsIndexRouteImport } from './routes/_authenticated/admin/requests/index'
+import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './routes/_authenticated/admin/requests/$requestId'
+import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
+import { Route as AuthenticatedAdminRuntimeIndexRouteImport } from './routes/_authenticated/admin/runtime/index'
+import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
+import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
+import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
+import { Route as AuthenticatedProjectPlaygroundIndexRouteImport } from './routes/_authenticated/project/playground/index'
+import { Route as AuthenticatedProjectPromptsIndexRouteImport } from './routes/_authenticated/project/prompts/index'
+import { Route as AuthenticatedProjectRequestsIndexRouteImport } from './routes/_authenticated/project/requests/index'
+import { Route as AuthenticatedProjectRequestsRequestIdRouteImport } from './routes/_authenticated/project/requests/$requestId'
+import { Route as AuthenticatedProjectRolesIndexRouteImport } from './routes/_authenticated/project/roles/index'
+import { Route as AuthenticatedProjectThreadsIndexRouteImport } from './routes/_authenticated/project/threads/index'
+import { Route as AuthenticatedProjectThreadsThreadIdRouteImport } from './routes/_authenticated/project/threads/$threadId'
+import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_authenticated/project/traces/index'
+import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
+import { Route as AuthenticatedProjectUsageStatsIndexRouteImport } from './routes/_authenticated/project/usage-stats/index'
+import { Route as AuthenticatedProjectUsersIndexRouteImport } from './routes/_authenticated/project/users/index'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const OauthConsentRoute = OauthConsentRouteImport.update({
-  id: '/oauth/consent',
-  path: '/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedPermissionRoute = AuthenticatedPermissionRouteImport.update({
-  id: '/permission',
-  path: '/permission',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const errors503Route = errors503RouteImport.update({
-  id: '/(errors)/503',
-  path: '/503',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors500Route = errors500RouteImport.update({
-  id: '/(errors)/500',
-  path: '/500',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors404Route = errors404RouteImport.update({
-  id: '/(errors)/404',
-  path: '/404',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors403Route = errors403RouteImport.update({
-  id: '/(errors)/403',
-  path: '/403',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors401Route = errors401RouteImport.update({
-  id: '/(errors)/401',
-  path: '/401',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
-  id: '/(auth)/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignUpRoute = authSignUpRouteImport.update({
-  id: '/(auth)/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignInRoute = authSignInRouteImport.update({
-  id: '/(auth)/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authResetPasswordRoute = authResetPasswordRouteImport.update({
-  id: '/(auth)/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authInviteRoute = authInviteRouteImport.update({
-  id: '/(auth)/invite',
-  path: '/invite',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authInitializationRoute = authInitializationRouteImport.update({
-  id: '/(auth)/initialization',
-  path: '/initialization',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -149,39 +79,113 @@ const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authInitializationRoute = authInitializationRouteImport.update({
+  id: '/(auth)/initialization',
+  path: '/initialization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authInviteRoute = authInviteRouteImport.update({
+  id: '/(auth)/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authResetPasswordRoute = authResetPasswordRouteImport.update({
+  id: '/(auth)/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authSignInRoute = authSignInRouteImport.update({
+  id: '/(auth)/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authSignUpRoute = authSignUpRouteImport.update({
+  id: '/(auth)/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
+  id: '/(auth)/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors401Route = errors401RouteImport.update({
+  id: '/(errors)/401',
+  path: '/401',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors403Route = errors403RouteImport.update({
+  id: '/(errors)/403',
+  path: '/403',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors404Route = errors404RouteImport.update({
+  id: '/(errors)/404',
+  path: '/404',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors500Route = errors500RouteImport.update({
+  id: '/(errors)/500',
+  path: '/500',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const errors503Route = errors503RouteImport.update({
+  id: '/(errors)/503',
+  path: '/503',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPermissionRoute = AuthenticatedPermissionRouteImport.update({
+  id: '/permission',
+  path: '/permission',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRouteRoute =
   AuthenticatedSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAnalyticsIndexRoute =
+  AuthenticatedAnalyticsIndexRouteImport.update({
+    id: '/analytics/',
+    path: '/analytics/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedApiKeysIndexRoute =
+  AuthenticatedApiKeysIndexRouteImport.update({
+    id: '/api-keys/',
+    path: '/api-keys/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
+  id: '/chats/',
+  path: '/chats/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedProjectsIndexRoute =
-  AuthenticatedProjectsIndexRouteImport.update({
-    id: '/projects/',
-    path: '/projects/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPermissionDemoIndexRoute =
-  AuthenticatedPermissionDemoIndexRouteImport.update({
-    id: '/permission-demo/',
-    path: '/permission-demo/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMyModelsIndexRoute =
-  AuthenticatedMyModelsIndexRouteImport.update({
-    id: '/my-models/',
-    path: '/my-models/',
+const AuthenticatedHelpCenterIndexRoute =
+  AuthenticatedHelpCenterIndexRouteImport.update({
+    id: '/help-center/',
+    path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMyChannelsIndexRoute =
@@ -190,55 +194,34 @@ const AuthenticatedMyChannelsIndexRoute =
     path: '/my-channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedHelpCenterIndexRoute =
-  AuthenticatedHelpCenterIndexRouteImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
+const AuthenticatedMyModelsIndexRoute =
+  AuthenticatedMyModelsIndexRouteImport.update({
+    id: '/my-models/',
+    path: '/my-models/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
-  id: '/chats/',
-  path: '/chats/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedApiKeysIndexRoute =
-  AuthenticatedApiKeysIndexRouteImport.update({
-    id: '/api-keys/',
-    path: '/api-keys/',
+const AuthenticatedPermissionDemoIndexRoute =
+  AuthenticatedPermissionDemoIndexRouteImport.update({
+    id: '/permission-demo/',
+    path: '/permission-demo/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAnalyticsIndexRoute =
-  AuthenticatedAnalyticsIndexRouteImport.update({
-    id: '/analytics/',
-    path: '/analytics/',
+const AuthenticatedProjectsIndexRoute =
+  AuthenticatedProjectsIndexRouteImport.update({
+    id: '/projects/',
+    path: '/projects/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedAdminRouteRoute,
-} as any)
-const OauthOidcIdpCallbackRoute = OauthOidcIdpCallbackRouteImport.update({
-  id: '/oauth/oidc/idp-callback',
-  path: '/oauth/oidc/idp-callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedSettingsProfileRoute =
-  AuthenticatedSettingsProfileRouteImport.update({
-    id: '/profile',
-    path: '/profile',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+const AuthenticatedRequestsRequestIdRoute =
+  AuthenticatedRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSettingsNotificationsRoute =
-  AuthenticatedSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsDisplayRoute =
-  AuthenticatedSettingsDisplayRouteImport.update({
-    id: '/display',
-    path: '/display',
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsAppearanceRoute =
@@ -247,124 +230,39 @@ const AuthenticatedSettingsAppearanceRoute =
     path: '/appearance',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedRequestsRequestIdRoute =
-  AuthenticatedRequestsRequestIdRouteImport.update({
-    id: '/requests/$requestId',
-    path: '/requests/$requestId',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedSettingsDisplayRoute =
+  AuthenticatedSettingsDisplayRouteImport.update({
+    id: '/display',
+    path: '/display',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedProjectUsersIndexRoute =
-  AuthenticatedProjectUsersIndexRouteImport.update({
-    id: '/project/users/',
-    path: '/project/users/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedSettingsNotificationsRoute =
+  AuthenticatedSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedProjectUsageStatsIndexRoute =
-  AuthenticatedProjectUsageStatsIndexRouteImport.update({
-    id: '/project/usage-stats/',
-    path: '/project/usage-stats/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedSettingsProfileRoute =
+  AuthenticatedSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedProjectTracesIndexRoute =
-  AuthenticatedProjectTracesIndexRouteImport.update({
-    id: '/project/traces/',
-    path: '/project/traces/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectThreadsIndexRoute =
-  AuthenticatedProjectThreadsIndexRouteImport.update({
-    id: '/project/threads/',
-    path: '/project/threads/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectRolesIndexRoute =
-  AuthenticatedProjectRolesIndexRouteImport.update({
-    id: '/project/roles/',
-    path: '/project/roles/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectRequestsIndexRoute =
-  AuthenticatedProjectRequestsIndexRouteImport.update({
-    id: '/project/requests/',
-    path: '/project/requests/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectPromptsIndexRoute =
-  AuthenticatedProjectPromptsIndexRouteImport.update({
-    id: '/project/prompts/',
-    path: '/project/prompts/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectPlaygroundIndexRoute =
-  AuthenticatedProjectPlaygroundIndexRouteImport.update({
-    id: '/project/playground/',
-    path: '/project/playground/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProjectApiKeysIndexRoute =
-  AuthenticatedProjectApiKeysIndexRouteImport.update({
-    id: '/project/api-keys/',
-    path: '/project/api-keys/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminUsersIndexRoute =
-  AuthenticatedAdminUsersIndexRouteImport.update({
-    id: '/users/',
-    path: '/users/',
+const OauthOidcIdpCallbackRoute = OauthOidcIdpCallbackRouteImport.update({
+  id: '/oauth/oidc/idp-callback',
+  path: '/oauth/oidc/idp-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminChannelsIndexRoute =
+  AuthenticatedAdminChannelsIndexRouteImport.update({
+    id: '/channels/',
+    path: '/channels/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminUsageMonitorIndexRoute =
-  AuthenticatedAdminUsageMonitorIndexRouteImport.update({
-    id: '/usage-monitor/',
-    path: '/usage-monitor/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminSystemIndexRoute =
-  AuthenticatedAdminSystemIndexRouteImport.update({
-    id: '/system/',
-    path: '/system/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminRuntimeIndexRoute =
-  AuthenticatedAdminRuntimeIndexRouteImport.update({
-    id: '/runtime/',
-    path: '/runtime/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminRolesIndexRoute =
-  AuthenticatedAdminRolesIndexRouteImport.update({
-    id: '/roles/',
-    path: '/roles/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminRequestsIndexRoute =
-  AuthenticatedAdminRequestsIndexRouteImport.update({
-    id: '/requests/',
-    path: '/requests/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminPublishRequestsIndexRoute =
-  AuthenticatedAdminPublishRequestsIndexRouteImport.update({
-    id: '/publish-requests/',
-    path: '/publish-requests/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminPromptProtectionRulesIndexRoute =
-  AuthenticatedAdminPromptProtectionRulesIndexRouteImport.update({
-    id: '/prompt-protection-rules/',
-    path: '/prompt-protection-rules/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminOauthApplicationsIndexRoute =
-  AuthenticatedAdminOauthApplicationsIndexRouteImport.update({
-    id: '/oauth-applications/',
-    path: '/oauth-applications/',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminModelsIndexRoute =
-  AuthenticatedAdminModelsIndexRouteImport.update({
-    id: '/models/',
-    path: '/models/',
+const AuthenticatedAdminDashboardChannelSuccessRatesRoute =
+  AuthenticatedAdminDashboardChannelSuccessRatesRouteImport.update({
+    id: '/dashboard/channel-success-rates',
+    path: '/dashboard/channel-success-rates',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminDataStoragesIndexRoute =
@@ -373,22 +271,94 @@ const AuthenticatedAdminDataStoragesIndexRoute =
     path: '/data-storages/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminChannelsIndexRoute =
-  AuthenticatedAdminChannelsIndexRouteImport.update({
-    id: '/channels/',
-    path: '/channels/',
+const AuthenticatedAdminModelsIndexRoute =
+  AuthenticatedAdminModelsIndexRouteImport.update({
+    id: '/models/',
+    path: '/models/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedProjectTracesTraceIdRoute =
-  AuthenticatedProjectTracesTraceIdRouteImport.update({
-    id: '/project/traces/$traceId',
-    path: '/project/traces/$traceId',
+const AuthenticatedAdminOauthApplicationsIndexRoute =
+  AuthenticatedAdminOauthApplicationsIndexRouteImport.update({
+    id: '/oauth-applications/',
+    path: '/oauth-applications/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminPromptProtectionRulesIndexRoute =
+  AuthenticatedAdminPromptProtectionRulesIndexRouteImport.update({
+    id: '/prompt-protection-rules/',
+    path: '/prompt-protection-rules/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminPublishRequestsIndexRoute =
+  AuthenticatedAdminPublishRequestsIndexRouteImport.update({
+    id: '/publish-requests/',
+    path: '/publish-requests/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsIndexRoute =
+  AuthenticatedAdminRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsRequestIdRoute =
+  AuthenticatedAdminRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRolesIndexRoute =
+  AuthenticatedAdminRolesIndexRouteImport.update({
+    id: '/roles/',
+    path: '/roles/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminRuntimeIndexRoute =
+  AuthenticatedAdminRuntimeIndexRouteImport.update({
+    id: '/runtime/',
+    path: '/runtime/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemIndexRoute =
+  AuthenticatedAdminSystemIndexRouteImport.update({
+    id: '/system/',
+    path: '/system/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsageMonitorIndexRoute =
+  AuthenticatedAdminUsageMonitorIndexRouteImport.update({
+    id: '/usage-monitor/',
+    path: '/usage-monitor/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedProjectApiKeysIndexRoute =
+  AuthenticatedProjectApiKeysIndexRouteImport.update({
+    id: '/project/api-keys/',
+    path: '/project/api-keys/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProjectThreadsThreadIdRoute =
-  AuthenticatedProjectThreadsThreadIdRouteImport.update({
-    id: '/project/threads/$threadId',
-    path: '/project/threads/$threadId',
+const AuthenticatedProjectPlaygroundIndexRoute =
+  AuthenticatedProjectPlaygroundIndexRouteImport.update({
+    id: '/project/playground/',
+    path: '/project/playground/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectPromptsIndexRoute =
+  AuthenticatedProjectPromptsIndexRouteImport.update({
+    id: '/project/prompts/',
+    path: '/project/prompts/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectRequestsIndexRoute =
+  AuthenticatedProjectRequestsIndexRouteImport.update({
+    id: '/project/requests/',
+    path: '/project/requests/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProjectRequestsRequestIdRoute =
@@ -397,17 +367,47 @@ const AuthenticatedProjectRequestsRequestIdRoute =
     path: '/project/requests/$requestId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminRequestsRequestIdRoute =
-  AuthenticatedAdminRequestsRequestIdRouteImport.update({
-    id: '/requests/$requestId',
-    path: '/requests/$requestId',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
+const AuthenticatedProjectRolesIndexRoute =
+  AuthenticatedProjectRolesIndexRouteImport.update({
+    id: '/project/roles/',
+    path: '/project/roles/',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminDashboardChannelSuccessRatesRoute =
-  AuthenticatedAdminDashboardChannelSuccessRatesRouteImport.update({
-    id: '/dashboard/channel-success-rates',
-    path: '/dashboard/channel-success-rates',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
+const AuthenticatedProjectThreadsIndexRoute =
+  AuthenticatedProjectThreadsIndexRouteImport.update({
+    id: '/project/threads/',
+    path: '/project/threads/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectThreadsThreadIdRoute =
+  AuthenticatedProjectThreadsThreadIdRouteImport.update({
+    id: '/project/threads/$threadId',
+    path: '/project/threads/$threadId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectTracesIndexRoute =
+  AuthenticatedProjectTracesIndexRouteImport.update({
+    id: '/project/traces/',
+    path: '/project/traces/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectTracesTraceIdRoute =
+  AuthenticatedProjectTracesTraceIdRouteImport.update({
+    id: '/project/traces/$traceId',
+    path: '/project/traces/$traceId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectUsageStatsIndexRoute =
+  AuthenticatedProjectUsageStatsIndexRouteImport.update({
+    id: '/project/usage-stats/',
+    path: '/project/usage-stats/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProjectUsersIndexRoute =
+  AuthenticatedProjectUsersIndexRouteImport.update({
+    id: '/project/users/',
+    path: '/project/users/',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -805,95 +805,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/oauth/consent': {
-      id: '/oauth/consent'
-      path: '/oauth/consent'
-      fullPath: '/oauth/consent'
-      preLoaderRoute: typeof OauthConsentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/permission': {
-      id: '/_authenticated/permission'
-      path: '/permission'
-      fullPath: '/permission'
-      preLoaderRoute: typeof AuthenticatedPermissionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/(errors)/503': {
-      id: '/(errors)/503'
-      path: '/503'
-      fullPath: '/503'
-      preLoaderRoute: typeof errors503RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/500': {
-      id: '/(errors)/500'
-      path: '/500'
-      fullPath: '/500'
-      preLoaderRoute: typeof errors500RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/404': {
-      id: '/(errors)/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof errors404RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/403': {
-      id: '/(errors)/403'
-      path: '/403'
-      fullPath: '/403'
-      preLoaderRoute: typeof errors403RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/401': {
-      id: '/(errors)/401'
-      path: '/401'
-      fullPath: '/401'
-      preLoaderRoute: typeof errors401RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/verify-email': {
-      id: '/(auth)/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof authVerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-up': {
-      id: '/(auth)/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof authSignUpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-in': {
-      id: '/(auth)/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof authSignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/reset-password': {
-      id: '/(auth)/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof authResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/invite': {
-      id: '/(auth)/invite'
-      path: '/invite'
-      fullPath: '/invite'
-      preLoaderRoute: typeof authInviteRouteImport
+    '/(auth)/forgot-password': {
+      id: '/(auth)/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof authForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/initialization': {
@@ -903,18 +819,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authInitializationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/forgot-password': {
-      id: '/(auth)/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof authForgotPasswordRouteImport
+    '/(auth)/invite': {
+      id: '/(auth)/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof authInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+    '/(auth)/reset-password': {
+      id: '/(auth)/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof authResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/sign-in': {
+      id: '/(auth)/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof authSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/sign-up': {
+      id: '/(auth)/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/verify-email': {
+      id: '/(auth)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/401': {
+      id: '/(errors)/401'
+      path: '/401'
+      fullPath: '/401'
+      preLoaderRoute: typeof errors401RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/403': {
+      id: '/(errors)/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof errors403RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/404': {
+      id: '/(errors)/404'
+      path: '/404'
+      fullPath: '/404'
+      preLoaderRoute: typeof errors404RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/500': {
+      id: '/(errors)/500'
+      path: '/500'
+      fullPath: '/500'
+      preLoaderRoute: typeof errors500RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(errors)/503': {
+      id: '/(errors)/503'
+      path: '/503'
+      fullPath: '/503'
+      preLoaderRoute: typeof errors503RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -924,53 +903,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
+    '/_authenticated/permission': {
+      id: '/_authenticated/permission'
+      path: '/permission'
+      fullPath: '/permission'
+      preLoaderRoute: typeof AuthenticatedPermissionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
       path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/projects/': {
-      id: '/_authenticated/projects/'
-      path: '/projects'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/permission-demo/': {
-      id: '/_authenticated/permission-demo/'
-      path: '/permission-demo'
-      fullPath: '/permission-demo/'
-      preLoaderRoute: typeof AuthenticatedPermissionDemoIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/my-models/': {
-      id: '/_authenticated/my-models/'
-      path: '/my-models'
-      fullPath: '/my-models/'
-      preLoaderRoute: typeof AuthenticatedMyModelsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/my-channels/': {
-      id: '/_authenticated/my-channels/'
-      path: '/my-channels'
-      fullPath: '/my-channels/'
-      preLoaderRoute: typeof AuthenticatedMyChannelsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
-      path: '/help-center'
-      fullPath: '/help-center/'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
-      path: '/chats'
-      fullPath: '/chats/'
-      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
+    '/_authenticated/analytics/': {
+      id: '/_authenticated/analytics/'
+      path: '/analytics'
+      fullPath: '/analytics/'
+      preLoaderRoute: typeof AuthenticatedAnalyticsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/api-keys/': {
@@ -980,46 +945,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApiKeysIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/analytics/': {
-      id: '/_authenticated/analytics/'
-      path: '/analytics'
-      fullPath: '/analytics/'
-      preLoaderRoute: typeof AuthenticatedAnalyticsIndexRouteImport
+    '/_authenticated/chats/': {
+      id: '/_authenticated/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
+    '/_authenticated/help-center/': {
+      id: '/_authenticated/help-center/'
+      path: '/help-center'
+      fullPath: '/help-center/'
+      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-channels/': {
+      id: '/_authenticated/my-channels/'
+      path: '/my-channels'
+      fullPath: '/my-channels/'
+      preLoaderRoute: typeof AuthenticatedMyChannelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-models/': {
+      id: '/_authenticated/my-models/'
+      path: '/my-models'
+      fullPath: '/my-models/'
+      preLoaderRoute: typeof AuthenticatedMyModelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/permission-demo/': {
+      id: '/_authenticated/permission-demo/'
+      path: '/permission-demo'
+      fullPath: '/permission-demo/'
+      preLoaderRoute: typeof AuthenticatedPermissionDemoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/projects/': {
+      id: '/_authenticated/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/requests/$requestId': {
+      id: '/_authenticated/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/requests/$requestId'
+      preLoaderRoute: typeof AuthenticatedRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
       path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/oauth/oidc/idp-callback': {
-      id: '/oauth/oidc/idp-callback'
-      path: '/oauth/oidc/idp-callback'
-      fullPath: '/oauth/oidc/idp-callback'
-      preLoaderRoute: typeof OauthOidcIdpCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/settings/profile': {
-      id: '/_authenticated/settings/profile'
-      path: '/profile'
-      fullPath: '/settings/profile'
-      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications'
-      path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display'
-      path: '/display'
-      fullPath: '/settings/display'
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/appearance': {
@@ -1029,144 +1008,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/requests/$requestId': {
-      id: '/_authenticated/requests/$requestId'
-      path: '/requests/$requestId'
-      fullPath: '/requests/$requestId'
-      preLoaderRoute: typeof AuthenticatedRequestsRequestIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/settings/display': {
+      id: '/_authenticated/settings/display'
+      path: '/display'
+      fullPath: '/settings/display'
+      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/project/users/': {
-      id: '/_authenticated/project/users/'
-      path: '/project/users'
-      fullPath: '/project/users/'
-      preLoaderRoute: typeof AuthenticatedProjectUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/settings/notifications': {
+      id: '/_authenticated/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/project/usage-stats/': {
-      id: '/_authenticated/project/usage-stats/'
-      path: '/project/usage-stats'
-      fullPath: '/project/usage-stats/'
-      preLoaderRoute: typeof AuthenticatedProjectUsageStatsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/settings/profile': {
+      id: '/_authenticated/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
-    '/_authenticated/project/traces/': {
-      id: '/_authenticated/project/traces/'
-      path: '/project/traces'
-      fullPath: '/project/traces/'
-      preLoaderRoute: typeof AuthenticatedProjectTracesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/oauth/oidc/idp-callback': {
+      id: '/oauth/oidc/idp-callback'
+      path: '/oauth/oidc/idp-callback'
+      fullPath: '/oauth/oidc/idp-callback'
+      preLoaderRoute: typeof OauthOidcIdpCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/project/threads/': {
-      id: '/_authenticated/project/threads/'
-      path: '/project/threads'
-      fullPath: '/project/threads/'
-      preLoaderRoute: typeof AuthenticatedProjectThreadsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/project/roles/': {
-      id: '/_authenticated/project/roles/'
-      path: '/project/roles'
-      fullPath: '/project/roles/'
-      preLoaderRoute: typeof AuthenticatedProjectRolesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/project/requests/': {
-      id: '/_authenticated/project/requests/'
-      path: '/project/requests'
-      fullPath: '/project/requests/'
-      preLoaderRoute: typeof AuthenticatedProjectRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/project/prompts/': {
-      id: '/_authenticated/project/prompts/'
-      path: '/project/prompts'
-      fullPath: '/project/prompts/'
-      preLoaderRoute: typeof AuthenticatedProjectPromptsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/project/playground/': {
-      id: '/_authenticated/project/playground/'
-      path: '/project/playground'
-      fullPath: '/project/playground/'
-      preLoaderRoute: typeof AuthenticatedProjectPlaygroundIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/project/api-keys/': {
-      id: '/_authenticated/project/api-keys/'
-      path: '/project/api-keys'
-      fullPath: '/project/api-keys/'
-      preLoaderRoute: typeof AuthenticatedProjectApiKeysIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/users/': {
-      id: '/_authenticated/admin/users/'
-      path: '/users'
-      fullPath: '/admin/users/'
-      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+    '/_authenticated/admin/channels/': {
+      id: '/_authenticated/admin/channels/'
+      path: '/channels'
+      fullPath: '/admin/channels/'
+      preLoaderRoute: typeof AuthenticatedAdminChannelsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/usage-monitor/': {
-      id: '/_authenticated/admin/usage-monitor/'
-      path: '/usage-monitor'
-      fullPath: '/admin/usage-monitor/'
-      preLoaderRoute: typeof AuthenticatedAdminUsageMonitorIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/system/': {
-      id: '/_authenticated/admin/system/'
-      path: '/system'
-      fullPath: '/admin/system/'
-      preLoaderRoute: typeof AuthenticatedAdminSystemIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/runtime/': {
-      id: '/_authenticated/admin/runtime/'
-      path: '/runtime'
-      fullPath: '/admin/runtime/'
-      preLoaderRoute: typeof AuthenticatedAdminRuntimeIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/roles/': {
-      id: '/_authenticated/admin/roles/'
-      path: '/roles'
-      fullPath: '/admin/roles/'
-      preLoaderRoute: typeof AuthenticatedAdminRolesIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/requests/': {
-      id: '/_authenticated/admin/requests/'
-      path: '/requests'
-      fullPath: '/admin/requests/'
-      preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/publish-requests/': {
-      id: '/_authenticated/admin/publish-requests/'
-      path: '/publish-requests'
-      fullPath: '/admin/publish-requests/'
-      preLoaderRoute: typeof AuthenticatedAdminPublishRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/prompt-protection-rules/': {
-      id: '/_authenticated/admin/prompt-protection-rules/'
-      path: '/prompt-protection-rules'
-      fullPath: '/admin/prompt-protection-rules/'
-      preLoaderRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/oauth-applications/': {
-      id: '/_authenticated/admin/oauth-applications/'
-      path: '/oauth-applications'
-      fullPath: '/admin/oauth-applications/'
-      preLoaderRoute: typeof AuthenticatedAdminOauthApplicationsIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/models/': {
-      id: '/_authenticated/admin/models/'
-      path: '/models'
-      fullPath: '/admin/models/'
-      preLoaderRoute: typeof AuthenticatedAdminModelsIndexRouteImport
+    '/_authenticated/admin/dashboard/channel-success-rates': {
+      id: '/_authenticated/admin/dashboard/channel-success-rates'
+      path: '/dashboard/channel-success-rates'
+      fullPath: '/admin/dashboard/channel-success-rates'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardChannelSuccessRatesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/data-storages/': {
@@ -1176,25 +1057,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDataStoragesIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/channels/': {
-      id: '/_authenticated/admin/channels/'
-      path: '/channels'
-      fullPath: '/admin/channels/'
-      preLoaderRoute: typeof AuthenticatedAdminChannelsIndexRouteImport
+    '/_authenticated/admin/models/': {
+      id: '/_authenticated/admin/models/'
+      path: '/models'
+      fullPath: '/admin/models/'
+      preLoaderRoute: typeof AuthenticatedAdminModelsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/project/traces/$traceId': {
-      id: '/_authenticated/project/traces/$traceId'
-      path: '/project/traces/$traceId'
-      fullPath: '/project/traces/$traceId'
-      preLoaderRoute: typeof AuthenticatedProjectTracesTraceIdRouteImport
+    '/_authenticated/admin/oauth-applications/': {
+      id: '/_authenticated/admin/oauth-applications/'
+      path: '/oauth-applications'
+      fullPath: '/admin/oauth-applications/'
+      preLoaderRoute: typeof AuthenticatedAdminOauthApplicationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/prompt-protection-rules/': {
+      id: '/_authenticated/admin/prompt-protection-rules/'
+      path: '/prompt-protection-rules'
+      fullPath: '/admin/prompt-protection-rules/'
+      preLoaderRoute: typeof AuthenticatedAdminPromptProtectionRulesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/publish-requests/': {
+      id: '/_authenticated/admin/publish-requests/'
+      path: '/publish-requests'
+      fullPath: '/admin/publish-requests/'
+      preLoaderRoute: typeof AuthenticatedAdminPublishRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/requests/': {
+      id: '/_authenticated/admin/requests/'
+      path: '/requests'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/requests/$requestId': {
+      id: '/_authenticated/admin/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/admin/requests/$requestId'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/roles/': {
+      id: '/_authenticated/admin/roles/'
+      path: '/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AuthenticatedAdminRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/runtime/': {
+      id: '/_authenticated/admin/runtime/'
+      path: '/runtime'
+      fullPath: '/admin/runtime/'
+      preLoaderRoute: typeof AuthenticatedAdminRuntimeIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/system/': {
+      id: '/_authenticated/admin/system/'
+      path: '/system'
+      fullPath: '/admin/system/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/usage-monitor/': {
+      id: '/_authenticated/admin/usage-monitor/'
+      path: '/usage-monitor'
+      fullPath: '/admin/usage-monitor/'
+      preLoaderRoute: typeof AuthenticatedAdminUsageMonitorIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/project/api-keys/': {
+      id: '/_authenticated/project/api-keys/'
+      path: '/project/api-keys'
+      fullPath: '/project/api-keys/'
+      preLoaderRoute: typeof AuthenticatedProjectApiKeysIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/project/threads/$threadId': {
-      id: '/_authenticated/project/threads/$threadId'
-      path: '/project/threads/$threadId'
-      fullPath: '/project/threads/$threadId'
-      preLoaderRoute: typeof AuthenticatedProjectThreadsThreadIdRouteImport
+    '/_authenticated/project/playground/': {
+      id: '/_authenticated/project/playground/'
+      path: '/project/playground'
+      fullPath: '/project/playground/'
+      preLoaderRoute: typeof AuthenticatedProjectPlaygroundIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/prompts/': {
+      id: '/_authenticated/project/prompts/'
+      path: '/project/prompts'
+      fullPath: '/project/prompts/'
+      preLoaderRoute: typeof AuthenticatedProjectPromptsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/requests/': {
+      id: '/_authenticated/project/requests/'
+      path: '/project/requests'
+      fullPath: '/project/requests/'
+      preLoaderRoute: typeof AuthenticatedProjectRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/project/requests/$requestId': {
@@ -1204,19 +1169,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectRequestsRequestIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/requests/$requestId': {
-      id: '/_authenticated/admin/requests/$requestId'
-      path: '/requests/$requestId'
-      fullPath: '/admin/requests/$requestId'
-      preLoaderRoute: typeof AuthenticatedAdminRequestsRequestIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
+    '/_authenticated/project/roles/': {
+      id: '/_authenticated/project/roles/'
+      path: '/project/roles'
+      fullPath: '/project/roles/'
+      preLoaderRoute: typeof AuthenticatedProjectRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/dashboard/channel-success-rates': {
-      id: '/_authenticated/admin/dashboard/channel-success-rates'
-      path: '/dashboard/channel-success-rates'
-      fullPath: '/admin/dashboard/channel-success-rates'
-      preLoaderRoute: typeof AuthenticatedAdminDashboardChannelSuccessRatesRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
+    '/_authenticated/project/threads/': {
+      id: '/_authenticated/project/threads/'
+      path: '/project/threads'
+      fullPath: '/project/threads/'
+      preLoaderRoute: typeof AuthenticatedProjectThreadsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/threads/$threadId': {
+      id: '/_authenticated/project/threads/$threadId'
+      path: '/project/threads/$threadId'
+      fullPath: '/project/threads/$threadId'
+      preLoaderRoute: typeof AuthenticatedProjectThreadsThreadIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/traces/': {
+      id: '/_authenticated/project/traces/'
+      path: '/project/traces'
+      fullPath: '/project/traces/'
+      preLoaderRoute: typeof AuthenticatedProjectTracesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/traces/$traceId': {
+      id: '/_authenticated/project/traces/$traceId'
+      path: '/project/traces/$traceId'
+      fullPath: '/project/traces/$traceId'
+      preLoaderRoute: typeof AuthenticatedProjectTracesTraceIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/usage-stats/': {
+      id: '/_authenticated/project/usage-stats/'
+      path: '/project/usage-stats'
+      fullPath: '/project/usage-stats/'
+      preLoaderRoute: typeof AuthenticatedProjectUsageStatsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/project/users/': {
+      id: '/_authenticated/project/users/'
+      path: '/project/users'
+      fullPath: '/project/users/'
+      preLoaderRoute: typeof AuthenticatedProjectUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }

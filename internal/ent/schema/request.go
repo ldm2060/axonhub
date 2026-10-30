@@ -195,13 +195,15 @@ func (Request) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
-			scopes.APIKeyScopeQueryRule(scopes.ScopeWriteRequests),
+			// API key principals stay inside the key's project: a project-level
+			// write_requests grant must not become a system-wide read.
+			scopes.APIKeyProjectScopeReadRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeReadRequestsRule(scopes.ScopeReadRequests),
 			scopes.UserReadScopeRule(scopes.ScopeReadRequests),
 		},
 		Mutation: scopes.MutationPolicy{
 			scopes.OwnerRule(),
-			scopes.APIKeyScopeMutationRule(scopes.ScopeWriteRequests),
+			scopes.APIKeyProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserProjectScopeWriteRule(scopes.ScopeWriteRequests),
 			scopes.UserWriteScopeRule(scopes.ScopeWriteRequests),
 		},
