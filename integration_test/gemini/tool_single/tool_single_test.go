@@ -7,8 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 	"google.golang.org/genai"
+
+	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 )
 
 func TestMain(m *testing.M) {
@@ -472,11 +473,11 @@ func TestGoogleSearchReturnsGroundingMetadata(t *testing.T) {
 	stream := helper.Client.Models.GenerateContentStream(ctx, modelName, contents, config)
 
 	var (
-		responseCount      int
-		fullResponse       strings.Builder
-		groundingMetadata  *genai.GroundingMetadata
-		citationMetadata   *genai.CitationMetadata
-		receivedCandidate  bool
+		responseCount     int
+		fullResponse      strings.Builder
+		groundingMetadata *genai.GroundingMetadata
+		citationMetadata  *genai.CitationMetadata
+		receivedCandidate bool
 	)
 
 	for response, err := range stream {

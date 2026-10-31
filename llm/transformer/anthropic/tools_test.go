@@ -213,6 +213,7 @@ func TestFilterOutAnthropicNativeTools(t *testing.T) {
 		})
 	}
 }
+
 func TestSupportsAnthropicNativeTools(t *testing.T) {
 	tests := []struct {
 		name   string

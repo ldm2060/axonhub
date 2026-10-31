@@ -6,6 +6,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/shared/constant"
+
 	"github.com/ldm2060/axonhub/anthropic_test/internal/testutil"
 )
 
@@ -225,8 +226,8 @@ func TestValidateAnthropicWebSearchResponse_AllowsCitationOnlyFallback(t *testin
 			Type: "text",
 			Text: "Recent announcement",
 			Citations: []anthropic.TextCitationUnion{{
-				Type:  "search_result_location",
-				Title: "example.com",
+				Type:   "search_result_location",
+				Title:  "example.com",
 				Source: "web",
 			}},
 		},

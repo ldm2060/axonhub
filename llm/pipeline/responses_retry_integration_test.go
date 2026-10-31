@@ -21,6 +21,7 @@ func (*retryTestInbound) TransformRequest(context.Context, *httpclient.Request) 
 	stream := true
 	return &llm.Request{Stream: &stream}, nil
 }
+
 func (*retryTestInbound) TransformStream(_ context.Context, stream streams.Stream[*llm.Response]) (streams.Stream[*httpclient.StreamEvent], error) {
 	return streams.Map(stream, func(resp *llm.Response) *httpclient.StreamEvent {
 		if resp == llm.DoneResponse || (resp != nil && resp.Object == "[DONE]") {
@@ -57,9 +58,11 @@ type retryTestOutbound struct {
 func (o *retryTestOutbound) TransformRequest(ctx context.Context, req *llm.Request) (*httpclient.Request, error) {
 	return o.real.TransformRequest(ctx, req)
 }
+
 func (o *retryTestOutbound) TransformStream(ctx context.Context, req *httpclient.Request, stream streams.Stream[*httpclient.StreamEvent]) (streams.Stream[*llm.Response], error) {
 	return o.real.TransformStream(ctx, req, stream)
 }
+
 func (o *retryTestOutbound) CanRetry(err error) bool {
 	if o.canRetry != nil {
 		return o.canRetry(err)
@@ -67,6 +70,7 @@ func (o *retryTestOutbound) CanRetry(err error) bool {
 
 	return errors.Is(err, llm.ErrStreamIncomplete) || errors.Is(err, llm.ErrEmptyResponse)
 }
+
 func (o *retryTestOutbound) PrepareForRetry(context.Context) error {
 	*o.prepareCalls++
 	return nil
@@ -80,6 +84,7 @@ type retryTestExecutor struct {
 func (*retryTestExecutor) Do(context.Context, *httpclient.Request) (*httpclient.Response, error) {
 	return nil, errors.New("unexpected non-stream request")
 }
+
 func (e *retryTestExecutor) DoStream(context.Context, *httpclient.Request) (streams.Stream[*httpclient.StreamEvent], error) {
 	index := *e.attempts
 	*e.attempts++

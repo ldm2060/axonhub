@@ -95,6 +95,7 @@ func (h *TestHelper) CreateResponseStreamingWithHeaders(ctx context.Context, par
 func (h *TestHelper) GetHeaderOptions() []option.RequestOption {
 	return h.Config.GetHeaderOptions()
 }
+
 func (h *TestHelper) ValidateChatResponse(t *testing.T, response *openai.ChatCompletion, description string) {
 	t.Helper()
 	if response == nil {

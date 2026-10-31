@@ -277,7 +277,8 @@ var channelTemplates = []ChannelTemplate{
 			{Key: "token_used", Label: "Token Usage", ValueRef: "token_used", TotalRef: "token_total", Format: "fraction", Unit: "USD", DisplayOrder: 5},
 			{Key: "token_is_unlimited", Label: "Token Unlimited", ValueRef: "token_is_unlimited", Format: "text", DisplayOrder: 6, Badge: "quota", BadgePresets: `{"true":"sapphire","false":"rosegold"}`},
 		},
-	}, {
+	},
+	{
 		ProviderType:          "zhipu",
 		Name:                  "Zhipu / Z.ai",
 		Description:           "Monitor Zhipu AI quota limits for tokens and MCP usage",

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 
 	"github.com/ldm2060/axonhub/llm"
@@ -23,7 +24,6 @@ import (
 	"github.com/ldm2060/axonhub/llm/transformer/anthropic"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
-	"github.com/samber/lo"
 )
 
 var modelVersionRegex = regexp.MustCompile(`^gpt-(\d+)`)

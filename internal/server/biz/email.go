@@ -301,7 +301,7 @@ func (s *EmailService) TestConnection(ctx context.Context) error {
 	switch settings.Encryption {
 	case "ssl":
 		tlsDialer := &tls.Dialer{
-			Config: tlsConfig,
+			Config:    tlsConfig,
 			NetDialer: &net.Dialer{Timeout: 5 * time.Second},
 		}
 		conn, err := tlsDialer.DialContext(ctx, "tcp", addr)

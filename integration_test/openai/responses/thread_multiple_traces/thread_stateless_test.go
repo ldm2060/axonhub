@@ -3,9 +3,10 @@ package main
 import (
 	"testing"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 // Helper function

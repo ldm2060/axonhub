@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/invopop/jsonschema"
-	"github.com/ldm2060/axonhub/conf"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/ldm2060/axonhub/conf"
 )
 
 func main() {

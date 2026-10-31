@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+
 	"github.com/ldm2060/axonhub/internal/build"
 	"github.com/ldm2060/axonhub/internal/ent"
 )

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/samber/lo"
+
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/auth"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -17,7 +19,6 @@ import (
 	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/shared"
-	"github.com/samber/lo"
 )
 
 var (

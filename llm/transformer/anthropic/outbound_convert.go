@@ -1058,7 +1058,6 @@ func convertMultiplePartContent(msg llm.Message) (MessageContent, bool) {
 	}
 
 	for _, toolCall := range msg.ToolCalls {
-
 		appendOrdered(toolCall.TransformerMetadata, toolUseBlockFromLLM(toolCall))
 	}
 
@@ -1073,7 +1072,6 @@ func convertMultiplePartContent(msg llm.Message) (MessageContent, bool) {
 	blocks := make([]MessageContentBlock, 0, len(sorted))
 	for _, ob := range sorted {
 		blocks = append(blocks, ob.block)
-
 	}
 
 	if len(blocks) == 0 {

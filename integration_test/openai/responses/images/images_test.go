@@ -9,11 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 	"github.com/openai/openai-go/v3/shared/constant"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 func TestMain(m *testing.M) {
@@ -103,7 +104,7 @@ func TestResponsesImageGeneration(t *testing.T) {
 	timestamp := time.Now().Format("20060102_150405")
 	filename := filepath.Join(os.TempDir(), fmt.Sprintf("generated_image_%s.png", timestamp))
 
-	err = os.WriteFile(filename, imgBytes, 0644)
+	err = os.WriteFile(filename, imgBytes, 0o644)
 	if err != nil {
 		t.Fatalf("Failed to save image to %s: %v", filename, err)
 	}
@@ -209,7 +210,7 @@ func TestResponsesImageGenerationStreaming(t *testing.T) {
 	timestamp := time.Now().Format("20060102_150405")
 	filename := filepath.Join(os.TempDir(), fmt.Sprintf("generated_image_%s.png", timestamp))
 
-	err := os.WriteFile(filename, decodedBytes, 0644)
+	err := os.WriteFile(filename, decodedBytes, 0o644)
 	if err != nil {
 		t.Fatalf("Failed to save image to %s: %v", filename, err)
 	}

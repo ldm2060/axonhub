@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 // TestResponsesStreamingClientDisconnectAfterDone tests the fix for GitHub Issue #827
@@ -260,6 +261,7 @@ func TestResponsesStreamingClientDisconnectAfterOutputTextDone(t *testing.T) {
 	t.Log("  - final decision should still resolve to completed when aggregation proves completion")
 	t.Log("  - this is the closest integration-level regression to Claude Code style early stop")
 }
+
 func TestResponsesStreamingRapidDisconnects(t *testing.T) {
 	helper := testutil.NewTestHelper(t, "TestResponsesStreamingRapidDisconnects")
 

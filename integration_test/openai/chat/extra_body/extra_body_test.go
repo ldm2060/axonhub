@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 func TestMain(m *testing.M) {

@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 // TestConnectionAwareLoadBalancing verifies that connection tracking
@@ -42,7 +43,6 @@ func TestConnectionAwareLoadBalancing(t *testing.T) {
 				},
 				Model: helper.GetModel(),
 			})
-
 			if err != nil {
 				results <- fmt.Errorf("request %d failed: %w", requestNum, err)
 				return
@@ -144,7 +144,6 @@ func TestLoadBalancingWithChannelFailover(t *testing.T) {
 			},
 			Model: helper.GetModel(),
 		})
-
 		if err != nil {
 			t.Logf("Request %d failed: %v (system should retry with alternative channel)", i+1, err)
 			continue

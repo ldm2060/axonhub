@@ -4,10 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/objects"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertModelToOpenAIExtended_NilModelCard(t *testing.T) {

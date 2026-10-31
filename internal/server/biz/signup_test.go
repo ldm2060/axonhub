@@ -344,6 +344,7 @@ func TestSignUp_WithVerificationCode_PendingWhenApprovalRequired(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, token.ConsumedAt)
 }
+
 func TestSignUp_WithVerificationCode_RejectsCaseVariantDuplicateEmail(t *testing.T) {
 	svc, client := setupTestSignUpService(t)
 	defer client.Close()

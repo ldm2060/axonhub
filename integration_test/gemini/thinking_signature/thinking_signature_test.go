@@ -8,8 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 	"google.golang.org/genai"
+
+	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 )
 
 func TestMain(m *testing.M) {

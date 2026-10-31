@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	openapigraphql "examples/graphql"
-
 	"github.com/Khan/genqlient/graphql"
+
+	openapigraphql "examples/graphql"
 )
 
 func main() {

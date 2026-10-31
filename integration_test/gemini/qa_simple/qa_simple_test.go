@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 	"google.golang.org/genai"
+
+	"github.com/ldm2060/axonhub/gemini_test/internal/testutil"
 )
 
 func TestMain(m *testing.M) {
@@ -35,9 +36,10 @@ func TestSimpleQA(t *testing.T) {
 	modelName := helper.GetModel()
 
 	// Prepare the generate content request
-	contents := []*genai.Content{{
-		Parts: []*genai.Part{{Text: question}},
-	},
+	contents := []*genai.Content{
+		{
+			Parts: []*genai.Part{{Text: question}},
+		},
 	}
 
 	// Make the API call
@@ -109,9 +111,10 @@ func TestMultipleQuestions(t *testing.T) {
 	for i, question := range questions {
 		t.Logf("Question %d: %s", i+1, question)
 
-		contents := []*genai.Content{{
-			Parts: []*genai.Part{{Text: question}},
-		},
+		contents := []*genai.Content{
+			{
+				Parts: []*genai.Part{{Text: question}},
+			},
 		}
 
 		config := helper.MergeHTTPOptions(nil)

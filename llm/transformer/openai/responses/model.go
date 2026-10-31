@@ -416,9 +416,11 @@ type URLCitation struct {
 	Title string `json:"title,omitempty"`
 }
 
-const responsesWebSearchCallsTransformerMetadataKey = "openai_responses_web_search_calls"
-const responsesReasoningItemTransformerMetadataKey = "openai_responses_reasoning_item"
-const responsesTerminalDetailsTransformerMetadataKey = "openai_responses_terminal_details"
+const (
+	responsesWebSearchCallsTransformerMetadataKey  = "openai_responses_web_search_calls"
+	responsesReasoningItemTransformerMetadataKey   = "openai_responses_reasoning_item"
+	responsesTerminalDetailsTransformerMetadataKey = "openai_responses_terminal_details"
+)
 
 // Preserve details that cannot be represented by a Chat Completions finish_reason.
 type responsesTerminalDetails struct {

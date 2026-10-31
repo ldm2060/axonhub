@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/shared"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 func TestSingleTraceMultipleCalls(t *testing.T) {

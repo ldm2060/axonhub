@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 	"github.com/openai/openai-go/v3"
+
+	"github.com/ldm2060/axonhub/openai_test/internal/testutil"
 )
 
 // TestTraceBasedLoadBalancing verifies that trace sticky routing works correctly.
@@ -188,7 +189,6 @@ func TestWeightRoundRobinLoadBalancing(t *testing.T) {
 				},
 				Model: helper.GetModel(),
 			})
-
 			if err != nil {
 				results <- fmt.Errorf("request %d failed: %w", requestNum, err)
 				return

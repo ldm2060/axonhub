@@ -813,6 +813,7 @@ func TestPipeline_NonStreaming_AutoAggregateUpgradedStream_EmptyJSONObjectAggreg
 	require.NotNil(t, result.Response)
 	require.Equal(t, "{}", string(result.Response.Body))
 }
+
 func TestPipeline_Streaming_WithTestData(t *testing.T) {
 	tests := []struct {
 		name                string

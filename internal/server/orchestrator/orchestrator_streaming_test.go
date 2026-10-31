@@ -876,12 +876,12 @@ func TestChatCompletionOrchestrator_Process_RPMAdmissionBlocksBeforeUpstream(t *
 	rpm := int64(1)
 	bizChannel := &biz.Channel{
 		Channel: &ent.Channel{
-			ID:               ch.ID,
-			Name:             ch.Name,
-			BaseURL:          ch.BaseURL,
-			Credentials:      ch.Credentials,
-			SupportedModels:  ch.SupportedModels,
-			DefaultTestModel: ch.DefaultTestModel,
+			ID:                ch.ID,
+			Name:              ch.Name,
+			BaseURL:           ch.BaseURL,
+			Credentials:       ch.Credentials,
+			SupportedModels:   ch.SupportedModels,
+			DefaultTestModel:  ch.DefaultTestModel,
 			Status:            ch.Status,
 			QuotaBindingReady: true,
 			Settings: &objects.ChannelSettings{

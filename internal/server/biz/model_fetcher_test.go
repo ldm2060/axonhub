@@ -673,7 +673,6 @@ func TestFetchModelsGeminiPagination(t *testing.T) {
 		BaseURL:     server.URL,
 		APIKey:      &apiKey,
 	})
-
 	if err != nil {
 		t.Fatalf("FetchModels() unexpected error: %v", err)
 	}
