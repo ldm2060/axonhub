@@ -170,6 +170,9 @@ test('normalized limits: malformed required fields produce no rendered limits', 
     usageRatio: 0.1,
     status: 'available',
     ready: false,
+    // fieldKey rides along since 2eee00f6: windowed derivations and the
+    // custom-monitor estimate config stamp their source field on the limit.
+    fieldKey: undefined,
     account: undefined,
     nextResetAt: undefined,
     periodStart: undefined,
