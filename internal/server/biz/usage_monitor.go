@@ -1151,11 +1151,7 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 			log.Int("monitor_id", ch.ID),
 			log.Cause(err))
 	} else if len(cfgs) > 0 {
-		if ch.Source == usagemonitorchannel.SourceTemplate {
-			usage_monitor.StampEstimateWindows(pollData.Fields, pollData.Variables, cfgs, &derived)
-		} else {
-			usage_monitor.ApplyEstimateConfigs(pollData.Fields, pollData.Variables, cfgs, &derived)
-		}
+		usage_monitor.ApplyEstimateConfigs(pollData.Fields, pollData.Variables, cfgs, &derived)
 	}
 
 	quotaStatus = derived.Status

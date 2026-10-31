@@ -206,10 +206,10 @@ export function AddChannelDialog() {
       // Field-selection sources (custom/builtin) need a usage field per row;
       // template rows configure the window only.
       const estimateConfigsInput =
-        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window && (source === 'template' || row.fieldKey))
+        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window)
           ? estimateConfigs.map((row) => ({
-              fieldKey: source === 'template' ? '' : row.fieldKey,
-              remaining: source === 'template' ? false : row.remaining,
+              fieldKey: row.fieldKey,
+              remaining: row.remaining,
               resetFieldKey: row.resetFieldKey || undefined,
               window: row.window,
             }))
@@ -244,7 +244,7 @@ export function AddChannelDialog() {
     !headersError &&
     // A chosen usage field needs its window before the estimate config is complete.
     // Every added estimate row needs its window (and usage field) filled.
-    !estimateConfigs.some((row) => (source === 'template' ? !row.window : !row.window || !row.fieldKey)) &&
+    !estimateConfigs.some((row) => !row.window) &&
     (source === 'template' ? selectedTemplate !== null && apiKey.trim() !== '' : true);
   return (
     <Dialog
@@ -731,7 +731,6 @@ export function AddChannelDialog() {
                     channels={channelsQuery.data?.edges}
                     channelId={channelId}
                     onChannelIdChange={setChannelId}
-                    allowFieldSelection={false}
                   />
 
                   {/* Test Connection */}

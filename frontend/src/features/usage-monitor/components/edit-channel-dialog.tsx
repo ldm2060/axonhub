@@ -127,10 +127,10 @@ export function EditChannelDialog() {
       // unbound attribution channel sends clearChannelId since the GUID
       // scalar rejects empty strings.
       const estimateConfigsInput =
-        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window && (isTemplate || row.fieldKey))
+        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window)
           ? estimateConfigs.map((row) => ({
-              fieldKey: isTemplate ? '' : row.fieldKey,
-              remaining: isTemplate ? false : row.remaining,
+              fieldKey: row.fieldKey,
+              remaining: row.remaining,
               resetFieldKey: row.resetFieldKey || undefined,
               window: row.window,
             }))
@@ -208,8 +208,8 @@ export function EditChannelDialog() {
     ? // Every added estimate row needs its window filled.
       name.trim() && !estimateConfigs.some((row) => !row.window)
     : isBuiltin
-      ? name.trim() && !estimateConfigs.some((row) => !row.window || !row.fieldKey)
-      : name.trim() && apiUrl.trim() && !headersError && !estimateConfigs.some((row) => !row.window || !row.fieldKey);
+      ? name.trim() && !estimateConfigs.some((row) => !row.window)
+      : name.trim() && apiUrl.trim() && !headersError && !estimateConfigs.some((row) => !row.window);
 
   return (
     <Dialog
@@ -410,7 +410,6 @@ export function EditChannelDialog() {
                 channels={channelsQuery.data?.edges}
                 channelId={channelId}
                 onChannelIdChange={setChannelId}
-                allowFieldSelection={false}
               />
             )}
             {isBuiltin && (

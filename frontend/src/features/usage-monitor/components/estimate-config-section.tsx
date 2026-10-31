@@ -28,11 +28,11 @@ type ChannelEdge = { node: { id: string; name: string } };
 
 // EstimateConfigSection edits the monitor's period quota estimate entries —
 // one row per window, since providers commonly expose a 5h rolling window and
-// a longer pool at the same time. With allowFieldSelection each row picks the
-// usage ratio field (and its direction); window-only rows (template monitors)
-// stamp the window onto the template's own limits without changing their
-// ratios. The attribution channel select is rendered when the parent passes
-// channel props.
+// a longer pool at the same time. Each row picks the usage ratio field (and
+// its direction); a row with no usage field (template monitors) stamps the
+// window onto the template's own limits without changing their ratios. The
+// attribution channel select is rendered when the parent passes channel
+// props.
 export function EstimateConfigSection({
   displayFields,
   variables,
@@ -41,7 +41,6 @@ export function EstimateConfigSection({
   channels,
   channelId,
   onChannelIdChange,
-  allowFieldSelection = true,
 }: {
   displayFields: DisplayField[];
   variables?: Variable[];
@@ -50,7 +49,6 @@ export function EstimateConfigSection({
   channels?: ChannelEdge[];
   channelId?: string;
   onChannelIdChange?: (channelId: string) => void;
-  allowFieldSelection?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -70,9 +68,7 @@ export function EstimateConfigSection({
       <div className='flex items-center gap-2'>
         <Label className='text-sm font-semibold'>{t('usageMonitor.estimateSection')}</Label>
       </div>
-      <p className='text-muted-foreground text-xs'>
-        {allowFieldSelection ? t('usageMonitor.estimateSectionHint') : t('usageMonitor.estimateSectionTemplateHint')}
-      </p>
+      <p className='text-muted-foreground text-xs'>{t('usageMonitor.estimateSectionHint')}</p>
 
       {values.map((row, index) => (
         <div key={index} className='border-border/60 relative space-y-2 rounded-md border p-2.5 pr-8'>
@@ -86,36 +82,34 @@ export function EstimateConfigSection({
           </button>
 
           <div className='grid grid-cols-2 gap-2'>
-            {allowFieldSelection && (
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateField')}</Label>
-                <Select value={row.fieldKey || undefined} onValueChange={(v) => patchRow(index, { fieldKey: v })}>
-                  <SelectTrigger className='h-8 w-full'>
-                    <SelectValue placeholder={t('usageMonitor.estimateFieldPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
+            <div className='space-y-1'>
+              <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateField')}</Label>
+              <Select value={row.fieldKey || undefined} onValueChange={(v) => patchRow(index, { fieldKey: v })}>
+                <SelectTrigger className='h-8 w-full'>
+                  <SelectValue placeholder={t('usageMonitor.estimateFieldPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>{t('usageMonitor.displayFieldSection')}</SelectLabel>
+                    {ratioFields.map((df) => (
+                      <SelectItem key={df.key} value={df.key}>
+                        {df.label || df.key}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  {(variables?.length ?? 0) > 0 && (
                     <SelectGroup>
-                      <SelectLabel>{t('usageMonitor.displayFieldSection')}</SelectLabel>
-                      {ratioFields.map((df) => (
-                        <SelectItem key={df.key} value={df.key}>
-                          {df.label || df.key}
+                      <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
+                      {variables!.map((v) => (
+                        <SelectItem key={v.key} value={`var:${v.key}`}>
+                          {v.key}
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                    {(variables?.length ?? 0) > 0 && (
-                      <SelectGroup>
-                        <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
-                        {variables!.map((v) => (
-                          <SelectItem key={v.key} value={`var:${v.key}`}>
-                            {v.key}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             <div className='space-y-1'>
               <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateWindow')}</Label>
               <Select value={row.window || undefined} onValueChange={(v) => patchRow(index, { window: v })}>
@@ -134,23 +128,18 @@ export function EstimateConfigSection({
           </div>
 
           <div className='grid grid-cols-2 gap-2'>
-            {allowFieldSelection && (
-              <div className='space-y-1'>
-                <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateDirection')}</Label>
-                <Select
-                  value={row.remaining ? 'remaining' : 'used'}
-                  onValueChange={(v) => patchRow(index, { remaining: v === 'remaining' })}
-                >
-                  <SelectTrigger className='h-8 w-full'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='used'>{t('usageMonitor.estimateDirectionUsed')}</SelectItem>
-                    <SelectItem value='remaining'>{t('usageMonitor.estimateDirectionRemaining')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className='space-y-1'>
+              <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateDirection')}</Label>
+              <Select value={row.remaining ? 'remaining' : 'used'} onValueChange={(v) => patchRow(index, { remaining: v === 'remaining' })}>
+                <SelectTrigger className='h-8 w-full'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='used'>{t('usageMonitor.estimateDirectionUsed')}</SelectItem>
+                  <SelectItem value='remaining'>{t('usageMonitor.estimateDirectionRemaining')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className='space-y-1'>
               <Label className='text-muted-foreground text-[11px]'>{t('usageMonitor.estimateResetField')}</Label>
               <Select value={row.resetFieldKey || undefined} onValueChange={(v) => patchRow(index, { resetFieldKey: v === NONE ? '' : v })}>

@@ -204,10 +204,10 @@ func TestApplyEstimateConfigs_LimitShapesEstimateReady(t *testing.T) {
 	assert.NotNil(t, limit.PeriodStart)
 }
 
-func TestStampEstimateWindows_WindowOnly(t *testing.T) {
-	// Template monitors: a windowless template-derived limit gains the
-	// configured window and period start; ratio, status, and field key stay
-	// the template's own.
+func TestApplyEstimateConfigs_WindowOnlyStampsTemplateRatio(t *testing.T) {
+	// Template monitors: a window-only entry stamps the configured window onto
+	// the template's windowless limit; ratio, status, and field key stay the
+	// template's own, and the routing status is preserved.
 	reset := time.Now().UTC().Add(72 * time.Hour).Truncate(time.Second)
 	fields := []ParsedField{
 		{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)},
@@ -220,7 +220,7 @@ func TestStampEstimateWindows_WindowOnly(t *testing.T) {
 		},
 	}
 
-	StampEstimateWindows(fields, nil, []EstimateConfig{{Window: EstimateWindowMonthly}}, &derived)
+	ApplyEstimateConfigs(fields, nil, []EstimateConfig{{Window: EstimateWindowMonthly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	limit := derived.Limits[0]
@@ -234,7 +234,7 @@ func TestStampEstimateWindows_WindowOnly(t *testing.T) {
 	assert.Equal(t, reset, *limit.NextResetAt)
 }
 
-func TestStampEstimateWindows_MultipleWindows(t *testing.T) {
+func TestApplyEstimateConfigs_MultipleWindowOnlyEntries(t *testing.T) {
 	// One windowless template ratio priced against both a 5h and a weekly window.
 	reset := time.Now().UTC().Add(72 * time.Hour).Truncate(time.Second)
 	fields := []ParsedField{{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)}}
@@ -246,7 +246,7 @@ func TestStampEstimateWindows_MultipleWindows(t *testing.T) {
 		},
 	}
 
-	StampEstimateWindows(fields, nil, []EstimateConfig{
+	ApplyEstimateConfigs(fields, nil, []EstimateConfig{
 		{Window: EstimateWindow5h},
 		{Window: EstimateWindowWeekly},
 	}, &derived)
@@ -259,12 +259,44 @@ func TestStampEstimateWindows_MultipleWindows(t *testing.T) {
 	}
 }
 
-func TestStampEstimateWindows_KeepsWindowedLimits(t *testing.T) {
-	// Limits that already carry a window are untouched.
+func TestApplyEstimateConfigs_FieldEntryOnTemplate(t *testing.T) {
+	// A field entry on a template monitor replaces the windowless ratio with
+	// the selected field's ratio; the template's windowed limits survive.
+	reset := time.Now().UTC().Add(72 * time.Hour).Truncate(time.Second)
+	fields := []ParsedField{
+		{Key: "tokens_pct", Format: "percentage", Percent: 85},
+		{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)},
+	}
+	windowed := provider_quota.QuotaLimitStatus{Status: "available", UsageRatio: 0.1}.WithWindow("5h", 5*time.Hour)
+	derived := QuotaDerivedStatus{
+		Status: "available",
+		Ready:  true,
+		Limits: []provider_quota.QuotaLimitStatus{
+			windowed,
+			{Type: provider_quota.QuotaLimitTypeToken, Status: "available", UsageRatio: 0.4, Ready: true},
+		},
+	}
+
+	ApplyEstimateConfigs(fields, nil, []EstimateConfig{{FieldKey: "tokens_pct", Window: EstimateWindowWeekly}}, &derived)
+
+	require.Len(t, derived.Limits, 2)
+	assert.Equal(t, "5h", derived.Limits[0].Window)
+	assert.InDelta(t, 0.1, derived.Limits[0].UsageRatio, 1e-9)
+	weekly := derived.Limits[1]
+	assert.Equal(t, EstimateWindowWeekly, weekly.Window)
+	assert.InDelta(t, 0.85, weekly.UsageRatio, 1e-9)
+	assert.Equal(t, "tokens_pct", weekly.FieldKey)
+	assert.Equal(t, "warning", weekly.Status)
+	// Field entries redefine the routing status.
+	assert.Equal(t, "warning", derived.Status)
+}
+
+func TestApplyEstimateConfigs_WindowOnlyKeepsWindowedLimits(t *testing.T) {
+	// Limits that already carry a window are untouched by window-only entries.
 	windowed := provider_quota.QuotaLimitStatus{Status: "warning", UsageRatio: 0.9}.WithWindow("5h", 5*time.Hour)
 	derived := QuotaDerivedStatus{Status: "warning", Ready: true, Limits: []provider_quota.QuotaLimitStatus{windowed}}
 
-	StampEstimateWindows(nil, nil, []EstimateConfig{{Window: EstimateWindowWeekly}}, &derived)
+	ApplyEstimateConfigs(nil, nil, []EstimateConfig{{Window: EstimateWindowWeekly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	assert.Equal(t, "5h", derived.Limits[0].Window)
@@ -272,10 +304,10 @@ func TestStampEstimateWindows_KeepsWindowedLimits(t *testing.T) {
 	assert.Nil(t, derived.Limits[0].PeriodStart)
 }
 
-func TestStampEstimateWindows_InvalidWindowNoop(t *testing.T) {
+func TestApplyEstimateConfigs_InvalidWindowNoop(t *testing.T) {
 	derived := QuotaDerivedStatus{Status: "available", Ready: true, Limits: []provider_quota.QuotaLimitStatus{{Status: "available", UsageRatio: 0.1}}}
 
-	StampEstimateWindows(nil, nil, []EstimateConfig{{Window: "fortnight"}}, &derived)
+	ApplyEstimateConfigs(nil, nil, []EstimateConfig{{Window: "fortnight"}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	assert.Empty(t, derived.Limits[0].Window)

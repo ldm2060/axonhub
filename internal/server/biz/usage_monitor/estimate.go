@@ -169,15 +169,25 @@ func windowedLimit(ratio float64, reset *time.Time, window string) (provider_quo
 	}
 }
 
-// ApplyEstimateConfigs drives the period estimate for field-selection sources
-// (custom/builtin): every entry contributes one windowed limit priced from its
-// field's ratio, so a monitor can carry both a 5h and a weekly window at once.
-// The ratio source is a display field key or a var:-prefixed raw variable.
-// Entries whose source is missing or yields no usable ratio are skipped; when
-// no entry succeeds the derived limits are left untouched. The routing status
-// follows the worst contributed limit.
+// ApplyEstimateConfigs drives the period quota estimate for every monitor
+// source. Entries with a FieldKey contribute one windowed limit priced from
+// that field's ratio (display field or var:-prefixed variable) and replace the
+// windowless originals; entries with only a window stamp that window onto the
+// windowless originals — the template mode that keeps the template's own
+// ratios, statuses, and field keys. Windowed originals always survive, so a
+// monitor can carry a 5h and a weekly window at once. When no entry produces
+// anything the derived limits are left untouched.
 func ApplyEstimateConfigs(fields []ParsedField, vars map[string]any, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
-	var out []provider_quota.QuotaLimitStatus
+	var windowed, windowless []provider_quota.QuotaLimitStatus
+	for _, l := range derived.Limits {
+		if l.Window != "" {
+			windowed = append(windowed, l)
+		} else {
+			windowless = append(windowless, l)
+		}
+	}
+
+	var fieldLimits, stamped []provider_quota.QuotaLimitStatus
 	worstStatus := ""
 	var earliestReset *time.Time
 	for _, cfg := range cfgs {
@@ -188,7 +198,8 @@ func ApplyEstimateConfigs(fields []ParsedField, vars map[string]any, cfgs []Esti
 		if !ok {
 			continue
 		}
-		limit, ok := windowedLimit(ratio, estimateResetTime(fields, vars, cfg.ResetFieldKey), cfg.Window)
+		reset := estimateResetTime(fields, vars, cfg.ResetFieldKey)
+		limit, ok := windowedLimit(ratio, reset, cfg.Window)
 		if !ok {
 			continue
 		}
@@ -201,7 +212,7 @@ func ApplyEstimateConfigs(fields []ParsedField, vars map[string]any, cfgs []Esti
 		limit.Status = status
 		limit.Ready = provider_quota.IsReadyStatus(status)
 		limit.FieldKey = cfg.FieldKey
-		out = append(out, limit)
+		fieldLimits = append(fieldLimits, limit)
 		if quotaStatusRank(status) > quotaStatusRank(worstStatus) {
 			worstStatus = status
 		}
@@ -209,39 +220,8 @@ func ApplyEstimateConfigs(fields []ParsedField, vars map[string]any, cfgs []Esti
 			earliestReset = limit.NextResetAt
 		}
 	}
-	if len(out) == 0 {
-		return
-	}
-	derived.Limits = out
-	derived.Status = worstStatus
-	derived.Ready = provider_quota.IsReadyStatus(worstStatus)
-	derived.NextResetAt = earliestReset
-}
-
-// StampEstimateWindows is the template-monitor path: every configured window
-// is stamped onto the limits that have none, so a template reporting one ratio
-// can be priced against both a 5h and a weekly window when both are
-// configured. Reset times resolve from display fields or var:-prefixed
-// variables. The template keeps its own ratios, statuses, and field keys;
-// limits that already carry a window are left untouched.
-func StampEstimateWindows(fields []ParsedField, vars map[string]any, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
-	var windowless []provider_quota.QuotaLimitStatus
-	var windowed []provider_quota.QuotaLimitStatus
-	for _, l := range derived.Limits {
-		if l.Window != "" {
-			windowed = append(windowed, l)
-		} else {
-			windowless = append(windowless, l)
-		}
-	}
-	if len(windowless) == 0 {
-		return
-	}
-
-	var stamped []provider_quota.QuotaLimitStatus
-	var earliestReset *time.Time
 	for _, cfg := range cfgs {
-		if cfg.Window == "" {
+		if cfg.FieldKey != "" || cfg.Window == "" {
 			continue
 		}
 		reset := estimateResetTime(fields, vars, cfg.ResetFieldKey)
@@ -259,11 +239,20 @@ func StampEstimateWindows(fields []ParsedField, vars map[string]any, cfgs []Esti
 			}
 		}
 	}
-	if len(stamped) == 0 {
+	if len(fieldLimits) == 0 && len(stamped) == 0 {
 		return
 	}
-	derived.Limits = append(windowed, stamped...)
-	if derived.NextResetAt == nil {
+
+	out := windowed
+	out = append(out, fieldLimits...)
+	out = append(out, stamped...)
+	derived.Limits = out
+	if len(fieldLimits) > 0 {
+		// Field-selection entries redefine the routing status.
+		derived.Status = worstStatus
+		derived.Ready = provider_quota.IsReadyStatus(worstStatus)
+		derived.NextResetAt = earliestReset
+	} else if derived.NextResetAt == nil {
 		derived.NextResetAt = earliestReset
 	}
 }
