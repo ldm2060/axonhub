@@ -71,7 +71,12 @@ const queryClient = new QueryClient({
     },
   },
   queryCache: new QueryCache({
-    onError: (error) => {
+    onError: (error, query) => {
+      // Queries marked silent (best-effort background checks) fail without
+      // surfacing the global error toasts; their consumers handle the result.
+      if (query?.meta?.silent) {
+        return;
+      }
       // For fetch API errors, we check if it's a Response object with status
       const status =
         error instanceof Response ? error.status : error && typeof error === 'object' && 'status' in error ? (error as any).status : 0;

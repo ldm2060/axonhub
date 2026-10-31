@@ -41,6 +41,10 @@ export function useVersionCheck() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    // The background check is best-effort: a failed GitHub lookup (rate
+    // limiting is common) must not surface the global error toast. The About
+    // page's user-triggered check keeps its feedback.
+    meta: { silent: true },
   });
 
   const showUpdateToast = useCallback((latestVersion: string, releaseUrl: string) => {
