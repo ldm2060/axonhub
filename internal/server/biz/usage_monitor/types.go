@@ -133,37 +133,38 @@ type TestResult struct {
 }
 
 type CreateUsageMonitorChannelInput struct {
-	Name           string          `json:"name"`
-	Source         string          `json:"source"`
-	ChannelID      *string         `json:"channelId,omitempty"`
-	ProviderType   *string         `json:"providerType,omitempty"` // required when source=template
-	ApiKey         *string         `json:"apiKey,omitempty"`       // required when source=template
-	ApiURL         string          `json:"apiUrl"`
-	ApiMethod      string          `json:"apiMethod"`
-	ApiHeaders     string          `json:"apiHeaders"`
-	ApiBody        *string         `json:"apiBody,omitempty"`
-	PollInterval   int             `json:"pollInterval"`
-	Fields         []FieldConfig   `json:"fields"`
-	Variables      []Variable      `json:"variables,omitempty"`
-	DisplayFields  []DisplayField  `json:"displayFields,omitempty"`
-	EstimateConfig *EstimateConfig `json:"estimateConfig,omitempty"`
+	Name            string           `json:"name"`
+	Source          string           `json:"source"`
+	ChannelID       *string          `json:"channelId,omitempty"`
+	ProviderType    *string          `json:"providerType,omitempty"` // required when source=template
+	ApiKey          *string          `json:"apiKey,omitempty"`       // required when source=template
+	ApiURL          string           `json:"apiUrl"`
+	ApiMethod       string           `json:"apiMethod"`
+	ApiHeaders      string           `json:"apiHeaders"`
+	ApiBody         *string          `json:"apiBody,omitempty"`
+	PollInterval    int              `json:"pollInterval"`
+	Fields          []FieldConfig    `json:"fields"`
+	Variables       []Variable       `json:"variables,omitempty"`
+	DisplayFields   []DisplayField   `json:"displayFields,omitempty"`
+	EstimateConfigs []EstimateConfig `json:"estimateConfigs,omitempty"`
 }
 
 type UpdateUsageMonitorChannelInput struct {
-	Name           *string         `json:"name,omitempty"`
-	ApiURL         *string         `json:"apiUrl,omitempty"`
-	ApiMethod      *string         `json:"apiMethod,omitempty"`
-	ApiHeaders     *string         `json:"apiHeaders,omitempty"`
-	ApiKey         *string         `json:"apiKey,omitempty"` // allow key rotation for template channels
-	ApiBody        *string         `json:"apiBody,omitempty"`
-	PollInterval   *int            `json:"pollInterval,omitempty"`
-	Fields         *[]FieldConfig  `json:"fields,omitempty"`
-	Variables      *[]Variable     `json:"variables,omitempty"`
-	DisplayFields  *[]DisplayField `json:"displayFields,omitempty"`
-	Status         *string         `json:"status,omitempty"`
-	ChannelID      *string         `json:"channelId,omitempty"`      // nil=unchanged, value=bind
-	ClearChannelID *bool           `json:"clearChannelId,omitempty"` // true=unbind (takes precedence over ChannelID)
-	EstimateConfig *EstimateConfig `json:"estimateConfig,omitempty"` // FieldKey ""=clear
+	Name                *string          `json:"name,omitempty"`
+	ApiURL              *string          `json:"apiUrl,omitempty"`
+	ApiMethod           *string          `json:"apiMethod,omitempty"`
+	ApiHeaders          *string          `json:"apiHeaders,omitempty"`
+	ApiKey              *string          `json:"apiKey,omitempty"` // allow key rotation for template channels
+	ApiBody             *string          `json:"apiBody,omitempty"`
+	PollInterval        *int             `json:"pollInterval,omitempty"`
+	Fields              *[]FieldConfig   `json:"fields,omitempty"`
+	Variables           *[]Variable      `json:"variables,omitempty"`
+	DisplayFields       *[]DisplayField  `json:"displayFields,omitempty"`
+	Status              *string          `json:"status,omitempty"`
+	ChannelID           *string          `json:"channelId,omitempty"`           // nil=unchanged, value=bind
+	ClearChannelID      *bool            `json:"clearChannelId,omitempty"`      // true=unbind (takes precedence over ChannelID)
+	EstimateConfigs     []EstimateConfig `json:"estimateConfigs,omitempty"`     // nil=unchanged
+	ClearEstimateConfig *bool            `json:"clearEstimateConfig,omitempty"` // true=remove the estimate config
 }
 
 type TestUsageMonitorChannelInput struct {

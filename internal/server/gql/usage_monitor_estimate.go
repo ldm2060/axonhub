@@ -6,14 +6,22 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
 )
 
-// estimateConfigFromInput converts the GraphQL estimate config input into the
-// biz representation stored on the monitor row. Lives outside the resolvers
-// file because gqlgen regenerates that file and strips helper functions.
-func estimateConfigFromInput(data *EstimateConfigInput) *usage_monitor.EstimateConfig {
-	return &usage_monitor.EstimateConfig{
-		FieldKey:      data.FieldKey,
-		Remaining:     lo.FromPtr(data.Remaining),
-		ResetFieldKey: lo.FromPtr(data.ResetFieldKey),
-		Window:        data.Window,
+// estimateConfigsFromInput converts the GraphQL estimate config inputs into
+// the biz representation stored on the monitor row. Lives outside the
+// resolvers file because gqlgen regenerates that file and strips helper
+// functions.
+func estimateConfigsFromInput(data []*EstimateConfigInput) []usage_monitor.EstimateConfig {
+	cfgs := make([]usage_monitor.EstimateConfig, 0, len(data))
+	for _, entry := range data {
+		if entry == nil {
+			continue
+		}
+		cfgs = append(cfgs, usage_monitor.EstimateConfig{
+			FieldKey:      entry.FieldKey,
+			Remaining:     lo.FromPtr(entry.Remaining),
+			ResetFieldKey: lo.FromPtr(entry.ResetFieldKey),
+			Window:        entry.Window,
+		})
 	}
+	return cfgs
 }

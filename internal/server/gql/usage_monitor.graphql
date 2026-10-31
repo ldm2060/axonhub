@@ -55,11 +55,13 @@ extend type UsageMonitorChannel {
     apiHeadersString: String!
     "Parsed field values from last poll data"
     parsedData: [ParsedFieldValue!]
-    "Custom-monitor period quota estimate config (null = not configured)"
-    estimateConfig: EstimateConfig
+    "Monitor period quota estimate configs (empty = not configured)"
+    estimateConfigs: [EstimateConfig!]
 }
 
-# Which parsed values drive a custom monitor's period quota estimate
+# Which parsed values drive a monitor's period quota estimate. A usage field
+# (fieldKey) replaces the derived ratio; a window-only config stamps the
+# window onto template-derived limits without changing their ratios.
 type EstimateConfig {
     "Display field key whose value is used as the usage ratio"
     fieldKey: String!
@@ -127,7 +129,7 @@ input CreateUsageMonitorChannelInput {
     fields: [FieldConfigInput!]!
     variables: [VariableInput!]
     displayFields: [DisplayFieldInput!]
-    estimateConfig: EstimateConfigInput
+    estimateConfigs: [EstimateConfigInput!]
 }
 
 input UpdateUsageMonitorChannelInput {
@@ -146,7 +148,9 @@ input UpdateUsageMonitorChannelInput {
     channelId: ID
     "Unbind the estimate attribution channel (takes precedence over channelId)"
     clearChannelId: Boolean
-    estimateConfig: EstimateConfigInput
+    estimateConfigs: [EstimateConfigInput!]
+    "Remove the estimate configs (takes precedence over estimateConfigs)"
+    clearEstimateConfig: Boolean
 }
 
 input TestUsageMonitorChannelInput {

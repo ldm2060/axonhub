@@ -264,25 +264,26 @@ func (r *usageMonitorChannelResolver) ParsedData(ctx context.Context, obj *ent.U
 	return fields, nil
 }
 
-// EstimateConfig is the resolver for the estimateConfig field.
-func (r *usageMonitorChannelResolver) EstimateConfig(ctx context.Context, obj *ent.UsageMonitorChannel) (*EstimateConfig, error) {
-	cfg, err := usage_monitor.EstimateConfigFromMap(obj.EstimateConfig)
+// EstimateConfigs is the resolver for the estimateConfigs field.
+func (r *usageMonitorChannelResolver) EstimateConfigs(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*EstimateConfig, error) {
+	cfgs, err := usage_monitor.EstimateConfigsFromMap(obj.EstimateConfig)
 	if err != nil {
 		return nil, err
 	}
-	if cfg == nil {
-		return nil, nil
+	out := make([]*EstimateConfig, 0, len(cfgs))
+	for _, cfg := range cfgs {
+		var resetFieldKey *string
+		if cfg.ResetFieldKey != "" {
+			resetFieldKey = &cfg.ResetFieldKey
+		}
+		out = append(out, &EstimateConfig{
+			FieldKey:      cfg.FieldKey,
+			Remaining:     cfg.Remaining,
+			ResetFieldKey: resetFieldKey,
+			Window:        cfg.Window,
+		})
 	}
-	var resetFieldKey *string
-	if cfg.ResetFieldKey != "" {
-		resetFieldKey = &cfg.ResetFieldKey
-	}
-	return &EstimateConfig{
-		FieldKey:      cfg.FieldKey,
-		Remaining:     cfg.Remaining,
-		ResetFieldKey: resetFieldKey,
-		Window:        cfg.Window,
-	}, nil
+	return out, nil
 }
 
 // APIKey is the resolver for the apiKey field.
@@ -432,10 +433,10 @@ func (r *createUsageMonitorChannelInputResolver) DisplayFields(ctx context.Conte
 	return nil
 }
 
-// EstimateConfig is the resolver for the estimateConfig field.
-func (r *createUsageMonitorChannelInputResolver) EstimateConfig(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *EstimateConfigInput) error {
+// EstimateConfigs is the resolver for the estimateConfigs field.
+func (r *createUsageMonitorChannelInputResolver) EstimateConfigs(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*EstimateConfigInput) error {
 	if data != nil {
-		obj.EstimateConfig = estimateConfigFromInput(data)
+		obj.EstimateConfigs = estimateConfigsFromInput(data)
 	}
 	return nil
 }
@@ -555,10 +556,10 @@ func (r *updateUsageMonitorChannelInputResolver) ChannelID(ctx context.Context, 
 	return nil
 }
 
-// EstimateConfig is the resolver for the estimateConfig field.
-func (r *updateUsageMonitorChannelInputResolver) EstimateConfig(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *EstimateConfigInput) error {
+// EstimateConfigs is the resolver for the estimateConfigs field.
+func (r *updateUsageMonitorChannelInputResolver) EstimateConfigs(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*EstimateConfigInput) error {
 	if data != nil {
-		obj.EstimateConfig = estimateConfigFromInput(data)
+		obj.EstimateConfigs = estimateConfigsFromInput(data)
 	}
 	return nil
 }
@@ -603,3 +604,15 @@ type usageMonitorBindingSummaryResolver struct{ *Resolver }
 type createUsageMonitorChannelInputResolver struct{ *Resolver }
 type testUsageMonitorChannelInputResolver struct{ *Resolver }
 type updateUsageMonitorChannelInputResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *updateUsageMonitorChannelInputResolver) ClearEstimateConfig(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *bool) error {
+	panic(fmt.Errorf("not implemented: ClearEstimateConfig - clearEstimateConfig"))
+}
+*/

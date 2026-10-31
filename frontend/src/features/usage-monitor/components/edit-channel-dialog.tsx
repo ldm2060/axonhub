@@ -47,7 +47,7 @@ export function EditChannelDialog() {
   const [variables, setVariables] = useState<Variable[]>([]);
   const [displayFields, setDisplayFields] = useState<DisplayField[]>([]);
   const [channelId, setChannelId] = useState('');
-  const [estimateConfig, setEstimateConfig] = useState<EstimateConfigFormValue | null>(null);
+  const [estimateConfigs, setEstimateConfigs] = useState<EstimateConfigFormValue[]>([]);
   const [headersError, setHeadersError] = useState('');
 
   const channelsQuery = useQueryChannels({ first: 200, where: { statusIn: ['enabled'] } });
@@ -76,9 +76,13 @@ export function EditChannelDialog() {
     setVariables(currentChannel.variables ?? []);
     setDisplayFields(currentChannel.displayFields ?? []);
     setChannelId(currentChannel.channel?.id ?? '');
-    const ec = currentChannel.estimateConfig;
-    setEstimateConfig(
-      ec ? { fieldKey: ec.fieldKey, remaining: ec.remaining ?? false, resetFieldKey: ec.resetFieldKey ?? '', window: ec.window } : null
+    setEstimateConfigs(
+      (currentChannel.estimateConfigs ?? []).map((ec) => ({
+        fieldKey: ec.fieldKey,
+        remaining: ec.remaining ?? false,
+        resetFieldKey: ec.resetFieldKey ?? '',
+        window: ec.window,
+      }))
     );
     setHeadersError('');
     // For template channels, pre-fill with masked API key
@@ -103,22 +107,38 @@ export function EditChannelDialog() {
   async function handleSubmit() {
     if (!currentChannel) return;
     try {
+      const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
+        key: df.key,
+        label: df.label,
+        valueRef: df.valueRef,
+        format: df.format,
+        unit: df.unit ?? undefined,
+        totalRef: df.totalRef ?? undefined,
+        displayOrder: df.displayOrder,
+        badge: df.badge ?? undefined,
+        badgePresets: df.badgePresets ?? undefined,
+        group: df.group ?? undefined,
+        groupLabelRef: df.groupLabelRef ?? undefined,
+      }));
+      // Every source may carry the estimate configs: template monitors set
+      // the window only (the template keeps its own ratios), builtin/custom
+      // pick a usage field per row. Removing all rows of a previously
+      // configured estimate sends the explicit clearEstimateConfig flag. An
+      // unbound attribution channel sends clearChannelId since the GUID
+      // scalar rejects empty strings.
+      const estimateConfigsInput =
+        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window && (isTemplate || row.fieldKey))
+          ? estimateConfigs.map((row) => ({
+              fieldKey: isTemplate ? '' : row.fieldKey,
+              remaining: isTemplate ? false : row.remaining,
+              resetFieldKey: row.resetFieldKey || undefined,
+              window: row.window,
+            }))
+          : undefined;
+      const estimateClear = estimateConfigs.length === 0 && (currentChannel.estimateConfigs?.length ?? 0) > 0 ? true : undefined;
       if (isTemplate) {
         // Template channels: only send name, apiKey (if changed), pollInterval, and displayFields
         // Do NOT send variables — backend ignores them anyway
-        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
-          key: df.key,
-          label: df.label,
-          valueRef: df.valueRef,
-          format: df.format,
-          unit: df.unit ?? undefined,
-          totalRef: df.totalRef ?? undefined,
-          displayOrder: df.displayOrder,
-          badge: df.badge ?? undefined,
-          badgePresets: df.badgePresets ?? undefined,
-          group: df.group ?? undefined,
-          groupLabelRef: df.groupLabelRef ?? undefined,
-        }));
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {
@@ -126,28 +146,20 @@ export function EditChannelDialog() {
             pollInterval: pollIntervalMin * 60,
             displayFields: displayFieldInputs,
             ...(apiKey.trim() && apiKey !== MASKED_API_KEY ? { apiKey } : {}),
+            channelId: channelId || undefined,
+            clearChannelId: !channelId && currentChannel.channel ? true : undefined,
+            estimateConfigs: estimateConfigsInput,
+            clearEstimateConfig: estimateClear,
           },
         });
       } else if (isBuiltin) {
-        // Builtin channels: name, pollInterval, variables, displayFields
+        // Builtin channels: name, pollInterval, variables, displayFields;
+        // the estimate is priced on the inherently bound channel.
         const variableInputs: VariableInput[] = variables.map((v) => ({
           key: v.key,
           path: v.path,
           type: v.type,
           groupIndex: v.groupIndex ?? undefined,
-        }));
-        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
-          key: df.key,
-          label: df.label,
-          valueRef: df.valueRef,
-          format: df.format,
-          unit: df.unit ?? undefined,
-          totalRef: df.totalRef ?? undefined,
-          displayOrder: df.displayOrder,
-          badge: df.badge ?? undefined,
-          badgePresets: df.badgePresets ?? undefined,
-          group: df.group ?? undefined,
-          groupLabelRef: df.groupLabelRef ?? undefined,
         }));
         await updateMutation.mutateAsync({
           id: currentChannel.id,
@@ -156,6 +168,8 @@ export function EditChannelDialog() {
             pollInterval: pollIntervalMin * 60,
             variables: variableInputs,
             displayFields: displayFieldInputs,
+            estimateConfigs: estimateConfigsInput,
+            clearEstimateConfig: estimateClear,
           },
         });
       } else {
@@ -166,34 +180,6 @@ export function EditChannelDialog() {
           type: v.type,
           groupIndex: v.groupIndex ?? undefined,
         }));
-        const displayFieldInputs: DisplayFieldInput[] = displayFields.map((df) => ({
-          key: df.key,
-          label: df.label,
-          valueRef: df.valueRef,
-          format: df.format,
-          unit: df.unit ?? undefined,
-          totalRef: df.totalRef ?? undefined,
-          displayOrder: df.displayOrder,
-          badge: df.badge ?? undefined,
-          badgePresets: df.badgePresets ?? undefined,
-          group: df.group ?? undefined,
-          groupLabelRef: df.groupLabelRef ?? undefined,
-        }));
-        // The estimate config is sent when complete; clearing a previously
-        // configured estimate sends the backend's documented empty-fieldKey
-        // clear signal. An unbound attribution channel sends the explicit
-        // clearChannelId flag since the GUID scalar rejects empty strings.
-        const estimateInput =
-          estimateConfig?.fieldKey && estimateConfig.window
-            ? {
-                fieldKey: estimateConfig.fieldKey,
-                remaining: estimateConfig.remaining,
-                resetFieldKey: estimateConfig.resetFieldKey || undefined,
-                window: estimateConfig.window,
-              }
-            : currentChannel.estimateConfig
-              ? { fieldKey: '', window: '' }
-              : undefined;
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {
@@ -207,7 +193,8 @@ export function EditChannelDialog() {
             displayFields: displayFieldInputs,
             channelId: channelId || undefined,
             clearChannelId: channelId ? undefined : true,
-            estimateConfig: estimateInput,
+            estimateConfigs: estimateConfigsInput,
+            clearEstimateConfig: estimateClear,
           },
         });
       }
@@ -218,11 +205,11 @@ export function EditChannelDialog() {
   }
 
   const canSubmit = isTemplate
-    ? name.trim()
+    ? // Every added estimate row needs its window filled.
+      name.trim() && !estimateConfigs.some((row) => !row.window)
     : isBuiltin
-      ? name.trim()
-      : // A chosen usage field needs its window before the estimate config is complete.
-        name.trim() && apiUrl.trim() && !headersError && !(estimateConfig?.fieldKey && !estimateConfig.window);
+      ? name.trim() && !estimateConfigs.some((row) => !row.window || !row.fieldKey)
+      : name.trim() && apiUrl.trim() && !headersError && !estimateConfigs.some((row) => !row.window || !row.fieldKey);
 
   return (
     <Dialog
@@ -413,12 +400,24 @@ export function EditChannelDialog() {
               <DisplayFieldForm displayFields={displayFields} variables={variables} onChange={setDisplayFields} />
             </div>
 
-            {/* Period quota estimate config (custom monitors only) */}
+            {/* Period quota estimate config */}
+            {isTemplate && (
+              <EstimateConfigSection
+                displayFields={displayFields}
+                values={estimateConfigs}
+                onChange={setEstimateConfigs}
+                channels={channelsQuery.data?.edges}
+                channelId={channelId}
+                onChannelIdChange={setChannelId}
+                allowFieldSelection={false}
+              />
+            )}
+            {isBuiltin && <EstimateConfigSection displayFields={displayFields} values={estimateConfigs} onChange={setEstimateConfigs} />}
             {!isTemplate && !isBuiltin && (
               <EstimateConfigSection
                 displayFields={displayFields}
-                value={estimateConfig}
-                onChange={setEstimateConfig}
+                values={estimateConfigs}
+                onChange={setEstimateConfigs}
                 channels={channelsQuery.data?.edges}
                 channelId={channelId}
                 onChannelIdChange={setChannelId}

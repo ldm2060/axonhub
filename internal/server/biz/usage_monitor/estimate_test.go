@@ -10,14 +10,14 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 )
 
-func TestApplyEstimateConfig_PercentageField(t *testing.T) {
+func TestApplyEstimateConfigs_PercentageField(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "plan", Format: "text", Value: "pro"},
 		{Key: "credits_pct", Format: "percentage", Percent: 45},
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "credits_pct", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "credits_pct", Window: EstimateWindowWeekly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	limit := derived.Limits[0]
@@ -27,27 +27,27 @@ func TestApplyEstimateConfig_PercentageField(t *testing.T) {
 	assert.Equal(t, "available", limit.Status)
 }
 
-func TestApplyEstimateConfig_RemainingInverted(t *testing.T) {
+func TestApplyEstimateConfigs_RemainingInverted(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "credits_pct", Format: "percentage", Percent: 70},
 	}
 	derived := DeriveQuotaStatus("", fields)
 
 	// A "remaining 70%" field means 30% used.
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "credits_pct", Remaining: true, Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "credits_pct", Remaining: true, Window: EstimateWindowWeekly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	assert.InDelta(t, 0.3, derived.Limits[0].UsageRatio, 1e-9)
 	assert.Equal(t, "available", derived.Status)
 }
 
-func TestApplyEstimateConfig_FractionRawValue(t *testing.T) {
+func TestApplyEstimateConfigs_FractionRawValue(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "utilization", Format: "fraction", Value: 0.9},
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "utilization", Window: EstimateWindowDaily}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "utilization", Window: EstimateWindowDaily}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	assert.InDelta(t, 0.9, derived.Limits[0].UsageRatio, 1e-9)
@@ -55,13 +55,13 @@ func TestApplyEstimateConfig_FractionRawValue(t *testing.T) {
 	assert.True(t, derived.Ready)
 }
 
-func TestApplyEstimateConfig_ExhaustedThresholds(t *testing.T) {
+func TestApplyEstimateConfigs_ExhaustedThresholds(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "used_pct", Format: "percentage", Percent: 100},
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", Window: EstimateWindow5h}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", Window: EstimateWindow5h}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	assert.Equal(t, "exhausted", derived.Limits[0].Status)
@@ -69,14 +69,14 @@ func TestApplyEstimateConfig_ExhaustedThresholds(t *testing.T) {
 	assert.False(t, derived.Ready)
 }
 
-func TestApplyEstimateConfig_MissingFieldFallsBack(t *testing.T) {
+func TestApplyEstimateConfigs_MissingFieldFallsBack(t *testing.T) {
 	fields := []ParsedField{
 		{Key: "used_pct", Format: "percentage", Percent: 50},
 	}
 	derived := DeriveQuotaStatus("", fields)
 	genericRatio := derived.Limits[0].UsageRatio
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "nope", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "nope", Window: EstimateWindowWeekly}}, &derived)
 
 	// The generic max-ratio limit survives untouched.
 	require.Len(t, derived.Limits, 1)
@@ -84,7 +84,30 @@ func TestApplyEstimateConfig_MissingFieldFallsBack(t *testing.T) {
 	assert.Empty(t, derived.Limits[0].Window)
 }
 
-func TestApplyEstimateConfig_WindowPeriodStart(t *testing.T) {
+func TestApplyEstimateConfigs_MultipleWindows(t *testing.T) {
+	// The same field priced against both a 5h and a weekly window.
+	reset := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
+	fields := []ParsedField{
+		{Key: "used_pct", Format: "percentage", Percent: 25},
+		{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)},
+	}
+	derived := DeriveQuotaStatus("", fields)
+
+	ApplyEstimateConfigs(fields, []EstimateConfig{
+		{FieldKey: "used_pct", Window: EstimateWindow5h},
+		{FieldKey: "used_pct", Window: EstimateWindowWeekly},
+	}, &derived)
+
+	require.Len(t, derived.Limits, 2)
+	assert.Equal(t, EstimateWindow5h, derived.Limits[0].Window)
+	assert.Equal(t, EstimateWindowWeekly, derived.Limits[1].Window)
+	for _, limit := range derived.Limits {
+		assert.InDelta(t, 0.25, limit.UsageRatio, 1e-9)
+		assert.Equal(t, "used_pct", limit.FieldKey)
+	}
+}
+
+func TestApplyEstimateConfigs_WindowPeriodStart(t *testing.T) {
 	// earliestDatetime only considers future datetimes, so the fixtures do too.
 	reset := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second)
 	fields := []ParsedField{
@@ -93,7 +116,7 @@ func TestApplyEstimateConfig_WindowPeriodStart(t *testing.T) {
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", Window: EstimateWindow5h}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", Window: EstimateWindow5h}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	limit := derived.Limits[0]
@@ -105,7 +128,7 @@ func TestApplyEstimateConfig_WindowPeriodStart(t *testing.T) {
 	assert.Equal(t, reset, *derived.NextResetAt)
 }
 
-func TestApplyEstimateConfig_MonthlyPeriodStartClamped(t *testing.T) {
+func TestApplyEstimateConfigs_MonthlyPeriodStartClamped(t *testing.T) {
 	// March 31 resets to a month whose previous month has fewer days.
 	reset := time.Date(2027, 3, 31, 8, 0, 0, 0, time.UTC)
 	fields := []ParsedField{
@@ -114,7 +137,7 @@ func TestApplyEstimateConfig_MonthlyPeriodStartClamped(t *testing.T) {
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", Window: EstimateWindowMonthly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", Window: EstimateWindowMonthly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	limit := derived.Limits[0]
@@ -124,7 +147,7 @@ func TestApplyEstimateConfig_MonthlyPeriodStartClamped(t *testing.T) {
 	assert.Equal(t, time.Date(2027, 2, 28, 8, 0, 0, 0, time.UTC), *limit.PeriodStart)
 }
 
-func TestApplyEstimateConfig_ResetFieldSelection(t *testing.T) {
+func TestApplyEstimateConfigs_ResetFieldSelection(t *testing.T) {
 	early := time.Now().UTC().Add(10 * 24 * time.Hour).Truncate(time.Second)
 	cycle := time.Now().UTC().Add(22 * 24 * time.Hour).Truncate(time.Second)
 	fields := []ParsedField{
@@ -135,20 +158,20 @@ func TestApplyEstimateConfig_ResetFieldSelection(t *testing.T) {
 	derived := DeriveQuotaStatus("", fields)
 
 	// Without an explicit reset field the earliest future datetime wins.
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", Window: EstimateWindowWeekly}}, &derived)
 	require.Len(t, derived.Limits, 1)
 	require.NotNil(t, derived.Limits[0].NextResetAt)
 	assert.Equal(t, early, *derived.Limits[0].NextResetAt)
 
 	// With one, the named field wins over the earliest.
 	derived = DeriveQuotaStatus("", fields)
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", ResetFieldKey: "cycle_reset", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", ResetFieldKey: "cycle_reset", Window: EstimateWindowWeekly}}, &derived)
 	require.Len(t, derived.Limits, 1)
 	require.NotNil(t, derived.Limits[0].NextResetAt)
 	assert.Equal(t, cycle, *derived.Limits[0].NextResetAt)
 }
 
-func TestApplyEstimateConfig_InvalidRatioFallsBack(t *testing.T) {
+func TestApplyEstimateConfigs_InvalidRatioFallsBack(t *testing.T) {
 	// A plain number field above 1 is not a usable ratio.
 	fields := []ParsedField{
 		{Key: "credits", Format: "number", Value: 300.0},
@@ -156,55 +179,12 @@ func TestApplyEstimateConfig_InvalidRatioFallsBack(t *testing.T) {
 	derived := DeriveQuotaStatus("", fields)
 	origLimits := derived.Limits
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "credits", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "credits", Window: EstimateWindowWeekly}}, &derived)
 
 	assert.Equal(t, origLimits, derived.Limits)
 }
 
-func TestEstimateConfig_MapRoundTrip(t *testing.T) {
-	cfg := EstimateConfig{FieldKey: "credits_pct", Remaining: true, ResetFieldKey: "cycle_reset", Window: EstimateWindowMonthly}
-
-	decoded, err := EstimateConfigFromMap(cfg.ToMap())
-	require.NoError(t, err)
-	require.NotNil(t, decoded)
-	assert.Equal(t, cfg, *decoded)
-
-	// Nil and keyless maps mean "not configured".
-	nilCfg, err := EstimateConfigFromMap(nil)
-	require.NoError(t, err)
-	assert.Nil(t, nilCfg)
-	emptyCfg, err := EstimateConfigFromMap(map[string]any{"window": EstimateWindowWeekly})
-	require.NoError(t, err)
-	assert.Nil(t, emptyCfg)
-}
-
-func TestValidateEstimateConfig(t *testing.T) {
-	keys := []string{"used_pct", "cycle_reset"}
-
-	// Valid config.
-	assert.NoError(t, ValidateEstimateConfig(EstimateConfig{FieldKey: "used_pct", Window: EstimateWindowWeekly}, keys))
-
-	// Unknown window.
-	err := ValidateEstimateConfig(EstimateConfig{FieldKey: "used_pct", Window: "fortnight"}, keys)
-	assert.ErrorContains(t, err, "window")
-
-	// Unknown field key.
-	err = ValidateEstimateConfig(EstimateConfig{FieldKey: "nope", Window: EstimateWindowWeekly}, keys)
-	assert.ErrorContains(t, err, "fieldKey")
-
-	// Unknown reset field key.
-	err = ValidateEstimateConfig(EstimateConfig{FieldKey: "used_pct", ResetFieldKey: "nope", Window: EstimateWindowWeekly}, keys)
-	assert.ErrorContains(t, err, "resetFieldKey")
-
-	// Empty field key.
-	err = ValidateEstimateConfig(EstimateConfig{Window: EstimateWindowWeekly}, keys)
-	assert.Error(t, err)
-
-	// No display fields known yet: field keys are accepted unchecked.
-	assert.NoError(t, ValidateEstimateConfig(EstimateConfig{FieldKey: "anything", Window: EstimateWindow5h}, nil))
-}
-
-func TestApplyEstimateConfig_LimitShapesEstimateReady(t *testing.T) {
+func TestApplyEstimateConfigs_LimitShapesEstimateReady(t *testing.T) {
 	// With a PeriodStart present the limit is index-shaped for
 	// fillMonitorPeriodQuotaEstimates: Window + PeriodStart stamped so the
 	// estimator has a period to query.
@@ -215,11 +195,143 @@ func TestApplyEstimateConfig_LimitShapesEstimateReady(t *testing.T) {
 	}
 	derived := DeriveQuotaStatus("", fields)
 
-	ApplyEstimateConfig(fields, EstimateConfig{FieldKey: "used_pct", Window: EstimateWindowWeekly}, &derived)
+	ApplyEstimateConfigs(fields, []EstimateConfig{{FieldKey: "used_pct", Window: EstimateWindowWeekly}}, &derived)
 
 	require.Len(t, derived.Limits, 1)
 	limit := derived.Limits[0]
 	assert.Equal(t, provider_quota.QuotaLimitTypeToken, limit.Type)
 	assert.NotEmpty(t, limit.Window)
 	assert.NotNil(t, limit.PeriodStart)
+}
+
+func TestStampEstimateWindows_WindowOnly(t *testing.T) {
+	// Template monitors: a windowless template-derived limit gains the
+	// configured window and period start; ratio, status, and field key stay
+	// the template's own.
+	reset := time.Now().UTC().Add(72 * time.Hour).Truncate(time.Second)
+	fields := []ParsedField{
+		{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)},
+	}
+	derived := QuotaDerivedStatus{
+		Status: "available",
+		Ready:  true,
+		Limits: []provider_quota.QuotaLimitStatus{
+			{Type: provider_quota.QuotaLimitTypeToken, Status: "available", UsageRatio: 0.017, Ready: true, FieldKey: "premium_pct"},
+		},
+	}
+
+	StampEstimateWindows(fields, []EstimateConfig{{Window: EstimateWindowMonthly}}, &derived)
+
+	require.Len(t, derived.Limits, 1)
+	limit := derived.Limits[0]
+	assert.Equal(t, EstimateWindowMonthly, limit.Window)
+	assert.InDelta(t, 0.017, limit.UsageRatio, 1e-9)
+	assert.Equal(t, "available", limit.Status)
+	assert.True(t, limit.Ready)
+	assert.Equal(t, "premium_pct", limit.FieldKey)
+	require.NotNil(t, limit.PeriodStart)
+	require.NotNil(t, limit.NextResetAt)
+	assert.Equal(t, reset, *limit.NextResetAt)
+}
+
+func TestStampEstimateWindows_MultipleWindows(t *testing.T) {
+	// One windowless template ratio priced against both a 5h and a weekly window.
+	reset := time.Now().UTC().Add(72 * time.Hour).Truncate(time.Second)
+	fields := []ParsedField{{Key: "reset_at", Format: "datetime", Value: reset.Format(time.RFC3339)}}
+	derived := QuotaDerivedStatus{
+		Status: "available",
+		Ready:  true,
+		Limits: []provider_quota.QuotaLimitStatus{
+			{Type: provider_quota.QuotaLimitTypeToken, Status: "available", UsageRatio: 0.02, Ready: true},
+		},
+	}
+
+	StampEstimateWindows(fields, []EstimateConfig{
+		{Window: EstimateWindow5h},
+		{Window: EstimateWindowWeekly},
+	}, &derived)
+
+	require.Len(t, derived.Limits, 2)
+	assert.Equal(t, EstimateWindow5h, derived.Limits[0].Window)
+	assert.Equal(t, EstimateWindowWeekly, derived.Limits[1].Window)
+	for _, limit := range derived.Limits {
+		assert.InDelta(t, 0.02, limit.UsageRatio, 1e-9)
+	}
+}
+
+func TestStampEstimateWindows_KeepsWindowedLimits(t *testing.T) {
+	// Limits that already carry a window are untouched.
+	windowed := provider_quota.QuotaLimitStatus{Status: "warning", UsageRatio: 0.9}.WithWindow("5h", 5*time.Hour)
+	derived := QuotaDerivedStatus{Status: "warning", Ready: true, Limits: []provider_quota.QuotaLimitStatus{windowed}}
+
+	StampEstimateWindows(nil, []EstimateConfig{{Window: EstimateWindowWeekly}}, &derived)
+
+	require.Len(t, derived.Limits, 1)
+	assert.Equal(t, "5h", derived.Limits[0].Window)
+	assert.InDelta(t, 0.9, derived.Limits[0].UsageRatio, 1e-9)
+	assert.Nil(t, derived.Limits[0].PeriodStart)
+}
+
+func TestStampEstimateWindows_InvalidWindowNoop(t *testing.T) {
+	derived := QuotaDerivedStatus{Status: "available", Ready: true, Limits: []provider_quota.QuotaLimitStatus{{Status: "available", UsageRatio: 0.1}}}
+
+	StampEstimateWindows(nil, []EstimateConfig{{Window: "fortnight"}}, &derived)
+
+	require.Len(t, derived.Limits, 1)
+	assert.Empty(t, derived.Limits[0].Window)
+}
+
+func TestEstimateConfigs_MapRoundTrip(t *testing.T) {
+	cfgs := []EstimateConfig{
+		{FieldKey: "credits_pct", Remaining: true, ResetFieldKey: "cycle_reset", Window: EstimateWindowMonthly},
+		{FieldKey: "used_pct", Window: EstimateWindow5h},
+	}
+
+	decoded, err := EstimateConfigsFromMap(EstimateConfigsToMap(cfgs))
+	require.NoError(t, err)
+	require.Len(t, decoded, 2)
+	assert.Equal(t, cfgs, decoded)
+
+	// Legacy flat single-config objects decode to a one-element list.
+	legacy, err := EstimateConfigsFromMap(map[string]any{"fieldKey": "used_pct", "window": EstimateWindowWeekly})
+	require.NoError(t, err)
+	require.Len(t, legacy, 1)
+	assert.Equal(t, "used_pct", legacy[0].FieldKey)
+
+	// Nil maps and entries without any field/window mean "not configured".
+	nilCfg, err := EstimateConfigsFromMap(nil)
+	require.NoError(t, err)
+	assert.Nil(t, nilCfg)
+	emptyCfg, err := EstimateConfigsFromMap(map[string]any{"items": []any{map[string]any{"fieldKey": ""}}})
+	require.NoError(t, err)
+	assert.Nil(t, emptyCfg)
+}
+
+func TestValidateEstimateConfigs(t *testing.T) {
+	keys := []string{"used_pct", "cycle_reset"}
+
+	// Valid configs: field selection and the window-only template mode.
+	assert.NoError(t, ValidateEstimateConfigs([]EstimateConfig{
+		{FieldKey: "used_pct", Window: EstimateWindowWeekly},
+		{Window: EstimateWindowMonthly},
+	}, keys))
+
+	// Unknown window.
+	err := ValidateEstimateConfigs([]EstimateConfig{{FieldKey: "used_pct", Window: "fortnight"}}, keys)
+	assert.ErrorContains(t, err, "window")
+
+	// Unknown field key.
+	err = ValidateEstimateConfigs([]EstimateConfig{{FieldKey: "nope", Window: EstimateWindowWeekly}}, keys)
+	assert.ErrorContains(t, err, "fieldKey")
+
+	// Unknown reset field key.
+	err = ValidateEstimateConfigs([]EstimateConfig{{FieldKey: "used_pct", ResetFieldKey: "nope", Window: EstimateWindowWeekly}}, keys)
+	assert.ErrorContains(t, err, "resetFieldKey")
+
+	// A window is required on every entry.
+	err = ValidateEstimateConfigs([]EstimateConfig{{}}, keys)
+	assert.ErrorContains(t, err, "window")
+
+	// No display fields known yet: field keys are accepted unchecked.
+	assert.NoError(t, ValidateEstimateConfigs([]EstimateConfig{{FieldKey: "anything", Window: EstimateWindow5h}}, nil))
 }

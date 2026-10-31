@@ -2591,7 +2591,7 @@ type ComplexityRoot struct {
 		ChannelID            func(childComplexity int) int
 		CreatedAt            func(childComplexity int) int
 		DisplayFields        func(childComplexity int) int
-		EstimateConfig       func(childComplexity int) int
+		EstimateConfigs      func(childComplexity int) int
 		Fields               func(childComplexity int) int
 		ID                   func(childComplexity int) int
 		LastPollAt           func(childComplexity int) int
@@ -3355,7 +3355,7 @@ type UsageMonitorChannelResolver interface {
 
 	APIHeadersString(ctx context.Context, obj *ent.UsageMonitorChannel) (string, error)
 	ParsedData(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*usage_monitor.ParsedField, error)
-	EstimateConfig(ctx context.Context, obj *ent.UsageMonitorChannel) (*EstimateConfig, error)
+	EstimateConfigs(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*EstimateConfig, error)
 	APIKey(ctx context.Context, obj *ent.UsageMonitorChannel) (*string, error)
 	Variables(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*Variable, error)
 	DisplayFields(ctx context.Context, obj *ent.UsageMonitorChannel) ([]*DisplayField, error)
@@ -3399,7 +3399,7 @@ type CreateUsageMonitorChannelInputResolver interface {
 
 	Variables(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*VariableInput) error
 	DisplayFields(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*DisplayFieldInput) error
-	EstimateConfig(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *EstimateConfigInput) error
+	EstimateConfigs(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data []*EstimateConfigInput) error
 }
 type QuotaMonitorBindingConditionInputResolver interface {
 	Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition, data string) error
@@ -3419,7 +3419,7 @@ type UpdateUsageMonitorChannelInputResolver interface {
 
 	ChannelID(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *objects.GUID) error
 
-	EstimateConfig(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *EstimateConfigInput) error
+	EstimateConfigs(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data []*EstimateConfigInput) error
 }
 
 type executableSchema struct {
@@ -14733,12 +14733,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UsageMonitorChannel.DisplayFields(childComplexity), true
-	case "UsageMonitorChannel.estimateConfig":
-		if e.complexity.UsageMonitorChannel.EstimateConfig == nil {
+	case "UsageMonitorChannel.estimateConfigs":
+		if e.complexity.UsageMonitorChannel.EstimateConfigs == nil {
 			break
 		}
 
-		return e.complexity.UsageMonitorChannel.EstimateConfig(childComplexity), true
+		return e.complexity.UsageMonitorChannel.EstimateConfigs(childComplexity), true
 	case "UsageMonitorChannel.fields":
 		if e.complexity.UsageMonitorChannel.Fields == nil {
 			break
@@ -26888,8 +26888,8 @@ func (ec *executionContext) fieldContext_Channel_usageMonitorChannels(_ context.
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -33302,8 +33302,8 @@ func (ec *executionContext) fieldContext_ChannelUsageMonitorBinding_usageMonitor
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -50463,8 +50463,8 @@ func (ec *executionContext) fieldContext_Mutation_createUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -50572,8 +50572,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUsageMonitorChannel(ctx 
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -50773,8 +50773,8 @@ func (ec *executionContext) fieldContext_Mutation_refreshUsageMonitorChannel(ctx
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -64051,8 +64051,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelsList(_ contex
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -64149,8 +64149,8 @@ func (ec *executionContext) fieldContext_Query_usageMonitorChannelById(ctx conte
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -80871,23 +80871,23 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_parsedData(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _UsageMonitorChannel_estimateConfig(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
+func (ec *executionContext) _UsageMonitorChannel_estimateConfigs(ctx context.Context, field graphql.CollectedField, obj *ent.UsageMonitorChannel) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_UsageMonitorChannel_estimateConfig,
+		ec.fieldContext_UsageMonitorChannel_estimateConfigs,
 		func(ctx context.Context) (any, error) {
-			return ec.resolvers.UsageMonitorChannel().EstimateConfig(ctx, obj)
+			return ec.resolvers.UsageMonitorChannel().EstimateConfigs(ctx, obj)
 		},
 		nil,
-		ec.marshalOEstimateConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfig,
+		ec.marshalOEstimateConfig2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigᚄ,
 		true,
 		false,
 	)
 }
 
-func (ec *executionContext) fieldContext_UsageMonitorChannel_estimateConfig(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UsageMonitorChannel_estimateConfigs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UsageMonitorChannel",
 		Field:      field,
@@ -82394,8 +82394,8 @@ func (ec *executionContext) fieldContext_User_usageMonitorChannels(_ context.Con
 				return ec.fieldContext_UsageMonitorChannel_apiHeadersString(ctx, field)
 			case "parsedData":
 				return ec.fieldContext_UsageMonitorChannel_parsedData(ctx, field)
-			case "estimateConfig":
-				return ec.fieldContext_UsageMonitorChannel_estimateConfig(ctx, field)
+			case "estimateConfigs":
+				return ec.fieldContext_UsageMonitorChannel_estimateConfigs(ctx, field)
 			case "apiKey":
 				return ec.fieldContext_UsageMonitorChannel_apiKey(ctx, field)
 			case "variables":
@@ -96322,7 +96322,7 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "source", "channelId", "providerType", "apiKey", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields", "estimateConfig"}
+	fieldsInOrder := [...]string{"name", "source", "channelId", "providerType", "apiKey", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields", "estimateConfigs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -96432,13 +96432,13 @@ func (ec *executionContext) unmarshalInputCreateUsageMonitorChannelInput(ctx con
 			if err = ec.resolvers.CreateUsageMonitorChannelInput().DisplayFields(ctx, &it, data); err != nil {
 				return it, err
 			}
-		case "estimateConfig":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimateConfig"))
-			data, err := ec.unmarshalOEstimateConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInput(ctx, v)
+		case "estimateConfigs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimateConfigs"))
+			data, err := ec.unmarshalOEstimateConfigInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.CreateUsageMonitorChannelInput().EstimateConfig(ctx, &it, data); err != nil {
+			if err = ec.resolvers.CreateUsageMonitorChannelInput().EstimateConfigs(ctx, &it, data); err != nil {
 				return it, err
 			}
 		}
@@ -115647,7 +115647,7 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields", "status", "apiKey", "channelId", "clearChannelId", "estimateConfig"}
+	fieldsInOrder := [...]string{"name", "apiUrl", "apiMethod", "apiHeaders", "apiBody", "pollInterval", "fields", "variables", "displayFields", "status", "apiKey", "channelId", "clearChannelId", "estimateConfigs", "clearEstimateConfig"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -115755,15 +115755,22 @@ func (ec *executionContext) unmarshalInputUpdateUsageMonitorChannelInput(ctx con
 				return it, err
 			}
 			it.ClearChannelID = data
-		case "estimateConfig":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimateConfig"))
-			data, err := ec.unmarshalOEstimateConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInput(ctx, v)
+		case "estimateConfigs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimateConfigs"))
+			data, err := ec.unmarshalOEstimateConfigInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			if err = ec.resolvers.UpdateUsageMonitorChannelInput().EstimateConfig(ctx, &it, data); err != nil {
+			if err = ec.resolvers.UpdateUsageMonitorChannelInput().EstimateConfigs(ctx, &it, data); err != nil {
 				return it, err
 			}
+		case "clearEstimateConfig":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("clearEstimateConfig"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ClearEstimateConfig = data
 		}
 	}
 
@@ -146696,7 +146703,7 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "estimateConfig":
+		case "estimateConfigs":
 			field := field
 
 			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
@@ -146705,7 +146712,7 @@ func (ec *executionContext) _UsageMonitorChannel(ctx context.Context, sel ast.Se
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._UsageMonitorChannel_estimateConfig(ctx, field, obj)
+				res = ec._UsageMonitorChannel_estimateConfigs(ctx, field, obj)
 				return res
 			}
 
@@ -152449,6 +152456,21 @@ func (ec *executionContext) marshalNEmailTokenType2githubᚗcomᚋldm2060ᚋaxon
 
 func (ec *executionContext) unmarshalNEmailTokenWhereInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐEmailTokenWhereInput(ctx context.Context, v any) (*ent.EmailTokenWhereInput, error) {
 	res, err := ec.unmarshalInputEmailTokenWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEstimateConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfig(ctx context.Context, sel ast.SelectionSet, v *EstimateConfig) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EstimateConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNEstimateConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInput(ctx context.Context, v any) (*EstimateConfigInput, error) {
+	res, err := ec.unmarshalInputEstimateConfigInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -160714,19 +160736,69 @@ func (ec *executionContext) unmarshalOEmailTokenWhereInput2ᚖgithubᚗcomᚋldm
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOEstimateConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfig(ctx context.Context, sel ast.SelectionSet, v *EstimateConfig) graphql.Marshaler {
+func (ec *executionContext) marshalOEstimateConfig2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigᚄ(ctx context.Context, sel ast.SelectionSet, v []*EstimateConfig) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._EstimateConfig(ctx, sel, v)
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEstimateConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfig(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
-func (ec *executionContext) unmarshalOEstimateConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInput(ctx context.Context, v any) (*EstimateConfigInput, error) {
+func (ec *executionContext) unmarshalOEstimateConfigInput2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInputᚄ(ctx context.Context, v any) ([]*EstimateConfigInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputEstimateConfigInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*EstimateConfigInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNEstimateConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐEstimateConfigInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOExcludeAssociation2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐExcludeAssociationᚄ(ctx context.Context, sel ast.SelectionSet, v []*objects.ExcludeAssociation) graphql.Marshaler {

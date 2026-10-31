@@ -63,7 +63,7 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
       quotaReady
       nextResetAt
       quotaLimits
-      estimateConfig {
+      estimateConfigs {
         fieldKey
         remaining
         resetFieldKey
@@ -128,7 +128,7 @@ const CREATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
-      estimateConfig {
+      estimateConfigs {
         fieldKey
         remaining
         resetFieldKey
@@ -193,7 +193,7 @@ const UPDATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
-      estimateConfig {
+      estimateConfigs {
         fieldKey
         remaining
         resetFieldKey
@@ -286,7 +286,7 @@ const REFRESH_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
-      estimateConfig {
+      estimateConfigs {
         fieldKey
         remaining
         resetFieldKey
@@ -338,7 +338,7 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     quotaReady: raw.quotaReady ?? null,
     nextResetAt: raw.nextResetAt || null,
     quotaLimits: raw.quotaLimits ?? null,
-    estimateConfig: raw.estimateConfig ?? null,
+    estimateConfigs: raw.estimateConfigs ?? [],
     createdAt: raw.createdAt ?? '',
     updatedAt: raw.updatedAt ?? '',
   });
@@ -380,7 +380,7 @@ export type CreateUsageMonitorChannelInput = {
   fields: FieldConfig[];
   variables?: VariableInput[];
   displayFields?: DisplayFieldInput[];
-  estimateConfig?: EstimateConfigInput;
+  estimateConfigs?: EstimateConfigInput[];
 };
 
 export function useCreateUsageMonitorChannel() {
@@ -421,7 +421,8 @@ export type UpdateUsageMonitorChannelInput = {
   apiKey?: string;
   channelId?: string;
   clearChannelId?: boolean;
-  estimateConfig?: EstimateConfigInput;
+  estimateConfigs?: EstimateConfigInput[];
+  clearEstimateConfig?: boolean;
 };
 
 export function useUpdateUsageMonitorChannel() {

@@ -45,7 +45,7 @@ export function AddChannelDialog() {
   const [pollIntervalMin, setPollIntervalMin] = useState(5);
   const [variables, setVariables] = useState<Variable[]>([]);
   const [displayFields, setDisplayFields] = useState<DisplayField[]>([]);
-  const [estimateConfig, setEstimateConfig] = useState<EstimateConfigFormValue | null>(null);
+  const [estimateConfigs, setEstimateConfigs] = useState<EstimateConfigFormValue[]>([]);
   const [headersError, setHeadersError] = useState('');
 
   const templates = useQuotaMonitorTemplates();
@@ -84,7 +84,7 @@ export function AddChannelDialog() {
     setPollIntervalMin(5);
     setVariables([]);
     setDisplayFields([]);
-    setEstimateConfig(null);
+    setEstimateConfigs([]);
     setHeadersError('');
     setSelectedTemplate(null);
     setApiKey('');
@@ -199,13 +199,26 @@ export function AddChannelDialog() {
       // For template source, use template fields as the legacy fields array
       const legacyFields: FieldConfig[] = source === 'template' ? (selectedTemplate?.fields ?? []) : [];
 
-      // Custom monitors may bind an attribution channel and pick which parsed
-      // values drive the period quota estimate; the config is only sent when
-      // both the usage field and the window are chosen.
+      // Every source may configure the period quota estimate. Field-selection
+      // sources (custom/builtin) need both the usage field and the window;
+      // template monitors configure the window only — the template keeps its
+      // own ratios and the window is stamped onto windowless limits.
+      // Field-selection sources (custom/builtin) need a usage field per row;
+      // template rows configure the window only.
+      const estimateConfigsInput =
+        estimateConfigs.length > 0 && estimateConfigs.every((row) => row.window && (source === 'template' || row.fieldKey))
+          ? estimateConfigs.map((row) => ({
+              fieldKey: source === 'template' ? '' : row.fieldKey,
+              remaining: source === 'template' ? false : row.remaining,
+              resetFieldKey: row.resetFieldKey || undefined,
+              window: row.window,
+            }))
+          : undefined;
+
       await createMutation.mutateAsync({
         name,
         source,
-        channelId: source === 'builtin' || source === 'custom' ? channelId || undefined : undefined,
+        channelId: channelId || undefined,
         providerType: source === 'template' ? selectedTemplate?.providerType : undefined,
         apiKey: source === 'template' ? apiKey : undefined,
         apiUrl,
@@ -216,15 +229,7 @@ export function AddChannelDialog() {
         fields: source === 'template' ? legacyFields : [],
         variables: variableInputs,
         displayFields: displayFieldInputs,
-        estimateConfig:
-          source === 'custom' && estimateConfig?.fieldKey && estimateConfig.window
-            ? {
-                fieldKey: estimateConfig.fieldKey,
-                remaining: estimateConfig.remaining,
-                resetFieldKey: estimateConfig.resetFieldKey || undefined,
-                window: estimateConfig.window,
-              }
-            : undefined,
+        estimateConfigs: estimateConfigsInput,
       });
       setOpen(null);
       resetForm();
@@ -238,7 +243,8 @@ export function AddChannelDialog() {
     apiUrl.trim() &&
     !headersError &&
     // A chosen usage field needs its window before the estimate config is complete.
-    !(source === 'custom' && estimateConfig?.fieldKey && !estimateConfig.window) &&
+    // Every added estimate row needs its window (and usage field) filled.
+    !estimateConfigs.some((row) => (source === 'template' ? !row.window : !row.window || !row.fieldKey)) &&
     (source === 'template' ? selectedTemplate !== null && apiKey.trim() !== '' : true);
   return (
     <Dialog
@@ -373,6 +379,9 @@ export function AddChannelDialog() {
                 <DisplayFieldForm displayFields={displayFields} variables={variables} onChange={setDisplayFields} />
               </div>
 
+              {/* Period quota estimate config: the bound channel prices it */}
+              <EstimateConfigSection displayFields={displayFields} values={estimateConfigs} onChange={setEstimateConfigs} />
+
               {/* Test Connection */}
               <TestConnection
                 apiUrl={apiUrl}
@@ -473,8 +482,8 @@ export function AddChannelDialog() {
               {/* Period quota estimate config */}
               <EstimateConfigSection
                 displayFields={displayFields}
-                value={estimateConfig}
-                onChange={setEstimateConfig}
+                values={estimateConfigs}
+                onChange={setEstimateConfigs}
                 channels={channelsQuery.data?.edges}
                 channelId={channelId}
                 onChannelIdChange={setChannelId}
@@ -704,6 +713,19 @@ export function AddChannelDialog() {
                     <p className='text-muted-foreground text-xs'>{t('usageMonitor.templateDisplayFieldsHint')}</p>
                     <DisplayFieldForm displayFields={displayFields} variables={variables} onChange={setDisplayFields} />
                   </div>
+
+                  {/* Period quota estimate config: window-only mode, the
+                      template keeps its own ratios; attribution defaults to
+                      same-provider channels, or the bound channel below. */}
+                  <EstimateConfigSection
+                    displayFields={displayFields}
+                    values={estimateConfigs}
+                    onChange={setEstimateConfigs}
+                    channels={channelsQuery.data?.edges}
+                    channelId={channelId}
+                    onChannelIdChange={setChannelId}
+                    allowFieldSelection={false}
+                  />
 
                   {/* Test Connection */}
                   <TestConnection

@@ -88,7 +88,7 @@ export const usageMonitorChannelSchema = z.object({
   // Derived per-limit quota statuses; Map scalar shaped as { items: [...] }
   // with the same keys provider_quota_status stores under quota_data._limits.
   quotaLimits: z.any().nullable().optional(),
-  estimateConfig: estimateConfigSchema.nullable().optional(),
+  estimateConfigs: z.array(estimateConfigSchema).nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
