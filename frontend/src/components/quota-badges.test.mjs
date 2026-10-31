@@ -115,21 +115,24 @@ test('Ollama badge renders both the 5h and weekly windows with a reset countdown
 });
 
 test('quota window identifiers resolve to localized labels', () => {
-  const quotaBadges = read('components/quota-badges.tsx');
+  // The shared window-label map and the windowless fallback moved into
+  // quota-window-display.tsx during the extraction; quota-badges imports them.
+  const display = read('components/quota-window-display.tsx');
 
-  assert.match(quotaBadges, /payg:\s*'quota\.label\.token_usage'/);
-  assert.match(quotaBadges, /credits:\s*'quota\.label\.credits_remaining'/);
-  assert.match(quotaBadges, /'5h':\s*'quota\.window\.5h'/);
-  assert.match(quotaBadges, /'7d':\s*'quota\.window\.7d'/);
-  assert.match(quotaBadges, /limit\.window === 'primary' \|\| limit\.window === 'secondary'/);
+  assert.match(display, /payg:\s*'quota\.label\.token_usage'/);
+  assert.match(display, /credits:\s*'quota\.label\.credits_remaining'/);
+  assert.match(display, /'5h':\s*'quota\.window\.5h'/);
+  assert.match(display, /'7d':\s*'quota\.window\.7d'/);
+  assert.match(display, /limit\.window === 'primary' \|\| limit\.window === 'secondary'/);
 });
 
 test('Apertis duration marker shares timestamp validation', () => {
   const quotaBadges = read('components/quota-badges.tsx');
+  const display = read('components/quota-window-display.tsx');
   const apertisStart = quotaBadges.indexOf("{isOpenaiType(channel.type) && channel.providerType === 'apertis' &&");
   const apertisEnd = quotaBadges.indexOf("{isOpenaiType(channel.type) && channel.providerType === 'charm_hyper' &&");
 
-  assert.match(quotaBadges, /function getDurationPercent\([\s\S]*?Number\.isFinite\(start\)[\s\S]*?end <= start/);
+  assert.match(display, /function getDurationPercent\([\s\S]*?Number\.isFinite\(start\)[\s\S]*?end <= start/);
   assert.match(
     quotaBadges.slice(apertisStart, apertisEnd),
     /durationPercent=\{getDurationPercent\(qd\.subscription\.cycle_start, qd\.subscription\.cycle_end\)\}/
@@ -138,6 +141,7 @@ test('Apertis duration marker shares timestamp validation', () => {
 
 test('NeuralWatt kWh bar shares the elapsed-window marker and label', () => {
   const quotaBadges = read('components/quota-badges.tsx');
+  const display = read('components/quota-window-display.tsx');
   const start = quotaBadges.indexOf("{isOpenaiType(channel.type) && channel.providerType === 'neuralwatt' &&");
   const end = quotaBadges.indexOf("{isOpenaiType(channel.type) && channel.providerType === 'apertis' &&");
 
@@ -149,7 +153,7 @@ test('NeuralWatt kWh bar shares the elapsed-window marker and label', () => {
   assert.match(neuralwattBlock, /const durationPercent = kwhLimit \? getLimitDurationPercent\(kwhLimit\) : undefined/);
   assert.match(neuralwattBlock, /durationPercent=\{durationPercent\}/);
   assert.match(neuralwattBlock, /quota\.label\.time_elapsed/);
-  assert.match(quotaBadges, /kwh:\s*'quota\.label\.kwh_remaining'/);
+  assert.match(display, /kwh:\s*'quota\.label\.kwh_remaining'/);
 });
 
 // Regression: the quota-display refactor dropped the OpenCode Go popover
@@ -646,9 +650,10 @@ test('Synthetic badge lists the hourly search quota without gating', () => {
   assert.match(syntheticBlock, /formatTimeToReset\(searchHourly\.renewsAt\)/);
 
   // Provider-reported credits are USD; every other provider keeps the
-  // configured display currency.
+  // configured display currency. The configured-currency fallback lives in the
+  // shared PeriodQuotaEstimate (quota-window-display) since the extraction.
   assert.match(source, /currency=\{channel\.providerType === 'synthetic' \? 'USD' : undefined\}/);
-  assert.match(source, /currency: currency \|\| generalSettings\?\.currencyCode \|\| 'USD'/);
+  assert.match(read('components/quota-window-display.tsx'), /currency: currency \|\| generalSettings\?\.currencyCode \|\| 'USD'/);
 });
 
 // --- Synthetic weekly pool behavior (production code, real data) ---
@@ -680,7 +685,10 @@ const collectSyntheticFunctions = (node) => {
 collectSyntheticFunctions(badgesAst);
 assert.equal(syntheticFuncNodes.length, syntheticHelperNames.length, 'all Synthetic helpers must stay in quota-badges.tsx');
 
-const syntheticConstNames = ['syntheticWeeklyRegenTickPct', 'calcDurationPercent', 'formatTimeToReset'];
+// formatTimeToReset moved into the useFormatTimeToReset hook (quota-window-display);
+// the synthetic modules splice the extracted hook in below instead of the old
+// module-scope formatter.
+const syntheticConstNames = ['syntheticWeeklyRegenTickPct', 'calcDurationPercent'];
 const syntheticConstNodes = [];
 const collectSyntheticConsts = (node) => {
   ts.forEachChild(node, (child) => {
@@ -697,6 +705,18 @@ const collectSyntheticConsts = (node) => {
 };
 collectSyntheticConsts(badgesAst);
 assert.equal(syntheticConstNodes.length, syntheticConstNames.length, 'all Synthetic constants must stay in quota-badges.tsx');
+
+// The reset-countdown formatter lives in the shared useFormatTimeToReset hook
+// (quota-window-display.tsx); extract its production source so the synthetic
+// modules exercise the real branches behind a useTranslation shim.
+const displaySource = read('components/quota-window-display.tsx');
+const displayAst = ts.createSourceFile('quota-window-display.tsx', displaySource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+let useFormatTimeToResetNode;
+ts.forEachChild(displayAst, (node) => {
+  if (ts.isFunctionDeclaration(node) && node.name?.text === 'useFormatTimeToReset') useFormatTimeToResetNode = node;
+});
+assert.ok(useFormatTimeToResetNode, 'useFormatTimeToReset must stay in quota-window-display.tsx');
+const useFormatTimeToResetText = useFormatTimeToResetNode.getText(displayAst);
 
 // Locate render-branch expressions to rebuild as executable functions.
 const findVariableDeclaration = (root, name) => {
@@ -717,6 +737,9 @@ const syntheticModuleSource = [
   // i18n shim: formatTimeToReset branches and rounds through t(); the shim emits
   // key:params so the branch choice and the rounded percent are asserted for real.
   'const t = (key, params) => (params ? key + ":" + JSON.stringify(params) : key);',
+  'function useTranslation() { return { t }; }',
+  useFormatTimeToResetText,
+  'export const formatTimeToReset = useFormatTimeToReset();',
   ...syntheticFuncNodes.map((node) => `export ${node.getText(badgesAst)}`),
   ...syntheticConstNodes.map((node) => `export ${node.getText(badgesAst)}`),
   `export const getSyntheticWeeklyRegenTick = (planWeekly) => ${regenTickDecl.initializer.getText(badgesAst)};`,
@@ -768,6 +791,9 @@ const syntheticRenderModule = [
   '  for (const [name, value] of Object.entries(params || {})) out = out.split(`{{${name}}}`).join(String(value));',
   '  return out;',
   '}',
+  'function useTranslation() { return { t }; }',
+  useFormatTimeToResetText,
+  'const formatTimeToReset = useFormatTimeToReset();',
   ...syntheticFuncNodes.map((node) => node.getText(badgesAst)),
   ...syntheticConstNodes.map((node) => node.getText(badgesAst)),
   // Same clamping as the real shared bar, projected into data-* attributes so
@@ -968,18 +994,20 @@ test('Synthetic badge percentage prefers the plan pool and falls back to the leg
 // component must pick its tooltip wording per row source, and mark rows when
 // a channel mixes both. Extract the exact production function and render it
 // SSR against the real en locale, the same way the Synthetic branch tests do.
+// The period quota rows moved into quota-window-display.tsx with the shared
+// display primitives; extract them from there.
 const enCurrencies = JSON.parse(read('locales/en/currencies.json'));
-const periodQuotaFuncNames = ['periodMoneyIsProviderReported', 'PeriodQuotaEstimate'];
-const periodQuotaFuncNodes = [...badgesAst.statements].filter(
+const periodQuotaFuncNames = ['periodMoneyIsProviderReported', 'PeriodQuotaEstimate', 'quotaWindowLabel'];
+const periodQuotaFuncNodes = [...displayAst.statements].filter(
   (node) => ts.isFunctionDeclaration(node) && periodQuotaFuncNames.includes(node.name?.text)
 );
-assert.equal(periodQuotaFuncNodes.length, periodQuotaFuncNames.length, 'period quota components must stay in quota-badges.tsx');
-const windowLabelKeysDecl = [...badgesAst.statements].find(
+assert.equal(periodQuotaFuncNodes.length, periodQuotaFuncNames.length, 'period quota components must stay in quota-window-display.tsx');
+const windowLabelKeysDecl = [...displayAst.statements].find(
   (node) =>
     ts.isVariableStatement(node) &&
     node.declarationList.declarations.some((d) => ts.isIdentifier(d.name) && d.name.text === 'WINDOW_LABEL_KEYS')
 );
-assert.ok(windowLabelKeysDecl, 'WINDOW_LABEL_KEYS must stay in quota-badges.tsx');
+assert.ok(windowLabelKeysDecl, 'WINDOW_LABEL_KEYS must stay in quota-window-display.tsx');
 
 const enPeriodQuota = { ...enSystem, ...enCurrencies };
 const periodQuotaRenderModule = [
@@ -999,8 +1027,8 @@ const periodQuotaRenderModule = [
   'function TooltipContent({ children }) { return children; }',
   'function useTranslation() { return { t, i18n: { language: "en" } }; }',
   'function useGeneralSettings() { return { data: { currencyCode: "EUR" } }; }',
-  windowLabelKeysDecl.getText(badgesAst),
-  ...periodQuotaFuncNodes.map((node) => node.getText(badgesAst)),
+  windowLabelKeysDecl.getText(displayAst),
+  ...periodQuotaFuncNodes.map((node) => node.getText(displayAst)),
   'function PeriodQuotaRow({ limits, currency }) { return <PeriodQuotaEstimate limits={limits} currency={currency} />; }',
   'export default PeriodQuotaRow;',
 ].join('\n');

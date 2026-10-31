@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useQueryChannels } from '@/features/channels/data/channels';
 import { antigravityOAuthExchange, antigravityOAuthStart } from '@/features/channels/data/antigravity';
+import { useQueryChannels } from '@/features/channels/data/channels';
 import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { Variable, DisplayField, VariableInput, DisplayFieldInput } from '../data/schema';
@@ -77,7 +77,9 @@ export function EditChannelDialog() {
     setDisplayFields(currentChannel.displayFields ?? []);
     setChannelId(currentChannel.channel?.id ?? '');
     const ec = currentChannel.estimateConfig;
-    setEstimateConfig(ec ? { fieldKey: ec.fieldKey, remaining: ec.remaining ?? false, resetFieldKey: ec.resetFieldKey ?? '', window: ec.window } : null);
+    setEstimateConfig(
+      ec ? { fieldKey: ec.fieldKey, remaining: ec.remaining ?? false, resetFieldKey: ec.resetFieldKey ?? '', window: ec.window } : null
+    );
     setHeadersError('');
     // For template channels, pre-fill with masked API key
     setApiKey(currentChannel.apiKey ?? MASKED_API_KEY);
@@ -181,16 +183,17 @@ export function EditChannelDialog() {
         // configured estimate sends the backend's documented empty-fieldKey
         // clear signal. An unbound attribution channel sends the explicit
         // clearChannelId flag since the GUID scalar rejects empty strings.
-        const estimateInput = estimateConfig?.fieldKey && estimateConfig.window
-          ? {
-              fieldKey: estimateConfig.fieldKey,
-              remaining: estimateConfig.remaining,
-              resetFieldKey: estimateConfig.resetFieldKey || undefined,
-              window: estimateConfig.window,
-            }
-          : currentChannel.estimateConfig
-            ? { fieldKey: '', window: '' }
-            : undefined;
+        const estimateInput =
+          estimateConfig?.fieldKey && estimateConfig.window
+            ? {
+                fieldKey: estimateConfig.fieldKey,
+                remaining: estimateConfig.remaining,
+                resetFieldKey: estimateConfig.resetFieldKey || undefined,
+                window: estimateConfig.window,
+              }
+            : currentChannel.estimateConfig
+              ? { fieldKey: '', window: '' }
+              : undefined;
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {

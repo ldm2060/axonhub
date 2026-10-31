@@ -22,7 +22,15 @@ export function getLimitDurationPercent(limit: ProviderQuotaLimit): number | und
 // UsageTimeBar shows usage on a single progress bar with a small triangle below
 // it marking how far the reset window has elapsed (time progress). Hovering
 // reveals the detailed figures via tooltip, keeping the row compact.
-export function UsageTimeBar({ usagePercent, durationPercent, tooltip }: { usagePercent: number; durationPercent?: number; tooltip: ReactNode }) {
+export function UsageTimeBar({
+  usagePercent,
+  durationPercent,
+  tooltip,
+}: {
+  usagePercent: number;
+  durationPercent?: number;
+  tooltip: ReactNode;
+}) {
   const clamped = Math.min(Math.max(usagePercent || 0, 0), 100);
   const markerLeft = durationPercent === undefined ? undefined : Math.min(Math.max(durationPercent, 0), 100);
   const u = clamped / 100;

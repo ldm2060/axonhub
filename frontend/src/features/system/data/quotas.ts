@@ -543,7 +543,9 @@ function parseQuotaLimit(entry: unknown): ProviderQuotaLimit | undefined {
   const type = requiredString(limit.type);
   // window is optional: monitor-derived limits (custom/generic templates)
   // carry a single windowless ratio the cards render as a generic usage bar.
-  const window = optionalString(limit.window);
+  // Blank or non-string windows normalize to absent (not dropped) so the row
+  // degrades to the generic usage label instead of vanishing.
+  const window = typeof limit.window === 'string' && limit.window.trim() !== '' ? limit.window.trim() : undefined;
   const account = optionalString(limit.account);
   if (!type || !isNormalizedQuotaStatus(limit.status)) return undefined;
 

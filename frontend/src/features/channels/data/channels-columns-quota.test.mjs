@@ -147,6 +147,9 @@ test('normalized limits: malformed required fields produce no rendered limits', 
   // Given entries with malformed identity, status, or usage fields,
   // When the provider quota payload is parsed,
   // Then every malformed entry is omitted instead of becoming a fabricated row.
+  // Malformed windows are tolerated since 0a590b2a: window is optional for
+  // monitor-derived limits, so blank/non-string windows degrade to a windowless
+  // row (generic usage label) rather than dropping the backend's data.
   const limits = parseQuotaLimits({
     _limits: [
       { type: '', window: '5h', usageRatio: 0.1, status: 'available' },
@@ -161,7 +164,22 @@ test('normalized limits: malformed required fields produce no rendered limits', 
     ],
   });
 
-  assert.deepEqual(limits, []);
+  const windowlessRow = {
+    type: 'token',
+    window: undefined,
+    usageRatio: 0.1,
+    status: 'available',
+    ready: false,
+    account: undefined,
+    nextResetAt: undefined,
+    periodStart: undefined,
+    periodCost: undefined,
+    periodQuota: undefined,
+  };
+  assert.deepEqual(limits, [windowlessRow, { ...windowlessRow }]);
+  for (const limit of limits) {
+    assert.equal(limit.window, undefined, 'a malformed window must degrade to windowless, never a blank label');
+  }
 });
 
 test('no provider fallback: channels table renders quota for any channel type with normalized limits', () => {

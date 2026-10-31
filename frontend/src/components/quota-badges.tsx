@@ -4,15 +4,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, RefreshCw, Zap, Battery, BatteryLow, BatteryMedium, BatteryFull, BatteryWarning, ArrowUpDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import {
-  PeriodQuotaEstimate,
-  QuotaWindowBars,
-  UsageTimeBar,
-  WINDOW_LABEL_KEYS,
-  getDurationPercent,
-  getLimitDurationPercent,
-  useFormatTimeToReset,
-} from '@/components/quota-window-display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +16,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  PeriodQuotaEstimate,
+  QuotaWindowBars,
+  UsageTimeBar,
+  WINDOW_LABEL_KEYS,
+  getDurationPercent,
+  getLimitDurationPercent,
+  useFormatTimeToReset,
+} from '@/components/quota-window-display';
 import type { ChannelQuotaRoutingMode } from '@/features/channels/data/schema';
 import { getChannelQuotaRoutingIndicator } from '@/features/channels/utils/quota-routing-status';
 import {
