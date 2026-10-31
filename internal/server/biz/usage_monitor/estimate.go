@@ -336,8 +336,8 @@ func estimateUsageRatio(fields []ParsedField, vars map[string]any, cfg EstimateC
 // derivation uses).
 func estimateResetTime(fields []ParsedField, vars map[string]any, resetFieldKey string) *time.Time {
 	if resetFieldKey != "" {
-		if strings.HasPrefix(resetFieldKey, VarFieldPrefix) {
-			if raw, ok := vars[strings.TrimPrefix(resetFieldKey, VarFieldPrefix)]; ok {
+		if key, hasVar := strings.CutPrefix(resetFieldKey, VarFieldPrefix); hasVar {
+			if raw, ok := vars[key]; ok {
 				return rawVariableTime(raw)
 			}
 			return earliestDatetime(fields)
