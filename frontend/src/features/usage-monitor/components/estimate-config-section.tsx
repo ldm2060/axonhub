@@ -4,8 +4,8 @@ import { Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { DisplayField } from '../data/schema';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { DisplayField, Variable } from '../data/schema';
 
 export type EstimateConfigFormValue = {
   fieldKey: string;
@@ -35,6 +35,7 @@ type ChannelEdge = { node: { id: string; name: string } };
 // channel props.
 export function EstimateConfigSection({
   displayFields,
+  variables,
   values,
   onChange,
   channels,
@@ -43,6 +44,7 @@ export function EstimateConfigSection({
   allowFieldSelection = true,
 }: {
   displayFields: DisplayField[];
+  variables?: Variable[];
   values: EstimateConfigFormValue[];
   onChange: (values: EstimateConfigFormValue[]) => void;
   channels?: ChannelEdge[];
@@ -92,11 +94,24 @@ export function EstimateConfigSection({
                     <SelectValue placeholder={t('usageMonitor.estimateFieldPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {ratioFields.map((df) => (
-                      <SelectItem key={df.key} value={df.key}>
-                        {df.label || df.key}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectLabel>{t('usageMonitor.displayFieldSection')}</SelectLabel>
+                      {ratioFields.map((df) => (
+                        <SelectItem key={df.key} value={df.key}>
+                          {df.label || df.key}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    {(variables?.length ?? 0) > 0 && (
+                      <SelectGroup>
+                        <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
+                        {variables!.map((v) => (
+                          <SelectItem key={v.key} value={`var:${v.key}`}>
+                            {v.key}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -144,11 +159,24 @@ export function EstimateConfigSection({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>{t('usageMonitor.estimateResetFieldAuto')}</SelectItem>
-                  {resetFields.map((df) => (
-                    <SelectItem key={df.key} value={df.key}>
-                      {df.label || df.key}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    <SelectLabel>{t('usageMonitor.displayFieldSection')}</SelectLabel>
+                    {resetFields.map((df) => (
+                      <SelectItem key={df.key} value={df.key}>
+                        {df.label || df.key}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  {(variables?.length ?? 0) > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
+                      {variables!.map((v) => (
+                        <SelectItem key={v.key} value={`var:${v.key}`}>
+                          {v.key}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             </div>

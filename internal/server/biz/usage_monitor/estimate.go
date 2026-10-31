@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
@@ -89,6 +90,10 @@ func nonEmptyConfigs(cfgs []EstimateConfig) []EstimateConfig {
 	return out
 }
 
+// VarFieldPrefix marks an estimate reference pointing at a raw variable
+// instead of a display field.
+const VarFieldPrefix = "var:"
+
 // EstimateConfigsToMap encodes the config list for the estimate_config JSON
 // column in the {"items": [...]} storage shape.
 func EstimateConfigsToMap(cfgs []EstimateConfig) map[string]any {
@@ -111,25 +116,35 @@ func EstimateConfigsToMap(cfgs []EstimateConfig) map[string]any {
 
 // ValidateEstimateConfigs checks every submitted entry: the window is always
 // mandatory, the usage field is optional (a window-only entry is the template
-// stamp mode), and the referenced fields must exist among the monitor's
-// display fields when those are known.
-func ValidateEstimateConfigs(cfgs []EstimateConfig, displayFieldKeys []string) error {
+// stamp mode), and the referenced values must exist — display fields among the
+// display fields, var:-prefixed references among the monitor's variables.
+func ValidateEstimateConfigs(cfgs []EstimateConfig, displayFieldKeys []string, variableKeys []string) error {
 	for _, cfg := range cfgs {
 		switch cfg.Window {
 		case EstimateWindow5h, EstimateWindowDaily, EstimateWindowWeekly, EstimateWindowMonthly:
 		default:
 			return fmt.Errorf("estimateConfig.window must be one of 5h, daily, weekly, monthly")
 		}
-		if len(displayFieldKeys) > 0 {
-			if cfg.FieldKey != "" && !slices.Contains(displayFieldKeys, cfg.FieldKey) {
-				return fmt.Errorf("estimateConfig.fieldKey %q is not a display field of this monitor", cfg.FieldKey)
-			}
-			if cfg.ResetFieldKey != "" && !slices.Contains(displayFieldKeys, cfg.ResetFieldKey) {
-				return fmt.Errorf("estimateConfig.resetFieldKey %q is not a display field of this monitor", cfg.ResetFieldKey)
-			}
+		if len(displayFieldKeys) == 0 && len(variableKeys) == 0 {
+			continue
+		}
+		if cfg.FieldKey != "" && !referenceExists(cfg.FieldKey, displayFieldKeys, variableKeys) {
+			return fmt.Errorf("estimateConfig.fieldKey %q is not a display field or variable of this monitor", cfg.FieldKey)
+		}
+		if cfg.ResetFieldKey != "" && !referenceExists(cfg.ResetFieldKey, displayFieldKeys, variableKeys) {
+			return fmt.Errorf("estimateConfig.resetFieldKey %q is not a display field or variable of this monitor", cfg.ResetFieldKey)
 		}
 	}
 	return nil
+}
+
+// referenceExists checks a field reference against the display field keys and,
+// for var:-prefixed references, the monitor's variable keys.
+func referenceExists(ref string, displayFieldKeys []string, variableKeys []string) bool {
+	if key, isVar := strings.CutPrefix(ref, VarFieldPrefix); isVar {
+		return slices.Contains(variableKeys, key)
+	}
+	return slices.Contains(displayFieldKeys, ref)
 }
 
 // windowedLimit builds the limit for one estimate window: the fixed-length
@@ -157,10 +172,11 @@ func windowedLimit(ratio float64, reset *time.Time, window string) (provider_quo
 // ApplyEstimateConfigs drives the period estimate for field-selection sources
 // (custom/builtin): every entry contributes one windowed limit priced from its
 // field's ratio, so a monitor can carry both a 5h and a weekly window at once.
-// Entries whose field is missing or yields no usable ratio are skipped; when
+// The ratio source is a display field key or a var:-prefixed raw variable.
+// Entries whose source is missing or yields no usable ratio are skipped; when
 // no entry succeeds the derived limits are left untouched. The routing status
 // follows the worst contributed limit.
-func ApplyEstimateConfigs(fields []ParsedField, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
+func ApplyEstimateConfigs(fields []ParsedField, vars map[string]any, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
 	var out []provider_quota.QuotaLimitStatus
 	worstStatus := ""
 	var earliestReset *time.Time
@@ -168,11 +184,11 @@ func ApplyEstimateConfigs(fields []ParsedField, cfgs []EstimateConfig, derived *
 		if cfg.FieldKey == "" {
 			continue
 		}
-		ratio, ok := estimateUsageRatio(fields, cfg)
+		ratio, ok := estimateUsageRatio(fields, vars, cfg)
 		if !ok {
 			continue
 		}
-		limit, ok := windowedLimit(ratio, estimateResetTime(fields, cfg.ResetFieldKey), cfg.Window)
+		limit, ok := windowedLimit(ratio, estimateResetTime(fields, vars, cfg.ResetFieldKey), cfg.Window)
 		if !ok {
 			continue
 		}
@@ -205,9 +221,10 @@ func ApplyEstimateConfigs(fields []ParsedField, cfgs []EstimateConfig, derived *
 // StampEstimateWindows is the template-monitor path: every configured window
 // is stamped onto the limits that have none, so a template reporting one ratio
 // can be priced against both a 5h and a weekly window when both are
-// configured. The template keeps its own ratios, statuses, and field keys;
+// configured. Reset times resolve from display fields or var:-prefixed
+// variables. The template keeps its own ratios, statuses, and field keys;
 // limits that already carry a window are left untouched.
-func StampEstimateWindows(fields []ParsedField, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
+func StampEstimateWindows(fields []ParsedField, vars map[string]any, cfgs []EstimateConfig, derived *QuotaDerivedStatus) {
 	var windowless []provider_quota.QuotaLimitStatus
 	var windowed []provider_quota.QuotaLimitStatus
 	for _, l := range derived.Limits {
@@ -227,7 +244,7 @@ func StampEstimateWindows(fields []ParsedField, cfgs []EstimateConfig, derived *
 		if cfg.Window == "" {
 			continue
 		}
-		reset := estimateResetTime(fields, cfg.ResetFieldKey)
+		reset := estimateResetTime(fields, vars, cfg.ResetFieldKey)
 		for _, orig := range windowless {
 			limit, ok := windowedLimit(orig.UsageRatio, reset, cfg.Window)
 			if !ok {
@@ -251,12 +268,35 @@ func StampEstimateWindows(fields []ParsedField, cfgs []EstimateConfig, derived *
 	}
 }
 
-// estimateUsageRatio extracts the usage ratio the configured field reports,
-// mirroring deriveGeneric's value handling: the computed percent for
-// percentage fields and fractions with a total, the raw value otherwise.
-// remaining=true means the field expresses unused quota and the ratio is
-// inverted to used.
-func estimateUsageRatio(fields []ParsedField, cfg EstimateConfig) (float64, bool) {
+// estimateUsageRatio extracts the usage ratio the configured source reports.
+// Display fields mirror deriveGeneric's value handling: the computed percent
+// for percentage fields and fractions with a total, the raw value otherwise.
+// var:-prefixed sources read the raw variable value instead: values above 1
+// are read as percentages and divided by 100, values within [0, 1] pass
+// through. remaining=true means the source expresses unused quota and the
+// ratio is inverted to used.
+func estimateUsageRatio(fields []ParsedField, vars map[string]any, cfg EstimateConfig) (float64, bool) {
+	if key, hasVar := strings.CutPrefix(cfg.FieldKey, VarFieldPrefix); hasVar {
+		raw, ok := vars[key]
+		if !ok {
+			return 0, false
+		}
+		f, ok := toFloat64Val(raw)
+		if !ok {
+			return 0, false
+		}
+		if f > 1 {
+			f = f / 100
+		}
+		if cfg.Remaining {
+			f = 1 - f
+		}
+		if f < 0 || f > 1 {
+			return 0, false
+		}
+		return f, true
+	}
+
 	for _, f := range fields {
 		if f.Key != cfg.FieldKey {
 			continue
@@ -291,13 +331,46 @@ func estimateUsageRatio(fields []ParsedField, cfg EstimateConfig) (float64, bool
 }
 
 // estimateResetTime resolves the limit's next reset: the configured datetime
-// field when present, otherwise the earliest future datetime the monitor
-// reports (the same default the generic derivation uses).
-func estimateResetTime(fields []ParsedField, resetFieldKey string) *time.Time {
+// source when present (display field or var:-prefixed variable), otherwise the
+// earliest future datetime the monitor reports (the same default the generic
+// derivation uses).
+func estimateResetTime(fields []ParsedField, vars map[string]any, resetFieldKey string) *time.Time {
 	if resetFieldKey != "" {
+		if strings.HasPrefix(resetFieldKey, VarFieldPrefix) {
+			if raw, ok := vars[strings.TrimPrefix(resetFieldKey, VarFieldPrefix)]; ok {
+				return rawVariableTime(raw)
+			}
+			return earliestDatetime(fields)
+		}
 		if t := findFieldTime(fields, resetFieldKey); t != nil {
 			return t
 		}
 	}
 	return earliestDatetime(fields)
+}
+
+// rawVariableTime interprets a raw variable value as a point in time: numeric
+// values and numeric strings are Unix timestamps (milliseconds above the
+// year-2000 ms threshold, seconds otherwise), strings parse as RFC 3339.
+func rawVariableTime(v any) *time.Time {
+	if v == nil {
+		return nil
+	}
+	if f, ok := toFloat64Val(v); ok {
+		if f > 946684800000 {
+			t := time.UnixMilli(int64(f))
+			return &t
+		}
+		if f > 946684800 {
+			t := time.Unix(int64(f), 0)
+			return &t
+		}
+		return nil
+	}
+	if s, ok := v.(string); ok {
+		if t, err := time.Parse(time.RFC3339, s); err == nil {
+			return &t
+		}
+	}
+	return nil
 }

@@ -380,7 +380,12 @@ export function AddChannelDialog() {
               </div>
 
               {/* Period quota estimate config: the bound channel prices it */}
-              <EstimateConfigSection displayFields={displayFields} values={estimateConfigs} onChange={setEstimateConfigs} />
+              <EstimateConfigSection
+                displayFields={displayFields}
+                variables={variables}
+                values={estimateConfigs}
+                onChange={setEstimateConfigs}
+              />
 
               {/* Test Connection */}
               <TestConnection
@@ -482,6 +487,7 @@ export function AddChannelDialog() {
               {/* Period quota estimate config */}
               <EstimateConfigSection
                 displayFields={displayFields}
+                variables={variables}
                 values={estimateConfigs}
                 onChange={setEstimateConfigs}
                 channels={channelsQuery.data?.edges}
@@ -719,6 +725,7 @@ export function AddChannelDialog() {
                       same-provider channels, or the bound channel below. */}
                   <EstimateConfigSection
                     displayFields={displayFields}
+                    variables={variables}
                     values={estimateConfigs}
                     onChange={setEstimateConfigs}
                     channels={channelsQuery.data?.edges}

@@ -667,15 +667,19 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		create.SetChannelID(channelID)
 	}
 
-	// Period quota estimate configs: validate against the display fields being
-	// stored so a stale field key fails fast instead of silently estimating
-	// nothing at poll time.
+	// Period quota estimate configs: validate against the display fields and
+	// variables being stored so a stale reference fails fast instead of
+	// silently estimating nothing at poll time.
 	if len(input.EstimateConfigs) > 0 {
-		keys := make([]string, 0, len(input.DisplayFields))
+		displayKeys := make([]string, 0, len(input.DisplayFields))
 		for _, df := range input.DisplayFields {
-			keys = append(keys, df.Key)
+			displayKeys = append(displayKeys, df.Key)
 		}
-		if err := usage_monitor.ValidateEstimateConfigs(input.EstimateConfigs, keys); err != nil {
+		variableKeys := make([]string, 0, len(input.Variables))
+		for _, v := range input.Variables {
+			variableKeys = append(variableKeys, v.Key)
+		}
+		if err := usage_monitor.ValidateEstimateConfigs(input.EstimateConfigs, displayKeys, variableKeys); err != nil {
 			return nil, err
 		}
 		create.SetEstimateConfig(usage_monitor.EstimateConfigsToMap(input.EstimateConfigs))
@@ -838,20 +842,31 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 		// estimateConfigs so a client can replace it in one round trip.
 		update.ClearEstimateConfig()
 	} else if len(input.EstimateConfigs) > 0 {
-		// Validate against the display fields effective after this update.
-		// Window-only entries (empty fieldKey) are the template-monitor mode:
-		// they stamp the window without replacing template-derived ratios.
+		// Validate against the display fields and variables effective after
+		// this update. Window-only entries (empty fieldKey) are the
+		// template-monitor mode: they stamp the window without replacing
+		// template-derived ratios.
 		displayFieldMaps := existing.DisplayFields
 		if input.DisplayFields != nil {
 			displayFieldMaps = convertDisplayFieldsToMapSlice(*input.DisplayFields)
 		}
-		keys := make([]string, 0, len(displayFieldMaps))
+		displayKeys := make([]string, 0, len(displayFieldMaps))
 		for _, m := range displayFieldMaps {
 			if k, ok := m["key"].(string); ok {
-				keys = append(keys, k)
+				displayKeys = append(displayKeys, k)
 			}
 		}
-		if err := usage_monitor.ValidateEstimateConfigs(input.EstimateConfigs, keys); err != nil {
+		variableMaps := existing.Variables
+		if input.Variables != nil {
+			variableMaps = convertVariablesToMapSlice(*input.Variables)
+		}
+		variableKeys := make([]string, 0, len(variableMaps))
+		for _, m := range variableMaps {
+			if k, ok := m["key"].(string); ok {
+				variableKeys = append(variableKeys, k)
+			}
+		}
+		if err := usage_monitor.ValidateEstimateConfigs(input.EstimateConfigs, displayKeys, variableKeys); err != nil {
 			return nil, err
 		}
 		update.SetEstimateConfig(usage_monitor.EstimateConfigsToMap(input.EstimateConfigs))
@@ -1137,9 +1152,9 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 			log.Cause(err))
 	} else if len(cfgs) > 0 {
 		if ch.Source == usagemonitorchannel.SourceTemplate {
-			usage_monitor.StampEstimateWindows(pollData.Fields, cfgs, &derived)
+			usage_monitor.StampEstimateWindows(pollData.Fields, pollData.Variables, cfgs, &derived)
 		} else {
-			usage_monitor.ApplyEstimateConfigs(pollData.Fields, cfgs, &derived)
+			usage_monitor.ApplyEstimateConfigs(pollData.Fields, pollData.Variables, cfgs, &derived)
 		}
 	}
 

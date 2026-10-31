@@ -174,9 +174,10 @@ func (c *GenericQuotaChecker) PollV2(
 	parsedFields := RenderDisplayFields(vars, displayFields)
 
 	return &PollData{
-		Raw:      string(resp.Body),
-		Fields:   parsedFields,
-		PolledAt: time.Now(),
+		Raw:       string(resp.Body),
+		Fields:    parsedFields,
+		Variables: vars,
+		PolledAt:  time.Now(),
 	}, nil
 }
 

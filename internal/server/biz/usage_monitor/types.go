@@ -120,9 +120,10 @@ type ParsedField struct {
 }
 
 type PollData struct {
-	Raw      string        `json:"raw"`
-	Fields   []ParsedField `json:"fields"`
-	PolledAt time.Time     `json:"polledAt"`
+	Raw       string         `json:"raw"`
+	Fields    []ParsedField  `json:"fields"`
+	Variables map[string]any `json:"variables,omitempty"` // raw extracted variable values
+	PolledAt  time.Time      `json:"polledAt"`
 }
 
 type TestResult struct {

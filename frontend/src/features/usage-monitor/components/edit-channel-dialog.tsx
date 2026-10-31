@@ -404,6 +404,7 @@ export function EditChannelDialog() {
             {isTemplate && (
               <EstimateConfigSection
                 displayFields={displayFields}
+                variables={variables}
                 values={estimateConfigs}
                 onChange={setEstimateConfigs}
                 channels={channelsQuery.data?.edges}
@@ -412,10 +413,18 @@ export function EditChannelDialog() {
                 allowFieldSelection={false}
               />
             )}
-            {isBuiltin && <EstimateConfigSection displayFields={displayFields} values={estimateConfigs} onChange={setEstimateConfigs} />}
+            {isBuiltin && (
+              <EstimateConfigSection
+                displayFields={displayFields}
+                variables={variables}
+                values={estimateConfigs}
+                onChange={setEstimateConfigs}
+              />
+            )}
             {!isTemplate && !isBuiltin && (
               <EstimateConfigSection
                 displayFields={displayFields}
+                variables={variables}
                 values={estimateConfigs}
                 onChange={setEstimateConfigs}
                 channels={channelsQuery.data?.edges}
