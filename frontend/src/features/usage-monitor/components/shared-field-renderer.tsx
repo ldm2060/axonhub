@@ -150,11 +150,9 @@ function FieldGroup({
       ) : (
         <ProgressBar percentage={pct} />
       )}
-      {enhanced ? (
-        metaText && <div className='text-muted-foreground text-[11px]'>{metaText}</div>
-      ) : (
-        resetText && <div className='text-muted-foreground text-right text-[11px]'>{resetText}</div>
-      )}
+      {enhanced
+        ? metaText && <div className='text-muted-foreground text-[11px]'>{metaText}</div>
+        : resetText && <div className='text-muted-foreground text-right text-[11px]'>{resetText}</div>}
     </div>
   );
 }
