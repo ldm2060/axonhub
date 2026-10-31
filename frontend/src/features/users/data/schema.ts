@@ -15,6 +15,7 @@ export const userSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   isOwner: z.boolean().optional(),
+  isAdmin: z.boolean().optional(),
   scopes: z.array(z.string()).optional().nullable(),
   roles: z
     .object({
@@ -50,6 +51,7 @@ export const createUserFormSchema = z
     password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string(),
     isOwner: z.boolean().optional(),
+    isAdmin: z.boolean().optional(),
     scopes: z.array(z.string()).optional(),
     roleIDs: z.array(z.string()).optional(),
   })
@@ -67,6 +69,7 @@ export const createUserInputSchema = z.object({
   lastName: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   isOwner: z.boolean().optional(),
+  isAdmin: z.boolean().optional(),
   scopes: z.array(z.string()).optional(),
   roleIDs: z.array(z.string()).optional(),
 });
@@ -94,6 +97,7 @@ export const updateUserInputSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   isOwner: z.boolean().optional(),
+  isAdmin: z.boolean().optional(),
   scopes: z.array(z.string()).optional(),
   appendScopes: z.array(z.string()).optional(),
   clearScopes: z.boolean().optional(),

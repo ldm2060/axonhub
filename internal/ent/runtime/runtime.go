@@ -1201,8 +1201,12 @@ func init() {
 	userDescIsOwner := userFields[6].Descriptor()
 	// user.DefaultIsOwner holds the default value on creation for the is_owner field.
 	user.DefaultIsOwner = userDescIsOwner.Default.(bool)
+	// userDescIsAdmin is the schema descriptor for is_admin field.
+	userDescIsAdmin := userFields[7].Descriptor()
+	// user.DefaultIsAdmin holds the default value on creation for the is_admin field.
+	user.DefaultIsAdmin = userDescIsAdmin.Default.(bool)
 	// userDescScopes is the schema descriptor for scopes field.
-	userDescScopes := userFields[7].Descriptor()
+	userDescScopes := userFields[8].Descriptor()
 	// user.DefaultScopes holds the default value on creation for the scopes field.
 	user.DefaultScopes = userDescScopes.Default.([]string)
 	userprojectMixin := schema.UserProject{}.Mixin()

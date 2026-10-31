@@ -14156,6 +14156,10 @@ type UserWhereInput struct {
 	IsOwner    *bool `json:"isOwner,omitempty"`
 	IsOwnerNEQ *bool `json:"isOwnerNEQ,omitempty"`
 
+	// "is_admin" field predicates.
+	IsAdmin    *bool `json:"isAdmin,omitempty"`
+	IsAdminNEQ *bool `json:"isAdminNEQ,omitempty"`
+
 	// "email_verified_at" field predicates.
 	EmailVerifiedAt       *time.Time  `json:"emailVerifiedAt,omitempty"`
 	EmailVerifiedAtNEQ    *time.Time  `json:"emailVerifiedAtNEQ,omitempty"`
@@ -14596,6 +14600,12 @@ func (i *UserWhereInput) P() (predicate.User, error) {
 	}
 	if i.IsOwnerNEQ != nil {
 		predicates = append(predicates, user.IsOwnerNEQ(*i.IsOwnerNEQ))
+	}
+	if i.IsAdmin != nil {
+		predicates = append(predicates, user.IsAdminEQ(*i.IsAdmin))
+	}
+	if i.IsAdminNEQ != nil {
+		predicates = append(predicates, user.IsAdminNEQ(*i.IsAdminNEQ))
 	}
 	if i.EmailVerifiedAt != nil {
 		predicates = append(predicates, user.EmailVerifiedAtEQ(*i.EmailVerifiedAt))

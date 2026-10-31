@@ -52,11 +52,14 @@ export const createColumns = (t: ReturnType<typeof useTranslation>['t'], canWrit
       header: t('users.columns.owner'),
       cell: ({ row }) => {
         const isOwner = row.getValue('isOwner') as boolean;
-        return isOwner ? (
-          <Badge variant='default'>{t('users.badges.owner')}</Badge>
-        ) : (
-          <Badge variant='secondary'>{t('users.badges.user')}</Badge>
-        );
+        const isAdmin = row.original.isAdmin === true;
+        if (isOwner) {
+          return <Badge variant='default'>{t('users.badges.owner')}</Badge>;
+        }
+        if (isAdmin) {
+          return <Badge variant='default'>{t('users.badges.admin')}</Badge>;
+        }
+        return <Badge variant='secondary'>{t('users.badges.user')}</Badge>;
       },
     },
     {

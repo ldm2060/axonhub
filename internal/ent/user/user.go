@@ -38,6 +38,8 @@ const (
 	FieldLastName = "last_name"
 	// FieldIsOwner holds the string denoting the is_owner field in the database.
 	FieldIsOwner = "is_owner"
+	// FieldIsAdmin holds the string denoting the is_admin field in the database.
+	FieldIsAdmin = "is_admin"
 	// FieldScopes holds the string denoting the scopes field in the database.
 	FieldScopes = "scopes"
 	// FieldEmailVerifiedAt holds the string denoting the email_verified_at field in the database.
@@ -201,6 +203,7 @@ var Columns = []string{
 	FieldFirstName,
 	FieldLastName,
 	FieldIsOwner,
+	FieldIsAdmin,
 	FieldScopes,
 	FieldEmailVerifiedAt,
 	FieldPrivateProjectID,
@@ -250,6 +253,8 @@ var (
 	DefaultLastName string
 	// DefaultIsOwner holds the default value on creation for the "is_owner" field.
 	DefaultIsOwner bool
+	// DefaultIsAdmin holds the default value on creation for the "is_admin" field.
+	DefaultIsAdmin bool
 	// DefaultScopes holds the default value on creation for the "scopes" field.
 	DefaultScopes []string
 )
@@ -337,6 +342,11 @@ func ByLastName(opts ...sql.OrderTermOption) OrderOption {
 // ByIsOwner orders the results by the is_owner field.
 func ByIsOwner(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsOwner, opts...).ToFunc()
+}
+
+// ByIsAdmin orders the results by the is_admin field.
+func ByIsAdmin(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsAdmin, opts...).ToFunc()
 }
 
 // ByEmailVerifiedAt orders the results by the email_verified_at field.

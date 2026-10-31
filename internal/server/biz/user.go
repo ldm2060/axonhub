@@ -76,6 +76,12 @@ func (s *UserService) CreateUser(ctx context.Context, input ent.CreateUserInput)
 			}
 		}
 
+		if input.IsAdmin != nil && *input.IsAdmin {
+			if err := s.permissionValidator.CanGrantAdmin(ctx); err != nil {
+				return nil, fmt.Errorf("permission denied: %w", err)
+			}
+		}
+
 		if input.Scopes != nil {
 			if err := s.permissionValidator.CanGrantScopes(ctx, input.Scopes, nil); err != nil {
 				return nil, fmt.Errorf("permission denied: %w", err)
@@ -108,6 +114,10 @@ func (s *UserService) CreateUser(ctx context.Context, input ent.CreateUserInput)
 		SetEmail(input.Email).
 		SetPassword(hashedPassword).
 		SetScopes(input.Scopes)
+
+	if input.IsAdmin != nil {
+		mut.SetIsAdmin(*input.IsAdmin)
+	}
 
 	if input.RoleIDs != nil {
 		mut.AddRoleIDs(input.RoleIDs...)
@@ -224,6 +234,14 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUs
 		}
 	}
 
+	// Same guard for the admin identity: admins bypass every scope check, so only
+	// system owners may hand it out.
+	if input.IsAdmin != nil {
+		if err := s.permissionValidator.CanGrantAdmin(ctx); err != nil {
+			return nil, fmt.Errorf("permission denied: %w", err)
+		}
+	}
+
 	// Validate scope grants if scopes are being updated
 	if input.Scopes != nil {
 		if err := s.permissionValidator.CanGrantScopes(ctx, input.Scopes, nil); err != nil {
@@ -254,6 +272,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, input ent.UpdateUs
 		SetNillableFirstName(input.FirstName).
 		SetNillableLastName(input.LastName).
 		SetNillableIsOwner(input.IsOwner).
+		SetNillableIsAdmin(input.IsAdmin).
 		SetNillablePreferLanguage(input.PreferLanguage)
 
 	if input.Password != nil {
@@ -510,6 +529,7 @@ func ConvertUserToUserInfo(ctx context.Context, u *ent.User) *objects.UserInfo {
 		FirstName:      u.FirstName,
 		LastName:       u.LastName,
 		IsOwner:        u.IsOwner,
+		IsAdmin:        u.IsAdmin,
 		PreferLanguage: u.PreferLanguage,
 		Avatar:         lo.ToPtr(objects.UserAvatarURL(u.ID)),
 		Scopes:         lo.Keys(allScopes),

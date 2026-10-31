@@ -22,6 +22,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   isOwner: boolean;
+  isAdmin?: boolean;
   preferLanguage: string;
   avatar?: string;
   scopes: string[];

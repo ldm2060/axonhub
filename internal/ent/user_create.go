@@ -160,6 +160,20 @@ func (_c *UserCreate) SetNillableIsOwner(v *bool) *UserCreate {
 	return _c
 }
 
+// SetIsAdmin sets the "is_admin" field.
+func (_c *UserCreate) SetIsAdmin(v bool) *UserCreate {
+	_c.mutation.SetIsAdmin(v)
+	return _c
+}
+
+// SetNillableIsAdmin sets the "is_admin" field if the given value is not nil.
+func (_c *UserCreate) SetNillableIsAdmin(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetIsAdmin(*v)
+	}
+	return _c
+}
+
 // SetScopes sets the "scopes" field.
 func (_c *UserCreate) SetScopes(v []string) *UserCreate {
 	_c.mutation.SetScopes(v)
@@ -499,6 +513,10 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultIsOwner
 		_c.mutation.SetIsOwner(v)
 	}
+	if _, ok := _c.mutation.IsAdmin(); !ok {
+		v := user.DefaultIsAdmin
+		_c.mutation.SetIsAdmin(v)
+	}
 	if _, ok := _c.mutation.Scopes(); !ok {
 		v := user.DefaultScopes
 		_c.mutation.SetScopes(v)
@@ -536,6 +554,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsOwner(); !ok {
 		return &ValidationError{Name: "is_owner", err: errors.New(`ent: missing required field "User.is_owner"`)}
+	}
+	if _, ok := _c.mutation.IsAdmin(); !ok {
+		return &ValidationError{Name: "is_admin", err: errors.New(`ent: missing required field "User.is_admin"`)}
 	}
 	return nil
 }
@@ -603,6 +624,10 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsOwner(); ok {
 		_spec.SetField(user.FieldIsOwner, field.TypeBool, value)
 		_node.IsOwner = value
+	}
+	if value, ok := _c.mutation.IsAdmin(); ok {
+		_spec.SetField(user.FieldIsAdmin, field.TypeBool, value)
+		_node.IsAdmin = value
 	}
 	if value, ok := _c.mutation.Scopes(); ok {
 		_spec.SetField(user.FieldScopes, field.TypeJSON, value)
@@ -1043,6 +1068,18 @@ func (u *UserUpsert) UpdateIsOwner() *UserUpsert {
 	return u
 }
 
+// SetIsAdmin sets the "is_admin" field.
+func (u *UserUpsert) SetIsAdmin(v bool) *UserUpsert {
+	u.Set(user.FieldIsAdmin, v)
+	return u
+}
+
+// UpdateIsAdmin sets the "is_admin" field to the value that was provided on create.
+func (u *UserUpsert) UpdateIsAdmin() *UserUpsert {
+	u.SetExcluded(user.FieldIsAdmin)
+	return u
+}
+
 // SetScopes sets the "scopes" field.
 func (u *UserUpsert) SetScopes(v []string) *UserUpsert {
 	u.Set(user.FieldScopes, v)
@@ -1272,6 +1309,20 @@ func (u *UserUpsertOne) SetIsOwner(v bool) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateIsOwner() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateIsOwner()
+	})
+}
+
+// SetIsAdmin sets the "is_admin" field.
+func (u *UserUpsertOne) SetIsAdmin(v bool) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetIsAdmin(v)
+	})
+}
+
+// UpdateIsAdmin sets the "is_admin" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateIsAdmin() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateIsAdmin()
 	})
 }
 
@@ -1679,6 +1730,20 @@ func (u *UserUpsertBulk) SetIsOwner(v bool) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateIsOwner() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateIsOwner()
+	})
+}
+
+// SetIsAdmin sets the "is_admin" field.
+func (u *UserUpsertBulk) SetIsAdmin(v bool) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetIsAdmin(v)
+	})
+}
+
+// UpdateIsAdmin sets the "is_admin" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateIsAdmin() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateIsAdmin()
 	})
 }
 

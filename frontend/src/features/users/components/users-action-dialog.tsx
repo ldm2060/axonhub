@@ -30,6 +30,7 @@ const createFormSchema = (t: (key: string) => string) =>
       password: z.string().optional(),
       confirmPassword: z.string().optional(),
       isOwner: z.boolean().optional(),
+      isAdmin: z.boolean().optional(),
       roleIDs: z.array(z.string()).optional(),
       scopes: z.array(z.string()).optional(),
     })
@@ -94,6 +95,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           password: '',
           confirmPassword: '',
           isOwner: currentRow.isOwner,
+          isAdmin: currentRow.isAdmin,
           roleIDs: currentRow.roles?.edges?.map((edge) => edge.node.id) || [],
           scopes: currentRow.scopes || [],
         }
@@ -104,6 +106,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           password: '',
           confirmPassword: '',
           isOwner: false,
+          isAdmin: false,
           roleIDs: [],
           scopes: [],
         },
@@ -166,6 +169,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           lastName: values.lastName,
           email: values.email,
           isOwner: values.isOwner,
+          isAdmin: values.isAdmin,
           scopes: values.scopes,
         };
 
@@ -190,6 +194,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           password: values.password || '',
           // 注意：不包含 confirmPassword
           isOwner: values.isOwner,
+          isAdmin: values.isAdmin,
           scopes: values.scopes,
           roleIDs: values.roleIDs,
         };
@@ -325,6 +330,22 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                     <div className='space-y-1 leading-none'>
                       <FormLabel>{t('users.form.isOwner')}</FormLabel>
                       <p className='text-muted-foreground text-sm'>{t('users.form.ownerDescription')}</p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='isAdmin'
+                render={({ field }) => (
+                  <FormItem className='flex flex-row items-start space-y-0 space-x-3'>
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className='space-y-1 leading-none'>
+                      <FormLabel>{t('users.form.isAdmin')}</FormLabel>
+                      <p className='text-muted-foreground text-sm'>{t('users.form.adminDescription')}</p>
                     </div>
                   </FormItem>
                 )}

@@ -14,6 +14,7 @@ export function useRoutePermissions() {
   const user = meData || authUser;
   const systemScopes = useMemo(() => user?.scopes || [], [user?.scopes]);
   const isOwner = user?.isOwner || false;
+  const isAdmin = user?.isAdmin || false;
 
   // Get project-level scopes for the selected project
   const projectScopes = useMemo(() => {
@@ -25,7 +26,7 @@ export function useRoutePermissions() {
   }, [selectedProjectId, user?.projects]);
 
   const isProjectOwner = useMemo(() => {
-    if (isOwner) {
+    if (isOwner || isAdmin) {
       return true;
     }
     if (!selectedProjectId || !user?.projects) {
@@ -33,7 +34,7 @@ export function useRoutePermissions() {
     }
     const project = user.projects.find((p) => p.projectID === selectedProjectId);
     return project?.isOwner || false;
-  }, [isOwner, selectedProjectId, user?.projects]);
+  }, [isOwner, isAdmin, selectedProjectId, user?.projects]);
 
   const hasRouteAccess = useCallback(
     (routeConfig: RouteConfig, groupScopeLevel?: ScopeLevel): boolean => {
@@ -47,8 +48,14 @@ export function useRoutePermissions() {
 
       const scopeLevel = routeConfig.scopeLevel || groupScopeLevel || 'any';
 
-      // Owner 拥有所有权限
-      if (isOwner) {
+      // system 级路由（管理组）按身份硬门槛：仅 owner / admin 可见，
+      // 与 scope 解耦——普通用户即使持有对应 scope 也不出现管理页。
+      if (scopeLevel === 'system' && !isOwner && !isAdmin) {
+        return false;
+      }
+
+      // Owner 和 admin 拥有所有权限
+      if (isOwner || isAdmin) {
         return true;
       }
 
@@ -72,7 +79,7 @@ export function useRoutePermissions() {
 
       return routeConfig.requiredScopes.some((scope) => scopesToCheck.includes(scope));
     },
-    [isOwner, isProjectOwner, projectScopes, systemScopes]
+    [isOwner, isAdmin, isProjectOwner, projectScopes, systemScopes]
   );
 
   const hasGroupAccess = useCallback(

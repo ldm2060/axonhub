@@ -16,6 +16,7 @@ export function usePermissions() {
   // Use data from me query if available, otherwise fall back to auth store
   const user = meData || authUser;
   const isOwner = user?.isOwner || false;
+  const isAdmin = user?.isAdmin || false;
 
   // Get project-level scopes for the selected project
   const projectScopes = useMemo(() => {
@@ -27,17 +28,17 @@ export function usePermissions() {
   }, [selectedProjectId, user?.projects]);
 
   const isProjectOwner = useMemo(() => {
-    if (isOwner) return true;
+    if (isOwner || isAdmin) return true;
     if (!selectedProjectId || !user?.projects) return false;
     const project = user.projects.find((p) => p.projectID === selectedProjectId);
     return project?.isOwner || false;
-  }, [isOwner, selectedProjectId, user?.projects]);
+  }, [isOwner, isAdmin, selectedProjectId, user?.projects]);
 
   // Check if user has a specific scope at system level only
   const hasSystemScope = useCallback(
     (requiredScope: string): boolean => {
-      // Owner has all permissions
-      if (isOwner) {
+      // Owner and admin identities have all permissions
+      if (isOwner || isAdmin) {
         return true;
       }
 
@@ -53,7 +54,7 @@ export function usePermissions() {
 
       return false;
     },
-    [user, isOwner]
+    [user, isOwner, isAdmin]
   );
 
   // Check if user has a specific scope at project level only
@@ -199,6 +200,7 @@ export function usePermissions() {
   return {
     user,
     isOwner,
+    isAdmin,
     isProjectOwner,
     hasScope,
     hasSystemScope,

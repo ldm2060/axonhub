@@ -6,6 +6,7 @@ export const ME_QUERY = `
       firstName
       lastName
       isOwner
+      isAdmin
       scopes
       preferLanguage
       avatar
@@ -48,6 +49,7 @@ export const USERS_QUERY = `
           firstName
           lastName
           isOwner
+          isAdmin
           preferLanguage
           scopes
           roles {
@@ -81,6 +83,7 @@ export const USER_QUERY = `
       firstName
       lastName
       isOwner
+      isAdmin
       preferLanguage
       scopes
       roles {
@@ -106,6 +109,7 @@ export const CREATE_USER_MUTATION = `
       firstName
       lastName
       isOwner
+      isAdmin
       preferLanguage
       scopes
       roles {
@@ -131,6 +135,7 @@ export const UPDATE_USER_MUTATION = `
       firstName
       lastName
       isOwner
+      isAdmin
       preferLanguage
       scopes
       roles {
@@ -156,6 +161,7 @@ export const UPDATE_USER_STATUS_MUTATION = `
       firstName
       lastName
       isOwner
+      isAdmin
       preferLanguage
       scopes
       roles {
@@ -185,6 +191,7 @@ export const SIGN_IN_MUTATION = `
         firstName
         lastName
         isOwner
+        isAdmin
         preferLanguage
         scopes
         roles {
@@ -216,6 +223,7 @@ export const UPDATE_ME_MUTATION = `
       firstName
       lastName
       isOwner
+      isAdmin
       preferLanguage
     }
   }

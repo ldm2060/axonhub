@@ -35,9 +35,9 @@ export function useRequestPermissions(options?: { systemOnly?: boolean }): Reque
   }, [selectedProjectId, user?.projects]);
 
   const isProjectOwner = useMemo(() => {
-    if (isOwner) return true;
+    if (isOwner || user?.isAdmin) return true;
     return user?.projects?.some((project) => project.projectID === selectedProjectId && project.isOwner) ?? false;
-  }, [isOwner, selectedProjectId, user?.projects]);
+  }, [isOwner, user, selectedProjectId]);
 
   const permissions = useMemo(() => {
     // 合并系统级和项目级权限

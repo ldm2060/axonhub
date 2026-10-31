@@ -169,6 +169,20 @@ func (_u *UserUpdate) SetNillableIsOwner(v *bool) *UserUpdate {
 	return _u
 }
 
+// SetIsAdmin sets the "is_admin" field.
+func (_u *UserUpdate) SetIsAdmin(v bool) *UserUpdate {
+	_u.mutation.SetIsAdmin(v)
+	return _u
+}
+
+// SetNillableIsAdmin sets the "is_admin" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableIsAdmin(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetIsAdmin(*v)
+	}
+	return _u
+}
+
 // SetScopes sets the "scopes" field.
 func (_u *UserUpdate) SetScopes(v []string) *UserUpdate {
 	_u.mutation.SetScopes(v)
@@ -882,6 +896,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsOwner(); ok {
 		_spec.SetField(user.FieldIsOwner, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsAdmin(); ok {
+		_spec.SetField(user.FieldIsAdmin, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Scopes(); ok {
 		_spec.SetField(user.FieldScopes, field.TypeJSON, value)
@@ -1775,6 +1792,20 @@ func (_u *UserUpdateOne) SetNillableIsOwner(v *bool) *UserUpdateOne {
 	return _u
 }
 
+// SetIsAdmin sets the "is_admin" field.
+func (_u *UserUpdateOne) SetIsAdmin(v bool) *UserUpdateOne {
+	_u.mutation.SetIsAdmin(v)
+	return _u
+}
+
+// SetNillableIsAdmin sets the "is_admin" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableIsAdmin(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetIsAdmin(*v)
+	}
+	return _u
+}
+
 // SetScopes sets the "scopes" field.
 func (_u *UserUpdateOne) SetScopes(v []string) *UserUpdateOne {
 	_u.mutation.SetScopes(v)
@@ -2518,6 +2549,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.IsOwner(); ok {
 		_spec.SetField(user.FieldIsOwner, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.IsAdmin(); ok {
+		_spec.SetField(user.FieldIsAdmin, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Scopes(); ok {
 		_spec.SetField(user.FieldScopes, field.TypeJSON, value)

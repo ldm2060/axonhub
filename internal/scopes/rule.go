@@ -50,6 +50,11 @@ func HasSystemScope(user *ent.User, requiredScope ScopeSlug) bool {
 		return true
 	}
 
+	// Admin identity grants every system scope without listing them.
+	if user.IsAdmin {
+		return true
+	}
+
 	// Check user's direct scopes
 	if hasScope(user.Scopes, string(requiredScope)) {
 		return true

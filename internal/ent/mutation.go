@@ -34645,6 +34645,7 @@ type UserMutation struct {
 	first_name                        *string
 	last_name                         *string
 	is_owner                          *bool
+	is_admin                          *bool
 	scopes                            *[]string
 	appendscopes                      []string
 	email_verified_at                 *time.Time
@@ -35177,6 +35178,42 @@ func (m *UserMutation) OldIsOwner(ctx context.Context) (v bool, err error) {
 // ResetIsOwner resets all changes to the "is_owner" field.
 func (m *UserMutation) ResetIsOwner() {
 	m.is_owner = nil
+}
+
+// SetIsAdmin sets the "is_admin" field.
+func (m *UserMutation) SetIsAdmin(b bool) {
+	m.is_admin = &b
+}
+
+// IsAdmin returns the value of the "is_admin" field in the mutation.
+func (m *UserMutation) IsAdmin() (r bool, exists bool) {
+	v := m.is_admin
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsAdmin returns the old "is_admin" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldIsAdmin(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsAdmin is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsAdmin requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsAdmin: %w", err)
+	}
+	return oldValue.IsAdmin, nil
+}
+
+// ResetIsAdmin resets all changes to the "is_admin" field.
+func (m *UserMutation) ResetIsAdmin() {
+	m.is_admin = nil
 }
 
 // SetScopes sets the "scopes" field.
@@ -36213,7 +36250,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -36243,6 +36280,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.is_owner != nil {
 		fields = append(fields, user.FieldIsOwner)
+	}
+	if m.is_admin != nil {
+		fields = append(fields, user.FieldIsAdmin)
 	}
 	if m.scopes != nil {
 		fields = append(fields, user.FieldScopes)
@@ -36281,6 +36321,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.LastName()
 	case user.FieldIsOwner:
 		return m.IsOwner()
+	case user.FieldIsAdmin:
+		return m.IsAdmin()
 	case user.FieldScopes:
 		return m.Scopes()
 	case user.FieldEmailVerifiedAt:
@@ -36316,6 +36358,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastName(ctx)
 	case user.FieldIsOwner:
 		return m.OldIsOwner(ctx)
+	case user.FieldIsAdmin:
+		return m.OldIsAdmin(ctx)
 	case user.FieldScopes:
 		return m.OldScopes(ctx)
 	case user.FieldEmailVerifiedAt:
@@ -36400,6 +36444,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsOwner(v)
+		return nil
+	case user.FieldIsAdmin:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsAdmin(v)
 		return nil
 	case user.FieldScopes:
 		v, ok := value.([]string)
@@ -36536,6 +36587,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldIsOwner:
 		m.ResetIsOwner()
+		return nil
+	case user.FieldIsAdmin:
+		m.ResetIsAdmin()
 		return nil
 	case user.FieldScopes:
 		m.ResetScopes()

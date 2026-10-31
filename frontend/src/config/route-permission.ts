@@ -271,6 +271,7 @@ export function resolveRouteConfigForPath(pathname: string): {
 
 export interface PathAccessUser {
   isOwner?: boolean;
+  isAdmin?: boolean;
   scopes?: string[];
   projects?: { projectID: string; isOwner: boolean; scopes?: string[]; effectiveScopes?: string[] }[];
 }
@@ -286,7 +287,7 @@ export function hasPathAccess(user: PathAccessUser | null | undefined, pathname:
   }
 
   const project = selectedProjectId ? user?.projects?.find((p) => p.projectID === selectedProjectId) : undefined;
-  const isProjectOwner = user?.isOwner === true || project?.isOwner === true;
+  const isProjectOwner = user?.isOwner === true || user?.isAdmin === true || project?.isOwner === true;
 
   if (routeConfig.requireProjectOwner && !isProjectOwner) {
     return false;
@@ -296,11 +297,18 @@ export function hasPathAccess(user: PathAccessUser | null | undefined, pathname:
     return true;
   }
 
-  if (user?.isOwner) {
+  const scopeLevel = routeConfig.scopeLevel || groupScopeLevel || 'any';
+
+  // system 级路由（管理组）按身份硬门槛：仅 owner / admin 可进入，
+  // 与 scope 解耦——普通用户即使持有对应 scope 也会被守卫拦下。
+  if (scopeLevel === 'system' && user?.isOwner !== true && user?.isAdmin !== true) {
+    return false;
+  }
+
+  if (user?.isOwner || user?.isAdmin) {
     return true;
   }
 
-  const scopeLevel = routeConfig.scopeLevel || groupScopeLevel || 'any';
   if (isProjectOwner && scopeLevel !== 'system') {
     return true;
   }

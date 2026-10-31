@@ -116,9 +116,10 @@ export function useSignIn(getTurnstileToken?: TurnstileTokenGetter, redirect?: s
       }
 
       // Redirect based on user role, skipping routes the user hid from the sidebar.
-      // Owner users go to dashboard, non-owner users go to playground.
-      const baseRedirectPath = data.user.isOwner ? '/' : '/project/playground';
-      const redirectPath = pickFallbackNavUrl(baseRedirectPath, getHiddenNavItems(), data.user.isOwner);
+      // Owner and admin users go to dashboard, other users go to playground.
+      const isPrivileged = data.user.isOwner || !!data.user.isAdmin;
+      const baseRedirectPath = isPrivileged ? '/' : '/project/playground';
+      const redirectPath = pickFallbackNavUrl(baseRedirectPath, getHiddenNavItems(), isPrivileged);
       router.navigate({ to: redirectPath });
     },
     onError: (error: any) => {
@@ -263,7 +264,7 @@ export function useOIDCExchange() {
       }
 
       // Redirect based on user role
-      const redirectPath = data.user.isOwner ? '/' : '/project/playground';
+      const redirectPath = data.user.isOwner || !!data.user.isAdmin ? '/' : '/project/playground';
       router.navigate({ to: redirectPath });
     },
     onError: (error: unknown) => {

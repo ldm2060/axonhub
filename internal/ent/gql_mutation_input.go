@@ -1889,6 +1889,7 @@ type CreateUserInput struct {
 	FirstName              *string
 	LastName               *string
 	IsOwner                *bool
+	IsAdmin                *bool
 	Scopes                 []string
 	EmailVerifiedAt        *time.Time
 	ProjectIDs             []int
@@ -1916,6 +1917,9 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.IsOwner; v != nil {
 		m.SetIsOwner(*v)
+	}
+	if v := i.IsAdmin; v != nil {
+		m.SetIsAdmin(*v)
 	}
 	if v := i.Scopes; v != nil {
 		m.SetScopes(v)
@@ -1955,6 +1959,7 @@ type UpdateUserInput struct {
 	FirstName                    *string
 	LastName                     *string
 	IsOwner                      *bool
+	IsAdmin                      *bool
 	ClearScopes                  bool
 	Scopes                       []string
 	AppendScopes                 []string
@@ -1999,6 +2004,9 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.IsOwner; v != nil {
 		m.SetIsOwner(*v)
+	}
+	if v := i.IsAdmin; v != nil {
+		m.SetIsAdmin(*v)
 	}
 	if i.ClearScopes {
 		m.ClearScopes()

@@ -100,6 +100,11 @@ func IsOwner(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldIsOwner, v))
 }
 
+// IsAdmin applies equality check predicate on the "is_admin" field. It's identical to IsAdminEQ.
+func IsAdmin(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsAdmin, v))
+}
+
 // EmailVerifiedAt applies equality check predicate on the "email_verified_at" field. It's identical to EmailVerifiedAtEQ.
 func EmailVerifiedAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmailVerifiedAt, v))
@@ -583,6 +588,16 @@ func IsOwnerEQ(v bool) predicate.User {
 // IsOwnerNEQ applies the NEQ predicate on the "is_owner" field.
 func IsOwnerNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldIsOwner, v))
+}
+
+// IsAdminEQ applies the EQ predicate on the "is_admin" field.
+func IsAdminEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsAdmin, v))
+}
+
+// IsAdminNEQ applies the NEQ predicate on the "is_admin" field.
+func IsAdminNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIsAdmin, v))
 }
 
 // ScopesIsNil applies the IsNil predicate on the "scopes" field.

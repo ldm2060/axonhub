@@ -2362,6 +2362,10 @@ input CreateUserInput {
   lastName: String
   isOwner: Boolean
   """
+  管理员身份：等同所有 scope，可见管理界面
+  """
+  isAdmin: Boolean
+  """
   User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
   """
   scopes: [String!]
@@ -7740,6 +7744,10 @@ input UpdateUserInput {
   lastName: String
   isOwner: Boolean
   """
+  管理员身份：等同所有 scope，可见管理界面
+  """
+  isAdmin: Boolean
+  """
   User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
   """
   scopes: [String!]
@@ -8656,6 +8664,10 @@ type User implements Node {
   lastName: String!
   isOwner: Boolean!
   """
+  管理员身份：等同所有 scope，可见管理界面
+  """
+  isAdmin: Boolean!
+  """
   User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
   """
   scopes: [String!]
@@ -9362,6 +9374,11 @@ input UserWhereInput {
   """
   isOwner: Boolean
   isOwnerNEQ: Boolean
+  """
+  is_admin field predicates
+  """
+  isAdmin: Boolean
+  isAdminNEQ: Boolean
   """
   email_verified_at field predicates
   """

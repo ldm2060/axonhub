@@ -7157,6 +7157,11 @@ func (_q *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *grap
 				selectedFields = append(selectedFields, user.FieldIsOwner)
 				fieldSeen[user.FieldIsOwner] = struct{}{}
 			}
+		case "isAdmin":
+			if _, ok := fieldSeen[user.FieldIsAdmin]; !ok {
+				selectedFields = append(selectedFields, user.FieldIsAdmin)
+				fieldSeen[user.FieldIsAdmin] = struct{}{}
+			}
 		case "scopes":
 			if _, ok := fieldSeen[user.FieldScopes]; !ok {
 				selectedFields = append(selectedFields, user.FieldScopes)

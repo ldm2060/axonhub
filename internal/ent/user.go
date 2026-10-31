@@ -39,6 +39,8 @@ type User struct {
 	LastName string `json:"last_name,omitempty"`
 	// IsOwner holds the value of the "is_owner" field.
 	IsOwner bool `json:"is_owner,omitempty"`
+	// 管理员身份：等同所有 scope，可见管理界面
+	IsAdmin bool `json:"is_admin,omitempty"`
 	// User scopes in system level: write_channels, read_channels, add_users, read_users, etc.
 	Scopes []string `json:"scopes,omitempty"`
 	// When the user verified their email
@@ -261,7 +263,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldScopes:
 			values[i] = new([]byte)
-		case user.FieldIsOwner:
+		case user.FieldIsOwner, user.FieldIsAdmin:
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldDeletedAt, user.FieldPrivateProjectID:
 			values[i] = new(sql.NullInt64)
@@ -349,6 +351,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_owner", values[i])
 			} else if value.Valid {
 				_m.IsOwner = value.Bool
+			}
+		case user.FieldIsAdmin:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_admin", values[i])
+			} else if value.Valid {
+				_m.IsAdmin = value.Bool
 			}
 		case user.FieldScopes:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -516,6 +524,9 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_owner=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsOwner))
+	builder.WriteString(", ")
+	builder.WriteString("is_admin=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsAdmin))
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))

@@ -254,6 +254,23 @@ func (v *PermissionValidator) CanGrantOwnership(ctx context.Context) error {
 	return nil
 }
 
+// CanGrantAdmin checks if the current user can grant or revoke the admin identity.
+// Rule: Only system owners can change the is_admin flag. is_admin is not a scope,
+// so CanGrantScopes does not cover it, and admins bypass every scope check —
+// this must therefore be gated separately.
+func (v *PermissionValidator) CanGrantAdmin(ctx context.Context) error {
+	currentUser, ok := contexts.GetUser(ctx)
+	if !ok || currentUser == nil {
+		return fmt.Errorf("user not found in context")
+	}
+
+	if !currentUser.IsOwner {
+		return fmt.Errorf("insufficient permissions: only system owners can change the admin identity")
+	}
+
+	return nil
+}
+
 // CanEditRole checks if the current user can edit a role.
 func (v *PermissionValidator) CanEditRole(ctx context.Context, roleID int, projectID *int) error {
 	role, err := authz.RunWithSystemBypass(ctx, "permission-check", func(bypassCtx context.Context) (*ent.Role, error) {

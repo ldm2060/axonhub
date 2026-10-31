@@ -42,6 +42,7 @@ func (User) Fields() []ent.Field {
 		field.String("first_name").Default(""),
 		field.String("last_name").Default(""),
 		field.Bool("is_owner").Default(false),
+		field.Bool("is_admin").Default(false).Comment("管理员身份：等同所有 scope，可见管理界面"),
 		field.Strings("scopes").
 			Comment("User scopes in system level: write_channels, read_channels, add_users, read_users, etc.").
 			Default([]string{}).

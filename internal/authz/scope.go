@@ -75,6 +75,11 @@ func userHasScope(ctx context.Context, requiredScope scopes.ScopeSlug) bool {
 		return true
 	}
 
+	// Admin identity grants every scope without listing them.
+	if user.IsAdmin {
+		return true
+	}
+
 	// Check user's direct scopes
 	if slices.Contains(user.Scopes, string(requiredScope)) {
 		return true

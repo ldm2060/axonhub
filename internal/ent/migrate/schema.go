@@ -1258,6 +1258,7 @@ var (
 		{Name: "first_name", Type: field.TypeString, Default: ""},
 		{Name: "last_name", Type: field.TypeString, Default: ""},
 		{Name: "is_owner", Type: field.TypeBool, Default: false},
+		{Name: "is_admin", Type: field.TypeBool, Default: false},
 		{Name: "scopes", Type: field.TypeJSON, Nullable: true},
 		{Name: "email_verified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "private_project_id", Type: field.TypeInt, Nullable: true},
@@ -1270,7 +1271,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_projects_private_project",
-				Columns:    []*schema.Column{UsersColumns[13]},
+				Columns:    []*schema.Column{UsersColumns[14]},
 				RefColumns: []*schema.Column{ProjectsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

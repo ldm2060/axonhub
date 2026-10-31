@@ -2629,6 +2629,7 @@ type ComplexityRoot struct {
 		EmailVerifiedAt          func(childComplexity int) int
 		FirstName                func(childComplexity int) int
 		ID                       func(childComplexity int) int
+		IsAdmin                  func(childComplexity int) int
 		IsOwner                  func(childComplexity int) int
 		LastName                 func(childComplexity int) int
 		OauthClients             func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.OAuthClientOrder, where *ent.OAuthClientWhereInput) int
@@ -2672,6 +2673,7 @@ type ComplexityRoot struct {
 		FirstName      func(childComplexity int) int
 		HasPassword    func(childComplexity int) int
 		ID             func(childComplexity int) int
+		IsAdmin        func(childComplexity int) int
 		IsOwner        func(childComplexity int) int
 		LastName       func(childComplexity int) int
 		OidcIdentities func(childComplexity int) int
@@ -14935,6 +14937,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.User.ID(childComplexity), true
+	case "User.isAdmin":
+		if e.complexity.User.IsAdmin == nil {
+			break
+		}
+
+		return e.complexity.User.IsAdmin(childComplexity), true
 	case "User.isOwner":
 		if e.complexity.User.IsOwner == nil {
 			break
@@ -15145,6 +15153,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.UserInfo.ID(childComplexity), true
+	case "UserInfo.isAdmin":
+		if e.complexity.UserInfo.IsAdmin == nil {
+			break
+		}
+
+		return e.complexity.UserInfo.IsAdmin(childComplexity), true
 	case "UserInfo.isOwner":
 		if e.complexity.UserInfo.IsOwner == nil {
 			break
@@ -20759,6 +20773,8 @@ func (ec *executionContext) fieldContext_APIKey_user(_ context.Context, field gr
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -26445,6 +26461,8 @@ func (ec *executionContext) fieldContext_Channel_owner(_ context.Context, field 
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -29786,6 +29804,8 @@ func (ec *executionContext) fieldContext_ChannelOverrideTemplate_user(_ context.
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -37464,6 +37484,8 @@ func (ec *executionContext) fieldContext_EmailToken_user(_ context.Context, fiel
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -39222,6 +39244,8 @@ func (ec *executionContext) fieldContext_InitializeSystemPayload_user(_ context.
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -39836,6 +39860,8 @@ func (ec *executionContext) fieldContext_Model_owner(_ context.Context, field gr
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -44674,6 +44700,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -44773,6 +44801,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -44872,6 +44902,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUserStatus(ctx context.C
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -46764,6 +46796,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMe(ctx context.Context, 
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -51682,6 +51716,8 @@ func (ec *executionContext) fieldContext_OAuthClient_user(_ context.Context, fie
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -52475,6 +52511,8 @@ func (ec *executionContext) fieldContext_OIDCIdentity_user(_ context.Context, fi
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -58079,6 +58117,8 @@ func (ec *executionContext) fieldContext_PublishRequest_requester(_ context.Cont
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -58166,6 +58206,8 @@ func (ec *executionContext) fieldContext_PublishRequest_reviewer(_ context.Conte
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -60983,6 +61025,8 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_UserInfo_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_UserInfo_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_UserInfo_isAdmin(ctx, field)
 			case "preferLanguage":
 				return ec.fieldContext_UserInfo_preferLanguage(ctx, field)
 			case "avatar":
@@ -70613,6 +70657,8 @@ func (ec *executionContext) fieldContext_SignInPayload_user(_ context.Context, f
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -80643,6 +80689,8 @@ func (ec *executionContext) fieldContext_UsageMonitorChannel_owner(_ context.Con
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -81377,6 +81425,35 @@ func (ec *executionContext) _User_isOwner(ctx context.Context, field graphql.Col
 }
 
 func (ec *executionContext) fieldContext_User_isOwner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_isAdmin(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_isAdmin,
+		func(ctx context.Context) (any, error) {
+			return obj.IsAdmin, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_isAdmin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -82600,6 +82677,8 @@ func (ec *executionContext) fieldContext_UserEdge_node(_ context.Context, field 
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -82807,6 +82886,35 @@ func (ec *executionContext) _UserInfo_isOwner(ctx context.Context, field graphql
 }
 
 func (ec *executionContext) fieldContext_UserInfo_isOwner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserInfo_isAdmin(ctx context.Context, field graphql.CollectedField, obj *objects.UserInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_UserInfo_isAdmin,
+		func(ctx context.Context) (any, error) {
+			return obj.IsAdmin, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_UserInfo_isAdmin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserInfo",
 		Field:      field,
@@ -83295,6 +83403,8 @@ func (ec *executionContext) fieldContext_UserProject_user(_ context.Context, fie
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -83741,6 +83851,8 @@ func (ec *executionContext) fieldContext_UserRole_user(_ context.Context, field 
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -84517,6 +84629,8 @@ func (ec *executionContext) fieldContext_UserUsageStats_user(_ context.Context, 
 				return ec.fieldContext_User_lastName(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_User_isOwner(ctx, field)
+			case "isAdmin":
+				return ec.fieldContext_User_isAdmin(ctx, field)
 			case "scopes":
 				return ec.fieldContext_User_scopes(ctx, field)
 			case "emailVerifiedAt":
@@ -96340,7 +96454,7 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "isOwner", "scopes", "emailVerifiedAt", "projectIDs", "roleIDs", "emailTokenIDs", "userUsageStatIDs", "usageMonitorChannelIDs"}
+	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "isOwner", "isAdmin", "scopes", "emailVerifiedAt", "projectIDs", "roleIDs", "emailTokenIDs", "userUsageStatIDs", "usageMonitorChannelIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -96396,6 +96510,13 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.IsOwner = data
+		case "isAdmin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdmin"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsAdmin = data
 		case "scopes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopes"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -115683,7 +115804,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "isOwner", "scopes", "appendScopes", "clearScopes", "emailVerifiedAt", "clearEmailVerifiedAt", "addProjectIDs", "removeProjectIDs", "clearProjects", "addRoleIDs", "removeRoleIDs", "clearRoles", "addEmailTokenIDs", "removeEmailTokenIDs", "clearEmailTokens", "addUserUsageStatIDs", "removeUserUsageStatIDs", "clearUserUsageStats", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
+	fieldsInOrder := [...]string{"email", "status", "preferLanguage", "password", "firstName", "lastName", "isOwner", "isAdmin", "scopes", "appendScopes", "clearScopes", "emailVerifiedAt", "clearEmailVerifiedAt", "addProjectIDs", "removeProjectIDs", "clearProjects", "addRoleIDs", "removeRoleIDs", "clearRoles", "addEmailTokenIDs", "removeEmailTokenIDs", "clearEmailTokens", "addUserUsageStatIDs", "removeUserUsageStatIDs", "clearUserUsageStats", "addUsageMonitorChannelIDs", "removeUsageMonitorChannelIDs", "clearUsageMonitorChannels"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -115739,6 +115860,13 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.IsOwner = data
+		case "isAdmin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdmin"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsAdmin = data
 		case "scopes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scopes"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -120432,7 +120560,7 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "isOwner", "isOwnerNEQ", "emailVerifiedAt", "emailVerifiedAtNEQ", "emailVerifiedAtIn", "emailVerifiedAtNotIn", "emailVerifiedAtGT", "emailVerifiedAtGTE", "emailVerifiedAtLT", "emailVerifiedAtLTE", "emailVerifiedAtIsNil", "emailVerifiedAtNotNil", "privateProjectID", "privateProjectIDNEQ", "privateProjectIDIn", "privateProjectIDNotIn", "privateProjectIDIsNil", "privateProjectIDNotNil", "hasProjects", "hasProjectsWith", "hasOwnedChannels", "hasOwnedChannelsWith", "hasOwnedModels", "hasOwnedModelsWith", "hasPublishRequests", "hasPublishRequestsWith", "hasReviewedRequests", "hasReviewedRequestsWith", "hasPrivateProject", "hasPrivateProjectWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasEmailTokens", "hasEmailTokensWith", "hasOauthClients", "hasOauthClientsWith", "hasUserUsageStats", "hasUserUsageStatsWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "email", "emailNEQ", "emailIn", "emailNotIn", "emailGT", "emailGTE", "emailLT", "emailLTE", "emailContains", "emailHasPrefix", "emailHasSuffix", "emailEqualFold", "emailContainsFold", "status", "statusNEQ", "statusIn", "statusNotIn", "preferLanguage", "preferLanguageNEQ", "preferLanguageIn", "preferLanguageNotIn", "preferLanguageGT", "preferLanguageGTE", "preferLanguageLT", "preferLanguageLTE", "preferLanguageContains", "preferLanguageHasPrefix", "preferLanguageHasSuffix", "preferLanguageEqualFold", "preferLanguageContainsFold", "firstName", "firstNameNEQ", "firstNameIn", "firstNameNotIn", "firstNameGT", "firstNameGTE", "firstNameLT", "firstNameLTE", "firstNameContains", "firstNameHasPrefix", "firstNameHasSuffix", "firstNameEqualFold", "firstNameContainsFold", "lastName", "lastNameNEQ", "lastNameIn", "lastNameNotIn", "lastNameGT", "lastNameGTE", "lastNameLT", "lastNameLTE", "lastNameContains", "lastNameHasPrefix", "lastNameHasSuffix", "lastNameEqualFold", "lastNameContainsFold", "isOwner", "isOwnerNEQ", "isAdmin", "isAdminNEQ", "emailVerifiedAt", "emailVerifiedAtNEQ", "emailVerifiedAtIn", "emailVerifiedAtNotIn", "emailVerifiedAtGT", "emailVerifiedAtGTE", "emailVerifiedAtLT", "emailVerifiedAtLTE", "emailVerifiedAtIsNil", "emailVerifiedAtNotNil", "privateProjectID", "privateProjectIDNEQ", "privateProjectIDIn", "privateProjectIDNotIn", "privateProjectIDIsNil", "privateProjectIDNotNil", "hasProjects", "hasProjectsWith", "hasOwnedChannels", "hasOwnedChannelsWith", "hasOwnedModels", "hasOwnedModelsWith", "hasPublishRequests", "hasPublishRequestsWith", "hasReviewedRequests", "hasReviewedRequestsWith", "hasPrivateProject", "hasPrivateProjectWith", "hasAPIKeys", "hasAPIKeysWith", "hasRoles", "hasRolesWith", "hasChannelOverrideTemplates", "hasChannelOverrideTemplatesWith", "hasOidcIdentities", "hasOidcIdentitiesWith", "hasEmailTokens", "hasEmailTokensWith", "hasOauthClients", "hasOauthClientsWith", "hasUserUsageStats", "hasUserUsageStatsWith", "hasUsageMonitorChannels", "hasUsageMonitorChannelsWith", "hasProjectUsers", "hasProjectUsersWith", "hasUserRoles", "hasUserRolesWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -121066,6 +121194,20 @@ func (ec *executionContext) unmarshalInputUserWhereInput(ctx context.Context, ob
 				return it, err
 			}
 			it.IsOwnerNEQ = data
+		case "isAdmin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdmin"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsAdmin = data
+		case "isAdminNEQ":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAdminNEQ"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsAdminNEQ = data
 		case "emailVerifiedAt":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("emailVerifiedAt"))
 			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
@@ -146861,6 +147003,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "isAdmin":
+			out.Values[i] = ec._User_isAdmin(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "scopes":
 			out.Values[i] = ec._User_scopes(ctx, field, obj)
 		case "emailVerifiedAt":
@@ -147626,6 +147773,11 @@ func (ec *executionContext) _UserInfo(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "isOwner":
 			out.Values[i] = ec._UserInfo_isOwner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "isAdmin":
+			out.Values[i] = ec._UserInfo_isAdmin(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
