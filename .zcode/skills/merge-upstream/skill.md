@@ -1,11 +1,11 @@
 ---
 name: merge-upstream
-description: Merge changes from upstream (looplj/axonhub) into our fork (ldm2060/axonhub). Use whenever merging, syncing, pulling, rebasing, or integrating upstream changes — including resolving merge conflicts from `git merge remote/unstable`, cherry-picking upstream commits, or synchronizing with the upstream repo. Covers four fork-specific hazards: (1) fields we've locally modified that upstream also touches, (2) upstream adding DB fields/migrations that must be reconciled with our actual schema and release version, (3) upstream reimplementing features we already shipped, (4) post-merge upgrade verification on a real local deploy. Trigger on any mention of "upstream", "merge upstream", "sync upstream", "拉取上游", "合并上游", "resolve conflicts from upstream", or when a merge from `remote/` is in progress or about to be committed.
+description: Merge changes from upstream (looplj/axonhub) into our fork (ldm2060/axonhub). Use whenever merging, syncing, pulling, rebasing, or integrating upstream changes — including resolving merge conflicts from `git merge remote/unstable`, cherry-picking upstream commits, or synchronizing with the upstream repo. Covers four fork-specific hazards: (1) fields we've locally modified that upstream also touches, (2) upstream adding DB fields/migrations that must be reconciled with our actual schema and release version, (3) upstream reimplementing features we already shipped, (4) post-merge upgrade verification on a real local deploy — plus a mechanical fork adaptation checklist (module path, Docker vite outDir, gqlgen helper files, OwnerRule, fork-only fields/i18n) to run after conflict resolution. Trigger on any mention of "upstream", "merge upstream", "sync upstream", "拉取上游", "合并上游", "resolve conflicts from upstream", or when a merge from `remote/` is in progress or about to be committed.
 ---
 
 # Merge Upstream Changes
 
-This fork (`ldm2060/axonhub`, remote `origin`) tracks upstream (`looplj/axonhub`, remote `remote`). Upstream merges are routine but hazardous because we have divergent schema, migrations, and features. This skill walks the four hazards in order, then verifies on a real deploy.
+This fork (`ldm2060/axonhub`, remote `origin`) tracks upstream (`looplj/axonhub`, remote `remote`). Upstream merges are routine but hazardous because we have divergent schema, migrations, and features. This skill walks the four hazards in order, runs the fork adaptation checklist over the merged tree, then verifies on a real deploy.
 
 ## Setup before resolving
 
@@ -78,6 +78,25 @@ For each such conflict:
 - Preserve our module path `github.com/ldm2060/axonhub` everywhere (upstream uses `github.com/looplj/axonhub`). Conflicts in `go.mod`, `fx_module.go`, and imports that touch the module path must keep `ldm2060`.
 
 **Why:** these are judgment calls with no mechanical answer. The cost of a wrong call is a regression that survives until the next merge, so prefer the choice that minimizes downstream cascade over the choice that looks cleanest in isolation.
+
+## Fork adaptation checklist (run between Hazard 3 and Hazard 4)
+
+After all conflicts are resolved — but BEFORE building, testing, or committing — mechanically check every item below against the merged tree. These fork-specific adaptations have all been silently dropped by auto-merges that took upstream's side without raising a conflict; the damage only surfaced later at the failing step (docker build, `make generate`, runtime). Grep the files; do not trust conflict markers to have caught them.
+
+1. **Module path is ours everywhere.** Upstream's NEW files arrive with their path baked in.
+   `grep -rl 'github.com/looplj/axonhub' --include='*.go' --include='*.yml' --include='*.mod' . | grep -v .git` must be empty (rewrite to `github.com/ldm2060/axonhub`).
+
+2. **Dockerfile keeps the vite outDir override.** Our `frontend/vite.config.ts` points `outDir` at `../internal/server/static/dist` (the Go embed dir — the exe embeds the frontend, so local builds must land there). Upstream's plain `pnpm build` step puts assets in the wrong place inside the container and the image build dies with `"/build/dist": not found` (v0.2.27 incident). The Dockerfile frontend-builder stage must build with:
+   `RUN pnpm exec vite build --emptyOutDir --outDir /build/dist`
+   Keep upstream's node/corepack toolchain if the release log shows it working — only the outDir override is fork-specific.
+
+3. **No non-resolver helpers inside `*.resolvers.go`.** gqlgen regenerates those files and silently deletes any function that isn't a schema resolver. The dashboard caching inner implementations live in `dashboard_channel_stats.go`, `dashboard_cache.go`, `dashboard_usage_aggregates.go`. If a merge (or an over-eager restore) puts helpers back into a `.resolvers.go` file, move them to a non-resolver file BEFORE running `make generate` — see [[gqlgen-strips-resolvers-file-helpers]].
+
+4. **`OwnerRule()` stays first in Ent policies.** Our entity policies begin with `scopes.OwnerRule()` (owner users) followed by upstream's project-scoped API-key rules — convention visible in `internal/ent/schema/api_key.go`. When upstream rewrites a policy we've extended, resolve to the hybrid (OwnerRule + upstream's rules), never a bare upstream policy, and never the pre-upstream fork rules alone (they predate the service-account-key scope fix).
+
+5. **Fork-only fields survive upstream rewrites of shared files.** Channel settings carry both `enableSameChannelRetry` (ours) and upstream additions like `responseTimeout` — both-sides-kept, in schema, GraphQL queries (`frontend/src/features/channels/data/channels.ts`), and the settings dialog. Same for quota monitor bindings, channel sharing/visibility, and usage-stats fields: when upstream rewrites a file we extended, keep both feature sets.
+
+6. **Fork i18n keys survive locale merges.** `frontend/src/locales/**` carries fork-only keys (e.g. `auth.signIn.links.signUp`) and wired-up UI that depends on them. After resolving locale conflicts, spot-check that fork keys are still present and still referenced by components (a dropped key fails silently — the UI just loses the feature, as happened with the sign-up link).
 
 ## Hazard 4 — Verify on a real local deploy before declaring done
 
