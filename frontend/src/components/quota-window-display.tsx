@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- shared quota display primitives (constants, hooks and components used together) */
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

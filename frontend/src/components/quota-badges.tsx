@@ -30,7 +30,6 @@ import { getChannelQuotaRoutingIndicator } from '@/features/channels/utils/quota
 import {
   useProviderQuotaStatuses,
   ProviderQuotaChannel,
-  ProviderQuotaLimit,
   ProviderNanoGPTQuotaData,
   NanoGPTQuotaWindow,
   ProviderSyntheticQuotaData,
@@ -53,7 +52,7 @@ import {
   resetChannelQuotaNow,
   checkProviderQuotas,
 } from '@/features/system/data/quotas';
-import { useGeneralSettings, useQuotaRoutingSettings, type QuotaRoutingMode } from '@/features/system/data/system';
+import { useQuotaRoutingSettings, type QuotaRoutingMode } from '@/features/system/data/system';
 import { capitalizeZenmuxTier, getZenmuxMonthlyQuotaUSD, getZenmuxUsagePercentage } from '@/features/system/data/zenmux-quota-display';
 import { SharedFieldRenderer } from '@/features/usage-monitor/components/shared-field-renderer';
 import type { UsageMonitorChannel } from '@/features/usage-monitor/data/schema';
