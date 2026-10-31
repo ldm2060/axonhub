@@ -32161,6 +32161,7 @@ type UsageMonitorChannelMutation struct {
 	appendvariables           []map[string]interface{}
 	display_fields            *[]map[string]interface{}
 	appenddisplay_fields      []map[string]interface{}
+	estimate_config           *map[string]interface{}
 	last_poll_at              *time.Time
 	last_poll_data            *map[string]interface{}
 	last_poll_error           *string
@@ -33027,6 +33028,55 @@ func (m *UsageMonitorChannelMutation) ResetDisplayFields() {
 	delete(m.clearedFields, usagemonitorchannel.FieldDisplayFields)
 }
 
+// SetEstimateConfig sets the "estimate_config" field.
+func (m *UsageMonitorChannelMutation) SetEstimateConfig(value map[string]interface{}) {
+	m.estimate_config = &value
+}
+
+// EstimateConfig returns the value of the "estimate_config" field in the mutation.
+func (m *UsageMonitorChannelMutation) EstimateConfig() (r map[string]interface{}, exists bool) {
+	v := m.estimate_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEstimateConfig returns the old "estimate_config" field's value of the UsageMonitorChannel entity.
+// If the UsageMonitorChannel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UsageMonitorChannelMutation) OldEstimateConfig(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEstimateConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEstimateConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEstimateConfig: %w", err)
+	}
+	return oldValue.EstimateConfig, nil
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (m *UsageMonitorChannelMutation) ClearEstimateConfig() {
+	m.estimate_config = nil
+	m.clearedFields[usagemonitorchannel.FieldEstimateConfig] = struct{}{}
+}
+
+// EstimateConfigCleared returns if the "estimate_config" field was cleared in this mutation.
+func (m *UsageMonitorChannelMutation) EstimateConfigCleared() bool {
+	_, ok := m.clearedFields[usagemonitorchannel.FieldEstimateConfig]
+	return ok
+}
+
+// ResetEstimateConfig resets all changes to the "estimate_config" field.
+func (m *UsageMonitorChannelMutation) ResetEstimateConfig() {
+	m.estimate_config = nil
+	delete(m.clearedFields, usagemonitorchannel.FieldEstimateConfig)
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (m *UsageMonitorChannelMutation) SetLastPollAt(t time.Time) {
 	m.last_poll_at = &t
@@ -33752,7 +33802,7 @@ func (m *UsageMonitorChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UsageMonitorChannelMutation) Fields() []string {
-	fields := make([]string, 0, 27)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldCreatedAt)
 	}
@@ -33800,6 +33850,9 @@ func (m *UsageMonitorChannelMutation) Fields() []string {
 	}
 	if m.display_fields != nil {
 		fields = append(fields, usagemonitorchannel.FieldDisplayFields)
+	}
+	if m.estimate_config != nil {
+		fields = append(fields, usagemonitorchannel.FieldEstimateConfig)
 	}
 	if m.last_poll_at != nil {
 		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
@@ -33874,6 +33927,8 @@ func (m *UsageMonitorChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.Variables()
 	case usagemonitorchannel.FieldDisplayFields:
 		return m.DisplayFields()
+	case usagemonitorchannel.FieldEstimateConfig:
+		return m.EstimateConfig()
 	case usagemonitorchannel.FieldLastPollAt:
 		return m.LastPollAt()
 	case usagemonitorchannel.FieldLastPollData:
@@ -33937,6 +33992,8 @@ func (m *UsageMonitorChannelMutation) OldField(ctx context.Context, name string)
 		return m.OldVariables(ctx)
 	case usagemonitorchannel.FieldDisplayFields:
 		return m.OldDisplayFields(ctx)
+	case usagemonitorchannel.FieldEstimateConfig:
+		return m.OldEstimateConfig(ctx)
 	case usagemonitorchannel.FieldLastPollAt:
 		return m.OldLastPollAt(ctx)
 	case usagemonitorchannel.FieldLastPollData:
@@ -34079,6 +34136,13 @@ func (m *UsageMonitorChannelMutation) SetField(name string, value ent.Value) err
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDisplayFields(v)
+		return nil
+	case usagemonitorchannel.FieldEstimateConfig:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEstimateConfig(v)
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		v, ok := value.(time.Time)
@@ -34256,6 +34320,9 @@ func (m *UsageMonitorChannelMutation) ClearedFields() []string {
 	if m.FieldCleared(usagemonitorchannel.FieldDisplayFields) {
 		fields = append(fields, usagemonitorchannel.FieldDisplayFields)
 	}
+	if m.FieldCleared(usagemonitorchannel.FieldEstimateConfig) {
+		fields = append(fields, usagemonitorchannel.FieldEstimateConfig)
+	}
 	if m.FieldCleared(usagemonitorchannel.FieldLastPollAt) {
 		fields = append(fields, usagemonitorchannel.FieldLastPollAt)
 	}
@@ -34314,6 +34381,9 @@ func (m *UsageMonitorChannelMutation) ClearField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldDisplayFields:
 		m.ClearDisplayFields()
+		return nil
+	case usagemonitorchannel.FieldEstimateConfig:
+		m.ClearEstimateConfig()
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		m.ClearLastPollAt()
@@ -34397,6 +34467,9 @@ func (m *UsageMonitorChannelMutation) ResetField(name string) error {
 		return nil
 	case usagemonitorchannel.FieldDisplayFields:
 		m.ResetDisplayFields()
+		return nil
+	case usagemonitorchannel.FieldEstimateConfig:
+		m.ResetEstimateConfig()
 		return nil
 	case usagemonitorchannel.FieldLastPollAt:
 		m.ResetLastPollAt()

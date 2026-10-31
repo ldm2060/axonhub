@@ -50,6 +50,8 @@ const (
 	FieldVariables = "variables"
 	// FieldDisplayFields holds the string denoting the display_fields field in the database.
 	FieldDisplayFields = "display_fields"
+	// FieldEstimateConfig holds the string denoting the estimate_config field in the database.
+	FieldEstimateConfig = "estimate_config"
 	// FieldLastPollAt holds the string denoting the last_poll_at field in the database.
 	FieldLastPollAt = "last_poll_at"
 	// FieldLastPollData holds the string denoting the last_poll_data field in the database.
@@ -122,6 +124,7 @@ var Columns = []string{
 	FieldFields,
 	FieldVariables,
 	FieldDisplayFields,
+	FieldEstimateConfig,
 	FieldLastPollAt,
 	FieldLastPollData,
 	FieldLastPollError,

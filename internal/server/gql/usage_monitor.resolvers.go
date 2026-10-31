@@ -264,6 +264,27 @@ func (r *usageMonitorChannelResolver) ParsedData(ctx context.Context, obj *ent.U
 	return fields, nil
 }
 
+// EstimateConfig is the resolver for the estimateConfig field.
+func (r *usageMonitorChannelResolver) EstimateConfig(ctx context.Context, obj *ent.UsageMonitorChannel) (*EstimateConfig, error) {
+	cfg, err := usage_monitor.EstimateConfigFromMap(obj.EstimateConfig)
+	if err != nil {
+		return nil, err
+	}
+	if cfg == nil {
+		return nil, nil
+	}
+	var resetFieldKey *string
+	if cfg.ResetFieldKey != "" {
+		resetFieldKey = &cfg.ResetFieldKey
+	}
+	return &EstimateConfig{
+		FieldKey:      cfg.FieldKey,
+		Remaining:     cfg.Remaining,
+		ResetFieldKey: resetFieldKey,
+		Window:        cfg.Window,
+	}, nil
+}
+
 // APIKey is the resolver for the apiKey field.
 func (r *usageMonitorChannelResolver) APIKey(ctx context.Context, obj *ent.UsageMonitorChannel) (*string, error) {
 	if obj.APIKey == "" {
@@ -411,6 +432,14 @@ func (r *createUsageMonitorChannelInputResolver) DisplayFields(ctx context.Conte
 	return nil
 }
 
+// EstimateConfig is the resolver for the estimateConfig field.
+func (r *createUsageMonitorChannelInputResolver) EstimateConfig(ctx context.Context, obj *usage_monitor.CreateUsageMonitorChannelInput, data *EstimateConfigInput) error {
+	if data != nil {
+		obj.EstimateConfig = estimateConfigFromInput(data)
+	}
+	return nil
+}
+
 // APIMethod is the resolver for the apiMethod field.
 func (r *testUsageMonitorChannelInputResolver) APIMethod(ctx context.Context, obj *usage_monitor.TestUsageMonitorChannelInput, data usagemonitorchannel.APIMethod) error {
 	obj.ApiMethod = string(data)
@@ -513,6 +542,23 @@ func (r *updateUsageMonitorChannelInputResolver) Status(ctx context.Context, obj
 	if data != nil {
 		str := string(*data)
 		obj.Status = &str
+	}
+	return nil
+}
+
+// ChannelID is the resolver for the channelId field.
+func (r *updateUsageMonitorChannelInputResolver) ChannelID(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *objects.GUID) error {
+	if data != nil {
+		str := fmt.Sprintf("%d", data.ID)
+		obj.ChannelID = &str
+	}
+	return nil
+}
+
+// EstimateConfig is the resolver for the estimateConfig field.
+func (r *updateUsageMonitorChannelInputResolver) EstimateConfig(ctx context.Context, obj *usage_monitor.UpdateUsageMonitorChannelInput, data *EstimateConfigInput) error {
+	if data != nil {
+		obj.EstimateConfig = estimateConfigFromInput(data)
 	}
 	return nil
 }

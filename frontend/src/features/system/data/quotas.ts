@@ -541,9 +541,11 @@ function parseQuotaLimit(entry: unknown): ProviderQuotaLimit | undefined {
 
   const limit = entry as Record<string, unknown>;
   const type = requiredString(limit.type);
-  const window = requiredString(limit.window);
+  // window is optional: monitor-derived limits (custom/generic templates)
+  // carry a single windowless ratio the cards render as a generic usage bar.
+  const window = optionalString(limit.window);
   const account = optionalString(limit.account);
-  if (!type || !window || !isNormalizedQuotaStatus(limit.status)) return undefined;
+  if (!type || !isNormalizedQuotaStatus(limit.status)) return undefined;
 
   const usageRatio = optionalNumber(limit.usageRatio);
   if (usageRatio === undefined || usageRatio < 0 || usageRatio > 1) return undefined;

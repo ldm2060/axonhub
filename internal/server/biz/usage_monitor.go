@@ -667,6 +667,20 @@ func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_m
 		create.SetChannelID(channelID)
 	}
 
+	// Period quota estimate config (custom monitors): validate against the
+	// display fields being stored so a stale field key fails fast instead of
+	// silently estimating nothing at poll time.
+	if input.EstimateConfig != nil {
+		keys := make([]string, 0, len(input.DisplayFields))
+		for _, df := range input.DisplayFields {
+			keys = append(keys, df.Key)
+		}
+		if err := usage_monitor.ValidateEstimateConfig(*input.EstimateConfig, keys); err != nil {
+			return nil, err
+		}
+		create.SetEstimateConfig(input.EstimateConfig.ToMap())
+	}
+
 	if input.ApiBody != nil {
 		create.SetAPIBody(*input.ApiBody)
 	}
@@ -803,6 +817,43 @@ func (svc *UsageMonitorService) UpdateChannel(ctx context.Context, id int, input
 	} else if input.Fields != nil {
 		// Legacy path: update fields column directly if only fields provided
 		update.SetFields(convertFieldConfigsToMapSlice(*input.Fields))
+	}
+
+	if input.ClearChannelID != nil && *input.ClearChannelID {
+		// Unbind the estimate attribution channel; takes precedence over a
+		// concurrent channelId so a client can rebind in one round trip.
+		update.ClearChannelID()
+	} else if input.ChannelID != nil {
+		// Custom monitors may (re)bind the channel whose usage logs price
+		// their period estimate.
+		channelID, err := strconv.Atoi(*input.ChannelID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid channelId: %w", err)
+		}
+		update.SetChannelID(channelID)
+	}
+
+	if input.EstimateConfig != nil {
+		// An empty fieldKey is the documented "clear" signal; otherwise
+		// validate against the display fields effective after this update.
+		if input.EstimateConfig.FieldKey == "" {
+			update.ClearEstimateConfig()
+		} else {
+			displayFieldMaps := existing.DisplayFields
+			if input.DisplayFields != nil {
+				displayFieldMaps = convertDisplayFieldsToMapSlice(*input.DisplayFields)
+			}
+			keys := make([]string, 0, len(displayFieldMaps))
+			for _, m := range displayFieldMaps {
+				if k, ok := m["key"].(string); ok {
+					keys = append(keys, k)
+				}
+			}
+			if err := usage_monitor.ValidateEstimateConfig(*input.EstimateConfig, keys); err != nil {
+				return nil, err
+			}
+			update.SetEstimateConfig(input.EstimateConfig.ToMap())
+		}
 	}
 
 	if input.Status != nil {
@@ -1072,6 +1123,19 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 	var nextResetAt *time.Time
 
 	derived := usage_monitor.DeriveQuotaStatus(string(ch.ProviderType), pollData.Fields)
+
+	// A custom monitor's estimate config replaces the generic max-ratio limit
+	// with the user-selected usage field so the period estimate prices the
+	// window the user actually meant. Missing fields fall back to the generic
+	// derivation.
+	if cfg, err := usage_monitor.EstimateConfigFromMap(ch.EstimateConfig); err != nil {
+		log.Warn(ctx, "Failed to parse estimate config for usage monitor",
+			log.Int("monitor_id", ch.ID),
+			log.Cause(err))
+	} else if cfg != nil {
+		usage_monitor.ApplyEstimateConfig(pollData.Fields, *cfg, &derived)
+	}
+
 	quotaStatus = derived.Status
 	quotaReady = &derived.Ready
 	nextResetAt = derived.NextResetAt

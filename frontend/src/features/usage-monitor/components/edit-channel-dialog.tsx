@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useQueryChannels } from '@/features/channels/data/channels';
 import { antigravityOAuthExchange, antigravityOAuthStart } from '@/features/channels/data/antigravity';
 import { useOAuthFlow } from '@/features/channels/hooks/use-oauth-flow';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
@@ -16,6 +17,7 @@ import type { Variable, DisplayField, VariableInput, DisplayFieldInput } from '.
 import { useQuotaMonitorTemplates } from '../data/templates';
 import { useUpdateUsageMonitorChannel } from '../data/usage-monitor';
 import { DisplayFieldForm } from './display-field-form';
+import { EstimateConfigSection, type EstimateConfigFormValue } from './estimate-config-section';
 import { TestConnection } from './test-connection';
 import { VariableForm } from './variable-form';
 
@@ -44,7 +46,11 @@ export function EditChannelDialog() {
   const [pollIntervalMin, setPollIntervalMin] = useState(5);
   const [variables, setVariables] = useState<Variable[]>([]);
   const [displayFields, setDisplayFields] = useState<DisplayField[]>([]);
+  const [channelId, setChannelId] = useState('');
+  const [estimateConfig, setEstimateConfig] = useState<EstimateConfigFormValue | null>(null);
   const [headersError, setHeadersError] = useState('');
+
+  const channelsQuery = useQueryChannels({ first: 200, where: { statusIn: ['enabled'] } });
 
   // API key state for template channels
   const [apiKey, setApiKey] = useState('');
@@ -69,6 +75,9 @@ export function EditChannelDialog() {
     setPollIntervalMin(Math.round((currentChannel.pollInterval || 300) / 60));
     setVariables(currentChannel.variables ?? []);
     setDisplayFields(currentChannel.displayFields ?? []);
+    setChannelId(currentChannel.channel?.id ?? '');
+    const ec = currentChannel.estimateConfig;
+    setEstimateConfig(ec ? { fieldKey: ec.fieldKey, remaining: ec.remaining ?? false, resetFieldKey: ec.resetFieldKey ?? '', window: ec.window } : null);
     setHeadersError('');
     // For template channels, pre-fill with masked API key
     setApiKey(currentChannel.apiKey ?? MASKED_API_KEY);
@@ -168,6 +177,20 @@ export function EditChannelDialog() {
           group: df.group ?? undefined,
           groupLabelRef: df.groupLabelRef ?? undefined,
         }));
+        // The estimate config is sent when complete; clearing a previously
+        // configured estimate sends the backend's documented empty-fieldKey
+        // clear signal. An unbound attribution channel sends the explicit
+        // clearChannelId flag since the GUID scalar rejects empty strings.
+        const estimateInput = estimateConfig?.fieldKey && estimateConfig.window
+          ? {
+              fieldKey: estimateConfig.fieldKey,
+              remaining: estimateConfig.remaining,
+              resetFieldKey: estimateConfig.resetFieldKey || undefined,
+              window: estimateConfig.window,
+            }
+          : currentChannel.estimateConfig
+            ? { fieldKey: '', window: '' }
+            : undefined;
         await updateMutation.mutateAsync({
           id: currentChannel.id,
           input: {
@@ -179,6 +202,9 @@ export function EditChannelDialog() {
             pollInterval: pollIntervalMin * 60,
             variables: variableInputs,
             displayFields: displayFieldInputs,
+            channelId: channelId || undefined,
+            clearChannelId: channelId ? undefined : true,
+            estimateConfig: estimateInput,
           },
         });
       }
@@ -188,7 +214,12 @@ export function EditChannelDialog() {
     }
   }
 
-  const canSubmit = isTemplate ? name.trim() : isBuiltin ? name.trim() : name.trim() && apiUrl.trim() && !headersError;
+  const canSubmit = isTemplate
+    ? name.trim()
+    : isBuiltin
+      ? name.trim()
+      : // A chosen usage field needs its window before the estimate config is complete.
+        name.trim() && apiUrl.trim() && !headersError && !(estimateConfig?.fieldKey && !estimateConfig.window);
 
   return (
     <Dialog
@@ -378,6 +409,18 @@ export function EditChannelDialog() {
               {isTemplate && <p className='text-muted-foreground text-xs'>{t('usageMonitor.templateDisplayFieldsHint')}</p>}
               <DisplayFieldForm displayFields={displayFields} variables={variables} onChange={setDisplayFields} />
             </div>
+
+            {/* Period quota estimate config (custom monitors only) */}
+            {!isTemplate && !isBuiltin && (
+              <EstimateConfigSection
+                displayFields={displayFields}
+                value={estimateConfig}
+                onChange={setEstimateConfig}
+                channels={channelsQuery.data?.edges}
+                channelId={channelId}
+                onChannelIdChange={setChannelId}
+              />
+            )}
 
             {/* Test Connection */}
             <TestConnection

@@ -48,6 +48,14 @@ export const parsedFieldSchema = z.object({
   groupLabel: z.string().optional().nullable(),
 });
 
+// Which parsed values drive a custom monitor's period quota estimate.
+export const estimateConfigSchema = z.object({
+  fieldKey: z.string(),
+  remaining: z.boolean().optional().nullable(),
+  resetFieldKey: z.string().nullable().optional(),
+  window: z.string(),
+});
+
 export const usageMonitorChannelSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -80,6 +88,7 @@ export const usageMonitorChannelSchema = z.object({
   // Derived per-limit quota statuses; Map scalar shaped as { items: [...] }
   // with the same keys provider_quota_status stores under quota_data._limits.
   quotaLimits: z.any().nullable().optional(),
+  estimateConfig: estimateConfigSchema.nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -95,6 +104,7 @@ export type FieldConfig = z.infer<typeof fieldConfigSchema>;
 export type Variable = z.infer<typeof variableSchema>;
 export type DisplayField = z.infer<typeof displayFieldSchema>;
 export type ParsedField = z.infer<typeof parsedFieldSchema>;
+export type EstimateConfig = z.infer<typeof estimateConfigSchema>;
 export type UsageMonitorChannel = z.infer<typeof usageMonitorChannelSchema>;
 export type TestResult = z.infer<typeof testResultSchema>;
 

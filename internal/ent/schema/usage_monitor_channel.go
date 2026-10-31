@@ -69,6 +69,10 @@ func (UsageMonitorChannel) Fields() []ent.Field {
 			Optional().
 			Default([]map[string]any{}).
 			Comment("Display field definitions with optional badge styling"),
+		field.JSON("estimate_config", map[string]any{}).
+			Annotations(entgql.Skip(entgql.SkipAll)).
+			Optional().
+			Comment("Custom-monitor period quota estimate config: fieldKey (usage ratio source), remaining (invert to used), resetFieldKey (empty = earliest future datetime), window (5h/daily/weekly/monthly)"),
 		field.Time("last_poll_at").Optional().Nillable().
 			Comment("Last successful poll timestamp"),
 		field.JSON("last_poll_data", map[string]any{}).Optional().

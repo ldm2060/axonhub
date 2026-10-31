@@ -271,6 +271,18 @@ func (_u *UsageMonitorChannelUpdate) ClearDisplayFields() *UsageMonitorChannelUp
 	return _u
 }
 
+// SetEstimateConfig sets the "estimate_config" field.
+func (_u *UsageMonitorChannelUpdate) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelUpdate {
+	_u.mutation.SetEstimateConfig(v)
+	return _u
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (_u *UsageMonitorChannelUpdate) ClearEstimateConfig() *UsageMonitorChannelUpdate {
+	_u.mutation.ClearEstimateConfig()
+	return _u
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (_u *UsageMonitorChannelUpdate) SetLastPollAt(v time.Time) *UsageMonitorChannelUpdate {
 	_u.mutation.SetLastPollAt(v)
@@ -733,6 +745,12 @@ func (_u *UsageMonitorChannelUpdate) sqlSave(ctx context.Context) (_node int, er
 	if _u.mutation.DisplayFieldsCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON)
 	}
+	if value, ok := _u.mutation.EstimateConfig(); ok {
+		_spec.SetField(usagemonitorchannel.FieldEstimateConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.EstimateConfigCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldEstimateConfig, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)
 	}
@@ -1164,6 +1182,18 @@ func (_u *UsageMonitorChannelUpdateOne) AppendDisplayFields(v []map[string]inter
 // ClearDisplayFields clears the value of the "display_fields" field.
 func (_u *UsageMonitorChannelUpdateOne) ClearDisplayFields() *UsageMonitorChannelUpdateOne {
 	_u.mutation.ClearDisplayFields()
+	return _u
+}
+
+// SetEstimateConfig sets the "estimate_config" field.
+func (_u *UsageMonitorChannelUpdateOne) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelUpdateOne {
+	_u.mutation.SetEstimateConfig(v)
+	return _u
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (_u *UsageMonitorChannelUpdateOne) ClearEstimateConfig() *UsageMonitorChannelUpdateOne {
+	_u.mutation.ClearEstimateConfig()
 	return _u
 }
 
@@ -1658,6 +1688,12 @@ func (_u *UsageMonitorChannelUpdateOne) sqlSave(ctx context.Context) (_node *Usa
 	}
 	if _u.mutation.DisplayFieldsCleared() {
 		_spec.ClearField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.EstimateConfig(); ok {
+		_spec.SetField(usagemonitorchannel.FieldEstimateConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.EstimateConfigCleared() {
+		_spec.ClearField(usagemonitorchannel.FieldEstimateConfig, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)

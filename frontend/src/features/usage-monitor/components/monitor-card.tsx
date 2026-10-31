@@ -2,9 +2,11 @@ import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Pencil, Pause, Play, RefreshCw, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { PeriodQuotaEstimate, QuotaWindowBars } from '@/components/quota-window-display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { parseQuotaLimits } from '@/features/system/data/quotas';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { UsageMonitorChannel } from '../data/schema';
 import { useUpdateUsageMonitorChannel, useRefreshUsageMonitorChannel, useSilentRefreshUsageMonitorChannel } from '../data/usage-monitor';
@@ -88,6 +90,11 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
     ? `${t('usageMonitor.lastUpdated')} ${formatDistanceToNow(new Date(channel.lastPollAt), { addSuffix: true })}`
     : t('usageMonitor.noData');
 
+  // The backend persists derived limits with the same shape the built-in
+  // checkers store under quota_data._limits, so reuse that parser. The same
+  // block feeds the header popover's monitor rows.
+  const limits = parseQuotaLimits({ _limits: (channel.quotaLimits as { items?: unknown } | null)?.items });
+
   const pollIntervalSec = channel.pollInterval;
   const pollIntervalText = pollIntervalSec >= 60 ? `${Math.floor(pollIntervalSec / 60)}m` : `${pollIntervalSec}s`;
 
@@ -118,6 +125,11 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
       {channel.parsedData && channel.parsedData.length > 0 && (
         <SharedFieldRenderer fields={channel.parsedData} displayFields={channel.displayFields ?? undefined} />
       )}
+
+      {/* Per-window usage bars + period quota estimate, mirroring the
+          provider quota rows in the header popover. */}
+      <QuotaWindowBars limits={limits} />
+      <PeriodQuotaEstimate limits={limits} />
 
       {/* Binding summary */}
       <MonitorBindingSummary monitorID={channel.id} />

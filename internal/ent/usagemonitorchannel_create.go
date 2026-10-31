@@ -193,6 +193,12 @@ func (_c *UsageMonitorChannelCreate) SetDisplayFields(v []map[string]interface{}
 	return _c
 }
 
+// SetEstimateConfig sets the "estimate_config" field.
+func (_c *UsageMonitorChannelCreate) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelCreate {
+	_c.mutation.SetEstimateConfig(v)
+	return _c
+}
+
 // SetLastPollAt sets the "last_poll_at" field.
 func (_c *UsageMonitorChannelCreate) SetLastPollAt(v time.Time) *UsageMonitorChannelCreate {
 	_c.mutation.SetLastPollAt(v)
@@ -613,6 +619,10 @@ func (_c *UsageMonitorChannelCreate) createSpec() (*UsageMonitorChannel, *sqlgra
 		_spec.SetField(usagemonitorchannel.FieldDisplayFields, field.TypeJSON, value)
 		_node.DisplayFields = value
 	}
+	if value, ok := _c.mutation.EstimateConfig(); ok {
+		_spec.SetField(usagemonitorchannel.FieldEstimateConfig, field.TypeJSON, value)
+		_node.EstimateConfig = value
+	}
 	if value, ok := _c.mutation.LastPollAt(); ok {
 		_spec.SetField(usagemonitorchannel.FieldLastPollAt, field.TypeTime, value)
 		_node.LastPollAt = &value
@@ -984,6 +994,24 @@ func (u *UsageMonitorChannelUpsert) UpdateDisplayFields() *UsageMonitorChannelUp
 // ClearDisplayFields clears the value of the "display_fields" field.
 func (u *UsageMonitorChannelUpsert) ClearDisplayFields() *UsageMonitorChannelUpsert {
 	u.SetNull(usagemonitorchannel.FieldDisplayFields)
+	return u
+}
+
+// SetEstimateConfig sets the "estimate_config" field.
+func (u *UsageMonitorChannelUpsert) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelUpsert {
+	u.Set(usagemonitorchannel.FieldEstimateConfig, v)
+	return u
+}
+
+// UpdateEstimateConfig sets the "estimate_config" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsert) UpdateEstimateConfig() *UsageMonitorChannelUpsert {
+	u.SetExcluded(usagemonitorchannel.FieldEstimateConfig)
+	return u
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (u *UsageMonitorChannelUpsert) ClearEstimateConfig() *UsageMonitorChannelUpsert {
+	u.SetNull(usagemonitorchannel.FieldEstimateConfig)
 	return u
 }
 
@@ -1493,6 +1521,27 @@ func (u *UsageMonitorChannelUpsertOne) UpdateDisplayFields() *UsageMonitorChanne
 func (u *UsageMonitorChannelUpsertOne) ClearDisplayFields() *UsageMonitorChannelUpsertOne {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearDisplayFields()
+	})
+}
+
+// SetEstimateConfig sets the "estimate_config" field.
+func (u *UsageMonitorChannelUpsertOne) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetEstimateConfig(v)
+	})
+}
+
+// UpdateEstimateConfig sets the "estimate_config" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertOne) UpdateEstimateConfig() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateEstimateConfig()
+	})
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (u *UsageMonitorChannelUpsertOne) ClearEstimateConfig() *UsageMonitorChannelUpsertOne {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearEstimateConfig()
 	})
 }
 
@@ -2201,6 +2250,27 @@ func (u *UsageMonitorChannelUpsertBulk) UpdateDisplayFields() *UsageMonitorChann
 func (u *UsageMonitorChannelUpsertBulk) ClearDisplayFields() *UsageMonitorChannelUpsertBulk {
 	return u.Update(func(s *UsageMonitorChannelUpsert) {
 		s.ClearDisplayFields()
+	})
+}
+
+// SetEstimateConfig sets the "estimate_config" field.
+func (u *UsageMonitorChannelUpsertBulk) SetEstimateConfig(v map[string]interface{}) *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.SetEstimateConfig(v)
+	})
+}
+
+// UpdateEstimateConfig sets the "estimate_config" field to the value that was provided on create.
+func (u *UsageMonitorChannelUpsertBulk) UpdateEstimateConfig() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.UpdateEstimateConfig()
+	})
+}
+
+// ClearEstimateConfig clears the value of the "estimate_config" field.
+func (u *UsageMonitorChannelUpsertBulk) ClearEstimateConfig() *UsageMonitorChannelUpsertBulk {
+	return u.Update(func(s *UsageMonitorChannelUpsert) {
+		s.ClearEstimateConfig()
 	})
 }
 

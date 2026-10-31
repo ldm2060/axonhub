@@ -715,6 +715,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			usagemonitorchannel.FieldFields:               {Type: field.TypeJSON, Column: usagemonitorchannel.FieldFields},
 			usagemonitorchannel.FieldVariables:            {Type: field.TypeJSON, Column: usagemonitorchannel.FieldVariables},
 			usagemonitorchannel.FieldDisplayFields:        {Type: field.TypeJSON, Column: usagemonitorchannel.FieldDisplayFields},
+			usagemonitorchannel.FieldEstimateConfig:       {Type: field.TypeJSON, Column: usagemonitorchannel.FieldEstimateConfig},
 			usagemonitorchannel.FieldLastPollAt:           {Type: field.TypeTime, Column: usagemonitorchannel.FieldLastPollAt},
 			usagemonitorchannel.FieldLastPollData:         {Type: field.TypeJSON, Column: usagemonitorchannel.FieldLastPollData},
 			usagemonitorchannel.FieldLastPollError:        {Type: field.TypeString, Column: usagemonitorchannel.FieldLastPollError},
@@ -5431,6 +5432,11 @@ func (f *UsageMonitorChannelFilter) WhereVariables(p entql.BytesP) {
 // WhereDisplayFields applies the entql json.RawMessage predicate on the display_fields field.
 func (f *UsageMonitorChannelFilter) WhereDisplayFields(p entql.BytesP) {
 	f.Where(p.Field(usagemonitorchannel.FieldDisplayFields))
+}
+
+// WhereEstimateConfig applies the entql json.RawMessage predicate on the estimate_config field.
+func (f *UsageMonitorChannelFilter) WhereEstimateConfig(p entql.BytesP) {
+	f.Where(p.Field(usagemonitorchannel.FieldEstimateConfig))
 }
 
 // WhereLastPollAt applies the entql time.Time predicate on the last_poll_at field.

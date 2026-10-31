@@ -695,6 +695,16 @@ func DisplayFieldsNotNil() predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldDisplayFields))
 }
 
+// EstimateConfigIsNil applies the IsNil predicate on the "estimate_config" field.
+func EstimateConfigIsNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldIsNull(FieldEstimateConfig))
+}
+
+// EstimateConfigNotNil applies the NotNil predicate on the "estimate_config" field.
+func EstimateConfigNotNil() predicate.UsageMonitorChannel {
+	return predicate.UsageMonitorChannel(sql.FieldNotNull(FieldEstimateConfig))
+}
+
 // LastPollAtEQ applies the EQ predicate on the "last_poll_at" field.
 func LastPollAtEQ(v time.Time) predicate.UsageMonitorChannel {
 	return predicate.UsageMonitorChannel(sql.FieldEQ(FieldLastPollAt, v))

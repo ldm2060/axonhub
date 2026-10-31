@@ -52,6 +52,8 @@ type UsageMonitorChannel struct {
 	Variables []map[string]interface{} `json:"variables,omitempty"`
 	// Display field definitions with optional badge styling
 	DisplayFields []map[string]interface{} `json:"display_fields,omitempty"`
+	// Custom-monitor period quota estimate config: fieldKey (usage ratio source), remaining (invert to used), resetFieldKey (empty = earliest future datetime), window (5h/daily/weekly/monthly)
+	EstimateConfig map[string]interface{} `json:"estimate_config,omitempty"`
 	// Last successful poll timestamp
 	LastPollAt *time.Time `json:"last_poll_at,omitempty"`
 	// Last poll parsed data for degraded display
@@ -134,7 +136,7 @@ func (*UsageMonitorChannel) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldVariables, usagemonitorchannel.FieldDisplayFields, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
+		case usagemonitorchannel.FieldAPIHeaders, usagemonitorchannel.FieldFields, usagemonitorchannel.FieldVariables, usagemonitorchannel.FieldDisplayFields, usagemonitorchannel.FieldEstimateConfig, usagemonitorchannel.FieldLastPollData, usagemonitorchannel.FieldQuotaLimits:
 			values[i] = new([]byte)
 		case usagemonitorchannel.FieldQuotaReady, usagemonitorchannel.FieldAutoDisableEnabled:
 			values[i] = new(sql.NullBool)
@@ -272,6 +274,14 @@ func (_m *UsageMonitorChannel) assignValues(columns []string, values []any) erro
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.DisplayFields); err != nil {
 					return fmt.Errorf("unmarshal field display_fields: %w", err)
+				}
+			}
+		case usagemonitorchannel.FieldEstimateConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field estimate_config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.EstimateConfig); err != nil {
+					return fmt.Errorf("unmarshal field estimate_config: %w", err)
 				}
 			}
 		case usagemonitorchannel.FieldLastPollAt:
@@ -454,6 +464,9 @@ func (_m *UsageMonitorChannel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("display_fields=")
 	builder.WriteString(fmt.Sprintf("%v", _m.DisplayFields))
+	builder.WriteString(", ")
+	builder.WriteString("estimate_config=")
+	builder.WriteString(fmt.Sprintf("%v", _m.EstimateConfig))
 	builder.WriteString(", ")
 	if v := _m.LastPollAt; v != nil {
 		builder.WriteString("last_poll_at=")

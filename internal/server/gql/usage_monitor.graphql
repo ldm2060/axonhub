@@ -55,6 +55,20 @@ extend type UsageMonitorChannel {
     apiHeadersString: String!
     "Parsed field values from last poll data"
     parsedData: [ParsedFieldValue!]
+    "Custom-monitor period quota estimate config (null = not configured)"
+    estimateConfig: EstimateConfig
+}
+
+# Which parsed values drive a custom monitor's period quota estimate
+type EstimateConfig {
+    "Display field key whose value is used as the usage ratio"
+    fieldKey: String!
+    "True when the field expresses remaining quota (inverted to used)"
+    remaining: Boolean!
+    "Display field key whose datetime marks the reset (null = earliest future datetime)"
+    resetFieldKey: String
+    "Window length the estimate prices: 5h | daily | weekly | monthly"
+    window: String!
 }
 
 # Input types for create/update operations
@@ -92,6 +106,13 @@ input DisplayFieldInput {
     groupLabelRef: String
 }
 
+input EstimateConfigInput {
+    fieldKey: String!
+    remaining: Boolean
+    resetFieldKey: String
+    window: String!
+}
+
 input CreateUsageMonitorChannelInput {
     name: String!
     source: UsageMonitorChannelSource!
@@ -106,6 +127,7 @@ input CreateUsageMonitorChannelInput {
     fields: [FieldConfigInput!]!
     variables: [VariableInput!]
     displayFields: [DisplayFieldInput!]
+    estimateConfig: EstimateConfigInput
 }
 
 input UpdateUsageMonitorChannelInput {
@@ -120,6 +142,11 @@ input UpdateUsageMonitorChannelInput {
     displayFields: [DisplayFieldInput!]
     status: UsageMonitorChannelStatus
     apiKey: String
+    "Bind the channel whose usage logs price the period estimate (custom monitors)"
+    channelId: ID
+    "Unbind the estimate attribution channel (takes precedence over channelId)"
+    clearChannelId: Boolean
+    estimateConfig: EstimateConfigInput
 }
 
 input TestUsageMonitorChannelInput {

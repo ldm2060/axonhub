@@ -1135,19 +1135,19 @@ func init() {
 	// usagemonitorchannel.DefaultDisplayFields holds the default value on creation for the display_fields field.
 	usagemonitorchannel.DefaultDisplayFields = usagemonitorchannelDescDisplayFields.Default.([]map[string]interface{})
 	// usagemonitorchannelDescQuotaReady is the schema descriptor for quota_ready field.
-	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[18].Descriptor()
+	usagemonitorchannelDescQuotaReady := usagemonitorchannelFields[19].Descriptor()
 	// usagemonitorchannel.DefaultQuotaReady holds the default value on creation for the quota_ready field.
 	usagemonitorchannel.DefaultQuotaReady = usagemonitorchannelDescQuotaReady.Default.(bool)
 	// usagemonitorchannelDescAutoDisableEnabled is the schema descriptor for auto_disable_enabled field.
-	usagemonitorchannelDescAutoDisableEnabled := usagemonitorchannelFields[21].Descriptor()
+	usagemonitorchannelDescAutoDisableEnabled := usagemonitorchannelFields[22].Descriptor()
 	// usagemonitorchannel.DefaultAutoDisableEnabled holds the default value on creation for the auto_disable_enabled field.
 	usagemonitorchannel.DefaultAutoDisableEnabled = usagemonitorchannelDescAutoDisableEnabled.Default.(bool)
 	// usagemonitorchannelDescAutoDisableThreshold is the schema descriptor for auto_disable_threshold field.
-	usagemonitorchannelDescAutoDisableThreshold := usagemonitorchannelFields[22].Descriptor()
+	usagemonitorchannelDescAutoDisableThreshold := usagemonitorchannelFields[23].Descriptor()
 	// usagemonitorchannel.DefaultAutoDisableThreshold holds the default value on creation for the auto_disable_threshold field.
 	usagemonitorchannel.DefaultAutoDisableThreshold = usagemonitorchannelDescAutoDisableThreshold.Default.(float64)
 	// usagemonitorchannelDescAutoEnableThreshold is the schema descriptor for auto_enable_threshold field.
-	usagemonitorchannelDescAutoEnableThreshold := usagemonitorchannelFields[23].Descriptor()
+	usagemonitorchannelDescAutoEnableThreshold := usagemonitorchannelFields[24].Descriptor()
 	// usagemonitorchannel.DefaultAutoEnableThreshold holds the default value on creation for the auto_enable_threshold field.
 	usagemonitorchannel.DefaultAutoEnableThreshold = usagemonitorchannelDescAutoEnableThreshold.Default.(float64)
 	userMixin := schema.User{}.Mixin()

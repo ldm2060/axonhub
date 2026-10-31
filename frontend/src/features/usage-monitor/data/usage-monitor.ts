@@ -63,6 +63,12 @@ const USAGE_MONITOR_CHANNELS_QUERY = `
       quotaReady
       nextResetAt
       quotaLimits
+      estimateConfig {
+        fieldKey
+        remaining
+        resetFieldKey
+        window
+      }
       channel {
         id
         name
@@ -122,6 +128,12 @@ const CREATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
+      estimateConfig {
+        fieldKey
+        remaining
+        resetFieldKey
+        window
+      }
       channel {
         id
         name
@@ -181,6 +193,12 @@ const UPDATE_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
+      estimateConfig {
+        fieldKey
+        remaining
+        resetFieldKey
+        window
+      }
       channel {
         id
         name
@@ -268,6 +286,12 @@ const REFRESH_USAGE_MONITOR_CHANNEL_MUTATION = `
       lastPollError
       createdAt
       updatedAt
+      estimateConfig {
+        fieldKey
+        remaining
+        resetFieldKey
+        window
+      }
       channel {
         id
         name
@@ -314,6 +338,7 @@ function normalizeChannel(raw: any): UsageMonitorChannel {
     quotaReady: raw.quotaReady ?? null,
     nextResetAt: raw.nextResetAt || null,
     quotaLimits: raw.quotaLimits ?? null,
+    estimateConfig: raw.estimateConfig ?? null,
     createdAt: raw.createdAt ?? '',
     updatedAt: raw.updatedAt ?? '',
   });
@@ -334,6 +359,13 @@ export function useUsageMonitorChannels() {
   });
 }
 
+export type EstimateConfigInput = {
+  fieldKey: string;
+  remaining?: boolean;
+  resetFieldKey?: string;
+  window: string;
+};
+
 export type CreateUsageMonitorChannelInput = {
   name: string;
   source: 'builtin' | 'custom' | 'template';
@@ -348,6 +380,7 @@ export type CreateUsageMonitorChannelInput = {
   fields: FieldConfig[];
   variables?: VariableInput[];
   displayFields?: DisplayFieldInput[];
+  estimateConfig?: EstimateConfigInput;
 };
 
 export function useCreateUsageMonitorChannel() {
@@ -386,6 +419,9 @@ export type UpdateUsageMonitorChannelInput = {
   displayFields?: DisplayFieldInput[];
   status?: 'active' | 'paused' | 'error';
   apiKey?: string;
+  channelId?: string;
+  clearChannelId?: boolean;
+  estimateConfig?: EstimateConfigInput;
 };
 
 export function useUpdateUsageMonitorChannel() {

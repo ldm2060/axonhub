@@ -347,6 +347,24 @@ type DisplayFieldInput struct {
 	GroupLabelRef *string `json:"groupLabelRef,omitempty"`
 }
 
+type EstimateConfig struct {
+	// Display field key whose value is used as the usage ratio
+	FieldKey string `json:"fieldKey"`
+	// True when the field expresses remaining quota (inverted to used)
+	Remaining bool `json:"remaining"`
+	// Display field key whose datetime marks the reset (null = earliest future datetime)
+	ResetFieldKey *string `json:"resetFieldKey,omitempty"`
+	// Window length the estimate prices: 5h | daily | weekly | monthly
+	Window string `json:"window"`
+}
+
+type EstimateConfigInput struct {
+	FieldKey      string  `json:"fieldKey"`
+	Remaining     *bool   `json:"remaining,omitempty"`
+	ResetFieldKey *string `json:"resetFieldKey,omitempty"`
+	Window        string  `json:"window"`
+}
+
 type FastestChannel struct {
 	ChannelID       objects.GUID `json:"channelId"`
 	ChannelName     string       `json:"channelName"`
