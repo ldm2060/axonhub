@@ -116,6 +116,7 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 	// the Codex quota checker's own window labeling.
 	type windowInfo struct {
 		label     string
+		fieldKey  string
 		pct       float64
 		nextReset *time.Time
 		window    time.Duration
@@ -125,12 +126,12 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 	// Primary window
 	primaryPct := findFieldPercent(fields, "primary_used_pct") / 100.0
 	primaryReset := findFieldTime(fields, "primary_reset")
-	windows = append(windows, windowInfo{label: "primary", pct: primaryPct, nextReset: primaryReset, window: 5 * time.Hour})
+	windows = append(windows, windowInfo{label: "5h", fieldKey: "primary_used_pct", pct: primaryPct, nextReset: primaryReset, window: 5 * time.Hour})
 
 	// Secondary window
 	secondaryPct := findFieldPercent(fields, "secondary_used_pct") / 100.0
 	secondaryReset := findFieldTime(fields, "secondary_reset")
-	windows = append(windows, windowInfo{label: "secondary", pct: secondaryPct, nextReset: secondaryReset, window: 7 * 24 * time.Hour})
+	windows = append(windows, windowInfo{label: "7d", fieldKey: "secondary_used_pct", pct: secondaryPct, nextReset: secondaryReset, window: 7 * 24 * time.Hour})
 
 	// Additional rate limit windows (0 and 1)
 	for i := range 2 {
@@ -147,12 +148,15 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 				continue
 			}
 			window := 5 * time.Hour
+			label := "5h"
 			if suffix == "secondary" {
 				window = 7 * 24 * time.Hour
+				label = "7d"
 			}
 			reset := findFieldTime(fields, resetKey)
 			windows = append(windows, windowInfo{
-				label:     fmt.Sprintf("%s_%s", featureName, suffix),
+				label:     label,
+				fieldKey:  pctKey,
 				pct:       pct,
 				nextReset: reset,
 				window:    window,
@@ -178,6 +182,7 @@ func deriveCodex(fields []ParsedField) QuotaDerivedStatus {
 			UsageRatio:  w.pct,
 			Ready:       limitStatus != "exhausted",
 			NextResetAt: w.nextReset,
+			FieldKey:    w.fieldKey,
 		}.WithWindow(w.label, w.window))
 
 		if worstStatus == "" || quotaStatusRank(limitStatus) > quotaStatusRank(worstStatus) {
@@ -630,7 +635,9 @@ func deriveMinimax(fields []ParsedField) QuotaDerivedStatus {
 			status = "warning"
 		}
 		reset := findFieldTime(fields, w.key+"_reset")
-		limits = append(limits, provider_quota.NewTokenLimitStatus(status, ratio, reset).WithWindow(w.label, w.length))
+		limit := provider_quota.NewTokenLimitStatus(status, ratio, reset).WithWindow(w.label, w.length)
+		limit.FieldKey = w.key + "_used_pct"
+		limits = append(limits, limit)
 		if quotaStatusRank(status) > quotaStatusRank(worstStatus) {
 			worstStatus = status
 		}
@@ -682,6 +689,7 @@ func deriveOpenCodeGo(fields []ParsedField) QuotaDerivedStatus {
 			UsageRatio:  ratio,
 			Ready:       status != "exhausted",
 			NextResetAt: nextReset,
+			FieldKey:    key + "_used_pct",
 		}.WithWindow(key, windowLengths[key]))
 
 		if worstStatus == "" || quotaStatusRank(status) > quotaStatusRank(worstStatus) {
@@ -734,13 +742,15 @@ func deriveCline(fields []ParsedField) QuotaDerivedStatus {
 		}
 
 		nextReset := findFieldTime(fields, w.key+"_reset")
-		limits = append(limits, provider_quota.QuotaLimitStatus{
+		limit := provider_quota.QuotaLimitStatus{
 			Type:        provider_quota.QuotaLimitTypeToken,
 			Status:      status,
 			UsageRatio:  ratio,
 			Ready:       status != "exhausted",
 			NextResetAt: nextReset,
-		}.WithWindow(w.label, w.length))
+			FieldKey:    w.key + "_used_pct",
+		}.WithWindow(w.label, w.length)
+		limits = append(limits, limit)
 		if quotaStatusRank(status) > quotaStatusRank(worstStatus) {
 			worstStatus = status
 		}
@@ -961,6 +971,7 @@ func deriveXaiSubscription(fields []ParsedField) QuotaDerivedStatus {
 		}
 		reset := findFieldTime(fields, w.key+"_reset")
 		limit := provider_quota.NewTokenLimitStatus(status, ratio, reset).WithWindow(w.key, w.length)
+		limit.FieldKey = w.key + "_used_pct"
 		if w.key == "monthly" {
 			limit.PeriodStart = provider_quota.PeriodStartFromMonthlyReset(reset)
 		}

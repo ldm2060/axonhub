@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PeriodQuotaEstimate, QuotaWindowBars } from '@/components/quota-window-display';
+import { PeriodQuotaEstimate } from '@/components/quota-window-display';
 import { parseQuotaLimits } from '@/features/system/data/quotas';
 import { useUsageMonitorContext } from '../context/usage-monitor-context';
 import type { UsageMonitorChannel } from '../data/schema';
@@ -121,14 +121,13 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
         </span>
       </div>
 
-      {/* Parsed fields */}
+      {/* Parsed fields: a field whose key matches a limit's fieldKey renders
+          the window's time progress and countdown on its own bar. */}
       {channel.parsedData && channel.parsedData.length > 0 && (
-        <SharedFieldRenderer fields={channel.parsedData} displayFields={channel.displayFields ?? undefined} />
+        <SharedFieldRenderer fields={channel.parsedData} displayFields={channel.displayFields ?? undefined} limits={limits} />
       )}
 
-      {/* Per-window usage bars + period quota estimate, mirroring the
-          provider quota rows in the header popover. */}
-      <QuotaWindowBars limits={limits} />
+      {/* Period quota estimate text block. */}
       <PeriodQuotaEstimate limits={limits} />
 
       {/* Binding summary */}

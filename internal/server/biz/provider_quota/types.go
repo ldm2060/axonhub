@@ -85,6 +85,12 @@ type QuotaLimitStatus struct {
 	// QuotaLimitType, so this is what tells them apart in the UI.
 	Window string `json:"window,omitempty"`
 
+	// FieldKey names the usage-monitor display field this limit was derived
+	// from ("primary_used_pct", ...). The monitor UI matches it against the
+	// configured display fields so the field's own bar renders the window's
+	// time progress and reset countdown instead of a duplicate bar.
+	FieldKey string `json:"field_key,omitempty"`
+
 	// Account identifies the credential a limit belongs to when one channel
 	// draws from several accounts (one API key per account). It is a display
 	// label and never holds a credential.

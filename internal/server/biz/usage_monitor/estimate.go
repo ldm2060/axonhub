@@ -127,6 +127,7 @@ func ApplyEstimateConfig(fields []ParsedField, cfg EstimateConfig, derived *Quot
 	}
 	limit.Status = status
 	limit.Ready = provider_quota.IsReadyStatus(status)
+	limit.FieldKey = cfg.FieldKey
 
 	derived.Limits = []provider_quota.QuotaLimitStatus{limit}
 	derived.Status = status

@@ -1,10 +1,14 @@
 package usage_monitor
 
 import (
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDeriveQuotaStatus_Generic_Percentage(t *testing.T) {
@@ -457,4 +461,39 @@ func TestDeriveQuotaStatus_OpenCodeGo_NoWindows(t *testing.T) {
 	result := DeriveQuotaStatus("opencode_go", nil)
 	assert.Equal(t, "unknown", result.Status)
 	assert.Empty(t, result.Limits)
+}
+
+func TestDeriveQuotaStatus_CodexStampsFieldKey(t *testing.T) {
+	reset := time.Now().UTC().Add(3 * time.Hour).Truncate(time.Second).Format(time.RFC3339)
+	fields := []ParsedField{
+		{Key: "primary_used_pct", Format: "percentage", Percent: 40},
+		{Key: "primary_reset", Format: "datetime", Value: reset},
+		{Key: "secondary_used_pct", Format: "percentage", Percent: 15},
+	}
+	result := DeriveQuotaStatus("codex", fields)
+	require.Len(t, result.Limits, 2)
+	assert.Equal(t, "primary_used_pct", result.Limits[0].FieldKey)
+	assert.Equal(t, "5h", result.Limits[0].Window)
+	assert.Equal(t, "secondary_used_pct", result.Limits[1].FieldKey)
+	assert.Equal(t, "7d", result.Limits[1].Window)
+}
+
+func TestDeriveQuotaStatus_WindowedTemplatesStampFieldKey(t *testing.T) {
+	reset := time.Now().UTC().Add(48 * time.Hour).Truncate(time.Second).Format(time.RFC3339)
+	check := func(t *testing.T, providerType, fieldKey, windowLabel string) {
+		t.Helper()
+		fields := []ParsedField{
+			{Key: fieldKey, Format: "percentage", Percent: 30},
+			{Key: strings.TrimSuffix(fieldKey, "_used_pct") + "_reset", Format: "datetime", Value: reset},
+		}
+		result := DeriveQuotaStatus(providerType, fields)
+		require.Len(t, result.Limits, 1, providerType)
+		assert.Equal(t, fieldKey, result.Limits[0].FieldKey, providerType)
+		assert.Equal(t, windowLabel, result.Limits[0].Window, providerType)
+	}
+	check(t, "minimax", "interval_used_pct", "5h")
+	check(t, "minimax", "weekly_used_pct", "weekly")
+	check(t, "opencode_go", "rolling_used_pct", "rolling")
+	check(t, "xai_subscription", "weekly_used_pct", "weekly")
+	check(t, "cline", "last5h_used_pct", "5h")
 }

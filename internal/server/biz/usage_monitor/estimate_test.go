@@ -23,6 +23,7 @@ func TestApplyEstimateConfig_PercentageField(t *testing.T) {
 	limit := derived.Limits[0]
 	assert.InDelta(t, 0.45, limit.UsageRatio, 1e-9)
 	assert.Equal(t, EstimateWindowWeekly, limit.Window)
+	assert.Equal(t, "credits_pct", limit.FieldKey)
 	assert.Equal(t, "available", limit.Status)
 }
 

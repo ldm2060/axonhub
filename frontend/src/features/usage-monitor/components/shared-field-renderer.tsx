@@ -1,10 +1,14 @@
 import { useTranslation } from 'react-i18next';
+import { getLimitDurationPercent, quotaWindowLabel } from '@/components/quota-window-display';
+import type { ProviderQuotaLimit } from '@/features/system/data/quotas';
 import type { ParsedField, DisplayField } from '../data/schema';
 import { BadgeDisplay } from './badge-display';
 
 interface SharedFieldRendererProps {
   fields: ParsedField[];
   displayFields?: DisplayField[];
+  /** Monitor quota limits; a limit whose fieldKey matches a field upgrades that field's bar with window data. */
+  limits?: ProviderQuotaLimit[];
 }
 
 /**
@@ -96,22 +100,61 @@ function ProgressBar({ percentage }: { percentage: number }) {
 /** A single progress-bar field with its reset time embedded in the bottom-right. */
 function FieldGroup({
   group,
+  limit,
   t,
 }: {
   group: { pct: ParsedField; reset?: ParsedField };
+  limit?: ProviderQuotaLimit;
   t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   const pct = group.pct.percent ?? 0;
   const resetText = group.reset ? formatRelativeTime(group.reset.value, t) : undefined;
 
+  // Window data attached to this field: upgrade the bar with the window tag,
+  // the elapsed-time marker, and the reset countdown instead of the plain
+  // paired-datetime reset line — the limit is the authoritative window.
+  const windowLabel = limit?.window ? quotaWindowLabel(limit, t) : undefined;
+  const elapsed = limit ? getLimitDurationPercent(limit) : undefined;
+  const countdown = limit?.nextResetAt ? formatRelativeTime(limit.nextResetAt, t) : undefined;
+  const enhanced = Boolean(windowLabel || elapsed !== undefined);
+  const metaText = enhanced
+    ? [
+        elapsed !== undefined ? `${t('quota.label.time_elapsed')} ${Math.round(elapsed)}%` : '',
+        countdown ? t('quota.label.resets_in_time', { time: countdown }) : '',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+
   return (
     <div className='space-y-0.5'>
       <div className='flex items-center justify-between text-xs'>
-        <span className='text-muted-foreground font-medium'>{group.pct.label}</span>
+        <span className='text-muted-foreground font-medium'>
+          {group.pct.label}
+          {windowLabel && (
+            <span className='ml-1.5 rounded bg-green-500/10 px-1 py-px text-[10px] font-medium text-green-500'>{windowLabel}</span>
+          )}
+        </span>
         <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
       </div>
-      <ProgressBar percentage={pct} />
-      {resetText && <div className='text-muted-foreground text-right text-[11px]'>{resetText}</div>}
+      {enhanced ? (
+        <div className='relative pb-2'>
+          <ProgressBar percentage={pct} />
+          {elapsed !== undefined && (
+            <div className='absolute top-2 -translate-x-1/2' style={{ left: `${Math.min(Math.max(elapsed, 0), 100)}%` }} aria-hidden>
+              {/* upward triangle marking how far the window has elapsed */}
+              <div className='border-b-muted-foreground h-0 w-0 border-x-[3px] border-b-[4px] border-x-transparent' />
+            </div>
+          )}
+        </div>
+      ) : (
+        <ProgressBar percentage={pct} />
+      )}
+      {enhanced ? (
+        metaText && <div className='text-muted-foreground text-[11px]'>{metaText}</div>
+      ) : (
+        resetText && <div className='text-muted-foreground text-right text-[11px]'>{resetText}</div>
+      )}
     </div>
   );
 }
@@ -192,12 +235,14 @@ function NamedGroup({
   groupLabel,
   fields,
   displayFields,
+  limitMap,
   t,
 }: {
   groupName: string;
   groupLabel?: string;
   fields: ParsedField[];
   displayFields?: DisplayField[];
+  limitMap?: Map<string, ProviderQuotaLimit>;
   t: (key: string, params?: Record<string, unknown>) => string;
 }) {
   // Within a named group, group percentage/fraction fields with their reset datetime fields
@@ -220,7 +265,7 @@ function NamedGroup({
         {fieldGroups.length > 0 && (
           <div className='space-y-2'>
             {fieldGroups.map((group) => (
-              <FieldGroup key={group.pct.key} group={group} t={t} />
+              <FieldGroup key={group.pct.key} group={group} limit={limitMap?.get(group.pct.key)} t={t} />
             ))}
           </div>
         )}
@@ -254,8 +299,15 @@ function NamedGroup({
   );
 }
 
-export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRendererProps) {
+export function SharedFieldRenderer({ fields, displayFields, limits }: SharedFieldRendererProps) {
   const { t } = useTranslation();
+
+  // Match limits to display fields by the backend-stamped source field key so
+  // the field's own bar carries the window's time progress and countdown.
+  const limitMap = new Map<string, ProviderQuotaLimit>();
+  for (const limit of limits ?? []) {
+    if (limit.fieldKey) limitMap.set(limit.fieldKey, limit);
+  }
 
   if (!fields || fields.length === 0) return null;
 
@@ -298,7 +350,7 @@ export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRender
       {autoGroups.length > 0 && (
         <div className='space-y-2'>
           {autoGroups.map((group) => (
-            <FieldGroup key={group.pct.key} group={group} t={t} />
+            <FieldGroup key={group.pct.key} group={group} limit={limitMap.get(group.pct.key)} t={t} />
           ))}
         </div>
       )}
@@ -344,6 +396,7 @@ export function SharedFieldRenderer({ fields, displayFields }: SharedFieldRender
             groupLabel={groupData.groupLabel}
             fields={groupData.fields}
             displayFields={displayFields}
+            limitMap={limitMap}
             t={t}
           />
         );

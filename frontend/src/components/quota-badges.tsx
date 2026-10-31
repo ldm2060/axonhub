@@ -18,7 +18,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   PeriodQuotaEstimate,
-  QuotaWindowBars,
   UsageTimeBar,
   WINDOW_LABEL_KEYS,
   getDurationPercent,
@@ -2324,12 +2323,11 @@ function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
       {monitor.lastPollError && <div className='rounded bg-red-500/10 p-2 text-xs break-words text-red-500'>{monitor.lastPollError}</div>}
 
       {/* Same renderer as /admin/usage-monitor cards so template badge fields
-          (Plan, Access Type, Chat TRUE, …) keep their gradient badges. */}
+          (Plan, Access Type, Chat TRUE, …) keep their gradient badges, and a
+          field matching a limit's fieldKey renders the window on its own bar. */}
       {monitor.parsedData && monitor.parsedData.length > 0 && (
-        <SharedFieldRenderer fields={monitor.parsedData} displayFields={monitor.displayFields ?? undefined} />
+        <SharedFieldRenderer fields={monitor.parsedData} displayFields={monitor.displayFields ?? undefined} limits={limits} />
       )}
-
-      <QuotaWindowBars limits={limits} />
 
       <PeriodQuotaEstimate limits={limits} />
 

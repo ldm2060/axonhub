@@ -510,6 +510,9 @@ export type ProviderQuotaLimit = {
   usageRatio: number;
   ready: boolean;
   window?: string;
+  // The usage-monitor display field this limit was derived from; the field
+  // renderer matches it to upgrade that field's own bar with window data.
+  fieldKey?: string;
   account?: string;
   nextResetAt?: string;
   periodStart?: string;
@@ -573,6 +576,7 @@ function parseQuotaLimit(entry: unknown): ProviderQuotaLimit | undefined {
     usageRatio,
     ready: limit.ready === true,
     window,
+    fieldKey: optionalString(limit.fieldKey),
     account,
     nextResetAt,
     periodStart,

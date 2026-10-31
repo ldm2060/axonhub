@@ -1152,6 +1152,9 @@ func (svc *UsageMonitorService) pollChannel(ctx context.Context, ch *ent.UsageMo
 		if l.Window != "" {
 			m["window"] = l.Window
 		}
+		if l.FieldKey != "" {
+			m["fieldKey"] = l.FieldKey
+		}
 		if l.PeriodStart != nil {
 			m["periodStart"] = l.PeriodStart.Format(time.RFC3339)
 		}
