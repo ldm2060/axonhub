@@ -28,14 +28,12 @@ build-backend:
 	go build -ldflags "-s -w" -tags=nomsgpack -o axonhub ./cmd/axonhub
 	@echo "Backend build completed!"
 
-# Build the frontend application
+# Build the frontend application. The fork's vite config writes straight to
+# internal/server/static/dist (the go:embed target), so there is no frontend/dist
+# to copy — the old cp step failed every release after the outDir moved.
 build-frontend:
 	@echo "Building axonhub frontend..."
-	cd frontend && pnpm vite build
-	@echo "Copying frontend dist to server static directory..."
-	rm -rf internal/server/static/dist/assets
-	mkdir -p internal/server/static/dist
-	cp -r frontend/dist/* internal/server/static/dist/
+	cd frontend && pnpm vite build --emptyOutDir
 	@echo "Frontend build completed!"
 
 # Build both frontend and backend
