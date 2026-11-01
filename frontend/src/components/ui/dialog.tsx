@@ -4,9 +4,13 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePresenceExitGuard } from '@/hooks/use-presence-exit-guard';
 
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot='dialog' {...props} />;
+function Dialog({ open, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  // Safety net: without it a lost exit-animation event (occluded/throttled
+  // window) would leave the overlay and body scroll lock stuck on the page.
+  usePresenceExitGuard(open, '[data-slot="dialog-overlay"][data-state="closed"], [data-slot="dialog-content"][data-state="closed"]');
+  return <DialogPrimitive.Root data-slot='dialog' open={open} {...props} />;
 }
 
 function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {

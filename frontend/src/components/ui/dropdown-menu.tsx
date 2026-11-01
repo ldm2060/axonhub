@@ -2,9 +2,20 @@ import * as React from 'react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePresenceExitGuard } from '@/hooks/use-presence-exit-guard';
 
-function DropdownMenu({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot='dropdown-menu' {...props} />;
+function DropdownMenu({ open, onOpenChange, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  // Same safety net as Dialog: a lost exit-animation event would leave the
+  // menu content mounted on the page after it "closed".
+  const armExitGuard = usePresenceExitGuard(open, '[data-slot="dropdown-menu-content"][data-state="closed"]');
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!next) armExitGuard();
+      onOpenChange?.(next);
+    },
+    [armExitGuard, onOpenChange]
+  );
+  return <DropdownMenuPrimitive.Root data-slot='dropdown-menu' open={open} onOpenChange={handleOpenChange} {...props} />;
 }
 
 function DropdownMenuPortal({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
