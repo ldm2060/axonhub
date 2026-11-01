@@ -667,5 +667,15 @@
   "system.claudeCode.loadFailed": "Failed to load Claude Code safeguards settings.",
   "system.claudeCode.retry": "Retry",
   "system.claudeCode.validation.fallbacks": "Fallback models must be distinct and different from the reviewer model.",
-  "system.claudeCode.validation.limits": "Enter valid timeouts, output token limits, and transcript limits."
+  "system.claudeCode.validation.limits": "Enter valid timeouts, output token limits, and transcript limits.",
+  "quota.pool.title": "My pools",
+  "quota.pool.shareLine": "Your share {{share}}% →",
+  "quota.pool.totalShort": "of",
+  "quota.pool.remaining": "left",
+  "quota.pool.usedShort": "Used",
+  "quota.pool.unavailableNote": "The monitor has no estimate for this window yet — this pool is not enforced right now.",
+  "quota.pool.status.available": "OK",
+  "quota.pool.status.warning": "Near limit",
+  "quota.pool.status.paused": "Paused",
+  "quota.pool.status.unavailable": "No estimate"
 }

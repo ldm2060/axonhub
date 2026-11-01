@@ -23,7 +23,19 @@ globs: "internal/scopes/rule_channel_usage*.go, internal/server/orchestrator/cha
 5. `shared_with` 存的是**裸数字用户 ID**，UI 里流转的是 GUID（`gid://axonhub/User/2`）。两侧比较一律用 `extractNumberID` / `extractNumberIDAsNumber`。
 6. 无主渠道（`owner_id = 0/NULL`）保持对所有人开放，否则升级用户的历史渠道会被锁死。
 
+## 渠道拼车（pooling，本 fork 新增）
+
+渠道 settings JSON 里的 `pooling`（`objects.ChannelPoolingConfig`）把某监控某窗口的预估总额（`quota_limits[].periodQuota`）按固定百分比拆给成员。与上面两条规则的关系：
+
+1. **拼车是可用性的再收窄**：`scopes.CanRouteThroughChannel` 放行之后，orchestrator 的 `PoolingGate`（`biz.ChannelPoolingService.AllowRoutingThroughChannel`）再按"该用户是否为成员且份额已用完"拦截。两道过滤都必须留在 `filterCandidatesByChannelAccess` / `ListEnabledModels` 的候选过滤处，禁止进任何共享缓存（理由同上）。
+2. **豁免顺序**：系统主体（user==nil）、渠道车主、`write_channels` 持有者不受拼车限制；非成员的共享用户保持原行为（拼车只约束 members 名单内的人）。
+3. **fail-open**：监控无预估（`estimateOK=false`）、用量查询失败、状态缓存未热——全部放行。一个坏监控不能把成员锁在渠道外面。
+4. **状态失效靠版本对比**：pool state 缓存以 `channel.UpdatedAt` + `monitor.LastPollAt` 判旧，不要加轮询回调或手动失效路径。
+5. 成员保存时**只增不减**地同步进 `shared_with`（`syncPoolingSharedWith`），并会把 private 渠道提升为 shared；从拼车移除成员不动 `shared_with`，车主用分享对话框自行清理。
+6. `pooling.monitorId`/`members[].userId` 存**裸数字 ID**，UI 里是 GUID——与 `shared_with` 同一条规则，用 `extractNumberIDAsNumber` 换算。
+
 ## 相关改动记录
 
 - `2ac6fe17` 共享链路（可见性）修复
 - `94203204` 可用性门禁
+- 渠道拼车（settings.pooling + PoolingGate + 电池面板「我的拼车」）

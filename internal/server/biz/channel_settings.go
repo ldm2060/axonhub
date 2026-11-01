@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/ldm2060/axonhub/internal/authz"
@@ -47,6 +48,7 @@ type UpdateChannelSettingsInput struct {
 	APIKeyRoundRobinSwitchAfter *int                                  `json:"apiKeyRoundRobinSwitchAfter"`
 	ProviderQuota               *objects.ChannelProviderQuotaSettings `json:"providerQuota"`
 	QuotaRoutingMode            *objects.QuotaRoutingMode             `json:"quotaRoutingMode"`
+	Pooling                     *objects.ChannelPoolingConfig         `json:"pooling"`
 }
 
 // Apply returns the settings that result from applying the patch to base.
@@ -122,8 +124,97 @@ func (i *UpdateChannelSettingsInput) Apply(base *objects.ChannelSettings) object
 	if i.QuotaRoutingMode != nil {
 		merged.QuotaRoutingMode = *i.QuotaRoutingMode
 	}
+	if i.Pooling != nil {
+		merged.Pooling = i.Pooling
+	}
 
 	return merged
+}
+
+// ValidatePoolingSettings checks a channel's pooling config. Only an enabled
+// config is strictly validated, so disabling pooling never fails on legacy or
+// half-edited values, and a disabled config keeps its members for re-enabling.
+func ValidatePoolingSettings(settings *objects.ChannelSettings) error {
+	if settings == nil || settings.Pooling == nil || !settings.Pooling.Enabled {
+		return nil
+	}
+
+	cfg := settings.Pooling
+	if !objects.IsValidPoolingWindow(cfg.Window) {
+		return fmt.Errorf("unknown pooling window %q", cfg.Window)
+	}
+	if cfg.MonitorID <= 0 {
+		return fmt.Errorf("pooling requires a bound usage monitor")
+	}
+
+	seen := make(map[int]struct{}, len(cfg.Members))
+	sum := 0.0
+	for _, m := range cfg.Members {
+		if m.UserID <= 0 {
+			return fmt.Errorf("pooling member has an invalid user id")
+		}
+		if _, dup := seen[m.UserID]; dup {
+			return fmt.Errorf("pooling member %d appears more than once", m.UserID)
+		}
+		seen[m.UserID] = struct{}{}
+		if m.SharePct <= 0 || m.SharePct > 100 {
+			return fmt.Errorf("pooling member %d share must be within (0, 100]", m.UserID)
+		}
+		sum += m.SharePct
+	}
+	if sum > 100+1e-9 {
+		return fmt.Errorf("pooling shares sum to %.2f%%, exceeding 100%%", sum)
+	}
+	return nil
+}
+
+// syncPoolingSharedWith adds pooling members to the channel's shared_with list
+// (add-only) and promotes a private channel to shared: a member needs the
+// channel shared to route through it at all, and visible ≠ usable means the
+// visibility side must move too. Members removed from the pool keep their
+// share-dialog membership; the owner removes them there.
+func (svc *ChannelService) syncPoolingSharedWith(ctx context.Context, channelID int, cfg *objects.ChannelPoolingConfig) error {
+	if cfg == nil || !cfg.Enabled || len(cfg.Members) == 0 {
+		return nil
+	}
+
+	existing, err := authz.RunWithScopeDecision(ctx, scopes.ScopeWriteChannels, func(queryCtx context.Context) (*ent.Channel, error) {
+		return svc.entFromContext(queryCtx).Channel.Query().
+			Where(channel.IDEQ(channelID)).
+			Select(channel.FieldOwnerID, channel.FieldSharedWith, channel.FieldVisibility).
+			Only(queryCtx)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to load channel for pooling share sync: %w", err)
+	}
+
+	sharedWith := existing.SharedWith
+	changed := false
+	for _, m := range cfg.Members {
+		if m.UserID == existing.OwnerID {
+			continue
+		}
+		if !slices.Contains(sharedWith, m.UserID) {
+			sharedWith = append(sharedWith, m.UserID)
+			changed = true
+		}
+	}
+	if !changed {
+		return nil
+	}
+
+	visibility := existing.Visibility
+	if visibility == channel.VisibilityPrivate {
+		visibility = channel.VisibilityShared
+	}
+	if _, err := svc.entFromContext(ctx).Channel.UpdateOneID(channelID).
+		SetSharedWith(sharedWith).
+		SetVisibility(visibility).
+		Save(ctx); err != nil {
+		return fmt.Errorf("failed to add pooling members to shared_with: %w", err)
+	}
+	svc.asyncReloadChannels()
+	return nil
 }
 
 // channelExpectedVersionKey carries the updated-at version a guarded channel
@@ -176,6 +267,9 @@ func (svc *ChannelService) UpdateChannelSettings(ctx context.Context, id int, in
 
 		updated, err := svc.UpdateChannel(withChannelExpectedVersion(ctx, existing.UpdatedAt), id, &ent.UpdateChannelInput{Settings: &merged})
 		if err == nil {
+			if err := svc.syncPoolingSharedWith(ctx, id, merged.Pooling); err != nil {
+				return nil, err
+			}
 			return updated, nil
 		}
 

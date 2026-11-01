@@ -234,6 +234,21 @@ type ChannelSettings {
   apiKeyRoundRobinSwitchAfter: Int
   providerQuota: ChannelProviderQuotaSettings @goField(forceResolver: true)
   quotaRoutingMode: ChannelQuotaRoutingMode
+  pooling: ChannelPoolingConfig
+}
+
+# Pooling splits one bound usage-monitor window's estimated quota between
+# specific users with fixed percentage shares; the owner keeps the remainder.
+type ChannelPoolingConfig {
+  enabled: Boolean!
+  monitorId: Int!
+  window: String!
+  members: [ChannelPoolingMember!]!
+}
+
+type ChannelPoolingMember {
+  userId: Int!
+  sharePct: Float!
 }
 
 enum ChannelQuotaRoutingMode {
@@ -374,6 +389,19 @@ input ChannelSettingsInput {
   apiKeyRoundRobinSwitchAfter: Int
   providerQuota: ChannelProviderQuotaSettingsInput
   quotaRoutingMode: ChannelQuotaRoutingMode
+  pooling: ChannelPoolingConfigInput
+}
+
+input ChannelPoolingConfigInput {
+  enabled: Boolean
+  monitorId: Int
+  window: String
+  members: [ChannelPoolingMemberInput!]
+}
+
+input ChannelPoolingMemberInput {
+  userId: Int!
+  sharePct: Float!
 }
 
 # A partial patch of channel settings. Absent fields keep their stored
@@ -400,6 +428,7 @@ input UpdateChannelSettingsInput {
   apiKeyRoundRobinSwitchAfter: Int
   providerQuota: ChannelProviderQuotaSettingsInput
   quotaRoutingMode: ChannelQuotaRoutingMode
+  pooling: ChannelPoolingConfigInput
 }
 
 input ChannelRateLimitInput {

@@ -20,6 +20,7 @@ schema:
   - usage_monitor.graphql
   - analytics.graphql
   - oauth_provider.graphql
+  - pooling.graphql
 
 omit_gqlgen_version_in_file_notice: true
 
@@ -192,6 +193,18 @@ models:
   ChannelSettingsInput:
     model:
       - github.com/ldm2060/axonhub/internal/objects.ChannelSettings
+  ChannelPoolingConfig:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPoolingConfig
+  ChannelPoolingConfigInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPoolingConfig
+  ChannelPoolingMember:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPoolingMember
+  ChannelPoolingMemberInput:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelPoolingMember
   RetryableErrorPattern:
     model:
       - github.com/ldm2060/axonhub/internal/objects.RetryableErrorPattern

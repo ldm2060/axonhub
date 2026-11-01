@@ -1,0 +1,56 @@
+# Channel pooling (拼车) queries: the viewer-facing pool quotas that feed the
+# battery popover, and the owner-facing per-channel pool status.
+#
+# Fork-specific feature; upstream has nothing like it. Status values mirror
+# biz pooling constants: available | warning | paused | unavailable, where
+# "unavailable" means the bound monitor could not price the configured window
+# and the pool fails open (no enforcement).
+
+extend type Query {
+  "Every enabled pool the current viewer is a member of, for the battery popover."
+  myPoolQuotas: [MyPoolQuota!]!
+
+  "Owner-facing pool state of one channel, including each member's usage."
+  channelPoolStatus(channelID: ID!): ChannelPoolStatus!
+}
+
+type MyPoolQuota {
+  channelId: Int!
+  channelName: String!
+  window: String!
+  "The viewer's fixed percentage share of the pool."
+  sharePct: Float!
+  "The viewer's sub-quota: total × share, recomputed on every monitor poll."
+  memberQuota: Float!
+  "The viewer's cost on the pooled channel since the window started."
+  used: Float!
+  totalQuota: Float
+  periodStart: Time
+  nextResetAt: Time
+  status: String!
+}
+
+type PoolMemberStatus {
+  userId: Int!
+  "Resolved so the owner panel renders names without holding read_users."
+  user: SharedUser
+  sharePct: Float!
+  "The member's sub-quota; null while the estimate is unavailable."
+  quota: Float
+  used: Float!
+  status: String!
+}
+
+type ChannelPoolStatus {
+  channelId: Int!
+  enabled: Boolean!
+  window: String
+  totalQuota: Float
+  periodStart: Time
+  nextResetAt: Time
+  "False when the monitor cannot price the window; the pool then fails open."
+  estimateAvailable: Boolean!
+  "100 minus the member share sum; display-only, the owner is exempt."
+  ownerReservedPct: Float!
+  members: [PoolMemberStatus!]!
+}

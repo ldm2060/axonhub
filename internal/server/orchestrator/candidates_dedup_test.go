@@ -34,7 +34,7 @@ func TestDefaultSelector_Select_Deduplication(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	// Create a model with a regex association that matches multiple RequestModels
 	// gpt-4 matches "gpt-4"
@@ -94,7 +94,7 @@ func TestDefaultSelector_Select_AggregateSameChannelSamePriority(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	model, err := client.Model.Create().
 		SetModelID("my-model").
@@ -160,7 +160,7 @@ func TestDefaultSelector_Select_DeduplicateAcrossConditionalAssociationsByActual
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	model, err := client.Model.Create().
 		SetModelID("conditional-dedup-model").
@@ -227,7 +227,7 @@ func TestDefaultSelector_Select_ConditionalMismatchKeepsDuplicateFallback(t *tes
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	model, err := client.Model.Create().
 		SetModelID("conditional-fallback-model").

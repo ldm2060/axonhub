@@ -386,6 +386,22 @@ export const channelResponseTimeoutSchema = z.object({
 });
 export type ChannelResponseTimeout = z.infer<typeof channelResponseTimeoutSchema>;
 
+// Channel pooling (拼车): one bound usage-monitor window's estimated quota
+// split between members by fixed percentage. Mirrors objects.ChannelPoolingConfig.
+export const channelPoolingMemberSchema = z.object({
+  userId: z.number().int(),
+  sharePct: z.number(),
+});
+export type ChannelPoolingMember = z.infer<typeof channelPoolingMemberSchema>;
+
+export const channelPoolingConfigSchema = z.object({
+  enabled: z.boolean(),
+  monitorId: z.number().int(),
+  window: z.string(),
+  members: z.array(channelPoolingMemberSchema),
+});
+export type ChannelPoolingConfig = z.infer<typeof channelPoolingConfigSchema>;
+
 // Channel Settings
 export const channelSettingsSchema = z.object({
   extraModelPrefix: z.string().optional(),
@@ -425,6 +441,7 @@ export const channelSettingsSchema = z.object({
     .optional(),
   apiKeyRoundRobinSwitchAfter: z.number().int().min(0).max(2147483647).optional().nullable(),
   quotaRoutingMode: z.enum(['INHERIT', 'IGNORE_QUOTA', 'REMOVE_ON_EXHAUSTED', 'BACKPRESSURE']).optional(),
+  pooling: channelPoolingConfigSchema.optional().nullable(),
 });
 
 export type ChannelSettings = z.infer<typeof channelSettingsSchema>;

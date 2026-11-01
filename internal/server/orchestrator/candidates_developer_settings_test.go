@@ -76,7 +76,7 @@ func TestDefaultSelector_Select_InheritsDeveloperAssociations(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	candidates, err := selector.Select(ctx, &llm.Request{Model: "claude-opus-4-6"})
 	require.NoError(t, err)
 	require.NotEmpty(t, candidates)
@@ -95,7 +95,7 @@ func TestDefaultSelector_Select_InvalidatesCacheWhenDeveloperAssociationsChange(
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	err := systemService.SetModelSettings(ctx, biz.SystemModelSettings{
 		QueryAllChannelModels: true,

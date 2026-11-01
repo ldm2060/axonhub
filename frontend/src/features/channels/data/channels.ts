@@ -118,6 +118,15 @@ const CREATE_CHANNEL_MUTATION = `
       tags
       defaultTestModel
       settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
         extraModelPrefix
         modelMappings {
           from
@@ -242,6 +251,15 @@ const DUPLICATE_CHANNEL_MUTATION = `
       tags
       defaultTestModel
       settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
         extraModelPrefix
         modelMappings {
           from
@@ -366,6 +384,15 @@ const BULK_CREATE_CHANNELS_MUTATION = `
       tags
       defaultTestModel
       settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
         extraModelPrefix
         modelMappings {
           from
@@ -489,6 +516,15 @@ const CHANNEL_FIELDS_FRAGMENT = `
       tags
       defaultTestModel
       settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
         extraModelPrefix
         modelMappings {
           from
@@ -753,6 +789,15 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
           transport
         }
         settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
           extraModelPrefix
           modelMappings {
             from
@@ -1004,6 +1049,15 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
           transport
         }
         settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
           extraModelPrefix
           modelMappings {
             from
@@ -1255,6 +1309,15 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
           tags
           defaultTestModel
           settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
             extraModelPrefix
             modelMappings {
               from
@@ -1433,6 +1496,15 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
           quotaBindingReady
           quotaMultiMonitorStrategy
           settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
             quotaRoutingMode
           }
           providerQuotaStatus {
@@ -1458,6 +1530,15 @@ const CHANNEL_QUERY_TAGS_SELECTION = `
 
 const CHANNEL_QUERY_PROXY_SELECTION = `
           settings {
+        pooling {
+          enabled
+          monitorId
+          window
+          members {
+            userId
+            sharePct
+          }
+        }
             quotaRoutingMode
             proxy {
               type

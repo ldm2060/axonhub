@@ -72,7 +72,7 @@ func TestGoogleNativeToolsSelector_Select_WithGoogleNativeTools(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithGoogleNativeToolsSelector(baseSelector)
 
 	// Request with Google native tools
@@ -109,7 +109,7 @@ func TestGoogleNativeToolsSelector_Select_WithoutGoogleNativeTools(t *testing.T)
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithGoogleNativeToolsSelector(baseSelector)
 
 	// Request without Google native tools (only function tools)
@@ -156,7 +156,7 @@ func TestGoogleNativeToolsSelector_Select_NoCompatibleChannels(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithGoogleNativeToolsSelector(baseSelector)
 
 	// Request with Google native tools
@@ -185,7 +185,7 @@ func TestGoogleNativeToolsSelector_Select_EmptyTools(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithGoogleNativeToolsSelector(baseSelector)
 
 	// Request with no tools
@@ -219,7 +219,7 @@ func TestGoogleNativeToolsSelector_Select_MultipleGoogleNativeTools(t *testing.T
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithGoogleNativeToolsSelector(baseSelector)
 
 	// Request with multiple Google native tools

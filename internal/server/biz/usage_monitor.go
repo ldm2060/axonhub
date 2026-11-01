@@ -556,6 +556,13 @@ func (svc *UsageMonitorService) GetChannel(ctx context.Context, id int) (*ent.Us
 	return svc.cache.Get(ctx, id)
 }
 
+// GetChannelCached returns a monitor from the in-memory cache without a DB
+// fallback; ok is false when the cache has not loaded the monitor yet. Hot
+// paths (pool routing checks) use it to avoid a per-request DB round-trip.
+func (svc *UsageMonitorService) GetChannelCached(id int) (*ent.UsageMonitorChannel, bool) {
+	return svc.cache.GetCached(id)
+}
+
 // CreateChannel creates a new usage monitor channel.
 func (svc *UsageMonitorService) CreateChannel(ctx context.Context, input usage_monitor.CreateUsageMonitorChannelInput) (*ent.UsageMonitorChannel, error) {
 	client := svc.entFromContext(ctx)

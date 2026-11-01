@@ -90,6 +90,7 @@ type ResolverRoot interface {
 	OAuthClient() OAuthClientResolver
 	OIDCIdentity() OIDCIdentityResolver
 	ParsedFieldValue() ParsedFieldValueResolver
+	PoolMemberStatus() PoolMemberStatusResolver
 	Project() ProjectResolver
 	Prompt() PromptResolver
 	PromptProtectionRule() PromptProtectionRuleResolver
@@ -583,6 +584,30 @@ type ComplexityRoot struct {
 		Stream                 func(childComplexity int) int
 	}
 
+	ChannelPoolStatus struct {
+		ChannelID         func(childComplexity int) int
+		Enabled           func(childComplexity int) int
+		EstimateAvailable func(childComplexity int) int
+		Members           func(childComplexity int) int
+		NextResetAt       func(childComplexity int) int
+		OwnerReservedPct  func(childComplexity int) int
+		PeriodStart       func(childComplexity int) int
+		TotalQuota        func(childComplexity int) int
+		Window            func(childComplexity int) int
+	}
+
+	ChannelPoolingConfig struct {
+		Enabled   func(childComplexity int) int
+		Members   func(childComplexity int) int
+		MonitorID func(childComplexity int) int
+		Window    func(childComplexity int) int
+	}
+
+	ChannelPoolingMember struct {
+		SharePct func(childComplexity int) int
+		UserID   func(childComplexity int) int
+	}
+
 	ChannelProbe struct {
 		AvgTimeToFirstTokenMs func(childComplexity int) int
 		AvgTokensPerSecond    func(childComplexity int) int
@@ -666,6 +691,7 @@ type ComplexityRoot struct {
 		ModelProtocols              func(childComplexity int) int
 		PassThroughBody             func(childComplexity int) int
 		PassThroughUserAgent        func(childComplexity int) int
+		Pooling                     func(childComplexity int) int
 		ProviderQuota               func(childComplexity int) int
 		Proxy                       func(childComplexity int) int
 		QuotaRoutingMode            func(childComplexity int) int
@@ -1366,6 +1392,19 @@ type ComplexityRoot struct {
 		UpdateWebhookNotifierConfig           func(childComplexity int, input biz.WebhookNotifierConfig) int
 	}
 
+	MyPoolQuota struct {
+		ChannelID   func(childComplexity int) int
+		ChannelName func(childComplexity int) int
+		MemberQuota func(childComplexity int) int
+		NextResetAt func(childComplexity int) int
+		PeriodStart func(childComplexity int) int
+		SharePct    func(childComplexity int) int
+		Status      func(childComplexity int) int
+		TotalQuota  func(childComplexity int) int
+		Used        func(childComplexity int) int
+		Window      func(childComplexity int) int
+	}
+
 	OAuthAuthorizationDecision struct {
 		RedirectURL func(childComplexity int) int
 	}
@@ -1507,6 +1546,15 @@ type ComplexityRoot struct {
 
 	PassThroughSettings struct {
 		Enabled func(childComplexity int) int
+	}
+
+	PoolMemberStatus struct {
+		Quota    func(childComplexity int) int
+		SharePct func(childComplexity int) int
+		Status   func(childComplexity int) int
+		Used     func(childComplexity int) int
+		User     func(childComplexity int) int
+		UserID   func(childComplexity int) int
 	}
 
 	PriceOverride struct {
@@ -1751,6 +1799,7 @@ type ComplexityRoot struct {
 		CatalogSettings                 func(childComplexity int) int
 		ChannelOverrideTemplates        func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.ChannelOverrideTemplateOrder, where *ent.ChannelOverrideTemplateWhereInput) int
 		ChannelPerformanceStats         func(childComplexity int) int
+		ChannelPoolStatus               func(childComplexity int, channelID objects.GUID) int
 		ChannelProbeData                func(childComplexity int, input biz.GetChannelProbeDataInput) int
 		ChannelQuotaMonitorBindings     func(childComplexity int, channelID objects.GUID) int
 		ChannelSuccessRates             func(childComplexity int, timeWindow *string, limit *int) int
@@ -1791,6 +1840,7 @@ type ComplexityRoot struct {
 		MyFastestChannels               func(childComplexity int, input FastestChannelsInput) int
 		MyFastestModels                 func(childComplexity int, input FastestChannelsInput) int
 		MyModelPerformanceStats         func(childComplexity int) int
+		MyPoolQuotas                    func(childComplexity int) int
 		MyProjects                      func(childComplexity int) int
 		MyRequestStats                  func(childComplexity int, timeWindow *string) int
 		MyRequestStatsByAPIKey          func(childComplexity int, timeWindow *string) int
@@ -3074,6 +3124,9 @@ type ParsedFieldValueResolver interface {
 	Value(ctx context.Context, obj *usage_monitor.ParsedField) (*string, error)
 	Total(ctx context.Context, obj *usage_monitor.ParsedField) (*string, error)
 }
+type PoolMemberStatusResolver interface {
+	User(ctx context.Context, obj *biz.PoolMemberStatus) (*SharedUser, error)
+}
 type ProjectResolver interface {
 	ID(ctx context.Context, obj *ent.Project) (*objects.GUID, error)
 
@@ -3230,6 +3283,8 @@ type QueryResolver interface {
 	AnalyticsDailyStats(ctx context.Context, filter *AnalyticsFilter) ([]*AnalyticsDailyStat, error)
 	AnalyticsDimensionStats(ctx context.Context, filter *AnalyticsFilter, dimension string) ([]*AnalyticsDimensionStat, error)
 	OauthAuthorizationRequest(ctx context.Context, requestID string) (*OAuthAuthorizationRequest, error)
+	MyPoolQuotas(ctx context.Context) ([]*biz.MyPoolQuota, error)
+	ChannelPoolStatus(ctx context.Context, channelID objects.GUID) (*biz.ChannelPoolStatus, error)
 }
 type QuotaMonitorBindingConditionResolver interface {
 	Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition) (string, error)
@@ -5228,6 +5283,99 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ChannelPolicies.Stream(childComplexity), true
 
+	case "ChannelPoolStatus.channelId":
+		if e.complexity.ChannelPoolStatus.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.ChannelID(childComplexity), true
+	case "ChannelPoolStatus.enabled":
+		if e.complexity.ChannelPoolStatus.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.Enabled(childComplexity), true
+	case "ChannelPoolStatus.estimateAvailable":
+		if e.complexity.ChannelPoolStatus.EstimateAvailable == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.EstimateAvailable(childComplexity), true
+	case "ChannelPoolStatus.members":
+		if e.complexity.ChannelPoolStatus.Members == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.Members(childComplexity), true
+	case "ChannelPoolStatus.nextResetAt":
+		if e.complexity.ChannelPoolStatus.NextResetAt == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.NextResetAt(childComplexity), true
+	case "ChannelPoolStatus.ownerReservedPct":
+		if e.complexity.ChannelPoolStatus.OwnerReservedPct == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.OwnerReservedPct(childComplexity), true
+	case "ChannelPoolStatus.periodStart":
+		if e.complexity.ChannelPoolStatus.PeriodStart == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.PeriodStart(childComplexity), true
+	case "ChannelPoolStatus.totalQuota":
+		if e.complexity.ChannelPoolStatus.TotalQuota == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.TotalQuota(childComplexity), true
+	case "ChannelPoolStatus.window":
+		if e.complexity.ChannelPoolStatus.Window == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolStatus.Window(childComplexity), true
+
+	case "ChannelPoolingConfig.enabled":
+		if e.complexity.ChannelPoolingConfig.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingConfig.Enabled(childComplexity), true
+	case "ChannelPoolingConfig.members":
+		if e.complexity.ChannelPoolingConfig.Members == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingConfig.Members(childComplexity), true
+	case "ChannelPoolingConfig.monitorId":
+		if e.complexity.ChannelPoolingConfig.MonitorID == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingConfig.MonitorID(childComplexity), true
+	case "ChannelPoolingConfig.window":
+		if e.complexity.ChannelPoolingConfig.Window == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingConfig.Window(childComplexity), true
+
+	case "ChannelPoolingMember.sharePct":
+		if e.complexity.ChannelPoolingMember.SharePct == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingMember.SharePct(childComplexity), true
+	case "ChannelPoolingMember.userId":
+		if e.complexity.ChannelPoolingMember.UserID == nil {
+			break
+		}
+
+		return e.complexity.ChannelPoolingMember.UserID(childComplexity), true
+
 	case "ChannelProbe.avgTimeToFirstTokenMs":
 		if e.complexity.ChannelProbe.AvgTimeToFirstTokenMs == nil {
 			break
@@ -5567,6 +5715,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ChannelSettings.PassThroughUserAgent(childComplexity), true
+	case "ChannelSettings.pooling":
+		if e.complexity.ChannelSettings.Pooling == nil {
+			break
+		}
+
+		return e.complexity.ChannelSettings.Pooling(childComplexity), true
 	case "ChannelSettings.providerQuota":
 		if e.complexity.ChannelSettings.ProviderQuota == nil {
 			break
@@ -9266,6 +9420,67 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.UpdateWebhookNotifierConfig(childComplexity, args["input"].(biz.WebhookNotifierConfig)), true
 
+	case "MyPoolQuota.channelId":
+		if e.complexity.MyPoolQuota.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.ChannelID(childComplexity), true
+	case "MyPoolQuota.channelName":
+		if e.complexity.MyPoolQuota.ChannelName == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.ChannelName(childComplexity), true
+	case "MyPoolQuota.memberQuota":
+		if e.complexity.MyPoolQuota.MemberQuota == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.MemberQuota(childComplexity), true
+	case "MyPoolQuota.nextResetAt":
+		if e.complexity.MyPoolQuota.NextResetAt == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.NextResetAt(childComplexity), true
+	case "MyPoolQuota.periodStart":
+		if e.complexity.MyPoolQuota.PeriodStart == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.PeriodStart(childComplexity), true
+	case "MyPoolQuota.sharePct":
+		if e.complexity.MyPoolQuota.SharePct == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.SharePct(childComplexity), true
+	case "MyPoolQuota.status":
+		if e.complexity.MyPoolQuota.Status == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.Status(childComplexity), true
+	case "MyPoolQuota.totalQuota":
+		if e.complexity.MyPoolQuota.TotalQuota == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.TotalQuota(childComplexity), true
+	case "MyPoolQuota.used":
+		if e.complexity.MyPoolQuota.Used == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.Used(childComplexity), true
+	case "MyPoolQuota.window":
+		if e.complexity.MyPoolQuota.Window == nil {
+			break
+		}
+
+		return e.complexity.MyPoolQuota.Window(childComplexity), true
+
 	case "OAuthAuthorizationDecision.redirectUrl":
 		if e.complexity.OAuthAuthorizationDecision.RedirectURL == nil {
 			break
@@ -9800,6 +10015,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PassThroughSettings.Enabled(childComplexity), true
+
+	case "PoolMemberStatus.quota":
+		if e.complexity.PoolMemberStatus.Quota == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.Quota(childComplexity), true
+	case "PoolMemberStatus.sharePct":
+		if e.complexity.PoolMemberStatus.SharePct == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.SharePct(childComplexity), true
+	case "PoolMemberStatus.status":
+		if e.complexity.PoolMemberStatus.Status == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.Status(childComplexity), true
+	case "PoolMemberStatus.used":
+		if e.complexity.PoolMemberStatus.Used == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.Used(childComplexity), true
+	case "PoolMemberStatus.user":
+		if e.complexity.PoolMemberStatus.User == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.User(childComplexity), true
+	case "PoolMemberStatus.userId":
+		if e.complexity.PoolMemberStatus.UserID == nil {
+			break
+		}
+
+		return e.complexity.PoolMemberStatus.UserID(childComplexity), true
 
 	case "PriceOverride.items":
 		if e.complexity.PriceOverride.Items == nil {
@@ -10815,6 +11067,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.ChannelPerformanceStats(childComplexity), true
+	case "Query.channelPoolStatus":
+		if e.complexity.Query.ChannelPoolStatus == nil {
+			break
+		}
+
+		args, err := ec.field_Query_channelPoolStatus_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ChannelPoolStatus(childComplexity, args["channelID"].(objects.GUID)), true
 	case "Query.channelProbeData":
 		if e.complexity.Query.ChannelProbeData == nil {
 			break
@@ -11175,6 +11438,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.MyModelPerformanceStats(childComplexity), true
+	case "Query.myPoolQuotas":
+		if e.complexity.Query.MyPoolQuotas == nil {
+			break
+		}
+
+		return e.complexity.Query.MyPoolQuotas(childComplexity), true
 	case "Query.myProjects":
 		if e.complexity.Query.MyProjects == nil {
 			break
@@ -15735,6 +16004,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputChannelOverrideTemplateOrder,
 		ec.unmarshalInputChannelOverrideTemplateWhereInput,
 		ec.unmarshalInputChannelPoliciesInput,
+		ec.unmarshalInputChannelPoolingConfigInput,
+		ec.unmarshalInputChannelPoolingMemberInput,
 		ec.unmarshalInputChannelProbeWhereInput,
 		ec.unmarshalInputChannelProviderQuotaSettingsInput,
 		ec.unmarshalInputChannelRateLimitInput,
@@ -16048,7 +16319,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql" "publish_request.graphql" "usage_monitor.graphql" "analytics.graphql" "oauth_provider.graphql"
+//go:embed "axonhub.graphql" "ent.graphql" "dashboard.graphql" "scopes.graphql" "me.graphql" "system.graphql" "filter.graphql" "model.graphql" "backup.graphql" "channel_probe.graphql" "prompt.graphql" "prompt_protection_rule.graphql" "price.graphql" "cost.graphql" "publish_request.graphql" "usage_monitor.graphql" "analytics.graphql" "oauth_provider.graphql" "pooling.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -16078,6 +16349,7 @@ var sources = []*ast.Source{
 	{Name: "usage_monitor.graphql", Input: sourceData("usage_monitor.graphql"), BuiltIn: false},
 	{Name: "analytics.graphql", Input: sourceData("analytics.graphql"), BuiltIn: false},
 	{Name: "oauth_provider.graphql", Input: sourceData("oauth_provider.graphql"), BuiltIn: false},
+	{Name: "pooling.graphql", Input: sourceData("pooling.graphql"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -18763,6 +19035,17 @@ func (ec *executionContext) field_Query_channelOverrideTemplates_args(ctx contex
 		return nil, err
 	}
 	args["where"] = arg5
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_channelPoolStatus_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "channelID", ec.unmarshalNID2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐGUID)
+	if err != nil {
+		return nil, err
+	}
+	args["channelID"] = arg0
 	return args, nil
 }
 
@@ -26017,6 +26300,8 @@ func (ec *executionContext) fieldContext_Channel_settings(_ context.Context, fie
 				return ec.fieldContext_ChannelSettings_providerQuota(ctx, field)
 			case "quotaRoutingMode":
 				return ec.fieldContext_ChannelSettings_quotaRoutingMode(ctx, field)
+			case "pooling":
+				return ec.fieldContext_ChannelSettings_pooling(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ChannelSettings", field.Name)
 		},
@@ -30346,6 +30631,461 @@ func (ec *executionContext) fieldContext_ChannelPolicies_apiKeyAutoDisableRules(
 	return fc, nil
 }
 
+func (ec *executionContext) _ChannelPoolStatus_channelId(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_channelId,
+		func(ctx context.Context) (any, error) {
+			return obj.ChannelID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_channelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_enabled(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_window(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_window,
+		func(ctx context.Context) (any, error) {
+			return obj.Window, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_window(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_totalQuota(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_totalQuota,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalQuota, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_totalQuota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_periodStart(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_periodStart,
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodStart, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_periodStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_nextResetAt(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_nextResetAt,
+		func(ctx context.Context) (any, error) {
+			return obj.NextResetAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_nextResetAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_estimateAvailable(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_estimateAvailable,
+		func(ctx context.Context) (any, error) {
+			return obj.EstimateAvailable, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_estimateAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_ownerReservedPct(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_ownerReservedPct,
+		func(ctx context.Context) (any, error) {
+			return obj.OwnerReservedPct, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_ownerReservedPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolStatus_members(ctx context.Context, field graphql.CollectedField, obj *biz.ChannelPoolStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolStatus_members,
+		func(ctx context.Context) (any, error) {
+			return obj.Members, nil
+		},
+		nil,
+		ec.marshalNPoolMemberStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐPoolMemberStatusᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolStatus_members(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_PoolMemberStatus_userId(ctx, field)
+			case "user":
+				return ec.fieldContext_PoolMemberStatus_user(ctx, field)
+			case "sharePct":
+				return ec.fieldContext_PoolMemberStatus_sharePct(ctx, field)
+			case "quota":
+				return ec.fieldContext_PoolMemberStatus_quota(ctx, field)
+			case "used":
+				return ec.fieldContext_PoolMemberStatus_used(ctx, field)
+			case "status":
+				return ec.fieldContext_PoolMemberStatus_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PoolMemberStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingConfig_enabled(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingConfig_enabled,
+		func(ctx context.Context) (any, error) {
+			return obj.Enabled, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingConfig_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingConfig_monitorId(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingConfig_monitorId,
+		func(ctx context.Context) (any, error) {
+			return obj.MonitorID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingConfig_monitorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingConfig_window(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingConfig_window,
+		func(ctx context.Context) (any, error) {
+			return obj.Window, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingConfig_window(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingConfig_members(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingConfig) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingConfig_members,
+		func(ctx context.Context) (any, error) {
+			return obj.Members, nil
+		},
+		nil,
+		ec.marshalNChannelPoolingMember2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMemberᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingConfig_members(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingConfig",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_ChannelPoolingMember_userId(ctx, field)
+			case "sharePct":
+				return ec.fieldContext_ChannelPoolingMember_sharePct(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelPoolingMember", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingMember_userId(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingMember) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingMember_userId,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingMember_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingMember",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelPoolingMember_sharePct(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelPoolingMember) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelPoolingMember_sharePct,
+		func(ctx context.Context) (any, error) {
+			return obj.SharePct, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelPoolingMember_sharePct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelPoolingMember",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ChannelProbe_id(ctx context.Context, field graphql.CollectedField, obj *ent.ChannelProbe) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -32394,6 +33134,45 @@ func (ec *executionContext) fieldContext_ChannelSettings_quotaRoutingMode(_ cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ChannelQuotaRoutingMode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ChannelSettings_pooling(ctx context.Context, field graphql.CollectedField, obj *objects.ChannelSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_ChannelSettings_pooling,
+		func(ctx context.Context) (any, error) {
+			return obj.Pooling, nil
+		},
+		nil,
+		ec.marshalOChannelPoolingConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingConfig,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_ChannelSettings_pooling(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ChannelSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_ChannelPoolingConfig_enabled(ctx, field)
+			case "monitorId":
+				return ec.fieldContext_ChannelPoolingConfig_monitorId(ctx, field)
+			case "window":
+				return ec.fieldContext_ChannelPoolingConfig_window(ctx, field)
+			case "members":
+				return ec.fieldContext_ChannelPoolingConfig_members(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelPoolingConfig", field.Name)
 		},
 	}
 	return fc, nil
@@ -51152,6 +51931,296 @@ func (ec *executionContext) fieldContext_Mutation_denyOAuthAuthorization(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _MyPoolQuota_channelId(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_channelId,
+		func(ctx context.Context) (any, error) {
+			return obj.ChannelID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_channelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_channelName(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_channelName,
+		func(ctx context.Context) (any, error) {
+			return obj.ChannelName, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_channelName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_window(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_window,
+		func(ctx context.Context) (any, error) {
+			return obj.Window, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_window(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_sharePct(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_sharePct,
+		func(ctx context.Context) (any, error) {
+			return obj.SharePct, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_sharePct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_memberQuota(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_memberQuota,
+		func(ctx context.Context) (any, error) {
+			return obj.MemberQuota, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_memberQuota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_used(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_used,
+		func(ctx context.Context) (any, error) {
+			return obj.Used, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_used(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_totalQuota(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_totalQuota,
+		func(ctx context.Context) (any, error) {
+			return obj.TotalQuota, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_totalQuota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_periodStart(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_periodStart,
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodStart, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_periodStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_nextResetAt(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_nextResetAt,
+		func(ctx context.Context) (any, error) {
+			return obj.NextResetAt, nil
+		},
+		nil,
+		ec.marshalOTime2ᚖtimeᚐTime,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_nextResetAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MyPoolQuota_status(ctx context.Context, field graphql.CollectedField, obj *biz.MyPoolQuota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_MyPoolQuota_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_MyPoolQuota_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MyPoolQuota",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OAuthAuthorizationDecision_redirectUrl(ctx context.Context, field graphql.CollectedField, obj *OAuthAuthorizationDecision) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -53897,6 +54966,190 @@ func (ec *executionContext) fieldContext_PassThroughSettings_enabled(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_userId(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_userId,
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_user(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_user,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PoolMemberStatus().User(ctx, obj)
+		},
+		nil,
+		ec.marshalOSharedUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐSharedUser,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SharedUser_id(ctx, field)
+			case "email":
+				return ec.fieldContext_SharedUser_email(ctx, field)
+			case "firstName":
+				return ec.fieldContext_SharedUser_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_SharedUser_lastName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SharedUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_sharePct(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_sharePct,
+		func(ctx context.Context) (any, error) {
+			return obj.SharePct, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_sharePct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_quota(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_quota,
+		func(ctx context.Context) (any, error) {
+			return obj.Quota, nil
+		},
+		nil,
+		ec.marshalOFloat2ᚖfloat64,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_quota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_used(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_used,
+		func(ctx context.Context) (any, error) {
+			return obj.Used, nil
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_used(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoolMemberStatus_status(ctx context.Context, field graphql.CollectedField, obj *biz.PoolMemberStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PoolMemberStatus_status,
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_PoolMemberStatus_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoolMemberStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64603,6 +65856,118 @@ func (ec *executionContext) fieldContext_Query_oauthAuthorizationRequest(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_oauthAuthorizationRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_myPoolQuotas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_myPoolQuotas,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().MyPoolQuotas(ctx)
+		},
+		nil,
+		ec.marshalNMyPoolQuota2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐMyPoolQuotaᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_myPoolQuotas(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_MyPoolQuota_channelId(ctx, field)
+			case "channelName":
+				return ec.fieldContext_MyPoolQuota_channelName(ctx, field)
+			case "window":
+				return ec.fieldContext_MyPoolQuota_window(ctx, field)
+			case "sharePct":
+				return ec.fieldContext_MyPoolQuota_sharePct(ctx, field)
+			case "memberQuota":
+				return ec.fieldContext_MyPoolQuota_memberQuota(ctx, field)
+			case "used":
+				return ec.fieldContext_MyPoolQuota_used(ctx, field)
+			case "totalQuota":
+				return ec.fieldContext_MyPoolQuota_totalQuota(ctx, field)
+			case "periodStart":
+				return ec.fieldContext_MyPoolQuota_periodStart(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_MyPoolQuota_nextResetAt(ctx, field)
+			case "status":
+				return ec.fieldContext_MyPoolQuota_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type MyPoolQuota", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_channelPoolStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_channelPoolStatus,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().ChannelPoolStatus(ctx, fc.Args["channelID"].(objects.GUID))
+		},
+		nil,
+		ec.marshalNChannelPoolStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelPoolStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_channelPoolStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_ChannelPoolStatus_channelId(ctx, field)
+			case "enabled":
+				return ec.fieldContext_ChannelPoolStatus_enabled(ctx, field)
+			case "window":
+				return ec.fieldContext_ChannelPoolStatus_window(ctx, field)
+			case "totalQuota":
+				return ec.fieldContext_ChannelPoolStatus_totalQuota(ctx, field)
+			case "periodStart":
+				return ec.fieldContext_ChannelPoolStatus_periodStart(ctx, field)
+			case "nextResetAt":
+				return ec.fieldContext_ChannelPoolStatus_nextResetAt(ctx, field)
+			case "estimateAvailable":
+				return ec.fieldContext_ChannelPoolStatus_estimateAvailable(ctx, field)
+			case "ownerReservedPct":
+				return ec.fieldContext_ChannelPoolStatus_ownerReservedPct(ctx, field)
+			case "members":
+				return ec.fieldContext_ChannelPoolStatus_members(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ChannelPoolStatus", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_channelPoolStatus_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -91623,6 +92988,88 @@ func (ec *executionContext) unmarshalInputChannelPoliciesInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputChannelPoolingConfigInput(ctx context.Context, obj any) (objects.ChannelPoolingConfig, error) {
+	var it objects.ChannelPoolingConfig
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"enabled", "monitorId", "window", "members"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "enabled":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enabled"))
+			data, err := ec.unmarshalOBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enabled = data
+		case "monitorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("monitorId"))
+			data, err := ec.unmarshalOInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MonitorID = data
+		case "window":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("window"))
+			data, err := ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Window = data
+		case "members":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("members"))
+			data, err := ec.unmarshalOChannelPoolingMemberInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMemberᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Members = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputChannelPoolingMemberInput(ctx context.Context, obj any) (objects.ChannelPoolingMember, error) {
+	var it objects.ChannelPoolingMember
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userId", "sharePct"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
+		case "sharePct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sharePct"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SharePct = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputChannelProbeWhereInput(ctx context.Context, obj any) (ent.ChannelProbeWhereInput, error) {
 	var it ent.ChannelProbeWhereInput
 	asMap := map[string]any{}
@@ -92289,7 +93736,7 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "maxSingleChannelRetries", "responseTimeout", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "autoTrimedModelSuffixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "enableSameChannelRetry", "retryableStatusCodes", "retryableErrorPatterns", "minInputTokens", "maxSingleChannelRetries", "responseTimeout", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode", "pooling"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -92471,6 +93918,13 @@ func (ec *executionContext) unmarshalInputChannelSettingsInput(ctx context.Conte
 				return it, err
 			}
 			it.QuotaRoutingMode = data
+		case "pooling":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pooling"))
+			data, err := ec.unmarshalOChannelPoolingConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Pooling = data
 		}
 	}
 
@@ -113225,7 +114679,7 @@ func (ec *executionContext) unmarshalInputUpdateChannelSettingsInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes", "retryableErrorPatterns", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode"}
+	fieldsInOrder := [...]string{"extraModelPrefix", "modelMappings", "autoTrimedModelPrefixes", "hideOriginalModels", "hideMappedModels", "lowercaseModelId", "proxy", "transformOptions", "headerOverrideOperations", "bodyOverrideOperations", "passThroughUserAgent", "passThroughBody", "rateLimit", "retryableStatusCodes", "retryableErrorPatterns", "modelProtocols", "apiKeyStrategy", "apiKeyRoundRobinSwitchAfter", "providerQuota", "quotaRoutingMode", "pooling"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -113372,6 +114826,13 @@ func (ec *executionContext) unmarshalInputUpdateChannelSettingsInput(ctx context
 				return it, err
 			}
 			it.QuotaRoutingMode = data
+		case "pooling":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pooling"))
+			data, err := ec.unmarshalOChannelPoolingConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingConfig(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Pooling = data
 		}
 	}
 
@@ -126349,6 +127810,171 @@ func (ec *executionContext) _ChannelPolicies(ctx context.Context, sel ast.Select
 	return out
 }
 
+var channelPoolStatusImplementors = []string{"ChannelPoolStatus"}
+
+func (ec *executionContext) _ChannelPoolStatus(ctx context.Context, sel ast.SelectionSet, obj *biz.ChannelPoolStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelPoolStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelPoolStatus")
+		case "channelId":
+			out.Values[i] = ec._ChannelPoolStatus_channelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enabled":
+			out.Values[i] = ec._ChannelPoolStatus_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "window":
+			out.Values[i] = ec._ChannelPoolStatus_window(ctx, field, obj)
+		case "totalQuota":
+			out.Values[i] = ec._ChannelPoolStatus_totalQuota(ctx, field, obj)
+		case "periodStart":
+			out.Values[i] = ec._ChannelPoolStatus_periodStart(ctx, field, obj)
+		case "nextResetAt":
+			out.Values[i] = ec._ChannelPoolStatus_nextResetAt(ctx, field, obj)
+		case "estimateAvailable":
+			out.Values[i] = ec._ChannelPoolStatus_estimateAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerReservedPct":
+			out.Values[i] = ec._ChannelPoolStatus_ownerReservedPct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "members":
+			out.Values[i] = ec._ChannelPoolStatus_members(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelPoolingConfigImplementors = []string{"ChannelPoolingConfig"}
+
+func (ec *executionContext) _ChannelPoolingConfig(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelPoolingConfig) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelPoolingConfigImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelPoolingConfig")
+		case "enabled":
+			out.Values[i] = ec._ChannelPoolingConfig_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "monitorId":
+			out.Values[i] = ec._ChannelPoolingConfig_monitorId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "window":
+			out.Values[i] = ec._ChannelPoolingConfig_window(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "members":
+			out.Values[i] = ec._ChannelPoolingConfig_members(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var channelPoolingMemberImplementors = []string{"ChannelPoolingMember"}
+
+func (ec *executionContext) _ChannelPoolingMember(ctx context.Context, sel ast.SelectionSet, obj *objects.ChannelPoolingMember) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, channelPoolingMemberImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChannelPoolingMember")
+		case "userId":
+			out.Values[i] = ec._ChannelPoolingMember_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sharePct":
+			out.Values[i] = ec._ChannelPoolingMember_sharePct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var channelProbeImplementors = []string{"ChannelProbe", "Node"}
 
 func (ec *executionContext) _ChannelProbe(ctx context.Context, sel ast.SelectionSet, obj *ent.ChannelProbe) graphql.Marshaler {
@@ -127174,6 +128800,8 @@ func (ec *executionContext) _ChannelSettings(ctx context.Context, sel ast.Select
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "quotaRoutingMode":
 			out.Values[i] = ec._ChannelSettings_quotaRoutingMode(ctx, field, obj)
+		case "pooling":
+			out.Values[i] = ec._ChannelSettings_pooling(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -132674,6 +134302,81 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
+var myPoolQuotaImplementors = []string{"MyPoolQuota"}
+
+func (ec *executionContext) _MyPoolQuota(ctx context.Context, sel ast.SelectionSet, obj *biz.MyPoolQuota) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, myPoolQuotaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MyPoolQuota")
+		case "channelId":
+			out.Values[i] = ec._MyPoolQuota_channelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "channelName":
+			out.Values[i] = ec._MyPoolQuota_channelName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "window":
+			out.Values[i] = ec._MyPoolQuota_window(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sharePct":
+			out.Values[i] = ec._MyPoolQuota_sharePct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memberQuota":
+			out.Values[i] = ec._MyPoolQuota_memberQuota(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "used":
+			out.Values[i] = ec._MyPoolQuota_used(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalQuota":
+			out.Values[i] = ec._MyPoolQuota_totalQuota(ctx, field, obj)
+		case "periodStart":
+			out.Values[i] = ec._MyPoolQuota_periodStart(ctx, field, obj)
+		case "nextResetAt":
+			out.Values[i] = ec._MyPoolQuota_nextResetAt(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._MyPoolQuota_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var oAuthAuthorizationDecisionImplementors = []string{"OAuthAuthorizationDecision"}
 
 func (ec *executionContext) _OAuthAuthorizationDecision(ctx context.Context, sel ast.SelectionSet, obj *OAuthAuthorizationDecision) graphql.Marshaler {
@@ -133857,6 +135560,95 @@ func (ec *executionContext) _PassThroughSettings(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._PassThroughSettings_enabled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var poolMemberStatusImplementors = []string{"PoolMemberStatus"}
+
+func (ec *executionContext) _PoolMemberStatus(ctx context.Context, sel ast.SelectionSet, obj *biz.PoolMemberStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, poolMemberStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PoolMemberStatus")
+		case "userId":
+			out.Values[i] = ec._PoolMemberStatus_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PoolMemberStatus_user(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "sharePct":
+			out.Values[i] = ec._PoolMemberStatus_sharePct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "quota":
+			out.Values[i] = ec._PoolMemberStatus_quota(ctx, field, obj)
+		case "used":
+			out.Values[i] = ec._PoolMemberStatus_used(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "status":
+			out.Values[i] = ec._PoolMemberStatus_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -139011,6 +140803,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_oauthAuthorizationRequest(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "myPoolQuotas":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myPoolQuotas(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "channelPoolStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_channelPoolStatus(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -150964,6 +152800,73 @@ func (ec *executionContext) marshalNChannelPerformanceStat2ᚖgithubᚗcomᚋldm
 	return ec._ChannelPerformanceStat(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNChannelPoolStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelPoolStatus(ctx context.Context, sel ast.SelectionSet, v biz.ChannelPoolStatus) graphql.Marshaler {
+	return ec._ChannelPoolStatus(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelPoolStatus2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐChannelPoolStatus(ctx context.Context, sel ast.SelectionSet, v *biz.ChannelPoolStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChannelPoolStatus(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNChannelPoolingMember2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMember(ctx context.Context, sel ast.SelectionSet, v objects.ChannelPoolingMember) graphql.Marshaler {
+	return ec._ChannelPoolingMember(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNChannelPoolingMember2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMemberᚄ(ctx context.Context, sel ast.SelectionSet, v []objects.ChannelPoolingMember) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChannelPoolingMember2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMember(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNChannelPoolingMemberInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMember(ctx context.Context, v any) (objects.ChannelPoolingMember, error) {
+	res, err := ec.unmarshalInputChannelPoolingMemberInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNChannelProbe2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelProbe(ctx context.Context, sel ast.SelectionSet, v *ent.ChannelProbe) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -153618,6 +155521,60 @@ func (ec *executionContext) unmarshalNModelWhereInput2ᚖgithubᚗcomᚋldm2060�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNMyPoolQuota2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐMyPoolQuotaᚄ(ctx context.Context, sel ast.SelectionSet, v []*biz.MyPoolQuota) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMyPoolQuota2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐMyPoolQuota(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMyPoolQuota2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐMyPoolQuota(ctx context.Context, sel ast.SelectionSet, v *biz.MyPoolQuota) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MyPoolQuota(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNNode2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐNoder(ctx context.Context, sel ast.SelectionSet, v []ent.Noder) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -153964,6 +155921,54 @@ func (ec *executionContext) marshalNPassThroughSettings2ᚖgithubᚗcomᚋldm206
 		return graphql.Null
 	}
 	return ec._PassThroughSettings(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPoolMemberStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐPoolMemberStatus(ctx context.Context, sel ast.SelectionSet, v biz.PoolMemberStatus) graphql.Marshaler {
+	return ec._PoolMemberStatus(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPoolMemberStatus2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐPoolMemberStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.PoolMemberStatus) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPoolMemberStatus2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐPoolMemberStatus(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNPriceItemCode2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐPriceItemCode(ctx context.Context, v any) (objects.PriceItemCode, error) {
@@ -159268,6 +161273,39 @@ func (ec *executionContext) unmarshalOChannelPoliciesInput2ᚖgithubᚗcomᚋldm
 	}
 	res, err := ec.unmarshalInputChannelPoliciesInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOChannelPoolingConfig2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingConfig(ctx context.Context, sel ast.SelectionSet, v *objects.ChannelPoolingConfig) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ChannelPoolingConfig(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOChannelPoolingConfigInput2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingConfig(ctx context.Context, v any) (*objects.ChannelPoolingConfig, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputChannelPoolingConfigInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOChannelPoolingMemberInput2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMemberᚄ(ctx context.Context, v any) ([]objects.ChannelPoolingMember, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]objects.ChannelPoolingMember, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNChannelPoolingMemberInput2githubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋobjectsᚐChannelPoolingMember(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOChannelProbe2ᚕᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋentᚐChannelProbeᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.ChannelProbe) graphql.Marshaler {
@@ -164790,6 +166828,13 @@ func (ec *executionContext) marshalOSegment2ᚖgithubᚗcomᚋldm2060ᚋaxonhub�
 		return graphql.Null
 	}
 	return ec._Segment(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSharedUser2ᚖgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋgqlᚐSharedUser(ctx context.Context, sel ast.SelectionSet, v *SharedUser) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SharedUser(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOSpan2ᚕgithubᚗcomᚋldm2060ᚋaxonhubᚋinternalᚋserverᚋbizᚐSpanᚄ(ctx context.Context, sel ast.SelectionSet, v []biz.Span) graphql.Marshaler {

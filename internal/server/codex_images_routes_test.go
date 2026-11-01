@@ -50,7 +50,7 @@ func setupCodexImageRoute(t *testing.T, format llm.APIFormat, response string) (
 	built, err := h.channels.GetChannel(h.ctx, h.source.ID)
 	require.NoError(t, err)
 	h.channels.SetEnabledChannelsForTest([]*biz.Channel{built})
-	selector := orchestrator.NewDefaultSelector(h.channels, h.openAI.ModelService, h.system)
+	selector := orchestrator.NewDefaultSelector(h.channels, h.openAI.ModelService, h.system, nil)
 	h.openAI.ImageGenerationHandlers = api.NewChatCompletionHandlers(orchestrator.NewChatCompletionOrchestrator(h.channels, selector, h.requests, httpclient.NewHttpClient(), openai.NewImageGenerationInboundTransformer(), h.system, h.usage, h.prompts, nil, h.protect, biz.NewLiveStreamRegistry(), orchestrator.NewChannelLimiterManager(), nil))
 	h.openAI.ImageEditHandlers = api.NewChatCompletionHandlers(orchestrator.NewChatCompletionOrchestrator(h.channels, selector, h.requests, httpclient.NewHttpClient(), openai.NewImageEditInboundTransformer(), h.system, h.usage, h.prompts, nil, h.protect, biz.NewLiveStreamRegistry(), orchestrator.NewChannelLimiterManager(), nil))
 	require.NoError(t, h.system.SetCodexCompatibilitySettings(h.ctx, biz.CodexCompatibilitySettings{Enabled: true, ChannelID: &h.source.ID}))

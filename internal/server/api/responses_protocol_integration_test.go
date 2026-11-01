@@ -123,7 +123,7 @@ func newResponsesIntegrationFixture(t *testing.T, upstreamURL string, configure 
 	storage := &biz.DataStorageService{AbstractService: &biz.AbstractService{}, SystemService: systemService, Cache: xcache.NewFromConfig[ent.DataStorage](cacheConfig)}
 	requestService := biz.NewRequestService(client, cacheConfig, systemService, usageLogService, storage, biz.NewLiveStreamRegistry())
 	modelService := biz.NewModelService(biz.ModelServiceParams{ChannelService: channelService, SystemService: systemService, Ent: client})
-	selector := orchestrator.NewDefaultSelector(channelService, modelService, systemService)
+	selector := orchestrator.NewDefaultSelector(channelService, modelService, systemService, nil)
 	candidates, err := selector.Select(ctx, &llm.Request{Model: "synthetic-model", RequestType: llm.RequestTypeChat})
 	require.NoError(t, err)
 	require.NotEmpty(t, candidates)

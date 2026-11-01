@@ -297,7 +297,9 @@ func buildModelDiagnostics(
 ) []channelModelCacheDiagnosticsModelView {
 	selector := defaultSelector
 	if selector == nil {
-		selector = orchestrator.NewDefaultSelector(channelService, modelService, systemService)
+		// Diagnostics fallback selector: pool enforcement is not wired here
+		// because the diagnostics path never serves user traffic.
+		selector = orchestrator.NewDefaultSelector(channelService, modelService, systemService, nil)
 	}
 
 	result := make([]channelModelCacheDiagnosticsModelView, 0, len(models))

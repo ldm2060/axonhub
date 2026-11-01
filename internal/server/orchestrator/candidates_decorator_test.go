@@ -26,7 +26,7 @@ func TestDecoratorChain_FullStack(t *testing.T) {
 
 	// Build decorator chain: Default -> SelectedChannels -> LoadBalanced
 	modelService := newTestModelService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	filteredSelector := WithSelectedChannelsSelector(baseSelector, []int{channels[0].ID, channels[1].ID})
 	selector := WithLoadBalancedSelector(filteredSelector, loadBalancer, systemService)
 
@@ -96,7 +96,7 @@ func TestSelectedChannelsSelector_WithEmptyFilter(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	req := &llm.Request{
 		Model: "gpt-4",

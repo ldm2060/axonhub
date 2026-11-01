@@ -137,6 +137,8 @@ export function mergeChannelSettingsForUpdate(
     apiKeyRoundRobinSwitchAfter: pick('apiKeyRoundRobinSwitchAfter', existing?.apiKeyRoundRobinSwitchAfter ?? null),
     providerQuota: pick('providerQuota', existing?.providerQuota ?? null),
     quotaRoutingMode: pick('quotaRoutingMode', existing?.quotaRoutingMode ?? undefined),
+    // Whole-object merge, same as the backend's nested-object patch semantics.
+    pooling: pick('pooling', existing?.pooling ?? null),
   };
 }
 

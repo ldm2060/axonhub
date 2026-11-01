@@ -435,7 +435,7 @@ func TestLoadBalancedSelector_Select(t *testing.T) {
 	loadBalancer := NewLoadBalancer(systemService, nil, strategies...)
 
 	modelService := newTestModelService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithLoadBalancedSelector(baseSelector, loadBalancer, systemService)
 
 	req := &llm.Request{
@@ -481,7 +481,7 @@ func TestLoadBalancedSelector_Select_SingleChannel(t *testing.T) {
 	loadBalancer := NewLoadBalancer(systemService, nil)
 
 	modelService := newTestModelService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	selector := WithLoadBalancedSelector(baseSelector, loadBalancer, systemService)
 
 	req := &llm.Request{

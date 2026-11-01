@@ -54,7 +54,7 @@ func TestDefaultSelector_SelectModelCandidates_Cache(t *testing.T) {
 	systemService := newTestSystemService(client)
 
 	// Create selector
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	t.Run("first call caches result", func(t *testing.T) {
 		// Test selectModelCandidates with mock request
@@ -567,6 +567,7 @@ func TestDefaultSelector_SelectModelCandidates_UsesModelCardOutputLimit(t *testi
 		newTestChannelServiceForChannels(client),
 		newTestModelService(client),
 		newTestSystemService(client),
+		nil,
 	)
 	candidates, err := selector.selectModelCandidates(ctx, &llm.Request{Model: "glm-5.3"})
 	require.NoError(t, err)

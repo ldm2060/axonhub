@@ -23,6 +23,13 @@ func actingUserForRouting(ctx context.Context) *ent.User {
 	return nil
 }
 
+// PoolingGate is the pooling half of channel access: when a pool member has
+// exhausted their share on a channel, requests are no longer routed through
+// it for that user. Nil gates allow everything (tests, unwired runtime).
+type PoolingGate interface {
+	AllowRoutingThroughChannel(ctx context.Context, user *ent.User, ch *ent.Channel) bool
+}
+
 // filterCandidatesByChannelAccess drops candidates whose channel the acting user
 // may not route through. The enabled-channel cache holds every enabled channel,
 // so private channels of other users - and shared channels the user is not on
@@ -32,7 +39,7 @@ func actingUserForRouting(ctx context.Context) *ent.User {
 // resolveAssociations or the channel cache - both are keyed on channel count and
 // timestamps and are shared by every request, so a user-scoped filter there would
 // poison the cache for whoever asks next.
-func filterCandidatesByChannelAccess(ctx context.Context, candidates []*ChannelModelsCandidate) []*ChannelModelsCandidate {
+func filterCandidatesByChannelAccess(ctx context.Context, candidates []*ChannelModelsCandidate, pooling PoolingGate) []*ChannelModelsCandidate {
 	if len(candidates) == 0 {
 		return candidates
 	}
@@ -43,7 +50,16 @@ func filterCandidatesByChannelAccess(ctx context.Context, candidates []*ChannelM
 	}
 
 	allowed := lo.Filter(candidates, func(candidate *ChannelModelsCandidate, _ int) bool {
-		return candidate != nil && candidate.Channel != nil && scopes.CanRouteThroughChannel(user, candidate.Channel.Channel)
+		if candidate == nil || candidate.Channel == nil {
+			return false
+		}
+		if !scopes.CanRouteThroughChannel(user, candidate.Channel.Channel) {
+			return false
+		}
+		if pooling == nil {
+			return true
+		}
+		return pooling.AllowRoutingThroughChannel(ctx, user, candidate.Channel.Channel)
 	})
 
 	if len(allowed) != len(candidates) && log.DebugEnabled(ctx) {

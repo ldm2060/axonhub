@@ -666,5 +666,15 @@
   "system.claudeCode.loadFailed": "加载 Claude Code 安全审查设置失败。",
   "system.claudeCode.retry": "重试",
   "system.claudeCode.validation.fallbacks": "备用模型不得重复，且不能与主审查模型相同。",
-  "system.claudeCode.validation.limits": "请输入有效的超时、输出 token 上限和对话预算。"
+  "system.claudeCode.validation.limits": "请输入有效的超时、输出 token 上限和对话预算。",
+  "quota.pool.title": "我的拼车",
+  "quota.pool.shareLine": "你的份额 {{share}}% →",
+  "quota.pool.totalShort": "总额",
+  "quota.pool.remaining": "剩余",
+  "quota.pool.usedShort": "已用",
+  "quota.pool.unavailableNote": "监控暂无该窗口预估，当前拼车不限制使用。",
+  "quota.pool.status.available": "正常",
+  "quota.pool.status.warning": "接近上限",
+  "quota.pool.status.paused": "已暂停",
+  "quota.pool.status.unavailable": "预估不可用"
 }

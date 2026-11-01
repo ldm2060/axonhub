@@ -11,4 +11,5 @@ var Module = fx.Module("orchestrator",
 	fx.Provide(NewCandidateSelectorDiagnostics),
 	fx.Provide(NewChannelLimiterManager),
 	fx.Provide(func(svc *biz.ProviderQuotaService) ProviderQuotaStatusProvider { return svc }),
+	fx.Provide(func(svc *biz.ChannelPoolingService) PoolingGate { return svc }),
 )

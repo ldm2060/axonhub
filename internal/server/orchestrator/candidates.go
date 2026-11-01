@@ -93,16 +93,21 @@ type DefaultSelector struct {
 	ModelService   *biz.ModelService // Optional: for AxonHub Model resolution
 	SystemService  *biz.SystemService
 
+	// Pooling enforces per-user pool shares on pooled channels. Optional:
+	// nil (tests, unwired runtime) allows every pool through.
+	Pooling PoolingGate
+
 	// Association resolution cache
 	cacheMu          sync.RWMutex
 	associationCache map[string]*associationCacheEntry
 }
 
-func NewDefaultSelector(channelService *biz.ChannelService, modelService *biz.ModelService, systemService *biz.SystemService) *DefaultSelector {
+func NewDefaultSelector(channelService *biz.ChannelService, modelService *biz.ModelService, systemService *biz.SystemService, pooling PoolingGate) *DefaultSelector {
 	return &DefaultSelector{
 		ChannelService:   channelService,
 		ModelService:     modelService,
 		SystemService:    systemService,
+		Pooling:          pooling,
 		associationCache: make(map[string]*associationCacheEntry),
 	}
 }
@@ -121,7 +126,7 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 
 				// Fork-specific channel access rule: every candidate path must pass
 				// through the filter (see .agent/rules/channel-access.md).
-				return filterCandidatesByChannelAccess(ctx, legacyCandidates), nil
+				return filterCandidatesByChannelAccess(ctx, legacyCandidates, s.Pooling), nil
 			}
 
 			return nil, fmt.Errorf("%w: %q", biz.ErrInvalidModel, req.Model)
@@ -132,7 +137,7 @@ func (s *DefaultSelector) Select(ctx context.Context, req *llm.Request) ([]*Chan
 
 	// Fork-specific channel access rule: candidates are filtered here, after the
 	// selection and association caches, so those caches stay principal-independent.
-	return filterCandidatesByChannelAccess(ctx, candidates), nil
+	return filterCandidatesByChannelAccess(ctx, candidates, s.Pooling), nil
 }
 
 // selectChannelCadidates performs the original channel selection logic.

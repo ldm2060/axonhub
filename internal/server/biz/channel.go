@@ -670,6 +670,10 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 		if err := validateModelProtocols(input.Settings, &ent.Channel{Type: input.Type, BaseURL: baseURL, Endpoints: input.Endpoints}); err != nil {
 			return nil, fmt.Errorf("invalid model protocols: %w", err)
 		}
+
+		if err := ValidatePoolingSettings(input.Settings); err != nil {
+			return nil, fmt.Errorf("invalid pooling settings: %w", err)
+		}
 	}
 
 	if err := ValidateVertexAPIKeys(input.Type, input.Credentials); err != nil {
@@ -714,6 +718,16 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 	channel, err := createBuilder.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create channel: %w", err)
+	}
+
+	// Settings is nil when the caller created the channel without settings;
+	// pooling sync only applies to a stored config.
+	var poolingCfg *objects.ChannelPoolingConfig
+	if channel.Settings != nil {
+		poolingCfg = channel.Settings.Pooling
+	}
+	if err := svc.syncPoolingSharedWith(ctx, channel.ID, poolingCfg); err != nil {
+		return nil, err
 	}
 
 	return channel, nil
@@ -1111,6 +1125,10 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 
 		if err := NormalizeRetryableErrorPatterns(input.Settings); err != nil {
 			return nil, err
+		}
+
+		if err := ValidatePoolingSettings(input.Settings); err != nil {
+			return nil, fmt.Errorf("invalid pooling settings: %w", err)
 		}
 	}
 

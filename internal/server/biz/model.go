@@ -29,6 +29,7 @@ type ModelServiceParams struct {
 
 	ChannelService *ChannelService
 	SystemService  *SystemService
+	Pooling        *ChannelPoolingService
 	Ent            *ent.Client
 }
 
@@ -39,6 +40,7 @@ func NewModelService(params ModelServiceParams) *ModelService {
 		},
 		channelService: params.ChannelService,
 		systemService:  params.SystemService,
+		pooling:        params.Pooling,
 	}
 }
 
@@ -47,6 +49,10 @@ type ModelService struct {
 
 	channelService *ChannelService
 	systemService  *SystemService
+
+	// pooling enforces per-user pool shares on pooled channels. Optional:
+	// nil (tests) keeps every pooled channel listed.
+	pooling *ChannelPoolingService
 }
 
 // validateModelSettings validates regex patterns in model settings.
@@ -665,6 +671,14 @@ func (svc *ModelService) ListEnabledModels(ctx context.Context) ([]ModelFacade, 
 		channels = lo.Filter(channels, func(ch *Channel, _ int) bool {
 			return scopes.CanRouteThroughChannel(user, ch.Channel)
 		})
+		// Pooling narrows the same access further for pool members who have
+		// exhausted their share; apply it at the same point so the model list
+		// never advertises a pooled channel that would reject the caller.
+		if svc.pooling != nil {
+			channels = lo.Filter(channels, func(ch *Channel, _ int) bool {
+				return svc.pooling.AllowRoutingThroughChannel(ctx, user, ch.Channel)
+			})
+		}
 	}
 
 	if apiKey, ok := contexts.GetAPIKey(ctx); ok && apiKey != nil {

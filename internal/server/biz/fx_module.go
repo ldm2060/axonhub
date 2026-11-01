@@ -46,6 +46,7 @@ var Module = fx.Module("biz",
 	fx.Provide(NewMemorySampler),
 	fx.Provide(NewUserUsageStatsService),
 	fx.Provide(NewUsageMonitorService),
+	fx.Provide(NewChannelPoolingService),
 	fx.Invoke(func(channelSvc *ChannelService, quotaSvc *ProviderQuotaService) {
 		channelSvc.SetChannelProviderQuotaInvalidator(quotaSvc)
 	}),

@@ -58,7 +58,7 @@ func TestDefaultSelector_Select_DropsChannelsTheActingUserCannotRouteThrough(t *
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
 
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 	req := &llm.Request{Model: "gpt-4"}
 
 	t.Run("acting user only reaches own, shared and published channels", func(t *testing.T) {

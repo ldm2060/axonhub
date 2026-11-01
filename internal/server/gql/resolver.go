@@ -61,6 +61,7 @@ type Resolver struct {
 	usageMonitorService            *biz.UsageMonitorService
 	catalogService                 *biz.CatalogService
 	oauthProviderService           *biz.OAuthProviderService
+	poolingService                 *biz.ChannelPoolingService
 }
 
 // NewSchema creates a graphql executable schema.
@@ -102,6 +103,7 @@ func NewSchema(
 	usageMonitorService *biz.UsageMonitorService,
 	catalogService *biz.CatalogService,
 	oauthProviderService *biz.OAuthProviderService,
+	poolingService *biz.ChannelPoolingService,
 ) graphql.ExecutableSchema {
 	modelFetcher := biz.NewModelFetcher(httpClient, channelService)
 
@@ -144,6 +146,7 @@ func NewSchema(
 			usageMonitorService:            usageMonitorService,
 			catalogService:                 catalogService,
 			oauthProviderService:           oauthProviderService,
+			poolingService:                 poolingService,
 		},
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -304,6 +305,76 @@ type ChannelSettings struct {
 	ProviderQuota *ChannelProviderQuotaSettings `json:"providerQuota,omitempty"`
 
 	QuotaRoutingMode QuotaRoutingMode `json:"quotaRoutingMode,omitempty"`
+
+	// Pooling splits the estimated quota of one bound usage-monitor window
+	// between specific users. Nil means the channel has no pooling config.
+	Pooling *ChannelPoolingConfig `json:"pooling,omitempty"`
+}
+
+// Channel pooling windows, aligned with the usage-monitor estimate windows.
+const (
+	PoolingWindow5h      = "5h"
+	PoolingWindowDaily   = "daily"
+	PoolingWindowWeekly  = "weekly"
+	PoolingWindowMonthly = "monthly"
+)
+
+// IsValidPoolingWindow reports whether value is one of the four supported
+// pooling windows.
+func IsValidPoolingWindow(value string) bool {
+	switch value {
+	case PoolingWindow5h, PoolingWindowDaily, PoolingWindowWeekly, PoolingWindowMonthly:
+		return true
+	}
+	return false
+}
+
+// ChannelPoolingMember assigns a fixed percentage share of the pool to one user.
+type ChannelPoolingMember struct {
+	// UserID is the bare numeric user ID, mirroring channel shared_with.
+	UserID int `json:"userId"`
+
+	// SharePct is the member's share of the pool total, in percent (0, 100].
+	SharePct float64 `json:"sharePct"`
+}
+
+// ChannelPoolingConfig configures quota pooling on one channel. The total is
+// the bound usage monitor's period-quota estimate for Window; each member's
+// sub-quota is total × SharePct and is recomputed whenever the monitor repolls.
+type ChannelPoolingConfig struct {
+	Enabled bool `json:"enabled"`
+
+	// MonitorID is the UsageMonitorChannel whose period-quota estimate serves
+	// as the pool total. Zero when pooling has never been configured.
+	MonitorID int `json:"monitorId"`
+
+	// Window selects which estimated window is the pool total.
+	Window string `json:"window"`
+
+	// Members are the users holding a share. The channel owner implicitly
+	// keeps 100% minus the member sum and is never paused by the pool.
+	Members []ChannelPoolingMember `json:"members"`
+}
+
+// OwnerReservedPct returns 100 minus the member share sum, clamped at zero.
+// The remainder is the owner's implicit share; it is display-only because the
+// owner is exempt from pool enforcement.
+func (c *ChannelPoolingConfig) OwnerReservedPct() float64 {
+	sum := 0.0
+	for _, m := range c.Members {
+		sum += m.SharePct
+	}
+	return math.Max(0, 100-sum)
+}
+
+// MemberByUserID returns the member entry for userID, or nil.
+func (c *ChannelPoolingConfig) MemberByUserID(userID int) *ChannelPoolingMember {
+	for i := range c.Members {
+		if c.Members[i].UserID == userID {
+			return &c.Members[i]
+		}
+	}
+	return nil
 }
 
 // API key selection strategies for channels with multiple enabled keys.

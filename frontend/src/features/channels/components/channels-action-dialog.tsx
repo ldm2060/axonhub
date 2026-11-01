@@ -85,6 +85,7 @@ import {
   ChannelType,
   ApiFormat,
   ChannelSettings,
+  ChannelPoolingConfig,
   ChannelQuotaRoutingMode,
   RetryableErrorPattern,
   createChannelInputSchema,
@@ -101,6 +102,7 @@ import { isValidModelPattern, matchesModelPattern } from '../utils/pattern';
 import { ApiKeyStrategyFields, type APIKeyStrategyValue } from './channel-api-key-strategy';
 import { ChannelAutoDisableConfig } from './channel-auto-disable-config';
 import { ChannelClientRestriction } from './channel-client-restriction';
+import { ChannelPoolingSettings } from './channel-pooling-settings';
 import { ChannelQuotaMonitorBinding } from './channel-quota-monitor-binding';
 import { CopilotDeviceFlow } from './copilot-device-flow';
 import { KimiCodeDeviceFlow } from './kimi-code-device-flow';
@@ -592,6 +594,12 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
     return initialRow?.settings?.enableSameChannelRetry ?? true;
   });
   const [quotaRoutingMode, setQuotaRoutingMode] = useState<ChannelQuotaRoutingMode>(() => recallQuotaRoutingMode(initialRow?.settings));
+  // Pooling config is a whole-object patch (like providerQuota): the panel owns
+  // the object and the submit sends it verbatim. Null means the channel has no
+  // pooling config and the user never touched it — the patch then omits the key
+  // entirely, because a null patch value would force the null-clear full-update
+  // path for every channel edit.
+  const [pooling, setPooling] = useState<ChannelPoolingConfig | null>(() => initialRow?.settings?.pooling ?? null);
   const [retryableStatusCodesText, setRetryableStatusCodesText] = useState(() =>
     formatRetryableStatusCodes(initialRow?.settings?.retryableStatusCodes)
   );
@@ -1764,6 +1772,7 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
           // field when the patch omits it and carries the null clear through.
           providerQuota: settingsForSubmit?.providerQuota,
           ...quotaRoutingModeSettingsPatch(quotaRoutingMode),
+          ...(pooling ? { pooling } : {}),
           ...(shouldUpdateModelProtocols
             ? { modelProtocols: getModelProtocolsForApiFormat(selectedApiFormat, supportedModels, existingModelProtocols) }
             : {}),
@@ -4086,6 +4095,16 @@ export function ChannelsActionDialog({ currentRow, duplicateFromRow, open, onOpe
                               onStrategyChange={setQuotaBindingStrategy}
                               onBindingsChange={setQuotaBindings}
                             />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Channel Pooling (edit mode only: it binds an existing monitor) */}
+                      {isEdit && (
+                        <div className='grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-8'>
+                          <FormLabel className='pt-2 font-medium md:col-span-2 md:text-right'>{t('channels.pooling.title')}</FormLabel>
+                          <div className='md:col-span-6'>
+                            <ChannelPoolingSettings config={pooling} onChange={setPooling} channelId={currentRow?.id} />
                           </div>
                         </div>
                       )}

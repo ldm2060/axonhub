@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, RefreshCw, Zap, Battery, BatteryLow, BatteryMedium, BatteryFull, BatteryWarning, ArrowUpDown } from 'lucide-react';
+import {
+  Loader2,
+  RefreshCw,
+  Zap,
+  Battery,
+  BatteryLow,
+  BatteryMedium,
+  BatteryFull,
+  BatteryWarning,
+  ArrowUpDown,
+  CarFront,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +35,7 @@ import {
   getLimitDurationPercent,
   useFormatTimeToReset,
 } from '@/components/quota-window-display';
+import { useMyPoolQuotas, POOL_STATUS, type MyPoolQuota } from '@/features/channels/data/pooling';
 import type { ChannelQuotaRoutingMode } from '@/features/channels/data/schema';
 import { getChannelQuotaRoutingIndicator } from '@/features/channels/utils/quota-routing-status';
 import {
@@ -2287,6 +2299,96 @@ function QuotaRow({ channel, effectiveMode }: { channel: ProviderQuotaChannel; e
   );
 }
 
+// One pool the viewer belongs to: fixed share of the monitor's estimated
+// total, sub-quota recomputed on every poll, in-window usage on the channel.
+// Pool exhaustion (paused) is a member-level state, so the channel rows above
+// can look healthy while this member's own slice is spent.
+function PoolQuotaRow({ pool }: { pool: MyPoolQuota }) {
+  const { t, i18n } = useTranslation();
+  const formatTimeToReset = useFormatTimeToReset();
+
+  const paused = pool.status === POOL_STATUS.paused;
+  const unavailable = pool.status === POOL_STATUS.unavailable;
+  const usedPct = pool.memberQuota > 0 ? (pool.used / pool.memberQuota) * 100 : 0;
+  const remaining = Math.max(0, pool.memberQuota - pool.used);
+
+  const formatMoney = (val: number) =>
+    t('currencies.format', {
+      val,
+      currency: 'USD',
+      locale: i18n.language.startsWith('zh') ? 'zh-CN' : 'en-US',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const windowLabel = t(`quota.window.${pool.window}`, { defaultValue: pool.window });
+
+  return (
+    <div className='border-border/60 space-y-3 border-b py-3 last:border-0 last:pb-1'>
+      <div className='flex items-center justify-between'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <CarFront className={`h-4 w-4 shrink-0 ${paused ? 'text-red-500' : 'text-muted-foreground'}`} />
+          <span className='text-foreground truncate font-medium'>{pool.channelName}</span>
+        </div>
+        <Badge
+          variant={paused ? 'destructive' : 'outline'}
+          className={
+            paused ? '' : unavailable || pool.status === POOL_STATUS.warning ? BADGE_COLOR_CLASSES.amber : BADGE_COLOR_CLASSES.green
+          }
+        >
+          {t(`quota.pool.status.${pool.status}`)}
+        </Badge>
+      </div>
+
+      {unavailable ? (
+        <div className='rounded bg-amber-500/10 p-2 text-xs text-amber-500'>{t('quota.pool.unavailableNote')}</div>
+      ) : (
+        <>
+          <div className='flex items-center justify-between text-xs'>
+            <span className='text-muted-foreground'>
+              {t('quota.pool.shareLine', { share: pool.sharePct })}
+              <span className='text-foreground ml-1 font-medium tabular-nums'>{formatMoney(pool.memberQuota)}</span>
+              {pool.totalQuota != null && (
+                <span className='opacity-70'>
+                  {' '}
+                  ({t('quota.pool.totalShort')} {formatMoney(pool.totalQuota)})
+                </span>
+              )}
+            </span>
+            <span className='text-foreground font-medium tabular-nums'>{Math.round(usedPct)}%</span>
+          </div>
+          <UsageTimeBar
+            usagePercent={usedPct}
+            tooltip={
+              <div className='space-y-0.5'>
+                <div className='font-medium'>
+                  {pool.channelName} · {t('quota.pool.title')}
+                </div>
+                <div>
+                  {formatMoney(pool.used)} / {formatMoney(pool.memberQuota)}
+                </div>
+                <div>
+                  {t('quota.pool.remaining')}: {formatMoney(remaining)}
+                </div>
+                {pool.nextResetAt && <div>{formatTimeToReset(pool.nextResetAt)}</div>}
+              </div>
+            }
+          />
+          <div className='text-muted-foreground flex items-center justify-between text-[11px]'>
+            <span>
+              {t('quota.pool.usedShort')} {formatMoney(pool.used)} · {t('quota.pool.remaining')} {formatMoney(remaining)}
+            </span>
+            <span>
+              {windowLabel}
+              {pool.nextResetAt ? ` · ${formatTimeToReset(pool.nextResetAt)}` : ''}
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
   const { t } = useTranslation();
   const statusColor =
@@ -2343,11 +2445,13 @@ function MonitorQuotaRow({ monitor }: { monitor: MonitorQuotaEntry }) {
 function QuotaBadgeTrigger({
   channels,
   monitorChannels,
+  poolQuotas,
   isLoading,
   isError,
 }: {
   channels: ProviderQuotaChannel[];
   monitorChannels: MonitorQuotaEntry[];
+  poolQuotas: MyPoolQuota[];
   isLoading?: boolean;
   isError?: boolean;
 }) {
@@ -2368,10 +2472,14 @@ function QuotaBadgeTrigger({
   const hasWarning = channels.some((c) => c.quotaStatus.status === 'warning' && c.quotaBindingReady !== true);
   const monitorExhausted = monitorChannels.some((m) => m.statusLabel === 'exhausted');
   const monitorWarning = monitorChannels.some((m) => m.statusLabel === 'warning');
+  // A pool the viewer belongs to pausing them is their own quota pressure, so
+  // it lights the battery like any other exhausted row.
+  const poolPaused = poolQuotas.some((p) => p.status === POOL_STATUS.paused);
+  const poolWarning = poolQuotas.some((p) => p.status === POOL_STATUS.warning);
 
   let level: BatteryLevel = 'full';
-  if (hasExhausted || monitorExhausted) level = 'warning';
-  else if (hasWarning || monitorWarning) level = 'low';
+  if (hasExhausted || monitorExhausted || poolPaused) level = 'warning';
+  else if (hasWarning || monitorWarning || poolWarning) level = 'low';
   else level = getBatteryLevel(highestUsed, 'available');
 
   const BatteryIcon = getBatteryIcon(level);
@@ -2589,6 +2697,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
   const { channels, isLoading, isError, error } = useProviderQuotaStatuses();
   const { data: routingSettings } = useQuotaRoutingSettings();
   const { data: usageMonitors } = useUsageMonitorChannels();
+  const { data: poolQuotas = [] } = useMyPoolQuotas();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [grouped, setGrouped] = useState(() => readStoredBoolean(QUOTA_GROUPED_STORAGE_KEY, true));
   const [sortMode, setSortMode] = useState<QuotaSortMode>(() => readStoredSortMode(QUOTA_SORT_MODE_STORAGE_KEY));
@@ -2715,6 +2824,18 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
       </div>
     );
 
+    const poolSection = poolQuotas.length > 0 && (
+      <div className='mt-3 space-y-3'>
+        <div className='text-muted-foreground flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase'>
+          <CarFront className='h-3.5 w-3.5' />
+          {t('quota.pool.title')}
+        </div>
+        {poolQuotas.map((p) => (
+          <PoolQuotaRow key={p.channelId} pool={p} />
+        ))}
+      </div>
+    );
+
     return (
       <div
         className={`max-h-[60vh] overflow-y-auto pr-1 pl-1 ${sortedChannels.length > WIDE_QUOTA_POPOVER_CHANNEL_COUNT ? 'grid grid-cols-1 gap-x-4 sm:grid-cols-2' : ''}`}
@@ -2737,6 +2858,7 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
           )
         )}
         {monitorSection}
+        {poolSection}
       </div>
     );
   };
@@ -2745,7 +2867,13 @@ export function QuotaBadges({ isRefreshing, onRefresh }: { isRefreshing: boolean
     <Popover>
       <PopoverTrigger asChild>
         <button type='button' className='hover:bg-muted relative rounded-md p-2 transition-colors'>
-          <QuotaBadgeTrigger channels={groupedChannels} monitorChannels={monitorChannels} isLoading={isLoading} isError={isError} />
+          <QuotaBadgeTrigger
+            channels={groupedChannels}
+            monitorChannels={monitorChannels}
+            poolQuotas={poolQuotas}
+            isLoading={isLoading}
+            isError={isError}
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent

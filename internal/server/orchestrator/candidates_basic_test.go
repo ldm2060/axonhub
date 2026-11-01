@@ -51,7 +51,7 @@ func TestDefaultSelector_Select(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	selector := NewDefaultSelector(channelService, modelService, systemService)
+	selector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	req := &llm.Request{
 		Model: "gpt-4",
@@ -280,7 +280,7 @@ func TestSelectedChannelsSelector_Select_WithFilter(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	// Only allow channels 0 and 2
 	allowedIDs := []int{channels[0].ID, channels[2].ID}
@@ -315,7 +315,7 @@ func TestSelectedChannelsSelector_Select_EmptyFilter(t *testing.T) {
 	channelService := newTestChannelServiceForChannels(client)
 	modelService := newTestModelService(client)
 	systemService := newTestSystemService(client)
-	baseSelector := NewDefaultSelector(channelService, modelService, systemService)
+	baseSelector := NewDefaultSelector(channelService, modelService, systemService, nil)
 
 	// Empty filter should return all channels
 	selector := WithSelectedChannelsSelector(baseSelector, nil)
