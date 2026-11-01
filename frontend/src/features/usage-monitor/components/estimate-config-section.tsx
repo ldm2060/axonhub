@@ -58,6 +58,10 @@ export function EstimateConfigSection({
   const ratioFields = displayFields.filter((df) => df.format === 'percentage' || df.format === 'fraction' || df.format === 'number');
   const resetFields = displayFields.filter((df) => df.format === 'datetime');
 
+  // Skip unnamed variables — a just-added one has key '' and would render a
+  // blank option (or, with a bare key as item value, an empty-value SelectItem).
+  const namedVariables = (variables ?? []).filter((v) => v.key !== '');
+
   const addRow = () => onChange([...values, { fieldKey: '', remaining: false, resetFieldKey: '', window: '' }]);
   const removeRow = (index: number) => onChange(values.filter((_, i) => i !== index));
   const patchRow = (index: number, partial: Partial<EstimateConfigFormValue>) =>
@@ -97,10 +101,10 @@ export function EstimateConfigSection({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                  {(variables?.length ?? 0) > 0 && (
+                  {namedVariables.length > 0 && (
                     <SelectGroup>
                       <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
-                      {variables!.map((v) => (
+                      {namedVariables.map((v) => (
                         <SelectItem key={v.key} value={`var:${v.key}`}>
                           {v.key}
                         </SelectItem>
@@ -156,10 +160,10 @@ export function EstimateConfigSection({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                  {(variables?.length ?? 0) > 0 && (
+                  {namedVariables.length > 0 && (
                     <SelectGroup>
                       <SelectLabel>{t('usageMonitor.variableSection')}</SelectLabel>
-                      {variables!.map((v) => (
+                      {namedVariables.map((v) => (
                         <SelectItem key={v.key} value={`var:${v.key}`}>
                           {v.key}
                         </SelectItem>

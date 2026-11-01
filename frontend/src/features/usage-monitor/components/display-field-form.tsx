@@ -272,7 +272,16 @@ export const DisplayFieldForm = memo(function DisplayFieldForm({ displayFields, 
   );
 
   // Joined string keeps this prop value-stable across variable edits (see DisplayFieldItemProps).
-  const variableKeys = useMemo(() => variables.map((v) => v.key).join('\n'), [variables]);
+  // Blank keys are skipped: a just-added unnamed variable would otherwise render
+  // <SelectItem value=''> which Base UI's Select rejects.
+  const variableKeys = useMemo(
+    () =>
+      variables
+        .map((v) => v.key)
+        .filter((k) => k !== '')
+        .join('\n'),
+    [variables]
+  );
 
   return (
     <div className='space-y-4'>
