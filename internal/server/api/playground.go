@@ -173,6 +173,21 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 		}
 	}
 
+	// An unavailable model or a channel the caller may not route through surfaces
+	// as ErrInvalidModel; report it as a client error instead of a 500.
+	if errors.Is(rawErr, transformer.ErrInvalidModel) {
+		return &PlaygroundResponseError{
+			Status: http.StatusUnprocessableEntity,
+			Error: struct {
+				Code    int    `json:"code,omitempty"`
+				Message string `json:"message"`
+			}{
+				Code:    http.StatusUnprocessableEntity,
+				Message: rawErr.Error(),
+			},
+		}
+	}
+
 	if llmErr, ok := xerrors.As[*llm.ResponseError](rawErr); ok && llmErr != nil {
 		if llmErr.Detail.Message == "" {
 			return &PlaygroundResponseError{

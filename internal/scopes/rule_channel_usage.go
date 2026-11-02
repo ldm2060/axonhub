@@ -17,7 +17,8 @@ import (
 // Visibility decides who may see a channel; this decides who may use it:
 //   - a nil user is a system-level principal (service account, noauth key,
 //     background task) and keeps unrestricted access
-//   - the system owner and users holding write_channels manage every channel
+//   - the system owner and admins manage every channel; write_channels alone
+//     does not grant routing, only management
 //   - the owner of a channel may always route through it
 //   - published channels are open to everyone
 //   - shared channels are open to the users listed in shared_with
@@ -28,7 +29,7 @@ func CanRouteThroughChannel(user *ent.User, ch *ent.Channel) bool {
 		return true
 	}
 
-	if user.IsOwner || HasSystemScope(user, ScopeWriteChannels) {
+	if user.IsOwner || user.IsAdmin {
 		return true
 	}
 

@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
+import { canUseChannel } from '../data/access';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -139,8 +140,9 @@ export const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
   const { t } = useTranslation();
   const channel = row.original;
   const { setOpen, setCurrentRow } = useChannels();
-  const { channelPermissions } = usePermissions();
+  const { channelPermissions, user } = usePermissions();
   const testChannel = useTestChannel();
+  const canUse = canUseChannel(channel, user);
   const isArchived = channel.status === 'archived';
   const hasError = !!channel.errorMessage;
   const hasDisabledAPIKeys = channelPermissions.canWrite && (channel.disabledAPIKeys?.length ?? 0) > 0;
@@ -171,9 +173,11 @@ export const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
       <Button size='sm' variant='outline' className='h-8 w-8 p-0' onClick={handleEdit}>
         <IconEdit className='h-3 w-3' />
       </Button>
-      <Button size='sm' variant='outline' className='h-8 px-3' onClick={handleDefaultTest} disabled={testChannel.isPending}>
-        <IconPlayerPlay className='mr-1 h-3 w-3' />
-      </Button>
+      {canUse && (
+        <Button size='sm' variant='outline' className='h-8 px-3' onClick={handleDefaultTest} disabled={testChannel.isPending}>
+          <IconPlayerPlay className='mr-1 h-3 w-3' />
+        </Button>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button size='sm' variant='outline' className='h-8 w-8 p-0' data-testid='row-actions'>
@@ -181,10 +185,12 @@ export const ActionCell = memo(({ row }: { row: Row<Channel> }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
-          <DropdownMenuItem onClick={handleOpenTestDialog}>
-            <IconPlayerPlay size={16} className='mr-2' />
-            {t('channels.actions.test')}
-          </DropdownMenuItem>
+          {canUse && (
+            <DropdownMenuItem onClick={handleOpenTestDialog}>
+              <IconPlayerPlay size={16} className='mr-2' />
+              {t('channels.actions.test')}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => {
               setCurrentRow(channel);

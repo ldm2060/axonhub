@@ -1119,6 +1119,9 @@ const ALL_CHANNEL_SUMMARYS_QUERY = `
       name
       type
       status
+      visibility
+      sharedWith
+      ownerID
       baseURL
       orderingWeight
       tags

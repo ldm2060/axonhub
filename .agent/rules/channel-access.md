@@ -10,7 +10,7 @@ globs: "internal/scopes/rule_channel_usage*.go, internal/server/orchestrator/cha
 ## 两条独立的规则
 
 1. **可见性**（既有）：`visibility` + `shared_with` 决定用户在「我的渠道」里看到什么；`read_channels` 持有者绕过 privacy 过滤，能在管理页看到全部渠道。
-2. **可用性**（本 fork 新增，`scopes.CanRouteThroughChannel`）：决定请求能路由到哪些渠道。行为主体 = 会话用户，或 API key 的属主用户；`service_account` / `noauth` / 无主体走系统路径不设限。放行条件：自己的渠道 / `published` / `shared` 且在 `shared_with` 里 / 系统 Owner 或 `write_channels` / `owner_id` 为空的无主渠道。
+2. **可用性**（本 fork 新增，`scopes.CanRouteThroughChannel`）：决定请求能路由到哪些渠道。行为主体 = 会话用户，或 API key 的属主用户；`service_account` / `noauth` / 无主体走系统路径不设限。放行条件：自己的渠道 / `published` / `shared` 且在 `shared_with` 里 / 系统 Owner 或 `IsAdmin` / `owner_id` 为空的无主渠道。**`write_channels` 不再放行路由**——它只代表能管理渠道，不代表能用别人的渠道。
 
 **可见 ≠ 可用。** 不要用 `read_channels` 当可用性门禁（自注册用户默认就有它）。
 
@@ -22,6 +22,7 @@ globs: "internal/scopes/rule_channel_usage*.go, internal/server/orchestrator/cha
 4. 共享链路必须走 `mySharedChannels`（服务端按 `shared_with` 判定）；用 `where: {visibility: 'shared'}` 的列表查询会在 `read_channels` 账号上把别人的共享渠道全拉下来，其他账号上则为空。
 5. `shared_with` 存的是**裸数字用户 ID**，UI 里流转的是 GUID（`gid://axonhub/User/2`）。两侧比较一律用 `extractNumberID` / `extractNumberIDAsNumber`。
 6. 无主渠道（`owner_id = 0/NULL`）保持对所有人开放，否则升级用户的历史渠道会被锁死。
+7. **点名渠道也必须过同一道门禁**：`SpecifiedChannelSelector.Select`（渠道测试按钮、Playground 的 `X-Channel-ID`）末尾同样调用 `filterCandidatesByChannelAccess`。任何新增的"按渠道 ID 指定渠道"的入口都必须复用它；否则就等于绕过 `CanRouteThroughChannel`。前端对应镜像在 `frontend/src/features/channels/data/access.ts`（`canUseChannel`），仅用于隐藏入口，不能替代服务端校验。
 
 ## 渠道拼车（pooling，本 fork 新增）
 

@@ -34,10 +34,16 @@ func TestCanRouteThroughChannel(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "write_channels holder reaches every channel",
-			user: &ent.User{ID: otherID, Scopes: []string{string(ScopeWriteChannels)}},
+			name: "admin identity reaches every channel",
+			user: &ent.User{ID: otherID, IsAdmin: true},
 			ch:   &ent.Channel{OwnerID: ownerID, Visibility: channel.VisibilityPrivate},
 			want: true,
+		},
+		{
+			name: "write_channels alone does not grant routing",
+			user: &ent.User{ID: otherID, Scopes: []string{string(ScopeWriteChannels)}},
+			ch:   &ent.Channel{OwnerID: ownerID, Visibility: channel.VisibilityPrivate},
+			want: false,
 		},
 		{
 			name: "channel owner reaches their own private channel",

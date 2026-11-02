@@ -11,6 +11,7 @@ import { ensureFreshAccessToken } from '@/lib/auth-session';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
+import { canUseChannel } from '@/features/channels/data/access';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -312,16 +313,21 @@ export default function Playground() {
     }
   }, [messages, regenerate, setMessages]);
 
+  // 当前用户可经其路由的渠道（服务端 CanRouteThroughChannel 的镜像）
+  const routableEdges = useMemo(() => {
+    if (!channelsData?.edges) return [];
+    return channelsData.edges.filter((edge) => canUseChannel(edge.node, user));
+  }, [channelsData, user]);
+
   // 渠道选项列表（仅展示启用中的渠道，已关闭的渠道不可用）
   const channelOptions = useMemo(() => {
-    if (!channelsData?.edges) return [];
-    return channelsData.edges
+    return routableEdges
       .filter((edge) => edge.node.status === 'enabled' && edge.node.allModelEntries.length > 0)
       .map((edge) => ({
         value: edge.node.id,
         label: edge.node.name,
       }));
-  }, [channelsData]);
+  }, [routableEdges]);
 
   const modelPageModelOptions = useMemo(() => {
     if (!modelsData?.edges) return [];
@@ -339,7 +345,7 @@ export default function Playground() {
     const channels = channelOptions.map((option) => ({
       value: option.value,
       models:
-        channelsData.edges.find((edge) => edge.node.id === option.value)?.node.allModelEntries.map((entry) => entry.requestModel) ?? [],
+        routableEdges.find((edge) => edge.node.id === option.value)?.node.allModelEntries.map((entry) => entry.requestModel) ?? [],
     }));
     const gatewayModels = modelPageModelOptions.map((option) => option.value);
     setSelectionState((current) => {
@@ -355,7 +361,7 @@ export default function Playground() {
       }
       return { ...current, ...resolved, ready: true };
     });
-  }, [canUseModelGateway, channelOptions, channelsData, modelPageModelOptions, modelSource, modelsData, selectedProjectId, user]);
+  }, [canUseModelGateway, channelOptions, channelsData, routableEdges, modelPageModelOptions, modelSource, modelsData, selectedProjectId, user]);
 
   useEffect(() => {
     if (selection.ready && selection.projectId === selectedProjectId) {
@@ -366,25 +372,25 @@ export default function Playground() {
   // 根据选中渠道过滤出模型列表（渠道已关闭时不展示其模型）
   const modelOptions = useMemo(() => {
     if (isModelGatewaySource) return modelPageModelOptions;
-    if (!channelsData?.edges || !selectedChannel) return [];
-    const channelEdge = channelsData.edges.find((edge) => edge.node.id === selectedChannel);
+    if (!selectedChannel) return [];
+    const channelEdge = routableEdges.find((edge) => edge.node.id === selectedChannel);
     if (!channelEdge || channelEdge.node.status !== 'enabled') return [];
     return channelEdge.node.allModelEntries.map((entry) => ({
       value: entry.requestModel,
       label: entry.requestModel,
     }));
-  }, [channelsData, isModelGatewaySource, modelPageModelOptions, selectedChannel]);
+  }, [routableEdges, isModelGatewaySource, modelPageModelOptions, selectedChannel]);
 
   const selectedModelSourceLoading = isModelGatewaySource ? modelsLoading : channelsLoading;
 
   // 处理渠道选择，自动选第一个模型
   const handleChannelChange = useCallback(
     (channelId: string) => {
-      const channelEdge = channelsData?.edges?.find((edge) => edge.node.id === channelId && edge.node.status === 'enabled');
+      const channelEdge = routableEdges.find((edge) => edge.node.id === channelId && edge.node.status === 'enabled');
       const firstModel = channelEdge?.node.allModelEntries[0]?.requestModel ?? '';
       setSelectionState((current) => ({ ...current, selectedChannel: channelId, model: firstModel }));
     },
-    [channelsData]
+    [routableEdges]
   );
 
   const handleModelSourceChange = useCallback(
@@ -402,14 +408,14 @@ export default function Playground() {
         }));
         return;
       }
-      const channelEdge = channelsData?.edges?.find((edge) => edge.node.id === selectedChannel && edge.node.status === 'enabled');
+      const channelEdge = routableEdges.find((edge) => edge.node.id === selectedChannel && edge.node.status === 'enabled');
       setSelectionState((current) => ({
         ...current,
         modelSource: nextSource,
         model: channelEdge?.node.allModelEntries[0]?.requestModel ?? '',
       }));
     },
-    [canUseModelGateway, channelsData, modelPageModelOptions, modelsData, selectedChannel]
+    [canUseModelGateway, routableEdges, modelPageModelOptions, modelsData, selectedChannel]
   );
 
   return (

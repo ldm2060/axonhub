@@ -1129,5 +1129,9 @@ func (s *SpecifiedChannelSelector) Select(ctx context.Context, req *llm.Request)
 		APIFormat: apiFormat,
 	}
 
-	return []*ChannelModelsCandidate{candidate}, nil
+	// Fork-specific channel access rule: an explicitly pinned channel must pass the
+	// same check as automatic selection. The channel test button and the playground
+	// pick a channel by ID, so without this filter any signed-in user could route
+	// through another user's private channel. See .agent/rules/channel-access.md.
+	return filterCandidatesByChannelAccess(ctx, []*ChannelModelsCandidate{candidate}, nil), nil
 }

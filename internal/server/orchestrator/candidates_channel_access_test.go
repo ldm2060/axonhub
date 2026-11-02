@@ -94,6 +94,51 @@ func TestDefaultSelector_Select_DropsChannelsTheActingUserCannotRouteThrough(t *
 	})
 }
 
+func TestSpecifiedChannelSelector_EnforcesChannelAccess(t *testing.T) {
+	ctx, client := setupTest(t)
+
+	const (
+		ownerID  = 101
+		viewerID = 202
+	)
+
+	ch, err := client.Channel.Create().
+		SetType(channel.TypeOpenai).
+		SetName("Pinned Private").
+		SetBaseURL("https://api.openai.com/v1").
+		SetCredentials(objects.ChannelCredentials{APIKey: "test-key"}).
+		SetSupportedModels([]string{"gpt-4"}).
+		SetDefaultTestModel("gpt-4").
+		SetStatus(channel.StatusEnabled).
+		SetOwnerID(ownerID).
+		SetVisibility(channel.VisibilityPrivate).
+		Save(ctx)
+	require.NoError(t, err)
+
+	selector := NewSpecifiedChannelSelector(newTestChannelServiceForChannels(client), objects.GUID{ID: ch.ID})
+	req := &llm.Request{Model: "gpt-4"}
+
+	t.Run("another user cannot pin a private channel", func(t *testing.T) {
+		viewerCtx := contexts.WithPrincipalUser(ctx, &ent.User{
+			ID:     viewerID,
+			Scopes: []string{string(scopes.ScopeReadChannels), string(scopes.ScopeManageOwnChannels)},
+		})
+
+		result, err := selector.Select(viewerCtx, req)
+		require.NoError(t, err)
+		require.Empty(t, result)
+	})
+
+	t.Run("the channel owner can pin it", func(t *testing.T) {
+		ownerCtx := contexts.WithPrincipalUser(ctx, &ent.User{ID: ownerID})
+
+		result, err := selector.Select(ownerCtx, req)
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Equal(t, ch.ID, result[0].Channel.ID)
+	})
+}
+
 func channelIDsOf(candidates []*ChannelModelsCandidate) []int {
 	ids := make([]int, 0, len(candidates))
 	for _, candidate := range candidates {
