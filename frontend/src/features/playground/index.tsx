@@ -11,7 +11,6 @@ import { ensureFreshAccessToken } from '@/lib/auth-session';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
-import { canUseChannel } from '@/features/channels/data/access';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +36,7 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-e
 import { Response as UIResponse } from '@/components/ai-elements/response';
 import { usePromptInputAttachments } from '@/components/ai-elements/use-prompt-input-attachments';
 import { AutoCompleteSelect } from '@/components/auto-complete-select';
+import { canUseChannel } from '@/features/channels/data/access';
 import { useAllChannelSummarys } from '@/features/channels/data/channels';
 import { useQueryModels } from '@/features/models/data/models';
 import { readSelection, resolveSelection, writeSelection, type PlaygroundModelSource } from './selection';
@@ -344,8 +344,7 @@ export default function Playground() {
     if (!user || !channelsData || (modelSource === 'model_gateway' && canUseModelGateway && !modelsData)) return;
     const channels = channelOptions.map((option) => ({
       value: option.value,
-      models:
-        routableEdges.find((edge) => edge.node.id === option.value)?.node.allModelEntries.map((entry) => entry.requestModel) ?? [],
+      models: routableEdges.find((edge) => edge.node.id === option.value)?.node.allModelEntries.map((entry) => entry.requestModel) ?? [],
     }));
     const gatewayModels = modelPageModelOptions.map((option) => option.value);
     setSelectionState((current) => {
@@ -361,7 +360,17 @@ export default function Playground() {
       }
       return { ...current, ...resolved, ready: true };
     });
-  }, [canUseModelGateway, channelOptions, channelsData, routableEdges, modelPageModelOptions, modelSource, modelsData, selectedProjectId, user]);
+  }, [
+    canUseModelGateway,
+    channelOptions,
+    channelsData,
+    routableEdges,
+    modelPageModelOptions,
+    modelSource,
+    modelsData,
+    selectedProjectId,
+    user,
+  ]);
 
   useEffect(() => {
     if (selection.ready && selection.projectId === selectedProjectId) {

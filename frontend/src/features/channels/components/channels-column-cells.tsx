@@ -31,7 +31,6 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
-import { canUseChannel } from '../data/access';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { parseQuotaLimits, type ProviderQuotaLimit } from '../../system/data/quotas';
 import type { QuotaRoutingMode } from '../../system/data/system';
 import { useChannels } from '../context/channels-context';
+import { canUseChannel } from '../data/access';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
 import { RELAY_PROTOCOLS, RELAY_PROTOCOL_LABEL_KEYS, getChannelRelayProtocols, type RelayProtocol } from '../data/relay-protocols';
