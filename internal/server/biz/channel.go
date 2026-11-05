@@ -610,7 +610,7 @@ func (svc *ChannelService) createChannel(ctx context.Context, input ent.CreateCh
 	}
 
 	if input.BaseURL != nil {
-		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
+		if err := ValidateChannelBaseURL(*input.BaseURL); err != nil {
 			return nil, err
 		}
 	}
@@ -1052,11 +1052,10 @@ func (svc *ChannelService) UpdateChannel(ctx context.Context, id int, input *ent
 	}
 
 	if input.BaseURL != nil {
-		if err := ValidateChannelBaseURL(ctx, *input.BaseURL); err != nil {
+		if err := ValidateChannelBaseURL(*input.BaseURL); err != nil {
 			return nil, err
 		}
 	}
-
 	// Check if name is being updated and if it conflicts with existing channels
 	if input.Name != nil {
 		existing, err := svc.entFromContext(ctx).Channel.Query().
