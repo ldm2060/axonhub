@@ -43,7 +43,10 @@ function PersonalChannelsContent() {
 
   useProvidersData();
   const { channelPermissions } = usePermissions();
-  const canWrite = channelPermissions.canWrite;
+  // The "mine" tab lists only channels owned by the current user, and the
+  // backend's ChannelManageOwnMutationRule lets manage_own_channels holders
+  // mutate their own channels — so editing there must not require write_channels.
+  const canWrite = channelPermissions.canWrite || channelPermissions.canManageOwn;
 
   const [source, setSource] = useState<PersonalChannelSource>('mine');
   const isReadOnly = isPersonalChannelSourceReadOnly(source);

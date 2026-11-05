@@ -111,7 +111,9 @@ export const StatusSwitchCell = memo(({ row }: { row: Row<Channel> }) => {
     }
   }, [canToggle, isArchived]);
 
-  if (!channelPermissions.canWrite) {
+  // canToggle already folds in manage_own_channels ownership; gating the whole
+  // cell on write_channels would hide the switch from owners of the channel.
+  if (!canToggle) {
     return <Badge variant='outline'>{channel.status}</Badge>;
   }
 
@@ -684,8 +686,12 @@ export const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [weight, setWeight] = useState<string>(initialWeight?.toString() || '1');
   const updateChannel = useUpdateChannel();
-  const { channelPermissions } = usePermissions();
+  const { channelPermissions, user } = usePermissions();
   const inputRef = useRef<HTMLInputElement>(null);
+  // Same rule as the models table: write_channels, or manage_own_channels on
+  // your own channel (mirrors ChannelManageOwnMutationRule server-side).
+  const isOwner = channel.ownerID === user?.id;
+  const canEditWeight = channelPermissions.canWrite || (channelPermissions.canManageOwn && isOwner);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -729,7 +735,7 @@ export const OrderingWeightCell = memo(({ row }: { row: Row<Channel> }) => {
     [handleSave, initialWeight]
   );
 
-  if (!channelPermissions.canWrite) {
+  if (!canEditWeight) {
     return <span className={cn('font-mono text-sm', initialWeight == null && 'text-muted-foreground')}>{initialWeight ?? '-'}</span>;
   }
 
