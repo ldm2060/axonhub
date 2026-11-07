@@ -24,7 +24,7 @@ export function ChannelsPrimaryButtons() {
         <Button
           variant='outline'
           className='shrink-0 space-x-1'
-          onClick={() => navigate({ to: '/admin/system', search: { tab: 'retry' } })}
+          onClick={() => navigate({ to: '/admin/system/$section', params: { section: 'requests' }, search: { tab: 'retry' } })}
         >
           <span>{t('channels.loadBalancingStrategy')}</span> <IconScale size={18} />
         </Button>

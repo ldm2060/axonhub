@@ -868,8 +868,7 @@ const monitorStatusColor = (status: string) => {
 };
 
 type QuotaCellUnit =
-  | { kind: 'limit'; key: string; limit: ProviderQuotaLimit }
-  | { kind: 'monitor'; key: string; binding: ChannelQuotaMonitorBindingView };
+  { kind: 'limit'; key: string; limit: ProviderQuotaLimit } | { kind: 'monitor'; key: string; binding: ChannelQuotaMonitorBindingView };
 
 function QuotaLimitRow({ limit, t }: { limit: ProviderQuotaLimit; t: QuotaCellTranslator }) {
   const usageRatio = limit.status === 'exhausted' ? 1 : (limit.usageRatio ?? 1);

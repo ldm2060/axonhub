@@ -131,7 +131,7 @@ func (ts *OutboundPersistentStream) consumeTailEvent(event *httpclient.StreamEve
 	if ts.terminalState == streamTerminalNone && ts.terminalTracker.Observe(event) {
 		ts.terminalState = classifyAcceptedTerminalEvent(event)
 		ts.state.OutboundStreamTerminal = ts.terminalState
-		ts.outcome.observeTerminal(ts.terminalState)
+		ts.outcome.observeTerminalEvent(ts.terminalState, event)
 	}
 	return nil
 }
@@ -198,7 +198,7 @@ func (ts *OutboundPersistentStream) Current() *httpclient.StreamEvent {
 				if ts.terminalState != streamTerminalCompleted {
 					ts.terminalError = streamTerminalErrorMessage(event, ts.terminalState)
 				}
-				ts.outcome.observeTerminal(ts.terminalState)
+				ts.outcome.observeTerminalEvent(ts.terminalState, event)
 				ts.markPerformanceTerminal(ts.terminalState, ts.terminalError)
 				if isNonChoiceTerminalEvent(event) {
 					ts.sourceEnd = llm.SourceEndSemantic
@@ -690,8 +690,8 @@ func (p *PersistentOutboundTransformer) refreshCandidateAPIFormat(
 	}
 
 	entry := candidate.Models[modelIndex]
-	endpoints := applyForcedAPIFormats(ctx, candidate.Channel, []biz.ChannelModelEntry{entry}, requestModel, candidate.Channel.ResolveEndpoints())
-	candidate.APIFormat = SelectAPIFormat(endpoints, req)
+	endpoints, forced := applyForcedAPIFormats(ctx, candidate.Channel, []biz.ChannelModelEntry{entry}, requestModel, candidate.Channel.ResolveEndpoints())
+	candidate.APIFormat = selectEndpointAPIFormat(endpoints, req, forced)
 }
 
 // APIFormat returns the API format of the transformer.
@@ -732,6 +732,7 @@ func (p *PersistentOutboundTransformer) TransformRequest(ctx context.Context, ll
 	entry := candidate.Models[p.state.CurrentModelIndex]
 
 	p.state.CurrentCandidate = candidate
+	p.state.OutboundAttempt++
 	p.state.StreamCompleted = false
 	p.state.OutboundStreamTerminal = streamTerminalNone
 	p.state.CleanEOFCompletionEvidence = false
@@ -1000,6 +1001,10 @@ func (p *PersistentOutboundTransformer) NextChannel(ctx context.Context) error {
 		lifecycleOwner.waitForAccounting()
 	}
 
+	// Remember the channel being left before the index moves. The event is
+	// published only after the switch succeeds.
+	leftChannel, leftModel, attempt := p.channelBeingLeft()
+
 	// Cancel any in-flight pass-through stream goroutine from the previous attempt
 	// so it exits promptly and releases its upstream HTTP connection.
 	p.resetPassThroughStreamState()
@@ -1033,6 +1038,8 @@ func (p *PersistentOutboundTransformer) NextChannel(ctx context.Context) error {
 			log.String("api_format", candidate.APIFormat),
 		)
 	}
+
+	p.publishRequestFailover(ctx, leftChannel, leftModel, attempt, candidate.Channel)
 
 	return nil
 }

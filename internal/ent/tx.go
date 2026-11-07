@@ -40,6 +40,10 @@ type Tx struct {
 	OAuthClient *OAuthClientClient
 	// OIDCIdentity is the client for interacting with the OIDCIdentity builders.
 	OIDCIdentity *OIDCIdentityClient
+	// Plugin is the client for interacting with the Plugin builders.
+	Plugin *PluginClient
+	// PluginStorage is the client for interacting with the PluginStorage builders.
+	PluginStorage *PluginStorageClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
 	// Prompt is the client for interacting with the Prompt builders.
@@ -219,6 +223,8 @@ func (tx *Tx) init() {
 	tx.Model = NewModelClient(tx.config)
 	tx.OAuthClient = NewOAuthClientClient(tx.config)
 	tx.OIDCIdentity = NewOIDCIdentityClient(tx.config)
+	tx.Plugin = NewPluginClient(tx.config)
+	tx.PluginStorage = NewPluginStorageClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
 	tx.Prompt = NewPromptClient(tx.config)
 	tx.PromptProtectionRule = NewPromptProtectionRuleClient(tx.config)

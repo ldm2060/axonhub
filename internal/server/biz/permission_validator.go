@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/authz/identity"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/privacy"
 	entuser "github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/scopes"
 )
@@ -100,6 +102,18 @@ func (v *PermissionValidator) CanGrantScopes(ctx context.Context, scopesToGrant 
 		return fmt.Errorf("user not found in context")
 	}
 
+	if identity.IsPlugin(ctx) {
+		for _, scope := range scopesToGrant {
+			allowed := scopes.EffectiveSystemScope(ctx, currentUser, scopes.ScopeSlug(scope))
+			if projectID != nil {
+				allowed = allowed || scopes.EffectiveProjectScope(ctx, currentUser, *projectID, scopes.ScopeSlug(scope))
+			}
+			if !allowed {
+				return fmt.Errorf("plugin cannot grant scope %s", scope)
+			}
+		}
+		return nil
+	}
 	// Owners can grant any scopes
 	isOwner, err := v.isProjectOwner(ctx, currentUser, projectID)
 	if err != nil {
@@ -146,7 +160,7 @@ func (v *PermissionValidator) CanGrantAPIKeyScopes(ctx context.Context, user *en
 			return fmt.Errorf("invalid scope '%s'", scope)
 		}
 
-		if scopes.IsSystemOnlyScope(scope) && !scopes.HasSystemScope(user, scopes.ScopeSlug(scope)) {
+		if scopes.IsSystemOnlyScope(scope) && !scopes.EffectiveSystemScope(ctx, user, scopes.ScopeSlug(scope)) {
 			return fmt.Errorf("insufficient permissions: cannot grant system scope '%s' that you don't possess at system level", scope)
 		}
 	}
@@ -168,7 +182,7 @@ func (v *PermissionValidator) CanEditUserPermissions(ctx context.Context, target
 	}
 
 	// Get target user
-	targetUser, err := authz.RunWithSystemBypass(ctx, "permission-check", func(bypassCtx context.Context) (*ent.User, error) {
+	targetUser, err := authz.RunAsHost(ctx, v.entFromContext(ctx), "permission-check", func(bypassCtx context.Context) (*ent.User, error) {
 		client := v.entFromContext(bypassCtx)
 
 		return client.User.Query().
@@ -273,7 +287,7 @@ func (v *PermissionValidator) CanGrantAdmin(ctx context.Context) error {
 
 // CanEditRole checks if the current user can edit a role.
 func (v *PermissionValidator) CanEditRole(ctx context.Context, roleID int, projectID *int) error {
-	role, err := authz.RunWithSystemBypass(ctx, "permission-check", func(bypassCtx context.Context) (*ent.Role, error) {
+	role, err := authz.RunAsHost(ctx, v.entFromContext(ctx), "permission-check", func(bypassCtx context.Context) (*ent.Role, error) {
 		client := v.entFromContext(bypassCtx)
 		return client.Role.Get(bypassCtx, roleID)
 	})
@@ -296,7 +310,7 @@ func (v *PermissionValidator) CanDeleteProject(ctx context.Context, projectID in
 	}
 
 	// Only system owners can delete projects
-	if !currentUser.IsOwner {
+	if !scopes.IsDirectOwner(ctx) {
 		return fmt.Errorf("insufficient permissions: only system owners can delete projects")
 	}
 
@@ -317,9 +331,18 @@ func (v *PermissionValidator) CanDeleteUser(ctx context.Context, targetUserID in
 	}
 
 	// Only system owners can delete users
-	if !currentUser.IsOwner {
+	if !scopes.IsDirectOwner(ctx) {
 		return fmt.Errorf("insufficient permissions: only system owners can delete users")
 	}
 
+	return nil
+}
+
+// CanChangeOwnership prevents a delegated plugin from changing owner authority.
+// Direct-user ownership rules remain enforced by the existing mutation paths.
+func (v *PermissionValidator) CanChangeOwnership(ctx context.Context, isOwner *bool) error {
+	if isOwner != nil && identity.IsPlugin(ctx) {
+		return privacy.Denyf("plugin cannot change owner authority")
+	}
 	return nil
 }

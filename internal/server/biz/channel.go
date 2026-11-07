@@ -32,6 +32,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/scopes"
 	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/ldm2060/axonhub/internal/server/biz/usage_monitor"
+	"github.com/ldm2060/axonhub/internal/server/events"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
@@ -106,8 +107,11 @@ type ChannelServiceParams struct {
 	Ent             *ent.Client
 	SystemService   *SystemService
 	WebhookNotifier *WebhookNotifier
-	HttpClient      *httpclient.HttpClient
-	UsageMonitor    *UsageMonitorService
+	// EventBus publishes plugin events. Nil skips publication; the business
+	// operation still runs. Tests construct the service without a bus.
+	EventBus     *events.Bus `optional:"true"`
+	HttpClient   *httpclient.HttpClient
+	UsageMonitor *UsageMonitorService
 }
 
 func NewChannelService(params ChannelServiceParams) *ChannelService {
@@ -117,6 +121,7 @@ func NewChannelService(params ChannelServiceParams) *ChannelService {
 		},
 		SystemService:             params.SystemService,
 		WebhookNotifier:           params.WebhookNotifier,
+		EventBus:                  params.EventBus,
 		httpClient:                params.HttpClient,
 		usageMonitor:              params.UsageMonitor,
 		channelPerfMetrics:        make(map[int]*channelMetrics),
@@ -180,6 +185,9 @@ type ChannelService struct {
 
 	SystemService   *SystemService
 	WebhookNotifier *WebhookNotifier
+	// EventBus publishes plugin events. Nil skips publication and does not
+	// skip the business operation.
+	EventBus *events.Bus
 
 	httpClient   *httpclient.HttpClient
 	usageMonitor *UsageMonitorService

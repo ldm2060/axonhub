@@ -15,8 +15,11 @@ import { useMyProjects } from '@/features/projects/data/projects';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
 import { BrandLogo } from './brand-logo';
+import { NavModuleTabs } from './nav-module-tabs';
+import { ProjectSwitcher } from './project-switcher';
+import { type SidebarData } from './types';
 
-export function AppHeader() {
+export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
   const { data: brandSettings } = useBrandSettings();
   const { t } = useTranslation();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -27,6 +30,7 @@ export function AppHeader() {
 
   // Auto-resolve project context without user interaction
   useAutoResolveProject(myProjects);
+  const showProjectSwitcher = sidebarData.activeModuleId === 'project';
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
@@ -65,6 +69,18 @@ export function AppHeader() {
             </div>
             <span className='text-sm leading-none font-semibold'>{displayName}</span>
           </div>
+
+          {/* Module tabs - desktop only, the mobile sidebar has its own switcher */}
+          {!isMobile && <NavModuleTabs modules={sidebarData.modules} activeModuleId={sidebarData.activeModuleId} className='ml-4' />}
+
+          {/* Project Switcher - only meaningful for project-scoped pages. Placed after
+              the tabs so toggling it never shifts them. */}
+          {showProjectSwitcher && (
+            <>
+              <span className='text-muted-foreground/60 mx-0.5 text-sm select-none'>/</span>
+              <ProjectSwitcher />
+            </>
+          )}
         </div>
 
         {/* 右侧控件 */}

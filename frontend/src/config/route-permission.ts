@@ -88,6 +88,26 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        path: '/admin/system/requests',
+        requiredScopes: ['read_settings'],
+        mode: 'hidden',
+      },
+      {
+        path: '/admin/system/integrations',
+        requiredScopes: ['read_settings'],
+        mode: 'hidden',
+      },
+      {
+        path: '/admin/system/operations',
+        requiredScopes: ['read_settings'],
+        mode: 'hidden',
+      },
+      {
+        path: '/plugins',
+        requiredScopes: ['read_plugins'],
+        mode: 'hidden',
+      },
+      {
         path: '/admin/runtime',
         requiredScopes: ['read_settings'],
         mode: 'hidden',
@@ -107,6 +127,11 @@ export const routeConfigs: RouteGroup[] = [
       {
         path: '/',
         // Personal dashboard - accessible to all users
+      },
+      {
+        path: '/projects',
+        requiredScopes: ['read_projects'],
+        mode: 'hidden',
       },
       {
         path: '/my-channels',
@@ -160,6 +185,20 @@ export const routeConfigs: RouteGroup[] = [
         path: '/project/threads',
         requiredScopes: ['read_requests'],
         mode: 'hidden',
+      },
+      {
+        path: '/project/users',
+        requiredScopes: ['read_users'],
+        mode: 'hidden',
+      },
+      {
+        path: '/project/roles',
+        requiredScopes: ['read_roles'],
+        mode: 'hidden',
+      },
+      {
+        path: '/project/playground',
+        // Playground is accessible to all users
       },
       {
         path: '/project/threads/$threadId',

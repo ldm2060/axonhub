@@ -15,7 +15,7 @@ import (
 // Refusal delta followed by finish_reason=content_filter into the stream
 // transformer and asserts that the output contains:
 //  1. a text_delta event with the refusal text, and
-//  2. a message_delta event with stop_reason=end_turn.
+//  2. a message_delta event with stop_reason=refusal.
 //
 // This is a regression test: the existing inbound_refusal_test.go tests only
 // exercise the non-stream convertToAnthropicResponse path, not the actual
@@ -77,16 +77,16 @@ func TestStreamPipeline_RefusalContentFilter(t *testing.T) {
 	}
 	require.True(t, foundRefusalTextDelta, "stream should emit a text_delta with the refusal text")
 
-	// Assert: message_delta has stop_reason=end_turn for content_filter.
+	// Assert: message_delta has stop_reason=refusal for content_filter.
 	var foundContentFilterEndTurn bool
 	for _, event := range events {
 		if event.Type == "message_delta" && event.Delta != nil &&
-			event.Delta.StopReason != nil && *event.Delta.StopReason == "end_turn" {
+			event.Delta.StopReason != nil && *event.Delta.StopReason == "refusal" {
 			foundContentFilterEndTurn = true
 		}
 	}
 	require.True(t, foundContentFilterEndTurn,
-		"stream should emit message_delta with stop_reason=end_turn for content_filter finish reason")
+		"stream should emit message_delta with stop_reason=refusal for content_filter finish reason")
 }
 
 // TestStreamPipeline_ContentFilterWithNormalText verifies that when a stream
@@ -155,7 +155,7 @@ func TestStreamPipeline_ContentFilterWithNormalText(t *testing.T) {
 	var foundEndTurn bool
 	for _, event := range events {
 		if event.Type == "message_delta" && event.Delta != nil &&
-			event.Delta.StopReason != nil && *event.Delta.StopReason == "end_turn" {
+			event.Delta.StopReason != nil && *event.Delta.StopReason == "refusal" {
 			foundEndTurn = true
 		}
 	}

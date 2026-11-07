@@ -35,6 +35,7 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedMyChannelsIndexRouteImport } from './routes/_authenticated/my-channels/index'
 import { Route as AuthenticatedMyModelsIndexRouteImport } from './routes/_authenticated/my-models/index'
 import { Route as AuthenticatedPermissionDemoIndexRouteImport } from './routes/_authenticated/permission-demo/index'
+import { Route as AuthenticatedPluginsIndexRouteImport } from './routes/_authenticated/plugins/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedRequestsRequestIdRouteImport } from './routes/_authenticated/requests/$requestId'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
@@ -55,6 +56,7 @@ import { Route as AuthenticatedAdminRequestsRequestIdRouteImport } from './route
 import { Route as AuthenticatedAdminRolesIndexRouteImport } from './routes/_authenticated/admin/roles/index'
 import { Route as AuthenticatedAdminRuntimeIndexRouteImport } from './routes/_authenticated/admin/runtime/index'
 import { Route as AuthenticatedAdminSystemIndexRouteImport } from './routes/_authenticated/admin/system/index'
+import { Route as AuthenticatedAdminSystemSectionRouteImport } from './routes/_authenticated/admin/system/$section'
 import { Route as AuthenticatedAdminUsageMonitorIndexRouteImport } from './routes/_authenticated/admin/usage-monitor/index'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedProjectApiKeysIndexRouteImport } from './routes/_authenticated/project/api-keys/index'
@@ -69,6 +71,7 @@ import { Route as AuthenticatedProjectTracesIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedProjectTracesTraceIdRouteImport } from './routes/_authenticated/project/traces/$traceId'
 import { Route as AuthenticatedProjectUsageStatsIndexRouteImport } from './routes/_authenticated/project/usage-stats/index'
 import { Route as AuthenticatedProjectUsersIndexRouteImport } from './routes/_authenticated/project/users/index'
+import { Route as AuthenticatedPluginsPluginIdPagesPageRouteImport } from './routes/_authenticated/plugins/$pluginId/pages/$page'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -206,6 +209,12 @@ const AuthenticatedPermissionDemoIndexRoute =
     path: '/permission-demo/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPluginsIndexRoute =
+  AuthenticatedPluginsIndexRouteImport.update({
+    id: '/plugins/',
+    path: '/plugins/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjectsIndexRoute =
   AuthenticatedProjectsIndexRouteImport.update({
     id: '/projects/',
@@ -325,6 +334,12 @@ const AuthenticatedAdminSystemIndexRoute =
     path: '/system/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminSystemSectionRoute =
+  AuthenticatedAdminSystemSectionRouteImport.update({
+    id: '/system/$section',
+    path: '/system/$section',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminUsageMonitorIndexRoute =
   AuthenticatedAdminUsageMonitorIndexRouteImport.update({
     id: '/usage-monitor/',
@@ -409,6 +424,12 @@ const AuthenticatedProjectUsersIndexRoute =
     path: '/project/users/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPluginsPluginIdPagesPageRoute =
+  AuthenticatedPluginsPluginIdPagesPageRouteImport.update({
+    id: '/plugins/$pluginId/pages/$page',
+    path: '/plugins/$pluginId/pages/$page',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -442,10 +463,12 @@ export interface FileRoutesByFullPath {
   '/my-channels/': typeof AuthenticatedMyChannelsIndexRoute
   '/my-models/': typeof AuthenticatedMyModelsIndexRoute
   '/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
+  '/plugins/': typeof AuthenticatedPluginsIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
+  '/admin/system/$section': typeof AuthenticatedAdminSystemSectionRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -470,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/project/traces/': typeof AuthenticatedProjectTracesIndexRoute
   '/project/usage-stats/': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/project/users/': typeof AuthenticatedProjectUsersIndexRoute
+  '/plugins/$pluginId/pages/$page': typeof AuthenticatedPluginsPluginIdPagesPageRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof authForgotPasswordRoute
@@ -501,10 +525,12 @@ export interface FileRoutesByTo {
   '/my-channels': typeof AuthenticatedMyChannelsIndexRoute
   '/my-models': typeof AuthenticatedMyModelsIndexRoute
   '/permission-demo': typeof AuthenticatedPermissionDemoIndexRoute
+  '/plugins': typeof AuthenticatedPluginsIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
+  '/admin/system/$section': typeof AuthenticatedAdminSystemSectionRoute
   '/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -529,6 +555,7 @@ export interface FileRoutesByTo {
   '/project/traces': typeof AuthenticatedProjectTracesIndexRoute
   '/project/usage-stats': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/project/users': typeof AuthenticatedProjectUsersIndexRoute
+  '/plugins/$pluginId/pages/$page': typeof AuthenticatedPluginsPluginIdPagesPageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -564,10 +591,12 @@ export interface FileRoutesById {
   '/_authenticated/my-channels/': typeof AuthenticatedMyChannelsIndexRoute
   '/_authenticated/my-models/': typeof AuthenticatedMyModelsIndexRoute
   '/_authenticated/permission-demo/': typeof AuthenticatedPermissionDemoIndexRoute
+  '/_authenticated/plugins/': typeof AuthenticatedPluginsIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/admin/dashboard/channel-success-rates': typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   '/_authenticated/admin/requests/$requestId': typeof AuthenticatedAdminRequestsRequestIdRoute
+  '/_authenticated/admin/system/$section': typeof AuthenticatedAdminSystemSectionRoute
   '/_authenticated/project/requests/$requestId': typeof AuthenticatedProjectRequestsRequestIdRoute
   '/_authenticated/project/threads/$threadId': typeof AuthenticatedProjectThreadsThreadIdRoute
   '/_authenticated/project/traces/$traceId': typeof AuthenticatedProjectTracesTraceIdRoute
@@ -592,6 +621,7 @@ export interface FileRoutesById {
   '/_authenticated/project/traces/': typeof AuthenticatedProjectTracesIndexRoute
   '/_authenticated/project/usage-stats/': typeof AuthenticatedProjectUsageStatsIndexRoute
   '/_authenticated/project/users/': typeof AuthenticatedProjectUsersIndexRoute
+  '/_authenticated/plugins/$pluginId/pages/$page': typeof AuthenticatedPluginsPluginIdPagesPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -627,10 +657,12 @@ export interface FileRouteTypes {
     | '/my-channels/'
     | '/my-models/'
     | '/permission-demo/'
+    | '/plugins/'
     | '/projects/'
     | '/settings/'
     | '/admin/dashboard/channel-success-rates'
     | '/admin/requests/$requestId'
+    | '/admin/system/$section'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -655,6 +687,7 @@ export interface FileRouteTypes {
     | '/project/traces/'
     | '/project/usage-stats/'
     | '/project/users/'
+    | '/plugins/$pluginId/pages/$page'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -686,10 +719,12 @@ export interface FileRouteTypes {
     | '/my-channels'
     | '/my-models'
     | '/permission-demo'
+    | '/plugins'
     | '/projects'
     | '/settings'
     | '/admin/dashboard/channel-success-rates'
     | '/admin/requests/$requestId'
+    | '/admin/system/$section'
     | '/project/requests/$requestId'
     | '/project/threads/$threadId'
     | '/project/traces/$traceId'
@@ -714,6 +749,7 @@ export interface FileRouteTypes {
     | '/project/traces'
     | '/project/usage-stats'
     | '/project/users'
+    | '/plugins/$pluginId/pages/$page'
   id:
     | '__root__'
     | '/_authenticated'
@@ -748,10 +784,12 @@ export interface FileRouteTypes {
     | '/_authenticated/my-channels/'
     | '/_authenticated/my-models/'
     | '/_authenticated/permission-demo/'
+    | '/_authenticated/plugins/'
     | '/_authenticated/projects/'
     | '/_authenticated/settings/'
     | '/_authenticated/admin/dashboard/channel-success-rates'
     | '/_authenticated/admin/requests/$requestId'
+    | '/_authenticated/admin/system/$section'
     | '/_authenticated/project/requests/$requestId'
     | '/_authenticated/project/threads/$threadId'
     | '/_authenticated/project/traces/$traceId'
@@ -776,6 +814,7 @@ export interface FileRouteTypes {
     | '/_authenticated/project/traces/'
     | '/_authenticated/project/usage-stats/'
     | '/_authenticated/project/users/'
+    | '/_authenticated/plugins/$pluginId/pages/$page'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -980,6 +1019,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPermissionDemoIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/plugins/': {
+      id: '/_authenticated/plugins/'
+      path: '/plugins'
+      fullPath: '/plugins/'
+      preLoaderRoute: typeof AuthenticatedPluginsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/projects/': {
       id: '/_authenticated/projects/'
       path: '/projects'
@@ -1120,6 +1166,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSystemIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/system/$section': {
+      id: '/_authenticated/admin/system/$section'
+      path: '/system/$section'
+      fullPath: '/admin/system/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/usage-monitor/': {
       id: '/_authenticated/admin/usage-monitor/'
       path: '/usage-monitor'
@@ -1218,6 +1271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectUsersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/plugins/$pluginId/pages/$page': {
+      id: '/_authenticated/plugins/$pluginId/pages/$page'
+      path: '/plugins/$pluginId/pages/$page'
+      fullPath: '/plugins/$pluginId/pages/$page'
+      preLoaderRoute: typeof AuthenticatedPluginsPluginIdPagesPageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -1225,6 +1285,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminDashboardChannelSuccessRatesRoute: typeof AuthenticatedAdminDashboardChannelSuccessRatesRoute
   AuthenticatedAdminRequestsRequestIdRoute: typeof AuthenticatedAdminRequestsRequestIdRoute
+  AuthenticatedAdminSystemSectionRoute: typeof AuthenticatedAdminSystemSectionRoute
   AuthenticatedAdminChannelsIndexRoute: typeof AuthenticatedAdminChannelsIndexRoute
   AuthenticatedAdminDataStoragesIndexRoute: typeof AuthenticatedAdminDataStoragesIndexRoute
   AuthenticatedAdminModelsIndexRoute: typeof AuthenticatedAdminModelsIndexRoute
@@ -1246,6 +1307,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
       AuthenticatedAdminDashboardChannelSuccessRatesRoute,
     AuthenticatedAdminRequestsRequestIdRoute:
       AuthenticatedAdminRequestsRequestIdRoute,
+    AuthenticatedAdminSystemSectionRoute: AuthenticatedAdminSystemSectionRoute,
     AuthenticatedAdminChannelsIndexRoute: AuthenticatedAdminChannelsIndexRoute,
     AuthenticatedAdminDataStoragesIndexRoute:
       AuthenticatedAdminDataStoragesIndexRoute,
@@ -1306,6 +1368,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyChannelsIndexRoute: typeof AuthenticatedMyChannelsIndexRoute
   AuthenticatedMyModelsIndexRoute: typeof AuthenticatedMyModelsIndexRoute
   AuthenticatedPermissionDemoIndexRoute: typeof AuthenticatedPermissionDemoIndexRoute
+  AuthenticatedPluginsIndexRoute: typeof AuthenticatedPluginsIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedProjectRequestsRequestIdRoute: typeof AuthenticatedProjectRequestsRequestIdRoute
   AuthenticatedProjectThreadsThreadIdRoute: typeof AuthenticatedProjectThreadsThreadIdRoute
@@ -1319,6 +1382,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProjectTracesIndexRoute: typeof AuthenticatedProjectTracesIndexRoute
   AuthenticatedProjectUsageStatsIndexRoute: typeof AuthenticatedProjectUsageStatsIndexRoute
   AuthenticatedProjectUsersIndexRoute: typeof AuthenticatedProjectUsersIndexRoute
+  AuthenticatedPluginsPluginIdPagesPageRoute: typeof AuthenticatedPluginsPluginIdPagesPageRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1334,6 +1398,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyChannelsIndexRoute: AuthenticatedMyChannelsIndexRoute,
   AuthenticatedMyModelsIndexRoute: AuthenticatedMyModelsIndexRoute,
   AuthenticatedPermissionDemoIndexRoute: AuthenticatedPermissionDemoIndexRoute,
+  AuthenticatedPluginsIndexRoute: AuthenticatedPluginsIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedProjectRequestsRequestIdRoute:
     AuthenticatedProjectRequestsRequestIdRoute,
@@ -1353,6 +1418,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProjectUsageStatsIndexRoute:
     AuthenticatedProjectUsageStatsIndexRoute,
   AuthenticatedProjectUsersIndexRoute: AuthenticatedProjectUsersIndexRoute,
+  AuthenticatedPluginsPluginIdPagesPageRoute:
+    AuthenticatedPluginsPluginIdPagesPageRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

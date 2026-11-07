@@ -39,5 +39,15 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // TanStack Router route files export `Route = createFileRoute(...)`,
+    // which react-refresh 0.5.x flags even though it is the file's only
+    // export and the component stays local. Route modules are not hot-swapped
+    // components, so the rule does not apply to them.
+    files: ['src/routes/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   }
 );

@@ -26,6 +26,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/model"
 	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
+	"github.com/ldm2060/axonhub/internal/ent/plugin"
+	"github.com/ldm2060/axonhub/internal/ent/pluginstorage"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
@@ -117,6 +119,8 @@ func checkColumn(t, c string) error {
 			model.Table:                      model.ValidColumn,
 			oauthclient.Table:                oauthclient.ValidColumn,
 			oidcidentity.Table:               oidcidentity.ValidColumn,
+			plugin.Table:                     plugin.ValidColumn,
+			pluginstorage.Table:              pluginstorage.ValidColumn,
 			project.Table:                    project.ValidColumn,
 			prompt.Table:                     prompt.ValidColumn,
 			promptprotectionrule.Table:       promptprotectionrule.ValidColumn,

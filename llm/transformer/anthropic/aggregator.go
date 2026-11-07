@@ -173,12 +173,12 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 			if event.Index != nil && int(*event.Index) < len(contentBlocks) {
 				index := int(*event.Index)
 
-				block := contentBlocks[index]
+				block := &contentBlocks[index]
 				if isAnthropicToolUseLike(block.Type) {
 					if !json.Valid(block.Input) {
 						slog.WarnContext(ctx, "invalid tool use input", slog.String("input", string(block.Input)))
 
-						repaired, err := jsonrepair.JSONRepair(string(block.Input))
+						repaired, err := jsonrepair.Repair(string(block.Input))
 						if err == nil {
 							block.Input = []byte(repaired)
 						}
@@ -186,7 +186,6 @@ func AggregateStreamChunks(ctx context.Context, chunks []*httpclient.StreamEvent
 					if block.Name != nil {
 						block.Input = sanitizeToolUseInput(*block.Name, block.Input)
 					}
-					contentBlocks[index] = block
 				}
 			}
 		case "message_stop":

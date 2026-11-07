@@ -24,7 +24,6 @@ import {
   useUpdateConcurrencyLimitSettings,
 } from '../data/system';
 import { GMTTimeZoneOptions } from '../data/timezones';
-import { CatalogSettings } from './catalog-settings';
 
 export function GeneralSettings() {
   const { t } = useTranslation();
@@ -33,16 +32,16 @@ export function GeneralSettings() {
   const { isLoading, setIsLoading } = useSystemContext();
 
   // User-Agent Pass-Through settings
-  const { data: uaSettings, isLoading: isLoadingUASettings } = useUserAgentPassThroughSettings();
+  const { isLoading: isLoadingUASettings } = useUserAgentPassThroughSettings();
   const updateUASettings = useUpdateUserAgentPassThroughSettings();
   const [uaPassThroughEnabled, setUaPassThroughEnabled] = useState(false);
 
   // Pass-Through (request/response body) settings
-  const { data: ptSettings, isLoading: isLoadingPTSettings } = usePassThroughSettings();
+  const { isLoading: isLoadingPTSettings } = usePassThroughSettings();
   const updatePTSettings = useUpdatePassThroughSettings();
   const [passThroughEnabled, setPassThroughEnabled] = useState(false);
 
-  const { data: usageCostSettings, isLoading: isLoadingUsageCostSettings } = useUsageCostInjectionSettings();
+  const { isLoading: isLoadingUsageCostSettings } = useUsageCostInjectionSettings();
   const updateUsageCostSettings = useUpdateUsageCostInjectionSettings();
   const [usageCostInjectionEnabled, setUsageCostInjectionEnabled] = useState(false);
 
@@ -84,26 +83,6 @@ export function GeneralSettings() {
       setTimezone(settings.timezone || 'UTC');
     }
   }, [settings]);
-
-  // Update UA pass-through state when loaded
-  useEffect(() => {
-    if (uaSettings) {
-      setUaPassThroughEnabled(uaSettings.enabled);
-    }
-  }, [uaSettings]);
-
-  // Update pass-through state when loaded
-  useEffect(() => {
-    if (ptSettings) {
-      setPassThroughEnabled(ptSettings.enabled);
-    }
-  }, [ptSettings]);
-
-  useEffect(() => {
-    if (usageCostSettings) {
-      setUsageCostInjectionEnabled(usageCostSettings.enabled);
-    }
-  }, [usageCostSettings]);
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -292,8 +271,6 @@ export function GeneralSettings() {
           </div>
         </CardContent>
       </Card>
-
-      <CatalogSettings />
 
       {hasChanges && (
         <div className='flex justify-end'>

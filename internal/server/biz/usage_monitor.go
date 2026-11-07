@@ -11,6 +11,7 @@ import (
 
 	"go.uber.org/fx"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/usagemonitorchannel"
@@ -424,8 +425,11 @@ func (svc *UsageMonitorService) Start(ctx context.Context) error {
 
 	// One-time cleanup: remove orphan quota monitor bindings left behind by
 	// older versions that did not clean up bindings on channel/monitor delete.
-	// Logged, never fatal — a cleanup issue must not block startup.
-	if removed, err := svc.CleanupOrphanedBindings(ctx); err != nil {
+	// Logged, never fatal — a cleanup issue must not block startup. Startup
+	// carries no user principal, so the query runs under a system bypass.
+	if removed, err := authz.RunWithSystemBypass(ctx, "cleanup-orphaned-bindings", func(bypassCtx context.Context) (int, error) {
+		return svc.CleanupOrphanedBindings(bypassCtx)
+	}); err != nil {
 		log.Warn(ctx, "failed to clean orphaned quota monitor bindings", log.Cause(err))
 	} else if removed > 0 {
 		log.Info(ctx, "cleaned orphaned quota monitor bindings", log.Int("removed", removed))

@@ -376,14 +376,12 @@ export function useRequest(
   const projectId = options?.projectId !== undefined ? options.projectId : selectedProjectId;
   const enabled = options?.enabled ?? true;
 
-  const queryKey = ['request', id, permissions, projectId] as const;
-
   return useQuery({
-    queryKey,
+    queryKey: ['request', id, permissions, projectId],
     queryFn: async () => {
       try {
         const headers = projectId ? { 'X-Project-ID': projectId } : undefined;
-        const previousRequest = queryClient.getQueryData<Request>(queryKey);
+        const previousRequest = queryClient.getQueryData<Request>(['request', id, permissions, projectId]);
         const shouldUseLightweightPolling = previousRequest?.status === 'processing';
 
         const query = shouldUseLightweightPolling ? buildRequestDetailPollingQuery(permissions) : buildRequestDetailQuery(permissions);

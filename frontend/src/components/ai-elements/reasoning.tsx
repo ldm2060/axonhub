@@ -135,6 +135,9 @@ export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent> & 
   children: string;
 };
 
+// Streamdown 2.x narrows its handler prop types (e.g. onAnimationEnd to a
+// zero-arg callback), so only the display props are forwarded; the rest stay
+// on the CollapsibleContent wrapper.
 export const ReasoningContent = memo(({ className, children, ...props }: ReasoningContentProps) => (
   <CollapsibleContent
     className={cn(
@@ -144,7 +147,7 @@ export const ReasoningContent = memo(({ className, children, ...props }: Reasoni
     )}
     {...props}
   >
-    <Streamdown shikiTheme={['one-light', 'one-dark-pro']} {...props}>
+    <Streamdown shikiTheme={['one-light', 'one-dark-pro']} dir={props.dir as 'auto' | 'ltr' | 'rtl' | undefined}>
       {children}
     </Streamdown>
   </CollapsibleContent>

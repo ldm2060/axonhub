@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/authz/identity"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
@@ -17,10 +18,15 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/samber/lo"
 )
 
 // UpdateMe is the resolver for the updateMe field.
 func (r *mutationResolver) UpdateMe(ctx context.Context, input UpdateMeInput) (*ent.User, error) {
+	if err := authz.RequireDirectUser(ctx); err != nil {
+		return nil, err
+	}
+
 	// Get current user from context
 	user, ok := contexts.GetUser(ctx)
 	if !ok || user == nil {
@@ -36,6 +42,10 @@ func (r *mutationResolver) UpdateMe(ctx context.Context, input UpdateMeInput) (*
 
 // UpdateMyPassword is the resolver for the updateMyPassword field.
 func (r *mutationResolver) UpdateMyPassword(ctx context.Context, input UpdateMyPasswordInput) (bool, error) {
+	if err := authz.RequireDirectUser(ctx); err != nil {
+		return false, err
+	}
+
 	// Get current user from context
 	user, ok := contexts.GetUser(ctx)
 	if !ok || user == nil {
@@ -65,6 +75,10 @@ func (r *mutationResolver) UpdateMyPassword(ctx context.Context, input UpdateMyP
 
 // UnlinkOIDCIdentity is the resolver for the unlinkOIDCIdentity field.
 func (r *mutationResolver) UnlinkOIDCIdentity(ctx context.Context, id objects.GUID) (bool, error) {
+	if err := authz.RequireDirectUser(ctx); err != nil {
+		return false, err
+	}
+
 	// Get current user from context
 	user, ok := contexts.GetUser(ctx)
 	if !ok || user == nil {
@@ -129,6 +143,12 @@ func (r *queryResolver) Me(ctx context.Context) (*objects.UserInfo, error) {
 		return nil, fmt.Errorf("user not found in context")
 	}
 
+	if identity.IsPlugin(ctx) {
+		if !identity.ValidPlugin(ctx, userCtx.ID) {
+			return nil, fmt.Errorf("invalid plugin identity")
+		}
+		return &objects.UserInfo{ID: objects.GUID{Type: ent.TypeUser, ID: userCtx.ID}, Email: userCtx.Email, FirstName: userCtx.FirstName, LastName: userCtx.LastName, PreferLanguage: userCtx.PreferLanguage, Avatar: lo.ToPtr(objects.UserAvatarURL(userCtx.ID)), Scopes: []string{}, Roles: []objects.RoleInfo{}, Projects: []objects.UserProjectInfo{}, OIDCIdentities: []objects.OIDCIdentityInfo{}}, nil
+	}
 	// Fetch the full user model with all preloaded edges
 	user, err := r.userService.GetUserByID(ctx, userCtx.ID)
 	if err != nil {
@@ -146,7 +166,9 @@ func (r *queryResolver) MyProjects(ctx context.Context) ([]*ent.Project, error) 
 	if !ok || u == nil {
 		return nil, fmt.Errorf("user not found in context")
 	}
-
+	if identity.IsPlugin(ctx) {
+		return r.client.Project.Query().Where(project.HasUsersWith(user.IDEQ(u.ID)), project.StatusEQ(project.StatusActive)).All(ctx)
+	}
 	ctx = authz.WithSystemBypass(ctx, "read-my-projects")
 
 	return r.client.Project.Query().

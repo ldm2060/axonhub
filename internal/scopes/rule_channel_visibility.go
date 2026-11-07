@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/entql"
 
+	"github.com/ldm2060/axonhub/internal/authz/identity"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
@@ -25,6 +26,16 @@ func channelVisibilityFilter(readScope ScopeSlug) func(ctx context.Context, f pr
 		user, err := getUserFromContext(ctx)
 		if err != nil {
 			return err
+		}
+
+		// A plugin principal is a delegated program, not a user browsing the
+		// catalog: without the plugin grant the query is denied outright
+		// rather than filtered down, matching the plugin call ceiling.
+		if identity.IsPlugin(ctx) {
+			if EffectiveSystemScope(ctx, user, readScope) {
+				return privacy.Allow
+			}
+			return privacy.Denyf("delegated plugin principal lacks the %s grant", readScope)
 		}
 
 		if HasSystemScope(user, readScope) {

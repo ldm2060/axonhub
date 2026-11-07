@@ -443,10 +443,7 @@ type ProviderClineErrorQuotaData = ProviderQuotaDataCommon & {
 };
 
 export type ProviderClineQuotaData =
-  | ProviderClinePassQuotaData
-  | ProviderClineUnavailablePassQuotaData
-  | ProviderClineDirectQuotaData
-  | ProviderClineErrorQuotaData;
+  ProviderClinePassQuotaData | ProviderClineUnavailablePassQuotaData | ProviderClineDirectQuotaData | ProviderClineErrorQuotaData;
 
 export function isClineActivePassQuotaData(qd: ProviderClineQuotaData): qd is ProviderClinePassQuotaData {
   return qd.pool === 'cline_pass' && qd.windows != null;

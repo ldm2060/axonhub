@@ -20,7 +20,12 @@ import {
   type WebhookTarget,
 } from '../data/system';
 
-const AUTO_DISABLED_EVENT = 'channel.auto_disabled';
+const WEBHOOK_EVENTS = [
+  { id: 'channel.auto_disabled', i18nKey: 'system.webhook.events.channelAutoDisabled' },
+  { id: 'provider.quota.warning', i18nKey: 'system.webhook.events.providerQuotaWarning' },
+  { id: 'provider.quota.exhausted', i18nKey: 'system.webhook.events.providerQuotaExhausted' },
+  { id: 'provider.quota.recovered', i18nKey: 'system.webhook.events.providerQuotaRecovered' },
+] as const;
 
 const DEFAULT_WEBHOOK_BODY_TEMPLATE = `{
   "event": "{{.Event}}",
@@ -37,6 +42,15 @@ const DEFAULT_WEBHOOK_BODY_TEMPLATE = `{
     "threshold": {{.Trigger.Threshold}},
     "actual_count": {{.Trigger.ActualCount}},
     "reason": "{{.Trigger.Reason}}"
+  },
+  "quota": {
+    "previous_status": "{{.Quota.PreviousStatus}}",
+    "new_status": "{{.Quota.NewStatus}}",
+    "usage_ratio": {{.Quota.UsageRatio}},
+    "usage_percent": {{.Quota.UsagePercent}},
+    "next_reset_at": "{{.Quota.NextResetAt}}",
+    "limits": {{.Quota.Limits | json}},
+    "warning_threshold_ratio": {{.Quota.WarningThresholdRatio}}
   }
 }`;
 
@@ -74,11 +88,9 @@ export function WebhookSettings() {
   }, [webhookConfig]);
 
   const getSubscribedTargetNames = useCallback(
-    () => new Set(formData.subscriptions.find((subscription) => subscription.event === AUTO_DISABLED_EVENT)?.targetNames || []),
+    (event: string) => new Set(formData.subscriptions.find((subscription) => subscription.event === event)?.targetNames || []),
     [formData.subscriptions]
   );
-
-  const isTargetSubscribed = useCallback((targetName: string) => getSubscribedTargetNames().has(targetName), [getSubscribedTargetNames]);
 
   const addTarget = useCallback(() => {
     setFormData((prev) => ({
@@ -90,11 +102,17 @@ export function WebhookSettings() {
   const removeTarget = useCallback((index: number) => {
     setFormData((prev) => {
       const removedTarget = prev.targets[index];
+      const removedName = (removedTarget?.name || '').trim();
       const nextTargets = prev.targets.filter((_, i) => i !== index);
+      // Subscriptions are keyed by trimmed name, and the UI only flags
+      // duplicate names via aria-invalid — targets sharing a trimmed name can
+      // coexist. Drop a name only when the removed target was its sole owner;
+      // a remaining target with the same trimmed name keeps its subscriptions.
+      const remainingNames = new Set(nextTargets.map((target) => target.name.trim()));
       const nextSubscriptions = prev.subscriptions
         .map((subscription) => ({
           ...subscription,
-          targetNames: subscription.targetNames.filter((name) => name !== removedTarget?.name),
+          targetNames: subscription.targetNames.filter((name) => name.trim() !== removedName || remainingNames.has(name.trim())),
         }))
         .filter((subscription) => subscription.targetNames.length > 0);
 
@@ -175,12 +193,52 @@ export function WebhookSettings() {
 
   const handleTargetNameChange = useCallback((index: number, value: string) => {
     setFormData((prev) => {
-      const previousName = prev.targets[index]?.name;
+      // Keep the raw entered value in state so multiword names can be typed
+      // without the cursor fighting trailing whitespace. Subscription entries
+      // are compared and persisted by trimmed name; entries loaded from an
+      // older saved config may still carry raw untrimmed names, so all
+      // name comparisons trim both sides.
+      const previousName = (prev.targets[index]?.name || '').trim();
+      const trimmedName = value.trim();
+      const renameOccurred = previousName !== trimmedName;
       const nextTargets = prev.targets.map((target, i) => (i === index ? { ...target, name: value } : target));
-      const nextSubscriptions = prev.subscriptions.map((subscription) => ({
-        ...subscription,
-        targetNames: subscription.targetNames.map((targetName) => (targetName === previousName ? value : targetName)),
-      }));
+      // Subscriptions are keyed by trimmed name, and the UI only flags
+      // duplicate names via aria-invalid — targets sharing a trimmed name can
+      // coexist. A rename rewrites the previous name onto the new one only
+      // when this target was its sole owner; when a remaining target still
+      // uses that name, the previous name stays in targetNames and the
+      // renamed target gains coverage under the new name, mirroring how
+      // removeTarget keeps shared names via remainingNames.
+      const nameUsedElsewhere =
+        renameOccurred && prev.targets.some((target, i) => i !== index && (target.name || '').trim() === previousName);
+      const nextSubscriptions = renameOccurred
+        ? prev.subscriptions.map((subscription) => {
+            const hasPreviousName = subscription.targetNames.some((targetName) => targetName.trim() === previousName);
+            if (!hasPreviousName) {
+              return subscription;
+            }
+
+            if (!nameUsedElsewhere) {
+              return {
+                ...subscription,
+                targetNames: subscription.targetNames.map((targetName) => (targetName.trim() === previousName ? trimmedName : targetName)),
+              };
+            }
+
+            // The previous name stays — a remaining target is still
+            // subscribed under it — and the renamed target gains coverage
+            // under the new name, added once if absent.
+            const nextTargetNames = [...subscription.targetNames];
+            if (!nextTargetNames.some((targetName) => targetName.trim() === trimmedName)) {
+              nextTargetNames.push(trimmedName);
+            }
+
+            return {
+              ...subscription,
+              targetNames: nextTargetNames,
+            };
+          })
+        : prev.subscriptions;
 
       return {
         ...prev,
@@ -234,17 +292,17 @@ export function WebhookSettings() {
     }));
   }, []);
 
-  const handleSubscriptionChange = useCallback((targetName: string, checked: boolean) => {
+  const handleSubscriptionChange = useCallback((eventId: string, targetName: string, checked: boolean) => {
     setFormData((prev) => {
-      const current = prev.subscriptions.find((subscription) => subscription.event === AUTO_DISABLED_EVENT);
+      const current = prev.subscriptions.find((subscription) => subscription.event === eventId);
       const nextTargetNames = checked
         ? Array.from(new Set([...(current?.targetNames || []), targetName]))
         : (current?.targetNames || []).filter((name) => name !== targetName);
 
-      const nextSubscriptions = prev.subscriptions.filter((subscription) => subscription.event !== AUTO_DISABLED_EVENT);
+      const nextSubscriptions = prev.subscriptions.filter((subscription) => subscription.event !== eventId);
       if (nextTargetNames.length > 0) {
         nextSubscriptions.push({
-          event: AUTO_DISABLED_EVENT,
+          event: eventId,
           targetNames: nextTargetNames,
         });
       }
@@ -312,13 +370,24 @@ export function WebhookSettings() {
       }));
 
       const validTargetNames = new Set(normalizedTargets.map((target) => target.name));
+      // Dedupe on trimmed equality so whitespace-variant names loaded from an
+      // older saved config cannot subscribe the same target twice.
       const normalizedSubscriptions = formData.subscriptions
-        .map((subscription) => ({
-          ...subscription,
-          targetNames: subscription.targetNames
-            .filter((targetName) => validTargetNames.has(targetName.trim()))
-            .map((targetName) => targetName.trim()),
-        }))
+        .map((subscription) => {
+          const uniqueNames = new Set<string>();
+          const targetNames: string[] = [];
+          for (const targetName of subscription.targetNames) {
+            const trimmed = targetName.trim();
+            if (!validTargetNames.has(trimmed) || uniqueNames.has(trimmed)) {
+              continue;
+            }
+
+            uniqueNames.add(trimmed);
+            targetNames.push(trimmed);
+          }
+
+          return { ...subscription, targetNames };
+        })
         .filter((subscription) => subscription.targetNames.length > 0);
 
       await updateWebhookNotifierConfig.mutateAsync({
@@ -337,7 +406,6 @@ export function WebhookSettings() {
     );
   }
 
-  const subscribedTargetCount = getSubscribedTargetNames().size;
   const normalizedNameCounts = formData.targets.reduce<Record<string, number>>((acc, target) => {
     const normalizedName = target.name.trim();
     if (!normalizedName) {
@@ -359,12 +427,18 @@ export function WebhookSettings() {
           <div className='bg-muted/50 space-y-2 rounded-md border p-4'>
             <div className='text-sm font-medium'>{t('system.webhook.availableEvents.title')}</div>
             <div className='text-muted-foreground text-sm'>{t('system.webhook.availableEvents.description')}</div>
-            <div className='bg-background flex items-center justify-between rounded-md border p-3'>
-              <div className='space-y-1'>
-                <div className='font-mono text-xs'>{AUTO_DISABLED_EVENT}</div>
-                <div className='text-muted-foreground text-sm'>{t('system.webhook.events.channelAutoDisabled')}</div>
-              </div>
-              <div className='text-muted-foreground text-sm'>{t('system.webhook.subscriptionCount', { count: subscribedTargetCount })}</div>
+            <div className='space-y-2'>
+              {WEBHOOK_EVENTS.map((event) => (
+                <div key={event.id} className='bg-background flex items-center justify-between rounded-md border p-3'>
+                  <div className='space-y-1'>
+                    <div className='font-mono text-xs'>{event.id}</div>
+                    <div className='text-muted-foreground text-sm'>{t(event.i18nKey)}</div>
+                  </div>
+                  <div className='text-muted-foreground text-sm'>
+                    {t('system.webhook.subscriptionCount', { count: getSubscribedTargetNames(event.id).size })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -385,7 +459,6 @@ export function WebhookSettings() {
             <div className='space-y-4'>
               {formData.targets.map((target, targetIndex) => {
                 const targetName = target.name.trim();
-                const targetSubscribed = targetName ? isTargetSubscribed(targetName) : false;
                 const hasDuplicateName = !!targetName && normalizedNameCounts[targetName] > 1;
                 const proxyType = target.proxy?.type || proxyTypeSchema.enum.disabled;
 
@@ -549,18 +622,28 @@ export function WebhookSettings() {
                         <div className='text-sm font-medium'>{t('system.webhook.subscription')}</div>
                         <div className='text-muted-foreground text-sm'>{t('system.webhook.subscriptionHelp')}</div>
                       </div>
-                      <label className='flex items-start gap-3'>
-                        <Checkbox
-                          checked={targetSubscribed}
-                          onCheckedChange={(checked) => handleSubscriptionChange(target.name.trim(), checked === true)}
-                          disabled={!target.name.trim()}
-                          className='mt-0.5 shrink-0'
-                        />
-                        <div className='min-w-0 flex-1 space-y-1'>
-                          <div className='font-mono text-xs break-all'>{AUTO_DISABLED_EVENT}</div>
-                          <div className='text-muted-foreground text-sm'>{t('system.webhook.events.channelAutoDisabled')}</div>
-                        </div>
-                      </label>
+                      <div className='space-y-2'>
+                        {WEBHOOK_EVENTS.map((event) => (
+                          <label key={event.id} className='flex items-start gap-3'>
+                            <Checkbox
+                              checked={
+                                targetName
+                                  ? (
+                                      formData.subscriptions.find((subscription) => subscription.event === event.id)?.targetNames || []
+                                    ).includes(targetName)
+                                  : false
+                              }
+                              onCheckedChange={(checked) => handleSubscriptionChange(event.id, targetName, checked === true)}
+                              disabled={!targetName}
+                              className='mt-0.5 shrink-0'
+                            />
+                            <div className='min-w-0 flex-1 space-y-1'>
+                              <div className='font-mono text-xs break-all'>{event.id}</div>
+                              <div className='text-muted-foreground text-sm'>{t(event.i18nKey)}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
                     <div className='space-y-3'>

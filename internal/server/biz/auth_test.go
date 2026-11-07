@@ -160,7 +160,7 @@ func TestAuthService_GenerateJWTToken(t *testing.T) {
 	require.NotEmpty(t, token)
 
 	// Get the actual secret key for validation
-	secretKey, err := authService.SystemService.SecretKey(ctx)
+	secretKey, err := authService.SystemService.SecretKey(authz.NewSystemContext(ctx))
 	require.NoError(t, err)
 
 	// Verify token structure
@@ -227,7 +227,7 @@ func TestAuthService_RefreshJWTToken(t *testing.T) {
 }
 
 func mustTestSecretKey(t *testing.T, authService *AuthService, ctx context.Context) string {
-	secretKey, err := authService.SystemService.SecretKey(ctx)
+	secretKey, err := authService.SystemService.SecretKey(authz.NewSystemContext(ctx))
 	require.NoError(t, err)
 	return secretKey
 }
@@ -374,7 +374,7 @@ func TestAuthService_AuthenticateJWTToken(t *testing.T) {
 	}
 
 	// Get secret key for signing
-	secretKey, err := authService.SystemService.SecretKey(ctx)
+	secretKey, err := authService.SystemService.SecretKey(authz.NewSystemContext(ctx))
 	require.NoError(t, err)
 
 	expiredToken := jwt.NewWithClaims(jwt.SigningMethodHS256, expiredClaims)

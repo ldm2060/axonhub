@@ -10,6 +10,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/gc"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/internal/server/video_storage"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -62,6 +63,7 @@ type Resolver struct {
 	catalogService                 *biz.CatalogService
 	oauthProviderService           *biz.OAuthProviderService
 	poolingService                 *biz.ChannelPoolingService
+	pluginManager                  *plugin.Manager
 }
 
 // NewSchema creates a graphql executable schema.
@@ -104,6 +106,7 @@ func NewSchema(
 	catalogService *biz.CatalogService,
 	oauthProviderService *biz.OAuthProviderService,
 	poolingService *biz.ChannelPoolingService,
+	pluginManager *plugin.Manager,
 ) graphql.ExecutableSchema {
 	modelFetcher := biz.NewModelFetcher(httpClient, channelService)
 
@@ -147,6 +150,7 @@ func NewSchema(
 			catalogService:                 catalogService,
 			oauthProviderService:           oauthProviderService,
 			poolingService:                 poolingService,
+			pluginManager:                  pluginManager,
 		},
 	})
 }

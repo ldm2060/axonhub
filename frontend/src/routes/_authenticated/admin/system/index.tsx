@@ -8,7 +8,7 @@ function ProtectedSystem() {
 
   return (
     <RouteGuard requiredScopes={['read_settings']} scopeLevel='system'>
-      <SystemManagement initialTab={search.tab} />
+      <SystemManagement page='general' initialTab={search.tab} />
     </RouteGuard>
   );
 }

@@ -274,3 +274,276 @@ func (r *queryResolver) parseTimeWindow(ctx context.Context, timeWindow *string)
 
 	return since, applyFilter
 }
+
+func (r *queryResolver) dailyRequestStats(ctx context.Context) ([]*DailyRequestStats, error) {
+	daysCount := 30
+
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	// Use GROUP BY aggregation for efficient database-level computation
+	type dailyStats struct {
+		Date   string  `json:"date"`
+		Count  int     `json:"total_count"`
+		Tokens int     `json:"total_tokens"`
+		Cost   float64 `json:"total_cost"`
+	}
+
+	var results []dailyStats
+
+	// Use raw SQL for complex GROUP BY with conditional counting
+	err := r.client.UsageLog.Query().
+		Where(
+			usagelog.CreatedAtGTE(startDateUTC),
+			usagelog.CreatedAtLT(nowUTC),
+		).
+		Modify(func(s *sql.Selector) {
+			// Build a dialect-specific date expression that returns a string 'YYYY-MM-DD'
+			var dateExpr string
+			// Use qualified column name to avoid ambiguity when joining
+			createdAtCol := s.C(usagelog.FieldCreatedAt)
+
+			switch s.Dialect() {
+			case dialect.SQLite:
+				dateExpr = fmt.Sprintf("strftime('%%Y-%%m-%%d', datetime(substr(%s, 1, 19), '%+d seconds'))", createdAtCol, offsetSeconds)
+			case dialect.MySQL:
+				offsetStr := xtime.FormatUTCOffset(offsetSeconds)
+				dateExpr = fmt.Sprintf("DATE_FORMAT(CONVERT_TZ(%s, '+00:00', '%s'), '%%Y-%%m-%%d')", createdAtCol, offsetStr)
+			case dialect.Postgres:
+				dateExpr = fmt.Sprintf("to_char(%s AT TIME ZONE '%s', 'YYYY-MM-DD')", createdAtCol, loc.String())
+			default:
+				// Fallback to ANSI-ish cast; many DBs accept this, but not guaranteed
+				dateExpr = fmt.Sprintf("DATE(%s)", createdAtCol)
+			}
+
+			s.Select(
+				sql.As(dateExpr, "date"),
+				sql.As(sql.Count(s.C(usagelog.FieldID)), "total_count"),
+				sql.As(sql.Sum(s.C(usagelog.FieldTotalTokens)), "total_tokens"),
+				sql.As(fmt.Sprintf("COALESCE(SUM(%s), 0)", s.C(usagelog.FieldTotalCost)), "total_cost"),
+			).
+				GroupBy(dateExpr).
+				OrderBy("date")
+		}).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get daily request stats: %w", err)
+	}
+
+	// Create a map for fast lookup of aggregated data
+	statsMap := lo.SliceToMap(results, func(item dailyStats) (string, dailyStats) {
+		return item.Date, item
+	})
+
+	// Build complete response with zero values for missing dates
+	response := make([]*DailyRequestStats, 0, daysCount)
+
+	for i := range daysCount {
+		date := startDateLocal.AddDate(0, 0, i)
+		dateStr := date.Format("2006-01-02")
+
+		if stats, exists := statsMap[dateStr]; exists {
+			// Use aggregated data from database
+			response = append(response, &DailyRequestStats{
+				Date:   dateStr,
+				Count:  stats.Count,
+				Tokens: stats.Tokens,
+				Cost:   stats.Cost,
+			})
+		} else {
+			// Fill missing dates with zero values
+			response = append(response, &DailyRequestStats{
+				Date:   dateStr,
+				Count:  0,
+				Tokens: 0,
+				Cost:   0,
+			})
+		}
+	}
+
+	return response, nil
+}
+
+func (r *queryResolver) modelPerformanceStats(ctx context.Context) ([]*ModelPerformanceStat, error) {
+	// Add 30-second timeout to prevent long-running queries
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	daysCount := 30
+
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startDateUTC := startDateLocal.UTC()
+	_, offsetSeconds := nowLocal.Zone()
+
+	dbDriver := r.client.Driver()
+	sqlDB, ok := dbDriver.(*sql.Driver)
+	if !ok {
+		return nil, fmt.Errorf("failed to get underlying SQL driver")
+	}
+
+	dialectName := sqlDB.Dialect()
+	useDollarPlaceholders := dialectName == dialect.Postgres
+
+	placeholder := "?"
+	if useDollarPlaceholders {
+		placeholder = "$1"
+	}
+
+	// The bundled SQLite driver is far newer than 3.25, so window functions are
+	// available. ROW_NUMBER avoids the correlated MAX(id) scan that made these
+	// aggregates roughly three times slower on SQLite.
+	queryMode := qb.ThroughputModeRowNumber
+
+	// Use shared query builder for daily performance stats
+	query := qb.BuildDailyPerformanceStatsQuery(
+		dialectName,
+		loc.String(),
+		offsetSeconds,
+		qb.DailyThroughputByModel,
+		placeholder,
+		queryMode,
+	)
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("context canceled: %w", err)
+	}
+
+	rows, err := sqlDB.DB().QueryContext(ctx, query, startDateUTC)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query model performance stats: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	type rawStat struct {
+		Date         string
+		ModelID      string
+		TokensCount  int64
+		LatencyMs    int64
+		FirstTokenMs *float64
+		RequestCount int64
+		Throughput   *float64
+	}
+
+	// ModelStatsBucket holds aggregated statistics for a single model.
+	// This is used internally to group performance stats before ranking.
+	type ModelStatsBucket struct {
+		totalRequests int64
+		results       []*ModelPerformanceStat
+	}
+
+	var rawResults []rawStat
+	for rows.Next() {
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("context canceled: %w", err)
+		}
+
+		var stat rawStat
+		if err := rows.Scan(
+			&stat.Date,
+			&stat.ModelID,
+			&stat.TokensCount,
+			&stat.LatencyMs,
+			&stat.FirstTokenMs,
+			&stat.RequestCount,
+			&stat.Throughput,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan model performance stats: %w", err)
+		}
+		rawResults = append(rawResults, stat)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	modelStats := make(map[string]*ModelStatsBucket)
+
+	for _, raw := range rawResults {
+		var ttftMs *float64
+		if raw.FirstTokenMs != nil && *raw.FirstTokenMs > 0 {
+			ttftMs = raw.FirstTokenMs
+		}
+
+		stat := &ModelPerformanceStat{
+			Date:         raw.Date,
+			ModelID:      raw.ModelID,
+			Throughput:   raw.Throughput,
+			TtftMs:       ttftMs,
+			RequestCount: safeIntFromInt64(raw.RequestCount),
+		}
+
+		if modelStats[raw.ModelID] == nil {
+			modelStats[raw.ModelID] = &ModelStatsBucket{}
+		}
+		modelStats[raw.ModelID].totalRequests += raw.RequestCount
+		modelStats[raw.ModelID].results = append(modelStats[raw.ModelID].results, stat)
+	}
+
+	type modelInfo struct {
+		modelID      string
+		requestCount int64
+	}
+
+	modelInfos := lo.MapToSlice(modelStats, func(modelID string, stats *ModelStatsBucket) modelInfo {
+		return modelInfo{
+			modelID:      modelID,
+			requestCount: stats.totalRequests,
+		}
+	})
+
+	// Use requestCount for both count and value since modelInfo doesn't include throughput.
+	// This ranks models by request volume rather than performance metrics.
+	topModels := calculateConfidenceAndSort(modelInfos, func(m modelInfo) int64 { return m.requestCount }, func(m modelInfo) float64 { return float64(m.requestCount) }, topPerformersLimit)
+
+	statsResults := make([]*ModelPerformanceStat, 0)
+	for _, item := range topModels {
+		statsResults = append(statsResults, modelStats[item.stats.modelID].results...)
+	}
+
+	return statsResults, nil
+}
+
+func (r *queryResolver) channelPerformanceStats(ctx context.Context) ([]*ChannelPerformanceStat, error) {
+	var cancel context.CancelFunc
+
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	daysCount := 30
+
+	loc := r.systemService.TimeLocation(ctx)
+	nowUTC := xtime.UTCNow()
+	nowLocal := nowUTC.In(loc)
+	startDateLocal := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, loc).AddDate(0, 0, -daysCount+1)
+	startTimestamp := startDateLocal.UTC().Unix()
+	_, offsetSeconds := nowLocal.Zone()
+
+	probeResults, err := r.queryChannelProbeStats(ctx, startTimestamp, loc.String(), offsetSeconds)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(probeResults) == 0 {
+		return r.buildChannelPerformanceStatsFromExecutions(ctx, startDateLocal, offsetSeconds, daysCount)
+	}
+
+	statsMap := aggregateProbeStats(probeResults)
+	topChannelIDs := getTopChannelIDs(statsMap, topPerformersLimit)
+	filterStatsByTopChannels(statsMap, topChannelIDs)
+
+	channelIDs := extractChannelIDsFromStats(statsMap)
+	channelNames, err := r.fetchChannelNames(ctx, channelIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildChannelPerformanceResponse(statsMap, channelNames, startDateLocal, daysCount), nil
+}

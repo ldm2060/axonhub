@@ -19,12 +19,14 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/backup"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/dependencies"
+	"github.com/ldm2060/axonhub/internal/server/events"
 	"github.com/ldm2060/axonhub/internal/server/gc"
 	"github.com/ldm2060/axonhub/internal/server/gql"
 	"github.com/ldm2060/axonhub/internal/server/gql/openapi"
 	"github.com/ldm2060/axonhub/internal/server/lifecycle"
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/internal/server/video_storage"
@@ -171,6 +173,8 @@ func Run(opts ...fx.Option) {
 			scheduler.Module,
 			biz.Module,
 			orchestrator.Module,
+			events.Module,
+			plugin.Module,
 			backup.Module,
 			video_storage.Module,
 			api.Module,

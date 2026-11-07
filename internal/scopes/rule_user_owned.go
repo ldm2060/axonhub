@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/entql"
 
+	"github.com/ldm2060/axonhub/internal/authz/identity"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/privacy"
 )
@@ -26,6 +27,9 @@ func UserOwnedQueryRule() privacy.QueryRule {
 }
 
 func userOwnedQueryFilter(ctx context.Context, q privacy.Filter) error {
+	if identity.IsPlugin(ctx) {
+		return privacy.Skip
+	}
 	user, err := getUserFromContext(ctx)
 	if err != nil {
 		return err
@@ -57,6 +61,9 @@ type UserOwnedMutation interface {
 type userOwnedMutationRule struct{}
 
 func (userOwnedMutationRule) EvalMutation(ctx context.Context, m ent.Mutation) error {
+	if identity.IsPlugin(ctx) {
+		return privacy.Skip
+	}
 	user, err := getUserFromContext(ctx)
 	if err != nil {
 		return err

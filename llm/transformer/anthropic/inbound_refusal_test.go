@@ -40,14 +40,15 @@ func TestConvertToAnthropicResponse_RefusalAsTextBlock(t *testing.T) {
 	require.NotNil(t, result.Content[0].Text)
 	require.Equal(t, refusal, *result.Content[0].Text)
 
-	// Stop reason should be end_turn
+	// Stop reason should be end_turn (the refusal itself is surfaced as the
+	// text block above; the stop reason is not rewritten for plain stops)
 	require.NotNil(t, result.StopReason)
 	require.Equal(t, "end_turn", *result.StopReason)
 }
 
-// TestConvertToAnthropicResponse_ContentFilterMapsToEndTurn tests that
-// content_filter finish reason maps to end_turn in non-stream path.
-func TestConvertToAnthropicResponse_ContentFilterMapsToEndTurn(t *testing.T) {
+// TestConvertToAnthropicResponse_ContentFilterMapsToRefusal tests that
+// content_filter finish reason maps to refusal in non-stream path (upstream a95d2247b).
+func TestConvertToAnthropicResponse_ContentFilterMapsToRefusal(t *testing.T) {
 	content := "filtered content"
 	chatResp := &llm.Response{
 		ID:    "msg_456",
@@ -69,7 +70,7 @@ func TestConvertToAnthropicResponse_ContentFilterMapsToEndTurn(t *testing.T) {
 	result := convertToAnthropicResponse(chatResp)
 	require.NotNil(t, result)
 	require.NotNil(t, result.StopReason)
-	require.Equal(t, "end_turn", *result.StopReason)
+	require.Equal(t, "refusal", *result.StopReason)
 }
 
 // TestConvertToAnthropicResponse_AllFinishReasonMappings tests all finish reason
@@ -83,7 +84,7 @@ func TestConvertToAnthropicResponse_AllFinishReasonMappings(t *testing.T) {
 		{"stop -> end_turn", "stop", "end_turn"},
 		{"length -> max_tokens", "length", "max_tokens"},
 		{"tool_calls -> tool_use", "tool_calls", "tool_use"},
-		{"content_filter -> end_turn", "content_filter", "end_turn"},
+		{"content_filter -> refusal", "content_filter", "refusal"},
 		{"unknown -> passthrough", "custom_reason", "custom_reason"},
 	}
 
@@ -155,7 +156,7 @@ func TestStreamFinishReasonMappings(t *testing.T) {
 	//   "stop" -> "end_turn"
 	//   "length" -> "max_tokens"
 	//   "tool_calls" -> "tool_use"
-	//   "content_filter" -> "end_turn"
+	//   "content_filter" -> "refusal"
 	//   default -> "end_turn"
 	//
 	// We verify this indirectly by constructing the stream and checking the
@@ -170,7 +171,7 @@ func TestStreamFinishReasonMappings(t *testing.T) {
 		{"stop -> end_turn", "stop", "end_turn"},
 		{"length -> max_tokens", "length", "max_tokens"},
 		{"tool_calls -> tool_use", "tool_calls", "tool_use"},
-		{"content_filter -> end_turn", "content_filter", "end_turn"},
+		{"content_filter -> refusal", "content_filter", "refusal"},
 		{"unknown -> passed through", "something_else", "something_else"},
 	}
 
@@ -249,7 +250,7 @@ func TestStreamRefusalDeltaAsTextDelta(t *testing.T) {
 }
 
 // TestStreamContentFilterStopReason verifies that content_filter as a
-// finish reason in the stream path produces end_turn in the message_delta.
+// finish reason in the stream path produces refusal in the message_delta.
 func TestStreamContentFilterStopReason(t *testing.T) {
 	chatResp := &llm.Response{
 		ID:    "msg_cf_stream",
@@ -271,5 +272,5 @@ func TestStreamContentFilterStopReason(t *testing.T) {
 	result := convertToAnthropicResponse(chatResp)
 	require.NotNil(t, result)
 	require.NotNil(t, result.StopReason)
-	require.Equal(t, "end_turn", *result.StopReason)
+	require.Equal(t, "refusal", *result.StopReason)
 }
