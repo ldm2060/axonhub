@@ -16,7 +16,6 @@ import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
 import { BrandLogo } from './brand-logo';
 import { NavModuleTabs } from './nav-module-tabs';
-import { ProjectSwitcher } from './project-switcher';
 import { type SidebarData } from './types';
 
 export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
@@ -30,7 +29,6 @@ export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
 
   // Auto-resolve project context without user interaction
   useAutoResolveProject(myProjects);
-  const showProjectSwitcher = sidebarData.activeModuleId === 'project';
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
@@ -75,12 +73,6 @@ export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
 
           {/* Project Switcher - only meaningful for project-scoped pages. Placed after
               the tabs so toggling it never shifts them. */}
-          {showProjectSwitcher && (
-            <>
-              <span className='text-muted-foreground/60 mx-0.5 text-sm select-none'>/</span>
-              <ProjectSwitcher />
-            </>
-          )}
         </div>
 
         {/* 右侧控件 */}

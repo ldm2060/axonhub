@@ -66,7 +66,7 @@ export function InviteForm({ token, className, ...props }: InviteFormProps) {
       setUser(response.user);
       setSelectedProjectId(response.user.projects[0]?.projectID ?? null);
       toast.success(t('users.messages.invitationRegistrationSuccess'));
-      router.navigate({ to: '/project/playground' });
+      router.navigate({ to: '/' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('common.errors.internalServerError'));
     }

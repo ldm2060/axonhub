@@ -130,7 +130,25 @@ How to get this right:
   3. `git update-ref refs/heads/<branch> $NEW`
 - Verify the result: `git log --graph --oneline -10` should show the upstream commits as a side branch merged in by your merge commit, and `git merge-base HEAD remote/unstable` should equal the upstream tip you merged.
 - Before pushing, run the frontend CI steps locally so a missing format/lint/typecheck failure doesn't surface only on the runner: `cd frontend && pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm build && pnpm bundle:check`. Past incident: a merge commit passed `pnpm lint` and `pnpm typecheck` locally but failed CI at `pnpm format:check` because we hadn't run prettier on the merged files — fix by running `pnpm format` and committing the result as a follow-up `style(frontend): apply prettier formatting to satisfy format:check`.
+- After the merge's CI is green, cut the release and Docker publish — this is part of the merge workflow, do not wait for the user to ask. See "Releasing after a merge" below.
 - You mush retain the upstream commits in the merge commit's history. Do not squash them into a single commit or rebase them onto our branch — that breaks future merges and obscures the provenance of upstream changes.
+
+## Releasing after a merge
+
+Once the merge commit (and any CI-fix commits) are green on `unstable`, publish the release. A tag push `v*` triggers three workflows: `Release` (goreleaser binaries), `Publish Docker image` (`docker-publish.yml`), and `Publish Helm chart`.
+
+1. Determine the version: `git fetch --tags origin` then `git tag --sort=-v:refname | grep -E '^v0\.2\.' | head -1` → bump **one patch** (e.g. `v0.2.36` → `v0.2.37`). Never derive it from migration filenames, upstream tags, or the `v0.1.x` track.
+2. Bump `internal/build/VERSION` to that version and commit as `chore: update VERSION to vX.Y.Z [skip ci]`.
+3. **The tag must NOT point at the `[skip ci]` commit.** GitHub skips tag-triggered workflows when the tagged commit's message contains `[skip ci]` — a tag on the VERSION-bump commit silently fires nothing and the release just never happens (2026-11-07 incident: v0.2.37 sat untagged for an hour with no runs). Add one empty commit after the bump (`git commit --allow-empty -m "chore: finalize vX.Y.Z release"`), push the branch, then tag that commit and push the tag:
+   ```bash
+   git push origin unstable
+   git tag vX.Y.Z && git push origin vX.Y.Z
+   ```
+   If the tag already landed on the wrong commit and no runs fired: `git tag -f vX.Y.Z <good-commit>`, `git push origin :refs/tags/vX.Y.Z`, then `git push origin vX.Y.Z`.
+4. Watch until green (typically 10–20 min; goreleaser cross-compiles and docker builds multi-arch):
+   `gh run list --repo ldm2060/axonhub --limit 10 --json headBranch,workflowName,status,conclusion` — the runs appear under `headBranch` = `vX.Y.Z`. All three (`Release`, `Publish Docker image`, `Publish Helm chart`) must reach `success`; Helm is usually first.
+5. Verify the release published: `gh release view vX.Y.Z --repo ldm2060/axonhub` shows the binary assets, and the Docker image tag `ghcr.io/ldm2060/axonhub:vX.Y.Z` exists in packages.
+6. If a tag workflow fails, follow the same diagnose-fix-push loop as CI (fix on `unstable`, then re-tag a new patch version — never move a tag whose workflows already produced artifacts).
 
 ## When to escalate to the user
 

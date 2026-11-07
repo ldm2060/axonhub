@@ -197,8 +197,12 @@ export const routeConfigs: RouteGroup[] = [
         mode: 'hidden',
       },
       {
+        // The playground page guards on these scopes; keep the nav filter in
+        // sync so the entry never renders for users who would hit a 403.
+        // Note: the item is intentionally absent from nav-items.ts.
         path: '/project/playground',
-        // Playground is accessible to all users
+        requiredScopes: ['read_channels', 'write_requests'],
+        mode: 'hidden',
       },
       {
         path: '/project/threads/$threadId',

@@ -62,6 +62,7 @@ test('flattened nav urls keep the full set of sidebar routes', () => {
     '/admin/publish-requests',
     '/admin/requests',
     '/admin/roles',
+    '/admin/runtime',
     '/admin/system',
     '/admin/system/integrations',
     '/admin/system/operations',
@@ -72,7 +73,6 @@ test('flattened nav urls keep the full set of sidebar routes', () => {
     '/my-models',
     '/plugins',
     '/project/api-keys',
-    '/project/playground',
     '/project/prompts',
     '/project/requests',
     '/project/roles',
@@ -80,7 +80,6 @@ test('flattened nav urls keep the full set of sidebar routes', () => {
     '/project/traces',
     '/project/usage-stats',
     '/project/users',
-    '/projects',
   ]);
 });
 

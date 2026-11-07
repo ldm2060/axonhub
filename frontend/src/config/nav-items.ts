@@ -6,12 +6,10 @@ import {
   IconChartBar,
   IconDatabase,
   IconDatabaseCog,
-  IconFlask,
   IconFolder,
   IconKey,
   IconLayoutDashboard,
   IconNote,
-  IconPackages,
   IconPlugConnected,
   IconPuzzle,
   IconRefresh,
@@ -105,6 +103,7 @@ export const NAV_MODULE_DEFS: NavModuleDef[] = [
           { titleKey: 'system.pages.requests.title', url: '/admin/system/requests', icon: IconRefresh },
           { titleKey: 'system.pages.integrations.title', url: '/admin/system/integrations', icon: IconPlugConnected },
           { titleKey: 'system.pages.operations.title', url: '/admin/system/operations', icon: IconDatabaseCog },
+          { titleKey: 'sidebar.items.runtime', url: '/admin/runtime', icon: IconActivity },
         ],
       },
     ],
@@ -117,10 +116,7 @@ export const NAV_MODULE_DEFS: NavModuleDef[] = [
       {
         // The landing pages sit at the top without a group title.
         id: 'overview',
-        items: [
-          { titleKey: 'sidebar.items.dashboard', url: '/', icon: IconLayoutDashboard },
-          { titleKey: 'sidebar.items.projects', url: '/projects', icon: IconPackages },
-        ],
+        items: [{ titleKey: 'sidebar.items.dashboard', url: '/', icon: IconLayoutDashboard }],
       },
       {
         id: 'develop',
@@ -128,7 +124,6 @@ export const NAV_MODULE_DEFS: NavModuleDef[] = [
         items: [
           { titleKey: 'sidebar.items.apiKeys', url: '/project/api-keys', icon: IconKey },
           { titleKey: 'sidebar.items.prompts', url: '/project/prompts', icon: IconNote },
-          { titleKey: 'sidebar.items.playground', url: '/project/playground', icon: IconFlask },
         ],
       },
       {

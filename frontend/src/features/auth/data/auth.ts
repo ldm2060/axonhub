@@ -116,9 +116,10 @@ export function useSignIn(getTurnstileToken?: TurnstileTokenGetter, redirect?: s
       }
 
       // Redirect based on user role, skipping routes the user hid from the sidebar.
-      // Owner and admin users go to dashboard, other users go to playground.
+      // Everyone lands on the personal dashboard; the playground is not linked
+      // in the nav and a user without its scopes would hit a 403 there.
       const isPrivileged = data.user.isOwner || !!data.user.isAdmin;
-      const baseRedirectPath = isPrivileged ? '/' : '/project/playground';
+      const baseRedirectPath = '/';
       const redirectPath = pickFallbackNavUrl(baseRedirectPath, getHiddenNavItems(), isPrivileged);
       router.navigate({ to: redirectPath });
     },
@@ -263,8 +264,8 @@ export function useOIDCExchange() {
         return;
       }
 
-      // Redirect based on user role
-      const redirectPath = data.user.isOwner || !!data.user.isAdmin ? '/' : '/project/playground';
+      // Redirect based on user role; the personal dashboard never 403s.
+      const redirectPath = '/';
       router.navigate({ to: redirectPath });
     },
     onError: (error: unknown) => {
