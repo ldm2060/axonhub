@@ -105,6 +105,8 @@ export function useSidebarData(): SidebarData {
 
   // Use data from me query if available, otherwise fall back to auth store
   const user = meData || authUser;
+  // Owners and admins keep the 项目 module tab; regular users do not see it.
+  const isPrivileged = Boolean((user as { isOwner?: boolean } | undefined)?.isOwner) || Boolean((user as { isAdmin?: boolean } | undefined)?.isAdmin);
 
   // Generate user initials for avatar
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
@@ -156,11 +158,8 @@ export function useSidebarData(): SidebarData {
         }) as NavLink
     );
 
-    // The user removed the project workspace tab from the header; its pages
-    // stay reachable by URL. Filter before mapping so no 项目 tab renders.
     return (
       rawNavModules
-        .filter((module) => module.id !== 'project')
         .map((module) => {
           let groups = applyHiddenNavItems(filterNavGroups(module.groups), hiddenItems).filter((group) =>
             group.items.some((item) => !item.isDisabled)
@@ -185,6 +184,10 @@ export function useSidebarData(): SidebarData {
   );
   const navGroups = modules.find((module) => module.id === activeModuleId)?.groups ?? [];
 
+  // Regular users keep their project sidebar but do not get the 项目 header
+  // tab; owners and admins see every module tab.
+  const visibleModules = isPrivileged ? modules : modules.filter((module) => module.id !== 'project');
+
   return {
     user: {
       name: getDisplayName(user?.firstName, user?.lastName, user?.email),
@@ -198,7 +201,7 @@ export function useSidebarData(): SidebarData {
         description: '',
       },
     ],
-    modules,
+    modules: visibleModules,
     activeModuleId,
     navGroups,
   };
