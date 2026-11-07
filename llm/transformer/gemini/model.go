@@ -34,6 +34,7 @@ func (r *GenerateContentRequest) UnmarshalJSON(data []byte) error {
 	type requestAlias GenerateContentRequest
 	var decoded struct {
 		requestAlias
+
 		SystemInstructionSnake *Content `json:"system_instruction"`
 	}
 	if err := json.Unmarshal(data, &decoded); err != nil {
@@ -84,6 +85,7 @@ func (p *Part) UnmarshalJSON(data []byte) error {
 	type partAlias Part
 	var decoded struct {
 		partAlias
+
 		InlineDataSnake *Blob `json:"inline_data"`
 	}
 	if err := json.Unmarshal(data, &decoded); err != nil {
@@ -110,6 +112,7 @@ func (b *Blob) UnmarshalJSON(data []byte) error {
 	type blobAlias Blob
 	var decoded struct {
 		blobAlias
+
 		MIMETypeSnake string `json:"mime_type"`
 	}
 	if err := json.Unmarshal(data, &decoded); err != nil {
@@ -136,6 +139,7 @@ func (f *FileData) UnmarshalJSON(data []byte) error {
 	type fileDataAlias FileData
 	var decoded struct {
 		fileDataAlias
+
 		MIMETypeSnake string `json:"mime_type"`
 	}
 	if err := json.Unmarshal(data, &decoded); err != nil {

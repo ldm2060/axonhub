@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
-	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
 )
 
 func TestProviderQuotaService_GetQuotaStatus_ReturnsCorrectData(t *testing.T) {

@@ -198,8 +198,14 @@ linters:
     modernize:
       # List of analyzers to disable.
       # By default, all analyzers are enabled.
-      disable: 
+      # newexpr: the rewrite needs the Go 1.26 builtin new(expr); keep it off
+      # until every supported toolchain accepts it.
+      # embedlit: the rewrite (elide embedded field names in struct literals)
+      # is a Go 1.28 language change; go 1.27 rejects the rewritten code, so
+      # the suggestion cannot be applied yet. Re-enable when 1.28 ships.
+      disable:
         - newexpr
+        - embedlit
   
   exclusions:
     presets:
