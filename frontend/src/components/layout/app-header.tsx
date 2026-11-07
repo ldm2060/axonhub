@@ -4,6 +4,8 @@ import { Link } from '@tanstack/react-router';
 import { IconSettings } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { NavModuleTabs } from './nav-module-tabs';
+import { type SidebarData } from './types';
 import { useAutoResolveProject } from '@/stores/projectStore';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -15,8 +17,6 @@ import { useMyProjects } from '@/features/projects/data/projects';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
 import { BrandLogo } from './brand-logo';
-import { NavModuleTabs } from './nav-module-tabs';
-import { type SidebarData } from './types';
 
 export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
   const { data: brandSettings } = useBrandSettings();
@@ -68,9 +68,10 @@ export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
             <span className='text-sm leading-none font-semibold'>{displayName}</span>
           </div>
 
-          {/* Module tabs - desktop only, the mobile sidebar has its own switcher */}
+          {/* Module tabs - desktop only. The project module is filtered out. */}
           {!isMobile && <NavModuleTabs modules={sidebarData.modules} activeModuleId={sidebarData.activeModuleId} className='ml-4' />}
 
+          {/* Module tabs - desktop only, the mobile sidebar has its own switcher */}
           {/* Project Switcher - only meaningful for project-scoped pages. Placed after
               the tabs so toggling it never shifts them. */}
         </div>

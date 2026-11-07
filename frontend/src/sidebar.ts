@@ -156,8 +156,11 @@ export function useSidebarData(): SidebarData {
         }) as NavLink
     );
 
+    // The user removed the project workspace tab from the header; its pages
+    // stay reachable by URL. Filter before mapping so no 项目 tab renders.
     return (
       rawNavModules
+        .filter((module) => module.id !== 'project')
         .map((module) => {
           let groups = applyHiddenNavItems(filterNavGroups(module.groups), hiddenItems).filter((group) =>
             group.items.some((item) => !item.isDisabled)
