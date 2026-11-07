@@ -4,8 +4,6 @@ import { Link } from '@tanstack/react-router';
 import { IconSettings } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { NavModuleTabs } from './nav-module-tabs';
-import { type SidebarData } from './types';
 import { useAutoResolveProject } from '@/stores/projectStore';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -17,6 +15,8 @@ import { useMyProjects } from '@/features/projects/data/projects';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
 import { BrandLogo } from './brand-logo';
+import { NavModuleTabs } from './nav-module-tabs';
+import { type SidebarData } from './types';
 
 export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
   const { data: brandSettings } = useBrandSettings();

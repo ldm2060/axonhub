@@ -106,7 +106,8 @@ export function useSidebarData(): SidebarData {
   // Use data from me query if available, otherwise fall back to auth store
   const user = meData || authUser;
   // Owners and admins keep the 项目 module tab; regular users do not see it.
-  const isPrivileged = Boolean((user as { isOwner?: boolean } | undefined)?.isOwner) || Boolean((user as { isAdmin?: boolean } | undefined)?.isAdmin);
+  const isPrivileged =
+    Boolean((user as { isOwner?: boolean } | undefined)?.isOwner) || Boolean((user as { isAdmin?: boolean } | undefined)?.isAdmin);
 
   // Generate user initials for avatar
   const getInitials = (firstName?: string, lastName?: string, email?: string) => {
