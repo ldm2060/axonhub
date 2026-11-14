@@ -85,7 +85,9 @@ func TestConvertToAnthropicResponse_AllFinishReasonMappings(t *testing.T) {
 		{"length -> max_tokens", "length", "max_tokens"},
 		{"tool_calls -> tool_use", "tool_calls", "tool_use"},
 		{"content_filter -> refusal", "content_filter", "refusal"},
-		{"unknown -> passthrough", "custom_reason", "custom_reason"},
+		// Anthropic's stop_reason is a closed set, so an unrecognized upstream
+		// reason has to collapse to end_turn rather than leak through.
+		{"unknown -> end_turn", "custom_reason", "end_turn"},
 	}
 
 	for _, tt := range tests {
@@ -172,7 +174,7 @@ func TestStreamFinishReasonMappings(t *testing.T) {
 		{"length -> max_tokens", "length", "max_tokens"},
 		{"tool_calls -> tool_use", "tool_calls", "tool_use"},
 		{"content_filter -> refusal", "content_filter", "refusal"},
-		{"unknown -> passed through", "something_else", "something_else"},
+		{"unknown -> end_turn", "something_else", "end_turn"},
 	}
 
 	for _, tt := range tests {

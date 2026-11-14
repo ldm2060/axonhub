@@ -32,6 +32,9 @@ type contextContainer struct {
 
 	// BaseURL stores the request-derived base URL (scheme://host) for building absolute URLs.
 	BaseURL *string
+	// RequestHookState is request-hook bookkeeping owned by the plugin package.
+	// The value is opaque here so contexts does not import the plugin manager.
+	RequestHookState any
 }
 
 // getContainer retrieves the existing container from context, or creates a new one and stores it in the context if it doesn't exist.

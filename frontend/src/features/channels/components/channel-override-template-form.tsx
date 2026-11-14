@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -197,7 +198,7 @@ export function ChannelOverrideTemplateForm({ initialValue, isSaving, submitLabe
         </TabsContent>
       </Tabs>
 
-      <div className='flex shrink-0 justify-end gap-2 border-t pt-4'>
+      <DialogFooter pinned divided>
         <Button type='button' onClick={handleSubmit} disabled={isSaving} data-testid='template-form-submit'>
           {isSaving ? (
             <>
@@ -208,7 +209,7 @@ export function ChannelOverrideTemplateForm({ initialValue, isSaving, submitLabe
             submitLabel
           )}
         </Button>
-      </div>
+      </DialogFooter>
     </div>
   );
 }

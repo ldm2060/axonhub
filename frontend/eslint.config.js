@@ -20,6 +20,23 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // eslint-plugin-react-hooks 7 folded the React Compiler rules into
+      // `recommended`. They encode compiler constraints this codebase has not
+      // been migrated to (set-state-in-effect, refs, purity, ...), so adopting
+      // them wholesale turns the whole tree red. Keep the classic hook rules
+      // and re-enable these one at a time as the code is made compiler-clean.
+      'react-hooks/error-boundaries': 'off',
+      'react-hooks/globals': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/incompatible-library': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/set-state-in-render': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/unsupported-syntax': 'off',
+      'react-hooks/use-memo': 'off',
       'react-hooks/exhaustive-deps': 'error',
       'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
       'no-console': 'error',
@@ -38,6 +55,15 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
+    },
+  },
+  {
+    // claude-reset-credits.tsx exports its pure reason helpers alongside the
+    // component because its unit test compiles this single file and calls them
+    // directly; splitting them out would orphan that test harness.
+    files: ['src/components/claude-reset-credits.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
     },
   },
   {

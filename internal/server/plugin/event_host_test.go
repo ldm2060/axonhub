@@ -25,7 +25,7 @@ import (
 )
 
 const failoverGuardScript = `
-export function onEvent(event, ctx) {
+export function onEvent(ctx, event) {
   const ch = event.subject.channel;
   const n = ctx.counter.add("failover:" + ch.id + ":" + event.subject.model, 300);
   if (n === ctx.config.threshold) {
@@ -43,7 +43,7 @@ func TestEventDeliveryFollowsManifest(t *testing.T) {
 	manager := newEventManager(t, client, xcache.Config{Mode: xcache.ModeMemory}, bus, nil, nil)
 
 	installed := installEventPlugin(t, manager, "acme.events", []string{"request.failover"}, nil, `
-export function onEvent(event, ctx) {
+export function onEvent(ctx, event) {
   const prev = ctx.kv.get("seen") || "";
   ctx.kv.set("seen", prev + event.type + "\n");
 }
@@ -88,7 +88,7 @@ func TestEventPermissionDeniedHasNoSideEffect(t *testing.T) {
 	ch := createEventChannel(t, client, "denied-channel", []string{"sk-denied"})
 
 	installed := installEventPlugin(t, manager, "acme.denied", []string{"request.failover"}, []string{"write_channels"}, `
-export function onEvent(event, ctx) {
+export function onEvent(ctx, event) {
   try {
     ctx.axonhub.channels.disable(event.subject.channel.id, { reason: "nope" });
     ctx.kv.set("result", "wrote");
@@ -134,7 +134,7 @@ func TestCredentialDisablePublishesPluginOrigin(t *testing.T) {
 		received <- event
 	})
 	installed := installEventPlugin(t, manager, "acme.cred", []string{"request.failover"}, []string{"write_channels"}, fmt.Sprintf(`
-export function onEvent(event, ctx) {
+export function onEvent(ctx, event) {
   try {
     ctx.axonhub.channels.disableCredential(1, "oauth");
     ctx.kv.set("oauth", "wrote");
@@ -168,6 +168,61 @@ export function onEvent(event, ctx) {
 	require.NoError(t, err)
 	require.Len(t, stored.DisabledAPIKeys, 1)
 	require.Equal(t, secret, stored.DisabledAPIKeys[0].Key)
+}
+
+func TestCredentialDisableTakesOverAQuotaOwnedRecord(t *testing.T) {
+	client := newPluginDB(t)
+	bus := events.NewBus()
+	t.Cleanup(func() { require.NoError(t, bus.Close(context.Background())) })
+	channels := newEventChannels(t, client, bus)
+	manager := newEventManager(t, client, xcache.Config{Mode: xcache.ModeMemory}, bus, channels, nil)
+	secret := "sk-credential-takeover"
+	ch := createEventChannel(t, client, "takeover-channel", []string{secret})
+	fingerprint := events.Fingerprint(secret)
+
+	// A provider quota observation parked the key.
+	expiredAt := time.Now().Add(-24 * time.Hour)
+	_, err := client.Channel.UpdateOneID(ch.ID).
+		SetDisabledAPIKeys([]objects.DisabledAPIKey{{
+			Key:           secret,
+			DisabledAt:    expiredAt,
+			Reason:        "Provider quota exhausted",
+			QuotaDisabled: true,
+		}}).
+		Save(pluginCtx())
+	require.NoError(t, err)
+
+	installed := installEventPlugin(t, manager, "acme.takeover", []string{"request.failover"}, []string{"write_channels"}, fmt.Sprintf(`
+export function onEvent(ctx, event) {
+  const runs = ctx.counter.add("runs", 300);
+  ctx.axonhub.channels.disableCredential(event.subject.channel.id, "%s", { reason: "plugin policy" });
+  ctx.kv.set("once", "done");
+  ctx.kv.set("runs", String(runs));
+}
+`, fingerprint))
+	require.NoError(t, manager.Enable(pluginCtx(), installed.ID, []string{"write_channels"}, nil))
+	publishFailover(bus, ch, "", 0)
+	waitKV(t, manager, "acme.takeover", installed.ID, "runs", "1")
+
+	stored, err := client.Channel.Get(pluginCtx(), ch.ID)
+	require.NoError(t, err)
+	require.Len(t, stored.DisabledAPIKeys, 1)
+	require.False(t, stored.DisabledAPIKeys[0].QuotaDisabled, "the plugin disable takes ownership away from the quota reconciler")
+	require.Equal(t, "plugin policy", stored.DisabledAPIKeys[0].Reason)
+
+	// A second disable of the now plugin-owned key is a genuine duplicate and
+	// must stay idempotent: the record and its reason are untouched. The runs
+	// counter only reaches two when the second handler has actually run, so the
+	// assertions below cannot pass off a duplicate that never happened.
+	publishFailover(bus, ch, "", 0)
+	waitKV(t, manager, "acme.takeover", installed.ID, "runs", "2")
+
+	again, err := client.Channel.Get(pluginCtx(), ch.ID)
+	require.NoError(t, err)
+	require.Len(t, again.DisabledAPIKeys, 1)
+	require.False(t, again.DisabledAPIKeys[0].QuotaDisabled)
+	require.Equal(t, "plugin policy", again.DisabledAPIKeys[0].Reason)
+	require.Equal(t, stored.DisabledAPIKeys[0].DisabledAt, again.DisabledAPIKeys[0].DisabledAt, "the idempotent disable keeps the original record")
 }
 
 func TestInstallRejectsClosedEventsWithoutWrite(t *testing.T) {
@@ -212,7 +267,7 @@ func TestWriteLimitHasNoSideEffect(t *testing.T) {
 	now := time.Date(2026, 11, 6, 4, 0, 0, 0, time.UTC)
 	manager.kvNow = func() time.Time { return now }
 	installed := installJS(t, manager, "acme.writes", `
-export function onEvent(op, ctx) {
+export function onEvent(ctx, op) {
   try {
     if (op.op === "burst") {
       for (let i = 0; i < op.n; i++) ctx.kv.set("w" + i, "v");

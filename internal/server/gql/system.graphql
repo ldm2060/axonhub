@@ -510,12 +510,10 @@ type ProvidersCatalog {
 
 type CatalogSettings {
   upstreamURL: String!
-  refreshSeconds: Int!
 }
 
 input UpdateCatalogSettingsInput {
   upstreamURL: String
-  refreshSeconds: Int
 }
 
 type CodexCompatibilitySettings {
@@ -569,7 +567,7 @@ extend type Mutation {
   updateSecuritySettings(input: UpdateSecuritySettingsInput!): Boolean!
   updateTurnstileSettings(input: UpdateTurnstileSettingsInput!): TurnstileSettings!
   checkProviderQuotas: Boolean!
-  resetChannelQuotaNow(channelID: ID!): Boolean!
+  resetChannelQuotaNow(channelID: ID!, resetID: String): Boolean!
   triggerGcCleanup(input: TriggerGcCleanupInput!): Boolean!
   saveProxyPreset(input: SaveProxyPresetInput!): Boolean!
   deleteProxyPreset(url: String!): Boolean!
@@ -580,7 +578,6 @@ extend type Mutation {
   testEmailConnection: TestEmailResult!
   updateUsageCostInjectionSettings(input: UpdateUsageCostInjectionSettingsInput!): Boolean!
   updateCatalogSettings(input: UpdateCatalogSettingsInput!): Boolean!
-  refreshProvidersCatalog: ProvidersCatalog!
 }
 
 extend type Query {

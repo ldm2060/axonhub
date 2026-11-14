@@ -11,6 +11,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/streams"
 	"github.com/ldm2060/axonhub/llm/transformer/aisdk"
@@ -32,6 +33,7 @@ type AiSdkHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	PluginManager               *plugin.Manager
 	TimeoutConfig               TimeoutConfig
 }
 
@@ -56,7 +58,7 @@ func NewAiSDKHandlers(params AiSdkHandlersParams) *AiSDKHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-			),
+				orchestratorPlugins(params.PluginManager)),
 			StreamWriter: WriteJSONStreamWithOptions,
 		}).WithTimeouts(params.TimeoutConfig),
 	}

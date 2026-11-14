@@ -33,6 +33,13 @@ func (c *ClientRestrictionChecker) CheckClientRestriction(
 		effectiveRestriction = *channelRestriction
 	}
 
+	// An empty level means "never configured". normalizeRetryPolicy only runs on
+	// the write path, so a policy read straight from settings can still carry "";
+	// treating it as a deny would drop every channel and take routing down.
+	if effectiveRestriction == "" {
+		effectiveRestriction = ClientRestrictionOff
+	}
+
 	// Evaluate restriction
 	switch effectiveRestriction {
 	case ClientRestrictionOff:

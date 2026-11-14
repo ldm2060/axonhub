@@ -6,6 +6,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer/jina"
 )
@@ -26,6 +27,7 @@ type JinaHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	PluginManager               *plugin.Manager
 }
 
 func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
@@ -45,7 +47,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-			),
+				orchestratorPlugins(params.PluginManager)),
 		},
 		EmbeddingHandlers: &ChatCompletionHandlers{
 			ChatCompletionOrchestrator: orchestrator.NewChatCompletionOrchestrator(
@@ -62,7 +64,7 @@ func NewJinaHandlers(params JinaHandlersParams) *JinaHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-			),
+				orchestratorPlugins(params.PluginManager)),
 		},
 	}
 }

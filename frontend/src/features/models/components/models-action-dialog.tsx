@@ -10,7 +10,7 @@ import { formatNumber } from '@/utils/format-number';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -801,7 +801,7 @@ export function ModelsActionDialog() {
                                     field.value ? new Date(field.value.length === 7 ? `${field.value}-01` : field.value) : undefined
                                   }
                                   onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined)}
-                                  initialFocus
+                                  autoFocus
                                 />
                               </PopoverContent>
                             </Popover>
@@ -832,7 +832,7 @@ export function ModelsActionDialog() {
                                   mode='single'
                                   selected={field.value ? new Date(field.value) : undefined}
                                   onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined)}
-                                  initialFocus
+                                  autoFocus
                                 />
                               </PopoverContent>
                             </Popover>
@@ -863,7 +863,7 @@ export function ModelsActionDialog() {
                                   mode='single'
                                   selected={field.value ? new Date(field.value) : undefined}
                                   onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined)}
-                                  initialFocus
+                                  autoFocus
                                 />
                               </PopoverContent>
                             </Popover>
@@ -877,14 +877,14 @@ export function ModelsActionDialog() {
               </div>
             </div>
 
-            <div className='flex flex-shrink-0 justify-end gap-2 border-t pt-4'>
+            <DialogFooter pinned divided>
               <Button type='button' variant='outline' onClick={handleClose}>
                 {t('common.buttons.cancel')}
               </Button>
               <Button type='submit' disabled={createModel.isPending || updateModel.isPending}>
                 {isEdit ? t('common.buttons.save') : t('common.buttons.create')}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

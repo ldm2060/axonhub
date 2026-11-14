@@ -34,6 +34,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/requestbodychunk"
+	"github.com/ldm2060/axonhub/internal/ent/requestbodychunkref"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/system"
@@ -127,6 +129,8 @@ func checkColumn(t, c string) error {
 			providerquotastatus.Table:        providerquotastatus.ValidColumn,
 			publishrequest.Table:             publishrequest.ValidColumn,
 			request.Table:                    request.ValidColumn,
+			requestbodychunk.Table:           requestbodychunk.ValidColumn,
+			requestbodychunkref.Table:        requestbodychunkref.ValidColumn,
 			requestexecution.Table:           requestexecution.ValidColumn,
 			role.Table:                       role.ValidColumn,
 			system.Table:                     system.ValidColumn,

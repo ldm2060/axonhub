@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
-	"net/http/pprof"
 	"os"
-	"time"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -74,7 +74,6 @@ type Server struct {
 
 	Config           Config
 	server           *http.Server
-	pprofServer      *http.Server
 	addr             string
 	ConcurrencyLimit *middleware.ConcurrencyLimitConfig
 	lifetime         *lifecycle.Manager
@@ -95,34 +94,9 @@ func (srv *Server) Run() error {
 		log.String("host", srv.Config.Host),
 		log.Int("port", srv.Config.Port),
 	)
-	addr := fmt.Sprintf("%s:%d", srv.Config.Host, srv.Config.Port)
+	addr := listenAddr(srv.Config.Host, srv.Config.Port)
 	srv.server = srv.newHTTPServer(addr)
 	srv.addr = addr
-
-	if srv.Config.Pprof.Enabled {
-		pprofAddr := fmt.Sprintf("%s:%d", srv.Config.Pprof.Host, srv.Config.Pprof.Port)
-		mux := http.NewServeMux()
-		mux.HandleFunc("/debug/pprof/", pprof.Index)
-		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-
-		srv.pprofServer = &http.Server{
-			Addr:              pprofAddr,
-			Handler:           mux,
-			ReadHeaderTimeout: 5 * time.Second,
-		}
-
-		log.Info(context.Background(), "starting pprof server",
-			log.String("addr", pprofAddr))
-
-		go func() {
-			if err := srv.pprofServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Error(context.Background(), "pprof server error", log.Cause(err))
-			}
-		}()
-	}
 
 	err := srv.server.ListenAndServe()
 	if err != nil {
@@ -136,13 +110,13 @@ func (srv *Server) Run() error {
 	return nil
 }
 
-func (srv *Server) Shutdown(ctx context.Context) error {
-	if srv.pprofServer != nil {
-		if err := srv.pprofServer.Shutdown(ctx); err != nil {
-			log.Error(ctx, "pprof server shutdown error", log.Cause(err))
-		}
-	}
+// listenAddr is the address passed to net.Listen. JoinHostPort brackets an
+// IPv6 host, so "::1" listens on "[::1]:port".
+func listenAddr(host string, port int) string {
+	return net.JoinHostPort(host, strconv.Itoa(port))
+}
 
+func (srv *Server) Shutdown(ctx context.Context) error {
 	if srv.lifetime != nil {
 		srv.lifetime.Shutdown(context.Cause(ctx))
 	}
@@ -232,6 +206,7 @@ func Run(opts ...fx.Option) {
 				})
 			}),
 			fx.Invoke(SetupRoutes),
+			fx.Invoke(registerPprof),
 		}, opts...)...,
 	)
 	app.Run()

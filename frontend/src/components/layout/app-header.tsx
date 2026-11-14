@@ -11,6 +11,7 @@ import { LanguageSwitch } from '@/components/language-switch';
 import { PermissionGuard } from '@/components/permission-guard';
 import { QuotaBadges } from '@/components/quota-badges';
 import { ThemeSwitch } from '@/components/theme-switch';
+import { PluginHeaderActions } from '@/features/plugins/components/plugin-header-actions';
 import { useMyProjects } from '@/features/projects/data/projects';
 import { checkProviderQuotas } from '@/features/system/data/quotas';
 import { useBrandSettings } from '@/features/system/data/system';
@@ -36,6 +37,8 @@ export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
     },
     onSuccess: () => {
       void queryClient.refetchQueries({ queryKey: ['provider-quotas'] });
+      void queryClient.invalidateQueries({ queryKey: ['channels'] });
+      void queryClient.invalidateQueries({ queryKey: ['channelDisabledAPIKeys'] });
       toast.success(t('system.providerQuota.refresh.success'));
     },
     onError: (error: any) => {
@@ -82,6 +85,8 @@ export function AppHeader({ sidebarData }: { sidebarData: SidebarData }) {
           <PermissionGuard requiredSystemScope='read_channels'>
             <QuotaBadges onRefresh={handleRefresh} isRefreshing={isRefreshing} />
           </PermissionGuard>
+
+          <PluginHeaderActions isMobile={isMobile} />
 
           {/* Desktop-only controls - hidden on mobile */}
           {!isMobile && (

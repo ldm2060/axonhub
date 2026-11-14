@@ -17,6 +17,24 @@ type selectorSystemService interface {
 	timeLocationProvider
 }
 
+// RetryPolicyProvider supplies the retry policy a selector reads. Upstream moved
+// the retry policy off the load balancer and into the request settings snapshot,
+// but the client-restriction selector still takes a provider, so the snapshot is
+// adapted to this interface instead of threading a second source of truth.
+type RetryPolicyProvider interface {
+	RetryPolicyOrDefault(ctx context.Context) *biz.RetryPolicy
+}
+
+// settingsRetryPolicyProvider adapts a request-scoped settings snapshot to
+// RetryPolicyProvider. It is a value type: the snapshot is immutable.
+type settingsRetryPolicyProvider struct {
+	policy *biz.RetryPolicy
+}
+
+func (p settingsRetryPolicyProvider) RetryPolicyOrDefault(context.Context) *biz.RetryPolicy {
+	return p.policy
+}
+
 // selectCandidates creates a middleware that selects available channel model candidates for the model.
 // This is the second step in the inbound pipeline, moved from outbound transformer.
 // If no valid candidates are found, it returns ErrInvalidModel to fail fast.
@@ -73,18 +91,20 @@ func selectCandidates(inbound *PersistentInboundTransformer, quotaProvider Provi
 			selector = WithAnthropicNativeToolsSelector(selector)
 		}
 
+		settings := inbound.state.settings()
+
 		selector = WithStreamPolicySelector(selector)
 		selector = WithAvailabilitySelector(selector, systemService)
 		selector = WithMinInputTokensSelector(selector)
-		selector = WithClientRestrictionSelector(selector, inbound.state.RetryPolicyProvider)
+		selector = WithClientRestrictionSelector(selector, settingsRetryPolicyProvider{policy: &settings.RetryPolicy})
 
-		gate := NewQuotaRoutingGate(quotaProvider, systemService.QuotaRoutingSettingsOrDefault(ctx))
+		gate := NewQuotaRoutingGate(quotaProvider, settings.QuotaRouting)
 
 		if len(inbound.state.LoadBalancers) > 0 {
 			selector = WithRoutingPolicyLoadBalancedSelector(
 				selector,
 				inbound.state.LoadBalancers,
-				inbound.state.RetryPolicyProvider,
+				&settings.RetryPolicy,
 				inbound.state.RequestService,
 				inbound.state.APIKey,
 				&inbound.state.RoutingPolicy,

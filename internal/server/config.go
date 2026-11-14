@@ -119,12 +119,6 @@ type Config struct {
 	MaxMultipartMemory MemorySize `conf:"max_multipart_memory" yaml:"max_multipart_memory" json:"max_multipart_memory"`
 }
 
-type Pprof struct {
-	Enabled bool   `conf:"enabled" yaml:"enabled" json:"enabled"`
-	Host    string `conf:"host" yaml:"host" json:"host"`
-	Port    int    `conf:"port" yaml:"port" json:"port"`
-}
-
 type SSEKeepAlive struct {
 	Enabled  bool          `conf:"enabled" yaml:"enabled" json:"enabled"`
 	Interval time.Duration `conf:"interval" yaml:"interval" json:"interval"`

@@ -11,6 +11,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	doubao "github.com/ldm2060/axonhub/llm/transformer/doubao"
@@ -33,6 +34,7 @@ type DoubaoHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	PluginManager               *plugin.Manager
 }
 
 type DoubaoHandlers struct {
@@ -60,7 +62,7 @@ func NewDoubaoHandlers(params DoubaoHandlersParams) *DoubaoHandlers {
 			params.LiveStreamRegistry,
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
-		),
+			orchestratorPlugins(params.PluginManager)),
 		InboundTransformer: inbound,
 	}
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func TestExampleNotesPackage(t *testing.T) {
-	root := filepath.Join("..", "..", "..", "plugin", "examples", "notes")
+	root := filepath.Join("..", "..", "..", "plugins", "examples", "notes")
 	files := map[string][]byte{}
 	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -80,6 +80,10 @@ func assertExampleNotesPackage(t *testing.T, raw []byte) {
 	require.Equal(t, []string{
 		"manifest.json",
 		"ui/assets/mark.svg",
+		"ui/assets/nanoid/LICENSE",
+		"ui/assets/nanoid/README.md",
+		"ui/assets/nanoid/index.js",
+		"ui/assets/nanoid/url-alphabet/index.js",
 		"ui/notes/app.js",
 		"ui/notes/format.js",
 		"ui/notes/index.html",
@@ -89,7 +93,7 @@ func assertExampleNotesPackage(t *testing.T, raw []byte) {
 
 func packExampleDirectory(t *testing.T, root string) []byte {
 	t.Helper()
-	packed, err := PackDirectory(root)
+	packed, _, err := PackDirectory(root)
 	require.NoError(t, err)
 	return packed
 }

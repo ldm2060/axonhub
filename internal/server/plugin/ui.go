@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -18,8 +19,6 @@ import (
 	"time"
 
 	_ "embed"
-
-	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 const (
@@ -28,8 +27,11 @@ const (
 	pluginUIBridge   = "_axonhub/bridge.js"
 	// allow-forms is required for the submit event to fire in a sandboxed
 	// frame; form-action 'none' keeps forms from navigating anywhere, so pages
-	// still have no network path besides the bridge.
-	pluginUICSP = "sandbox allow-scripts allow-forms; default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'self'"
+	// still have no network path besides the bridge. allow-downloads lets a
+	// page save a file the user already has on screen. The iframe's allow
+	// attribute grants clipboard-write separately. This CSP is the intersection
+	// with that sandbox, so a download token missing here still blocks the save.
+	pluginUICSP = "sandbox allow-scripts allow-forms allow-downloads; default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'self'"
 )
 
 //go:embed uisdk/bridge.js
@@ -52,6 +54,7 @@ type uiTokenPayload struct {
 	Entry         string `json:"entry"`
 	UserID        int    `json:"user_id"`
 	Exp           int64  `json:"exp"`
+	Nonce         string `json:"nonce,omitempty"`
 }
 
 // PluginUIRequest is one token-scoped UI resource read.
@@ -88,6 +91,7 @@ func (m *Manager) IssueUIToken(secret, pluginID, entry string, userID int, now t
 	}
 
 	body, err := json.Marshal(uiTokenPayload{
+		Nonce:         rand.Text(),
 		PluginID:      pluginID,
 		PackageSHA256: row.PackageSHA256,
 		Entry:         entry,
@@ -106,9 +110,7 @@ func pluginEntryDeclared(row *LoadedPlugin, entry string) bool {
 	if row == nil || row.Manifest.UI == nil {
 		return false
 	}
-	return slices.ContainsFunc(row.Manifest.UI.Pages, func(page objects.PluginUIPage) bool {
-		return page.Entry == entry
-	})
+	return slices.Contains(row.Manifest.UI.Entries(), entry)
 }
 
 func uiTokenMAC(secret, payload string) []byte {

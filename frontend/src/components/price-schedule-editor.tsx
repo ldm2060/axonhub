@@ -104,7 +104,7 @@ type PriceScheduleEditorProps = {
   priceIndex: number;
   currencyCode?: string;
   defaultTimezone?: string;
-  // Portal target for popups opened inside a dialog; see .agent/rules/frontend-ui.md.
+  // Portal target for popups opened inside a dialog; see .agents/rules/frontend-ui.md.
   portalContainer?: HTMLElement | null;
 };
 
@@ -794,7 +794,7 @@ const DateRangeSinglePicker = memo(function DateRangeSinglePicker({
                   mode='single'
                   selected={value ? new Date(value) : undefined}
                   onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>

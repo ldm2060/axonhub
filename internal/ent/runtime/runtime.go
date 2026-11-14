@@ -27,6 +27,8 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/providerquotastatus"
 	"github.com/ldm2060/axonhub/internal/ent/publishrequest"
 	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/requestbodychunk"
+	"github.com/ldm2060/axonhub/internal/ent/requestbodychunkref"
 	"github.com/ldm2060/axonhub/internal/ent/requestexecution"
 	"github.com/ldm2060/axonhub/internal/ent/role"
 	"github.com/ldm2060/axonhub/internal/ent/schema"
@@ -966,26 +968,78 @@ func init() {
 	requestDescFormat := requestFields[8].Descriptor()
 	// request.DefaultFormat holds the default value on creation for the format field.
 	request.DefaultFormat = requestDescFormat.Default.(string)
+	// requestDescRequestBodyChunked is the schema descriptor for request_body_chunked field.
+	requestDescRequestBodyChunked := requestFields[11].Descriptor()
+	// request.DefaultRequestBodyChunked holds the default value on creation for the request_body_chunked field.
+	request.DefaultRequestBodyChunked = requestDescRequestBodyChunked.Default.(bool)
 	// requestDescExternalID is the schema descriptor for external_id field.
-	requestDescExternalID := requestFields[15].Descriptor()
+	requestDescExternalID := requestFields[16].Descriptor()
 	// request.ExternalIDValidator is a validator for the "external_id" field. It is called by the builders before save.
 	request.ExternalIDValidator = requestDescExternalID.Validators[0].(func(string) error)
 	// requestDescStream is the schema descriptor for stream field.
-	requestDescStream := requestFields[17].Descriptor()
+	requestDescStream := requestFields[18].Descriptor()
 	// request.DefaultStream holds the default value on creation for the stream field.
 	request.DefaultStream = requestDescStream.Default.(bool)
 	// requestDescClientIP is the schema descriptor for client_ip field.
-	requestDescClientIP := requestFields[18].Descriptor()
+	requestDescClientIP := requestFields[19].Descriptor()
 	// request.DefaultClientIP holds the default value on creation for the client_ip field.
 	request.DefaultClientIP = requestDescClientIP.Default.(string)
 	// requestDescUserAgent is the schema descriptor for user_agent field.
-	requestDescUserAgent := requestFields[19].Descriptor()
+	requestDescUserAgent := requestFields[20].Descriptor()
 	// request.DefaultUserAgent holds the default value on creation for the user_agent field.
 	request.DefaultUserAgent = requestDescUserAgent.Default.(string)
 	// requestDescContentSaved is the schema descriptor for content_saved field.
-	requestDescContentSaved := requestFields[23].Descriptor()
+	requestDescContentSaved := requestFields[24].Descriptor()
 	// request.DefaultContentSaved holds the default value on creation for the content_saved field.
 	request.DefaultContentSaved = requestDescContentSaved.Default.(bool)
+	requestbodychunk.Policy = privacy.NewPolicies(schema.RequestBodyChunk{})
+	requestbodychunk.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := requestbodychunk.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	requestbodychunkFields := schema.RequestBodyChunk{}.Fields()
+	_ = requestbodychunkFields
+	// requestbodychunkDescHash is the schema descriptor for hash field.
+	requestbodychunkDescHash := requestbodychunkFields[1].Descriptor()
+	// requestbodychunk.HashValidator is a validator for the "hash" field. It is called by the builders before save.
+	requestbodychunk.HashValidator = func() func(string) error {
+		validators := requestbodychunkDescHash.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(hash string) error {
+			for _, fn := range fns {
+				if err := fn(hash); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// requestbodychunkDescCreatedAt is the schema descriptor for created_at field.
+	requestbodychunkDescCreatedAt := requestbodychunkFields[3].Descriptor()
+	// requestbodychunk.DefaultCreatedAt holds the default value on creation for the created_at field.
+	requestbodychunk.DefaultCreatedAt = requestbodychunkDescCreatedAt.Default.(func() time.Time)
+	requestbodychunkref.Policy = privacy.NewPolicies(schema.RequestBodyChunkRef{})
+	requestbodychunkref.Hooks[0] = func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if err := requestbodychunkref.Policy.EvalMutation(ctx, m); err != nil {
+				return nil, err
+			}
+			return next.Mutate(ctx, m)
+		})
+	}
+	requestbodychunkrefFields := schema.RequestBodyChunkRef{}.Fields()
+	_ = requestbodychunkrefFields
+	// requestbodychunkrefDescPosition is the schema descriptor for position field.
+	requestbodychunkrefDescPosition := requestbodychunkrefFields[3].Descriptor()
+	// requestbodychunkref.PositionValidator is a validator for the "position" field. It is called by the builders before save.
+	requestbodychunkref.PositionValidator = requestbodychunkrefDescPosition.Validators[0].(func(int) error)
 	requestexecutionMixin := schema.RequestExecution{}.Mixin()
 	requestexecution.Policy = privacy.NewPolicies(schema.RequestExecution{})
 	requestexecution.Hooks[0] = func(next ent.Mutator) ent.Mutator {
@@ -1026,12 +1080,16 @@ func init() {
 	requestexecutionDescChannelAPIKeySuffix := requestexecutionFields[10].Descriptor()
 	// requestexecution.ChannelAPIKeySuffixValidator is a validator for the "channel_api_key_suffix" field. It is called by the builders before save.
 	requestexecution.ChannelAPIKeySuffixValidator = requestexecutionDescChannelAPIKeySuffix.Validators[0].(func(string) error)
+	// requestexecutionDescRequestBodyChunked is the schema descriptor for request_body_chunked field.
+	requestexecutionDescRequestBodyChunked := requestexecutionFields[12].Descriptor()
+	// requestexecution.DefaultRequestBodyChunked holds the default value on creation for the request_body_chunked field.
+	requestexecution.DefaultRequestBodyChunked = requestexecutionDescRequestBodyChunked.Default.(bool)
 	// requestexecutionDescStream is the schema descriptor for stream field.
-	requestexecutionDescStream := requestexecutionFields[18].Descriptor()
+	requestexecutionDescStream := requestexecutionFields[19].Descriptor()
 	// requestexecution.DefaultStream holds the default value on creation for the stream field.
 	requestexecution.DefaultStream = requestexecutionDescStream.Default.(bool)
 	// requestexecutionDescPassThroughApplied is the schema descriptor for pass_through_applied field.
-	requestexecutionDescPassThroughApplied := requestexecutionFields[24].Descriptor()
+	requestexecutionDescPassThroughApplied := requestexecutionFields[25].Descriptor()
 	// requestexecution.DefaultPassThroughApplied holds the default value on creation for the pass_through_applied field.
 	requestexecution.DefaultPassThroughApplied = requestexecutionDescPassThroughApplied.Default.(bool)
 	roleMixin := schema.Role{}.Mixin()
@@ -1160,6 +1218,10 @@ func init() {
 	trace.DefaultUpdatedAt = traceDescUpdatedAt.Default.(func() time.Time)
 	// trace.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	trace.UpdateDefaultUpdatedAt = traceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// traceDescLastRequestAt is the schema descriptor for last_request_at field.
+	traceDescLastRequestAt := traceFields[4].Descriptor()
+	// trace.DefaultLastRequestAt holds the default value on creation for the last_request_at field.
+	trace.DefaultLastRequestAt = traceDescLastRequestAt.Default.(func() time.Time)
 	usagelogMixin := schema.UsageLog{}.Mixin()
 	usagelog.Policy = privacy.NewPolicies(schema.UsageLog{})
 	usagelog.Hooks[0] = func(next ent.Mutator) ent.Mutator {

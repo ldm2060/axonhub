@@ -343,6 +343,7 @@ export function RequestsTable({
         autoRefreshInterval={autoRefreshInterval}
         onAutoRefreshIntervalChange={onAutoRefreshIntervalChange}
         enableColumnOrdering
+        enableMetricColors
         getColumnLabel={(id) => t(`requests.columns.${id}`, { defaultValue: id })}
         adminScope={adminScope}
       />

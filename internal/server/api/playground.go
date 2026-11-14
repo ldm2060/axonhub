@@ -17,6 +17,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer"
@@ -47,6 +48,7 @@ type PlaygroundHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	PluginManager               *plugin.Manager
 	TimeoutConfig               TimeoutConfig
 }
 
@@ -74,7 +76,7 @@ func NewPlaygroundHandlers(params PlaygroundHandlersParams) *PlaygroundHandlers 
 			params.LiveStreamRegistry,
 			params.ChannelLimiterManager,
 			params.ProviderQuotaStatusProvider,
-		),
+			orchestratorPlugins(params.PluginManager)),
 		RequestTimeout:    params.TimeoutConfig.LLMRequestTimeout,
 		StreamIdleTimeout: params.TimeoutConfig.LLMStreamIdleTimeout,
 	}

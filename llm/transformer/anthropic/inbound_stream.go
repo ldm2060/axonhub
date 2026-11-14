@@ -217,7 +217,7 @@ func (s *anthropicInboundStream) startPendingToolCall(toolCallIndex int, pending
 		Index: &s.contentIndex,
 		ContentBlock: &MessageContentBlock{
 			Type:   blockType,
-			ID:     pending.id,
+			ID:     anthropicToolBlockID(blockType, pending.id),
 			Name:   &pending.name,
 			Input:  json.RawMessage("{}"),
 			Caller: getAnthropicCaller(pending.metadata),

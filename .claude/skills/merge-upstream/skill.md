@@ -1,11 +1,11 @@
 ---
 name: merge-upstream
-description: Merge changes from upstream (looplj/axonhub) into our fork (ldm2060/axonhub). Use whenever merging, syncing, pulling, rebasing, or integrating upstream changes — including resolving merge conflicts from `git merge remote/unstable`, cherry-picking upstream commits, or synchronizing with the upstream repo. Covers four fork-specific hazards: (1) fields we've locally modified that upstream also touches, (2) upstream adding DB fields/migrations that must be reconciled with our actual schema and release version, (3) upstream reimplementing features we already shipped, (4) post-merge upgrade verification on a real local deploy — plus a mechanical fork adaptation checklist (module path, Docker vite outDir, gqlgen helper files, OwnerRule, fork-only fields/i18n) to run after conflict resolution. Trigger on any mention of "upstream", "merge upstream", "sync upstream", "拉取上游", "合并上游", "resolve conflicts from upstream", or when a merge from `remote/` is in progress or about to be committed.
+description: Merge changes from upstream (looplj/axonhub) into our fork (ldm2060/axonhub). Use whenever merging, syncing, pulling, rebasing, or integrating upstream changes — including resolving merge conflicts from `git merge remote/unstable`, cherry-picking upstream commits, or synchronizing with the upstream repo. Covers five fork-specific hazards: (0) an explicit inventory of fork-only features whose anchors must all survive the merge, (1) fields we've locally modified that upstream also touches, (2) upstream adding DB fields/migrations that must be reconciled with our actual schema and release version, (3) upstream reimplementing features we already shipped, (4) post-merge upgrade verification on a real local deploy — plus a mechanical fork adaptation checklist (module path, Docker vite outDir, gqlgen helper files, OwnerRule, fork-only fields/i18n) and a CI-watch-then-release-then-watch-again closeout. Trigger on any mention of "upstream", "merge upstream", "sync upstream", "拉取上游", "合并上游", "resolve conflicts from upstream", or when a merge from `remote/` is in progress or about to be committed.
 ---
 
 # Merge Upstream Changes
 
-This fork (`ldm2060/axonhub`, remote `origin`) tracks upstream (`looplj/axonhub`, remote `remote`). Upstream merges are routine but hazardous because we have divergent schema, migrations, and features. This skill walks the four hazards in order, runs the fork adaptation checklist over the merged tree, then verifies on a real deploy.
+This fork (`ldm2060/axonhub`, remote `origin`) tracks upstream (`looplj/axonhub`, remote `remote`). Upstream merges are routine but hazardous because we have divergent schema, migrations, and features. This skill builds an inventory of fork-only features, walks the four hazards in order, runs the fork adaptation checklist over the merged tree, then verifies on a real deploy and closes out with a watched CI run and a watched release.
 
 ## Setup before resolving
 
@@ -17,6 +17,34 @@ Run these first to understand the divergence:
 4. Identify the files in conflict: `git diff --name-only --diff-filter=U`.
 
 Do not blindly accept `--theirs` or `--ours` on schema, migration, or scope files. Each conflict in those areas needs a conscious decision below.
+
+## Hazard 0 — Fork feature inventory (do this FIRST, before touching a conflict)
+
+**Rule: nothing this fork shipped may be deleted by a merge.** Upstream does not know our features exist, so an auto-merge that takes upstream's side of a shared file drops them *without raising a conflict*. Enumerate them before resolving anything, then re-check every one after the merge.
+
+1. Build the inventory from our divergent commits:
+   ```bash
+   git fetch remote
+   git log --oneline remote/unstable..origin/unstable --no-merges | grep -E '^[0-9a-f]+ (feat|fix|perf|refactor)' 
+   ```
+   Merge commits in that range (`merge: resolve conflicts with upstream ...`) also name the fork features that survived the last merge — read their messages.
+2. For each fork feature, write down its **anchors** — the symbols that only exist because of us. At least one anchor per feature, and prefer anchors a grep can find:
+   - Ent schema fields / column names (`internal/ent/schema/*.go`) and their GraphQL names
+   - Go identifiers unique to us (types, funcs, scope names like `CanRouteThroughChannel`, `OwnerRule`)
+   - i18n keys under `frontend/src/locales/**`
+   - Frontend routes/pages, feature directories, and files under `frontend/src/features/**`
+   - Settings keys in `conf/` and `frontend/src/features/**/data/*.ts`
+3. Save the anchor table to `.agent/summary/merge-upstream-fork-features.md` (per AGENTS.md summaries live in `.agent/summary`) and keep it as the checklist for step 6 of the fork adaptation checklist below.
+4. **After all conflicts are resolved but before build/test**, verify every anchor still exists in the merged tree:
+   ```bash
+   git grep -l '<anchor>'            # one per anchor, expect a hit
+   ```
+   An anchor with zero hits is a silently dropped fork feature — restore it from `origin/unstable` and re-apply upstream's change on top of *our* version of the file.
+
+Known fork-only feature areas to inventory (verify each merge — the list grows):
+scope-level `RouteGuard` / channel access (`CanRouteThroughChannel`, owner-shared-published visibility), per-channel and per-monitor provider quota (OpenCode/GLM/DeepSeek/ZCode), usage monitors and header quota popovers, custom API-key profiles and per-key quotas, channel sharing (`shared_with`) and `enableSameChannelRetry`, concurrency limits and client restrictions, personal dashboard scoping (`myUsageStatsByUser`), project/module nav gating, sign-up link i18n key, ZCode coding-plan signing.
+
+**Why:** the failure is silent. A dropped schema field or i18n key compiles, lints, tests, and boots — the feature is just gone until a user notices. The only defence is an explicit list checked by grep, not conflict markers.
 
 ## Hazard 1 — Fields we modified that upstream also changed
 
@@ -149,6 +177,18 @@ Once the merge commit (and any CI-fix commits) are green on `unstable`, publish 
    `gh run list --repo ldm2060/axonhub --limit 10 --json headBranch,workflowName,status,conclusion` — the runs appear under `headBranch` = `vX.Y.Z`. All three (`Release`, `Publish Docker image`, `Publish Helm chart`) must reach `success`; Helm is usually first.
 5. Verify the release published: `gh release view vX.Y.Z --repo ldm2060/axonhub` shows the binary assets, and the Docker image tag `ghcr.io/ldm2060/axonhub:vX.Y.Z` exists in packages.
 6. If a tag workflow fails, follow the same diagnose-fix-push loop as CI (fix on `unstable`, then re-tag a new patch version — never move a tag whose workflows already produced artifacts).
+
+## Monitoring CI, then releasing, then monitoring again
+
+The merge is not done when it is committed. Two watch loops follow, and both are part of the merge workflow — do not stop and ask between them.
+
+1. **Watch the merge commit's CI** with the `ci-watch` skill (it knows this fork's workflows, the mandatory build/lint/test gate, and the frontend `format:check` trap). Push `unstable`, watch the run for that SHA to completion, and fix-and-push on any failure before tagging. Never tag a red branch.
+2. **Cut the release** per "Releasing after a merge" below (bump VERSION, empty finalize commit so the tag is not on a `[skip ci]` commit, push branch + tag).
+3. **Keep watching after the tag.** A tag fires three workflows (`Release`, `Publish Docker image`, `Publish Helm chart`) under `headBranch` = the tag name. Re-check with
+   `gh run list --repo ldm2060/axonhub --limit 10 --json headBranch,workflowName,status,conclusion`
+   until all three report `success`. A green `Release` with a red Docker build is a broken release — do not declare done.
+4. **Verify the artifacts actually published**: `gh release view vX.Y.Z --repo ldm2060/axonhub` lists the binary assets, and `ghcr.io/ldm2060/axonhub:vX.Y.Z` exists. Only then is the merge closed out.
+5. If a tag workflow fails, diagnose-fix-push on `unstable` and cut a **new patch version** — never move a tag whose workflows already produced artifacts.
 
 ## When to escalate to the user
 

@@ -52,7 +52,7 @@ export const USERS_QUERY = `
           isAdmin
           preferLanguage
           scopes
-          roles {
+          roles(where: { level: system }) {
             edges {
               node {
                 id
@@ -86,7 +86,7 @@ export const USER_QUERY = `
       isAdmin
       preferLanguage
       scopes
-      roles {
+      roles(where: { level: system }) {
         edges {
           node {
             id
@@ -112,7 +112,7 @@ export const CREATE_USER_MUTATION = `
       isAdmin
       preferLanguage
       scopes
-      roles {
+      roles(where: { level: system }) {
         edges {
           node {
             id
@@ -138,7 +138,7 @@ export const UPDATE_USER_MUTATION = `
       isAdmin
       preferLanguage
       scopes
-      roles {
+      roles(where: { level: system }) {
         edges {
           node {
             id
@@ -164,7 +164,7 @@ export const UPDATE_USER_STATUS_MUTATION = `
       isAdmin
       preferLanguage
       scopes
-      roles {
+      roles(where: { level: system }) {
         edges {
           node {
             id

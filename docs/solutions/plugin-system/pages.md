@@ -1,6 +1,6 @@
 # 页面
 
-[插件系统](README.md)的 UI 扩展点。v1 只有独立页面：侧栏入口加一个整页 iframe。dashboard 面板等插槽见 [slots.md](slots.md)，未排期，排期时复用本篇的 iframe 宿主、桥接和插件 GraphQL。manifest 的 `ui.pages` 字段见 [manifest.md](manifest.md)。数值限制见 [运行限制](README.md#运行限制)。任务见 [任务表](README.md#9-任务管理)，本篇对应 T-04 至 T-07。
+[插件系统](README.md)的 UI 扩展点。本篇定义独立页面：侧栏入口加一个整页 iframe。全局工具栏操作插槽见 [slots.md](slots.md)，T-17 复用本篇的 iframe 宿主、桥接和插件 GraphQL。manifest 的 `ui.pages` 字段见 [manifest.md](manifest.md)。数值限制见 [运行限制](README.md#运行限制)。任务见 [任务表](README.md#9-任务管理)，本篇对应 T-04 至 T-07。
 
 > 页面使用独立 Plugin Principal，context 中的用户为收窄视图（权限与插件授权取交集、无 Owner、无角色），详见 [permission.md](permission.md)。
 
@@ -18,14 +18,14 @@
 
 ## 2. 目标
 
-1. manifest 的 `ui.pages` 每个条目在侧栏的「插件」分组里有一个入口。打开 `/plugins/$pluginId/pages/$page` 时，主区域渲染该页面的 iframe。iframe 是 `sandbox="allow-scripts allow-forms"`，不能读 cookie 和 localStorage；表单可以用 `submit` 事件处理，但不能真正提交。
+1. manifest 的 `ui.pages` 每个条目在侧栏的「插件」分组里有一个入口。打开 `/plugins/$pluginId/pages/$page` 时，主区域渲染该页面的 iframe。iframe 是 `sandbox="allow-scripts allow-forms allow-downloads"`，并带 `allow="clipboard-write"`。不能读 cookie 和 localStorage，也不能读剪贴板；表单可以用 `submit` 事件处理，但不能真正提交。用户点击后可以把页面里已有的内容写入剪贴板或下载。
 2. 页面经桥接执行 GraphQL query 和 mutation。执行权限是插件的 `granted_permissions` 与当前用户权限的交集。
 3. 页面能读写本插件的 KV，读写不到其他插件的 KV。写入要求当前用户有 `write_plugins`。
 4. 插件被禁用、页面 key 不存在、或用户未登录时，不渲染 iframe。页面 10 秒内不握手或脚本报错时，显示错误和重试。
 
 ### 非目标
 
-- 插槽：dashboard 面板、渠道编辑对话框、系统设置。见 [slots.md](slots.md)。
+- 操作插槽由 [slots.md](slots.md) 单独定义。
 - 浏览器直连外部 URL。页面用 `axonhub.fetch` 请宿主代发，目标必须匹配已授权的路径或正则，见 [出站请求](plugin.js.md#出站请求)。CSP 的 `connect-src` 保持 `'none'`。
 - 按 mutation 细分插件权限。授予 `write_channels` 就是授予渠道的全部写能力，见 [妥协 1](#10-风险与妥协)。
 - 把用户 token 交给 iframe；向页面传入请求体。
@@ -81,12 +81,14 @@ Plugin 主体记录真实用户 ID 用于身份和归属；context 中的用户�
          + "." + HMAC-SHA256(SystemKeySecretKey, "plugin-ui|" + payload)
    entry 必须是该插件 manifest 里某个 page 的 entry，并绑定到 token；资源读取范围见下文
 2. iframe src=/admin/plugin-ui/<token>/<entry>
-   sandbox="allow-scripts allow-forms"，不加 allow-same-origin
+   sandbox="allow-scripts allow-forms allow-downloads"，不加 allow-same-origin
+   allow="clipboard-write"，不授予 clipboard-read
    referrerpolicy="no-referrer"
    allow-forms 只为让 submit 事件触发（没有它浏览器在派发 submit 前就拦截表单），
    真正的表单提交由 CSP form-action 'none' 拦截
+   allow-downloads 与 clipboard-write 只放行页面里已有内容的保存和复制，不增加数据权限
 3. 资源响应头：
-   Content-Security-Policy: sandbox allow-scripts allow-forms; default-src 'none';
+   Content-Security-Policy: sandbox allow-scripts allow-forms allow-downloads; default-src 'none';
      script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
      img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none';
      frame-ancestors 'self'
@@ -96,7 +98,7 @@ Plugin 主体记录真实用户 ID 用于身份和归属；context 中的用户�
    不设置 Access-Control-Allow-Credentials；只对 token 保护的 UI 资源路由启用，见下文 CORS 契约
 4. 页面加载 /admin/plugin-ui/<token>/_axonhub/bridge.js，axonhub.ready() 发 hello
 5. 宿主只接受 event.source === iframe.contentWindow 的消息
-   回 init{theme, colorScheme, tokens, locale, projectId, page, panel: null, slot: null, config, canWriteKV}
+   回 init{theme, colorScheme, tokens, locale, projectId, page, panel: null, action: null, slot: null, context: {}, config, canWriteKV}
    tokens 是宿主已计算的样式变量，规则见 [UI Bridge](ui-bridge.md#1-sdk-契约)
    config 去掉 secret；canWriteKV 是当前用户是否有 write_plugins
 6. axonhub.graphql(query, variables)
@@ -186,7 +188,7 @@ UI token 的资源读取范围：
 - **响应**：该路由固定返回 `Access-Control-Allow-Origin: *`，不反射请求 Origin，也不使用 `Access-Control-Allow-Origin: null`。不返回 `Access-Control-Allow-Credentials` 或 Set-Cookie；不开放 Authorization 等自定义请求头。固定通配符不需要增加 `Vary: Origin`，保留其他已有 Vary 值。成功、条件响应（若返回 304）及错误响应均保留相同 CORS 头，错误响应不能包含受保护的资源内容。
 - **鉴权**：URL token 是资源访问凭据；CORS 不替代签名、有效期、启用状态、包版本和路径范围校验。所有读取（含 HEAD、条件请求）均先鉴权，不能因有 Cookie、用户 JWT 或 `Origin: null` 而放行无效 token。持有有效 token 的调用方可匿名读取其范围内的静态资源，因此包内 UI 文件不得包含密钥。
 - **加载方式**：示例使用 `crossorigin="anonymous"`，Vite 产物的模块脚本和 modulepreload 也使用匿名模式；禁止 `crossorigin="use-credentials"`。不向模块请求附加 Cookie、HTTP 身份认证或用户 Bearer token，不需要 SDK 在 JS 中拼接认证头。
-- **隔离保持**：iframe 和响应 CSP 仍为 `sandbox allow-scripts allow-forms`，不增加 `allow-same-origin`，不放宽 `connect-src 'none'` 和 `form-action 'none'`。页面要访问已登记的外部 URL 时，调用 `axonhub.fetch`，由宿主代发；浏览器不直接连接该 URL，因此不需要放宽 `connect-src`。这套静态资源 CORS 不能挂到整个 `/admin`，也不能应用到主 GraphQL 或插件 GraphQL 端点；数据访问继续由父页面 Bridge 代理。CORS 不改变 SDK 的 source/session 校验。
+- **隔离保持**：iframe 和响应 CSP 同为 `sandbox allow-scripts allow-forms allow-downloads`，iframe 另有 `allow="clipboard-write"`。不增加 `allow-same-origin`，不授予 `clipboard-read`，不放宽 `connect-src 'none'` 和 `form-action 'none'`。响应头的 sandbox 与 iframe 取交集，少写 `allow-downloads` 时下载仍会被拦。页面要访问已登记的外部 URL 时，调用 `axonhub.fetch`，由宿主代发；浏览器不直接连接该 URL，因此不需要放宽 `connect-src`。这套静态资源 CORS 不能挂到整个 `/admin`，也不能应用到主 GraphQL 或插件 GraphQL 端点；数据访问继续由父页面 Bridge 代理。CORS 不改变 SDK 的 source/session 校验。
 - **响应类型**：JS 模块及其依赖返回 `Content-Type: text/javascript`，CSS 返回 `text/css`，字体返回 `font/woff2`，保留 `nosniff`。缺失的 JS 返回真实 404，不能用 HTML 入口兜底，否则模块会因 MIME 不匹配失败。
 
 `navigate` 只允许站内路径。`toast` 走宿主的通知。主题变化用 `onTheme` 再推一次。
@@ -194,7 +196,7 @@ UI token 的资源读取范围：
 失败：token 过期或签名错误返回 403，重试会重新申请 token。10 秒内没有 hello，或脚本报错，主区域显示「页面出错」和重试。GraphQL `FORBIDDEN` 与主端点的 ErrorPresenter 相同，由页面自己处理。
 
 #### `internal/server/plugin/ui.go`
-- 用 `SystemKeySecretKey` 签发和校验绑定 entry 的 token。签发时校验 plugin 存在、已启用、entry 是 manifest 声明的某个 page entry；读取资源时按上文分别校验 HTML、静态资源和宿主 bridge。
+- 用 `SystemKeySecretKey` 签发和校验绑定 entry 的 token。签发时校验 plugin 存在、已启用、entry 是 manifest 声明的某个 page entry 或 action.effect.entry；读取资源时按上文分别校验 HTML、静态资源和宿主 bridge。
 - 路径校验、包版本校验与 MIME 白名单；按 UI 资源 CORS 契约返回响应头，从版本临时目录流式读取，传输期间持有资源引用，目录丢失时触发重建。嵌入 `/_axonhub/bridge.js`。
 
 #### `internal/server/plugin/uisdk/bridge.js`
@@ -208,14 +210,14 @@ UI token 的资源读取范围：
 
 ### 共用 UI Bridge
 
-浏览器 SDK 的方法签名、初始化上下文、消息格式、错误和会话生命周期统一见 [ui-bridge.md](ui-bridge.md)。页面与未来的 slots 共用这套契约，本篇只定义页面挂载、资源和 GraphQL 端点。
+浏览器 SDK 的方法签名、初始化上下文、消息格式、错误和会话生命周期统一见 [ui-bridge.md](ui-bridge.md)。页面与操作插槽共用这套契约，本篇只定义页面挂载、资源和 GraphQL 端点。
 
 ## 7. 插件 GraphQL
 
 `POST /admin/plugins/:pluginId/graphql` 放在新的 JWT 组：`WithJWTAuth` 只接受用户 JWT，不接受 service account，加 `WithProjectID` 和 10 秒超时。
 
 ```text
-a. 插件存在、已启用、声明了 ui.pages；否则 404
+a. 插件存在、已启用且运行有效，ui.pages 或 ui.actions 至少一项非空；否则 404
 b. kvWritable = 委托用户是 Owner，或有系统级 write_plugins。写入 context
 c. ceiling = granted_permissions 去掉 webhook，即插件被授予的 read_* 与 write_channels
 d. authz.DelegatePlugin 派生 Plugin 主体，复制授权快照并隔离请求容器；pluginID 和步骤 a 解析到的 installationID（plugins.id）绑定本次操作

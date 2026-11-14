@@ -1,0 +1,296 @@
+package biz
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/biz/provider_quota"
+)
+
+func TestGetProviderType_OpenaiWithUnknownURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.unknown.com",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "", result)
+}
+
+func TestGetProviderType_ExistingTypesPreserved(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	tests := []struct {
+		name           string
+		channelType    channel.Type
+		expectedResult string
+	}{
+		{"claudecode", channel.TypeClaudecode, "claudecode"},
+		{"codex", channel.TypeCodex, "codex"},
+		{"xai_subscription", channel.TypeXaiSubscription, "xai_subscription"},
+		{"github_copilot", channel.TypeGithubCopilot, "github_copilot"},
+		{"nanogpt", channel.TypeNanogpt, "nanogpt"},
+		{"nanogpt_responses", channel.TypeNanogptResponses, "nanogpt"},
+		{"zhipu", channel.TypeZhipu, "zhipu"},
+		{"zhipu_anthropic", channel.TypeZhipuAnthropic, "zhipu"},
+		{"zai", channel.TypeZai, "zai"},
+		{"zai_anthropic", channel.TypeZaiAnthropic, "zai"},
+		{"deepseek", channel.TypeDeepseek, "deepseek"},
+		{"deepseek_anthropic", channel.TypeDeepseekAnthropic, "deepseek"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ch := &ent.Channel{Type: tt.channelType}
+			result := svc.getProviderType(ch)
+			require.Equal(t, tt.expectedResult, result)
+		})
+	}
+}
+
+func TestGetProviderType_OpenaiResponsesWithSyntheticURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenaiResponses,
+		BaseURL: "https://api.synthetic.new",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "synthetic", result)
+}
+
+func TestGetProviderType_OpenaiWithNeuralWattURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.neuralwatt.com",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "neuralwatt", result)
+}
+
+func TestGetProviderType_OpenaiWithDeepSeekURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.deepseek.com/v1",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "deepseek", result)
+}
+
+func TestGetProviderType_OpenaiWithEmptyURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "", result)
+}
+
+func TestHasCredentialsForProvider_SyntheticAPIKey(t *testing.T) {
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.synthetic.new",
+		Credentials: objects.ChannelCredentials{
+			APIKey: "sk-test",
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_SyntheticNoKey(t *testing.T) {
+	ch := &ent.Channel{
+		Type:        channel.TypeOpenai,
+		BaseURL:     "https://api.synthetic.new",
+		Credentials: objects.ChannelCredentials{},
+	}
+	require.False(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_SyntheticOAuthIgnored(t *testing.T) {
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.synthetic.new",
+		Credentials: objects.ChannelCredentials{
+			OAuth: &objects.OAuthCredentials{AccessToken: "token"},
+		},
+	}
+	require.False(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_SyntheticAPIKeys(t *testing.T) {
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.synthetic.new",
+		Credentials: objects.ChannelCredentials{
+			APIKeys: []string{"sk-test"},
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_NonOpenaiWithOAuth(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeClaudecode,
+		Credentials: objects.ChannelCredentials{
+			OAuth: &objects.OAuthCredentials{AccessToken: "token"},
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_NonOpenaiNoCreds(t *testing.T) {
+	ch := &ent.Channel{
+		Type:        channel.TypeClaudecode,
+		Credentials: objects.ChannelCredentials{},
+	}
+	require.False(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_CodexWithOAuth(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeCodex,
+		Credentials: objects.ChannelCredentials{
+			OAuth: &objects.OAuthCredentials{AccessToken: "token"},
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_CodexWithOAuthJSON(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeCodex,
+		Credentials: objects.ChannelCredentials{
+			APIKey: `{"access_token": "token", "refresh_token": "refresh"}`,
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_CodexWithPlainAPIKey(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeCodex,
+		Credentials: objects.ChannelCredentials{
+			APIKey: "sk-plain-api-key",
+		},
+	}
+	require.False(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_ClaudeCodeWithOAuth(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeClaudecode,
+		Credentials: objects.ChannelCredentials{
+			OAuth: &objects.OAuthCredentials{AccessToken: "token"},
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_ClaudeCodeWithOAuthJSON(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeClaudecode,
+		Credentials: objects.ChannelCredentials{
+			APIKey: `{"access_token": "token", "refresh_token": "refresh"}`,
+		},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_ClaudeCodeWithPlainAPIKey(t *testing.T) {
+	ch := &ent.Channel{
+		Type: channel.TypeClaudecode,
+		Credentials: objects.ChannelCredentials{
+			APIKey: "sk-plain-api-key",
+		},
+	}
+	require.False(t, hasCredentialsForProvider(ch))
+}
+
+func TestGetProviderType_OpenaiWithSyntheticURLPort(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenaiResponses,
+		BaseURL: "https://api.synthetic.new:443",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "synthetic", result)
+}
+
+func TestGetProviderType_OpenaiWithNeuralWattURLPort(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://api.neuralwatt.com:443",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "neuralwatt", result)
+}
+
+func TestGetProviderType_OpenaiWithFalsePositiveURL(t *testing.T) {
+	svc := &ProviderQuotaService{
+		checkers: make(map[string]provider_quota.QuotaChecker),
+	}
+
+	ch := &ent.Channel{
+		Type:    channel.TypeOpenai,
+		BaseURL: "https://fakeapi.synthetic.new",
+	}
+	result := svc.getProviderType(ch)
+	require.Equal(t, "", result)
+}
+
+func TestGetProviderType_Cline(t *testing.T) {
+	svc := &ProviderQuotaService{checkers: make(map[string]provider_quota.QuotaChecker)}
+
+	result := svc.getProviderType(&ent.Channel{Type: channel.TypeCline})
+	require.Equal(t, "cline", result)
+}
+
+func TestHasCredentialsForProvider_ClineAPIKey(t *testing.T) {
+	ch := &ent.Channel{
+		Type:        channel.TypeCline,
+		Credentials: objects.ChannelCredentials{APIKey: "cline-key"},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_ClineAPIKeys(t *testing.T) {
+	ch := &ent.Channel{
+		Type:        channel.TypeCline,
+		Credentials: objects.ChannelCredentials{APIKeys: []string{"cline-key"}},
+	}
+	require.True(t, hasCredentialsForProvider(ch))
+}
+
+func TestHasCredentialsForProvider_ClineNoKey(t *testing.T) {
+	ch := &ent.Channel{Type: channel.TypeCline, Credentials: objects.ChannelCredentials{}}
+	require.False(t, hasCredentialsForProvider(ch))
+}

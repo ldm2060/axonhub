@@ -37,10 +37,6 @@ function buildThreadsQuery() {
             status
             createdAt
             updatedAt
-            project {
-              id
-              name
-            }
             tracesSummary: traces(first: 1, where: { statusNEQ: archived }) {
               totalCount
             }
@@ -85,10 +81,6 @@ function buildThreadDetailQuery() {
             totalCachedTokens
             totalCachedWriteTokens
           }
-          project {
-            id
-            name
-          }
           tracesSummary: traces(first: 1, where: { statusNEQ: archived }) {
             totalCount
           }
@@ -101,10 +93,7 @@ function buildThreadDetailQuery() {
                 status
                 createdAt
                 updatedAt
-                project {
-                  id
-                  name
-                }
+                lastRequestAt
                 thread {
                   id
                   threadID

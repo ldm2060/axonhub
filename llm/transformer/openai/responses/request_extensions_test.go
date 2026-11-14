@@ -56,7 +56,7 @@ func marshalRequestPayloadMapPath(
 		obj["tool_choice"] = cloneRaw(ext.RawToolChoice)
 	}
 
-	if input, ok := mergeRawOnlyInputItems(obj["input"], ext); ok {
+	if input, ok := mergeRawOnlyInputItems(obj["input"], ext, payload.Input.Reminder); ok {
 		raw, err := json.Marshal(input)
 		require.NoError(t, err)
 		obj["input"] = raw

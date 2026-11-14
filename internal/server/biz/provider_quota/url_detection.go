@@ -18,6 +18,7 @@ var urlProviderMap = []urlProviderEntry{
 	{hostPattern: "api.z.ai", providerType: "zhipu"},
 	{hostPattern: "api.apertis.ai", providerType: "apertis"},
 	{hostPattern: "hyper.charm.land", providerType: "charm_hyper"},
+	{hostPattern: "api.deepseek.com", providerType: "deepseek"},
 }
 
 func URLDetectedProviders() map[string]struct{} {

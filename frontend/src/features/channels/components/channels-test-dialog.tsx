@@ -273,7 +273,7 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
             {failedModels.length > 0 && (
               <Popover open={isRemovePopoverOpen} onOpenChange={setIsRemovePopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant='destructive' size='sm' className='h-10 sm:h-8'>
+                  <Button variant='destructive' size='sm'>
                     {t('channels.dialogs.test.removeFailed')} ({failedModels.length})
                   </Button>
                 </PopoverTrigger>
@@ -298,7 +298,7 @@ export function ChannelsTestDialog({ open, onOpenChange, channel }: Props) {
               </Popover>
             )}
           </div>
-          <Button onClick={handleTestSelected} disabled={selectedModels.length === 0 || isTesting} className='h-10 sm:h-9'>
+          <Button onClick={handleTestSelected} disabled={selectedModels.length === 0 || isTesting}>
             <IconPlayerPlay className='mr-2 h-4 w-4' />
             {t('channels.dialogs.test.testAllButton', { count: selectedModels.length })}
           </Button>

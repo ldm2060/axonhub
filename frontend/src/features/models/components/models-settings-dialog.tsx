@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { BookOpen, List, Loader2, RefreshCw, Route } from 'lucide-react';
+import { BookOpen, List, Loader2, Route } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,18 +22,6 @@ import {
   type UpdateModelSettingsInput,
 } from '@/features/system/data/system';
 import { useModels } from '../context/models-context';
-import { useRefreshProvidersCatalog } from '../data/providers';
-
-const MIN_CATALOG_REFRESH_SECONDS = 60;
-const MAX_CATALOG_REFRESH_SECONDS = 604800;
-
-function isValidRefreshSeconds(value: number): boolean {
-  return Number.isInteger(value) && value >= MIN_CATALOG_REFRESH_SECONDS && value <= MAX_CATALOG_REFRESH_SECONDS;
-}
-
-function clampRefreshSeconds(value: number): number {
-  return Math.min(MAX_CATALOG_REFRESH_SECONDS, Math.max(MIN_CATALOG_REFRESH_SECONDS, value));
-}
 
 type SettingsSectionKey = 'routing' | 'modelList' | 'catalog';
 
@@ -60,7 +48,6 @@ export function ModelSettingsDialog() {
   const { data: catalogSettings, isLoading: isLoadingCatalog } = useCatalogSettings();
   const updateModelSettings = useUpdateModelSettings();
   const updateCatalogSettings = useUpdateCatalogSettings();
-  const refreshCatalog = useRefreshProvidersCatalog();
 
   const isOpen = open === 'settings';
   const [activeSection, setActiveSection] = React.useState<SettingsSectionKey>('routing');
@@ -72,7 +59,6 @@ export function ModelSettingsDialog() {
   const [modelBlacklistRegex, setModelBlacklistRegex] = React.useState('');
   const [hideUnroutableModelsInList, setHideUnroutableModelsInList] = React.useState(false);
   const [catalogUpstreamURL, setCatalogUpstreamURL] = React.useState('');
-  const [catalogRefreshSeconds, setCatalogRefreshSeconds] = React.useState(3600);
 
   // Reset the form from the server state whenever the dialog opens.
   React.useEffect(() => {
@@ -95,7 +81,6 @@ export function ModelSettingsDialog() {
   React.useEffect(() => {
     if (catalogSettings && isOpen) {
       setCatalogUpstreamURL(catalogSettings.upstreamURL);
-      setCatalogRefreshSeconds(catalogSettings.refreshSeconds);
     }
   }, [catalogSettings, isOpen]);
 
@@ -108,10 +93,7 @@ export function ModelSettingsDialog() {
       (settings.modelBlacklistRegex ?? '') !== modelBlacklistRegex ||
       settings.hideUnroutableModelsInList !== hideUnroutableModelsInList);
 
-  const catalogChanged =
-    !!catalogSettings &&
-    (catalogSettings.upstreamURL !== catalogUpstreamURL.trim() || catalogSettings.refreshSeconds !== catalogRefreshSeconds);
-  const catalogRefreshValid = isValidRefreshSeconds(catalogRefreshSeconds);
+  const catalogChanged = !!catalogSettings && catalogSettings.upstreamURL !== catalogUpstreamURL.trim();
 
   const isSaving = updateModelSettings.isPending || updateCatalogSettings.isPending;
 
@@ -133,7 +115,6 @@ export function ModelSettingsDialog() {
     if (catalogChanged) {
       await updateCatalogSettings.mutateAsync({
         upstreamURL: catalogUpstreamURL.trim(),
-        refreshSeconds: clampRefreshSeconds(catalogRefreshSeconds),
       });
     }
     setOpen(null);
@@ -150,7 +131,6 @@ export function ModelSettingsDialog() {
     hideUnroutableModelsInList,
     settings?.developerSettings,
     catalogUpstreamURL,
-    catalogRefreshSeconds,
     setOpen,
   ]);
 
@@ -268,56 +248,17 @@ export function ModelSettingsDialog() {
                     />
                     <p className='text-muted-foreground text-xs'>{t('system.catalog.upstreamURL.description')}</p>
                   </div>
-                  <div className='flex flex-wrap items-end justify-between gap-3'>
-                    <div className='space-y-1.5'>
-                      <Label htmlFor='catalog-refresh-seconds' className='text-sm font-medium'>
-                        {t('system.catalog.refreshSeconds.label')}
-                      </Label>
-                      <Input
-                        id='catalog-refresh-seconds'
-                        type='number'
-                        min={MIN_CATALOG_REFRESH_SECONDS}
-                        max={MAX_CATALOG_REFRESH_SECONDS}
-                        step={1}
-                        value={Number.isInteger(catalogRefreshSeconds) ? catalogRefreshSeconds : ''}
-                        onChange={(event) => {
-                          const parsed = Number.parseInt(event.target.value, 10);
-                          setCatalogRefreshSeconds(Number.isNaN(parsed) ? Number.NaN : parsed);
-                        }}
-                        onBlur={() => {
-                          if (Number.isInteger(catalogRefreshSeconds)) {
-                            setCatalogRefreshSeconds(clampRefreshSeconds(catalogRefreshSeconds));
-                          }
-                        }}
-                        disabled={isSaving}
-                        className='w-40'
-                      />
-                      <p className='text-muted-foreground text-xs'>{t('system.catalog.refreshSeconds.description')}</p>
-                    </div>
-                    <Button variant='outline' size='sm' onClick={() => refreshCatalog.mutate()} disabled={refreshCatalog.isPending}>
-                      {refreshCatalog.isPending ? (
-                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      ) : (
-                        <RefreshCw className='mr-2 h-4 w-4' />
-                      )}
-                      {t('system.catalog.refreshNow')}
-                    </Button>
-                  </div>
                 </div>
               </SettingsSection>
             )}
           </SettingsDialogBody>
         )}
 
-        <DialogFooter className='flex shrink-0 flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-2'>
-          <Button variant='outline' onClick={handleClose} disabled={isSaving} className='h-10 w-full sm:h-9 sm:w-auto'>
+        <DialogFooter pinned gap='lg'>
+          <Button variant='outline' onClick={handleClose} disabled={isSaving} className='w-full sm:w-auto'>
             {t('common.buttons.cancel')}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || isLoading || isLoadingCatalog || !catalogRefreshValid}
-            className='h-10 w-full sm:h-9 sm:w-auto'
-          >
+          <Button onClick={handleSave} disabled={isSaving || isLoading || isLoadingCatalog} className='w-full sm:w-auto'>
             {isSaving ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />

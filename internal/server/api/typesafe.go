@@ -6,6 +6,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
+	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer/typesafe"
 )
@@ -26,6 +27,7 @@ type TypeSafeHandlersParams struct {
 	LiveStreamRegistry          *biz.LiveStreamRegistry
 	ChannelLimiterManager       *orchestrator.ChannelLimiterManager
 	ProviderQuotaStatusProvider orchestrator.ProviderQuotaStatusProvider
+	PluginManager               *plugin.Manager
 }
 
 type TypeSafeHandlers struct {
@@ -49,7 +51,7 @@ func NewTypeSafeHandlers(params TypeSafeHandlersParams) *TypeSafeHandlers {
 				params.LiveStreamRegistry,
 				params.ChannelLimiterManager,
 				params.ProviderQuotaStatusProvider,
-			),
+				orchestratorPlugins(params.PluginManager)),
 		},
 	}
 }
