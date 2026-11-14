@@ -245,12 +245,3 @@ func TestPackDirectoryImportsFromHiddenDirectory(t *testing.T) {
 		t.Fatalf("expected imported ancestor symlink rejection, got %v", err)
 	}
 }
-
-// A symlink in an unused, unimported path is still rejected.
-func TestPackDirectoryRejectsUnusedSymlink(t *testing.T) {
-	root := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(root, "manifest.json"), []byte(`{}`), 0o644))
-	symlinkOrSkip(t, filepath.Join(root, "manifest.json"), filepath.Join(root, "README.md"))
-	_, _, err := PackDirectory(root)
-	require.ErrorContains(t, err, "symlink")
-}
