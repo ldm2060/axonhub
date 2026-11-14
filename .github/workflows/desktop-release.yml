@@ -40,6 +40,14 @@ jobs:
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    env:
+      # mygo refuses to upload an unsigned update archive. The fork has no
+      # MYGO_UPDATER_PRIVATE_KEY secret yet, so the desktop installers are
+      # built and published only once one is configured; until then the build
+      # and download-table steps are skipped instead of failing the release.
+      # secrets is not readable from a job-level `if`, so it is funnelled
+      # through env, which is.
+      DESKTOP_UPDATER_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -109,6 +117,7 @@ jobs:
           echo "Desktop and embedded server version: $RELEASE_TAG"
 
       - name: Build and upload
+        if: ${{ env.DESKTOP_UPDATER_KEY != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
