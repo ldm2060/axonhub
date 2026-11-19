@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -84,6 +85,9 @@ func (h *EmailTokenAPI) checkRateLimit(key string) bool {
 
 // VerifyEmail handles GET /auth/verify-email?token=...
 // Validates the token, marks email as verified, and redirects to the frontend.
+//
+// Like ResetPassword, the token is consumed only after the work it authorizes
+// has succeeded, so a transient failure leaves the link usable for a retry.
 func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	ctx := c.Request.Context()
 	token := c.Query("token")
@@ -98,15 +102,6 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 		log.Error(ctx, "Email verification token validation failed",
 			zap.Error(err),
 			zap.String("token_prefix", token[:min(8, len(token))]))
-		c.Redirect(http.StatusFound, "/verify-email?verified=0")
-		return
-	}
-
-	// Consume the token
-	if err := h.emailTokenService.ConsumeToken(ctx, token); err != nil {
-		log.Error(ctx, "Failed to consume email verification token",
-			zap.Error(err),
-			zap.Int("user_id", userID))
 		c.Redirect(http.StatusFound, "/verify-email?verified=0")
 		return
 	}
@@ -126,6 +121,7 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 		log.Error(ctx, "Failed to check registration settings during email verification",
 			zap.Error(err),
 			zap.Int("user_id", userID))
+		h.consumeVerificationToken(ctx, token, userID)
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
@@ -133,6 +129,7 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 	if rs.ApprovalRequired {
 		log.Info(ctx, "Email verified, awaiting admin approval",
 			zap.Int("user_id", userID))
+		h.consumeVerificationToken(ctx, token, userID)
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
@@ -142,13 +139,27 @@ func (h *EmailTokenAPI) VerifyEmail(c *gin.Context) {
 		log.Error(ctx, "Failed to activate user after email verification",
 			zap.Error(err),
 			zap.Int("user_id", userID))
+		h.consumeVerificationToken(ctx, token, userID)
 		c.Redirect(http.StatusFound, "/verify-email?verified=1&pending=1")
 		return
 	}
 
+	h.consumeVerificationToken(ctx, token, userID)
+
 	log.Info(ctx, "Email verified and user activated",
 		zap.Int("user_id", userID))
 	c.Redirect(http.StatusFound, "/verify-email?verified=1")
+}
+
+// consumeVerificationToken burns a verification token that has already done its
+// job. A failure here is logged rather than surfaced: the email is verified, so
+// failing the redirect would tell the user their link is broken when it is not.
+func (h *EmailTokenAPI) consumeVerificationToken(ctx context.Context, token string, userID int) {
+	if err := h.emailTokenService.ConsumeToken(ctx, token); err != nil {
+		log.Error(ctx, "Failed to consume email verification token",
+			zap.Error(err),
+			zap.Int("user_id", userID))
+	}
 }
 
 // ResendVerificationRequest is the request body for resending a verification email.
@@ -265,6 +276,10 @@ type ResetPasswordRequest struct {
 
 // ResetPassword handles POST /auth/reset-password
 // Validates the token, consumes it, and sets the new password.
+//
+// The password is changed before the token is consumed: consuming first would
+// burn the one-shot token even when the reset fails, and the user would then be
+// stuck retrying a link that reports "Invalid or expired reset token" forever.
 func (h *EmailTokenAPI) ResetPassword(c *gin.Context) {
 	ctx := c.Request.Context()
 	var req ResetPasswordRequest
@@ -280,16 +295,18 @@ func (h *EmailTokenAPI) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	// Consume token
-	if err := h.emailTokenService.ConsumeToken(ctx, req.Token); err != nil {
-		JSONError(c, http.StatusInternalServerError, errors.New("Failed to consume reset token"))
-		return
-	}
-
 	// Reset password
 	if err := h.userService.ResetPassword(ctx, userID, req.Password); err != nil {
 		JSONError(c, http.StatusInternalServerError, errors.New("Failed to reset password"))
 		return
+	}
+
+	// Consume token. The password is already changed at this point, so a failure
+	// here must not fail the request: report success and let the token expire.
+	if err := h.emailTokenService.ConsumeToken(ctx, req.Token); err != nil {
+		log.Error(ctx, "Failed to consume reset token after a successful password reset",
+			zap.Error(err),
+			zap.Int("user_id", userID))
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password has been reset successfully."})

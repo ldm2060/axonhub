@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/samber/lo"
 	"go.uber.org/fx"
@@ -24,6 +23,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xcache"
 	"github.com/ldm2060/axonhub/internal/pkg/xtext"
+	"github.com/ldm2060/axonhub/internal/pkg/xtime"
 )
 
 type UserServiceParams struct {
@@ -886,32 +886,45 @@ func (s *UserService) RejectUser(ctx context.Context, userID int) error {
 }
 
 // MarkEmailVerified sets the email_verified_at timestamp for a user.
+// Called from the public verify-email handler, so it bypasses the Ent privacy
+// layer: the request context carries no principal.
 func (s *UserService) MarkEmailVerified(ctx context.Context, userID int) error {
-	_, err := s.entFromContext(ctx).User.UpdateOneID(userID).
-		SetEmailVerifiedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("mark email verified: %w", err)
-	}
-	s.invalidateUserCache(ctx, userID)
-	return nil
+	return authz.RunWithSystemBypassVoid(ctx, "user-mark-email-verified", func(bypassCtx context.Context) error {
+		_, err := s.entFromContext(bypassCtx).User.UpdateOneID(userID).
+			SetEmailVerifiedAt(xtime.UTCNow()).
+			Save(bypassCtx)
+		if err != nil {
+			return fmt.Errorf("mark email verified: %w", err)
+		}
+
+		s.invalidateUserCache(ctx, userID)
+
+		return nil
+	})
 }
 
 // ActivateUser activates a pending user with default scopes from registration settings.
+// Called from the public verify-email handler, so it bypasses the Ent privacy
+// layer: the request context carries no principal.
 func (s *UserService) ActivateUser(ctx context.Context, userID int) error {
-	rs, err := s.systemService.RegistrationSettings(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = s.entFromContext(ctx).User.UpdateOneID(userID).
-		SetStatus(user.StatusActivated).
-		SetScopes(rs.DefaultUserScopes).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("activate user: %w", err)
-	}
-	s.invalidateUserCache(ctx, userID)
-	return nil
+	return authz.RunWithSystemBypassVoid(ctx, "user-activate", func(bypassCtx context.Context) error {
+		rs, err := s.systemService.RegistrationSettings(bypassCtx)
+		if err != nil {
+			return err
+		}
+
+		_, err = s.entFromContext(bypassCtx).User.UpdateOneID(userID).
+			SetStatus(user.StatusActivated).
+			SetScopes(rs.DefaultUserScopes).
+			Save(bypassCtx)
+		if err != nil {
+			return fmt.Errorf("activate user: %w", err)
+		}
+
+		s.invalidateUserCache(ctx, userID)
+
+		return nil
+	})
 }
 
 // GetByEmail finds a user by their email address.
@@ -924,19 +937,26 @@ func (s *UserService) GetByEmail(ctx context.Context, email string) (*ent.User, 
 }
 
 // ResetPassword updates a user's password to a new hashed value.
+// Called from the public (unauthenticated) reset-password handler, so it must
+// bypass the Ent privacy layer: the request context carries no principal.
 func (s *UserService) ResetPassword(ctx context.Context, userID int, newPassword string) error {
-	hashed, err := HashPassword(newPassword)
-	if err != nil {
-		return err
-	}
-	_, err = s.entFromContext(ctx).User.UpdateOneID(userID).
-		SetPassword(hashed).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("reset password: %w", err)
-	}
-	s.invalidateUserCache(ctx, userID)
-	return nil
+	return authz.RunWithSystemBypassVoid(ctx, "user-reset-password", func(bypassCtx context.Context) error {
+		hashed, err := HashPassword(newPassword)
+		if err != nil {
+			return err
+		}
+
+		_, err = s.entFromContext(bypassCtx).User.UpdateOneID(userID).
+			SetPassword(hashed).
+			Save(bypassCtx)
+		if err != nil {
+			return fmt.Errorf("reset password: %w", err)
+		}
+
+		s.invalidateUserCache(ctx, userID)
+
+		return nil
+	})
 }
 
 // ListOwners returns all activated users who are owners.
