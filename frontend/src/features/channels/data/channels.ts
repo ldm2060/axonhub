@@ -34,6 +34,7 @@ import {
   ProxyConfig,
   ChannelPolicies,
   ChannelModelPrice,
+  ModelPrice,
   SaveChannelModelPriceInput,
   channelModelPriceSchema,
   TestChannelAPIKeysPayload,
@@ -110,6 +111,13 @@ const CREATE_CHANNEL_MUTATION = `
             enabled
           }
         }
+        scheduledDisable {
+          disableCron
+          disableTimezone
+          reenableMode
+          reenableCron
+          reenableTimezone
+        }
       }
       supportedModels
       autoSyncSupportedModels
@@ -137,6 +145,7 @@ const CREATE_CHANNEL_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        syncModelPrices
         quotaRoutingMode
         proxy {
           type
@@ -148,6 +157,7 @@ const CREATE_CHANNEL_MUTATION = `
         transformOptions {
           forceArrayInstructions
           forceArrayInputs
+          forceArrayStop
           replaceDeveloperRoleWithSystem
           reasoningEffortMapping { from to }
           downgradeMidConversationSystem
@@ -243,6 +253,13 @@ const DUPLICATE_CHANNEL_MUTATION = `
             enabled
           }
         }
+        scheduledDisable {
+          disableCron
+          disableTimezone
+          reenableMode
+          reenableCron
+          reenableTimezone
+        }
       }
       supportedModels
       autoSyncSupportedModels
@@ -270,6 +287,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        syncModelPrices
         quotaRoutingMode
         proxy {
           type
@@ -281,6 +299,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
         transformOptions {
           forceArrayInstructions
           forceArrayInputs
+          forceArrayStop
           replaceDeveloperRoleWithSystem
           reasoningEffortMapping { from to }
           downgradeMidConversationSystem
@@ -376,6 +395,13 @@ const BULK_CREATE_CHANNELS_MUTATION = `
             enabled
           }
         }
+        scheduledDisable {
+          disableCron
+          disableTimezone
+          reenableMode
+          reenableCron
+          reenableTimezone
+        }
       }
       supportedModels
       autoSyncSupportedModels
@@ -403,6 +429,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        syncModelPrices
         quotaRoutingMode
         proxy {
           type
@@ -414,6 +441,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         transformOptions {
           forceArrayInstructions
           forceArrayInputs
+          forceArrayStop
           replaceDeveloperRoleWithSystem
           reasoningEffortMapping { from to }
           downgradeMidConversationSystem
@@ -508,6 +536,13 @@ const CHANNEL_FIELDS_FRAGMENT = `
             enabled
           }
         }
+        scheduledDisable {
+          disableCron
+          disableTimezone
+          reenableMode
+          reenableCron
+          reenableTimezone
+        }
       }
       supportedModels
       autoSyncSupportedModels
@@ -535,6 +570,7 @@ const CHANNEL_FIELDS_FRAGMENT = `
         hideOriginalModels
         hideMappedModels
         lowercaseModelId
+        syncModelPrices
         quotaRoutingMode
         proxy {
           type
@@ -546,6 +582,7 @@ const CHANNEL_FIELDS_FRAGMENT = `
         transformOptions {
           forceArrayInstructions
           forceArrayInputs
+          forceArrayStop
           replaceDeveloperRoleWithSystem
           reasoningEffortMapping { from to }
           downgradeMidConversationSystem
@@ -808,10 +845,12 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
           hideOriginalModels
           hideMappedModels
           lowercaseModelId
+          syncModelPrices
           quotaRoutingMode
           transformOptions {
             forceArrayInstructions
             forceArrayInputs
+            forceArrayStop
             replaceDeveloperRoleWithSystem
             reasoningEffortMapping { from to }
             downgradeMidConversationSystem
@@ -1069,10 +1108,12 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
           hideOriginalModels
           hideMappedModels
           lowercaseModelId
+          syncModelPrices
           quotaRoutingMode
           transformOptions {
             forceArrayInstructions
             forceArrayInputs
+            forceArrayStop
             replaceDeveloperRoleWithSystem
             reasoningEffortMapping { from to }
             downgradeMidConversationSystem
@@ -1157,6 +1198,13 @@ const CHANNEL_AUTO_DISABLE_COPY_SOURCES_QUERY = `
           disableUntilCron
           disableUntilTimezone
         }
+        scheduledDisable {
+          disableCron
+          disableTimezone
+          reenableMode
+          reenableCron
+          reenableTimezone
+        }
       }
     }
   }
@@ -1183,6 +1231,13 @@ const BULK_UPDATE_CHANNEL_AUTO_DISABLE_MUTATION = `
             disableUntilCron
             disableUntilTimezone
           }
+          scheduledDisable {
+            disableCron
+            disableTimezone
+            reenableMode
+            reenableCron
+            reenableTimezone
+          }
         }
       }
     }
@@ -1194,8 +1249,30 @@ const FETCH_MODELS_QUERY = `
     fetchModels(input: $input) {
       models {
         id
+        pricing {
+          items {
+            itemCode
+            pricing {
+              mode
+              usagePerUnit
+            }
+            promptWriteCacheVariants {
+              variantCode
+              pricing {
+                mode
+                usagePerUnit
+              }
+            }
+          }
+        }
       }
       error
+      fallback
+      codexCatalogVersion {
+        version
+        source
+      }
+      codexCatalogSkippedReason
     }
   }
 `;
@@ -1286,6 +1363,13 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
                 enabled
               }
             }
+            scheduledDisable {
+              disableCron
+              disableTimezone
+              reenableMode
+              reenableCron
+              reenableTimezone
+            }
           }
           credentials {
             apiKey
@@ -1332,6 +1416,7 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             hideOriginalModels
             hideMappedModels
             lowercaseModelId
+            syncModelPrices
             quotaRoutingMode
             bodyOverrideOperations {
               op
@@ -1371,6 +1456,7 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             transformOptions {
               forceArrayInstructions
               forceArrayInputs
+              forceArrayStop
               replaceDeveloperRoleWithSystem
               reasoningEffortMapping { from to }
               downgradeMidConversationSystem
@@ -1521,6 +1607,19 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
           }
 `;
 
+const CHANNEL_QUERY_ROUTING_STATUS_SELECTION = `
+           settings {
+             quotaRoutingMode
+             syncModelPrices
+           }
+           providerQuotaStatus {
+             status
+             ready
+             quotaData
+             providerType
+           }
+`;
+
 const CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION = `
           supportedModels
           allModelEntries {
@@ -1546,6 +1645,7 @@ const CHANNEL_QUERY_PROXY_SELECTION = `
           }
         }
             quotaRoutingMode
+            syncModelPrices
             proxy {
               type
               url
@@ -1625,6 +1725,7 @@ export function buildChannelNodeSelection(columnVisibility?: ChannelListColumnVi
 
   return [
     CHANNEL_QUERY_LIST_NODE_BASE_SELECTION,
+    CHANNEL_QUERY_ROUTING_STATUS_SELECTION,
     isChannelColumnVisible(columnVisibility, 'supportedModels') ? CHANNEL_QUERY_SUPPORTED_MODELS_SELECTION : '',
     isChannelColumnVisible(columnVisibility, 'tags') ? CHANNEL_QUERY_TAGS_SELECTION : '',
     isChannelColumnVisible(columnVisibility, 'proxy') ? CHANNEL_QUERY_PROXY_SELECTION : '',
@@ -2577,14 +2678,33 @@ const SYNC_CHANNEL_MODELS_MUTATION = `
       channelID
       supportedModels
       manualModels
+      fallback
+      codexCatalogVersion {
+        version
+        source
+      }
+      codexCatalogSkippedReason
     }
   }
 `;
+
+const codexCatalogVersionSchema = z.object({
+  version: z.string(),
+  source: z.enum(['channel_version', 'channel_user_agent', 'npm', 'cache', 'builtin']),
+});
+
+export type CodexCatalogVersion = z.infer<typeof codexCatalogVersionSchema>;
+
+const codexCatalogSkippedReasonSchema = z.enum(['no_credentials', 'unsupported_url']);
+export type CodexCatalogSkippedReason = z.infer<typeof codexCatalogSkippedReasonSchema>;
 
 const syncChannelModelsPayloadSchema = z.object({
   channelID: z.string(),
   supportedModels: z.array(z.string()),
   manualModels: z.array(z.string()),
+  fallback: z.boolean(),
+  codexCatalogVersion: codexCatalogVersionSchema.nullable(),
+  codexCatalogSkippedReason: codexCatalogSkippedReasonSchema.nullable(),
 });
 
 export function useSyncChannelModels() {
@@ -2602,9 +2722,23 @@ export function useSyncChannelModels() {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: ({ fallback, codexCatalogVersion, codexCatalogSkippedReason }) => {
+      if (codexCatalogSkippedReason) {
+        toast.info(t(`channels.messages.codexCatalogSyncSkipped.${codexCatalogSkippedReason}`));
+        return;
+      }
+      if (fallback) {
+        toast.warning(t('channels.messages.codexCatalogSyncFallback'));
+        return;
+      }
+      const description = codexCatalogVersion
+        ? t('channels.messages.codexCatalogVersion', {
+            version: codexCatalogVersion.version,
+            source: t(`channels.messages.codexCatalogVersionSources.${codexCatalogVersion.source}`),
+          })
+        : undefined;
       queryClient.invalidateQueries({ queryKey: ['channels'] });
-      toast.success(t('channels.messages.syncModelsSuccess'));
+      toast.success(t('channels.messages.syncModelsSuccess'), { description });
     },
   });
 }
@@ -2625,8 +2759,11 @@ export function useFetchModels() {
       try {
         const data = await graphqlRequest<{
           fetchModels: {
-            models: Array<{ id: string }>;
+            models: Array<{ id: string; pricing?: ModelPrice | null }>;
             error?: string | null;
+            fallback: boolean;
+            codexCatalogVersion: CodexCatalogVersion | null;
+            codexCatalogSkippedReason: CodexCatalogSkippedReason | null;
           };
         }>(FETCH_MODELS_QUERY, { input });
         return data.fetchModels;
@@ -2635,10 +2772,10 @@ export function useFetchModels() {
         throw error;
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       if (data.error) {
         toast.error(t('common.errors.internalServerError'));
-      } else {
+      } else if (input.channelType !== 'codex' || !data.fallback) {
         const count = data.models.length;
         if (count > 100) {
           toast.success(t('channels.messages.fetchModelsSuccessLarge', { count }));

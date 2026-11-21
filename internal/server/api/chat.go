@@ -19,6 +19,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/llm"
@@ -323,9 +324,20 @@ func (handlers *ChatCompletionHandlers) writeCommittedProcessError(c *gin.Contex
 }
 
 func (handlers *ChatCompletionHandlers) ChatCompletionWithRequest(c *gin.Context, genericReq *httpclient.Request) {
+	if genericReq != nil {
+		// Narrow the total LLM budget now that the response mode is known, then
+		// keep the handler-lifetime cancellation so a dying downstream write
+		// tears down the upstream stream too.
+		cancelTimeout := middleware.SelectLLMTimeout(c, requestStreams(genericReq))
+		defer cancelTimeout()
+	}
+
 	ctx, cancelStream := context.WithCancel(c.Request.Context())
 	defer cancelStream()
 	c.Request = c.Request.WithContext(ctx)
+	if genericReq != nil && genericReq.RawRequest != nil {
+		genericReq.RawRequest = genericReq.RawRequest.WithContext(c.Request.Context())
+	}
 	started := time.Now()
 
 	if genericReq == nil || len(genericReq.Body) == 0 {

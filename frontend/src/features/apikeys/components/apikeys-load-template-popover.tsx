@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useApiKeyProfileTemplates, useLoadApiKeyProfileTemplate, useDeleteApiKeyProfileTemplate } from '../data/apikeys';
 import type { ApiKeyProfileTemplate, ApiKeyProfile } from '../data/schema';
 
@@ -162,7 +161,7 @@ export function ApiKeyLoadTemplatePopover({ apiKeyID, projectID, portalContainer
           )}
 
           {!isEmpty && !isLoadingTemplates && (
-            <ScrollArea className='max-h-[280px]'>
+            <div className='max-h-[280px] overflow-y-auto'>
               <div className='py-1'>
                 {templateList.map((template) => (
                   <TemplateItem
@@ -175,7 +174,7 @@ export function ApiKeyLoadTemplatePopover({ apiKeyID, projectID, portalContainer
                   />
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </PopoverContent>
       </Popover>

@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { TagsAutocompleteInput } from '@/components/ui/tags-autocomplete-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUpdateChannel } from '../data/channels';
@@ -33,6 +34,7 @@ interface Props {
 const createModelMappingFormSchema = (supportedModels: string[]) =>
   z.object({
     extraModelPrefix: z.string().optional(),
+    syncModelPrices: z.boolean().optional(),
     modelMappings: z
       .array(
         z.object({
@@ -178,6 +180,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
     resolver: zodResolver(modelMappingFormSchema),
     defaultValues: {
       extraModelPrefix: currentRow.settings?.extraModelPrefix || '',
+      syncModelPrices: currentRow.settings?.syncModelPrices || false,
       modelMappings: currentRow.settings?.modelMappings || [],
       autoTrimedModelPrefixes: currentRow.settings?.autoTrimedModelPrefixes || [],
       autoTrimedModelSuffixes: currentRow.settings?.autoTrimedModelSuffixes || [],
@@ -333,6 +336,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
     setNewMapping({ from: '', to: '' });
     form.reset({
       extraModelPrefix: nextExtraModelPrefix,
+      syncModelPrices: currentRow.settings?.syncModelPrices || false,
       modelMappings: nextMappings,
       autoTrimedModelPrefixes: currentRow.settings?.autoTrimedModelPrefixes || [],
       autoTrimedModelSuffixes: currentRow.settings?.autoTrimedModelSuffixes || [],
@@ -417,6 +421,7 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
     try {
       const modelNameSettings = {
         extraModelPrefix: values.extraModelPrefix,
+        syncModelPrices: values.syncModelPrices,
         modelMappings: values.modelMappings,
         autoTrimedModelPrefixes: values.autoTrimedModelPrefixes || [],
         autoTrimedModelSuffixes: values.autoTrimedModelSuffixes || [],
@@ -521,6 +526,23 @@ export function ChannelsModelMappingDialog({ open, onOpenChange, currentRow }: P
                       {form.formState.errors.extraModelPrefix?.message && (
                         <p className='text-destructive mt-2 text-sm'>{form.formState.errors.extraModelPrefix.message.toString()}</p>
                       )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className='text-lg'>{t('channels.dialogs.settings.syncModelPrices.title')}</CardTitle>
+                      <CardDescription>{t('channels.dialogs.settings.syncModelPrices.description')}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className='flex items-center justify-end'>
+                        <Switch
+                          id='syncModelPrices'
+                          aria-label={t('channels.dialogs.settings.syncModelPrices.title')}
+                          checked={form.watch('syncModelPrices') ?? false}
+                          onCheckedChange={(checked) => form.setValue('syncModelPrices', checked)}
+                        />
+                      </div>
                     </CardContent>
                   </Card>
 

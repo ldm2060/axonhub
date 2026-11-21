@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { appPath } from '@/lib/app-path';
 import AuthLayout from '../auth-layout';
 import TwoColumnAuth from '../components/two-column-auth';
 import { useSignUpAllowed } from '../data/auth';

@@ -28,6 +28,7 @@ interface Props {
 const transformOptionsFormSchema = z.object({
   forceArrayInstructions: z.boolean().optional(),
   forceArrayInputs: z.boolean().optional(),
+  forceArrayStop: z.boolean().optional(),
   replaceDeveloperRoleWithSystem: z.boolean().optional(),
   downgradeMidConversationSystem: z.boolean().optional(),
   reasoningEffortMapping: z
@@ -60,6 +61,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
     defaultValues: {
       forceArrayInstructions: currentRow.settings?.transformOptions?.forceArrayInstructions || false,
       forceArrayInputs: currentRow.settings?.transformOptions?.forceArrayInputs || false,
+      forceArrayStop: currentRow.settings?.transformOptions?.forceArrayStop || false,
       replaceDeveloperRoleWithSystem: currentRow.settings?.transformOptions?.replaceDeveloperRoleWithSystem || false,
       downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem || false,
       reasoningEffortMapping: currentRow.settings?.transformOptions?.reasoningEffortMapping || [],
@@ -75,6 +77,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
       form.reset({
         forceArrayInstructions: currentRow.settings?.transformOptions?.forceArrayInstructions || false,
         forceArrayInputs: currentRow.settings?.transformOptions?.forceArrayInputs || false,
+        forceArrayStop: currentRow.settings?.transformOptions?.forceArrayStop || false,
         replaceDeveloperRoleWithSystem: currentRow.settings?.transformOptions?.replaceDeveloperRoleWithSystem || false,
         downgradeMidConversationSystem: currentRow.settings?.transformOptions?.downgradeMidConversationSystem || false,
         reasoningEffortMapping: currentRow.settings?.transformOptions?.reasoningEffortMapping || [],
@@ -110,6 +113,7 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
       const transformOptions: TransformOptions = {
         forceArrayInstructions: values.forceArrayInstructions,
         forceArrayInputs: values.forceArrayInputs,
+        forceArrayStop: values.forceArrayStop,
         replaceDeveloperRoleWithSystem: values.replaceDeveloperRoleWithSystem,
         downgradeMidConversationSystem: values.downgradeMidConversationSystem,
       };
@@ -193,6 +197,27 @@ export function ChannelsTransformOptionsDialog({ open, onOpenChange, currentRow 
                           </FormLabel>
                           <p className='text-muted-foreground text-xs'>
                             {t('channels.dialogs.fields.transformOptions.forceArrayInputs.description')}
+                          </p>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='forceArrayStop'
+                    render={({ field }) => (
+                      <FormItem className='flex items-center gap-2'>
+                        <FormControl>
+                          <Checkbox checked={field.value || false} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <div className='space-y-0.5'>
+                          <FormLabel className='cursor-pointer text-sm font-normal'>
+                            {t('channels.dialogs.fields.transformOptions.forceArrayStop.label')}
+                          </FormLabel>
+                          <p className='text-muted-foreground text-xs'>
+                            {t('channels.dialogs.fields.transformOptions.forceArrayStop.description')}
                           </p>
                         </div>
                         <FormMessage />

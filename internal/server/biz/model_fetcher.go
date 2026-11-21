@@ -200,13 +200,30 @@ type FetchModelsInput struct {
 }
 
 // FetchModelsResult represents the result of fetching models.
+// CodexCatalogVersion is set only when Models came from a catalog queried with it.
 type FetchModelsResult struct {
 	Models []ModelIdentify
 	Error  *string
 	// KimiCodeModels carries normalized protocol metadata for the channel sync
 	// persistence path. It remains internal to the service boundary.
-	KimiCodeModels []kimicode.Model
-	Fallback       bool
+	KimiCodeModels            []kimicode.Model
+	Fallback                  bool
+	CodexCatalogVersion       *CodexCatalogVersion
+	CodexCatalogSkippedReason *string
+}
+
+const (
+	codexCatalogNoCredentials  = "no_credentials"
+	codexCatalogUnsupportedURL = "unsupported_url"
+)
+
+func staticModelResult(models []ModelIdentify, typ channel.Type, codexSkippedReason string) *FetchModelsResult {
+	result := &FetchModelsResult{Models: models}
+	if typ == channel.TypeCodex {
+		result.Fallback = true
+		result.CodexCatalogSkippedReason = &codexSkippedReason
+	}
+	return result
 }
 
 var qiniuFallbackModels = []ModelIdentify{{ID: "deepseek-v3"}}
@@ -427,7 +444,7 @@ func (f *ModelFetcher) fetchClineRecommendedModels(ctx context.Context, httpClie
 	usedFallback := !hasUsableClineModel(response.ClinePass)
 	if usedFallback {
 		fallbackEntries := lo.Map(fallback, func(model ModelIdentify, _ int) clineRecommendedModel {
-			return clineRecommendedModel(model)
+			return clineRecommendedModel{ID: model.ID}
 		})
 		models = appendUniqueClineModels(models, seen, fallbackEntries)
 	}
@@ -474,6 +491,11 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 		return f.fetchZCodeModels(ctx, input)
 	}
 
+	return f.fetchModels(ctx, input, true)
+}
+
+//nolint:maintidx // Handles every channel type in one pass and is hard to split.
+func (f *ModelFetcher) fetchModels(ctx context.Context, input FetchModelsInput, refreshCodexVersion bool) (*FetchModelsResult, error) {
 	if input.ChannelType == channel.TypeAntigravity.String() {
 		models, err := f.fetchAntigravityModels(ctx, input)
 		if err != nil {
@@ -535,7 +557,7 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 			if ch.Type == channel.TypeCodex && codex.SupportsModelCatalog(ch.BaseURL) {
 				codexChannel = ch
 			} else if models := f.getDefaultModelsByType(ctx, ch.Type); models != nil {
-				return &FetchModelsResult{Models: models}, nil
+				return staticModelResult(models, ch.Type, codexCatalogUnsupportedURL), nil
 			}
 		}
 
@@ -572,14 +594,7 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 		if ch.Settings != nil {
 			proxyConfig = ch.Settings.Proxy
 
-			// The new schema field takes precedence; the legacy OverrideHeaders list is
-			// converted when the new field is absent (same precedence as
-			// (*Channel).GetHeaderOverrideOperations).
-			if ch.Settings.HeaderOverrideOperations != nil {
-				headerOverrideOps = ch.Settings.HeaderOverrideOperations
-			} else {
-				headerOverrideOps = objects.HeaderEntriesToOverrideOperations(ch.Settings.OverrideHeaders)
-			}
+			headerOverrideOps = channelHeaderOverrideOperations(ch)
 		}
 	}
 
@@ -594,7 +609,7 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 		}
 		if isOfficialOnlyType(channelType) {
 			if models := f.getDefaultModelsByType(ctx, channelType); models != nil {
-				return &FetchModelsResult{Models: models}, nil
+				return staticModelResult(models, channelType, codexCatalogNoCredentials), nil
 			}
 		}
 		return &FetchModelsResult{
@@ -610,7 +625,7 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 				Credentials: objects.ChannelCredentials{APIKey: apiKey},
 			}
 		} else if models := f.getDefaultModelsByType(ctx, channelType); models != nil {
-			return &FetchModelsResult{Models: models}, nil
+			return staticModelResult(models, channelType, codexCatalogUnsupportedURL), nil
 		}
 	}
 
@@ -662,20 +677,10 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 		httpClient = httpClient.WithRejectHTTPSDowngrade()
 	}
 
-	parse := f.parseModelsResponse
-	if codexChannel != nil {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
-		defer cancel()
-		var err error
-		req, err = f.prepareCodexModelsRequest(ctx, codexChannel, httpClient)
-		if err != nil {
-			return &FetchModelsResult{Models: f.getDefaultModelsByType(ctx, channel.TypeCodex), Fallback: true}, nil
-		}
-		parse = parseCodexModels
-	} else if thirdPartyCodexCatalog {
+	var catalogBaseURL string
+	if thirdPartyCodexCatalog {
 		httpClient = httpClient.WithRejectRedirects()
-		catalogBaseURL := httpModelsBaseURL(input.BaseURL)
+		catalogBaseURL = httpModelsBaseURL(input.BaseURL)
 		parsedCatalogURL, err := url.Parse(strings.TrimRight(catalogBaseURL, "/#"))
 		if err != nil || (parsedCatalogURL.Scheme != "http" && parsedCatalogURL.Scheme != "https") || parsedCatalogURL.Host == "" {
 			return &FetchModelsResult{
@@ -683,9 +688,34 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 				Error:  lo.ToPtr("failed to prepare Codex models request: Codex catalog URL must use HTTP or HTTPS"),
 			}, nil
 		}
+	}
+
+	var catalogVersion *CodexCatalogVersion
+	if codexChannel != nil || thirdPartyCodexCatalog {
+		if refreshCodexVersion && f.channelService != nil {
+			f.channelService.refreshCodexRelease(ctx)
+		}
+		version := f.channelService.resolveCodexClientVersion(headerOverrideOps)
+		catalogVersion = &version
+	}
+	parse := func(body []byte) ([]ModelIdentify, error) {
+		return f.parseModelsResponse(channelType, body)
+	}
+	if codexChannel != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+		var err error
+		req, err = f.prepareCodexModelsRequest(ctx, codexChannel, httpClient, catalogVersion.Version)
+		if err != nil {
+			return &FetchModelsResult{Models: f.getDefaultModelsByType(ctx, channel.TypeCodex), Fallback: true}, nil
+		}
+		parse = parseCodexModels
+	} else if thirdPartyCodexCatalog {
+		var err error
 		req, err = codex.ModelsRequest(ctx, oauth.NewAPIKeyTokenProvider(func(context.Context) string {
 			return apiKey
-		}), catalogBaseURL)
+		}), catalogBaseURL, catalogVersion.Version)
 		if err != nil {
 			return &FetchModelsResult{Models: []ModelIdentify{}, Error: lo.ToPtr(fmt.Sprintf("failed to prepare Codex models request: %v", err))}, nil
 		}
@@ -707,6 +737,13 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 	// Channel header overrides win over the standard auth headers, matching the
 	// chat/completion path.
 	ApplyModelFetchHeaderOverrides(req.Headers, headerOverrideOps)
+	if catalogVersion != nil {
+		// Keep the query and version header aligned, including after copy or rename.
+		// A deleted header remains absent.
+		if _, ok := req.Headers["Version"]; ok {
+			req.Headers.Set("Version", catalogVersion.Version)
+		}
+	}
 
 	if channelType.IsGemini() {
 		models, err := f.fetchGeminiModels(ctx, httpClient, req)
@@ -756,8 +793,9 @@ func (f *ModelFetcher) FetchModels(ctx context.Context, input FetchModelsInput) 
 	}
 
 	return &FetchModelsResult{
-		Models: models,
-		Error:  nil,
+		Models:              models,
+		Error:               nil,
+		CodexCatalogVersion: catalogVersion,
 	}, nil
 }
 
@@ -893,7 +931,7 @@ func (f *ModelFetcher) fetchZCodeModels(ctx context.Context, input FetchModelsIn
 		return fallback(fmt.Sprintf("models status %d: %s", resp.StatusCode, string(resp.Body))), nil
 	}
 
-	models, err := f.parseModelsResponse(resp.Body)
+	models, err := f.parseModelsResponse(channel.TypeZcode, resp.Body)
 	if err != nil {
 		return fallback(fmt.Sprintf("parse models response: %v", err)), nil
 	}
@@ -930,7 +968,7 @@ func fetchModels(
 	return lo.Uniq(models), nil
 }
 
-func (f *ModelFetcher) prepareCodexModelsRequest(ctx context.Context, ch *ent.Channel, client *httpclient.HttpClient) (*httpclient.Request, error) {
+func (f *ModelFetcher) prepareCodexModelsRequest(ctx context.Context, ch *ent.Channel, client *httpclient.HttpClient, version string) (*httpclient.Request, error) {
 	creds, err := ch.Credentials.ResolveOAuthCredentials()
 	if err != nil {
 		return nil, err
@@ -939,7 +977,7 @@ func (f *ModelFetcher) prepareCodexModelsRequest(ctx context.Context, ch *ent.Ch
 	if ch.ID != 0 {
 		params.OnRefreshed = f.channelService.onTokenRefreshed(ch)
 	}
-	return codex.ModelsRequest(ctx, codex.NewTokenProvider(params), ch.BaseURL)
+	return codex.ModelsRequest(ctx, codex.NewTokenProvider(params), ch.BaseURL, version)
 }
 
 func parseCodexModels(body []byte) ([]ModelIdentify, error) {
@@ -990,7 +1028,7 @@ func (f *ModelFetcher) fetchGeminiModels(ctx context.Context, httpClient *httpcl
 
 		var page geminiListModelsResponse
 		if err := json.Unmarshal(resp.Body, &page); err != nil {
-			models, parseErr := f.parseModelsResponse(resp.Body)
+			models, parseErr := f.parseModelsResponse(channel.TypeGemini, resp.Body)
 			if parseErr != nil {
 				return nil, fmt.Errorf("failed to parse models response: paginated unmarshal: %w; fallback parse: %w", err, parseErr)
 			}
@@ -1211,7 +1249,7 @@ type GeminiModelResponse struct {
 }
 
 type commonModelsResponse struct {
-	Data   []ModelIdentify       `json:"data"`
+	Data   []json.RawMessage     `json:"data"`
 	Models []GeminiModelResponse `json:"models"`
 }
 
@@ -1234,28 +1272,34 @@ func ExtractJSONArray(body []byte, target any) error {
 }
 
 // parseModelsResponse parses the models response from the provider API.
-func (f *ModelFetcher) parseModelsResponse(body []byte) ([]ModelIdentify, error) {
-	// First, try to parse as direct array (e.g., GitHub Models response)
-	var directArray []ModelIdentify
-	if err := json.Unmarshal(body, &directArray); err == nil && len(directArray) > 0 {
-		return directArray, nil
+func (f *ModelFetcher) parseModelsResponse(channelType channel.Type, body []byte) ([]ModelIdentify, error) {
+	rawItems, geminiModels, err := extractRawModelResponse(body)
+	if err != nil {
+		return nil, err
 	}
 
-	var response commonModelsResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		if err := ExtractJSONArray(body, &response.Data); err != nil {
-			return nil, fmt.Errorf("failed to parse response: %w", err)
+	models := make([]ModelIdentify, 0, len(rawItems)+len(geminiModels))
+	for _, rawItem := range rawItems {
+		var model struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(rawItem, &model); err != nil {
+			return nil, fmt.Errorf("failed to parse model: %w", err)
+		}
+		models = append(models, ModelIdentify{ID: model.ID})
+	}
+
+	for _, model := range geminiModels {
+		// remove "models/" prefix for gemini.
+		models = append(models, ModelIdentify{ID: strings.TrimPrefix(model.Name, "models/")})
+	}
+
+	if supportsEndpointPricing(channelType) {
+		prices := extractModelPricingFromRawItems(rawItems, models[:len(rawItems)])
+		for i := range models {
+			models[i].Pricing = prices[models[i].ID]
 		}
 	}
 
-	if len(response.Models) > 0 {
-		for _, model := range response.Models {
-			// remove "models/" prefix for gemini.
-			response.Data = append(response.Data, ModelIdentify{
-				ID: strings.TrimPrefix(model.Name, "models/"),
-			})
-		}
-	}
-
-	return response.Data, nil
+	return models, nil
 }

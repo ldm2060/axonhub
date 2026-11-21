@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/contexts"
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/enttest"
-	"github.com/ldm2060/axonhub/internal/ent/privacy"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
@@ -21,7 +21,7 @@ func TestProjectOwnerCanReadMemberPersonalKeyRequests(t *testing.T) {
 	client := enttest.NewEntClient(t, "sqlite3", "file:project-owner-personal-key-requests?mode=memory&_fk=1")
 	defer client.Close()
 
-	setupCtx := privacy.DecisionContext(context.Background(), privacy.Allow)
+	setupCtx := authz.WithTestBypass(t.Context())
 	project := client.Project.Create().SetName("project").SaveX(setupCtx)
 	owner := client.User.Create().SetEmail("owner@example.com").SetPassword("password").SaveX(setupCtx)
 	creator := client.User.Create().SetEmail("creator@example.com").SetPassword("password").SaveX(setupCtx)

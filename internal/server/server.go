@@ -79,15 +79,6 @@ type Server struct {
 	lifetime         *lifecycle.Manager
 }
 
-func (srv *Server) newHTTPServer(addr string) *http.Server {
-	return &http.Server{
-		Addr:         addr,
-		Handler:      srv.Engine,
-		ReadTimeout:  srv.Config.ReadTimeout,
-		WriteTimeout: 0,
-	}
-}
-
 func (srv *Server) Run() error {
 	log.Info(context.Background(), "run server",
 		log.String("name", srv.Config.Name),
@@ -95,7 +86,12 @@ func (srv *Server) Run() error {
 		log.Int("port", srv.Config.Port),
 	)
 	addr := listenAddr(srv.Config.Host, srv.Config.Port)
-	srv.server = srv.newHTTPServer(addr)
+	srv.server = &http.Server{
+		Addr:         addr,
+		Handler:      mountBasePath(srv.Config.BasePath, srv.Engine),
+		ReadTimeout:  srv.Config.ReadTimeout,
+		WriteTimeout: srv.Config.writeTimeout(),
+	}
 	srv.addr = addr
 
 	err := srv.server.ListenAndServe()

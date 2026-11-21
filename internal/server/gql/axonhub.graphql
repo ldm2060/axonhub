@@ -72,6 +72,7 @@ type ReasoningEffortMapping {
 type TransformOptions {
   forceArrayInstructions: Boolean!
   forceArrayInputs: Boolean!
+  forceArrayStop: Boolean!
   replaceDeveloperRoleWithSystem: Boolean!
   reasoningEffortMapping: [ReasoningEffortMapping!]
   downgradeMidConversationSystem: Boolean
@@ -81,6 +82,9 @@ type SyncChannelModelsPayload {
   channelID: ID!
   supportedModels: [String!]!
   manualModels: [String!]!
+  fallback: Boolean!
+  codexCatalogVersion: CodexCatalogVersion
+  codexCatalogSkippedReason: String
 }
 
 input ReasoningEffortMappingInput {
@@ -91,6 +95,7 @@ input ReasoningEffortMappingInput {
 input TransformOptionsInput {
   forceArrayInstructions: Boolean
   forceArrayInputs: Boolean
+  forceArrayStop: Boolean
   replaceDeveloperRoleWithSystem: Boolean
   reasoningEffortMapping: [ReasoningEffortMappingInput!]
   downgradeMidConversationSystem: Boolean
@@ -221,6 +226,7 @@ type ChannelSettings {
   bodyOverrideOperations: [OverrideOperation!]! @goField(forceResolver: true)
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
+  syncModelPrices: Boolean
   rateLimit: ChannelRateLimit
   enableSameChannelRetry: Boolean
   retryableStatusCodes: [Int!]
@@ -343,11 +349,28 @@ input APIKeyAutoDisableRuleInput {
   disableUntilTimezone: String
 }
 
+type ChannelScheduledDisable {
+  disableCron: String!
+  disableTimezone: String
+  reenableMode: String
+  reenableCron: String
+  reenableTimezone: String
+}
+
+input ChannelScheduledDisableInput {
+  disableCron: String!
+  disableTimezone: String
+  reenableMode: String
+  reenableCron: String
+  reenableTimezone: String
+}
+
 type ChannelPolicies {
   stream: CapabilityPolicy
   availability: ChannelAvailability
   apiKeyAutoDisableMode: APIKeyAutoDisableMode
   apiKeyAutoDisableRules: [APIKeyAutoDisableRule!]
+  scheduledDisable: ChannelScheduledDisable
 }
 
 input ChannelPoliciesInput {
@@ -355,6 +378,7 @@ input ChannelPoliciesInput {
   availability: ChannelAvailabilityInput
   apiKeyAutoDisableMode: APIKeyAutoDisableMode
   apiKeyAutoDisableRules: [APIKeyAutoDisableRuleInput!]
+  scheduledDisable: ChannelScheduledDisableInput
 }
 
 input ModelMappingInput {
@@ -376,6 +400,7 @@ input ChannelSettingsInput {
   bodyOverrideOperations: [OverrideOperationInput!]
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
+  syncModelPrices: Boolean
   rateLimit: ChannelRateLimitInput
   enableSameChannelRetry: Boolean
   retryableStatusCodes: [Int!]
@@ -420,6 +445,7 @@ input UpdateChannelSettingsInput {
   bodyOverrideOperations: [OverrideOperationInput!]
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
+  syncModelPrices: Boolean
   rateLimit: ChannelRateLimitInput
   retryableStatusCodes: [Int!]
   retryableErrorPatterns: [RetryableErrorPatternInput!]
@@ -808,10 +834,19 @@ input FetchModelsInput {
 type FetchModelsPayload {
   models: [ModelIdentify!]!
   error: String
+  fallback: Boolean!
+  codexCatalogVersion: CodexCatalogVersion
+  codexCatalogSkippedReason: String
+}
+
+type CodexCatalogVersion {
+  version: String!
+  source: String!
 }
 
 type ModelIdentify {
   id: String!
+  pricing: ModelPrice
 }
 
 type ModelIdentityWithStatus {

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { apiRequest } from '@/lib/api-client';
+import { appPath } from '@/lib/app-path';
 import { copyTextToClipboard } from '@/lib/clipboard';
 import { extractNumberIDAsNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,7 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
           roleID: extractNumberIDAsNumber(values.roleID),
         },
       });
-      const url = new URL('/invite', window.location.origin);
+      const url = new URL(appPath('/invite'), window.location.origin);
       url.searchParams.set('token', response.token);
       setInviteLink(url.toString());
       toast.success(t('users.messages.invitationCreated'));

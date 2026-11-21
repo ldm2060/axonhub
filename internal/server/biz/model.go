@@ -1062,7 +1062,8 @@ func findUnassociatedChannels(channels []*ent.Channel, associations []*objects.M
 }
 
 type ModelIdentify struct {
-	ID string `json:"id"`
+	ID      string              `json:"id"`
+	Pricing *objects.ModelPrice `json:"pricing,omitempty"`
 }
 
 type UnassociatedChannel struct {

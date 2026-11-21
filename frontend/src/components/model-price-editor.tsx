@@ -11,7 +11,8 @@ import { Separator } from '@/components/ui/separator';
 
 const priceItemCodes = ['prompt_tokens', 'completion_tokens', 'prompt_cached_tokens', 'prompt_write_cached_tokens'] as const;
 const promptWriteCacheVariantCodes = ['five_min', 'one_hour'] as const;
-type PricingMode = 'flat_fee' | 'usage_per_unit' | 'usage_tiered' | 'usage_volume';
+// An empty mode marks cache-write items whose 5m/1h variants carry the rates (no aggregate).
+type PricingMode = '' | 'flat_fee' | 'usage_per_unit' | 'usage_tiered' | 'usage_volume';
 
 type PriceEditorFormValues = {
   prices: Array<{
@@ -20,7 +21,7 @@ type PriceEditorFormValues = {
       items: Array<{
         itemCode: (typeof priceItemCodes)[number];
         pricing: {
-          mode: PricingMode;
+          mode?: PricingMode | null;
           flatFee?: string | null;
           usagePerUnit?: string | null;
           usageTiered?: {
@@ -33,7 +34,8 @@ type PriceEditorFormValues = {
         promptWriteCacheVariants?: Array<{
           variantCode: (typeof promptWriteCacheVariantCodes)[number];
           pricing: {
-            mode: PricingMode;
+            // Variants must always carry a real mode; the empty mode is aggregate-only.
+            mode: Exclude<PricingMode, ''>;
             flatFee?: string | null;
             usagePerUnit?: string | null;
             usageTiered?: {

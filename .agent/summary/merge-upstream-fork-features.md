@@ -1,8 +1,65 @@
-# Fork-only feature inventory — merge of `remote/unstable` @ `a47f4a56b` (79 upstream commits)
+# Fork-only feature inventory — merge of `remote/unstable` @ `c2826aa42` (36 upstream commits)
 
 Generated per merge-upstream skill **Hazard 0**. Every anchor below must still resolve in the
 merged tree after conflict resolution. Verify with `git grep -l <anchor>` — an anchor with zero
 hits is a silently dropped fork feature.
+
+## This merge (2026-11-21): decisions log
+
+Upstream highlights: URL-prefix serving (#3058), scheduled disable/enable by cron (#3050),
+channel model-price sync from endpoints (#3038), configurable upstream stream idle timeout
+(#2905), forceArrayStop transform option (#3017), Codex catalog version in model discovery
+(#3045), Copilot reasoning signatures (#3035), plus dependency bumps (TS 6, eslint 10,
+i18next 27, Go module updates).
+
+- **Streaming timeouts (Hazard 3 hybrid):** upstream's `WithLLMTimeout`/`SelectLLMTimeout`
+  middleware (#2905) subsumes the fork's decode-then-select design; took upstream's wiring in
+  `routes.go`/`codex_routes.go`/`api/*` and layered the fork's handler-lifetime
+  `context.WithCancel` back on top in `chat.go`/`playground.go`. Kept the fork's conservative
+  idle default (120s, from the fork's original feature commit) and added upstream's
+  `llm_stream_request_timeout` (1800s). Removed the fork's `newHTTPServer` (WriteTimeout: 0)
+  in favor of upstream's `writeTimeout()` + per-route clearing; `server_test.go` now tests
+  `writeTimeout()` semantics.
+- **Upstream new files** arrived with `looplj` paths; all rewritten to `ldm2060` (30 files).
+  Root/llm `go.mod` taken from upstream, module path rewritten, fork's `afero-s3`/`afero-webdav`
+  replaces restored (they mirror upstream's real repos), `oliveagle/jsonpath` re-added by tidy.
+- **channels queries:** `availability` (fork) + `scheduledDisable` (upstream) both in every
+  Channel selection; upstream's `CHANNEL_QUERY_ROUTING_STATUS_SELECTION` included in the
+  composed list node.
+- **sign-up page:** kept the fork's design (`auth.signUp.*` keys); upstream's version links to
+  `/terms` + `/privacy` routes that don't exist in the fork.
+- **invite link:** kept the fork's `/invite?token=` route (upstream moved to `/sign-up?invite=`,
+  which our sign-up route doesn't accept).
+- **traces:** took upstream's `buildGUID` + `appPath` URLs (base-path correct; the gqlgen GUID
+  int coercion accepts both forms).
+- **apikeys-view-dialog:** deps array switched to upstream's `serverURL` (base-path aware).
+- **providers.json / pnpm-lock.yaml:** taken from upstream (generated data; same provider sets).
+
+## Post-merge fixes made while verifying (2026-11-21)
+
+- `conf_test.go`: upstream's `TestLLMTimeoutConfig` table (came with #2905) expected the 600s
+  idle default; updated the three default rows to the fork's 120s.
+- `request_storage_boundary_test.go`: `CreateRequestExecution` grew a `reasoningEffort` arg
+  (upstream #3052); test call sites pass `""`.
+- `dashboard_usage_aggregates_test.go`: `UsageStatsByUser` calls now pass the fork's
+  `projectID *objects.GUID` arg as `nil`.
+- `channel_scheduled_disable_test.go`: the two stale-CAS tests are nondeterministic on Windows
+  (coarse ~5ms clock makes the admin edit's `updated_at` equal the snapshot's, so the
+  compare-and-set wrongly fires); the admin edit now bumps `updated_at` explicitly by 1ms.
+- `middleware/llm_response_writer_test.go`: `TestUnlimitedLLMBlockedDownstreamWrites` skipped
+  on Windows (loopback accepts the whole 16 MiB payload without blocking).
+- Frontend TS6/eslint-10 fallout (upstream's CI skips the frontend build, so these surfaced
+  only locally): dropped deprecated `baseUrl` from both tsconfigs (paths-only), added
+  `"types": ["node"]` for the node:test file, widened two narrow `t:` prop types to
+  `TFunction`, fixed 5 `no-useless-assignment` sites, `preserve-caught-error` in
+  `audio-utils.ts`, moved `CRON_PRESETS`/`CRON_PRESET_LABEL_KEYS`/`TIMEZONE_OPTIONS`/
+  `zoneOffsetLabel` out of the rules editor into `channel-auto-disable-shared.ts`
+  (react-refresh), updated the cron-picker guard test to the new file, removed duplicate
+  framer-motion imports in the two trace views, prettier on the touched files, and raised the
+  `adminModels`/`modelsProvider` bundle budgets for this merge's data growth.
+- llm module lint (fork `default: all` config, stricter than upstream's): blank line between
+  file header and `package` in 5 upstream-new files (godoclint), blank line after embedded
+  struct fields in 5 files (embeddedstructfieldcheck).
 
 ## Fork-only source files (459 files exist in `origin/unstable` but not `remote/unstable`)
 
@@ -42,29 +99,27 @@ Fork-only Go/TS files that must survive (spot list, full list via
 | ZCode coding-plan signing | `zcode`, `coding-plan` |
 | Module path | `github.com/ldm2060/axonhub` (and absence of `github.com/looplj/axonhub`) |
 
-## Status during this merge
+## Post-resolution anchor verification (merge of 2026-11-21, `c2826aa42`)
 
-Anchors checked pre-resolution: all present in the working tree (counts ≥ `origin/unstable`).
-Re-check after conflict resolution, before build/test.
+All anchors re-checked in the merged working tree, all present:
 
-## Post-resolution anchor verification (all present in the merged tree)
+| Anchor | count (files) |
+|---|---|
+| `OwnerRule` | 32 |
+| `CanRouteThroughChannel` | 13 |
+| `RouteGuard` | 37 |
+| `enableSameChannelRetry` | 11 |
+| `shared_with` | 39 |
+| `myUsageStatsByUser` | 7 |
+| `manage_own_channels` | 14 |
+| `usePresenceExitGuard` | 3 |
+| `auth.signIn.links.signUp` (2 locale files) | 2 |
+| Fork ent entities (`channelusagemonitorbinding`, `apikeyprofiletemplate`, `channeloverridetemplate`, `publishrequest`, `datastorage`, `userusagestats`, `usagemonitorchannel`) | all present |
+| Fork-only frontend files (access/pooling/zcode/share/invite/route-guard/...) | all present |
 
-| Anchor | origin/unstable | merged |
-|---|---|---|
-| `OwnerRule` (schema policies) | 24 files | 24 files |
-| `CanRouteThroughChannel` | 10 files | 12 files |
-| `enableSameChannelRetry` | 5 files | 5 files |
-| `shared_with` | 11 files | 11 files |
-| `provider_quota/` + `zhipu_checker.go` | present | present |
-| `quota-window-display.tsx` / monitor + pool sections in `quota-badges.tsx` | present | present |
-| `apikeys-active-profile-cell` / `apikeys-context` | present | present |
-| `myUsageStatsByUser` / `myDailyUsageStatsByUser` | 2 files | 2 files |
-| `auth.signIn.links.signUp` | 2 locale files | 2 locale files |
-| `clientRestriction` / `concurrencyLimit` | 18 / 9 files | 18 / 9 files |
-| `use-ensure-selected-project` | present | present |
-| `channel_usage_monitor_binding`, `provider_quota_status`, `api_key_profile_template`, `channel_override_template`, `usage_monitor_channel`, `publish_request`, `data_storage`, `user_usage_stats`, `request_body_chunk(+ref)` ent entities | present | all regenerated by entc |
-| Fork-only Go files | 220 | 219 (only `plugin/scripts/pack-plugin/main_test.go` lost, with upstream's deletion of `plugin/**`) |
-| Fork i18n keys (`dashboard.personal`, `dashboard.reviewQueue`, `publish.*`, `channels.pooling`, `usageMonitor`, `apikeys.profile`) | present | present |
+Hazard 2: upstream added **no** migrations in this merge (`git diff HEAD...MERGE_HEAD --
+internal/ent/migrate/` empty); `internal/build/VERSION` stays `v0.2.40` (upstream's
+`v1.0.0-beta9` not taken).
 
 ## Fork adaptations confirmed after the merge
 

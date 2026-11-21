@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation, useRouter } from '@tanstack/react-router';
 import { isAuthError } from '@/gql/graphql';
 import { useAuthStore } from '@/stores/authStore';
 import { useSelectedProjectId } from '@/stores/projectStore';
@@ -11,6 +12,11 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
+  const router = useRouter();
+  const isAuthPage = useLocation({
+    select: ({ pathname }) =>
+      ['/sign-in', '/sign-up', '/initialization', '/forgot-password', '/otp'].some((path) => pathname.startsWith(path)),
+  });
   const { accessToken } = useAuthStore((state) => state.auth);
   const selectedProjectId = useSelectedProjectId();
 
@@ -26,22 +32,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const projectReady = isProjectSelectionValid(meData, selectedProjectId);
 
   useEffect(() => {
-    // If no token, redirect to sign-in
-    if (!accessToken) {
-      const currentPath = window.location.pathname;
-      // Don't redirect if already on auth pages
-      if (
-        !currentPath.startsWith('/sign-in') &&
-        !currentPath.startsWith('/sign-up') &&
-        !currentPath.startsWith('/initialization') &&
-        !currentPath.startsWith('/forgot-password') &&
-        !currentPath.startsWith('/otp')
-      ) {
-        const redirectTarget = currentPath + window.location.search;
-        window.location.href = `/sign-in?redirect=${encodeURIComponent(redirectTarget)}`;
-      }
+    if (!accessToken && !isAuthPage) {
+      // Preserve the attempted path so sign-in can return the user after login.
+      const redirectTarget = window.location.pathname + window.location.search;
+      router.navigate({ to: '/sign-in', search: { redirect: redirectTarget } });
     }
-  }, [accessToken]);
+  }, [accessToken, isAuthPage, router]);
 
   // Handle me query error (e.g., token expired)
   useEffect(() => {
@@ -54,15 +50,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Show loading while checking auth
   if (!accessToken) {
-    const currentPath = window.location.pathname;
-    // Don't show loading on auth pages
-    if (
-      currentPath.startsWith('/sign-in') ||
-      currentPath.startsWith('/sign-up') ||
-      currentPath.startsWith('/initialization') ||
-      currentPath.startsWith('/forgot-password') ||
-      currentPath.startsWith('/otp')
-    ) {
+    if (isAuthPage) {
       return <>{children}</>;
     }
 

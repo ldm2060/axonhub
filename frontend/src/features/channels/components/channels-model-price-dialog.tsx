@@ -49,8 +49,12 @@ const createPriceFormSchema = (t: (key: string) => string) =>
             items: z.array(
               z.object({
                 itemCode: z.enum(priceItemCodes),
+                // An empty mode is legal on cache-write items whose 5m/1h variants carry the rates.
                 pricing: z.object({
-                  mode: z.enum(pricingModes),
+                  mode: z
+                    .union([z.enum(pricingModes), z.literal('')])
+                    .optional()
+                    .nullable(),
                   flatFee: z.string().optional().nullable(),
                   usagePerUnit: z.string().optional().nullable(),
                   usageTiered: z
@@ -119,7 +123,11 @@ const createPriceFormSchema = (t: (key: string) => string) =>
                       z.object({
                         itemCode: z.enum(priceItemCodes),
                         pricing: z.object({
-                          mode: z.enum(pricingModes),
+                          // An empty mode is legal on cache-write items whose 5m/1h variants carry the rates.
+                          mode: z
+                            .union([z.enum(pricingModes), z.literal('')])
+                            .optional()
+                            .nullable(),
                           flatFee: z.string().optional().nullable(),
                           usagePerUnit: z.string().optional().nullable(),
                           usageTiered: z
@@ -151,7 +159,7 @@ const createPriceFormSchema = (t: (key: string) => string) =>
         pricePerUnit?: string;
       };
       type PricingLike = {
-        mode?: (typeof pricingModes)[number];
+        mode?: (typeof pricingModes)[number] | '' | null;
         flatFee?: string | null;
         usagePerUnit?: string | null;
         usageTiered?: {
@@ -162,6 +170,7 @@ const createPriceFormSchema = (t: (key: string) => string) =>
       const validatePricing = (pricing: PricingLike | null | undefined, pathPrefix: Array<string | number>) => {
         const requiredMsg = t('price.validation.priceRequired');
         const { mode, flatFee, usagePerUnit, usageTiered } = pricing || {};
+        if (!mode) return;
         if (mode === 'flat_fee' && !flatFee?.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -338,7 +347,7 @@ function mapPriceToForm(price: ModelPrice): PriceFormData['prices'][number]['pri
     items: price.items.map((item) => ({
       itemCode: item.itemCode,
       pricing: {
-        mode: item.pricing.mode,
+        mode: item.pricing.mode ?? '',
         flatFee: item.pricing.flatFee?.toString() || '',
         usagePerUnit: item.pricing.usagePerUnit?.toString() || '',
         usageTiered: item.pricing.usageTiered
@@ -382,7 +391,7 @@ function mapPriceToForm(price: ModelPrice): PriceFormData['prices'][number]['pri
             items: o.items.map((item) => ({
               itemCode: item.itemCode,
               pricing: {
-                mode: item.pricing.mode,
+                mode: item.pricing.mode ?? '',
                 flatFee: item.pricing.flatFee?.toString() || '',
                 usagePerUnit: item.pricing.usagePerUnit?.toString() || '',
                 usageTiered: item.pricing.usageTiered

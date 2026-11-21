@@ -16,6 +16,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/internal/server/plugin"
 	"github.com/ldm2060/axonhub/llm"
@@ -235,6 +236,10 @@ func (handlers *PlaygroundHandlers) HandleError(rawErr error) *PlaygroundRespons
 }
 
 func (handlers *PlaygroundHandlers) ChatCompletion(c *gin.Context) {
+	// Playground requests always stream: narrow the total budget now, and keep
+	// the handler-lifetime cancellation for the upstream stream teardown.
+	cancel := middleware.SelectLLMTimeout(c, true)
+	defer cancel()
 	ctx, cancelStream := context.WithCancel(c.Request.Context())
 	defer cancelStream()
 	c.Request = c.Request.WithContext(ctx)
