@@ -339,7 +339,7 @@ export function parseRequestConversation(body: unknown, format?: string): Conver
 
   const fmt = format || '';
   const messages: ConversationMessage[] = [];
-  let tools: ConversationTool[] = [];
+  let tools: ConversationTool[];
 
   // System instruction extraction (Anthropic / Gemini).
   let systemText = '';

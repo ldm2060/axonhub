@@ -1699,6 +1699,7 @@ func jsonValueIsEmpty(value any) bool {
 // message payloads are upstream activity too, including on pooled connections.
 type webSocketActivityConn struct {
 	net.Conn
+
 	mu       sync.Mutex
 	activity func()
 }

@@ -33,7 +33,7 @@ export const recordAudio = (function (): RecordAudioType {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      throw new Error('Failed to start recording: ' + errorMessage);
+      throw new Error('Failed to start recording: ' + errorMessage, { cause: error });
     }
   };
 

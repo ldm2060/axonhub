@@ -11,8 +11,8 @@
 //   没有 access token 时不能请求 /admin/graphql。命令菜单在登录完成前也会调用本查询。
 import { useQuery } from '@tanstack/react-query';
 import { graphqlRequest } from '@/gql/graphql';
-import { appPath } from '@/lib/app-path';
 import { useAuthStore } from '@/stores/authStore';
+import { appPath } from '@/lib/app-path';
 
 const PLUGIN_UI_ENTRIES_QUERY = `
   query PluginUIEntries {

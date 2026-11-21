@@ -838,7 +838,7 @@ function QuotaRow({
 
   const getClaudeDurationPercent = (windowKey: string, resetTs?: number) => {
     if (!resetTs) return undefined;
-    let limit = 0;
+    let limit: number;
     if (windowKey === '5h') limit = 5 * 3600;
     else if (windowKey === '7d') limit = 7 * 24 * 3600;
     else return undefined;
@@ -3039,7 +3039,7 @@ function QuotaBadgeTrigger({
   const poolPaused = poolQuotas.some((p) => p.status === POOL_STATUS.paused);
   const poolWarning = poolQuotas.some((p) => p.status === POOL_STATUS.warning);
 
-  let level: BatteryLevel = 'full';
+  let level: BatteryLevel;
   if (hasExhausted || monitorExhausted || poolPaused) level = 'warning';
   else if (hasWarning || monitorWarning || poolWarning) level = 'low';
   // No channel published a current observation: the battery must not imply

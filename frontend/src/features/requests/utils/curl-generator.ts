@@ -1,6 +1,6 @@
+import { appPath } from '@/lib/app-path';
 import { CHANNEL_CONFIGS } from '@/features/channels/data/config_channels';
 import { ApiFormat } from '@/features/channels/data/schema';
-import { appPath } from '@/lib/app-path';
 import { getApiPath } from './curl-paths';
 import { escapeShellValue } from './curl-shell';
 

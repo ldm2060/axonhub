@@ -9,6 +9,7 @@
 //
 //	映射层对未知非空版本原样返回，显式 ErrInvalidRequest 只在转换入口产生。
 //	不支持原生工具的平台继续整体过滤，不注入 code_execution 或额外工具。
+
 package anthropic
 
 import (

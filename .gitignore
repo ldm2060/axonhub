@@ -185,3 +185,4 @@ docs/superpowers/**
 superpowers/
 superpowers/**
 build/**
+*.pre-merge-backup

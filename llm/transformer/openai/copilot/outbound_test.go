@@ -2066,6 +2066,7 @@ func TestOutboundTransformer_TransformRequest_ReplaysReasoningOpaque(t *testing.
 
 type currentCountingStream struct {
 	streams.Stream[*httpclient.StreamEvent]
+
 	reads int
 }
 

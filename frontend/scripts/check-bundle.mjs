@@ -21,10 +21,10 @@ const budgets = {
   // Dependency bumps (lucide-react 1.63, ai 7.0.156 tool-approval states)
   // grew the model chunks ~9 KiB gzip in the 2026-10-30 upstream merge; the
   // 2026-11 merge's tanstack/react-dom bumps grew them another ~15 KiB.
-  adminModels: { raw: 1_550 * 1024, gzip: 412 * 1024 },
+  adminModels: { raw: 1_550 * 1024, gzip: 420 * 1024 },
   personalModels: { raw: 1_500 * 1024, gzip: 400 * 1024 },
-  // Dependency bumps pulled modelsProvider from ~60 KiB to ~62 KiB raw.
-  modelsProvider: { raw: 64 * 1024, gzip: 16 * 1024 },
+  // The 2026-11-21 model-developers data sync added ~1.5k lines to providers.json.
+  modelsProvider: { raw: 68 * 1024, gzip: 17 * 1024 },
   modelsDialogs: { raw: 100 * 1024, gzip: 25 * 1024 },
 };
 

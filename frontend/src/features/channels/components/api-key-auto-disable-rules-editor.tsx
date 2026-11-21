@@ -14,52 +14,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type ApiKeyAutoDisableRuleFormValue } from '../data/auto-disable';
 import { type APIKeyAutoDisableRule, apiKeyAutoDisableRuleFormSchema } from '../data/schema';
+import { CRON_PRESETS, CRON_PRESET_LABEL_KEYS, TIMEZONE_OPTIONS, zoneOffsetLabel } from './channel-auto-disable-shared';
 
 const formSchema = z.object({
   rules: z.array(apiKeyAutoDisableRuleFormSchema),
 });
 
 const PRESET_DISABLE_DURATIONS = [5, 15, 30, 60, 120, 360, 720, 1440];
-
-export const CRON_PRESETS = ['0 * * * *', '0 */6 * * *', '0 0 * * *', '0 0 * * 1', '0 0 1 * *'] as const;
-
-export const CRON_PRESET_LABEL_KEYS: Record<string, string> = {
-  '0 * * * *': 'channels.dialogs.availability.cronPresets.hourly',
-  '0 */6 * * *': 'channels.dialogs.availability.cronPresets.every6h',
-  '0 0 * * *': 'channels.dialogs.availability.cronPresets.daily',
-  '0 0 * * 1': 'channels.dialogs.availability.cronPresets.weekly',
-  '0 0 1 * *': 'channels.dialogs.availability.cronPresets.monthly',
-};
-
-export const TIMEZONE_OPTIONS = [
-  'UTC',
-  'Asia/Shanghai',
-  'Asia/Hong_Kong',
-  'Asia/Tokyo',
-  'Asia/Seoul',
-  'Asia/Singapore',
-  'Asia/Kolkata',
-  'Asia/Dubai',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Moscow',
-  'America/Sao_Paulo',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'Australia/Sydney',
-  'Pacific/Auckland',
-] as const;
-
-export function zoneOffsetLabel(timeZone: string): string {
-  try {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'longOffset' }).formatToParts(new Date());
-    return parts.find((part) => part.type === 'timeZoneName')?.value ?? '';
-  } catch {
-    return '';
-  }
-}
 
 function HelpTooltip({ children }: { children: ReactNode }) {
   return (

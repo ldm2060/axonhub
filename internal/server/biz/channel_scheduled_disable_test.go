@@ -20,12 +20,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zhenzou/executors"
 
-	"github.com/looplj/axonhub/internal/authz"
-	"github.com/looplj/axonhub/internal/ent"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/enttest"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/internal/server/scheduler"
+	"github.com/ldm2060/axonhub/internal/authz"
+	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/server/scheduler"
 )
 
 func TestNormalizeScheduledDisable(t *testing.T) {
@@ -586,11 +586,14 @@ func TestSweepScheduledDisableStaleScheduleDoesNotFire(t *testing.T) {
 	})
 
 	// The sweep's read is done (snapshot); an admin edit now lands before the
-	// guarded write.
+	// guarded write. The edit bumps UpdatedAt explicitly: on coarse-clock hosts
+	// (Windows) two writes can otherwise land on the same timestamp and the
+	// compare-and-set would wrongly fire.
 	snapshot, err := client.Channel.Get(ctx, ch.ID)
 	require.NoError(t, err)
 	_, err = client.Channel.UpdateOneID(ch.ID).
 		SetRemark("edited after sweep read").
+		SetUpdatedAt(snapshot.UpdatedAt.Add(time.Millisecond)).
 		Save(ctx)
 	require.NoError(t, err)
 
@@ -626,11 +629,14 @@ func TestSweepScheduledReenableStaleRowNotOverwritten(t *testing.T) {
 	require.NoError(t, err)
 
 	// The sweep's read is done (snapshot); an admin edit now lands before the
-	// guarded write.
+	// guarded write. The edit bumps UpdatedAt explicitly: on coarse-clock hosts
+	// (Windows) two writes can otherwise land on the same timestamp and the
+	// compare-and-set would wrongly fire.
 	snapshot, err := client.Channel.Get(ctx, ch.ID)
 	require.NoError(t, err)
 	_, err = client.Channel.UpdateOneID(ch.ID).
 		SetRemark("edited after sweep read").
+		SetUpdatedAt(snapshot.UpdatedAt.Add(time.Millisecond)).
 		Save(ctx)
 	require.NoError(t, err)
 

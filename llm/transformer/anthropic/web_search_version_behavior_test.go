@@ -9,6 +9,7 @@
 //
 //	行为测试经公开 JSON 请求接口验证，不依赖内部表示。
 //	插件 JSON hop 用例要求未知非空版本返回 ErrInvalidRequest，不能降级或静默丢弃。
+
 package anthropic
 
 import (

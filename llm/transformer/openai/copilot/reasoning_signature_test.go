@@ -3,6 +3,7 @@
 //
 //	llm/transformer/openai/copilot/reasoning_signature.go
 //	llm/transformer/shared/signature.go
+
 package copilot
 
 import (

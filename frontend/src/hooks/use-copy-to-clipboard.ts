@@ -11,7 +11,7 @@ type UseCopyToClipboardProps = {
 export function useCopyToClipboard({ text, copyMessage }: UseCopyToClipboardProps) {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCopy = useCallback(async () => {
     try {

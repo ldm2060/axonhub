@@ -92,6 +92,7 @@ func (p Part) MarshalJSON() ([]byte, error) {
 	if p.isSignatureOnly() {
 		return json.Marshal(struct {
 			partAlias
+
 			Text string `json:"text"`
 		}{partAlias: partAlias(p)})
 	}

@@ -1,7 +1,7 @@
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { firstNavLink } from '@/sidebar';
-import { appPath } from '@/lib/app-path';
 import { useSidebarPrefsStore } from '@/stores/sidebarPrefsStore';
+import { appPath } from '@/lib/app-path';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type NavLink, type NavModule } from './types';

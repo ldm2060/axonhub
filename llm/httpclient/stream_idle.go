@@ -112,6 +112,7 @@ func StreamContextError(ctx context.Context) error {
 
 type streamActivityReader struct {
 	io.ReadCloser
+
 	ctx      context.Context
 	activity func()
 }
@@ -133,6 +134,7 @@ func (r *streamActivityReader) Read(p []byte) (int, error) {
 
 type idleTimeoutStream struct {
 	streams.Stream[*StreamEvent]
+
 	ctx      context.Context
 	stop     func()
 	err      error

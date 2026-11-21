@@ -21,7 +21,7 @@ export function TimePeriodSelector<T extends string>({ value, onChange, periods 
       <TabsList className='h-7 p-0.5'>
         {effectivePeriods.map((period) => (
           <TabsTrigger key={period} value={period} className='h-6 px-2 text-[10px]'>
-            {t(`dashboard.stats.${period === 'allTime' ? 'all' : period}`)}
+            {t(`dashboard.stats.${period === 'allTime' ? 'all' : period}` as Parameters<typeof t>[0])}
           </TabsTrigger>
         ))}
       </TabsList>

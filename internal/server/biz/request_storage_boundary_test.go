@@ -25,12 +25,12 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
-	"github.com/looplj/axonhub/internal/contexts"
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/ent/datastorage"
-	"github.com/looplj/axonhub/internal/objects"
-	"github.com/looplj/axonhub/llm"
-	"github.com/looplj/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/internal/contexts"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/datastorage"
+	"github.com/ldm2060/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/llm"
+	"github.com/ldm2060/axonhub/llm/httpclient"
 )
 
 // TestExternalResponseChunksPreservePayload 验证外置 chunks 等于
@@ -118,7 +118,7 @@ func TestChunkedRequestKeepsSurrogateInlineReplaces(t *testing.T) {
 	require.Contains(t, string(stored), `\ud800`)
 	require.NotContains(t, string(stored), `\ufffd`)
 
-	exec, err := svc.CreateRequestExecution(ctx, &Channel{Channel: row}, "test", req,
+	exec, err := svc.CreateRequestExecution(ctx, &Channel{Channel: row}, "test", "", req,
 		httpclient.Request{JSONBody: large}, llm.APIFormatOpenAIResponse, false)
 	require.NoError(t, err)
 	require.True(t, exec.RequestBodyChunked)
@@ -135,7 +135,7 @@ func TestChunkedRequestKeepsSurrogateInlineReplaces(t *testing.T) {
 	require.False(t, inline.RequestBodyChunked)
 	require.Equal(t, `{"model":"test","input":"\ufffd"}`, string(inline.RequestBody))
 
-	inlineExec, err := svc.CreateRequestExecution(ctx, &Channel{Channel: row}, "test", inline,
+	inlineExec, err := svc.CreateRequestExecution(ctx, &Channel{Channel: row}, "test", "", inline,
 		httpclient.Request{JSONBody: small}, llm.APIFormatOpenAIResponse, false)
 	require.NoError(t, err)
 	require.False(t, inlineExec.RequestBodyChunked)

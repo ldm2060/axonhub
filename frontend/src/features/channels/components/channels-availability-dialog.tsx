@@ -22,14 +22,8 @@ import {
 } from '../data/auto-disable';
 import { useUpdateChannel } from '../data/channels';
 import { APIKeyAutoDisableMode, Channel } from '../data/schema';
-import {
-  ApiKeyAutoDisableRulesEditor,
-  ApiKeyAutoDisableRulesPreview,
-  CRON_PRESET_LABEL_KEYS,
-  CRON_PRESETS,
-  TIMEZONE_OPTIONS,
-  zoneOffsetLabel,
-} from './api-key-auto-disable-rules-editor';
+import { ApiKeyAutoDisableRulesEditor, ApiKeyAutoDisableRulesPreview } from './api-key-auto-disable-rules-editor';
+import { CRON_PRESETS, CRON_PRESET_LABEL_KEYS, TIMEZONE_OPTIONS, zoneOffsetLabel } from './channel-auto-disable-shared';
 
 interface Props {
   open: boolean;

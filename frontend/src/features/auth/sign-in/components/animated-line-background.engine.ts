@@ -126,8 +126,8 @@ export function initParticles(
   }
 
   for (let i = 0; i < rightSideCount; i++) {
-    let x = 0;
-    let y = 0;
+    let x: number;
+    let y: number;
     let attempts = 0;
 
     do {

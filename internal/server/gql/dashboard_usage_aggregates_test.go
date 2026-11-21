@@ -358,13 +358,13 @@ func TestUsageStatsByUserUsesProjectOwnerPolicy(t *testing.T) {
 		ctx := authz.NewUserContext(ent.NewContext(t.Context(), client), id)
 		return contexts.WithProjectID(contexts.WithUser(ctx, currentUser), project.ID)
 	}
-	stats, err := resolver.UsageStatsByUser(asUser(owner.ID), nil)
+	stats, err := resolver.UsageStatsByUser(asUser(owner.ID), nil, nil)
 	require.NoError(t, err)
 	require.Len(t, stats, 1)
 	require.Equal(t, member.ID, stats[0].UserID.ID)
 	require.Equal(t, 1, stats[0].RequestCount)
 	require.Equal(t, 12, stats[0].TotalTokens)
 
-	_, err = resolver.UsageStatsByUser(asUser(member.ID), nil)
+	_, err = resolver.UsageStatsByUser(asUser(member.ID), nil, nil)
 	require.ErrorContains(t, err, "only project owners")
 }

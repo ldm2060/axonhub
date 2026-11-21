@@ -8,9 +8,7 @@
 //   服务端注入的前缀不带末尾斜杠，根路径部署时为空。
 
 export function getBasePath(): string {
-  return typeof document === 'undefined'
-    ? ''
-    : (document.querySelector<HTMLMetaElement>('meta[name="axonhub-base-path"]')?.content ?? '');
+  return typeof document === 'undefined' ? '' : (document.querySelector<HTMLMetaElement>('meta[name="axonhub-base-path"]')?.content ?? '');
 }
 
 export function appPath(path: string): string {

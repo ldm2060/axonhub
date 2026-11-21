@@ -1,5 +1,5 @@
-import { appPath } from '@/lib/app-path';
 import type { AuthUser } from '@/stores/authStore';
+import { appPath } from '@/lib/app-path';
 import { ensureFreshAccessToken } from '@/lib/auth-session';
 
 type ErrorResponseBody = {

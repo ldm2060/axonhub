@@ -47,12 +47,14 @@ const dataHelpers = extractFunctions(read('features/channels/data/auto-disable.t
   'availabilityPoliciesPayload',
 ]);
 const editorExports = [
-  ...extractConstants(read('features/channels/components/api-key-auto-disable-rules-editor.tsx'), 'api-key-auto-disable-rules-editor.tsx', [
+  // The shared cron/timezone constants and the offset helper live in
+  // channel-auto-disable-shared.ts so the component files stay react-refresh clean.
+  ...extractConstants(read('features/channels/components/channel-auto-disable-shared.ts'), 'channel-auto-disable-shared.ts', [
     'CRON_PRESETS',
     'CRON_PRESET_LABEL_KEYS',
     'TIMEZONE_OPTIONS',
   ]),
-  ...extractFunctions(read('features/channels/components/api-key-auto-disable-rules-editor.tsx'), 'api-key-auto-disable-rules-editor.tsx', [
+  ...extractFunctions(read('features/channels/components/channel-auto-disable-shared.ts'), 'channel-auto-disable-shared.ts', [
     'zoneOffsetLabel',
   ]),
 ];

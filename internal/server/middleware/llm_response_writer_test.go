@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -46,6 +47,12 @@ func TestUnlimitedLLMWaitBeyondServerWriteTimeout(t *testing.T) {
 func TestUnlimitedLLMBlockedDownstreamWrites(t *testing.T) {
 	for _, operation := range []string{"binary", "string", "download", "flush"} {
 		t.Run(operation, func(t *testing.T) {
+			if runtime.GOOS == "windows" {
+				// Windows loopback accepts the whole 16 MiB payload into socket
+				// buffers without blocking, so the write-deadline error this test
+				// asserts never surfaces.
+				t.Skip("Windows loopback sockets buffer the payload without blocking")
+			}
 			writeErr := make(chan error, 1)
 			router := gin.New()
 			router.Use(WithLLMTimeout(0, 0))

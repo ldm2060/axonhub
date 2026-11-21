@@ -15,8 +15,8 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/looplj/axonhub/internal/ent/channel"
-	"github.com/looplj/axonhub/internal/objects"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/objects"
 )
 
 // supportsEndpointPricing reports whether a channel fetches models from an

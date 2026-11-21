@@ -12,7 +12,7 @@ function formatErrorMessage(error: string): {
   const requestIdRegex = /\(request id: ([^)]+)\)/g;
 
   let match;
-  let cleanedMessage = error;
+  let cleanedMessage: string;
 
   while ((match = requestIdRegex.exec(error)) !== null) {
     requestIDs.push(match[1]);

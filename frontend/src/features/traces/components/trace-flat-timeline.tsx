@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, Workflow, ChevronsDownUp, ExternalLink, Filter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { AnimatePresence, motion } from 'framer-motion';
 import { appPath } from '@/lib/app-path';
 import { buildGUID, cn } from '@/lib/utils';
 import { formatNumber } from '@/utils/format-number';

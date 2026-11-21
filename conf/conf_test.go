@@ -350,13 +350,13 @@ func TestLLMTimeoutConfig(t *testing.T) {
 		request, stream, idle time.Duration
 		invalid               bool
 	}{
-		{"defaults", "", 600 * time.Second, 1800 * time.Second, 600 * time.Second, false},
+		{"defaults", "", 600 * time.Second, 1800 * time.Second, 120 * time.Second, false},
 		{"disabled", "server:\n  llm_request_timeout: 0s\n  llm_stream_request_timeout: 0s\n  llm_stream_idle_timeout: 0s\n", 0, 0, 0, false},
 		{"custom", "server:\n  llm_request_timeout: 5m\n  llm_stream_request_timeout: 40m\n  llm_stream_idle_timeout: 20s\n", 5 * time.Minute, 40 * time.Minute, 20 * time.Second, false},
 		{"negative total", "server:\n  llm_request_timeout: -1s\n", 0, 0, 0, true},
 		{"negative streaming total", "server:\n  llm_stream_request_timeout: -1s\n", 0, 0, 0, true},
-		{"independent streaming disable", "server:\n  llm_stream_request_timeout: 0s\n", 600 * time.Second, 0, 600 * time.Second, false},
-		{"independent non-streaming disable", "server:\n  llm_request_timeout: 0s\n", 0, 1800 * time.Second, 600 * time.Second, false},
+		{"independent streaming disable", "server:\n  llm_stream_request_timeout: 0s\n", 600 * time.Second, 0, 120 * time.Second, false},
+		{"independent non-streaming disable", "server:\n  llm_request_timeout: 0s\n", 0, 1800 * time.Second, 120 * time.Second, false},
 		{"negative idle", "server:\n  llm_stream_idle_timeout: -1s\n", 0, 0, 0, true},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

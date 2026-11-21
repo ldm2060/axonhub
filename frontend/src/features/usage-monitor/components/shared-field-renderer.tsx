@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { getLimitDurationPercent, quotaWindowLabel } from '@/components/quota-window-display';
 import type { ProviderQuotaLimit } from '@/features/system/data/quotas';
@@ -39,7 +40,7 @@ function findDisplayField(displayFields: DisplayField[] | undefined, key: string
   return displayFields?.find((df) => df.key === key);
 }
 
-function formatRelativeTime(dateStr: string | null, t: (key: string, params?: Record<string, unknown>) => string): string {
+function formatRelativeTime(dateStr: string | null, t: TFunction): string {
   if (!dateStr) return '';
   const resetTimeMs = new Date(dateStr).getTime();
   const diffMs = resetTimeMs - Date.now();
@@ -98,15 +99,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
 }
 
 /** A single progress-bar field with its reset time embedded in the bottom-right. */
-function FieldGroup({
-  group,
-  limit,
-  t,
-}: {
-  group: { pct: ParsedField; reset?: ParsedField };
-  limit?: ProviderQuotaLimit;
-  t: (key: string, params?: Record<string, unknown>) => string;
-}) {
+function FieldGroup({ group, limit, t }: { group: { pct: ParsedField; reset?: ParsedField }; limit?: ProviderQuotaLimit; t: TFunction }) {
   const pct = group.pct.percent ?? 0;
   const resetText = group.reset ? formatRelativeTime(group.reset.value, t) : undefined;
 
@@ -171,7 +164,7 @@ function NumberField({ field }: { field: ParsedField }) {
   );
 }
 
-function DatetimeField({ field, t }: { field: ParsedField; t: (key: string, params?: Record<string, unknown>) => string }) {
+function DatetimeField({ field, t }: { field: ParsedField; t: TFunction }) {
   if (field.value == null) {
     return <div className='text-muted-foreground text-xs'>--</div>;
   }
@@ -241,7 +234,7 @@ function NamedGroup({
   fields: ParsedField[];
   displayFields?: DisplayField[];
   limitMap?: Map<string, ProviderQuotaLimit>;
-  t: (key: string, params?: Record<string, unknown>) => string;
+  t: TFunction;
 }) {
   // Within a named group, group percentage/fraction fields with their reset datetime fields
   const fieldGroups = groupFields(fields);

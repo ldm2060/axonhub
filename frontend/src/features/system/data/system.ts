@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { GRAPHQL_ENDPOINT, graphqlRequest, GraphQLRequestError } from '@/gql/graphql';
+import { GRAPHQL_ENDPOINT, graphqlRequest } from '@/gql/graphql';
 import { toast } from 'sonner';
 import { getTokenFromStorage, useAuthStore } from '@/stores/authStore';
 import i18n from '@/lib/i18n';
