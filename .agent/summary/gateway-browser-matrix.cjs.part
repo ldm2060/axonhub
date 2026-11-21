@@ -1,0 +1,147 @@
+  const secondKey = (await gql('mutation($input:CreateAPIKeyInput!){createAPIKey(input:$input){key}}', {input:{name:`Gateway second key ${Date.now()}`,type:'personal',projectID}})).createAPIKey.key;
+  const report = {pageErrors, protocols:[], rejectedRoutes:[], discoveryAtCap:[], webSockets:[]};
+  const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
+  const waitPending = async count => {
+    for(let i=0;i<200 && pending.size!==count;i++) await delay(20);
+    assert.equal(pending.size,count,'upstream active stream count');
+  };
+  const call = async (path,body,token=apiKey,method='POST') => page.evaluate(async ({path,body,token,method})=>{
+    const response = await fetch(path,{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},...(body!==undefined?{body:JSON.stringify(body)}:{})});
+    return {status:response.status,retryAfter:response.headers.get('Retry-After'),body:await response.text()};
+  },{path,body,token,method});
+  const fast = () => call('/v1/responses',{model:'concurrency-test',input:'fast',stream:false},secondKey);
+  const releasedFast = async () => {
+    let result;
+    for(let i=0;i<100;i++){result=await fast();if(result.status!==429)return result;await delay(20);}
+    return result;
+  };
+  const protocols = [
+    {name:'OpenAI Chat SSE',path:'/v1/chat/completions',body:{model:'concurrency-test',stream:true,messages:[{role:'user',content:'hold'}]}},
+    {name:'Anthropic SSE',path:'/v1/messages',body:{model:'concurrency-test',max_tokens:100,stream:true,messages:[{role:'user',content:'hold'}]}},
+    {name:'Anthropic alias SSE',path:'/anthropic/v1/messages',body:{model:'concurrency-test',max_tokens:100,stream:true,messages:[{role:'user',content:'hold'}]}},
+    {name:'Gemini SSE',path:'/gemini/v1beta/models/concurrency-test:streamGenerateContent?alt=sse',body:{contents:[{role:'user',parts:[{text:'hold'}]}]}},
+    {name:'Gemini alias JSON stream',path:'/v1beta/models/concurrency-test:streamGenerateContent',body:{contents:[{role:'user',parts:[{text:'hold'}]}]}},
+    {name:'Playground JWT stream',path:'/admin/playground/chat',token:auth.token,body:{model:'concurrency-test',stream:true,messages:[{id:'verify',role:'user',content:'hold',parts:[{type:'text',text:'hold'}]}]}}
+  ];
+  const start = async (entry,tag) => {
+    await page.evaluate(({path,body,token,tag,projectID})=>{
+      window.gatewayStreams ??= {};
+      const state = {controller:new AbortController(),text:'',done:false};
+      window.gatewayStreams[tag]=state;
+      (async()=>{
+        try {
+          const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`,'X-Project-ID':projectID},body:JSON.stringify(body),signal:state.controller.signal});
+          state.status=response.status;
+          const reader=response.body.getReader(), decoder=new TextDecoder();
+          for(;;){const chunk=await reader.read();if(chunk.done)break;state.text+=decoder.decode(chunk.value,{stream:true});}
+        } catch(error){state.error=error.name;}
+        finally{state.done=true;}
+      })();
+    },{...entry,token:entry.token||apiKey,tag,projectID});
+    await page.waitForFunction(tag=>window.gatewayStreams[tag].text.length>0||window.gatewayStreams[tag].done,tag,{timeout:10000});
+    const state=await page.evaluate(tag=>({status:window.gatewayStreams[tag].status,text:window.gatewayStreams[tag].text}),tag);
+    assert.equal(state.status,200,`${entry.name}: ${state.text}`);
+    await waitPending(1);
+  };
+  const abort = tag => page.evaluate(tag=>window.gatewayStreams[tag].controller.abort(),tag);
+  try {
+    await page.goto(base+'/admin/system',{waitUntil:'networkidle'});
+    await page.locator('#max-concurrent-requests').waitFor({timeout:20000});
+    const skip=page.locator('[data-testid="onboarding-skip-tour"]');
+    if(await skip.isVisible())await skip.click();
+    await setLimit(1);
+    for(const [index,entry] of protocols.entries()){
+      const tag=`protocol-${index}`;
+      await start(entry,tag);
+      const denied=await fast();assert.equal(denied.status,429);assert.equal(denied.retryAfter,'1');
+      // All HTTP streams must survive the test server's 1-second non-stream timeout.
+      await delay(1200);
+      assert.equal(await page.evaluate(tag=>window.gatewayStreams[tag].done,tag),false,entry.name+' total timeout leaked into stream');
+      for(const finish of [...pending.values()])finish();
+      await page.waitForFunction(tag=>window.gatewayStreams[tag].done,tag,{timeout:10000});
+      await waitPending(0);
+      assert.equal((await releasedFast()).status,200);
+      await start(entry,tag+'-cancel');
+      await abort(tag+'-cancel');await waitPending(0);
+      assert.equal((await releasedFast()).status,200);
+      report.protocols.push({name:entry.name,sharedAcrossKeys:429,survivesNonStreamTimeout:true,completionReleases:true,disconnectReleases:true});
+    }
+    await start(protocols[0],'at-cap');
+    const generationPaths=['/v1/chat/completions','/v1/completions','/v1/responses','/v1/responses/compact','/v1/embeddings','/v1/moderations','/v1/alpha/search','/v1/images/generations','/v1/images/edits','/v1/videos','/v1/audio/speech','/v1/audio/transcriptions','/v1/audio/translations','/v1/messages','/anthropic/v1/messages','/v1/rerank','/jina/v1/embeddings','/jina/v1/rerank','/v1/systemone','/typesafe/v1/systemone','/doubao/v3/contents/generations/tasks','/gemini/v1beta/models/concurrency-test:generateContent','/v1beta/models/concurrency-test:generateContent','/admin/playground/chat'];
+    for(const path of generationPaths){
+      const r=await call(path,{},path.startsWith('/admin')?auth.token:secondKey);
+      assert.equal(r.status,429,path);assert.equal(r.retryAfter,'1');
+      const body=JSON.parse(r.body);
+      if(path.includes('/gemini/')||path.includes('/v1beta/')){assert.equal(body.error.code,429);assert.equal(body.error.status,'RESOURCE_EXHAUSTED');}
+      if(path.endsWith('/messages'))assert.equal(body.type,'error');
+      report.rejectedRoutes.push({path,status:r.status});
+    }
+    for(const path of ['/v1/models','/anthropic/v1/models','/gemini/v1beta/models','/v1beta/models']){
+      const r=await call(path,undefined,secondKey,'GET');assert.equal(r.status,200,path);
+      report.discoveryAtCap.push({path,status:r.status});
+    }
+    for(const path of ['/v1/videos/gateway-no-such-task','/doubao/v3/contents/generations/tasks/gateway-no-such-task'])for(const method of ['GET','DELETE']){
+      const r=await call(path,undefined,secondKey,method);assert.notEqual(r.status,429,path);
+      report.discoveryAtCap.push({path,method,status:r.status});
+    }
+    const wsEntries=protocols.slice(0,5).map(entry=>({...entry,path:entry.path.split('?')[0]}));
+    // Keep all five protocol sockets idle beyond LLMRequestTimeout before use.
+    await page.evaluate(async entries=>{
+      window.gatewaySockets=[];
+      for(const entry of entries){const ws=new WebSocket('ws://127.0.0.1:18991'+entry.path);ws.events=[];ws.onmessage=e=>ws.events.push(e.data);await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=()=>reject(Error('upgrade failed'));});window.gatewaySockets.push(ws);}
+    },wsEntries);
+    await delay(1200);
+    for(const [index,entry] of wsEntries.entries()){
+      await page.evaluate(({index,body})=>window.gatewaySockets[index].send(JSON.stringify(body)),{index,body:entry.body});
+      await page.waitForFunction(index=>window.gatewaySockets[index].events.length>0,index,{timeout:5000});
+      const data=await page.evaluate(index=>window.gatewaySockets[index].events.join('\n'),index);
+      assert.match(data,entry.name.includes('Gemini')?/RESOURCE_EXHAUSTED/:/concurrency_limit_exceeded/);
+    }
+    await abort('at-cap');await waitPending(0);
+    assert.equal((await releasedFast()).status,200);
+    for(const [index,entry] of wsEntries.entries()){
+      await page.evaluate(({index,body})=>{window.gatewaySockets[index].events=[];window.gatewaySockets[index].send(JSON.stringify(body));},{index,body:entry.body});
+      await page.waitForFunction(index=>window.gatewaySockets[index].events.some(e=>e.includes('ok')),index,{timeout:5000});
+      await waitPending(1);
+      assert.equal((await fast()).status,429);
+      await page.evaluate(index=>window.gatewaySockets[index].close(),index);
+      await waitPending(0);
+      assert.equal((await releasedFast()).status,200);
+      report.webSockets.push({path:entry.path,idleBeyondTimeout:true,rejectionAndRetry:true,activeSharedCap:true,disconnectReleases:true});
+    }
+    report.idleTimeouts=[];
+    for(const [index,entry] of protocols.entries()){
+      const stalled={...entry,body:JSON.parse(JSON.stringify(entry.body).replaceAll('hold','stall'))};
+      const tag=`idle-${index}`;
+      await start(stalled,tag);
+      await page.waitForFunction(tag=>window.gatewayStreams[tag].done,tag,{timeout:6000});
+      await waitPending(0);assert.equal((await releasedFast()).status,200);
+      const text=await page.evaluate(tag=>window.gatewayStreams[tag].text,tag);
+      if(index<3)assert.match(text,/stream idle timeout/);
+      if(index===0)assert.match(text,/: keep-alive/);
+      if(index===1||index===2)assert.match(text,/"type":"ping"/);
+      report.idleTimeouts.push({protocol:entry.name,upstreamCanceled:true,budgetReleased:true});
+    }
+    // Enabling the limit must count requests admitted while it was disabled.
+    await setLimit(0);await start(protocols[0],'disabled-active');await setLimit(1);
+    assert.equal((await fast()).status,429);
+    await abort('disabled-active');await waitPending(0);assert.equal((await releasedFast()).status,200);
+    report.enableWhileActive='passed';
+    const timeout=await call('/v1/chat/completions',{model:'concurrency-test',stream:false,messages:[{role:'user',content:'hold'}]});
+    assert.notEqual(timeout.status,200);await waitPending(0);assert.equal((await releasedFast()).status,200);
+    report.nonStreamingTimeout={status:timeout.status,releases:true};
+    await setLimit(6);await page.reload({waitUntil:'networkidle'});
+    assert.equal(await page.locator('#max-concurrent-requests').inputValue(),'6');
+    if(await skip.isVisible())await skip.click();
+    await page.screenshot({path:resolve(__dirname,'gateway-concurrency-settings.png'),fullPage:true});
+    assert.deepEqual(pageErrors,[]);report.result='passed';
+  } catch(error){
+    report.result='failed';report.error=error.message;report.upstreamCalls=upstreamCalls;
+    report.streams=await page.evaluate(()=>Object.fromEntries(Object.entries(window.gatewayStreams||{}).map(([key,s])=>[key,{status:s.status,done:s.done,error:s.error,text:s.text}]))).catch(()=>({}));
+    console.error(error.stack);process.exitCode=1;
+  } finally{
+    writeFileSync(resolve(__dirname,'gateway-browser-verification.json'),JSON.stringify(report,null,2));
+    console.log(JSON.stringify(report,null,2));await browser.close();
+    for(const socket of proxySockets)socket.destroy();socketProxy.close();upstream.closeAllConnections();upstream.close();
+  }
+})().catch(err=>{console.error(err.message);for(const socket of proxySockets)socket.destroy();socketProxy.close();upstream.closeAllConnections();upstream.close();process.exitCode=1;});

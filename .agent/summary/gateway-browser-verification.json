@@ -1,0 +1,296 @@
+{
+  "pageErrors": [],
+  "protocols": [
+    {
+      "name": "OpenAI Chat SSE",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    },
+    {
+      "name": "Anthropic SSE",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    },
+    {
+      "name": "Anthropic alias SSE",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    },
+    {
+      "name": "Gemini SSE",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    },
+    {
+      "name": "Gemini alias JSON stream",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    },
+    {
+      "name": "Playground JWT stream",
+      "sharedAcrossKeys": 429,
+      "survivesNonStreamTimeout": true,
+      "completionReleases": true,
+      "disconnectReleases": true
+    }
+  ],
+  "rejectedRoutes": [
+    {
+      "path": "/v1/chat/completions",
+      "status": 429
+    },
+    {
+      "path": "/v1/completions",
+      "status": 429
+    },
+    {
+      "path": "/v1/responses",
+      "status": 429
+    },
+    {
+      "path": "/v1/responses/compact",
+      "status": 429
+    },
+    {
+      "path": "/v1/embeddings",
+      "status": 429
+    },
+    {
+      "path": "/v1/moderations",
+      "status": 429
+    },
+    {
+      "path": "/v1/alpha/search",
+      "status": 429
+    },
+    {
+      "path": "/v1/images/generations",
+      "status": 429
+    },
+    {
+      "path": "/v1/images/edits",
+      "status": 429
+    },
+    {
+      "path": "/v1/videos",
+      "status": 429
+    },
+    {
+      "path": "/v1/audio/speech",
+      "status": 429
+    },
+    {
+      "path": "/v1/audio/transcriptions",
+      "status": 429
+    },
+    {
+      "path": "/v1/audio/translations",
+      "status": 429
+    },
+    {
+      "path": "/v1/messages",
+      "status": 429
+    },
+    {
+      "path": "/anthropic/v1/messages",
+      "status": 429
+    },
+    {
+      "path": "/v1/rerank",
+      "status": 429
+    },
+    {
+      "path": "/jina/v1/embeddings",
+      "status": 429
+    },
+    {
+      "path": "/jina/v1/rerank",
+      "status": 429
+    },
+    {
+      "path": "/v1/systemone",
+      "status": 429
+    },
+    {
+      "path": "/typesafe/v1/systemone",
+      "status": 429
+    },
+    {
+      "path": "/doubao/v3/contents/generations/tasks",
+      "status": 429
+    },
+    {
+      "path": "/gemini/v1beta/models/concurrency-test:generateContent",
+      "status": 429
+    },
+    {
+      "path": "/v1beta/models/concurrency-test:generateContent",
+      "status": 429
+    },
+    {
+      "path": "/admin/playground/chat",
+      "status": 429
+    }
+  ],
+  "discoveryAtCap": [
+    {
+      "path": "/v1/models",
+      "status": 200
+    },
+    {
+      "path": "/anthropic/v1/models",
+      "status": 200
+    },
+    {
+      "path": "/gemini/v1beta/models",
+      "status": 200
+    },
+    {
+      "path": "/v1beta/models",
+      "status": 200
+    },
+    {
+      "path": "/v1/videos/gateway-no-such-task",
+      "method": "GET",
+      "status": 500
+    },
+    {
+      "path": "/v1/videos/gateway-no-such-task",
+      "method": "DELETE",
+      "status": 500
+    },
+    {
+      "path": "/doubao/v3/contents/generations/tasks/gateway-no-such-task",
+      "method": "GET",
+      "status": 500
+    },
+    {
+      "path": "/doubao/v3/contents/generations/tasks/gateway-no-such-task",
+      "method": "DELETE",
+      "status": 500
+    }
+  ],
+  "webSockets": [
+    {
+      "path": "/v1/chat/completions",
+      "idleBeyondTimeout": true,
+      "rejectionAndRetry": true,
+      "activeSharedCap": true,
+      "disconnectReleases": true
+    },
+    {
+      "path": "/v1/messages",
+      "idleBeyondTimeout": true,
+      "rejectionAndRetry": true,
+      "activeSharedCap": true,
+      "disconnectReleases": true
+    },
+    {
+      "path": "/anthropic/v1/messages",
+      "idleBeyondTimeout": true,
+      "rejectionAndRetry": true,
+      "activeSharedCap": true,
+      "disconnectReleases": true
+    },
+    {
+      "path": "/gemini/v1beta/models/concurrency-test:streamGenerateContent",
+      "idleBeyondTimeout": true,
+      "rejectionAndRetry": true,
+      "activeSharedCap": true,
+      "disconnectReleases": true
+    },
+    {
+      "path": "/v1beta/models/concurrency-test:streamGenerateContent",
+      "idleBeyondTimeout": true,
+      "rejectionAndRetry": true,
+      "activeSharedCap": true,
+      "disconnectReleases": true
+    }
+  ],
+  "firstResponseTimeouts": [
+    {
+      "protocol": "OpenAI Chat SSE",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Anthropic SSE",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Anthropic alias SSE",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Gemini SSE",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Gemini alias JSON stream",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Playground JWT stream",
+      "status": 500,
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    }
+  ],
+  "idleTimeouts": [
+    {
+      "protocol": "OpenAI Chat SSE",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Anthropic SSE",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Anthropic alias SSE",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Gemini SSE",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Gemini alias JSON stream",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    },
+    {
+      "protocol": "Playground JWT stream",
+      "upstreamCanceled": true,
+      "budgetReleased": true
+    }
+  ],
+  "enableWhileActive": "passed",
+  "nonStreamingTimeout": {
+    "status": 500,
+    "releases": true
+  },
+  "result": "passed"
+}

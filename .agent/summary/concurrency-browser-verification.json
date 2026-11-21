@@ -1,0 +1,23 @@
+{
+  "limit": 6,
+  "pageErrors": [],
+  "settingsPage": "http://127.0.0.1:8090/admin/system",
+  "idleWebSockets": 7,
+  "postWithSevenIdleSockets": 200,
+  "postWithOneActiveGeneration": 200,
+  "activeGenerationsAtCap": 6,
+  "postAtCap": {
+    "status": 429,
+    "retryAfter": "1",
+    "error": "concurrency_limit_exceeded"
+  },
+  "webSocketAtCap": {
+    "type": "response.failed",
+    "code": "concurrency_limit_exceeded"
+  },
+  "postAfterLoweringCap": 429,
+  "postAfterRaisingCap": 200,
+  "sameSocketRetryAfterCompletion": "response.completed",
+  "postAfterDisconnect": 200,
+  "result": "passed"
+}
