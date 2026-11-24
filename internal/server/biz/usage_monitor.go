@@ -527,7 +527,9 @@ func (svc *UsageMonitorService) loadSince(ctx context.Context, since time.Time) 
 	return items, maxUpdated, nil
 }
 
-// ListChannels returns all active (non-soft-deleted) monitor channels from the database.
+// ListChannels returns the active (non-soft-deleted) monitor channels the caller
+// may see: every monitor for a system principal, and for a user only the ones
+// whose channels are routable by them (see filterMonitorsByChannelAccess).
 func (svc *UsageMonitorService) ListChannels(ctx context.Context) ([]*ent.UsageMonitorChannel, error) {
 	client := svc.entFromContext(ctx)
 	channels, err := client.UsageMonitorChannel.Query().
@@ -541,7 +543,11 @@ func (svc *UsageMonitorService) ListChannels(ctx context.Context) ([]*ent.UsageM
 		svc.cache.Set(ch.ID, ch)
 	}
 
-	return channels, nil
+	viewer, ok := contexts.GetActingUser(ctx)
+	if !ok || viewer == nil {
+		return channels, nil
+	}
+	return svc.filterMonitorsByChannelAccess(ctx, viewer, channels), nil
 }
 
 // ListChannelsFromCache returns all usage monitor channels from the in-memory cache.

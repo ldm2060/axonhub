@@ -14,7 +14,13 @@ This fork surfaces **user-added quota monitors** (custom and template) in the he
 | `provider_quota_status` | Built-in checkers (`channel.providerQuotaStatus`) | `QuotaRow` |
 | `usage_monitor_channels` | `/admin/usage-monitor` (builtin / custom / template) | `MonitorQuotaRow` |
 
-`QuotaBadges` always queries `useUsageMonitorChannels` and lists every monitor. **Do not gate monitors on a bound channel, credentials, `quotaReady`, or any other "activation" prerequisite.** A monitor the user added must appear even when polling is in error.
+`QuotaBadges` always queries `useUsageMonitorChannels` and lists every monitor the server returns. **Do not gate monitors on a bound channel, credentials, `quotaReady`, or any other "activation" prerequisite.** A monitor the user added must appear even when polling is in error.
+
+## Per-user visibility (fork rule)
+
+`usageMonitorChannelsList` returns only the monitors the caller may see (`filterMonitorsByChannelAccess`): a monitor is listed when the caller can route through at least one channel its quota belongs to — their own, published, shared with them, or pooled with them — or when the caller is the one who added it. The system owner, admins, and principals without a user keep the full list.
+
+"该监控对应的渠道" is the same set the period-quota estimator prices: the bound channel when there is one, otherwise the enabled channels of the monitor's `providerType`, plus any channel whose `pooling.monitorId` points at the monitor. Keep the gate server-side: the popover renders whatever the list returns, and a client-side copy would leave another account's quota readable in the GraphQL response.
 
 ## Template badges
 
