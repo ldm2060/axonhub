@@ -162,6 +162,7 @@ export const PriceScheduleEditor = memo(function PriceScheduleEditor({
           currencyCode={currencyCode}
           defaultTimezone={defaultTimezone}
           portalContainer={portalContainer}
+          schedule={schedule}
         />
       )}
     </div>
@@ -170,18 +171,22 @@ export const PriceScheduleEditor = memo(function PriceScheduleEditor({
 
 // ==================== Schedule Content (only rendered when enabled) ====================
 
-const ScheduleContent = memo(function ScheduleContent({
+// Deliberately not memoized: `schedule` is the only prop that changes, and it has to reach
+// the override cards for their condition rows to update. See the note on OverrideCard.
+function ScheduleContent({
   control,
   priceIndex,
   currencyCode,
   defaultTimezone,
   portalContainer,
+  schedule,
 }: {
   control: Control<ScheduleFormValues>;
   priceIndex: number;
   currencyCode?: string;
   defaultTimezone: string;
   portalContainer?: HTMLElement | null;
+  schedule: NonNullable<ScheduleFormValues['prices'][number]['price']['schedule']>;
 }) {
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
@@ -248,6 +253,7 @@ const ScheduleContent = memo(function ScheduleContent({
             overrideIndex={overrideIndex}
             currencyCode={currencyCode}
             portalContainer={portalContainer}
+            when={schedule.overrides[overrideIndex]?.when ?? {}}
             onRemove={() => removeOverride(overrideIndex)}
           />
         ))}
@@ -256,7 +262,7 @@ const ScheduleContent = memo(function ScheduleContent({
       </div>
     </div>
   );
-});
+}
 
 // ==================== Override Card ====================
 
@@ -264,12 +270,19 @@ type ConditionType = 'dailyTime' | 'weekdays' | 'dateRange';
 
 const CONDITION_TYPES: ConditionType[] = ['dailyTime', 'weekdays', 'dateRange'];
 
+// `when` is passed down from ScheduleContent rather than watched here. RHF's setValue
+// writes `when.dailyTime` / `when.weekdays` / `when.dateRange` in place, so a useWatch on
+// `...when` holds the very object being mutated and its deep-equal guard reports
+// "unchanged": the card would never re-render and a newly added condition row would not
+// appear until some unrelated re-render flushed it. ScheduleContent re-renders off
+// PriceScheduleEditor's watch on `prices[i].price.schedule`, so the prop is always current.
 const OverrideCard = memo(function OverrideCard({
   control,
   priceIndex,
   overrideIndex,
   currencyCode,
   portalContainer,
+  when,
   onRemove,
 }: {
   control: Control<ScheduleFormValues>;
@@ -277,13 +290,13 @@ const OverrideCard = memo(function OverrideCard({
   overrideIndex: number;
   currencyCode?: string;
   portalContainer?: HTMLElement | null;
+  when: ScheduleOverride['when'];
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
   const { setValue } = useFormContext<ScheduleFormValues>();
 
   const base = `prices.${priceIndex}.price.schedule.overrides.${overrideIndex}`;
-  const when = useScheduleWatch<ScheduleOverride['when']>(control, `${base}.when`);
 
   // Build condition list from when object
   const conditions = useMemo(() => {
