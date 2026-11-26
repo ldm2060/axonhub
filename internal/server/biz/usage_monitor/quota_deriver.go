@@ -65,28 +65,35 @@ func deriveClaudeCode(fields []ParsedField) QuotaDerivedStatus {
 				maxUtil = v
 			}
 		}
-		if f.Key == "unified_status" {
-			if val, ok := f.Value.(string); ok && val == "throttled" {
-				return QuotaDerivedStatus{
-					Status: "exhausted",
-					Ready:  false,
-					Limits: []provider_quota.QuotaLimitStatus{
-						provider_quota.NewTokenLimitStatus("exhausted", maxUtil, nil),
-					},
-				}
-			}
+	}
+
+	// The provider's own throttled flag outranks the ratio, so it is checked
+	// after every window has been read: a monitor that lists unified_status
+	// before its utilization fields must still report the real usage ratio on
+	// the exhausted limit instead of the zero seen so far.
+	if findFieldString(fields, "unified_status") == "throttled" {
+		return QuotaDerivedStatus{
+			Status: "exhausted",
+			Ready:  false,
+			Limits: []provider_quota.QuotaLimitStatus{
+				provider_quota.NewTokenLimitStatus("exhausted", maxUtil, nil),
+			},
 		}
 	}
 
+	// A window at 100% is exhausted, the same threshold the built-in Claude Code
+	// checker applies to Anthropic-Ratelimit-Unified-*-Utilization.
 	status := "available"
-	if maxUtil >= warningThreshold {
+	if maxUtil >= 1.0 {
+		status = "exhausted"
+	} else if maxUtil >= warningThreshold {
 		status = "warning"
 	}
 
 	nextReset := earliestDatetime(fields)
 	return QuotaDerivedStatus{
 		Status: status,
-		Ready:  true,
+		Ready:  status != "exhausted",
 		Limits: []provider_quota.QuotaLimitStatus{
 			provider_quota.NewTokenLimitStatus(status, maxUtil, nextReset),
 		},
@@ -316,10 +323,17 @@ func deriveGitHubCopilot(fields []ParsedField) QuotaDerivedStatus {
 }
 
 func deriveNanoGPT(fields []ParsedField) QuotaDerivedStatus {
+	// Percent is 0-100 while maxPct is a 0-1 ratio, so the running maximum has
+	// to be compared against the converted value: comparing the raw percent let
+	// a later, lower-percent window overwrite an exhausted one, which left a
+	// monitor at 100% reporting available.
 	var maxPct float64
 	for _, f := range fields {
-		if f.Format == "percentage" && f.Percent > maxPct {
-			maxPct = f.Percent / 100.0
+		if f.Format != "percentage" {
+			continue
+		}
+		if ratio := f.Percent / 100.0; ratio > maxPct {
+			maxPct = ratio
 		}
 	}
 
@@ -350,13 +364,15 @@ func deriveNanoGPT(fields []ParsedField) QuotaDerivedStatus {
 	}
 
 	status := "available"
-	if maxPct >= warningThreshold {
+	if maxPct >= 1.0 {
+		status = "exhausted"
+	} else if maxPct >= warningThreshold {
 		status = "warning"
 	}
 
 	return QuotaDerivedStatus{
 		Status: status,
-		Ready:  true,
+		Ready:  status != "exhausted",
 		Limits: []provider_quota.QuotaLimitStatus{
 			provider_quota.NewTokenLimitStatus(status, maxPct, nil),
 		},

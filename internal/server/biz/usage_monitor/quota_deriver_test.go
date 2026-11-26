@@ -497,3 +497,65 @@ func TestDeriveQuotaStatus_WindowedTemplatesStampFieldKey(t *testing.T) {
 	check(t, "xai_subscription", "weekly_used_pct", "weekly")
 	check(t, "cline", "last5h_used_pct", "5h")
 }
+
+// Claude Code: a window at 100% utilization is exhausted, the same threshold the
+// built-in checker applies to the unified utilization headers. A monitor whose
+// bar reads 100% must therefore report exhausted, not warning.
+func TestDeriveQuotaStatus_ClaudeCode_FullUtilizationExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "5h_utilization", Format: "fraction", Value: 1.0},
+		{Key: "7d_utilization", Format: "fraction", Value: 0.42},
+	}
+	result := DeriveQuotaStatus("claudecode", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	require.Len(t, result.Limits, 1)
+	assert.InDelta(t, 1.0, result.Limits[0].UsageRatio, 1e-9)
+}
+
+func TestDeriveQuotaStatus_ClaudeCode_WarningBelowExhaustion(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "5h_utilization", Format: "fraction", Value: 0.99},
+		{Key: "7d_utilization", Format: "fraction", Value: 0.42},
+	}
+	result := DeriveQuotaStatus("claudecode", fields)
+	assert.Equal(t, "warning", result.Status)
+	assert.True(t, result.Ready)
+}
+
+// The provider's throttled flag outranks the ratio, and must not zero it out
+// when the status field is listed before the utilization fields.
+func TestDeriveQuotaStatus_ClaudeCode_ThrottledKeepsUsageRatio(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "unified_status", Format: "text", Value: "throttled"},
+		{Key: "5h_utilization", Format: "fraction", Value: 0.93},
+	}
+	result := DeriveQuotaStatus("claudecode", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+	require.Len(t, result.Limits, 1)
+	assert.InDelta(t, 0.93, result.Limits[0].UsageRatio, 1e-9)
+}
+
+// NanoGPT: a fully used window is exhausted even while the subscription state
+// still reads active, matching the NanoGPT checker's own threshold.
+func TestDeriveQuotaStatus_NanoGPT_FullUsageExhausted(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "weekly_tokens_pct", Format: "percentage", Percent: 100},
+		{Key: "daily_tokens_pct", Format: "percentage", Percent: 12},
+		{Key: "state", Format: "text", Value: "active"},
+	}
+	result := DeriveQuotaStatus("nanogpt", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}
+
+func TestDeriveQuotaStatus_NanoGPT_InactiveStateStillWins(t *testing.T) {
+	fields := []ParsedField{
+		{Key: "weekly_tokens_pct", Format: "percentage", Percent: 10},
+		{Key: "state", Format: "text", Value: "inactive"},
+	}
+	result := DeriveQuotaStatus("nanogpt", fields)
+	assert.Equal(t, "exhausted", result.Status)
+	assert.False(t, result.Ready)
+}

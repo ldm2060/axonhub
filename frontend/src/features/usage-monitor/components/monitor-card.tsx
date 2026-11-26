@@ -28,6 +28,39 @@ function StatusBadge({ status }: { status: UsageMonitorChannel['status'] }) {
   }
 }
 
+const QUOTA_STATUS_LABEL_KEYS = {
+  available: 'quota.status.available',
+  warning: 'quota.status.warning',
+  exhausted: 'quota.status.exhausted',
+  unknown: 'quota.status.unknown',
+} as const;
+
+// The quota status the backend derives on every poll (DeriveQuotaStatus) is
+// separate from the poll status above: a monitor can poll fine (活跃) while its
+// account is spent (已耗尽). The card's bars only show the parsed field's own
+// percentage, so without this badge a full bar reads as "nothing happened" —
+// the exhausted state was fetched but never rendered here.
+function QuotaStatusBadge({ status }: { status: UsageMonitorChannel['quotaStatus'] }) {
+  const { t } = useTranslation();
+
+  if (!status) return null;
+
+  const className =
+    status === 'exhausted'
+      ? 'bg-red-100 text-red-800'
+      : status === 'warning'
+        ? 'bg-amber-100 text-amber-800'
+        : status === 'available'
+          ? 'bg-green-100 text-green-800'
+          : undefined;
+
+  return (
+    <Badge variant={className ? undefined : 'secondary'} className={className}>
+      {t(QUOTA_STATUS_LABEL_KEYS[status])}
+    </Badge>
+  );
+}
+
 function getBorderClass(status: UsageMonitorChannel['status']): string {
   switch (status) {
     case 'active':
@@ -103,7 +136,10 @@ export function MonitorCard({ channel }: { channel: UsageMonitorChannel }) {
       {/* Header */}
       <div className='flex items-center justify-between gap-2'>
         <div className='truncate font-semibold'>{channel.name}</div>
-        <StatusBadge status={channel.status} />
+        <div className='flex shrink-0 items-center gap-1.5'>
+          <QuotaStatusBadge status={channel.quotaStatus} />
+          <StatusBadge status={channel.status} />
+        </div>
       </div>
 
       {/* Sub-info */}
