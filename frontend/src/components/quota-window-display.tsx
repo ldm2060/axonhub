@@ -19,6 +19,19 @@ export function getLimitDurationPercent(limit: ProviderQuotaLimit): number | und
   return getDurationPercent(limit.periodStart, limit.nextResetAt);
 }
 
+// usagePercent formats a used percentage for a label. Plain Math.round turns
+// 99.91% into "100%", which reads as exhausted on a window whose status is only
+// warning — the bar and the red/amber color already agree with the status, so
+// the number has to as well. A value that rounds up to a full bar without
+// reaching it keeps one decimal; a genuine 100 (or an overage clamped to it)
+// stays a whole number.
+export function usagePercent(pct: number): number {
+  if (!Number.isFinite(pct)) return 0;
+  const clamped = Math.min(Math.max(pct, 0), 100);
+  if (Math.round(clamped) >= 100 && clamped < 100) return Math.round(clamped * 10) / 10;
+  return Math.round(clamped);
+}
+
 // UsageTimeBar shows usage on a single progress bar with a small triangle below
 // it marking how far the reset window has elapsed (time progress). Hovering
 // reveals the detailed figures via tooltip, keeping the row compact.

@@ -274,6 +274,30 @@ const {
   buildQuotaDisplayItems,
 } = await loadTsModule(modeHelpers);
 
+test('monitor field bars label usage with the honest percent helper', () => {
+  // The monitor cards and the header popover share this renderer, so its label
+  // must not round a 99.9% window up to a full-looking 100%.
+  const renderer = read('features/usage-monitor/components/shared-field-renderer.tsx');
+
+  assert.match(renderer, /\{usagePercent\(pct\)\}%/);
+  assert.doesNotMatch(renderer, /\{Math\.round\(pct\)\}%/);
+});
+
+test('a usage label never claims 100% while the window is still below full', async () => {
+  // The Command Code monthly window reports 99.904%: plain Math.round prints
+  // "100%", which reads as exhausted on a window whose status is only warning.
+  const { usagePercent } = await loadTsModule(usagePercentText);
+
+  assert.equal(usagePercent(99.904006923), 99.9);
+  assert.equal(usagePercent(99.5), 99.5);
+  assert.equal(usagePercent(99.49), 99);
+  assert.equal(usagePercent(27.488668512), 27);
+  assert.equal(usagePercent(0), 0);
+  // A genuinely full window — and an overage clamped to it — stays whole.
+  assert.equal(usagePercent(100), 100);
+  assert.equal(usagePercent(132), 100);
+});
+
 test('Codex next-expiry pick ignores reset credits that already expired', async () => {
   // The picker lives inside the Codex render branch, so rebuild it from the
   // exact production source and run it against mixed fixtures.
@@ -888,6 +912,15 @@ ts.forEachChild(displayAst, (node) => {
 });
 assert.ok(useFormatTimeToResetNode, 'useFormatTimeToReset must stay in quota-window-display.tsx');
 const useFormatTimeToResetText = useFormatTimeToResetNode.getText(displayAst);
+// The usage label keeps one decimal when a value rounds up to a full bar
+// without reaching it, so the synthetic modules splice in the production helper
+// rather than a second copy of the rounding rule.
+let usagePercentNode;
+ts.forEachChild(displayAst, (node) => {
+  if (ts.isFunctionDeclaration(node) && node.name?.text === 'usagePercent') usagePercentNode = node;
+});
+assert.ok(usagePercentNode, 'usagePercent must stay in quota-window-display.tsx');
+const usagePercentText = usagePercentNode.getText(displayAst);
 
 // Locate render-branch expressions to rebuild as executable functions.
 const findVariableDeclaration = (root, name) => {
@@ -964,6 +997,7 @@ const syntheticRenderModule = [
   '}',
   'function useTranslation() { return { t }; }',
   useFormatTimeToResetText,
+  usagePercentText,
   'const formatTimeToReset = useFormatTimeToReset();',
   ...syntheticFuncNodes.map((node) => node.getText(badgesAst)),
   ...syntheticConstNodes.map((node) => node.getText(badgesAst)),
@@ -1300,7 +1334,7 @@ const apiKeyFunctionNodes = badgesAst.statements.filter(
   (node) => ts.isFunctionDeclaration(node) && apiKeyFunctionNames.includes(node.name?.text)
 );
 assert.equal(apiKeyFunctionNodes.length, apiKeyFunctionNames.length);
-const sharedDisplayFunctionNames = ['UsageTimeBar', 'getDurationPercent', 'getLimitDurationPercent'];
+const sharedDisplayFunctionNames = ['UsageTimeBar', 'getDurationPercent', 'getLimitDurationPercent', 'usagePercent'];
 const sharedDisplayFunctionNodes = [...displayAst.statements].filter(
   (node) => ts.isFunctionDeclaration(node) && sharedDisplayFunctionNames.includes(node.name?.text)
 );

@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { getLimitDurationPercent, quotaWindowLabel } from '@/components/quota-window-display';
+import { getLimitDurationPercent, quotaWindowLabel, usagePercent } from '@/components/quota-window-display';
 import type { ProviderQuotaLimit } from '@/features/system/data/quotas';
 import type { ParsedField, DisplayField } from '../data/schema';
 import { BadgeDisplay } from './badge-display';
@@ -128,7 +128,7 @@ function FieldGroup({ group, limit, t }: { group: { pct: ParsedField; reset?: Pa
             <span className='ml-1.5 rounded bg-green-500/10 px-1 py-px text-[10px] font-medium text-green-500'>{windowLabel}</span>
           )}
         </span>
-        <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
+        <span className='text-foreground font-medium'>{usagePercent(pct)}%</span>
       </div>
       {enhanced ? (
         <div className='relative pb-2'>

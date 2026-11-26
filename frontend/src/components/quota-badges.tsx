@@ -46,6 +46,7 @@ import {
   WINDOW_LABEL_KEYS,
   getDurationPercent,
   getLimitDurationPercent,
+  usagePercent,
   useFormatTimeToReset,
 } from '@/components/quota-window-display';
 import { useMyPoolQuotas, POOL_STATUS, type MyPoolQuota } from '@/features/channels/data/pooling';
@@ -546,7 +547,7 @@ function APIKeyQuotaDetails({
                         <span className='text-muted-foreground truncate font-medium'>{quotaWindowLabel(t, limit.window)}</span>
                         {known && (
                           <span className={`shrink-0 font-normal tabular-nums ${quotaPercentClass(usedPercent)}`}>
-                            {Math.round(usedPercent)}%
+                            {usagePercent(usedPercent)}%
                           </span>
                         )}
                       </div>
@@ -558,7 +559,7 @@ function APIKeyQuotaDetails({
                             tooltip={
                               <div className='space-y-0.5'>
                                 <div className='font-medium'>{quotaWindowLabel(t, limit.window)}</div>
-                                <div>{t('quota.label.percent_used', { percent: Math.round(usedPercent) })}</div>
+                                <div>{t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}</div>
                                 {limit.nextResetAt && <div>{formatTimeToReset(limit.nextResetAt)}</div>}
                               </div>
                             }
@@ -702,7 +703,7 @@ function APIKeyQuotaList({
               <div key={`capacity-${window}`} className='space-y-1'>
                 <div className='flex items-baseline justify-between gap-2 text-xs'>
                   <span className='text-muted-foreground truncate font-medium'>{quotaWindowLabel(t, window)}</span>
-                  <span className={`shrink-0 font-normal tabular-nums ${quotaPercentClass(percent)}`}>{Math.round(percent)}%</span>
+                  <span className={`shrink-0 font-normal tabular-nums ${quotaPercentClass(percent)}`}>{usagePercent(percent)}%</span>
                 </div>
                 <UsageTimeBar
                   usagePercent={percent}
@@ -710,7 +711,7 @@ function APIKeyQuotaList({
                   tooltip={
                     <div className='space-y-0.5'>
                       <div className='font-medium'>{quotaWindowLabel(t, window)}</div>
-                      <div>{t('quota.label.percent_used', { percent: Math.round(percent) })}</div>
+                      <div>{t('quota.label.percent_used', { percent: usagePercent(percent) })}</div>
                       {detail && <div>{detail}</div>}
                       {limit.nextResetAt && <div>{formatTimeToReset(limit.nextResetAt)}</div>}
                     </div>
@@ -948,7 +949,7 @@ function QuotaRow({
                       <div className='flex items-center justify-between text-xs'>
                         <span className='text-muted-foreground font-medium'>{t('quota.window.5h')}</span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round((qd.windows['5h'].utilization || 0) * 100) })}
+                          {t('quota.label.percent_used', { percent: usagePercent((qd.windows['5h'].utilization || 0) * 100) })}
                         </span>
                       </div>
                       <UsageTimeBar
@@ -957,7 +958,7 @@ function QuotaRow({
                         tooltip={
                           <div className='space-y-0.5'>
                             <div className='font-medium'>{t('quota.window.5h')}</div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round((qd.windows['5h'].utilization || 0) * 100) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent((qd.windows['5h'].utilization || 0) * 100) })}</div>
                             {getClaudeDurationPercent('5h', qd.windows['5h'].reset) !== undefined && (
                               <div>
                                 {t('quota.label.time_elapsed')}: {Math.round(getClaudeDurationPercent('5h', qd.windows['5h'].reset) || 0)}%
@@ -980,7 +981,7 @@ function QuotaRow({
                       <div className='flex items-center justify-between text-xs'>
                         <span className='text-muted-foreground font-medium'>{t('quota.window.7d')}</span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round((qd.windows['7d'].utilization || 0) * 100) })}
+                          {t('quota.label.percent_used', { percent: usagePercent((qd.windows['7d'].utilization || 0) * 100) })}
                         </span>
                       </div>
                       <UsageTimeBar
@@ -989,7 +990,7 @@ function QuotaRow({
                         tooltip={
                           <div className='space-y-0.5'>
                             <div className='font-medium'>{t('quota.window.7d')}</div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round((qd.windows['7d'].utilization || 0) * 100) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent((qd.windows['7d'].utilization || 0) * 100) })}</div>
                             {getClaudeDurationPercent('7d', qd.windows['7d'].reset) !== undefined && (
                               <div>
                                 {t('quota.label.time_elapsed')}: {Math.round(getClaudeDurationPercent('7d', qd.windows['7d'].reset) || 0)}%
@@ -1017,7 +1018,7 @@ function QuotaRow({
                         <div className='flex items-center justify-between text-xs'>
                           <span className='text-muted-foreground font-medium'>{label}</span>
                           <span className='text-foreground font-medium'>
-                            {t('quota.label.percent_used', { percent: Math.round(usedPercent) })}
+                            {t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}
                           </span>
                         </div>
                         <UsageTimeBar
@@ -1026,7 +1027,7 @@ function QuotaRow({
                           tooltip={
                             <div className='space-y-0.5'>
                               <div className='font-medium'>{label}</div>
-                              <div>{t('quota.label.percent_used', { percent: Math.round(usedPercent) })}</div>
+                              <div>{t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}</div>
                               {durationPercent !== undefined && (
                                 <div>
                                   {t('quota.label.time_elapsed')}: {Math.round(durationPercent)}%
@@ -1050,7 +1051,7 @@ function QuotaRow({
                       <div className='flex items-center justify-between text-xs'>
                         <span className='text-muted-foreground font-medium'>{t('quota.label.overage_window')}</span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round((qd.windows['overage'].utilization || 0) * 100) })}
+                          {t('quota.label.percent_used', { percent: usagePercent((qd.windows['overage'].utilization || 0) * 100) })}
                         </span>
                       </div>
                       <UsageTimeBar
@@ -1059,7 +1060,7 @@ function QuotaRow({
                           <div className='space-y-0.5'>
                             <div className='font-medium'>{t('quota.label.overage_window')}</div>
                             <div>
-                              {t('quota.label.percent_used', { percent: Math.round((qd.windows['overage'].utilization || 0) * 100) })}
+                              {t('quota.label.percent_used', { percent: usagePercent((qd.windows['overage'].utilization || 0) * 100) })}
                             </div>
                           </div>
                         }
@@ -1118,7 +1119,7 @@ function QuotaRow({
                             </span>
                           </span>
                           <span className='text-foreground font-medium'>
-                            {t('quota.label.percent_used', { percent: Math.round(usedPct) })}
+                            {t('quota.label.percent_used', { percent: usagePercent(usedPct) })}
                           </span>
                         </div>
                         <UsageTimeBar
@@ -1129,7 +1130,7 @@ function QuotaRow({
                               <div>
                                 {Math.round(displayRem)}/{Math.round(displayTot)}
                               </div>
-                              <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                              <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                               {quota.nextResetAt && (
                                 <div>
                                   {formatTimeToReset(quota.nextResetAt)} ({formatDate(new Date(quota.nextResetAt).getTime() / 1000)})
@@ -1179,7 +1180,7 @@ function QuotaRow({
                           <span className='text-foreground font-medium'>
                             {snapshot.unlimited
                               ? t('quota.label.unlimited')
-                              : t('quota.label.percent_used', { percent: Math.round(usedPct) })}
+                              : t('quota.label.percent_used', { percent: usagePercent(usedPct) })}
                           </span>
                         </div>
                         {!snapshot.unlimited && (
@@ -1191,7 +1192,7 @@ function QuotaRow({
                                 <div>
                                   {Math.round(displayRem)}/{Math.round(displayTot)}
                                 </div>
-                                <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                                <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                                 {quota.nextResetAt && (
                                   <div>
                                     {formatTimeToReset(quota.nextResetAt)} ({formatDate(new Date(quota.nextResetAt).getTime() / 1000)})
@@ -1253,7 +1254,7 @@ function QuotaRow({
                           <div className='flex items-center justify-between text-xs'>
                             <span className='text-muted-foreground font-medium'>{label}</span>
                             <span className='text-foreground font-medium'>
-                              {t('quota.label.percent_used', { percent: Math.round(usedPercent) })}
+                              {t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}
                             </span>
                           </div>
                           <UsageTimeBar
@@ -1262,7 +1263,7 @@ function QuotaRow({
                             tooltip={
                               <div className='space-y-0.5'>
                                 <div className='font-medium'>{label}</div>
-                                <div>{t('quota.label.percent_used', { percent: Math.round(usedPercent) })}</div>
+                                <div>{t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}</div>
                                 {durationPercent !== undefined && (
                                   <div>
                                     {t('quota.label.time_elapsed')}: {Math.round(durationPercent)}%
@@ -1344,7 +1345,7 @@ function QuotaRow({
                     <div className='flex items-center justify-between text-xs'>
                       <span className='text-muted-foreground font-medium'>{t('quota.window.weekly')}</span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(weekly.usage_percent ?? 0) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(weekly.usage_percent ?? 0) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -1353,7 +1354,7 @@ function QuotaRow({
                       tooltip={
                         <div className='space-y-0.5'>
                           <div className='font-medium'>{t('quota.window.weekly')}</div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(weekly.usage_percent ?? 0) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(weekly.usage_percent ?? 0) })}</div>
                           {weeklyDurationPercent !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(weeklyDurationPercent)}%
@@ -1391,7 +1392,7 @@ function QuotaRow({
                         ) : null}
                       </span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(monthly.usage_percent ?? 0) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(monthly.usage_percent ?? 0) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -1400,7 +1401,7 @@ function QuotaRow({
                       tooltip={
                         <div className='space-y-0.5'>
                           <div className='font-medium'>{t('quota.window.monthly')}</div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(monthly.usage_percent ?? 0) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(monthly.usage_percent ?? 0) })}</div>
                           {monthlyDurationPercent !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(monthlyDurationPercent)}%
@@ -1460,7 +1461,7 @@ function QuotaRow({
                         ) : null}
                       </span>
                       <span className='text-foreground font-medium'>
-                        {hasUsagePercent ? t('quota.label.percent_used', { percent: Math.round(usedPct) }) : t('quota.label.unavailable')}
+                        {hasUsagePercent ? t('quota.label.percent_used', { percent: usagePercent(usedPct) }) : t('quota.label.unavailable')}
                       </span>
                     </div>
                     {hasUsagePercent ? (
@@ -1470,7 +1471,7 @@ function QuotaRow({
                         tooltip={
                           <div className='space-y-0.5'>
                             <div className='font-medium'>{t(labelKey)}</div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                             {durationPct !== undefined && (
                               <div>
                                 {t('quota.label.time_elapsed')}: {Math.round(durationPct)}%
@@ -1570,7 +1571,7 @@ function QuotaRow({
                           ({usedStr}/{totalStr})
                         </span>
                       </span>
-                      <span className='text-foreground font-medium'>{Math.round(pct)}%</span>
+                      <span className='text-foreground font-medium'>{usagePercent(pct)}%</span>
                     </div>
                     <UsageTimeBar
                       usagePercent={pct}
@@ -1581,7 +1582,7 @@ function QuotaRow({
                           <div>
                             {usedStr}/{totalStr}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(pct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(pct) })}</div>
                           {durationPct !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(durationPct)}%
@@ -1645,7 +1646,7 @@ function QuotaRow({
                     <div className='flex items-center justify-between text-xs'>
                       <span className='text-muted-foreground font-medium'>{t(labelKey)}</span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(usedPercent) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -1654,7 +1655,7 @@ function QuotaRow({
                       tooltip={
                         <div className='space-y-0.5'>
                           <div className='font-medium'>{t(labelKey)}</div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(usedPercent) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(usedPercent) })}</div>
                           {durationPercent !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(durationPercent)}%
@@ -1705,14 +1706,14 @@ function QuotaRow({
                 <div key={key} className={index > 0 ? 'border-border/60 space-y-1.5 border-t border-dashed pt-3' : 'space-y-1.5'}>
                   <div className='flex items-center justify-between text-xs'>
                     <span className='text-muted-foreground font-medium'>{t(labelKey)}</span>
-                    <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</span>
+                    <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</span>
                   </div>
                   <UsageTimeBar
                     usagePercent={usedPct}
                     tooltip={
                       <div className='space-y-0.5'>
                         <div className='font-medium'>{t(labelKey)}</div>
-                        <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                        <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                         {resetText && <div>{resetText}</div>}
                       </div>
                     }
@@ -1790,7 +1791,7 @@ function QuotaRow({
                         </span>
                       ) : null}
                     </span>
-                    <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</span>
+                    <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</span>
                   </div>
                   <UsageTimeBar
                     usagePercent={usedPct}
@@ -1803,7 +1804,7 @@ function QuotaRow({
                             {currency(usedUsd)} / {currency(capUsd)}
                           </div>
                         )}
-                        <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                        <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                         {durationPct !== undefined && (
                           <div>
                             {t('quota.label.time_elapsed')}: {Math.round(durationPct)}%
@@ -1839,7 +1840,7 @@ function QuotaRow({
                       </span>
                     </span>
                     <span className='text-foreground font-medium'>
-                      {t('quota.label.percent_used', { percent: Math.round(monthlyPct) })}
+                      {t('quota.label.percent_used', { percent: usagePercent(monthlyPct) })}
                     </span>
                   </div>
                   <UsageTimeBar
@@ -1851,7 +1852,7 @@ function QuotaRow({
                         <div>
                           {currency(monthlyUsed)} / {currency(monthlyLimit)}
                         </div>
-                        <div>{t('quota.label.percent_used', { percent: Math.round(monthlyPct) })}</div>
+                        <div>{t('quota.label.percent_used', { percent: usagePercent(monthlyPct) })}</div>
                         {monthlyDurationPct !== undefined && (
                           <div>
                             {t('quota.label.time_elapsed')}: {Math.round(monthlyDurationPct)}%
@@ -1924,7 +1925,7 @@ function QuotaRow({
                           </span>
                         </span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round(percentage) })}
+                          {t('quota.label.percent_used', { percent: usagePercent(percentage) })}
                         </span>
                       </div>
                       <UsageTimeBar
@@ -1935,7 +1936,7 @@ function QuotaRow({
                             <div>
                               {row.used.toLocaleString()}/{row.limit.toLocaleString()}
                             </div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round(percentage) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent(percentage) })}</div>
                             {(row.resetAt || row.resetAfterSeconds) && <div>{formatTimeToReset(row.resetAt ?? row.resetAfterSeconds)}</div>}
                           </div>
                         }
@@ -1997,13 +1998,13 @@ function QuotaRow({
             return (
               <>
                 {rows.map((row, index) => {
-                  const intervalUsed = Math.round(row.intervalUsedPercent);
-                  const intervalTotal = Math.round(row.intervalTotalPercent);
+                  const intervalUsed = usagePercent(row.intervalUsedPercent);
+                  const intervalTotal = usagePercent(row.intervalTotalPercent);
                   const showIntervalTotal = intervalTotal !== 100;
 
                   const hasWeekly = row.weeklyStatus && row.weeklyStatus !== '';
-                  const weeklyUsed = Math.round(row.weeklyUsedPercent);
-                  const weeklyTotal = Math.round(row.weeklyTotalPercent);
+                  const weeklyUsed = usagePercent(row.weeklyUsedPercent);
+                  const weeklyTotal = usagePercent(row.weeklyTotalPercent);
                   const showWeeklyTotal = weeklyTotal !== 100;
 
                   return (
@@ -2106,7 +2107,7 @@ function QuotaRow({
                       <div className='flex items-center justify-between text-xs'>
                         <span className='text-muted-foreground font-medium'>{windowLabels[row.window] ?? row.window}</span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round(percentage) })}
+                          {t('quota.label.percent_used', { percent: usagePercent(percentage) })}
                         </span>
                       </div>
                       <UsageTimeBar
@@ -2122,7 +2123,7 @@ function QuotaRow({
                         tooltip={
                           <div className='space-y-0.5'>
                             <div className='font-medium'>{windowLabels[row.window] ?? row.window}</div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round(percentage) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent(percentage) })}</div>
                             {row.remaining != null && row.usage != null && (
                               <div>
                                 {t('quota.label.credits_amount', {
@@ -2177,7 +2178,9 @@ function QuotaRow({
                           </span>
                         )}
                       </span>
-                      <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</span>
+                      <span className='text-foreground font-medium'>
+                        {t('quota.label.percent_used', { percent: usagePercent(usedPct) })}
+                      </span>
                     </div>
                     <UsageTimeBar
                       usagePercent={usedPct}
@@ -2194,7 +2197,7 @@ function QuotaRow({
                               {usedCredits}/{maxCredits}
                             </div>
                           )}
-                          <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                           {weeklyNextRegenAt && <div>{formatTimeToReset(weeklyNextRegenAt, usedPct, regenTick)}</div>}
                         </div>
                       }
@@ -2220,7 +2223,7 @@ function QuotaRow({
                         </span>
                       </span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(fiveHrUsedPct) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(fiveHrUsedPct) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -2236,7 +2239,7 @@ function QuotaRow({
                           <div>
                             {Math.round(fiveHrUsed)}/{Math.round(fiveHrMax)}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(fiveHrUsedPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(fiveHrUsedPct) })}</div>
                           {qd.rollingFiveHourLimit.nextTickAt && (
                             <div>
                               {formatTimeToReset(
@@ -2278,7 +2281,7 @@ function QuotaRow({
                         </span>
                       </span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(searchUsedPct) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(searchUsedPct) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -2294,7 +2297,7 @@ function QuotaRow({
                           <div>
                             {searchUsed}/{searchLimit}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(searchUsedPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(searchUsedPct) })}</div>
                           {searchHourly.renewsAt && <div>{formatTimeToReset(searchHourly.renewsAt)}</div>}
                         </div>
                       }
@@ -2350,7 +2353,9 @@ function QuotaRow({
                           ({kwhUsed}/{kwhIncluded})
                         </span>
                       </span>
-                      <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</span>
+                      <span className='text-foreground font-medium'>
+                        {t('quota.label.percent_used', { percent: usagePercent(usedPct) })}
+                      </span>
                     </div>
                     <UsageTimeBar
                       usagePercent={usedPct}
@@ -2361,7 +2366,7 @@ function QuotaRow({
                           <div>
                             {kwhUsed}/{kwhIncluded}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                           {durationPercent !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(durationPercent)}%
@@ -2396,7 +2401,7 @@ function QuotaRow({
                 // reported.
                 const dfeUsed = dfe.kwh_used ?? (dfe.kwh_remaining != null ? Math.max(0, dfeIncluded - dfe.kwh_remaining) : 0);
                 const dfeLimit = quota.limits.find((l) => l.window === 'daily_free_energy');
-                const usagePercent = dfeLimit ? dfeLimit.usageRatio * 100 : (dfeUsed / dfeIncluded) * 100;
+                const dfeUsedPercent = dfeLimit ? dfeLimit.usageRatio * 100 : (dfeUsed / dfeIncluded) * 100;
                 // The limit carries no periodStart (deliberately display-only), so the
                 // elapsed marker comes from the known 24h cadence and the raw reset.
                 const dfeReset = dfe.reset_at;
@@ -2419,11 +2424,11 @@ function QuotaRow({
                           </span>
                         </span>
                         <span className='text-foreground font-medium'>
-                          {t('quota.label.percent_used', { percent: Math.round(usagePercent) })}
+                          {t('quota.label.percent_used', { percent: usagePercent(dfeUsedPercent) })}
                         </span>
                       </div>
                       <UsageTimeBar
-                        usagePercent={usagePercent}
+                        usagePercent={dfeUsedPercent}
                         durationPercent={durationPercent}
                         tooltip={
                           <div className='space-y-0.5'>
@@ -2431,7 +2436,7 @@ function QuotaRow({
                             <div>
                               {dfeUsed}/{dfeIncluded}
                             </div>
-                            <div>{t('quota.label.percent_used', { percent: Math.round(usagePercent) })}</div>
+                            <div>{t('quota.label.percent_used', { percent: usagePercent(dfeUsedPercent) })}</div>
                             {durationPercent !== undefined && (
                               <div>
                                 {t('quota.label.time_elapsed')}: {Math.round(durationPercent)}%
@@ -2505,7 +2510,9 @@ function QuotaRow({
                           ({subUsed}/{subTotal})
                         </span>
                       </span>
-                      <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(subPct) })}</span>
+                      <span className='text-foreground font-medium'>
+                        {t('quota.label.percent_used', { percent: usagePercent(subPct) })}
+                      </span>
                     </div>
                     <UsageTimeBar
                       usagePercent={subPct}
@@ -2516,7 +2523,7 @@ function QuotaRow({
                           <div>
                             {subUsed}/{subTotal}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(subPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(subPct) })}</div>
                           {qd.subscription.cycle_end && <div>{formatTimeToReset(qd.subscription.cycle_end)}</div>}
                         </div>
                       }
@@ -2544,7 +2551,7 @@ function QuotaRow({
                           )}
                         </span>
                         <span className='text-foreground font-medium'>
-                          {spent != null && limit != null ? t('quota.label.percent_used', { percent: Math.round(fallbackPct) }) : ''}
+                          {spent != null && limit != null ? t('quota.label.percent_used', { percent: usagePercent(fallbackPct) }) : ''}
                         </span>
                       </div>
                       {spent != null && limit != null && limit > 0 && (
@@ -2556,7 +2563,7 @@ function QuotaRow({
                               <div>
                                 ${spent.toFixed(2)}/${limit.toFixed(2)}
                               </div>
-                              <div>{t('quota.label.percent_used', { percent: Math.round(fallbackPct) })}</div>
+                              <div>{t('quota.label.percent_used', { percent: usagePercent(fallbackPct) })}</div>
                             </div>
                           }
                         />
@@ -2597,7 +2604,7 @@ function QuotaRow({
                         </span>
                       </span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(tokenPct) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(tokenPct) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -2608,7 +2615,7 @@ function QuotaRow({
                           <div>
                             ${tokenUsed.toFixed(2)}/${tokenTotal.toFixed(2)}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(tokenPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(tokenPct) })}</div>
                         </div>
                       }
                     />
@@ -2650,7 +2657,7 @@ function QuotaRow({
                         </span>
                       </span>
                       <span className='text-foreground font-medium'>
-                        {t('quota.label.percent_used', { percent: Math.round(monthlyPct) })}
+                        {t('quota.label.percent_used', { percent: usagePercent(monthlyPct) })}
                       </span>
                     </div>
                     <UsageTimeBar
@@ -2661,7 +2668,7 @@ function QuotaRow({
                           <div>
                             ${qd.payg.token_monthly_used_usd.toFixed(2)}/${qd.payg.token_monthly_limit_usd.toFixed(2)}
                           </div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(monthlyPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(monthlyPct) })}</div>
                         </div>
                       }
                     />
@@ -2703,7 +2710,7 @@ function QuotaRow({
                       <div className='space-y-0.5'>
                         <div className='font-medium'>{t('quota.label.credits_remaining')}</div>
                         <div>{Number.isInteger(balance) ? balance : balance.toFixed(2)}</div>
-                        <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                        <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                       </div>
                     }
                   />
@@ -2820,7 +2827,9 @@ function QuotaRow({
                   >
                     <div className='flex items-center justify-between text-xs'>
                       <span className='text-muted-foreground font-medium'>{t(labelKey)}</span>
-                      <span className='text-foreground font-medium'>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</span>
+                      <span className='text-foreground font-medium'>
+                        {t('quota.label.percent_used', { percent: usagePercent(usedPct) })}
+                      </span>
                     </div>
                     <UsageTimeBar
                       usagePercent={usedPct}
@@ -2828,7 +2837,7 @@ function QuotaRow({
                       tooltip={
                         <div className='space-y-0.5'>
                           <div className='font-medium'>{t(labelKey)}</div>
-                          <div>{t('quota.label.percent_used', { percent: Math.round(usedPct) })}</div>
+                          <div>{t('quota.label.percent_used', { percent: usagePercent(usedPct) })}</div>
                           {durationPct !== undefined && (
                             <div>
                               {t('quota.label.time_elapsed')}: {Math.round(durationPct)}%
@@ -2916,7 +2925,7 @@ function PoolQuotaRow({ pool }: { pool: MyPoolQuota }) {
                 </span>
               )}
             </span>
-            <span className='text-foreground font-medium tabular-nums'>{Math.round(usedPct)}%</span>
+            <span className='text-foreground font-medium tabular-nums'>{usagePercent(usedPct)}%</span>
           </div>
           <UsageTimeBar
             usagePercent={usedPct}
