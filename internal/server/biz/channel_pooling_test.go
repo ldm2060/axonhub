@@ -1,13 +1,20 @@
 package biz
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
+	"github.com/ldm2060/axonhub/internal/ent/channel"
+	"github.com/ldm2060/axonhub/internal/ent/enttest"
+	"github.com/ldm2060/axonhub/internal/ent/request"
+	"github.com/ldm2060/axonhub/internal/ent/user"
 	"github.com/ldm2060/axonhub/internal/objects"
 )
 
@@ -187,4 +194,112 @@ func TestPoolMemberStatus(t *testing.T) {
 	require.Equal(t, PoolStatusPaused, poolMemberStatus(12.0, 10))
 	// No estimate (quota 0): everything is available — fail-open display.
 	require.Equal(t, PoolStatusAvailable, poolMemberStatus(5.0, 0))
+}
+
+// TestMemberUsageAttributesAPIKeyOwner guards the attribution rule: API traffic
+// leaves request.user_id empty, so a member's usage is only visible through the
+// API key owner. Filtering by request.user_id alone zeroed every member's used
+// figure in the pooling panel.
+func TestMemberUsageAttributesAPIKeyOwner(t *testing.T) {
+	client := enttest.NewEntClient(t, "sqlite3", "file:pool-usage?mode=memory&_fk=1")
+	t.Cleanup(func() { require.NoError(t, client.Close()) })
+
+	ctx := ent.NewContext(authz.WithTestBypass(context.Background()), client)
+
+	projectRow := client.Project.Create().SetName("pool-usage-project").SaveX(ctx)
+	member := client.User.Create().
+		SetEmail("pool-member@example.com").
+		SetPassword("test-password").
+		SetStatus(user.StatusActivated).
+		SaveX(ctx)
+	other := client.User.Create().
+		SetEmail("pool-other@example.com").
+		SetPassword("test-password").
+		SetStatus(user.StatusActivated).
+		SaveX(ctx)
+
+	memberKey := client.APIKey.Create().
+		SetName("pool-member-key").
+		SetKey("ah-pool-member").
+		SetUserID(member.ID).
+		SetProjectID(projectRow.ID).
+		SetType(apikey.TypeUser).
+		SetStatus(apikey.StatusEnabled).
+		SaveX(ctx)
+	otherKey := client.APIKey.Create().
+		SetName("pool-other-key").
+		SetKey("ah-pool-other").
+		SetUserID(other.ID).
+		SetProjectID(projectRow.ID).
+		SetType(apikey.TypeUser).
+		SetStatus(apikey.StatusEnabled).
+		SaveX(ctx)
+
+	channelRow := client.Channel.Create().
+		SetType(channel.TypeOpenai).
+		SetName("pool-usage-channel").
+		SetCredentials(objects.ChannelCredentials{APIKey: "provider-key"}).
+		SetSupportedModels([]string{"gpt-test"}).
+		SetDefaultTestModel("gpt-test").
+		SetStatus(channel.StatusEnabled).
+		SaveX(ctx)
+	otherChannel := client.Channel.Create().
+		SetType(channel.TypeOpenai).
+		SetName("pool-usage-other-channel").
+		SetCredentials(objects.ChannelCredentials{APIKey: "provider-key"}).
+		SetSupportedModels([]string{"gpt-test"}).
+		SetDefaultTestModel("gpt-test").
+		SetStatus(channel.StatusEnabled).
+		SaveX(ctx)
+
+	logUsage := func(projectID, apiKeyID int, userID int, source request.Source, channelID int, cost float64) {
+		mut := client.Request.Create().
+			SetProjectID(projectID).
+			SetModelID("gpt-test").
+			SetRequestBody(objects.JSONRawMessage(`{}`)).
+			SetSource(source).
+			SetStatus(request.StatusCompleted)
+		if apiKeyID != 0 {
+			mut = mut.SetAPIKeyID(apiKeyID)
+		}
+		if userID != 0 {
+			mut = mut.SetUserID(userID)
+		}
+		req := mut.SaveX(ctx)
+
+		logMut := client.UsageLog.Create().
+			SetRequestID(req.ID).
+			SetProjectID(projectID).
+			SetChannelID(channelID).
+			SetModelID("gpt-test").
+			SetTotalCost(cost)
+		if apiKeyID != 0 {
+			logMut = logMut.SetAPIKeyID(apiKeyID)
+		}
+		logMut.SaveX(ctx)
+	}
+
+	// Member's API traffic: no request user, attributed through the API key.
+	logUsage(projectRow.ID, memberKey.ID, 0, request.SourceAPI, channelRow.ID, 3.5)
+	// Member's playground traffic keeps its direct user.
+	logUsage(projectRow.ID, 0, member.ID, request.SourcePlayground, channelRow.ID, 1.25)
+	// Another member's API traffic must not count.
+	logUsage(projectRow.ID, otherKey.ID, 0, request.SourceAPI, channelRow.ID, 5)
+	// The member's usage on a different channel must not count.
+	logUsage(projectRow.ID, memberKey.ID, 0, request.SourceAPI, otherChannel.ID, 2)
+
+	svc := NewChannelPoolingService(ChannelPoolingServiceParams{Ent: client})
+
+	// A non-UTC period start, as a provider-reported window can be: SQLite
+	// compares stored timestamps as text, so the window must not depend on the
+	// offset the caller happened to carry.
+	periodStart := time.Now().Add(-time.Hour).In(time.FixedZone("CST", 8*60*60))
+
+	used, err := svc.memberUsage(ctx, channelRow.ID, member.ID, periodStart)
+	require.NoError(t, err)
+	require.InDelta(t, 4.75, used, 1e-9)
+
+	used, err = svc.memberUsage(ctx, channelRow.ID, other.ID, periodStart)
+	require.NoError(t, err)
+	require.InDelta(t, 5.0, used, 1e-9)
 }

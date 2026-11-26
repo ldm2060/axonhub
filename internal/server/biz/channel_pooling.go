@@ -12,6 +12,7 @@ import (
 
 	"github.com/ldm2060/axonhub/internal/authz"
 	"github.com/ldm2060/axonhub/internal/ent"
+	"github.com/ldm2060/axonhub/internal/ent/apikey"
 	"github.com/ldm2060/axonhub/internal/ent/request"
 	"github.com/ldm2060/axonhub/internal/ent/usagelog"
 	"github.com/ldm2060/axonhub/internal/log"
@@ -470,9 +471,14 @@ func poolMemberStatus(used, quota float64) string {
 }
 
 // memberUsage sums the member's cost on the channel since the window started.
-// The query joins usage logs to their request for the user dimension, the same
-// shape the trace aggregates use, under a system bypass because a request-time
-// principal cannot read usage logs across projects (see aggregateChannelCostSince).
+// It runs under a system bypass because a request-time principal cannot read
+// usage logs across projects (see aggregateChannelCostSince).
+//
+// Attribution follows the dashboard's rule: API traffic carries no request
+// user (request.user_id is only stamped for playground requests), so the
+// request's API key owner is the user dimension; playground requests keep
+// their direct user. Filtering by request.user_id alone reports every API
+// member as unused.
 func (svc *ChannelPoolingService) memberUsage(ctx context.Context, channelID, userID int, periodStart time.Time) (float64, error) {
 	key := poolUsageKey{channelID: channelID, userID: userID, periodStartUnix: periodStart.Unix()}
 	now := time.Now()
@@ -488,8 +494,14 @@ func (svc *ChannelPoolingService) memberUsage(ctx context.Context, channelID, us
 	if _, err := authz.RunWithSystemBypass(ctx, "channel-pool-usage", func(bypassCtx context.Context) (struct{}, error) {
 		q := svc.entFromContext(bypassCtx).UsageLog.Query().Where(
 			usagelog.ChannelIDEQ(channelID),
-			usagelog.CreatedAtGTE(periodStart),
-			usagelog.HasRequestWith(request.UserIDEQ(userID)),
+			// SQLite stores timestamps as text, so a non-UTC period start (the
+			// monitor persists the provider's own offset) would compare by
+			// wall-clock string and silently exclude every row.
+			usagelog.CreatedAtGTE(periodStart.UTC()),
+			usagelog.HasRequestWith(request.Or(
+				request.UserIDEQ(userID),
+				request.HasAPIKeyWith(apikey.UserIDEQ(userID)),
+			)),
 		)
 		agg, err := aggregateUsageMetadata(bypassCtx, q)
 		if err != nil {
