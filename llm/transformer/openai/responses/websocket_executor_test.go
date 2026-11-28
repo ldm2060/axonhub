@@ -754,6 +754,178 @@ func TestWebSocketExecutorKeepaliveProbeEvictsDeadPooledConn(t *testing.T) {
 	require.Equal(t, int32(2), upgrades.Load())
 }
 
+func TestWebSocketExecutorKeepaliveProbeSkipsInFlightConn(t *testing.T) {
+	SetWebSocketKeepaliveIntervalSeconds(0)
+	t.Cleanup(func() { SetWebSocketKeepaliveIntervalSeconds(0) })
+
+	var upgrades atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrades.Add(1)
+
+		conn, err := websocket.Accept(w, r, nil)
+		require.NoError(t, err)
+		defer conn.CloseNow()
+
+		var payload map[string]any
+		require.NoError(t, wsjson.Read(r.Context(), conn, &payload))
+
+		// Mirror the streaming ingress: keep writing a turn for longer than
+		// one ping timeout without reading client frames, so an in-flight
+		// PING can never be answered with a PONG.
+		deadline := time.Now().Add(13 * time.Second)
+		for i := 0; time.Now().Before(deadline); i++ {
+			if err := wsjson.Write(r.Context(), conn, map[string]any{
+				"type":  "response.output_text.delta",
+				"delta": fmt.Sprintf("delta-%d", i),
+			}); err != nil {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		require.NoError(t, wsjson.Write(r.Context(), conn, map[string]any{
+			"type": "response.completed",
+			"response": map[string]any{
+				"id":         "resp_turn",
+				"object":     "response",
+				"created_at": 1700000000,
+				"model":      "gpt-5",
+				"status":     "completed",
+				"output":     []any{},
+			},
+		}))
+
+		// Never read again: the turn ends on the terminal event, and any
+		// post-turn probe PING stays unanswered for the rest of the test.
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	// The probe interval is captured when a connection is pooled, so it must
+	// be configured before the first request. One second is the smallest
+	// expressible interval.
+	SetWebSocketKeepaliveIntervalSeconds(1)
+
+	executor := NewWebSocketExecutor(nil)
+	defer executor.Close()
+
+	ctx, cancel := context.WithTimeout(webSocketTestContext(), 30*time.Second)
+	defer cancel()
+	stream, err := executor.DoStream(ctx, &httpclient.Request{
+		Method: http.MethodPost,
+		URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
+		Headers: http.Header{
+			webSocketSessionHeader: []string{"session-1"},
+		},
+		Auth: &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: "test-key"},
+		Body: []byte(`{"model":"gpt-5","instructions":"turn"}`),
+	})
+	require.NoError(t, err)
+	defer stream.Close()
+
+	sawCompleted := false
+	for stream.Next() {
+		if stream.Current().Type == "response.completed" {
+			sawCompleted = true
+		}
+	}
+	// A probe eviction of the leased connection would surface here as
+	// "use of closed network connection" instead of a clean stream end.
+	require.NoError(t, stream.Err())
+	require.True(t, sawCompleted)
+
+	// The probe must not have evicted the leased connection: the stream ran
+	// past a ping timeout without re-dialing or losing the pooled session.
+	require.Equal(t, int32(1), upgrades.Load())
+	executor.mu.Lock()
+	require.Len(t, executor.pool, 1)
+	executor.mu.Unlock()
+}
+
+func TestWebSocketExecutorKeepaliveProbeEvictsIdleConnThatStopsReading(t *testing.T) {
+	SetWebSocketKeepaliveIntervalSeconds(0)
+	t.Cleanup(func() { SetWebSocketKeepaliveIntervalSeconds(0) })
+
+	var upgrades atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		upgrades.Add(1)
+
+		conn, err := websocket.Accept(w, r, nil)
+		require.NoError(t, err)
+		defer conn.CloseNow()
+
+		var payload map[string]any
+		require.NoError(t, wsjson.Read(r.Context(), conn, &payload))
+		require.NoError(t, wsjson.Write(r.Context(), conn, map[string]any{
+			"type": "response.completed",
+			"response": map[string]any{
+				"id":         "resp_test",
+				"object":     "response",
+				"created_at": 1700000000,
+				"model":      "gpt-5",
+				"status":     "completed",
+				"output":     []any{},
+			},
+		}))
+
+		if upgrades.Load() == 1 {
+			// The first connection stays open but never reads again, so a
+			// probe PING on the idle connection can never be answered with a
+			// PONG.
+			<-r.Context().Done()
+			return
+		}
+	}))
+	defer server.Close()
+
+	SetWebSocketKeepaliveIntervalSeconds(1)
+
+	executor := NewWebSocketExecutor(nil)
+
+	doStream := func() error {
+		stream, err := executor.DoStream(webSocketTestContext(), &httpclient.Request{
+			Method: http.MethodPost,
+			URL:    "http" + strings.TrimPrefix(server.URL, "http") + "/v1/responses",
+			Headers: http.Header{
+				webSocketSessionHeader: []string{"session-1"},
+			},
+			Auth: &httpclient.AuthConfig{Type: httpclient.AuthTypeBearer, APIKey: "test-key"},
+			Body: []byte(`{"model":"gpt-5","instructions":"turn"}`),
+		})
+		if err != nil {
+			return err
+		}
+		defer stream.Close()
+		if !stream.Next() {
+			return stream.Err()
+		}
+		require.Equal(t, "response.completed", stream.Current().Type)
+		return nil
+	}
+
+	// Request 1 pools the connection; the server then stops reading it while
+	// the TCP connection stays open.
+	require.NoError(t, doStream())
+	require.Equal(t, int32(1), upgrades.Load())
+
+	executor.mu.Lock()
+	require.Len(t, executor.pool, 1)
+	executor.mu.Unlock()
+
+	// The probe PINGs the idle connection, the PONG never arrives, and the
+	// pong timeout evicts the connection.
+	require.Eventually(t, func() bool {
+		executor.mu.Lock()
+		defer executor.mu.Unlock()
+		return len(executor.pool) == 0
+	}, 15*time.Second, 20*time.Millisecond)
+
+	// The next request dials a fresh connection instead of failing on the
+	// dead one.
+	require.NoError(t, doStream())
+	require.Equal(t, int32(2), upgrades.Load())
+}
+
 func TestWebSocketExecutorDoesNotPoolWithoutSession(t *testing.T) {
 	var upgrades atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1294,8 +1466,11 @@ func TestWebSocketStreamReturnsErrorWhenReusedConnectionClosesBeforeEvent(t *tes
 	require.False(t, stream.Next())
 	streamErr := stream.Err()
 	require.Error(t, streamErr)
-	// Accept both the canonical error message and platform-specific socket errors (e.g. Windows wsarecv)
-	if !strings.Contains(streamErr.Error(), "websocket closed before response event") && !strings.Contains(streamErr.Error(), "wsarecv") && !strings.Contains(streamErr.Error(), "connection reset") && !strings.Contains(streamErr.Error(), "broken pipe") {
+	// Accept the canonical error message, coder/websocket close variants that
+	// race with the first read (EOF from an abrupt TCP close, or a clean close
+	// frame arriving before any event), and platform-specific socket errors
+	// (e.g. Windows wsarecv).
+	if !strings.Contains(streamErr.Error(), "websocket closed before response event") && !strings.Contains(streamErr.Error(), "wsarecv") && !strings.Contains(streamErr.Error(), "connection reset") && !strings.Contains(streamErr.Error(), "broken pipe") && !strings.Contains(streamErr.Error(), "EOF") && !strings.Contains(streamErr.Error(), "close frame") {
 		t.Errorf("expected error containing 'websocket closed before response event' or a platform socket error, got: %v", streamErr)
 	}
 }

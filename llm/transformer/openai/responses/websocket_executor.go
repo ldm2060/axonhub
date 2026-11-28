@@ -699,9 +699,12 @@ func (e *WebSocketExecutor) getOrDialPooled(ctx context.Context, request *httpcl
 }
 
 // startKeepaliveProbe periodically PINGs a pooled upstream connection and
-// evicts it once the ping fails. Ping is safe for concurrent use with the
-// leased connection's reads and writes, so the probe also covers in-flight
-// connections harmlessly.
+// evicts it once the ping fails. coder/websocket's Ping blocks waiting for a
+// PONG, and the peer may not read client frames while relaying a turn, so a
+// leased connection cannot answer PING until the turn ends: in-flight
+// connections do not participate in PING probing, and their health is judged
+// by the in-flight request's own read/write errors. Idle connections are
+// probed normally because the receiver keeps reading between requests.
 func (e *WebSocketExecutor) startKeepaliveProbe(pc *pooledWebSocketConn) {
 	if pc == nil {
 		return
@@ -718,10 +721,24 @@ func (e *WebSocketExecutor) startKeepaliveProbe(pc *pooledWebSocketConn) {
 			case <-pc.done:
 				return
 			case <-ticker.C:
+				if len(pc.inFlight) > 0 {
+					// A leased connection is relaying a turn; the peer may
+					// not read client frames (and therefore cannot answer
+					// PING) until the turn ends. The in-flight request's own
+					// reads decide liveness.
+					continue
+				}
 				pingCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				err := pc.conn.Ping(pingCtx)
 				cancel()
 				if err != nil {
+					// The connection may have been leased between the check
+					// above and the Ping; a PONG wait that timed out on a
+					// now-leased connection is the same peer-not-reading
+					// situation and must not evict an in-flight request.
+					if len(pc.inFlight) > 0 && errors.Is(err, context.DeadlineExceeded) {
+						continue
+					}
 					e.evict(pc)
 					return
 				}
