@@ -135,6 +135,7 @@ const CREATE_CHANNEL_MUTATION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
         extraModelPrefix
         modelMappings {
           from
@@ -163,6 +164,7 @@ const CREATE_CHANNEL_MUTATION = `
           downgradeMidConversationSystem
         }
         passThroughUserAgent
+        preferResponsesWebSocket
         passThroughBody
         enableSameChannelRetry
         responseTimeout {
@@ -209,12 +211,14 @@ const CREATE_CHANNEL_MUTATION = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       endpoints {
         apiFormat
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       quotaBindingReady
       quotaMultiMonitorStrategy
@@ -277,6 +281,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
         extraModelPrefix
         modelMappings {
           from
@@ -305,6 +310,7 @@ const DUPLICATE_CHANNEL_MUTATION = `
           downgradeMidConversationSystem
         }
         passThroughUserAgent
+        preferResponsesWebSocket
         passThroughBody
         enableSameChannelRetry
         responseTimeout {
@@ -351,12 +357,14 @@ const DUPLICATE_CHANNEL_MUTATION = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       endpoints {
         apiFormat
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       quotaBindingReady
       quotaMultiMonitorStrategy
@@ -419,6 +427,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
         extraModelPrefix
         modelMappings {
           from
@@ -447,6 +456,7 @@ const BULK_CREATE_CHANNELS_MUTATION = `
           downgradeMidConversationSystem
         }
         passThroughUserAgent
+        preferResponsesWebSocket
         passThroughBody
         enableSameChannelRetry
         responseTimeout {
@@ -493,12 +503,14 @@ const BULK_CREATE_CHANNELS_MUTATION = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       endpoints {
         apiFormat
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       quotaBindingReady
       quotaMultiMonitorStrategy
@@ -560,6 +572,7 @@ const CHANNEL_FIELDS_FRAGMENT = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
         extraModelPrefix
         modelMappings {
           from
@@ -588,6 +601,7 @@ const CHANNEL_FIELDS_FRAGMENT = `
           downgradeMidConversationSystem
         }
         passThroughUserAgent
+        preferResponsesWebSocket
         passThroughBody
         enableSameChannelRetry
         responseTimeout {
@@ -635,12 +649,14 @@ const CHANNEL_FIELDS_FRAGMENT = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       endpoints {
         apiFormat
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       quotaBindingReady
       quotaMultiMonitorStrategy
@@ -727,12 +743,14 @@ const SAVE_CHANNEL_ENDPOINTS_MUTATION = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       endpoints {
         apiFormat
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
     }
   }
@@ -818,12 +836,14 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
           path
           baseURL
           transport
+          handshakeTimeoutMs
         }
         endpoints {
           apiFormat
           path
           baseURL
           transport
+          handshakeTimeoutMs
         }
         settings {
         pooling {
@@ -835,6 +855,7 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
           extraModelPrefix
           modelMappings {
             from
@@ -856,6 +877,7 @@ const BULK_IMPORT_CHANNELS_MUTATION = `
             downgradeMidConversationSystem
           }
           passThroughUserAgent
+          preferResponsesWebSocket
           passThroughBody
           enableSameChannelRetry
           responseTimeout {
@@ -1081,12 +1103,14 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
           path
           baseURL
           transport
+          handshakeTimeoutMs
         }
         endpoints {
           apiFormat
           path
           baseURL
           transport
+          handshakeTimeoutMs
         }
         settings {
         pooling {
@@ -1098,6 +1122,7 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
           extraModelPrefix
           modelMappings {
             from
@@ -1119,6 +1144,7 @@ const BULK_UPDATE_CHANNEL_ORDERING_MUTATION = `
             downgradeMidConversationSystem
           }
           passThroughUserAgent
+          preferResponsesWebSocket
           passThroughBody
           enableSameChannelRetry
           responseTimeout {
@@ -1172,6 +1198,7 @@ const ALL_CHANNEL_SUMMARYS_QUERY = `
         path
         baseURL
         transport
+        handshakeTimeoutMs
       }
       allModelEntries {
         requestModel
@@ -1268,6 +1295,7 @@ const FETCH_MODELS_QUERY = `
       }
       error
       fallback
+      fallbackReason
       codexCatalogVersion {
         version
         source
@@ -1372,12 +1400,19 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             }
           }
           credentials {
+            isOAuth
             apiKey
             apiKeys
             vertexApiKeys {
               projectID
               apiKey
               region
+            }
+            vertexServiceAccounts {
+              credentialRef
+              projectID
+              region
+              jsonData
             }
             gcp {
               region
@@ -1406,6 +1441,7 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
             extraModelPrefix
             modelMappings {
               from
@@ -1462,6 +1498,7 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
               downgradeMidConversationSystem
             }
             passThroughUserAgent
+            preferResponsesWebSocket
             passThroughBody
             responseTimeout {
               mode
@@ -1516,12 +1553,14 @@ const CHANNEL_QUERY_FULL_NODE_SELECTION = `
             path
             baseURL
             transport
+            handshakeTimeoutMs
           }
           endpoints {
             apiFormat
             path
             baseURL
             transport
+            handshakeTimeoutMs
           }
           disabledAPIKeys {
             key
@@ -1609,6 +1648,7 @@ const CHANNEL_QUERY_LIST_NODE_BASE_SELECTION = `
 
 const CHANNEL_QUERY_ROUTING_STATUS_SELECTION = `
            settings {
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
              quotaRoutingMode
              syncModelPrices
            }
@@ -1644,6 +1684,7 @@ const CHANNEL_QUERY_PROXY_SELECTION = `
             sharePct
           }
         }
+        realtime { enabled protocol baseURL path handshakeTimeoutMs clientEventsPerSecond }
             quotaRoutingMode
             syncModelPrices
             proxy {
@@ -1703,12 +1744,14 @@ const CHANNEL_QUERY_ENDPOINTS_SELECTION = `
             path
             baseURL
             transport
+            handshakeTimeoutMs
           }
           endpoints {
             apiFormat
             path
             baseURL
             transport
+            handshakeTimeoutMs
           }
 `;
 
@@ -2134,7 +2177,7 @@ export function useUpdateChannelSettings() {
 
 export interface SaveChannelEndpointsInput {
   channelID: string;
-  endpoints: Array<{ apiFormat: string; path?: string; baseURL?: string; transport?: string }>;
+  endpoints: Array<{ apiFormat: string; path?: string; baseURL?: string; transport?: string; handshakeTimeoutMs?: number | null }>;
 }
 
 export function useSaveChannelEndpoints() {
@@ -2698,6 +2741,8 @@ export type CodexCatalogVersion = z.infer<typeof codexCatalogVersionSchema>;
 const codexCatalogSkippedReasonSchema = z.enum(['no_credentials', 'unsupported_url']);
 export type CodexCatalogSkippedReason = z.infer<typeof codexCatalogSkippedReasonSchema>;
 
+export type ModelCatalogFallbackReason = 'NO_CREDENTIALS' | 'AUTHORIZATION' | 'UNAVAILABLE';
+
 const syncChannelModelsPayloadSchema = z.object({
   channelID: z.string(),
   supportedModels: z.array(z.string()),
@@ -2713,16 +2758,20 @@ export function useSyncChannelModels() {
   const { handleError } = useErrorHandler();
 
   return useMutation({
-    mutationFn: async (input: { channelID: string; pattern?: string }) => {
+    mutationFn: async ({ channelID, pattern }: { channelID: string; channelType: string; pattern?: string }) => {
       try {
-        const data = await graphqlRequest<{ syncChannelModels: unknown }>(SYNC_CHANNEL_MODELS_MUTATION, input);
+        const data = await graphqlRequest<{ syncChannelModels: unknown }>(SYNC_CHANNEL_MODELS_MUTATION, { channelID, pattern });
         return syncChannelModelsPayloadSchema.parse(data.syncChannelModels);
       } catch (error) {
         handleError(error, { context: 'Sync Channel Models' });
         throw error;
       }
     },
-    onSuccess: ({ fallback, codexCatalogVersion, codexCatalogSkippedReason }) => {
+    onSuccess: ({ fallback, codexCatalogVersion, codexCatalogSkippedReason }, input) => {
+      if (fallback && input.channelType === 'claudecode') {
+        toast.info(t('channels.messages.claudeCatalogManualSync'));
+        return;
+      }
       if (codexCatalogSkippedReason) {
         toast.info(t(`channels.messages.codexCatalogSyncSkipped.${codexCatalogSkippedReason}`));
         return;
@@ -2751,6 +2800,7 @@ export function useFetchModels() {
     mutationFn: async (input: {
       channelType: string;
       baseURL: string;
+      proxy?: ProxyConfig;
       apiKey?: string;
       projectID?: string;
       region?: string;
@@ -2762,6 +2812,7 @@ export function useFetchModels() {
             models: Array<{ id: string; pricing?: ModelPrice | null }>;
             error?: string | null;
             fallback: boolean;
+            fallbackReason: ModelCatalogFallbackReason | null;
             codexCatalogVersion: CodexCatalogVersion | null;
             codexCatalogSkippedReason: CodexCatalogSkippedReason | null;
           };
@@ -2775,7 +2826,7 @@ export function useFetchModels() {
     onSuccess: (data, input) => {
       if (data.error) {
         toast.error(t('common.errors.internalServerError'));
-      } else if (input.channelType !== 'codex' || !data.fallback) {
+      } else if (!(data.fallback && (input.channelType === 'codex' || input.channelType === 'claudecode'))) {
         const count = data.models.length;
         if (count > 100) {
           toast.success(t('channels.messages.fetchModelsSuccessLarge', { count }));

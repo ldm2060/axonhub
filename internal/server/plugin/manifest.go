@@ -66,6 +66,8 @@ var pluginPermissionGates = []permissionGate{
 	{name: "read_settings", open: true},
 	{name: "write_channels", open: true},
 	{name: "webhook", open: true},
+	{name: permSQL, open: true},
+	{name: permTables, open: true},
 	{name: "fetch", message: errFetchNotEnabled},
 }
 
@@ -146,7 +148,10 @@ func ValidateManifest(manifest *objects.PluginManifest, axonhubVersion string) e
 	if err := checkEvents(manifest.Events); err != nil {
 		return err
 	}
-	return nil
+	if err := validateTasks(manifest.Tasks); err != nil {
+		return err
+	}
+	return validatePluginTables(manifest.Tables, manifest.Permissions)
 }
 
 // ValidateCurrentManifest validates a manifest against the running AxonHub version.
@@ -166,10 +171,39 @@ func DiffManifest(old, next *objects.PluginManifest) ManifestDiff {
 		Permissions: addedStrings(next.Permissions, old.Permissions),
 		Network:     addedStrings(next.NetworkGrants(), old.NetworkGrants()),
 		Events:      addedStrings(next.Events, old.Events),
-		Hooks:       addedHooks(old.Hooks, next.Hooks),
+		Hooks:       slices.Concat(addedHooks(old.Hooks, next.Hooks), addedServerMiddleware(old.Server, next.Server), changedTasks(old.Tasks, next.Tasks), changedPluginTables(old.Tables, next.Tables)),
 		Pages:       addedStrings(pageKeys(next.UI), pageKeys(old.UI)),
 		Actions:     addedActions(old.UI, next.UI),
 	}
+}
+
+func changedPluginTables(old, next map[string]objects.PluginTableSpec) []string {
+	var result []string
+	for _, name := range slices.Sorted(maps.Keys(next)) {
+		if !equalPluginTableSpec(old[name], next[name]) {
+			result = append(result, "tables: "+name)
+		}
+	}
+	return result
+}
+
+func addedServerMiddleware(old, next *objects.PluginServerSpec) []string {
+	if next == nil {
+		return nil
+	}
+	existing := make(map[string]struct{})
+	if old != nil {
+		for _, entry := range old.Middleware {
+			existing[entry.Handler] = struct{}{}
+		}
+	}
+	var added []string
+	for _, entry := range next.Middleware {
+		if _, ok := existing[entry.Handler]; !ok {
+			added = append(added, "server.middleware: "+entry.Handler)
+		}
+	}
+	return added
 }
 
 // ConvergePermissions applies the upgrade grant rule.
@@ -282,6 +316,9 @@ func PrepareUpgrade(old, next *objects.PluginManifest, oldGrant []string, oldNet
 	if old == nil || next == nil {
 		return nil, errors.New("manifest is required")
 	}
+	if err := compatiblePluginTables(old.Tables, next.Tables); err != nil {
+		return nil, err
+	}
 	diff := DiffManifest(old, next)
 	granted, err := ConvergePermissions(oldGrant, next.Permissions, submitted)
 	if err != nil {
@@ -350,7 +387,7 @@ func checkPluginAPIVersion(version int) error {
 // always be rejected even though the fork exposes the same host API. When the
 // running version does not satisfy a constraint but the parity release does,
 // the constraint is accepted.
-const forkUpstreamParityVersion = "1.0.0-beta9"
+const forkUpstreamParityVersion = "1.0.0-beta10"
 
 func checkAxonhubVersion(constraint, runtime string) error {
 	parsed, err := semver.NewConstraint(constraint)

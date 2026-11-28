@@ -20,14 +20,17 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xjson"
 	"github.com/ldm2060/axonhub/internal/pkg/xsecret"
 	"github.com/ldm2060/axonhub/internal/server/biz"
+	rt "github.com/ldm2060/axonhub/internal/server/realtime"
 	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/pipeline"
 	"github.com/ldm2060/axonhub/llm/pipeline/stream"
+	protocol "github.com/ldm2060/axonhub/llm/realtime"
 	"github.com/ldm2060/axonhub/llm/streams"
 	"github.com/ldm2060/axonhub/llm/transformer"
 	"github.com/ldm2060/axonhub/llm/transformer/openai"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/decisions"
+	openairt "github.com/ldm2060/axonhub/llm/transformer/openai/realtime"
 	"github.com/ldm2060/axonhub/llm/transformer/typesafe"
 )
 
@@ -48,6 +51,7 @@ type TestChannelOrchestrator struct {
 	modelMapper                 *ModelMapper
 	loadBalancer                *LoadBalancer
 	channelLimiterManager       *ChannelLimiterManager
+	realtimeConfig              rt.Config
 }
 
 // NewTestChannelOrchestrator creates a new TestChannelOrchestrator.
@@ -71,6 +75,12 @@ func NewTestChannelOrchestrator(
 		loadBalancer:                NewLoadBalancer(nil, channelService, NewWeightStrategy()),
 		channelLimiterManager:       NewChannelLimiterManager(),
 	}
+}
+
+// WithRealtimeConfig configures the baseline Realtime settings inherited by probes.
+func (processor *TestChannelOrchestrator) WithRealtimeConfig(config rt.Config) *TestChannelOrchestrator {
+	processor.realtimeConfig = config
+	return processor
 }
 
 // TestChannelRequest represents a channel test request.
@@ -132,10 +142,16 @@ func buildChannelTestRequest(model string, useStream bool, systemPrompt string, 
 
 func channelTestAPIFormat(channel *biz.Channel, model string) llm.APIFormat {
 	if channel != nil {
+		if channel.RealtimeOnly() {
+			return llm.APIFormat(channel.Settings.Realtime.Protocol)
+		}
 		endpoints := channel.ResolveEndpoints()
 		entry, ok := channel.GetModelEntries()[model]
 		if !ok {
 			entry = channel.GetDirectModelEntries()[model]
+		}
+		if entry.ActualModel == openairt.TranslationModel && channel.RealtimeEndpoint() != nil && channel.RealtimeEndpoint().APIFormat == llm.APIFormatOpenAIRealtimeWebSocket.String() {
+			return llm.APIFormatOpenAIRealtimeWebSocket
 		}
 		// A model pinned by modelProtocols to an endpoint is tested with it: a
 		// model that cannot serve chat (an embedding model on openai/embeddings, a
@@ -150,6 +166,21 @@ func channelTestAPIFormat(channel *biz.Channel, model string) llm.APIFormat {
 		for _, endpoint := range endpoints {
 			if endpoint.APIFormat == llm.APIFormatOpenAIDecisions.String() {
 				return llm.APIFormatOpenAIDecisions
+			}
+		}
+
+		if _, err := openairt.NewAdapter(entry.ActualModel); err == nil {
+			for _, endpoint := range endpoints {
+				if endpoint.APIFormat == llm.APIFormatOpenAIRealtimeWebSocket.String() {
+					return llm.APIFormatOpenAIRealtimeWebSocket
+				}
+			}
+		}
+		if _, err := protocol.NewAdapter(entry.ActualModel, false); err == nil {
+			for _, endpoint := range endpoints {
+				if endpoint.APIFormat == llm.APIFormatQwenRealtimeWebSocket.String() {
+					return llm.APIFormatQwenRealtimeWebSocket
+				}
 			}
 		}
 
@@ -353,6 +384,9 @@ func (processor *TestChannelOrchestrator) TestChannel(
 	testModel := lo.FromPtr(modelID)
 	if testModel == "" {
 		testModel = channel.DefaultTestModel
+	}
+	if testFormat := channelTestAPIFormat(channel, testModel); testFormat == llm.APIFormatQwenRealtimeWebSocket || testFormat == llm.APIFormatOpenAIRealtimeWebSocket {
+		return processor.testRealtimeChannel(ctx, channel, testModel, proxy)
 	}
 	systemPrompt, userPrompt, err := processor.systemService.ChannelTestPrompts(ctx)
 	if err != nil {
@@ -564,6 +598,13 @@ type TestAPIKeyResult struct {
 	Disabled  bool
 }
 
+func testCredentialPrefix(ref string) string {
+	if strings.HasPrefix(ref, "vertex-sa:") {
+		return "vertex-sa:****" + ref[len(ref)-4:]
+	}
+	return xsecret.MaskAPIKey(ref)
+}
+
 // TestChannelAPIKeysResult represents the aggregated result of testing all API keys.
 type TestChannelAPIKeysResult struct {
 	ChannelID    objects.GUID
@@ -586,12 +627,12 @@ func (processor *TestChannelOrchestrator) TestChannelAPIKeys(
 		return nil, xerrors.ForbiddenError("channel testing is not available to plugins")
 	}
 
-	ch, err := processor.channelService.GetChannel(ctx, channelID.ID)
+	ch, err := processor.channelService.GetChannelForCredentialTest(ctx, channelID.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	allKeys := ch.Credentials.GetAllAPIKeys()
+	allKeys := ch.Credentials.GetAllCredentialRefs()
 	if len(allKeys) == 0 {
 		return nil, fmt.Errorf("no API keys configured for channel")
 	}
@@ -634,7 +675,7 @@ func (processor *TestChannelOrchestrator) TestChannelAPIKeys(
 			case <-groupCtx.Done():
 				errMsg := groupCtx.Err().Error()
 				results[index] = &TestAPIKeyResult{
-					KeyPrefix: xsecret.MaskAPIKey(apiKey),
+					KeyPrefix: testCredentialPrefix(apiKey),
 					Success:   false,
 					Error:     &errMsg,
 				}
@@ -689,13 +730,13 @@ func (processor *TestChannelOrchestrator) TestSingleAPIKey(
 		return nil, xerrors.ForbiddenError("channel testing is not available to plugins")
 	}
 
-	ch, err := processor.channelService.GetChannel(ctx, channelID.ID)
+	ch, err := processor.channelService.GetChannelForCredentialTest(ctx, channelID.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Verify the provided key is actually configured for this channel.
-	channelKeys := ch.Credentials.GetAllAPIKeys()
+	channelKeys := ch.Credentials.GetAllCredentialRefs()
 	if len(channelKeys) == 0 {
 		return nil, fmt.Errorf("no API keys configured for channel")
 	}
@@ -743,7 +784,19 @@ func (processor *TestChannelOrchestrator) testSingleKey(
 	userPrompt string,
 	apiFormat llm.APIFormat,
 ) *TestAPIKeyResult {
-	keyPrefix := xsecret.MaskAPIKey(key)
+	keyPrefix := testCredentialPrefix(key)
+
+	if apiFormat == llm.APIFormatQwenRealtimeWebSocket || apiFormat == llm.APIFormatOpenAIRealtimeWebSocket {
+		ch, err := processor.channelService.GetChannelWithKey(ctx, channelID.ID, key)
+		if err != nil {
+			return &TestAPIKeyResult{KeyPrefix: keyPrefix, Error: lo.ToPtr("Realtime channel key is unavailable")}
+		}
+		result, err := processor.testRealtimeChannel(ctx, ch, testModel, proxy)
+		if err != nil {
+			return &TestAPIKeyResult{KeyPrefix: keyPrefix, Error: lo.ToPtr("Realtime key or endpoint test failed")}
+		}
+		return &TestAPIKeyResult{KeyPrefix: keyPrefix, Success: result.Success, Latency: result.Latency, Error: result.Error}
+	}
 
 	inbound, body, err := processor.buildChannelTestInput(ctx, testModel, useStream, systemPrompt, userPrompt, responsesWebSocket, apiFormat)
 	if err != nil {

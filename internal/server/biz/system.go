@@ -30,6 +30,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/pkg/xerrors"
 	"github.com/ldm2060/axonhub/internal/pkg/xregexp"
 	"github.com/ldm2060/axonhub/internal/pkg/xtime"
+	"github.com/ldm2060/axonhub/internal/scopes"
 	"github.com/ldm2060/axonhub/internal/server/safeguards"
 	"github.com/ldm2060/axonhub/llm/httpclient"
 	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
@@ -52,7 +53,7 @@ const (
 	// SystemKeySecretKey is the key used to store the secret key in the system table.
 	//
 	//nolint:gosec // Not a secret.
-	SystemKeySecretKey = "system_jwt_secret_key"
+	SystemKeySecretKey = scopes.SystemJWTSecretKey
 
 	// SystemKeyBrandName is the key for the brand name.
 	SystemKeyBrandName = "system_brand_name"

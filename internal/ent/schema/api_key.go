@@ -52,6 +52,7 @@ func (APIKey) Fields() []ent.Field {
 		field.String("key").
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput, entgql.SkipMutationUpdateInput),
+				entgql.Directives(forceResolver()),
 			),
 		field.String("name").
 			Annotations(entgql.OrderField("NAME")),
@@ -120,7 +121,7 @@ func (APIKey) Policy() ent.Policy {
 	return scopes.Policy{
 		Query: scopes.QueryPolicy{
 			scopes.OwnerRule(),
-			scopes.UserPersonalAPIKeyReadRule(scopes.ScopeReadAPIKeys),  // User 主体：project_id 过滤 + personal key 仅创建者可见
+			scopes.UserPersonalAPIKeyReadRule(scopes.ScopeReadAPIKeys), // User 主体：project_id 过滤 + personal key 仅创建者可见
 			scopes.APIKeyProjectScopeReadRule(scopes.ScopeReadAPIKeys), // API key 主体：用于 OpenAPI 走 service account 读 APIKey
 		},
 		Mutation: scopes.MutationPolicy{

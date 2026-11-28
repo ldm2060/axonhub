@@ -120,6 +120,7 @@ type ChannelEndpoint {
   path: String
   baseURL: String
   transport: String
+  handshakeTimeoutMs: Int
 }
 
 input ChannelEndpointInput {
@@ -127,6 +128,7 @@ input ChannelEndpointInput {
   path: String
   baseURL: String
   transport: String
+  handshakeTimeoutMs: Int
 }
 
 input SaveChannelEndpointsInput {
@@ -212,7 +214,26 @@ input ChannelProviderQuotaSettingsInput {
   ollama: OllamaQuotaSettingsInput
 }
 
+type ChannelRealtimeConfig {
+  enabled: Boolean!
+  protocol: String!
+  baseURL: String!
+  path: String!
+  handshakeTimeoutMs: Int
+  clientEventsPerSecond: Int
+}
+
+input ChannelRealtimeConfigInput {
+  enabled: Boolean!
+  protocol: String!
+  baseURL: String!
+  path: String!
+  handshakeTimeoutMs: Int
+  clientEventsPerSecond: Int
+}
+
 type ChannelSettings {
+  realtime: ChannelRealtimeConfig
   extraModelPrefix: String
   modelMappings: [ModelMapping!]
   autoTrimedModelPrefixes: [String!]
@@ -227,6 +248,7 @@ type ChannelSettings {
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
   syncModelPrices: Boolean
+  preferResponsesWebSocket: Boolean
   rateLimit: ChannelRateLimit
   enableSameChannelRetry: Boolean
   retryableStatusCodes: [Int!]
@@ -387,6 +409,7 @@ input ModelMappingInput {
 }
 
 input ChannelSettingsInput {
+  realtime: ChannelRealtimeConfigInput
   extraModelPrefix: String
   modelMappings: [ModelMappingInput!]
   autoTrimedModelPrefixes: [String!]
@@ -401,6 +424,7 @@ input ChannelSettingsInput {
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
   syncModelPrices: Boolean
+  preferResponsesWebSocket: Boolean
   rateLimit: ChannelRateLimitInput
   enableSameChannelRetry: Boolean
   retryableStatusCodes: [Int!]
@@ -433,6 +457,7 @@ input ChannelPoolingMemberInput {
 # values; nested objects replace the stored value as a whole. Use this
 # instead of updateChannel's settings input when only some settings change.
 input UpdateChannelSettingsInput {
+  realtime: ChannelRealtimeConfigInput
   extraModelPrefix: String
   modelMappings: [ModelMappingInput!]
   autoTrimedModelPrefixes: [String!]
@@ -446,6 +471,7 @@ input UpdateChannelSettingsInput {
   passThroughUserAgent: Boolean
   passThroughBody: Boolean
   syncModelPrices: Boolean
+  preferResponsesWebSocket: Boolean
   rateLimit: ChannelRateLimitInput
   retryableStatusCodes: [Int!]
   retryableErrorPatterns: [RetryableErrorPatternInput!]
@@ -474,9 +500,11 @@ type ChannelRateLimit {
 }
 
 type ChannelCredentials {
+  isOAuth: Boolean!
   apiKey: String
   apiKeys: [String!]
   vertexApiKeys: [VertexAPIKey!]
+  vertexServiceAccounts: [GCPCredential!]
   gcp: GCPCredential
   oauth: OAuthCredentials
 }
@@ -510,6 +538,7 @@ type VertexAPIKey {
 }
 
 type GCPCredential {
+  credentialRef: String!
   region: String!
   projectID: String!
   jsonData: String!
@@ -519,6 +548,7 @@ input ChannelCredentialsInput {
   apiKey: String
   apiKeys: [String!]
   vertexApiKeys: [VertexAPIKeyInput!]
+  vertexServiceAccounts: [GCPCredentialInput!]
   gcp: GCPCredentialInput
   oauth: OAuthCredentialsInput
   managementApiKey: String
@@ -823,6 +853,7 @@ type APIKeyProfileQuotaUsage {
 }
 
 input FetchModelsInput {
+  proxy: ProxyConfigInput
   channelType: String!
   baseURL: String!
   apiKey: String
@@ -835,8 +866,15 @@ type FetchModelsPayload {
   models: [ModelIdentify!]!
   error: String
   fallback: Boolean!
+  fallbackReason: ModelCatalogFallbackReason
   codexCatalogVersion: CodexCatalogVersion
   codexCatalogSkippedReason: String
+}
+
+enum ModelCatalogFallbackReason {
+  NO_CREDENTIALS
+  AUTHORIZATION
+  UNAVAILABLE
 }
 
 type CodexCatalogVersion {

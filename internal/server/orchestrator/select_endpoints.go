@@ -2,11 +2,14 @@ package orchestrator
 
 import (
 	"context"
+	"slices"
 
+	"github.com/ldm2060/axonhub/internal/ent/channel"
 	"github.com/ldm2060/axonhub/internal/log"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
 	"github.com/ldm2060/axonhub/llm"
+	openairt "github.com/ldm2060/axonhub/llm/transformer/openai/realtime"
 )
 
 // SelectAPIFormat selects the most appropriate APIFormat from a channel's resolved endpoints
@@ -29,15 +32,41 @@ func selectForcedAPIFormat(endpoints []objects.ChannelEndpoint, req *llm.Request
 }
 
 func selectEndpointAPIFormat(
+	ctx context.Context,
+	ch *biz.Channel,
 	endpoints []objects.ChannelEndpoint,
 	req *llm.Request,
 	forced bool,
 ) string {
+	// Match the actual parent protocol only among the reviewer model's
+	// eligible endpoints. Otherwise use the ordinary endpoint selection.
+	if parentFormat := guardianReviewParentAPIFormat(ctx); parentFormat != "" {
+		if _, capable := llm.CapableAPIFormats(req.RequestType)[parentFormat]; capable {
+			for _, endpoint := range endpoints {
+				if endpoint.APIFormat == parentFormat {
+					return parentFormat
+				}
+			}
+		}
+	}
 	if forced {
 		return selectForcedAPIFormat(endpoints, req)
 	}
 
-	return SelectAPIFormat(endpoints, req)
+	format := SelectAPIFormat(endpoints, req)
+	if format != llm.APIFormatOpenAIResponse.String() || req.RequestType != llm.RequestTypeChat ||
+		ch.Settings == nil || !ch.Settings.PreferResponsesWebSocket {
+		return format
+	}
+
+	webSocketFormat := llm.APIFormatOpenAIResponseWebSocket.String()
+	if slices.ContainsFunc(endpoints, func(ep objects.ChannelEndpoint) bool {
+		return ep.APIFormat == webSocketFormat
+	}) {
+		return webSocketFormat
+	}
+
+	return format
 }
 
 func selectAPIFormat(
@@ -82,7 +111,20 @@ func selectAPIFormat(
 		}
 	}
 
-	return endpoints[0].APIFormat
+	for _, ep := range endpoints {
+		if req.RequestType == llm.RequestTypeRealtime || !objects.IsRealtimeAPIFormat(ep.APIFormat) {
+			return ep.APIFormat
+		}
+	}
+	return ""
+}
+
+// A model scoped to the OpenAI translation protocol cannot serve an ordinary API.
+func allowsChannelModelForRequest(ch *biz.Channel, entry biz.ChannelModelEntry, requestType llm.RequestType) bool {
+	if requestType == llm.RequestTypeRealtime {
+		return true
+	}
+	return !ch.RealtimeOnly() && (entry.ActualModel != openairt.TranslationModel || ch.Channel == nil || ch.Type != channel.TypeOpenai)
 }
 
 func compatibleResponsesAPIFormat(format llm.APIFormat) string {
@@ -97,7 +139,8 @@ func compatibleResponsesAPIFormat(format llm.APIFormat) string {
 }
 
 func requiresExplicitEndpoint(requestType llm.RequestType) bool {
-	return requestType == llm.RequestTypeAlphaSearch ||
+	return requestType == llm.RequestTypeRealtime ||
+		requestType == llm.RequestTypeAlphaSearch ||
 		requestType == llm.RequestTypeDecisions ||
 		requestType == llm.RequestTypeSystemOne
 }
@@ -213,6 +256,25 @@ func applyForcedAPIFormatsForRequest(
 	requestType llm.RequestType,
 	endpoints []objects.ChannelEndpoint,
 ) ([]objects.ChannelEndpoint, bool) {
+	if requestType == llm.RequestTypeRealtime {
+		if ch == nil {
+			return nil, true
+		}
+
+		configuredRealtime := ch.RealtimeEndpoint()
+		if configuredRealtime == nil {
+			return nil, true
+		}
+
+		for _, endpoint := range endpoints {
+			if endpoint.APIFormat == configuredRealtime.APIFormat {
+				return []objects.ChannelEndpoint{endpoint}, true
+			}
+		}
+
+		return nil, true
+	}
+
 	forced := forcedAPIFormatsForCandidate(ch, entries, requestModel)
 	filtered, forcedActive := applyForcedAPIFormats(ctx, ch, entries, requestModel, endpoints)
 	if len(forced) > 0 && len(filtered) == len(endpoints) && requiresExplicitEndpoint(requestType) && len(FilterEndpointsByAPIFormats(endpoints, forced)) == 0 {

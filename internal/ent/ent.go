@@ -27,7 +27,11 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent/oauthclient"
 	"github.com/ldm2060/axonhub/internal/ent/oidcidentity"
 	"github.com/ldm2060/axonhub/internal/ent/plugin"
+	"github.com/ldm2060/axonhub/internal/ent/pluginschedule"
+	"github.com/ldm2060/axonhub/internal/ent/pluginschedulerun"
 	"github.com/ldm2060/axonhub/internal/ent/pluginstorage"
+	"github.com/ldm2060/axonhub/internal/ent/plugintableoperation"
+	"github.com/ldm2060/axonhub/internal/ent/plugintablestorage"
 	"github.com/ldm2060/axonhub/internal/ent/project"
 	"github.com/ldm2060/axonhub/internal/ent/prompt"
 	"github.com/ldm2060/axonhub/internal/ent/promptprotectionrule"
@@ -122,7 +126,11 @@ func checkColumn(t, c string) error {
 			oauthclient.Table:                oauthclient.ValidColumn,
 			oidcidentity.Table:               oidcidentity.ValidColumn,
 			plugin.Table:                     plugin.ValidColumn,
+			pluginschedule.Table:             pluginschedule.ValidColumn,
+			pluginschedulerun.Table:          pluginschedulerun.ValidColumn,
 			pluginstorage.Table:              pluginstorage.ValidColumn,
+			plugintableoperation.Table:       plugintableoperation.ValidColumn,
+			plugintablestorage.Table:         plugintablestorage.ValidColumn,
 			project.Table:                    project.ValidColumn,
 			prompt.Table:                     prompt.ValidColumn,
 			promptprotectionrule.Table:       promptprotectionrule.ValidColumn,

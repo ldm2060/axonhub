@@ -46,6 +46,11 @@ func (r *aPIKeyResolver) ProjectID(ctx context.Context, obj *ent.APIKey) (*objec
 	}, nil
 }
 
+// Key is the resolver for the key field.
+func (r *aPIKeyResolver) Key(ctx context.Context, obj *ent.APIKey) (string, error) {
+	return r.apiKeyService.RevealAPIKey(ctx, obj)
+}
+
 // User is the resolver for the user field.
 // Returns nil if the user has been soft-deleted.
 func (r *aPIKeyResolver) User(ctx context.Context, obj *ent.APIKey) (*ent.User, error) {
@@ -720,14 +725,7 @@ func (r *queryResolver) Roles(ctx context.Context, after *entgql.Cursor[int], fi
 
 // Systems is the resolver for the systems field.
 func (r *queryResolver) Systems(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int, orderBy *ent.SystemOrder, where *ent.SystemWhereInput) (*ent.SystemConnection, error) {
-	if err := validatePaginationArgs(first, last); err != nil {
-		return nil, err
-	}
-
-	return r.client.System.Query().Paginate(ctx, after, first, before, last,
-		ent.WithSystemOrder(orderBy),
-		ent.WithSystemFilter(where.Filter),
-	)
+	panic(fmt.Errorf("not implemented: Systems - systems"))
 }
 
 // Threads is the resolver for the threads field.
@@ -1050,10 +1048,7 @@ func (r *roleResolver) UserRoles(ctx context.Context, obj *ent.Role) ([]*ent.Use
 
 // ID is the resolver for the id field.
 func (r *systemResolver) ID(ctx context.Context, obj *ent.System) (*objects.GUID, error) {
-	return &objects.GUID{
-		Type: ent.TypeSystem,
-		ID:   obj.ID,
-	}, nil
+	panic(fmt.Errorf("not implemented: ID - id"))
 }
 
 // ID is the resolver for the id field.

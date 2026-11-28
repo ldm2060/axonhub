@@ -1,10 +1,62 @@
-# Fork-only feature inventory — merge of `remote/unstable` @ `c2826aa42` (36 upstream commits)
+# Fork-only feature inventory — merge of `remote/unstable` @ `043fa620b` (37 upstream commits, 2026-11-28)
 
 Generated per merge-upstream skill **Hazard 0**. Every anchor below must still resolve in the
 merged tree after conflict resolution. Verify with `git grep -l <anchor>` — an anchor with zero
 hits is a silently dropped fork feature.
 
-## This merge (2026-11-21): decisions log
+## This merge (2026-11-28): upstream highlights
+
+Plugin system: community plugin hosting (#3088) + registry read from axonhub-plugins, managed
+tables + page access (#3086), scheduled tasks + dynamic SQL (#3080), task GraphQL + nav badges
+(#3095), gateway server middleware (#3069), read-only model catalog checks (#3110), jev-guard
+maxTurns (#3103) and fail-blocked default (#3104). Realtime: OpenAI + Bailian/Qwen WebSocket
+gateway (#3051) with coder/websocket transport (#3091), WebSocket lanes (#3094/#3096/#3098),
+prefer configured Responses WebSocket (#3079), structural migration `biz.MigrateChannelRealtime`.
+Channels: 统一渠道限流状态 (#3101), Vertex mixed API key + service account credentials (#2855),
+Claude Code OAuth model fetch (#3061), default exchange rate for model prices (#3060), bulk
+import global models + reference price sync (#3067). Also: Codex compatibility config blocks
+split (#3081), watermark prompt_extend (#3082), moonshot K2.6/K2.7 Code/K3 sampling omission
+(#3097), ollama seed/penalties (#3083) + tool_calls finish_reason (#3064), Gemini final
+thought-signature chunk (#2721), Codex Guardian review linking (#3078), Go 1.27.4 bumps.
+
+## This merge (2026-11-28): decisions log
+
+- **Module path**: 91 upstream files rewritten `looplj`→`ldm2060`; `go.mod`/`llm/go.mod` taken from upstream with the fork's `afero-s3`/`afero-webdav` replaces restored.
+- **Hazard 2**: upstream added NO version-gated DataMigrator. `datamigrate/migrator.go` gained an unconditional structural call `biz.MigrateChannelRealtime` (idempotent, runs even when the stored version is current) + new `plugin_schedules`/`plugin_schedule_runs` tables via ent schema. No version rename needed (upstream VERSION still `v1.0.0-beta9`; ours stays `v0.2.43` until the release bump).
+- **System entity GraphQL exposure (Hazard 1)**: upstream's `entgql.Skip(SkipAll)` on `internal/ent/schema/system.go` was reverted to the fork's `QueryField+RelayConnection+Mutations` — ours' generated gql trio depends on the `systems()` query, and restoring it keeps ent graph consistent. Nothing in the fork UI uses `systems()` today, but regenerating without it invalidated ours' generated.go.
+- **APIKey.key where-input (Hazard 1)**: upstream added `SkipWhereInput` to the API key field; the fork's API-keys page searches by key (`keyContainsFold` OR-search) so the skip was dropped to keep the fork feature.
+- **`conf/conf.go`**: kept the fork's 120s `llm_stream_idle_timeout` default (upstream's 600s), took upstream's new `server.realtime.*` defaults.
+- **Responses WebSocket (Hazard 3 hybrid)**: kept the fork's admission skeleton in `processMessage` (copy-commit `nextSession` + `AcquireWebSocketConcurrency` gate + reservation undo) and adopted upstream's budget accounting (transient `session.mergedBytes`, refund-at-exit defer, `WithResponsesWarmupAccepted`, conditional lease retirement) and coder/websocket `CloseNow` lifecycle. Fork's `startKeepaliveProbe` kept, translated gorilla→coder (`conn.Ping`); fork's gorilla `dial` dropped (upstream's 3-return dial lives in the new `websocket_dial.go`). `pooledWebSocketConn` carries BOTH upstream's `receiver/activityConn` and the fork's `done` channel (probe stop) — the close path calls `receiver.close()` then `close(done)`.
+- **llm tests**: gorilla-based fork tests (`websocket_executor_test.go`, lane test) translated to coder/websocket API; fork's `Upgrader`/`WriteJSON`/`WriteControl` gone.
+- **gqlgen bootstrap (two passes)**: the gql package cannot load until generated files match BOTH sides' resolvers. Pass 1: moved `plugin.resolvers.go plugin_view.go plugin_ui.go axonhub.resolvers.go model.resolvers.go ent.resolvers.go` out, ran gqlgen (regenerates `generated.go`/`models_gen.go` from the merged `.graphql` superset), restored the merged resolver files, ran pass 2 (stubs missing methods like `Systems`). Added `configurePluginGraphQL`/`graphqlTransactions` helpers to `graphql.go` (upstream's refactor, file is handwritten).
+- **models-table grouping (React Compiler trap)**: upstream's `groupedRows`/`filteredSelectedRows` `useMemo([table])` froze on the initial empty data (tanstack v8 table instance is stable; the fork disables React Compiler) — reverted to the fork's recompute-every-render IIFE. This was caught only by browser verification, not by any gate.
+- **models-catalog-prices.tsx (react-refresh)**: non-component exports (`selectStyle`, `offerKey`, `useReferencePriceFormat`, `defaultSelection` + `findOffer/needsRebind/defaultRequest` helpers) moved to the new `models-catalog-price-format.ts` (fork's established split pattern); `highlightMaskedCode` added to `code-highlight.ts` (delegating to the fork's `highlightCode`) because the fork's masked-code-block lacks upstream's export.
+- **channels-columns**: restored the fork's extracted-cell structure (import from `channels-column-cells.tsx`); ported upstream's realtime provider badge + `getChannelRelayProtocols(..., settings?.realtime?.enabled)` into the fork's cells; the fork's StatusSwitchCell/QuotaCell already carried upstream's status dialog and quota-collapse features.
+- **channels/data/channels.ts**: every query keeps BOTH the fork's `pooling` selection and upstream's `realtime` selection.
+- **locales**: JSON-level merge, fork keys win, upstream additions kept (`models.import.*`, `channels.endpoints.qwenRealtime.*`, …).
+- **users**: upstream's derived `canEdit` replaced the fork's `canEdit/setCanEdit` state; `isAdmin` checkbox gated by `isOwner` (mirrors backend `CanGrantAdmin`); `RotateAPIKey` is upstream's structure with the fork's broader personal-key rule (creator, owner, or system `write_api_keys` holder); `model_fetcher.FetchModels` keeps fork's KimiCode/ZCode branches over upstream's `previewModels` default.
+- **models-provider rename**: fork's `models-provider.tsx` + `models-context.ts` layout kept; upstream's new `catalogImport` dialog type added.
+- **endpoints dialog**: taken from upstream wholesale (it is a superset — includes the fork's Codex WebSocket logic); fork's direct-path `@lobehub/icons/es/Google/components/Mono.js` import restored (the barrel import breaks the build — lobehub-ui 5.39 dropped `Divider`, v0.2.27-class incident).
+- **plugin parity**: `forkUpstreamParityVersion` bumped `1.0.0-beta9`→`1.0.0-beta10` (this merge tracks upstream's unreleased task/table/middleware surface).
+- **Bundle budgets**: `modelsDialogs` 100→110 KiB raw / 25→27 KiB gzip with a dated comment.
+- **Tests adapted to merged APIs**: upstream's new `realtime_routing_test.go`/`realtime_reconnect_test.go` pass `nil` PoolingGate; fork's api ws tests translated gorilla→coder; `CreateRequestExecution` call sites pass `""` reasoningEffort; `skipGraphqlTransaction` tests updated to the `*ast.OperationDefinition` signature; `channel-realtime.test.mjs`/`protocol-options.test.mjs` regexes adapted to prettier-formatted sources and the fork's extracted-cells file.
+- **Known pre-existing (not from this merge)**: Dockerfile ldflags still carry `github.com/looplj/axonhub/...` version stamp (no-op on the fork; goreleaser sets the real values); `biz/email.go` IPv6 dial vet note; `stream_lifecycle_test.go` lostcancel note. Left untouched.
+
+## Post-resolution anchor verification (merge of 2026-11-28, `043fa620b`)
+
+All anchors re-checked in the merged tree, all present: `OwnerRule` 26, `CanRouteThroughChannel` 10,
+`RouteGuard` 34, `enableSameChannelRetry` 7, `shared_with` 30, `myUsageStatsByUser` 4,
+`manage_own_channels` 10, `usePresenceExitGuard` 3, `IsAdmin` 21, `CanGrantAdmin` 2,
+`auth.signIn.links.signUp` in both base.json locales, fork ent entities (channelusagemonitorbinding,
+apikeyprofiletemplate, channeloverridetemplate, publishrequest, datastorage, userusagestats) all present,
+fork-only frontend files (access/pooling/zcode/share/route-guard/apikeys-context) all present,
+`usage_monitor_visibility.go` + `channel_pooling.go` present in `internal/server/biz/`.
+
+Browser verification (local profiling deploy, port 8090): dashboard, channels table, models grouped
+table (3 developers · 6 models with fork labels), users table, plugins page, api-keys masked cells,
+usage-monitor panels all render with no console errors after the models-table grouping fix.
+
+## Prior merge (2026-11-21, `c2826aa42`): decisions log
 
 Upstream highlights: URL-prefix serving (#3058), scheduled disable/enable by cron (#3050),
 channel model-price sync from endpoints (#3038), configurable upstream stream idle timeout
@@ -97,6 +149,16 @@ Fork-only Go/TS files that must survive (spot list, full list via
 | Client restriction / concurrency | `clientRestriction`, `concurrencyLimit` |
 | Project/module nav gating | `use-ensure-selected-project` |
 | ZCode coding-plan signing | `zcode`, `coding-plan` |
+| Admin identity decoupled from scopes (579199e05) | `IsAdmin`, `CanGrantAdmin` |
+| Channel pooling member share by API-key ownership (2b386e950) | `channel_pooling.go` |
+| Battery panel monitor visibility (ed64579f5) | `usage_monitor_visibility.go` |
+| Usage monitor estimate windows (2109c8710 et al.) | `estimateWindows`, `estimate` |
+| Kimi-code reverse proxy (0a63f3a5d) | `kimicode.go` |
+| Radix exit-animation guard (60f388e8f) | `usePresenceExitGuard` |
+| OIDC http redirect URIs (5113f3cbf) | `allowHttpRedirect` |
+| manage_own_channels edit-own (21439cc28) | `manage_own_channels` |
+| Desktop updater key gating (47628fa78) | `desktop-release.yml` updater signing |
+| Public mail token privacy bypass (94a8fdd53) | `WithSystemBypass` |
 | Module path | `github.com/ldm2060/axonhub` (and absence of `github.com/looplj/axonhub`) |
 
 ## Post-resolution anchor verification (merge of 2026-11-21, `c2826aa42`)

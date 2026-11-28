@@ -21,3 +21,32 @@ test('syncModelPrices preserves stored values and applies explicit updates', () 
   const enabled = wire(mergeChannelSettingsForUpdate(undefined, { syncModelPrices: true }));
   assert.equal(enabled.syncModelPrices, true);
 });
+
+test('channel Realtime config survives full channel settings merges', () => {
+  const existingRealtime = {
+    enabled: true,
+    protocol: 'openai/realtime-ws',
+    baseURL: 'wss://api.openai.com',
+    path: '/v1/realtime',
+  };
+  assert.deepEqual(wire(mergeChannelSettingsForUpdate(undefined, { realtime: existingRealtime })).realtime, existingRealtime);
+  assert.deepEqual(
+    wire(mergeChannelSettingsForUpdate({ realtime: existingRealtime }, { extraModelPrefix: 'prefix-' })).realtime,
+    existingRealtime
+  );
+
+  const updatedRealtime = { ...existingRealtime, protocol: 'qwen/realtime-ws', baseURL: 'wss://ws.cn-beijing.maas.aliyuncs.com' };
+  assert.deepEqual(
+    wire(mergeChannelSettingsForUpdate({ realtime: existingRealtime }, { realtime: updatedRealtime })).realtime,
+    updatedRealtime
+  );
+  assert.equal(wire(mergeChannelSettingsForUpdate({ realtime: existingRealtime }, { realtime: null })).realtime, null);
+});
+
+test('WebSocket preference preserves stored values and supports explicit opt-in and opt-out', () => {
+  const existing = { preferResponsesWebSocket: true };
+  assert.equal(wire(mergeChannelSettingsForUpdate(existing, { extraModelPrefix: 'prefix-' })).preferResponsesWebSocket, true);
+  assert.equal(wire(mergeChannelSettingsForUpdate(existing, { preferResponsesWebSocket: false })).preferResponsesWebSocket, false);
+  assert.equal(wire(mergeChannelSettingsForUpdate(undefined, { preferResponsesWebSocket: true })).preferResponsesWebSocket, true);
+  assert.equal(wire(mergeChannelSettingsForUpdate(undefined, {})).preferResponsesWebSocket, undefined);
+});

@@ -5,6 +5,7 @@ import { IconBuildingStore, IconPlugConnected, IconRefresh, IconSearch, IconUplo
 import { useTranslation } from 'react-i18next';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,6 +41,7 @@ export default function PluginsManagement({ tab, onTabChange }: PluginsManagemen
   const [installOpen, setInstallOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Plugin | null>(null);
+  const [purgeTables, setPurgeTables] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
@@ -172,7 +174,10 @@ export default function PluginsManagement({ tab, onTabChange }: PluginsManagemen
                     }}
                     onDisable={(target) => disablePlugin.mutate(target.id)}
                     onEditPermissions={flow.editPermissions}
-                    onDelete={setPendingDelete}
+                    onDelete={(plugin) => {
+                      setPurgeTables(false);
+                      setPendingDelete(plugin);
+                    }}
                   />
                 ))}
               </PluginGrid>
@@ -221,6 +226,7 @@ export default function PluginsManagement({ tab, onTabChange }: PluginsManagemen
         onOpenChange={(open) => !open && flow.cancel()}
         mode={flow.grant?.mode ?? 'install'}
         pluginID={flow.grant?.plugin.pluginID ?? ''}
+        installationID={flow.grant?.plugin.id}
         pluginName={flow.grant ? flow.grant.plugin.name || flow.grant.plugin.pluginID : ''}
         manifestHooks={flow.grant?.plugin.manifestHooks}
         permissions={flow.grant?.plugin.manifestPermissions ?? []}
@@ -240,6 +246,14 @@ export default function PluginsManagement({ tab, onTabChange }: PluginsManagemen
               {t('plugins.deleteDescription', { name: pendingDelete?.name || pendingDelete?.pluginID })}
             </DialogDescription>
           </DialogHeader>
+          <label className='flex items-center gap-2 text-sm'>
+            <Checkbox
+              checked={purgeTables}
+              disabled={deletePlugin.isPending}
+              onCheckedChange={(checked) => setPurgeTables(checked === true)}
+            />
+            {t('plugins.deleteTables')}
+          </label>
           <DialogFooter>
             <Button type='button' variant='outline' onClick={() => setPendingDelete(null)}>
               {t('plugins.cancel')}
@@ -252,7 +266,7 @@ export default function PluginsManagement({ tab, onTabChange }: PluginsManagemen
                 if (!pendingDelete) {
                   return;
                 }
-                deletePlugin.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) });
+                deletePlugin.mutate({ id: pendingDelete.id, purgeTables }, { onSuccess: () => setPendingDelete(null) });
               }}
             >
               {t('plugins.deleteConfirm')}

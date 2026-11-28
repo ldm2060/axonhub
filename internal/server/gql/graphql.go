@@ -359,3 +359,22 @@ func getNilableUser(ctx context.Context, client *ent.Client, userID int) (*ent.U
 
 	return u, nil
 }
+
+// graphqlTransactions wraps the ent client in gqlgen's transaction middleware.
+func graphqlTransactions(db *ent.Client) entgql.Transactioner {
+	return entgql.Transactioner{TxOpener: db}
+}
+
+// configurePluginGraphQL installs the shared plugin GraphQL middleware stack.
+func configurePluginGraphQL(srv interface {
+	Use(graphql.HandlerExtension)
+	AroundOperations(graphql.OperationMiddleware)
+	SetErrorPresenter(graphql.ErrorPresenterFunc)
+}, client *ent.Client,
+) {
+	srv.Use(extension.FixedComplexityLimit(pluginGraphqlComplexityLimit))
+	srv.Use(&loggingTracer{})
+	srv.AroundOperations(rejectPluginGraphqlOperation)
+	srv.Use(graphqlTransactions(client))
+	srv.SetErrorPresenter(presentGraphqlError)
+}

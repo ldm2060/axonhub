@@ -20,12 +20,14 @@ const PLUGIN_UI_ENTRIES_QUERY = `
       actions {
         pluginID key slot title icon revision
         effect { type entry }
+        badge { count dot tone }
       }
       pages {
         pluginID
         key
         entry
         title
+        badge { count dot tone }
       }
     }
   }
@@ -41,11 +43,18 @@ const CREATE_PLUGIN_UI_SESSION_MUTATION = `
   }
 `;
 
+export interface PluginUIBadge {
+  count: number | null;
+  dot: boolean;
+  tone: 'accent' | 'warning' | 'danger';
+}
+
 export interface PluginUIPage {
   pluginID: string;
   key: string;
   entry: string;
   title: string | Record<string, string>;
+  badge: PluginUIBadge | null;
 }
 
 export interface PluginUIAction {
@@ -56,6 +65,7 @@ export interface PluginUIAction {
   icon: 'puzzle' | 'search' | 'activity' | 'settings';
   effect: { type: 'dialog'; entry: string };
   revision: string;
+  badge: PluginUIBadge | null;
 }
 
 export interface PluginUIEntriesResult {
@@ -77,6 +87,10 @@ export function usePluginUIEntries() {
   return useQuery({
     queryKey: ['pluginUIEntries'],
     queryFn: () => graphqlRequest<PluginUIEntriesResult>(PLUGIN_UI_ENTRIES_QUERY),
+    refetchInterval: (query) => {
+      const entries = query.state.data?.pluginUIEntries;
+      return entries && (entries.pages.length > 0 || entries.actions.length > 0) ? 30_000 : false;
+    },
     // The command menu mounts this outside the authenticated layout. Without
     // a session the admin API returns 401 and the client would leave the page.
     enabled: accessToken.length > 0,

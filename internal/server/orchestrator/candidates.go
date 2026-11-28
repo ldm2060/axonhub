@@ -159,12 +159,12 @@ func (s *DefaultSelector) selectChannelCadidates(ctx context.Context, req *llm.R
 		entries := ch.GetModelEntries()
 
 		entry, ok := entries[req.Model]
-		if !ok {
+		if !ok || !allowsChannelModelForRequest(ch, entry, req.RequestType) {
 			continue
 		}
 
 		endpoints, forced := applyForcedAPIFormatsForRequest(ctx, ch, []biz.ChannelModelEntry{entry}, req.Model, req.RequestType, ch.ResolveEndpoints())
-		apiFormat := selectEndpointAPIFormat(endpoints, req, forced)
+		apiFormat := selectEndpointAPIFormat(ctx, ch, endpoints, req, forced)
 		if requiresExplicitEndpoint(req.RequestType) && apiFormat == "" {
 			continue
 		}
@@ -797,6 +797,17 @@ func WithRoutingPolicyLoadBalancedSelector(
 }
 
 func (s *LoadBalancedSelector) Select(ctx context.Context, req *llm.Request) ([]*ChannelModelsCandidate, error) {
+	return s.selectCandidates(ctx, req, false)
+}
+
+// SelectAll returns the effective policy ordering without applying the retry
+// shortlist or tracking a selection. The caller tracks the first candidate
+// that can actually serve its request.
+func (s *LoadBalancedSelector) SelectAll(ctx context.Context, req *llm.Request) ([]*ChannelModelsCandidate, error) {
+	return s.selectCandidates(ctx, req, true)
+}
+
+func (s *LoadBalancedSelector) selectCandidates(ctx context.Context, req *llm.Request, selectAll bool) ([]*ChannelModelsCandidate, error) {
 	candidates, err := s.wrapped.Select(ctx, req)
 	if err != nil {
 		return nil, err
@@ -826,7 +837,9 @@ func (s *LoadBalancedSelector) Select(ctx context.Context, req *llm.Request) ([]
 	}
 
 	requiredCount := 1
-	if retryPolicy.Enabled {
+	if selectAll {
+		requiredCount = len(candidates)
+	} else if retryPolicy.Enabled {
 		requiredCount = 1 + retryPolicy.MaxChannelRetries
 	}
 
@@ -842,26 +855,31 @@ func (s *LoadBalancedSelector) Select(ctx context.Context, req *llm.Request) ([]
 		quotaFallback = quotaFallbackCandidates(lastResort, quotaFallbackLimit(retryPolicy))
 	}
 
-	if stickyOK {
-		if stickyCandidate, remainingCandidates := s.pinStickyCandidate(candidates, stickyID); stickyCandidate != nil {
-			stickyCandidate.TraceSticky = true
-
-			fallbackCount := max(requiredCount-1, 0)
-			fallbackCandidates := s.sortCandidates(ctx, loadBalancer, remainingCandidates, req, fallbackCount, requiredCount, false)
-			result := make([]*ChannelModelsCandidate, 0, 1+len(fallbackCandidates)+len(quotaFallback))
-			result = append(result, stickyCandidate)
-			result = append(result, fallbackCandidates...)
-			result = append(result, quotaFallback...)
-
-			if loadBalancer != nil {
-				loadBalancer.TrackSelection(stickyCandidate)
-			}
-
-			return result, nil
+	// Prefer the parent only after quota admission, before load balancing trims
+	// the candidate list to fit the retry budget.
+	pinned, remaining := extractStickyCandidate(candidates, guardianReviewParentChannelID(ctx))
+	if pinned == nil && stickyOK {
+		pinned, remaining = s.pinStickyCandidate(candidates, stickyID)
+		if pinned != nil {
+			pinned.TraceSticky = true
 		}
 	}
+	if pinned != nil {
+		fallbackCount := max(requiredCount-1, 0)
+		fallbackCandidates := s.sortCandidates(ctx, loadBalancer, remaining, req, fallbackCount, requiredCount, false)
+		result := make([]*ChannelModelsCandidate, 0, 1+len(fallbackCandidates)+len(quotaFallback))
+		result = append(result, pinned)
+		result = append(result, fallbackCandidates...)
+		result = append(result, quotaFallback...)
 
-	preferred := s.sortCandidates(ctx, loadBalancer, candidates, req, requiredCount, requiredCount, true)
+		if loadBalancer != nil && !selectAll {
+			loadBalancer.TrackSelection(pinned)
+		}
+
+		return result, nil
+	}
+
+	preferred := s.sortCandidates(ctx, loadBalancer, candidates, req, requiredCount, requiredCount, !selectAll)
 	if len(quotaFallback) == 0 {
 		return preferred, nil
 	}
@@ -1208,8 +1226,12 @@ func (s *SpecifiedChannelSelector) Select(ctx context.Context, req *llm.Request)
 		return nil, fmt.Errorf("model %s not supported in channel %s", req.Model, channel.Name)
 	}
 
+	if !allowsChannelModelForRequest(channel, entry, req.RequestType) {
+		return nil, nil
+	}
+
 	endpoints, forced := applyForcedAPIFormatsForRequest(ctx, channel, []biz.ChannelModelEntry{entry}, req.Model, req.RequestType, channel.ResolveEndpoints())
-	apiFormat := selectEndpointAPIFormat(endpoints, req, forced)
+	apiFormat := selectEndpointAPIFormat(ctx, channel, endpoints, req, forced)
 	if requiresExplicitEndpoint(req.RequestType) && apiFormat == "" {
 		return []*ChannelModelsCandidate{}, nil
 	}

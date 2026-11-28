@@ -31,3 +31,9 @@ export async function highlightCode(code: string, language: BundledLanguage, sho
     }),
   ]);
 }
+
+// highlightMaskedCode mirrors highlightCode for masked API-key snippets; kept here
+// so the view dialog can highlight display-only code with the same themes.
+export async function highlightMaskedCode(code: string, language: BundledLanguage, showLineNumbers = false) {
+  return highlightCode(code, language, showLineNumbers);
+}

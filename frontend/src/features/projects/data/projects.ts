@@ -115,7 +115,8 @@ export function useProjects(
     after?: string;
     orderBy?: { field: 'CREATED_AT'; direction: 'ASC' | 'DESC' };
     where?: any;
-  } = {}
+  } = {},
+  options?: { enabled?: boolean }
 ) {
   const queryVariables = {
     ...variables,
@@ -124,6 +125,7 @@ export function useProjects(
 
   return useQuery({
     queryKey: ['projects', queryVariables],
+    enabled: options?.enabled,
     queryFn: async () => {
       const data = await graphqlRequest<{ projects: ProjectConnection }>(PROJECTS_QUERY, queryVariables);
       return projectConnectionSchema.parse(data?.projects);

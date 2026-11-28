@@ -30,9 +30,9 @@ import {
   CreateModelInput,
   createModelInputSchema,
   UpdateModelInput,
-  ModelCard,
   ModelType,
   modelTypeSchema,
+  referencePriceFields,
   normalizeModelRoutingPolicyValue,
 } from '../data/schema';
 
@@ -50,7 +50,6 @@ export function ModelsActionDialog() {
   const [developerSearchValue, setDeveloperSearchValue] = useState<string>('');
   const [modelIdInput, setModelIdInput] = useState<string>('');
   const [modelIdSearchValue, setModelIdSearchValue] = useState<string>('');
-  const [_selectedModelCard, setSelectedModelCard] = useState<ModelCard>({});
 
   // 用于解决 Dialog 内 Popover 无法滚动的问题
   const [dialogContent, setDialogContent] = useState<HTMLDivElement | null>(null);
@@ -118,6 +117,13 @@ export function ModelsActionDialog() {
 
   useEffect(() => {
     if (isEdit && currentRow) {
+      const modelCard: CreateModelInput['modelCard'] = { ...currentRow.modelCard };
+      if (modelCard.cost && currentRow.missingReferencePrices?.length) {
+        modelCard.cost = { ...modelCard.cost };
+        for (const field of referencePriceFields) {
+          if (currentRow.missingReferencePrices.includes(field)) delete modelCard.cost[field];
+        }
+      }
       form.reset({
         developer: currentRow.developer,
         modelID: currentRow.modelID,
@@ -125,7 +131,7 @@ export function ModelsActionDialog() {
         name: currentRow.name,
         icon: currentRow.icon,
         group: currentRow.group,
-        modelCard: currentRow.modelCard,
+        modelCard,
         settings: {
           ...currentRow.settings,
           associations: currentRow.settings?.associations ?? [],
@@ -137,7 +143,6 @@ export function ModelsActionDialog() {
       setSelectedProvider(currentRow.developer);
       setModelIdInput(currentRow.modelID);
       setModelIdSearchValue(currentRow.modelID);
-      setSelectedModelCard(currentRow.modelCard || {});
     } else if (!isEdit) {
       form.reset({
         developer: '',
@@ -154,7 +159,6 @@ export function ModelsActionDialog() {
       setDeveloperSearchValue('');
       setModelIdInput('');
       setModelIdSearchValue('');
-      setSelectedModelCard({});
     }
   }, [isEdit, currentRow, form, isOpen]);
 
@@ -178,7 +182,6 @@ export function ModelsActionDialog() {
         form.setValue('name', '');
         form.setValue('group', '');
         form.setValue('modelCard', {});
-        setSelectedModelCard({});
       }
     },
     [form, getDeveloperLabel, isEdit]
@@ -211,7 +214,7 @@ export function ModelsActionDialog() {
         if (normalizedType && modelTypeSchema.safeParse(normalizedType).success) {
           form.setValue('type', normalizedType as ModelType);
         }
-        const modelCard: ModelCard = {
+        const modelCard: CreateModelInput['modelCard'] = {
           reasoning: {
             supported: selectedModel.reasoning?.supported || false,
             default: selectedModel.reasoning?.default || false,
@@ -225,8 +228,8 @@ export function ModelsActionDialog() {
           },
           vision: resolveVision(selectedModel),
           cost: {
-            input: selectedModel.cost?.input || 0,
-            output: selectedModel.cost?.output || 0,
+            input: selectedModel.cost?.input,
+            output: selectedModel.cost?.output,
             cacheRead: selectedModel.cost?.cache_read,
             cacheWrite: selectedModel.cost?.cache_write,
           },
@@ -239,10 +242,6 @@ export function ModelsActionDialog() {
           lastUpdated: selectedModel.last_updated,
         };
         form.setValue('modelCard', modelCard);
-        setSelectedModelCard(modelCard);
-      } else {
-        const currentModelCard = form.getValues('modelCard');
-        setSelectedModelCard(currentModelCard || {});
       }
     },
     [selectedProviderModels, selectedProvider, form, isEdit]
@@ -262,7 +261,13 @@ export function ModelsActionDialog() {
           settings: data.settings,
           remark: data.remark,
         };
-        await updateModel.mutateAsync({ id: currentRow.id, input: updateData });
+        const editedPrices = referencePriceFields
+          .filter((field) => {
+            const original = currentRow.missingReferencePrices?.includes(field) ? undefined : currentRow.modelCard.cost?.[field];
+            return data.modelCard.cost?.[field] !== original;
+          })
+          .map((field) => ({ field, missing: data.modelCard.cost?.[field] == null }));
+        await updateModel.mutateAsync({ id: currentRow.id, input: updateData, editedPrices, expectedVersion: currentRow.editVersion });
       } else {
         await createModel.mutateAsync(data);
       }
@@ -279,7 +284,6 @@ export function ModelsActionDialog() {
     setDeveloperSearchValue('');
     setModelIdInput('');
     setModelIdSearchValue('');
-    setSelectedModelCard({});
   }, [form, setOpen]);
 
   return (
@@ -628,86 +632,29 @@ export function ModelsActionDialog() {
                     <FormLabel>{t('models.modelCard.cost')} ($/M tokens)</FormLabel>
                     <p className='text-muted-foreground text-xs'>{t('models.modelCard.costHint')}</p>
                     <div className='grid grid-cols-2 gap-2'>
-                      <FormField
-                        control={form.control}
-                        name='modelCard.cost.input'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='text-xs'>{t('models.modelCard.input')}</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                step='0.01'
-                                {...field}
-                                value={field.value ?? ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder='0'
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name='modelCard.cost.output'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='text-xs'>{t('models.modelCard.output')}</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                step='0.01'
-                                {...field}
-                                value={field.value ?? ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder='0'
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name='modelCard.cost.cacheRead'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='text-xs'>{t('models.modelCard.cacheRead')}</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                step='0.01'
-                                {...field}
-                                value={field.value ?? ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder='0'
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name='modelCard.cost.cacheWrite'
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='text-xs'>{t('models.modelCard.cacheWrite')}</FormLabel>
-                            <FormControl>
-                              <Input
-                                type='number'
-                                step='0.01'
-                                {...field}
-                                value={field.value ?? ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder='0'
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {referencePriceFields.map((priceField) => (
+                        <FormField
+                          key={priceField}
+                          control={form.control}
+                          name={`modelCard.cost.${priceField}`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className='text-xs'>{t(`models.modelCard.${priceField}`)}</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type='number'
+                                  step='any'
+                                  {...field}
+                                  value={field.value ?? ''}
+                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                  placeholder='—'
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))}
                     </div>
                   </div>
 

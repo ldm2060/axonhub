@@ -19,10 +19,11 @@ import (
 // Within a single channel, api_format must be unique after legacy normalization.
 // Responses uses distinct HTTP/WS formats; Transport remains a legacy read/input field.
 type ChannelEndpoint struct {
-	APIFormat string `json:"api_format"`
-	Path      string `json:"path,omitempty"`
-	BaseURL   string `json:"base_url,omitempty"`
-	Transport string `json:"transport,omitempty"`
+	APIFormat          string `json:"api_format"`
+	Path               string `json:"path,omitempty"`
+	BaseURL            string `json:"base_url,omitempty"`
+	Transport          string `json:"transport,omitempty"`
+	HandshakeTimeoutMs *int64 `json:"handshake_timeout_ms,omitempty"`
 }
 
 const (
@@ -167,6 +168,9 @@ func (m ModelProtocol) IsEnabled() bool {
 }
 
 type ChannelSettings struct {
+	// Realtime owns the provider's persistent realtime protocol independently
+	// from the generic, user-editable endpoint list.
+	Realtime *ChannelRealtimeConfig `json:"realtime,omitempty"`
 	// ExtraModelPrefix sets the channel accept the model with the extra prefix.
 	// e.g. a channel
 	// supported_modles is ["deepseek-chat", "deepseek-reasoner"]
@@ -239,6 +243,9 @@ type ChannelSettings struct {
 
 	// SyncModelPrices opts into overwriting saved channel prices, including manual edits, with endpoint prices for every listed model.
 	SyncModelPrices bool `json:"syncModelPrices,omitempty"`
+
+	// PreferResponsesWebSocket prefers a WebSocket endpoint when routing would otherwise choose Responses HTTP.
+	PreferResponsesWebSocket bool `json:"preferResponsesWebSocket,omitempty"`
 
 	// PassThroughUserAgent controls whether to pass through the original User-Agent header to upstream AI providers.
 	// When set to nil, it inherits from the global system setting.
@@ -603,6 +610,9 @@ type ChannelCredentials struct {
 	// The project and region must remain paired with the API key when keys rotate.
 	VertexAPIKeys []VertexAPIKey `json:"vertexApiKeys,omitempty"`
 
+	// VertexServiceAccounts shares Vertex credential selection with API keys.
+	VertexServiceAccounts []GCPCredential `json:"vertexServiceAccounts,omitempty"`
+
 	// ManagementAPIKey is an optional provider management/console API key used only
 	// for server-side quota checks (e.g. ZenMux). It is never attached to inference
 	// requests and never exposed to clients beyond credential write APIs.
@@ -657,13 +667,9 @@ func (c *ChannelCredentials) GetAllAPIKeys() []string {
 const OAuthCredentialRef = "__oauth__"
 
 // GetAllCredentialRefs returns the identities of every credential the channel
-// can be disabled on. Key-based channels are identified by the API keys
-// themselves; an OAuth channel is represented by the single OAuthCredentialRef
-// so that auto-disable and scheduled recovery treat it as a one-key channel.
-//
-// This is deliberately separate from GetAllAPIKeys: the sentinel must never
-// reach outbound requests, credential management UI, the channel tester or
-// backups, all of which consume GetAllAPIKeys.
+// can be disabled on. API keys retain their original identities; service
+// accounts use stable signing-key references and OAuth uses its fixed sentinel.
+// References identify selections and must never be sent as authentication.
 func (c *ChannelCredentials) GetAllCredentialRefs() []string {
 	if c == nil {
 		return nil
@@ -673,7 +679,14 @@ func (c *ChannelCredentials) GetAllCredentialRefs() []string {
 		return []string{OAuthCredentialRef}
 	}
 
-	return c.GetAllAPIKeys()
+	refs := c.GetAllAPIKeys()
+	for _, credential := range c.VertexServiceAccounts {
+		if ref := credential.CredentialRef(); ref != "" {
+			refs = append(refs, ref)
+		}
+	}
+
+	return refs
 }
 
 // GetEnabledCredentialRefs returns the credential refs that are not disabled.

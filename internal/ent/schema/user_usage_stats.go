@@ -39,8 +39,8 @@ func (UserUsageStats) Edges() []ent.Edge {
 			Ref("user_usage_stats").
 			Field("user_id").
 			Required().
-				Unique().
-				Immutable().
+			Unique().
+			Immutable().
 			Annotations(entgql.Directives(forceResolver())),
 	}
 }

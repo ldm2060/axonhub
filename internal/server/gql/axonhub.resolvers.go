@@ -93,6 +93,7 @@ func (r *channelResolver) Credentials(ctx context.Context, obj *ent.Channel) (*o
 
 	if obj.Type != channel.TypeGeminiVertex {
 		creds.VertexAPIKeys = nil
+		creds.VertexServiceAccounts = nil
 	}
 
 	if len(apiKeys) == 0 {
@@ -1118,10 +1119,20 @@ func (r *traceResolver) UsageMetadata(ctx context.Context, obj *ent.Trace) (*biz
 	return r.traceService.UsageMetadata(ctx, obj.ID)
 }
 
+// Realtime is the resolver for the realtime field.
+func (r *channelSettingsInputResolver) Realtime(ctx context.Context, obj *objects.ChannelSettings, data *ChannelRealtimeConfigInput) error {
+	panic(fmt.Errorf("not implemented: Realtime - realtime"))
+}
+
 // Operator is the resolver for the operator field.
 func (r *quotaMonitorBindingConditionInputResolver) Operator(ctx context.Context, obj *objects.QuotaMonitorBindingCondition, data string) error {
 	obj.Operator = objects.QuotaMonitorConditionOperator(data)
 	return nil
+}
+
+// Realtime is the resolver for the realtime field.
+func (r *updateChannelSettingsInputResolver) Realtime(ctx context.Context, obj *biz.UpdateChannelSettingsInput, data *ChannelRealtimeConfigInput) error {
+	panic(fmt.Errorf("not implemented: Realtime - realtime"))
 }
 
 // ChannelSettings returns ChannelSettingsResolver implementation.
@@ -1138,13 +1149,25 @@ func (r *Resolver) QuotaMonitorBindingCondition() QuotaMonitorBindingConditionRe
 // Segment returns SegmentResolver implementation.
 func (r *Resolver) Segment() SegmentResolver { return &segmentResolver{r} }
 
+// ChannelSettingsInput returns ChannelSettingsInputResolver implementation.
+func (r *Resolver) ChannelSettingsInput() ChannelSettingsInputResolver {
+	return &channelSettingsInputResolver{r}
+}
+
 // QuotaMonitorBindingConditionInput returns QuotaMonitorBindingConditionInputResolver implementation.
 func (r *Resolver) QuotaMonitorBindingConditionInput() QuotaMonitorBindingConditionInputResolver {
 	return &quotaMonitorBindingConditionInputResolver{r}
+}
+
+// UpdateChannelSettingsInput returns UpdateChannelSettingsInputResolver implementation.
+func (r *Resolver) UpdateChannelSettingsInput() UpdateChannelSettingsInputResolver {
+	return &updateChannelSettingsInputResolver{r}
 }
 
 type channelSettingsResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type quotaMonitorBindingConditionResolver struct{ *Resolver }
 type segmentResolver struct{ *Resolver }
+type channelSettingsInputResolver struct{ *Resolver }
 type quotaMonitorBindingConditionInputResolver struct{ *Resolver }
+type updateChannelSettingsInputResolver struct{ *Resolver }

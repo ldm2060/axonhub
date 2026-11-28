@@ -52,6 +52,7 @@ function buildApiKeysQuery(canViewUsers: boolean) {
             id
             createdAt
             updatedAt${userFields}
+            userID
             key
             name
             type
@@ -91,6 +92,7 @@ function buildApiKeyQuery(canViewUsers: boolean) {
         id
         createdAt
         updatedAt${userFields}
+        userID
         key
         name
         type

@@ -11,6 +11,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/gc"
 	"github.com/ldm2060/axonhub/internal/server/orchestrator"
 	"github.com/ldm2060/axonhub/internal/server/plugin"
+	"github.com/ldm2060/axonhub/internal/server/realtime"
 	"github.com/ldm2060/axonhub/internal/server/scheduler"
 	"github.com/ldm2060/axonhub/internal/server/video_storage"
 	"github.com/ldm2060/axonhub/llm/httpclient"
@@ -107,8 +108,20 @@ func NewSchema(
 	oauthProviderService *biz.OAuthProviderService,
 	poolingService *biz.ChannelPoolingService,
 	pluginManager *plugin.Manager,
+	realtimeConfig ...realtime.Config,
 ) graphql.ExecutableSchema {
 	modelFetcher := biz.NewModelFetcher(httpClient, channelService)
+	testChannelOrchestrator := orchestrator.NewTestChannelOrchestrator(
+		channelService,
+		requestService,
+		systemService,
+		usageLogService,
+		promptProtectionRuleService,
+		httpClient,
+	)
+	if len(realtimeConfig) > 0 {
+		testChannelOrchestrator.WithRealtimeConfig(realtimeConfig[0])
+	}
 
 	return NewExecutableSchema(Config{
 		Resolvers: &Resolver{
@@ -141,7 +154,7 @@ func NewSchema(
 			defaultSelector:                defaultSelector,
 			candidateSelectorDiagnostics:   candidateSelectorDiagnostics,
 			channelLimiterManager:          channelLimiterManager,
-			TestChannelOrchestrator:        orchestrator.NewTestChannelOrchestrator(channelService, requestService, systemService, usageLogService, promptProtectionRuleService, httpClient),
+			TestChannelOrchestrator:        testChannelOrchestrator,
 			gcWorker:                       gcWorker,
 			videoWorker:                    videoWorker,
 			memorySampler:                  memorySampler,

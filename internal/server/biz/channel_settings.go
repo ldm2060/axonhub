@@ -28,6 +28,7 @@ import (
 // (mergeChannelSettingsForUpdate) and makes those semantics available to
 // direct GraphQL callers.
 type UpdateChannelSettingsInput struct {
+	Realtime                    *objects.ChannelRealtimeConfig        `json:"realtime"`
 	ExtraModelPrefix            *string                               `json:"extraModelPrefix"`
 	ModelMappings               []objects.ModelMapping                `json:"modelMappings"`
 	AutoTrimedModelPrefixes     []string                              `json:"autoTrimedModelPrefixes"`
@@ -40,6 +41,7 @@ type UpdateChannelSettingsInput struct {
 	BodyOverrideOperations      []objects.OverrideOperation           `json:"bodyOverrideOperations"`
 	PassThroughUserAgent        *bool                                 `json:"passThroughUserAgent"`
 	SyncModelPrices             *bool                                 `json:"syncModelPrices"`
+	PreferResponsesWebSocket    *bool                                 `json:"preferResponsesWebSocket"`
 	PassThroughBody             *bool                                 `json:"passThroughBody"`
 	RateLimit                   *objects.ChannelRateLimit             `json:"rateLimit"`
 	RetryableStatusCodes        []int                                 `json:"retryableStatusCodes"`
@@ -63,6 +65,9 @@ func (i *UpdateChannelSettingsInput) Apply(base *objects.ChannelSettings) object
 
 	if i == nil {
 		return merged
+	}
+	if i.Realtime != nil {
+		merged.Realtime = i.Realtime
 	}
 
 	if i.ExtraModelPrefix != nil {
@@ -100,6 +105,9 @@ func (i *UpdateChannelSettingsInput) Apply(base *objects.ChannelSettings) object
 	}
 	if i.SyncModelPrices != nil {
 		merged.SyncModelPrices = *i.SyncModelPrices
+	}
+	if i.PreferResponsesWebSocket != nil {
+		merged.PreferResponsesWebSocket = *i.PreferResponsesWebSocket
 	}
 	if i.PassThroughBody != nil {
 		merged.PassThroughBody = i.PassThroughBody

@@ -3,7 +3,9 @@ package gql
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/parser"
 )
 
 func mutationOp(name string, fields ...string) *ast.OperationDefinition {
@@ -59,6 +61,31 @@ func TestSkipGraphqlTransaction(t *testing.T) {
 			wantSkip: true,
 		},
 		{
+			name:     "manual plugin schedules claim before runtime starts",
+			op:       mutationOp("RunWithAnyName", "runPluginTask"),
+			wantSkip: true,
+		},
+		{
+			name:     "plugin enable persists table migration intents independently",
+			op:       mutationOp("Enable", "enablePlugin"),
+			wantSkip: true,
+		},
+		{
+			name:     "plugin upload persists table migration intents independently",
+			op:       mutationOp("Upload", "installPlugin"),
+			wantSkip: true,
+		},
+		{
+			name:     "market install persists table migration intents independently",
+			op:       mutationOp("Market", "installPluginFromMarket"),
+			wantSkip: true,
+		},
+		{
+			name:     "plugin delete queues table cleanup in the enclosing transaction",
+			op:       mutationOp("Delete", "deletePlugin"),
+			wantSkip: false,
+		},
+		{
 			name:     "syncChannelModels uses the enclosing transaction",
 			op:       mutationOp("UpdateModels", "syncChannelModels"),
 			wantSkip: false,
@@ -80,5 +107,23 @@ func TestSkipGraphqlTransaction(t *testing.T) {
 				t.Fatalf("skipGraphqlTransaction(%s) = %v, want %v", tc.op.Name, got, tc.wantSkip)
 			}
 		})
+	}
+}
+
+func TestCatalogImportFragmentTransactions(t *testing.T) {
+	for _, test := range []struct {
+		fields  string
+		enabled bool
+		skip    bool
+	}{
+		{"applied: applyCatalogImport", true, true},
+		{"... on Mutation { applyCatalogImport }", true, true},
+		{"...Import @include(if:$enabled)", true, true},
+		{"...Import @include(if:$enabled)", false, false},
+		{"applyCatalogImport @skip(if:$enabled) updateModel", true, false},
+	} {
+		doc, err := parser.ParseQuery(&ast.Source{Input: "mutation Test($enabled:Boolean!) { " + test.fields + " } fragment Import on Mutation { applyCatalogImport }"})
+		require.NoError(t, err)
+		require.Equal(t, test.skip, skipGraphqlTransaction(doc.Operations[0]), test.fields)
 	}
 }

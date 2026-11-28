@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { SortingState } from '@tanstack/react-table';
-import { IconPlus, IconSettings, IconAlertCircle } from '@tabler/icons-react';
+import { IconPlus, IconDownload, IconSettings, IconAlertCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/use-debounce';
 import { revealFocusedHorizontalButton, useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
@@ -106,6 +106,17 @@ function BulkAddButton() {
   );
 }
 
+function CatalogImportButton() {
+  const { t } = useTranslation();
+  const { setOpen } = useModels();
+  return (
+    <Button variant='outline' className='shrink-0' onClick={() => setOpen('catalogImport')} data-testid='catalog-import-open'>
+      <IconDownload className='mr-2 h-4 w-4' />
+      {t('models.import.title')}
+    </Button>
+  );
+}
+
 function SettingsButton() {
   const { t } = useTranslation();
   const { setOpen } = useModels();
@@ -131,6 +142,8 @@ function DetectUnassociatedButton() {
 }
 
 function ActionButtons() {
+  const { hasSystemScope } = usePermissions();
+  const canImport = hasSystemScope('write_channels');
   const scrollRef = useHorizontalScroll<HTMLDivElement>();
   return (
     <div
@@ -147,6 +160,7 @@ function ActionButtons() {
           <CreateButton />
         </>
       </PermissionGuard>
+      {canImport && <CatalogImportButton />}
     </div>
   );
 }

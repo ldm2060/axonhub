@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSelectedProjectId } from '@/stores/projectStore';
 import { useErrorHandler } from '@/hooks/use-error-handler';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useRequestPermissions } from '@/hooks/useRequestPermissions';
 import {
   User,
@@ -191,18 +192,27 @@ export function useUsers(
 }
 
 export function useUser(id: string) {
+  const { t } = useTranslation();
+  const { handleError } = useErrorHandler();
   const selectedProjectId = useSelectedProjectId();
+  const { hasSystemScope } = usePermissions();
+  const includeRoles = hasSystemScope('read_roles');
 
   return useQuery({
-    queryKey: ['user', id, selectedProjectId],
+    queryKey: ['user', id, selectedProjectId, includeRoles],
     queryFn: async () => {
-      const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
-      const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id } }, headers);
-      const user = data.users.edges[0]?.node;
-      if (!user) {
-        throw new Error('User not found');
+      try {
+        const headers = selectedProjectId ? { 'X-Project-ID': selectedProjectId } : undefined;
+        const data = await graphqlRequest<{ users: UserConnection }>(USERS_QUERY, { where: { id }, includeRoles }, headers);
+        const user = data.users.edges[0]?.node;
+        if (!user) {
+          throw new Error(t('users.messages.userNotFound'));
+        }
+        return userSchema.parse(user);
+      } catch (error) {
+        handleError(error, t('common.errors.loadFailed'));
+        throw error;
       }
-      return userSchema.parse(user);
     },
     enabled: !!id,
   });

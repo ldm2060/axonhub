@@ -78,9 +78,23 @@ converters:
 
 # This section declares type mapping between the GraphQL and Go type systems.
 models:
+  ModelCatalogFallbackReason:
+    model: github.com/ldm2060/axonhub/internal/server/biz.ModelCatalogFallbackReason
+  ReferencePriceField:
+    model: github.com/ldm2060/axonhub/internal/server/biz.ReferencePriceField
+  CatalogImportStatus:
+    model: github.com/ldm2060/axonhub/internal/server/biz.CatalogImportStatus
+  CatalogPriceAction:
+    model: github.com/ldm2060/axonhub/internal/server/biz.CatalogPriceAction
+  CatalogImportMemberInput:
+    model: github.com/ldm2060/axonhub/internal/server/biz.CatalogImportMember
   CodexCatalogVersion:
     model:
       - github.com/ldm2060/axonhub/internal/server/biz.CodexCatalogVersion
+  ChannelRealtimeConfig:
+    model:
+      - github.com/ldm2060/axonhub/internal/objects.ChannelRealtimeConfig
+  ChannelRealtimeConfigInput:
   ClaudeCodeSafeguardsSettings:
     model: github.com/ldm2060/axonhub/internal/server/biz.ClaudeCodeSafeguardsSettings
   ClaudeCodeSafeguardsConfig:
@@ -969,6 +983,15 @@ models:
   PluginUIPage:
     model:
       - github.com/ldm2060/axonhub/internal/server/plugin.UIPage
+  PluginUIBadge:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/plugin.UIBadge
+  PluginUIBadgeTone:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/plugin.UIBadgeTone
+  ModelCatalogOffersPage:
+    model:
+      - github.com/ldm2060/axonhub/internal/server/biz.ModelCatalogOffersPage
   PluginUIAction:
     model:
       - github.com/ldm2060/axonhub/internal/server/plugin.UIAction

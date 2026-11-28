@@ -47,6 +47,7 @@ import { parseQuotaLimits, type ProviderQuotaLimit } from '../../system/data/quo
 import type { QuotaRoutingMode } from '../../system/data/system';
 import { useChannels } from '../context/channels-context';
 import { canUseChannel } from '../data/access';
+import { getRealtimeProviderBadgeClass } from '../data/channel-realtime';
 import { useTestChannel, useUpdateChannel } from '../data/channels';
 import { CHANNEL_CONFIGS, getProvider } from '../data/config_channels';
 import { RELAY_PROTOCOLS, RELAY_PROTOCOL_LABEL_KEYS, getChannelRelayProtocols, type RelayProtocol } from '../data/relay-protocols';
@@ -485,9 +486,10 @@ export const ProviderCell = memo(({ row }: { row: Row<Channel> }) => {
   const config = CHANNEL_CONFIGS[type];
   const provider = getProvider(type);
   const IconComponent = config.icon;
+  const realtimeBadgeClass = getRealtimeProviderBadgeClass(row.original.settings?.realtime);
   return (
     <div className='flex justify-center'>
-      <Badge variant='outline' className={cn('capitalize', config.color)}>
+      <Badge variant='outline' className={cn('capitalize', realtimeBadgeClass ?? config.color)}>
         <div className='flex items-center gap-2'>
           <IconComponent size={16} className='shrink-0' />
           <span>{t(`channels.providers.${provider}`)}</span>
@@ -638,8 +640,8 @@ const RELAY_PROTOCOL_ACTIVE_CLASSES: Record<RelayProtocol, string> = {
 export const EndpointProtocolsCell = memo(({ channel }: { channel: Channel }) => {
   const { t } = useTranslation();
   const protocols = useMemo(
-    () => getChannelRelayProtocols(channel.defaultEndpoints, channel.endpoints),
-    [channel.defaultEndpoints, channel.endpoints]
+    () => getChannelRelayProtocols(channel.defaultEndpoints, channel.endpoints, channel.settings?.realtime?.enabled),
+    [channel.defaultEndpoints, channel.endpoints, channel.settings?.realtime?.enabled]
   );
 
   return (

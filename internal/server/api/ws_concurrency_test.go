@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
@@ -102,8 +102,9 @@ func newConcurrencyWebSocketServer(t *testing.T, cfg *middleware.ConcurrencyLimi
 
 func readConcurrencyEvent(t *testing.T, conn *websocket.Conn) []byte {
 	t.Helper()
-	require.NoError(t, conn.SetReadDeadline(time.Now().Add(5*time.Second)))
-	_, message, err := conn.ReadMessage()
+	readCtx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
+	_, message, err := conn.Read(readCtx)
 	require.NoError(t, err)
 	return message
 }
@@ -134,7 +135,7 @@ func TestWebSocketConcurrencySharedWithHTTP(t *testing.T) {
 			connections := make([]*websocket.Conn, 0, 7)
 			for range 7 {
 				conn := dialResponsesWebSocket(t, server.URL, nil)
-				t.Cleanup(func() { _ = conn.Close() })
+				t.Cleanup(func() { _ = conn.Close(websocket.StatusNormalClosure, "") })
 				connections = append(connections, conn)
 			}
 			requireConcurrencyIdle(t, cfg)
@@ -155,7 +156,7 @@ func TestWebSocketConcurrencySharedWithHTTP(t *testing.T) {
 			}
 			send := func(conn *websocket.Conn) {
 				t.Helper()
-				require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","model":"gpt-test","input":"hello"}`)))
+				require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","model":"gpt-test","input":"hello"}`)))
 			}
 			denied := func(conn *websocket.Conn) {
 				t.Helper()
@@ -176,7 +177,7 @@ func TestWebSocketConcurrencySharedWithHTTP(t *testing.T) {
 			denied(connections[2])
 			// Even at full generation capacity, a fresh idle connection can open.
 			extra := dialResponsesWebSocket(t, server.URL, nil)
-			t.Cleanup(func() { _ = extra.Close() })
+			t.Cleanup(func() { _ = extra.Close(websocket.StatusNormalClosure, "") })
 
 			cfg.Apply(1)
 			post("", http.StatusTooManyRequests)
@@ -242,12 +243,12 @@ func TestWebSocketConcurrencyReleasesAfterProcessError(t *testing.T) {
 		server, _, _ := newConcurrencyWebSocketServer(t, cfg, process, dispatcher)
 		conn := dialResponsesWebSocket(t, server.URL, nil)
 		for range 2 {
-			require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","model":"gpt-test"}`)))
+			require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","model":"gpt-test"}`)))
 			event := readConcurrencyEvent(t, conn)
 			require.NotContains(t, string(event), "concurrency_limit_exceeded")
 			requireConcurrencyIdle(t, cfg)
 		}
-		require.NoError(t, conn.Close())
+		require.NoError(t, conn.Close(websocket.StatusNormalClosure, ""))
 	}
 }
 
@@ -263,11 +264,11 @@ func TestResponsesDispatcherConcurrencyCountsLanesButNotWarmup(t *testing.T) {
 	}
 	server, _, _ := newConcurrencyWebSocketServer(t, cfg, process, true)
 	conn := dialResponsesWebSocket(t, server.URL, nil)
-	defer conn.Close()
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","stream_id":"active","model":"gpt-test"}`)))
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","stream_id":"active","model":"gpt-test"}`)))
 	readConcurrencyEvent(t, conn)
 	<-requests
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","stream_id":"warmup","model":"gpt-test","input":"prefix","generate":false}`)))
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","stream_id":"warmup","model":"gpt-test","input":"prefix","generate":false}`)))
 	var warmupID string
 	for range 3 {
 		event := readConcurrencyEvent(t, conn)
@@ -275,19 +276,19 @@ func TestResponsesDispatcherConcurrencyCountsLanesButNotWarmup(t *testing.T) {
 		require.NotEqual(t, "error", gjson.GetBytes(event, "type").String())
 		warmupID = gjson.GetBytes(event, "response.id").String()
 	}
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","stream_id":"excess","model":"gpt-test"}`)))
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","stream_id":"excess","model":"gpt-test"}`)))
 	event := readConcurrencyEvent(t, conn)
 	require.Equal(t, "excess", gjson.GetBytes(event, "stream_id").String())
 	require.Equal(t, int64(429), gjson.GetBytes(event, "status").Int())
 
 	continuation := []byte(`{"type":"response.create","stream_id":"warmup","model":"gpt-test","input":"suffix","previous_response_id":"` + warmupID + `"}`)
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, continuation))
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, continuation))
 	event = readConcurrencyEvent(t, conn)
 	require.Equal(t, int64(429), gjson.GetBytes(event, "status").Int())
 	finishStream()
 	require.Equal(t, "response.completed", gjson.GetBytes(readConcurrencyEvent(t, conn), "type").String())
 	requireConcurrencyIdle(t, cfg)
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, continuation))
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, continuation))
 	readConcurrencyEvent(t, conn)
 	require.Equal(t, "response.completed", gjson.GetBytes(readConcurrencyEvent(t, conn), "type").String())
 	req := <-requests
@@ -305,9 +306,9 @@ func TestWebSocketConcurrencyDisconnectReleasesActiveStream(t *testing.T) {
 		}
 		server, _, _ := newConcurrencyWebSocketServer(t, cfg, process, dispatcher)
 		conn := dialResponsesWebSocket(t, server.URL, nil)
-		require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","model":"gpt-test"}`)))
+		require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","model":"gpt-test"}`)))
 		require.Equal(t, "response.created", gjson.GetBytes(readConcurrencyEvent(t, conn), "type").String())
-		require.NoError(t, conn.Close())
+		require.NoError(t, conn.Close(websocket.StatusNormalClosure, ""))
 		requireConcurrencyIdle(t, cfg)
 	}
 }

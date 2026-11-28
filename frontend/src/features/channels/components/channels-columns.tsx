@@ -160,7 +160,8 @@ export const createColumns = (
     },
     {
       id: 'endpointProtocols',
-      accessorFn: (row) => Array.from(getChannelRelayProtocols(row.defaultEndpoints, row.endpoints)).join(','),
+      accessorFn: (row) =>
+        Array.from(getChannelRelayProtocols(row.defaultEndpoints, row.endpoints, row.settings?.realtime?.enabled)).join(','),
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('channels.columns.endpointProtocols')} className='justify-center' />
       ),

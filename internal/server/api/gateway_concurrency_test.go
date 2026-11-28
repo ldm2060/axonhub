@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
@@ -54,15 +54,15 @@ func TestNonResponsesWebSocketsShareUserConcurrency(t *testing.T) {
 			t.Cleanup(server.Close)
 			connections := make([]*websocket.Conn, 2)
 			for i := range connections {
-				conn, _, err := websocket.DefaultDialer.Dial("ws"+strings.TrimPrefix(server.URL, "http")+path, nil)
+				conn, _, err := websocket.Dial(t.Context(), "ws"+strings.TrimPrefix(server.URL, "http")+path, nil)
 				require.NoError(t, err)
 				connections[i] = conn
-				t.Cleanup(func() { _ = conn.Close() })
+				t.Cleanup(func() { _ = conn.Close(websocket.StatusNormalClosure, "") })
 			}
 			requireConcurrencyIdle(t, cfg)
-			require.NoError(t, connections[0].WriteMessage(websocket.TextMessage, []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)))
+			require.NoError(t, connections[0].Write(t.Context(), websocket.MessageText, []byte(`{"model":"test","stream":true,"messages":[{"role":"user","content":"hi"}]}`)))
 			require.Contains(t, string(readConcurrencyEvent(t, connections[0])), "response.created")
-			require.NoError(t, connections[1].WriteMessage(websocket.TextMessage, []byte(`{"model":"test","stream":true}`)))
+			require.NoError(t, connections[1].Write(t.Context(), websocket.MessageText, []byte(`{"model":"test","stream":true}`)))
 			rejected := string(readConcurrencyEvent(t, connections[1]))
 			if strings.Contains(path, "models/") {
 				require.Contains(t, rejected, "RESOURCE_EXHAUSTED")
@@ -82,11 +82,11 @@ func TestNonResponsesWebSocketsShareUserConcurrency(t *testing.T) {
 				_ = resp.Body.Close()
 				require.Equal(t, want, resp.StatusCode)
 			}
-			require.NoError(t, connections[0].Close())
+			require.NoError(t, connections[0].Close(websocket.StatusNormalClosure, ""))
 			requireConcurrencyIdle(t, cfg)
-			require.NoError(t, connections[1].WriteMessage(websocket.TextMessage, []byte(`{"model":"test","stream":true}`)))
+			require.NoError(t, connections[1].Write(t.Context(), websocket.MessageText, []byte(`{"model":"test","stream":true}`)))
 			require.Contains(t, string(readConcurrencyEvent(t, connections[1])), "response.created")
-			require.NoError(t, connections[1].Close())
+			require.NoError(t, connections[1].Close(websocket.StatusNormalClosure, ""))
 			requireConcurrencyIdle(t, cfg)
 		})
 	}
@@ -219,8 +219,8 @@ func TestWebSocketStreamDeadlineSendsTerminalError(t *testing.T) {
 		return orchestrator.ChatCompletionResult{ChatCompletionStream: &errorAfterStream{err: context.DeadlineExceeded}}, nil
 	}, false)
 	conn := dialResponsesWebSocket(t, server.URL, nil)
-	defer conn.Close()
-	require.NoError(t, conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"response.create","model":"test","input":"hi"}`)))
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	require.NoError(t, conn.Write(t.Context(), websocket.MessageText, []byte(`{"type":"response.create","model":"test","input":"hi"}`)))
 	message := readConcurrencyEvent(t, conn)
 	require.Equal(t, "error", gjson.GetBytes(message, "type").String())
 	require.Contains(t, gjson.GetBytes(message, "error.message").String(), context.DeadlineExceeded.Error())

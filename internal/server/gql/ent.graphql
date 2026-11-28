@@ -12,7 +12,7 @@ type APIKey implements Node {
   Project ID, default to 1 for backward compatibility
   """
   projectID: ID!
-  key: String!
+  key: String! @goField(forceResolver: true)
   name: String!
   """
   API Key type: user, service_account, noauth, or personal

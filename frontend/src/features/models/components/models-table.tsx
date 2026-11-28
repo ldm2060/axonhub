@@ -37,8 +37,9 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { PermissionGuard } from '@/components/permission-guard';
 import { useModelSettings } from '@/features/system/data/system';
 import { useModels } from '../context/models-context';
-import { Model } from '../data/schema';
+import { referencePriceFields, type Model } from '../data/schema';
 import { useDeveloperLabel } from '../hooks/use-developer-label';
+import { useReferencePriceFormat } from './models-catalog-price-format';
 
 const MotionTableRow = motion.create(TableRow);
 
@@ -67,6 +68,7 @@ export function ModelsTable({
 }: ModelsTableProps) {
   const { t } = useTranslation();
   const getDeveloperLabel = useDeveloperLabel();
+  const formatPrice = useReferencePriceFormat();
   const { setSelectedModels, setResetRowSelection, setOpen, setCurrentDeveloper } = useModels();
   const { data: modelSettings } = useModelSettings();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -121,15 +123,17 @@ export function ModelsTable({
     manualFiltering: true,
   });
 
+  // Group rows by developer. Recomputed every render on purpose: the tanstack v8
+  // table instance is referentially stable, so a useMemo keyed on it would freeze
+  // on the initial empty data set (the fork does not enable React Compiler).
   const groupedRows = (() => {
-    const visibleRows = table.getRowModel().rows;
-    const groups = visibleRows.reduce((result, row) => {
+    const rows = table.getRowModel().rows;
+    const groups = new Map<string, typeof rows>();
+    rows.forEach((row) => {
       const developer = row.original.developer || 'Unknown';
-      const rows = result.get(developer) || [];
-      rows.push(row);
-      result.set(developer, rows);
-      return result;
-    }, new Map<string, typeof visibleRows>());
+      if (!groups.has(developer)) groups.set(developer, []);
+      groups.get(developer)!.push(row);
+    });
     return new Map([...groups.entries()].sort(([a], [b]) => a.localeCompare(b)));
   })();
 
@@ -154,13 +158,13 @@ export function ModelsTable({
     });
   }, []);
 
-  const toggleAllGroups = () => {
+  const toggleAllGroups = useCallback(() => {
     if (allGroupsCollapsed) {
       setCollapsedGroups(new Set());
     } else {
       setCollapsedGroups(new Set(groupedRows.keys()));
     }
-  };
+  }, [allGroupsCollapsed, groupedRows]);
 
   const filteredSelectedRows = table.getFilteredSelectedRowModel().rows;
 
@@ -479,26 +483,18 @@ export function ModelsTable({
                                             <div className='space-y-3'>
                                               <h4 className='text-sm font-semibold'>{t('models.modelCard.cost')} ($/M)</h4>
                                               <div className='space-y-2 text-sm'>
-                                                <div className='flex justify-between'>
-                                                  <span className='text-muted-foreground'>{t('models.modelCard.input')}:</span>
-                                                  <span className='font-mono text-xs'>{modelCard?.cost?.input ?? '-'}</span>
-                                                </div>
-                                                <div className='flex justify-between'>
-                                                  <span className='text-muted-foreground'>{t('models.modelCard.output')}:</span>
-                                                  <span className='font-mono text-xs'>{modelCard?.cost?.output ?? '-'}</span>
-                                                </div>
-                                                {modelCard?.cost?.cacheRead !== undefined && (
-                                                  <div className='flex justify-between'>
-                                                    <span className='text-muted-foreground'>{t('models.modelCard.cacheRead')}:</span>
-                                                    <span className='font-mono text-xs'>{modelCard.cost.cacheRead}</span>
-                                                  </div>
-                                                )}
-                                                {modelCard?.cost?.cacheWrite !== undefined && (
-                                                  <div className='flex justify-between'>
-                                                    <span className='text-muted-foreground'>{t('models.modelCard.cacheWrite')}:</span>
-                                                    <span className='font-mono text-xs'>{modelCard.cost.cacheWrite}</span>
-                                                  </div>
-                                                )}
+                                                {referencePriceFields.map((field) => {
+                                                  const value = model.missingReferencePrices?.includes(field)
+                                                    ? undefined
+                                                    : modelCard?.cost?.[field];
+                                                  if (value == null && (field === 'cacheRead' || field === 'cacheWrite')) return null;
+                                                  return (
+                                                    <div className='flex justify-between' key={field}>
+                                                      <span className='text-muted-foreground'>{t('models.modelCard.' + field)}:</span>
+                                                      <span className='font-mono text-xs'>{value == null ? '—' : formatPrice(value)}</span>
+                                                    </div>
+                                                  );
+                                                })}
                                               </div>
                                             </div>
                                           </div>

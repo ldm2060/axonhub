@@ -20,6 +20,7 @@ import (
 	"github.com/ldm2060/axonhub/internal/server/gql/openapi"
 	"github.com/ldm2060/axonhub/internal/server/middleware"
 	"github.com/ldm2060/axonhub/internal/server/plugin"
+	"github.com/ldm2060/axonhub/internal/server/realtime"
 	"github.com/ldm2060/axonhub/internal/server/static"
 )
 
@@ -29,6 +30,7 @@ type Handlers struct {
 	Graphql            *gql.GraphqlHandler
 	OpenAPIGraphql     *openapi.GraphqlHandler
 	OpenAI             *api.OpenAIHandlers
+	Realtime           *api.RealtimeHandlers
 	Doubao             *api.DoubaoHandlers
 	Anthropic          *api.AnthropicHandlers
 	Gemini             *api.GeminiHandlers
@@ -166,6 +168,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithTimeout(server.Config.RequestTimeout),
 			gin.WrapH(playground.Handler("AxonHub", server.Config.BasePath+adminGroupPath+"/graphql")),
 		)
+		adminGroup.POST("/realtime/reconcile", middleware.WithTimeout(server.Config.RequestTimeout), handlers.Realtime.ReconcileAudit)
 		adminGroup.POST("/invitations", handlers.Invitation.Create)
 
 		adminGroup.POST("/codex/oauth/start", handlers.Codex.StartOAuth)
@@ -266,10 +269,12 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 	registerCodexRoutes(server, handlers, services)
 
+	serverPluginMiddleware := middleware.WithServerPluginMiddleware(services.PluginManager)
 	apiMiddlewares := []gin.HandlerFunc{
 		middleware.WithStreamIdleTimeout(server.Config.LLMStreamIdleTimeout),
 		middleware.WithIPBlocklist(services.SystemService),
 		middleware.WithAPIKeyConfig(services.AuthService, nil),
+		serverPluginMiddleware,
 		middleware.WithSource(request.SourceAPI),
 		// Bound the number of requests whose bodies are resident at once. Each
 		// request holds several copies of its body across the transform
@@ -296,6 +301,12 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 	responsesWebSocketGroup.GET("/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
 	responsesWebSocketGroup.GET("/anthropic/v1/messages", handlers.Anthropic.CreateMessageWebSocket)
 	responsesWebSocketGroup.GET("/v1/chat/completions", handlers.OpenAI.ChatCompletionWebSocket)
+
+	// Realtime owns its lifetime and never inherits no-auth fallback, body capture or HTTP LLM timeouts.
+	realtimeGroup := server.Group("/", api.RealtimeBoundary(), middleware.WithIPBlocklist(services.SystemService),
+		middleware.WithStrictAPIKeyConfig(services.AuthService, &middleware.APIKeyConfig{Headers: []string{"Authorization"}, RequireBearer: true}),
+		middleware.WithSource(request.SourceAPI))
+	registerRealtimeRoutes(realtimeGroup, handlers.Realtime, server.Config.Realtime)
 
 	{
 		openaiGroup := apiGroup.Group("/v1")
@@ -366,6 +377,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithStreamIdleTimeout(server.Config.LLMStreamIdleTimeout),
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
+			serverPluginMiddleware,
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
@@ -380,6 +392,7 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 			middleware.WithStreamIdleTimeout(server.Config.LLMStreamIdleTimeout),
 			middleware.WithIPBlocklist(services.SystemService),
 			middleware.WithGeminiKeyAuth(services.AuthService),
+			serverPluginMiddleware,
 			middleware.WithSource(request.SourceAPI),
 			middleware.WithConcurrencyLimit(server.ConcurrencyLimit),
 			middleware.WithThread(server.Config.Trace, services.ThreadService),
@@ -392,6 +405,14 @@ func SetupRoutes(server *Server, handlers Handlers, client *ent.Client, services
 
 // registerPluginUIRoutes serves token-scoped plugin UI files without a user JWT.
 // A nil manager does not panic here; the handler answers 503.
+// registerRealtimeRoutes exposes a prefixed native path for SDKs that append
+// the standard Realtime suffix to a configurable Base URL.
+func registerRealtimeRoutes(group *gin.RouterGroup, handlers *api.RealtimeHandlers, config realtime.Config) {
+	group.GET("/v1/realtime", handlers.Handler(config, false))
+	group.GET("/v1/realtime/translations", handlers.TranslationHandler(config))
+	group.GET("/qwen/v1/realtime", handlers.Handler(config, true))
+}
+
 func registerPluginUIRoutes(group *gin.RouterGroup, manager *plugin.Manager, system *biz.SystemService) {
 	handler := func(c *gin.Context) {
 		request := plugin.PluginUIRequest{

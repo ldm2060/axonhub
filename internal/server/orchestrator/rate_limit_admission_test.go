@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/samber/lo"
@@ -12,7 +13,11 @@ import (
 	"github.com/ldm2060/axonhub/internal/ent"
 	"github.com/ldm2060/axonhub/internal/objects"
 	"github.com/ldm2060/axonhub/internal/server/biz"
+	"github.com/ldm2060/axonhub/llm"
 	"github.com/ldm2060/axonhub/llm/httpclient"
+	"github.com/ldm2060/axonhub/llm/transformer"
+	"github.com/ldm2060/axonhub/llm/transformer/openai"
+	"github.com/ldm2060/axonhub/llm/transformer/openai/responses"
 )
 
 func channelWithRPM(id int, name string, rpm int64) *biz.Channel {
@@ -66,6 +71,35 @@ func TestRateLimitAdmission_NoRPMBypasses(t *testing.T) {
 	}
 
 	assert.Equal(t, int64(0), tracker.GetRequestCount(channel.ID))
+}
+
+func TestRateLimitAdmission_SharesChannelStateAcrossProtocolHandlers(t *testing.T) {
+	ctx, client := setupTest(t)
+	channelService, requestService, systemService, usageLogService := setupTestServices(t, client)
+	t.Cleanup(channelService.Stop)
+	manager := NewChannelLimiterManager()
+	construct := func(inbound transformer.Inbound) *ChatCompletionOrchestrator {
+		return NewChatCompletionOrchestrator(channelService, nil, requestService, nil, inbound, systemService,
+			usageLogService, nil, nil, nil, nil, manager, nil, PluginIntegration{})
+	}
+	chat := construct(openai.NewInboundTransformer())
+	responses := construct(responses.NewInboundTransformer())
+	channel := channelWithRPM(1, "shared", 1)
+	firstOutbound, secondOutbound := newTestOutbound(channel), newTestOutbound(channel)
+
+	firstAdmission := withRateLimitAdmission(firstOutbound, chat.rateLimitTracker)
+	secondAdmission := withRateLimitAdmission(secondOutbound, responses.rateLimitTracker)
+	_, err := firstAdmission.OnOutboundRawRequest(ctx, &httpclient.Request{})
+	require.NoError(t, err)
+	_, err = secondAdmission.OnOutboundRawRequest(ctx, &httpclient.Request{})
+	require.ErrorIs(t, err, ErrLocalRPMExhausted)
+
+	firstTracking := withRateLimitTracking(firstOutbound, chat.rateLimitTracker)
+	_, err = firstTracking.OnOutboundLlmResponse(ctx, &llm.Response{Usage: &llm.Usage{TotalTokens: 9}})
+	require.NoError(t, err)
+	require.EqualValues(t, 9, responses.rateLimitTracker.GetTokenCount(channel.ID))
+	firstTracking.OnOutboundRawError(ctx, &httpclient.Error{StatusCode: http.StatusTooManyRequests})
+	require.True(t, responses.rateLimitTracker.IsCoolingDown(channel.ID))
 }
 
 func TestRateLimitAdmission_SameChannelRetryCannotBypassRPM(t *testing.T) {

@@ -111,6 +111,7 @@ export function mergeChannelSettingsForUpdate(
   };
 
   return {
+    realtime: pick('realtime', existing?.realtime ?? null),
     extraModelPrefix: pick('extraModelPrefix', existing?.extraModelPrefix ?? ''),
     modelMappings: pick('modelMappings', existing?.modelMappings ?? []),
     autoTrimedModelPrefixes: pick('autoTrimedModelPrefixes', existing?.autoTrimedModelPrefixes ?? []),
@@ -125,6 +126,7 @@ export function mergeChannelSettingsForUpdate(
     transformOptions: pick('transformOptions', existing?.transformOptions ?? undefined),
     passThroughUserAgent: pick('passThroughUserAgent', existing?.passThroughUserAgent ?? null),
     passThroughBody: pick('passThroughBody', existing?.passThroughBody ?? null),
+    preferResponsesWebSocket: pick('preferResponsesWebSocket', existing?.preferResponsesWebSocket ?? undefined),
     rateLimit: pick('rateLimit', existing?.rateLimit ?? null),
     enableSameChannelRetry: pick('enableSameChannelRetry', existing?.enableSameChannelRetry ?? true),
     retryableStatusCodes: pick('retryableStatusCodes', existing?.retryableStatusCodes ?? []),

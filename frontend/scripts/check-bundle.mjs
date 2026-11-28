@@ -25,7 +25,8 @@ const budgets = {
   personalModels: { raw: 1_500 * 1024, gzip: 400 * 1024 },
   // The 2026-11-21 model-developers data sync added ~1.5k lines to providers.json.
   modelsProvider: { raw: 68 * 1024, gzip: 17 * 1024 },
-  modelsDialogs: { raw: 100 * 1024, gzip: 25 * 1024 },
+  // The 2026-11-28 upstream merge added the realtime/catalog price editor to the models dialogs chunk.
+  modelsDialogs: { raw: 110 * 1024, gzip: 27 * 1024 },
 };
 
 const routeSources = {
